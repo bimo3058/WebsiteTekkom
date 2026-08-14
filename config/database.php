@@ -1,8 +1,17 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
 
 return [
+
+    'query_cache' => [
+        'enabled' => (bool) env('DB_QUERY_CACHE_ENABLED', true),
+        'store' => env('DB_QUERY_CACHE_STORE', 'redis'),
+        'ttl_seconds' => (int) env('DB_QUERY_CACHE_TTL', 60),
+        'max_bytes' => (int) env('DB_QUERY_CACHE_MAX_BYTES', 2_097_152),
+        'cache_console' => (bool) env('DB_QUERY_CACHE_CONSOLE', false),
+    ],
 
     /*
     |--------------------------------------------------------------------------
@@ -59,7 +68,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -79,26 +88,26 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
+                (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
         'pgsql' => [
-            'driver'      => 'pgsql',
-            'url'         => env('DB_URL'),
-            'host'        => env('DB_HOST', '127.0.0.1'),
-            'port'        => env('DB_PORT', '5432'),
-            'database'    => env('DB_DATABASE', 'laravel'),
-            'username'    => env('DB_USERNAME', 'root'),
-            'password'    => env('DB_PASSWORD', ''),
-            'charset'     => env('DB_CHARSET', 'utf8'),
-            'prefix'      => '',
+            'driver' => 'pgsql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'laravel'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
+            'charset' => env('DB_CHARSET', 'utf8'),
+            'prefix' => '',
             'prefix_indexes' => true,
             'search_path' => 'public',
-            'sslmode'     => 'require', // dari 'prefer' → 'require' untuk Supabase
-            'options'     => [
-                PDO::ATTR_TIMEOUT              => 10, 
-                PDO::ATTR_EMULATE_PREPARES     => true,
+            'sslmode' => 'require', // dari 'prefer' → 'require' untuk Supabase
+            'options' => [
+                PDO::ATTR_TIMEOUT => 10,
+                PDO::ATTR_EMULATE_PREPARES => true,
             ],
             'prepare' => false,
         ],
@@ -154,7 +163,6 @@ return [
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),
             'prefix' => env('REDIS_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-database-'),
-            'persistent' => env('REDIS_PERSISTENT', false),
         ],
 
         'default' => [
@@ -164,10 +172,9 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
-            'max_retries' => env('REDIS_MAX_RETRIES', 3),
-            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
-            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
-            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
+            'timeout' => (float) env('REDIS_CONNECT_TIMEOUT', 2.0),
+            'read_write_timeout' => (float) env('REDIS_READ_WRITE_TIMEOUT', 2.0),
+            'persistent' => (bool) env('REDIS_PERSISTENT', false),
         ],
 
         'cache' => [
@@ -177,10 +184,21 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
-            'max_retries' => env('REDIS_MAX_RETRIES', 3),
-            'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
-            'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
-            'backoff_cap' => env('REDIS_BACKOFF_CAP', 1000),
+            'timeout' => (float) env('REDIS_CONNECT_TIMEOUT', 2.0),
+            'read_write_timeout' => (float) env('REDIS_READ_WRITE_TIMEOUT', 2.0),
+            'persistent' => (bool) env('REDIS_PERSISTENT', false),
+        ],
+
+        'session' => [
+            'url' => env('REDIS_URL'),
+            'host' => env('REDIS_HOST', '127.0.0.1'),
+            'username' => env('REDIS_USERNAME'),
+            'password' => env('REDIS_PASSWORD'),
+            'port' => env('REDIS_PORT', '6379'),
+            'database' => env('REDIS_SESSION_DB', '2'),
+            'timeout' => (float) env('REDIS_CONNECT_TIMEOUT', 2.0),
+            'read_write_timeout' => (float) env('REDIS_READ_WRITE_TIMEOUT', 2.0),
+            'persistent' => (bool) env('REDIS_PERSISTENT', false),
         ],
 
     ],

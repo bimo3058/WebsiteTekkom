@@ -25,6 +25,7 @@
 
 <div class="grid grid-cols-[360px_1fr] gap-[14px] flex-1 min-h-0">
     {{-- Form Tambah Modul --}}
+    @if($praktikum->is_active)
     <div class="mp-card flex-shrink-0" style="padding:20px;">
         <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Tambah Modul</div>
         <form method="POST" action="{{ route('eoffice.manprak.koor.modul.store') }}" class="flex flex-col gap-3">
@@ -48,6 +49,7 @@
             <button class="mp-btn primary md w-full">Simpan Modul</button>
         </form>
     </div>
+    @endif
 
     {{-- Daftar Modul --}}
     <div class="mp-card min-h-0">
@@ -63,7 +65,7 @@
                     <tr style="background:#F9FAFB;">
                         <th class="mp-th text-left" style="padding:10px 16px;">Modul</th>
 
-                        <th class="mp-th text-left" style="padding:10px 16px;">Asprak</th>
+                        <th class="mp-th text-left" style="padding:10px 16px;">Asisten Praktikum</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Konten</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Aksi</th>
                     </tr>
@@ -81,10 +83,12 @@
                         <td style="padding:12px 16px;">
                             <div class="flex gap-2">
                                 <a href="{{ route('eoffice.manprak.koor.modul.show', $m->id) }}" class="mp-btn primary sm" style="text-decoration:none;">Detail</a>
+                                @if($praktikum->is_active)
                                 <form method="POST" action="{{ route('eoffice.manprak.koor.modul.destroy', $m->id) }}" onsubmit="return confirm('Hapus modul ini?')">
                                     @csrf @method('DELETE')
                                     <button class="mp-btn destructive sm">Hapus</button>
                                 </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

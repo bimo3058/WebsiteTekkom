@@ -7,8 +7,9 @@ use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\Title;
-use App\Services\BiddingService;
-use App\Services\FinalizationService;
+use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Services\BiddingService;
+use Modules\Capstone\Services\FinalizationService;
 use Illuminate\Http\Request;
 
 class FinalizationController extends Controller
@@ -113,9 +114,9 @@ class FinalizationController extends Controller
     public function allocate(Request $request)
     {
         $request->validate([
-            'bid_id' => 'required|exists:bids,id',
-            'supervisor_1_id' => 'required|exists:users,id',
-            'supervisor_2_id' => 'nullable|exists:users,id|different:supervisor_1_id',
+            'bid_id' => 'required|exists:capstone_bids,id',
+            'supervisor_1_id' => 'required|exists:lecturers,id',
+            'supervisor_2_id' => 'nullable|exists:lecturers,id|different:supervisor_1_id',
         ]);
 
         try {
@@ -143,10 +144,10 @@ class FinalizationController extends Controller
     public function allocateStudentProposed(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
-            'title_id' => 'required|exists:titles,id',
-            'supervisor_1_id' => 'required|exists:users,id',
-            'supervisor_2_id' => 'nullable|exists:users,id|different:supervisor_1_id',
+            'group_id' => 'required|exists:capstone_groups,id',
+            'title_id' => 'required|exists:capstone_titles,id',
+            'supervisor_1_id' => 'required|exists:lecturers,id',
+            'supervisor_2_id' => 'nullable|exists:lecturers,id|different:supervisor_1_id',
         ]);
 
         try {
@@ -176,7 +177,7 @@ class FinalizationController extends Controller
     public function finalizePeriod(Request $request)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
         ]);
 
         $period = Period::findOrFail($request->period_id);
@@ -210,7 +211,7 @@ class FinalizationController extends Controller
 
         $this->biddingService->lockBidding($period);
 
-        \App\Models\AuditLog::create([
+        AuditLog::create([
             'user_id' => $request->user()->id,
             'action' => 'BIDDING_LOCK',
             'target_type' => 'Period',

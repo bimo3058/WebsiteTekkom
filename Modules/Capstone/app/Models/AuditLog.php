@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditLog extends Model

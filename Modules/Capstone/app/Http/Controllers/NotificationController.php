@@ -4,7 +4,8 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\Notification;
-use App\Services\NotificationService;
+use Modules\Capstone\Models\GroupInvitation;
+use Modules\Capstone\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -27,7 +28,7 @@ class NotificationController extends Controller
 
         foreach ($notifications as $notification) {
             if ($notification->type === 'GROUP_INVITATION' && $notification->related_id) {
-                $invitation = \App\Models\GroupInvitation::find($notification->related_id);
+                $invitation = GroupInvitation::find($notification->related_id);
                 if ($invitation) {
                     $notification->invitation_status = $invitation->status;
                 }

@@ -5,7 +5,7 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">{{ $tugas->judul }}</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
         </div>
         <p class="mp-page-sub">{{ $tugas->modul?->nama }} · {{ $tugas->modul?->praktikum?->nama }}</p>
     </div>
@@ -253,6 +253,7 @@
                         @endphp
                         
                         @if($p)
+                        @if(isset($tugas->modul->praktikum) && $tugas->modul->praktikum->is_active)
                         <form method="POST" action="{{ route('eoffice.manprak.asprak.tugas.nilai', $p->id) }}" style="display:flex;gap:4px;align-items:center;margin:0;">
                             @csrf
                             <input type="number" name="nilai" min="0" max="100" step="0.5" placeholder="0-100"
@@ -260,12 +261,19 @@
                             <button type="submit" class="mp-btn ghost sm" style="white-space:nowrap;padding:4px 6px;font-size:11px;">{{ $st === 'acc' ? 'Edit' : 'ACC' }}</button>
                         </form>
                         @else
+                        <span style="font-size:12px;font-weight:600;">{{ $displayNilai ?: '—' }}</span>
+                        @endif
+                        @else
+                        @if(isset($tugas->modul->praktikum) && $tugas->modul->praktikum->is_active)
                         <form method="POST" action="{{ route('eoffice.manprak.asprak.tugas.nilai-jenis', $tugas->id) }}" style="display:flex;gap:4px;align-items:center;margin:0;">
                             @csrf
                             <input type="number" name="nilai[{{ $pr->id }}][nilai_jenis]" min="0" max="100" step="0.5" placeholder="0-100"
                                    value="{{ $displayNilai }}" class="mp-input" style="width:60px;font-size:12px;padding:4px 6px;">
                             <button type="submit" class="mp-btn ghost sm" style="white-space:nowrap;padding:4px 6px;font-size:11px;color:#0B266E;">Simpan</button>
                         </form>
+                        @else
+                        <span style="font-size:12px;font-weight:600;">{{ $displayNilai ?: '—' }}</span>
+                        @endif
                         @endif
                     </td>
 
@@ -288,6 +296,7 @@
                         <span style="font-size:12px;color:#999;">—</span>
                         @else
                         <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+                            @if(isset($tugas->modul->praktikum) && $tugas->modul->praktikum->is_active)
                             <div x-data="{ showRevisiModal: false }">
                                 <button type="button" @click="showRevisiModal = true" class="mp-btn secondary sm" style="white-space:nowrap;padding:4px 8px;font-size:11px;">Revisi</button>
 
@@ -337,6 +346,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
 
                             @if($p && ($p->file_revisi_asprak || $p->catatan_revisi))
                             <div style="padding:6px 8px;background:#FEF2F2;border:1px solid #FEE2E2;border-radius:6px;font-size:11px;width:100%;box-sizing:border-box;">

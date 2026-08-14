@@ -14,7 +14,7 @@ class AssessmentComponentController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
             'type' => 'nullable|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
         ]);
 
@@ -34,7 +34,7 @@ class AssessmentComponentController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
             'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
             'code' => 'required|string|max:50',
             'name' => 'required|string|max:255',
@@ -54,7 +54,7 @@ class AssessmentComponentController extends Controller
     public function bulkStore(Request $request)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
             'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
             'components' => 'required|array|min:1',
             'components.*.code' => 'required|string|max:50',

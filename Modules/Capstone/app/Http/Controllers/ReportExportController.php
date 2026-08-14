@@ -19,7 +19,7 @@ class ReportExportController extends Controller
     public function export(Request $request, $type)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
         ]);
 
         $periodId = $request->period_id;

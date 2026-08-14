@@ -87,6 +87,99 @@ class SupabaseStorage
     }
 
     /**
+     * Upload raw content to an exact object path.
+     */
+    public function put(string $path, string $contents, string $mimeType = 'application/octet-stream', ?string $bucket = null): bool
+    {
+        $targetBucket = $bucket ?? $this->bucket;
+        $normalizedPath = ltrim(str_replace('\\', '/', $path), '/');
+
+        try {
+            return Http::timeout(30)
+                ->withHeaders([
+                    'Authorization' => 'Bearer '.$this->key,
+                    'Content-Type' => $mimeType,
+                    'x-upsert' => 'true',
+                ])
+                ->withBody($contents, $mimeType)
+                ->post($this->objectUrl($targetBucket, $normalizedPath))
+                ->successful();
+        } catch (\Throwable $exception) {
+            Log::error('Supabase put exception', [
+                'bucket' => $targetBucket,
+                'path' => $normalizedPath,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
+    }
+
+    /**
+     * Download a private object with the service-role credential.
+     *
+     * @return array{content:string,mime_type:string}|null
+     */
+    public function download(string $path, ?string $bucket = null): ?array
+    {
+        $targetBucket = $bucket ?? $this->bucket;
+
+        try {
+            $response = Http::timeout(30)
+                ->withToken($this->key)
+                ->get($this->objectUrl($targetBucket, $path));
+
+            if (! $response->successful()) {
+                return null;
+            }
+
+            return [
+                'content' => $response->body(),
+                'mime_type' => $response->header('Content-Type', 'application/octet-stream'),
+            ];
+        } catch (\Throwable $exception) {
+            Log::error('Supabase download exception', [
+                'bucket' => $targetBucket,
+                'path' => $path,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * List private objects below a prefix.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function list(string $prefix, ?string $bucket = null): array
+    {
+        $targetBucket = $bucket ?? $this->bucket;
+
+        try {
+            $response = Http::timeout(30)
+                ->withToken($this->key)
+                ->post($this->url.'/storage/v1/object/list/'.rawurlencode($targetBucket), [
+                    'prefix' => trim($prefix, '/'),
+                    'limit' => 1000,
+                    'offset' => 0,
+                    'sortBy' => ['column' => 'created_at', 'order' => 'desc'],
+                ]);
+
+            return $response->successful() ? $response->json() : [];
+        } catch (\Throwable $exception) {
+            Log::error('Supabase list exception', [
+                'bucket' => $targetBucket,
+                'prefix' => $prefix,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
      * Generate public URL dari path
      * Format: {SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}
      */
@@ -170,6 +263,13 @@ class SupabaseStorage
         }
 
         return null;
+    }
+
+    private function objectUrl(string $bucket, string $path): string
+    {
+        $encodedPath = implode('/', array_map('rawurlencode', explode('/', ltrim($path, '/'))));
+
+        return $this->url.'/storage/v1/object/'.rawurlencode($bucket).'/'.$encodedPath;
     }
 
     // Helper internal tidak perlu diubah, biarkan mereferensi ke $this->bucket default

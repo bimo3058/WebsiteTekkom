@@ -25,12 +25,16 @@ class Praktikum extends Model
         'tahun_ajaran',
         'semester',
         'status',
+        'jumlah_kelompok',
+        'jumlah_shift',
+        'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'deleted_at'   => 'datetime',
+            'is_active'    => 'boolean',
         ];
     }
 

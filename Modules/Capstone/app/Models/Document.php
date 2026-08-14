@@ -3,7 +3,7 @@
 namespace Modules\Capstone\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Group;
+use App\Models\Student;
 use App\Models\User;
 
 class Document extends Model
@@ -18,7 +18,7 @@ class Document extends Model
 
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     public function reviewer()

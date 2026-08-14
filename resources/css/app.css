@@ -54,27 +54,70 @@
         /* ── Border Radius ─────────────────────────────────── */
         --radius: 0.75rem;          /* 12px              */
 
-        /* ── SITKOM Semantic Tokens (raw hex, pakai di komponen custom) ── */
-        --c-primary:         #0B266E;
-        --c-primary-hover:   #091958;
-        --c-primary-subtle:  rgba(11,38,110,0.08);
-        --c-primary-border:  #3C518B;
-        --c-bg:              #F6F8FA;
-        --c-card:            #FFFFFF;
-        --c-border:          #DFE1E7;
-        --c-border-strong:   #C1C7CF;
-        --c-fg:              #0D0D12;
-        --c-fg-sec:          #353849;
-        --c-fg-muted:        #666D80;
-        --c-fg-placeholder:  #A4ABB8;
-        --c-success:         #40C4AA;
-        --c-success-subtle:  #DDF2EE;
-        --c-warning:         #D39C3D;
-        --c-warning-subtle:  #F9ECCB;
-        --c-error:           #DF1C41;
-        --c-error-subtle:    #FADAE1;
-        --c-sky:             #106A97;
-        --c-sky-subtle:      #D1F0F9;
+        /* ── Design System Tokens (raw hex) ── */
+        /* Primary (Ungu) */
+        --c-primary-50:  #F8F5FF;
+        --c-primary-100: #D3C4FC;
+        --c-primary-200: #B59CFA;
+        --c-primary-300: #9774F7;
+        --c-primary-400: #7A4DF5;
+        --c-primary-500: #293C79;
+        
+        --c-primary: var(--c-primary-500);
+        --c-primary-hover: var(--c-primary-400);
+
+        /* Greyscale */
+        --c-grey-0:   #F8F9FB;
+        --c-grey-25:  #F6F8FA;
+        --c-grey-50:  #ECEFF3;
+        --c-grey-100: #DFE1E6;
+        --c-grey-200: #C1C7CF;
+        --c-grey-300: #A4ABB8;
+        --c-grey-400: #808897;
+        --c-grey-500: #666D80;
+        --c-grey-600: #353849;
+        --c-grey-700: #272835;
+        --c-grey-800: #1A1B25;
+        --c-grey-900: #0D0D12;
+        
+        /* Semantics */
+        --c-sky-0:   #EFFBFF;
+        --c-sky-25:  #D1F0F9;
+        --c-sky-50:  #7EDCF1;
+        --c-sky-100: #33CFFF;
+        --c-sky-200: #106A97;
+        --c-sky-300: #0C4D6E;
+
+        --c-success-0:   #EFFEFA;
+        --c-success-25:  #DDF2EE;
+        --c-success-50:  #9DE0D3;
+        --c-success-100: #40C4AA;
+        --c-success-200: #287F6E;
+        --c-success-300: #174E43;
+
+        --c-warning-0:   #FFF6E0;
+        --c-warning-25:  #F9ECCB;
+        --c-warning-50:  #FBD982;
+        --c-warning-100: #FFBD4C;
+        --c-warning-200: #956321;
+        --c-warning-300: #5B3D1E;
+
+        --c-error-0:   #FEEFF2;
+        --c-error-25:  #FADAE1;
+        --c-error-50:  #ED8296;
+        --c-error-100: #DF1C41;
+        --c-error-200: #95122B;
+        --c-error-300: #710E21;
+        
+        /* General Aliases */
+        --c-bg:             var(--c-grey-25);
+        --c-card:           var(--c-grey-0);
+        --c-border:         var(--c-grey-100);
+        --c-border-strong:  var(--c-grey-200);
+        --c-fg:             var(--c-grey-900);
+        --c-fg-sec:         var(--c-grey-600);
+        --c-fg-muted:       var(--c-grey-400);
+        --c-fg-placeholder: var(--c-grey-300);
     }
 
     .dark {
@@ -148,10 +191,10 @@
     }
 
     /* ── Buttons ────────────────────────────────────────────── */
-    /* Semua btn-primary sekarang pakai navy */
     .btn-primary {
-        @apply inline-flex items-center gap-2 text-white rounded-xl px-4 py-2.5 font-medium transition-colors;
+        @apply inline-flex items-center gap-2 text-white rounded-xl px-4 py-2.5 font-medium transition-all;
         background-color: var(--c-primary);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     }
     .btn-primary:hover {
         background-color: var(--c-primary-hover);
@@ -175,29 +218,49 @@
 
     /* ── Badges ─────────────────────────────────────────────── */
     .badge {
-        @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold;
+        @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium;
     }
 
-    .badge-success   { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700; }
-    .badge-warning   { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700; }
-    .badge-danger    { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700; }
-    .badge-info      { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700; }
-    .badge-secondary { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700; }
+    .badge-primary { 
+        background-color: var(--c-primary-50); 
+        color: var(--c-primary-500); 
+    }
+    .badge-success { 
+        background-color: var(--c-success-50); 
+        color: var(--c-success-300); 
+    }
+    .badge-warning { 
+        background-color: var(--c-warning-50); 
+        color: var(--c-warning-300); 
+    }
+    .badge-danger { 
+        background-color: var(--c-error-50); 
+        color: var(--c-error-300); 
+    }
+    .badge-info { 
+        background-color: var(--c-sky-50); 
+        color: var(--c-sky-300); 
+    }
+    .badge-secondary { 
+        background-color: var(--c-grey-50); 
+        color: var(--c-grey-600); 
+    }
 
     /* ── Form Elements ──────────────────────────────────────── */
     .form-group         { @apply mb-6 relative; }
     .form-group-compact { @apply relative mb-4; }
 
     .form-label {
-        @apply block text-sm font-semibold text-slate-900 mb-2;
-        letter-spacing: 0.2px;
+        @apply block text-sm font-medium mb-1.5;
+        color: var(--c-grey-900);
     }
     .form-label-required::after {
-        @apply content-['*'] ml-1 text-red-600;
+        @apply content-['*'] ml-1;
+        color: var(--c-error-100);
     }
     .form-hint {
-        @apply text-xs text-slate-500 mt-1.5 block;
-        letter-spacing: 0.3px;
+        @apply text-xs mt-1 block;
+        color: var(--c-grey-500);
     }
 
     .form-control {
@@ -210,7 +273,7 @@
         @apply ring-0;
         border-color: var(--c-primary);
         box-shadow:
-            0 0 0 3px var(--c-primary-subtle),
+            0 0 0 4px var(--c-primary-50),
             0 1px 3px 0 rgba(0, 0, 0, 0.06);
     }
     .form-control:disabled {

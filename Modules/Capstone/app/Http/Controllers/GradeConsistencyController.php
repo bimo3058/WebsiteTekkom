@@ -16,7 +16,7 @@ class GradeConsistencyController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
         ]);
 
         $checks = GradeConsistencyCheck::with(['group.title', 'student', 'checker'])
@@ -33,7 +33,7 @@ class GradeConsistencyController extends Controller
     public function generate(Request $request)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
         ]);
 
         $groups = Group::where('period_id', $request->period_id)

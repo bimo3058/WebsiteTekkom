@@ -12,7 +12,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement('ALTER TABLE mk_kegiatan ALTER COLUMN tanggal_mulai DROP NOT NULL');
+        Schema::table('mk_kegiatan', function (Blueprint $table) {
+            $table->date('tanggal_mulai')->nullable()->change();
+        });
     }
 
     /**

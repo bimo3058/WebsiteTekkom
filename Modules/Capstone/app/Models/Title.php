@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
 use Illuminate\Database\Eloquent\Model;
 
 class Title extends Model
@@ -22,15 +23,19 @@ class Title extends Model
         'proposed_supervisor_id',
         'supervisor_approval_status',
         'rejection_reason',
+        'period_id',
+        'pre_assigned_group_id',
+        'is_reserved',
     ];
 
     protected $casts = [
         'specializations' => 'array',
+        'is_reserved' => 'boolean',
     ];
 
     public function lecturer()
     {
-        return $this->belongsTo(User::class, 'lecturer_id');
+        return $this->belongsTo(Lecturer::class, 'lecturer_id');
     }
 
     public function groups()
@@ -50,6 +55,6 @@ class Title extends Model
 
     public function proposedSupervisor()
     {
-        return $this->belongsTo(User::class, 'proposed_supervisor_id');
+        return $this->belongsTo(Lecturer::class, 'proposed_supervisor_id');
     }
 }

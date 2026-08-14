@@ -49,7 +49,10 @@ class DashboardController extends Controller
             ->where('disetujui_dosen', false)
             ->count();
 
-        $semesterLabel = 'Semester Genap 2025/2026';
+        $currentYear = now()->year;
+        $currentSemester = now()->month <= 6 ? 'Genap' : 'Ganjil';
+        $defaultTahunAjaran = $currentSemester === 'Genap' ? $currentYear - 1 : $currentYear;
+        $semesterLabel = "Semester {$currentSemester} {$defaultTahunAjaran}/" . ($defaultTahunAjaran + 1);
 
         return view('eoffice::manajemen-praktikum.dosen.dashboard', compact(
             'praktikums',
@@ -100,5 +103,39 @@ class DashboardController extends Controller
         $this->koorService->assign($praktikum, $targetUser);
 
         return back()->with('success', "Mahasiswa {$targetUser->name} berhasil ditunjuk sebagai koordinator dan otomatis aktif sebagai asprak.");
+    }
+
+    public function searchPraktikan(Request $request)
+    {
+        $q = $request->get('q');
+        $praktikumId = $request->get('praktikum_id');
+        $user = auth()->user();
+
+        if (strlen($q) < 2) return response()->json([]);
+
+        // Pastikan dosen mengampu praktikum ini
+        $valid = Praktikum::where('id', $praktikumId)
+            ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
+            ->exists();
+        if (!$valid) return response()->json([]);
+
+        // Mencari semua mahasiswa di sistem (User yang punya relasi student)
+        $praktikan = \App\Models\User::with(['student'])
+            ->whereHas('student') // Pastikan dia adalah mahasiswa
+            ->where(function($query) use ($q) {
+                $query->where('name', 'ilike', "%{$q}%")
+                      ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'ilike', "%{$q}%"));
+            })
+            ->take(10)
+            ->get();
+
+        $results = $praktikan->map(function ($p) {
+            return [
+                'id' => $p->student?->student_number,
+                'text' => $p->name . ' - ' . ($p->student?->student_number ?? 'NIM tidak diketahui')
+            ];
+        });
+
+        return response()->json($results);
     }
 }
