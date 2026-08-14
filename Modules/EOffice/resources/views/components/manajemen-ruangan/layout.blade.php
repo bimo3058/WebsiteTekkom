@@ -542,7 +542,7 @@
             $admGroups = [];
 
             $admGroups['Utama'] = [
-                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => $iHome],
+                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'peminjaman.dashboard', 'icon' => $iHome],
             ];
 
             $admSisRuangan = [];
@@ -589,7 +589,7 @@
             $userGroups = [];
 
             $userGroups['Utama'] = [
-                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'user.dashboard', 'icon' => $iHome],
+                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'peminjaman.dashboard', 'icon' => $iHome],
             ];
 
             $sistemRuangan = [];
@@ -675,19 +675,18 @@
                                 @foreach($items as $item)
                                     @php $active = str_contains($currentRoute, $item['match']); @endphp
                                     <a href="{{ $item['href'] }}"
-                                        class="flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
-                                        :class="sidebarOpen ? '' : 'justify-center'" @if($active)
-                                        style="background:{{ $sectionColor }}; color:white;" @else style="color:#353849"
-                                            onmouseover="this.style.background='#F6F8FA'"
-                                        onmouseout="this.style.background='transparent'" @endif>
-                                        <svg class="w-[16px] h-[16px] flex-shrink-0"
-                                            style="color:{{ $active ? 'white' : '#808897' }}" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        class="group relative flex items-center gap-[10px] px-[12px] py-[9px] rounded-lg mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap {{ $active ? 'bg-[#F1F5F9] text-[#0B266E] font-bold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}"
+                                        :class="sidebarOpen ? '' : 'justify-center'">
+                                        @if($active)
+                                            <div class="absolute left-0 top-[15%] bottom-[15%] w-[4px] bg-[#0B266E] rounded-r-sm"></div>
+                                        @endif
+                                        <svg class="w-[18px] h-[18px] flex-shrink-0 transition-colors {{ $active ? 'text-[#0B266E]' : 'text-[#808897]' }}"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
                                             <path d="{{ $item['icon'] }}" />
                                         </svg>
                                         <span
-                                            class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
-                                                                                                                                                                                                                                                                                     {{ $active ? 'font-semibold' : 'font-medium' }}"
+                                            class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200"
                                             :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">{{ $item['label'] }}</span>
                                     </a>
                                 @endforeach
