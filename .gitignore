@@ -54,10 +54,11 @@ _ds_tmp/
 .kiro/specs/ui-standardization/.config.kiro
 # Redis dump
 dump.rdb
+Modules/EOffice/node_modules
+
 *.dump
 *.list
 
 # Frontend build and lint caches
 /frontend/.next/
 /frontend/.eslintcache
-

@@ -116,11 +116,11 @@
                 <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
                         class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
-                        📅 Mingguan
+                        Mingguan
                     </a>
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
                         class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
-                        🗓️ Bulanan
+                        Bulanan
                     </a>
                 </div>
             </div>
@@ -250,7 +250,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                                                                                                                                                        {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
                                             style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
@@ -386,8 +386,8 @@
                                                         @mouseout="!isDragging && ($el.style.background = '{{ $bg }}'); !isDragging && ($el.style.transform = 'scale(1)')"
                                                         class="select-none"
                                                         :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
-                                                                                                                                                                                                                                ? 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: #6EE7B7; border: 1px solid #10B981; border-radius:5px; transform: scale(1.05); z-index: 10; transition:all 0.15s;' 
-                                                                                                                                                                                                                                : 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: {{ $bg }}; border:1px solid {{ $border }}; border-radius:5px; transition:all 0.15s;'"
+                                                                                                                                                                                                                                                                                                                                    ? 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: #6EE7B7; border: 1px solid #10B981; border-radius:5px; transform: scale(1.05); z-index: 10; transition:all 0.15s;' 
+                                                                                                                                                                                                                                                                                                                                    : 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: {{ $bg }}; border:1px solid {{ $border }}; border-radius:5px; transition:all 0.15s;'"
                                                         title="Booking {{ $ruang->nama }} — {{ $day->translatedFormat('D, d M') }} pukul {{ $hStr }}">
                                                         ✓
                                                     </button>
@@ -406,10 +406,10 @@
                                                     @endphp
                                                     <div
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
-                                                                                                                                                                                                               background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                                                               text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                                                               font-size:9px; font-weight:800; color:{{ $tColor }};
-                                                                                                                                                                                                               cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
+                                                                                                                                                                                                                                                                                                                   background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                                                                                                                                                   text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                                                                                                                                                                   font-size:9px; font-weight:800; color:{{ $tColor }};
+                                                                                                                                                                                                                                                                                                                   cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -502,8 +502,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -558,11 +558,21 @@
                 class="relative bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
 
                 {{-- Header --}}
-                <div class="bg-white px-6 py-5 border-b border-gray-100 flex-shrink-0">
-                    <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Form Booking Ruangan</h3>
-                    <p class="text-sm text-gray-500 mt-1">Lengkapi data berikut untuk meminjam <span
-                            class="font-semibold text-emerald-600" x-text="bookingData.roomName"></span> pada <span
-                            class="font-semibold text-emerald-600" x-text="bookingData.waktu"></span>.</p>
+                <div class="bg-white px-6 py-5 border-b border-gray-100 flex-shrink-0 flex justify-between items-start">
+                    <div>
+                        <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Form Booking Ruangan</h3>
+                        <p class="text-sm text-gray-500 mt-1">Lengkapi data berikut untuk meminjam <span
+                                class="font-semibold text-emerald-600" x-text="bookingData.roomName"></span> pada <span
+                                class="font-semibold text-emerald-600" x-text="bookingData.waktu"></span>.</p>
+                    </div>
+                    <button type="button" @click="closeModal"
+                        class="text-gray-400 hover:text-gray-500 rounded-md focus:outline-none">
+                        <span class="sr-only">Close menu</span>
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
 
                 {{-- Scrollable Body --}}
@@ -575,7 +585,7 @@
                         <input type="hidden" name="jam_mulai" :value="bookingData.jamMulai">
                         <input type="hidden" name="jam_selesai" :value="bookingData.jamSelesai">
 
-                        <div class="space-y-5">
+                        <div class="space-y-3">
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
                                     <label
@@ -623,11 +633,10 @@
 
                             <div>
                                 <label
-                                    class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Tujuan
-                                    Peminjaman <span class="text-red-500">*</span></label>
-                                <textarea name="tujuan" rows="3" class="mp-input w-full resize-none"
-                                    placeholder="Misal: Digunakan untuk gladi bersih acara seminar nasional."
-                                    required></textarea>
+                                    class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama
+                                    Kegiatan <span class="text-red-500">*</span></label>
+                                <input type="text" name="tujuan" class="mp-input w-full"
+                                    placeholder="Misal: Rapat Kerja HIMASKOM" required>
                             </div>
 
                             <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-lg">
@@ -769,6 +778,6 @@
                     document.body.style.overflow = '';
                 }
             }))
-    })
+        })
     </script>
 </x-eoffice::manajemen-ruangan.layout>

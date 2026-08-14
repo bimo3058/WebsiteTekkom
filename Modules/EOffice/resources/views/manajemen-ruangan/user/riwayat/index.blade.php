@@ -70,10 +70,17 @@
                                 @endif
 
                                 <div class="mt-auto">
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($riwayat->berkas_pendukung) }}" target="_blank" class="text-[12px] font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                                        Lihat Arsip Proposal
-                                    </a>
+                                    @if($riwayat->berkas_pendukung)
+                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($riwayat->berkas_pendukung) }}" target="_blank" class="text-[12px] font-semibold text-indigo-600 hover:text-indigo-700 inline-flex items-center gap-1 group">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" class="group-hover:translate-x-0.5 transition-transform"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                                            Lihat Arsip Proposal
+                                        </a>
+                                    @else
+                                        <span class="text-[12px] font-semibold text-gray-400 inline-flex items-center gap-1">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                            Tanpa Arsip Proposal
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
 

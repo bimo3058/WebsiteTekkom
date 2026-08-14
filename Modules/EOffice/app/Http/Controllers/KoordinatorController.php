@@ -537,7 +537,7 @@ class KoordinatorController extends Controller implements HasMiddleware
             })->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
-                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
+                    'file_url' => $d->file_path ? $d->file_url : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-', // Can't easily get file size without storage hit
@@ -551,7 +551,7 @@ class KoordinatorController extends Controller implements HasMiddleware
             })->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
-                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
+                    'file_url' => $d->file_path ? $d->file_url : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-',
@@ -565,7 +565,7 @@ class KoordinatorController extends Controller implements HasMiddleware
             })->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
-                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
+                    'file_url' => $d->file_path ? $d->file_url : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-',

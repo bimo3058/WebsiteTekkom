@@ -1,33 +1,12 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIKP - Detail Bimbingan</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
-</head>
-<body class="bg-slate-50 text-slate-800 antialiased">
-
-    <!-- Top Navigation -->
-    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex items-center gap-4">
-                    <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="text-slate-400 hover:text-slate-600 transition-colors">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                    </a>
-                    <div class="h-6 w-px bg-slate-300"></div>
-                    <span class="font-bold text-lg text-slate-900 tracking-tight">SIKP - Detail Bimbingan</span>
-                </div>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<x-eoffice::layouts.dosen title="Detail Bimbingan">
+    @section('breadcrumbs')
+        <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="text-slate-400 hover:text-slate-700 transition-colors mr-2">
+            <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+        </a>
+        <span class="text-[#272835] font-semibold" style="font-family:'Inter Tight',sans-serif;">Detail Bimbingan</span>
+    @endsection
         
         <!-- Flash Message -->
         @if(session('success'))
@@ -145,7 +124,7 @@
                                             <div>
                                                 <p class="text-base font-semibold text-slate-900">{{ $dok->jenis_dokumen }} KP</p>
                                                 <div class="flex items-center gap-2 mt-1">
-                                                    <a href="#" class="text-xs text-blue-600 hover:text-blue-800 underline font-medium">Lihat File ({{ basename($dok->file_path) }})</a>
+                                                    <a href="{{ $dok->file_url }}" class="text-xs text-blue-600 hover:text-blue-800 underline font-medium">Lihat File ({{ basename($dok->file_path) }})</a>
                                                     <span class="text-slate-300">•</span>
                                                     <span class="text-xs text-slate-500">{{ \Carbon\Carbon::parse($dok->tanggal_upload)->format('d M Y') }}</span>
                                                 </div>
@@ -186,7 +165,4 @@
                 </div>
             </div>
         </div>
-    </main>
-
-</body>
-</html>
+</x-eoffice::layouts.dosen>

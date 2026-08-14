@@ -516,58 +516,108 @@
         $iLogout = "M13 8.73V8.14C13 6.58 12.19 5.24 11.07 4.94L7.87 4.06C6.39 3.66 5 5.21 5 7.27v9.46C5 18.79 6.39 20.34 7.87 19.94l3.2-.87C12.19 18.76 13 17.42 13 15.86v-.59M11 12h8M19 12l-2.5-2.72M19 12l-2.5 2.72";
         $iBack = "M19 12H5M5 12l7-7M5 12l7 7";
         $iList = "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2";
+        $iKey = "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L6.5 21.5H3v-3.5l1.5-1.5v-2l1.5-1.5 2-2 2.257-2.257A6 6 0 1121 9z";
+
+        // Query Menu Visibility Settings for Sidebar
+        $rawSettings = \Modules\EOffice\Models\Pengaturan::where('key', 'like', 'sb_%')->pluck('value', 'key')->toArray();
+        $sb_katalog = filter_var($rawSettings['sb_user_katalog'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_kalender = filter_var($rawSettings['sb_user_kalender'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_peminjaman = filter_var($rawSettings['sb_user_peminjaman'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_riwayat = filter_var($rawSettings['sb_user_riwayat'] ?? true, FILTER_VALIDATE_BOOLEAN);
+
+        $isSuperadmin = $user && $user->hasRole('superadmin');
+
+        $sb_adm_klg = $isSuperadmin || filter_var($rawSettings['sb_admin_kalenderglobal'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_jad = $isSuperadmin || filter_var($rawSettings['sb_admin_jadwalakademik'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_evt = $isSuperadmin || filter_var($rawSettings['sb_admin_event'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_set = $isSuperadmin || filter_var($rawSettings['sb_admin_persetujuan'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_ars = $isSuperadmin || filter_var($rawSettings['sb_admin_arsip'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_usu = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenuser'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_rua = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenruangan'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_pgt = $isSuperadmin || filter_var($rawSettings['sb_admin_pengaturan'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
         $sections = [];
 
         if ($isAdmin) {
+            $admGroups = [];
+
+            $admGroups['Utama'] = [
+                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => $iHome],
+            ];
+
+            $admSisRuangan = [];
+            if ($sb_adm_klg)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.kalender-global.index'), 'label' => 'Kalender Global', 'match' => 'admin.kalender', 'icon' => $iCal];
+            if ($sb_adm_jad)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.jadwal-akademik.index'), 'label' => 'Jadwal Akademik', 'match' => 'admin.jadwal-akademik', 'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'];
+            if ($sb_adm_evt)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.jadwal-internal.index'), 'label' => 'Event & Maintenance', 'match' => 'admin.jadwal-internal', 'icon' => $iList];
+            if ($sb_adm_set)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan', 'match' => 'admin.persetujuan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'];
+            if ($sb_adm_ars)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.riwayat.index'), 'label' => 'Arsip & Rekap', 'match' => 'admin.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'];
+            if (count($admSisRuangan) > 0)
+                $admGroups['Sistem Ruangan'] = $admSisRuangan;
+
+            $admMasterData = [];
+            if ($sb_adm_usu)
+                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.user.index'), 'label' => 'Manajemen User', 'match' => 'admin.user', 'icon' => $iUser];
+            if ($sb_adm_rua)
+                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.ruangan.index'), 'label' => 'Manajemen Ruangan', 'match' => 'admin.ruangan', 'icon' => $iBook];
+            $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.hak-akses.index'), 'label' => 'Hak Akses Menu', 'match' => 'admin.hak-akses', 'icon' => $iKey];
+
+            if (count($admMasterData) > 0)
+                $admGroups['Master Data'] = $admMasterData;
+
+            $admSistemWeb = [];
+            if ($sb_adm_pgt)
+                $admSistemWeb[] = ['href' => route('eoffice.peminjaman.admin.pengaturan.index'), 'label' => 'Pengaturan Operasional', 'match' => 'admin.pengaturan', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'];
+
+            if (count($admSistemWeb) > 0)
+                $admGroups['Sistem Web'] = $admSistemWeb;
+
             $sections[] = [
                 'label' => 'Admin Ruangan',
                 'color' => '#10B981',
                 'bg' => 'rgba(16, 185, 129, 0.08)',
                 'match' => 'peminjaman.admin',
-                'groups' => [
-                    'Utama' => [
-                        ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => $iHome],
-                    ],
-                    'Sistem Ruangan' => [
-                        ['href' => route('eoffice.peminjaman.admin.kalender-global.index'), 'label' => 'Kalender Global', 'match' => 'admin.kalender', 'icon' => $iCal],
-                        ['href' => route('eoffice.peminjaman.admin.jadwal-akademik.index'), 'label' => 'Jadwal Akademik', 'match' => 'admin.jadwal-akademik', 'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'],
-                        ['href' => route('eoffice.peminjaman.admin.jadwal-internal.index'), 'label' => 'Event & Maintenance', 'match' => 'admin.jadwal-internal', 'icon' => $iList],
-                        ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan', 'match' => 'admin.persetujuan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
-                        ['href' => route('eoffice.peminjaman.admin.riwayat.index'), 'label' => 'Arsip', 'match' => 'admin.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                    ],
-                    'Master Data' => [
-                        ['href' => route('eoffice.peminjaman.admin.user.index'), 'label' => 'Manajemen User', 'match' => 'admin.user', 'icon' => $iUser],
-                        ['href' => route('eoffice.peminjaman.admin.ruangan.index'), 'label' => 'Manajemen Ruangan', 'match' => 'admin.ruangan', 'icon' => $iBook],
-                    ],
-                    'Sistem Web' => [
-                        ['href' => route('eoffice.peminjaman.admin.pengaturan.index'), 'label' => 'Pengaturan Peminjaman', 'match' => 'admin.pengaturan', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'],
-                    ],
-                ],
+                'groups' => $admGroups,
             ];
         } else {
             // General User / Mahasiswa / Dosen View
+
+            $userGroups = [];
+
+            $userGroups['Utama'] = [
+                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'user.dashboard', 'icon' => $iHome],
+            ];
+
+            $sistemRuangan = [];
+            if ($sb_katalog)
+                $sistemRuangan[] = ['href' => route('eoffice.peminjaman.user.booking'), 'label' => 'Katalog Ruangan', 'match' => 'user.booking', 'icon' => $iBook];
+            if ($sb_kalender)
+                $sistemRuangan[] = ['href' => route('eoffice.peminjaman.user.kalender'), 'label' => 'Kalender Ruangan', 'match' => 'user.kalender', 'icon' => $iCal];
+            if (count($sistemRuangan) > 0)
+                $userGroups['Sistem Ruangan'] = $sistemRuangan;
+
+            $peminjamanItems = [];
+            if ($sb_peminjaman)
+                $peminjamanItems[] = ['href' => route('eoffice.peminjaman.user.saya'), 'label' => 'Peminjaman Saya', 'match' => 'user.saya', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'];
+            if ($sb_riwayat)
+                $peminjamanItems[] = ['href' => route('eoffice.peminjaman.user.riwayat'), 'label' => 'Riwayat', 'match' => 'user.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'];
+            if (count($peminjamanItems) > 0)
+                $userGroups['Peminjaman'] = $peminjamanItems;
+
+            $userGroups['Akun'] = [
+                ['href' => '#', 'label' => 'Profil', 'match' => 'user.profil', 'icon' => $iUser],
+            ];
+
             $sections[] = [
                 'label' => 'Akses Mahasiswa',
                 'color' => '#3B82F6',
                 'bg' => 'rgba(59, 130, 246, 0.08)',
                 'match' => 'peminjaman.user',
-                'groups' => [
-                    'Utama' => [
-                        ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'user.dashboard', 'icon' => $iHome],
-                    ],
-                    'Sistem Ruangan' => [
-                        ['href' => route('eoffice.peminjaman.user.booking'), 'label' => 'Katalog Ruangan', 'match' => 'user.booking', 'icon' => $iBook],
-                        ['href' => route('eoffice.peminjaman.user.kalender'), 'label' => 'Kalender Ruangan', 'match' => 'user.kalender', 'icon' => $iCal],
-                    ],
-                    'Peminjaman' => [
-                        ['href' => route('eoffice.peminjaman.user.saya'), 'label' => 'Peminjaman Saya', 'match' => 'user.saya', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
-                        ['href' => route('eoffice.peminjaman.user.riwayat'), 'label' => 'Riwayat', 'match' => 'user.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                    ],
-                    'Akun' => [
-                        ['href' => '#', 'label' => 'Profil', 'match' => 'user.profil', 'icon' => $iUser],
-                    ]
-                ],
+                'groups' => $userGroups,
             ];
         }
     @endphp
@@ -637,7 +687,7 @@
                                         </svg>
                                         <span
                                             class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
-                                                                                                                                                                                                                                     {{ $active ? 'font-semibold' : 'font-medium' }}"
+                                                                                                                                                                                                                                                                                     {{ $active ? 'font-semibold' : 'font-medium' }}"
                                             :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">{{ $item['label'] }}</span>
                                     </a>
                                 @endforeach

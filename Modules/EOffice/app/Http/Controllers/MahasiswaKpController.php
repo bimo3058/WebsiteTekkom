@@ -11,9 +11,12 @@ use Modules\EOffice\Models\KpMahasiswa;
 use Modules\EOffice\Models\KpPengumuman;
 use Modules\EOffice\Models\KpSeminar;
 use PhpOffice\PhpWord\TemplateProcessor;
+use App\Services\SupabaseStorage;
 
 class MahasiswaKpController extends Controller
 {
+    public function __construct(private SupabaseStorage $supabase) {}
+
     // =========================================================================
     // DASHBOARD
     // =========================================================================
@@ -283,27 +286,26 @@ class MahasiswaKpController extends Controller
             ->first();
 
         // Cek pendaftaran berdasarkan menu periode
-        $now = now();
-        $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)
-            ->whereDate('tanggal_buka', '<=', $now)
-            ->whereDate('tanggal_tutup', '>=', $now)
-            ->first();
+        $phaseStatus = $this->getPhaseStatus('pra_kp');
+        $registrationOpen = $phaseStatus['isOpen'];
+        $phaseClosed = $phaseStatus['isClosed'];
+        $showReminder = $phaseStatus['showReminder'];
+        $startDate = $phaseStatus['startDate'];
+        $endDate = $phaseStatus['deadline'];
+        $periodeAktif = $phaseStatus['periodeAktif'];
+        $listKelas = $periodeAktif ? ($periodeAktif->kelas_dibuka ?? []) : [];
 
-        // Jika tidak ada yang sedang buka pendaftarannya, cek kalau ada periode aktif yang menampung fallback informasi
-        if (!$activePeriod) {
-            $fallbackPeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)->latest()->first();
-        } else {
-            $fallbackPeriod = $activePeriod;
+        try {
+            $templatesQuery = \Modules\EOffice\Models\TemplateDokumenKP::where('phase', 'pra_kp');
+            if ($periodeAktif) {
+                $templatesQuery->where('periode_id', $periodeAktif->id);
+            }
+            $templatesDokumen = $templatesQuery->orderBy('created_at', 'desc')->get();
+        } catch (\Exception $e) {
+            $templatesDokumen = collect();
         }
 
-        $registrationOpen = $activePeriod != null;
-        $startDate = $fallbackPeriod ? ($fallbackPeriod->tanggal_buka ?? '') : '';
-        $endDate = $fallbackPeriod ? ($fallbackPeriod->tanggal_tutup ?? '') : '';
-
-        // Ambil kelas yang dibuka pada periode aktif
-        $listKelas = $activePeriod ? ($activePeriod->kelas_dibuka ?? []) : [];
-
-        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp', 'registrationOpen', 'startDate', 'endDate', 'listKelas'));
+        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp', 'registrationOpen', 'phaseClosed', 'showReminder', 'startDate', 'endDate', 'listKelas', 'periodeAktif', 'templatesDokumen'));
     }
 
     /**
@@ -313,15 +315,11 @@ class MahasiswaKpController extends Controller
      */
     public function storePendaftaran(Request $request)
     {
-        $now = now();
-        $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)
-            ->whereDate('tanggal_buka', '<=', $now)
-            ->whereDate('tanggal_tutup', '>=', $now)
-            ->first();
-
-        if (!$activePeriod) {
-            return redirect()->back()->with('error', 'Pendaftaran Kerja Praktik saat ini sedang ditutup di semua periode.');
+        $phaseStatus = $this->getPhaseStatus('pra_kp');
+        if (!$phaseStatus['isOpen']) {
+            return redirect()->back()->with('error', 'Pendaftaran Kerja Praktik saat ini sedang ditutup atau belum dimulai.');
         }
+        $activePeriod = $phaseStatus['periodeAktif'];
 
         // Ambil kelas yang dibuka pada periode aktif untuk divalidasi
         $listKelas = $activePeriod->kelas_dibuka ?? [];
@@ -334,8 +332,22 @@ class MahasiswaKpController extends Controller
             'ipk' => 'required|numeric|min:0|max:4.00',
             'sks_diambil' => 'required|integer|min:0',
             'kelas' => 'required|string',
-            'transkrip_terbaik' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ];
+
+        try {
+            $templatesQuery = \Modules\EOffice\Models\TemplateDokumenKP::where('phase', 'pra_kp')->where('is_uploadable', true);
+            if ($activePeriod) {
+                $templatesQuery->where('periode_id', $activePeriod->id);
+            }
+            $templatesDokumen = $templatesQuery->get();
+
+            foreach ($templatesDokumen as $tmpl) {
+                $inputName = 'dokumen_' . $tmpl->id;
+                $rules[$inputName] = 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx,zip|max:10240';
+            }
+        } catch (\Exception $e) {
+            // Abaikan jika tidak ada tabel atau error query
+        }
 
         if (!empty($listKelas)) {
             $rules['kelas'] .= '|in:' . implode(',', $listKelas);
@@ -354,43 +366,64 @@ class MahasiswaKpController extends Controller
             return redirect()->back()->with('error', 'Anda sudah memiliki pendaftaran KP yang sedang berjalan.');
         }
 
-        // Buat record KP baru
-        $kp = KerjaPraktik::create([
-            'nim' => $mahasiswa->nim,
-            'mahasiswa_id' => $mahasiswa->id,
-            'judul_kp' => $validated['judul_kp'],
-            'instansi_kp' => $validated['instansi_kp'],
-            'ipk' => $validated['ipk'],
-            'kelas' => $validated['kelas'],
-            'sks_diambil' => $validated['sks_diambil'],
-            'tanggal_mulai' => $validated['tanggal_mulai'],
-            'tanggal_selesai' => $validated['tanggal_selesai'],
-            'status_kp' => 'Pra-KP',
-            'is_acc_admin' => false,
-        ]);
+        \Illuminate\Support\Facades\DB::beginTransaction();
 
-        // Simpan file transkrip terbaik (IRS)
-        if ($request->hasFile('transkrip_terbaik')) {
-            $file = $request->file('transkrip_terbaik');
-            $fileName = $file->getClientOriginalName();
-            $path = $file->store("kp/{$mahasiswa->nim}/transkrip", 'public');
-
-            // Tambahkan ke eo_kp_dokumen
-            KpDokumen::create([
-                'kp_id' => $kp->id,
-                'jenis_dokumen' => 'Transkrip',
-                'file_path' => $path,
-                'file_name' => $fileName,
-                'phase' => 'pra_kp',
-                'status_validasi' => 'menunggu',
-                'approval_status' => 'pending',
-                'tanggal_upload' => now(),
+        try {
+            // Buat record KP baru
+            $kp = KerjaPraktik::create([
+                'nim' => $mahasiswa->nim,
+                'mahasiswa_id' => $mahasiswa->id,
+                'judul_kp' => $validated['judul_kp'],
+                'instansi_kp' => $validated['instansi_kp'],
+                'ipk' => $validated['ipk'],
+                'kelas' => $validated['kelas'],
+                'sks_diambil' => $validated['sks_diambil'],
+                'tanggal_mulai' => $validated['tanggal_mulai'],
+                'tanggal_selesai' => $validated['tanggal_selesai'],
+                'status_kp' => 'Pra-KP',
+                'is_acc_admin' => false,
             ]);
-        }
 
-        return redirect()
-            ->route('eoffice.kp.mahasiswa.dashboard')
-            ->with('success', 'Pendaftaran KP berhasil! Data Anda sedang direview oleh Koordinator.');
+            if (isset($templatesDokumen)) {
+                foreach ($templatesDokumen as $tmpl) {
+                    $inputName = 'dokumen_' . $tmpl->id;
+                    if ($request->hasFile($inputName)) {
+                        $file = $request->file($inputName);
+                        $fileName = $file->getClientOriginalName();
+                        $safeTitle = \Illuminate\Support\Str::slug($tmpl->title);
+                        $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/pra-kp", 'eoffice');
+
+                        if (!$path) {
+                            throw new \Exception("Gagal mengunggah dokumen {$tmpl->title} ke penyimpanan.");
+                        }
+
+                        KpDokumen::create([
+                            'kp_id' => $kp->id,
+                            'jenis_dokumen' => $tmpl->title,
+                            'file_path' => $path,
+                            'file_name' => $fileName,
+                            'phase' => 'pra_kp',
+                            'status_validasi' => 'menunggu',
+                            'approval_status' => 'pending',
+                            'tanggal_upload' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return redirect()
+                ->route('eoffice.kp.mahasiswa.pendaftaran')
+                ->with('success', 'Pendaftaran KP berhasil! Data Anda sedang direview oleh Koordinator.');
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
     }
 
     // =========================================================================
@@ -416,19 +449,34 @@ class MahasiswaKpController extends Controller
                 ->with('error', 'Anda belum mendaftar KP. Silakan daftar terlebih dahulu.');
         }
 
+        if (empty($kp->dosen_pembimbing_id)) {
+            return redirect()
+                ->route('eoffice.kp.mahasiswa.pendaftaran')
+                ->with('error', 'Halaman Dokumen KP belum dapat diakses. Silakan selesaikan seluruh fase pendaftaran terlebih dahulu.');
+        }
+
         // Kelompokkan dokumen berdasarkan jenis
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
 
-        // Ambil SEMUA template yang diupload Koordinator KP (semua fase)
+        $phaseStatus = $this->getPhaseStatus('saat_kp');
+        $isOpen = $phaseStatus['isOpen'];
+        $phaseClosed = $phaseStatus['isClosed'];
+        $showReminder = $phaseStatus['showReminder'];
+        $startDate = $phaseStatus['startDate'];
+        $endDate = $phaseStatus['deadline'];
+        $periodeAktif = $phaseStatus['periodeAktif'];
+
         try {
-            $templatesDokumen = \Modules\EOffice\Models\TemplateDokumenKP::orderBy('phase')
-                ->orderBy('created_at', 'desc')
-                ->get();
+            $templatesQuery = \Modules\EOffice\Models\TemplateDokumenKP::where('phase', 'saat_kp');
+            if ($periodeAktif) {
+                $templatesQuery->where('periode_id', $periodeAktif->id);
+            }
+            $templatesDokumen = $templatesQuery->orderBy('created_at', 'desc')->get();
         } catch (\Exception $e) {
             $templatesDokumen = collect();
         }
 
-        return view('eoffice::kp.mahasiswa.dokumen', compact('mahasiswa', 'kp', 'dokumenByJenis', 'templatesDokumen'));
+        return view('eoffice::kp.mahasiswa.dokumen', compact('mahasiswa', 'kp', 'dokumenByJenis', 'templatesDokumen', 'isOpen', 'phaseClosed', 'showReminder', 'endDate'));
     }
 
     /**
@@ -437,7 +485,7 @@ class MahasiswaKpController extends Controller
     public function storeDokumen(Request $request)
     {
         $validated = $request->validate([
-            'jenis_dokumen' => 'required|string|in:Bukti Terima,Laporan,Makalah,CV,Foto,Kartu Hijau,Nilai Lapangan,A2',
+            'jenis_dokumen' => 'required|string',
             'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             'nilai_input_mahasiswa' => 'nullable|numeric|min:0|max:100',
         ]);
@@ -462,11 +510,20 @@ class MahasiswaKpController extends Controller
             $activePhase = 'pasca_kp';
         }
 
+        $phaseStatus = $this->getPhaseStatus($activePhase);
+        if (!$phaseStatus['isOpen']) {
+            return redirect()->back()->with('error', "Fase untuk mengunggah dokumen ini sedang ditutup atau belum dimulai.");
+        }
+
         // Simpan file
         $file = $request->file('file');
         $fileName = $file->getClientOriginalName();
         $folder = strtolower(str_replace(' ', '_', $validated['jenis_dokumen']));
-        $path = $file->store("kp/{$mahasiswa->nim}/{$folder}", 'public');
+        $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/{$activePhase}", 'eoffice');
+
+        if (!$path) {
+            return redirect()->back()->with('error', "Gagal mengunggah dokumen {$validated['jenis_dokumen']} ke penyimpanan.");
+        }
 
         // Cek apakah sudah ada dokumen dengan jenis yang sama, update jika ya
         $existing = KpDokumen::where('kp_id', $kp->id)
@@ -488,7 +545,7 @@ class MahasiswaKpController extends Controller
 
         if ($existing) {
             // Hapus file lama
-            Storage::disk('public')->delete($existing->file_path);
+            $this->supabase->delete($existing->file_path, 'eoffice');
             KpDokumen::where('id', $existing->id)->update($data);
         } else {
             $data['kp_id'] = $kp->id;
@@ -509,6 +566,11 @@ class MahasiswaKpController extends Controller
             'instansi_kp' => 'required|string|max:255',
         ]);
 
+        $phaseStatus = $this->getPhaseStatus('saat_kp');
+        if (!$phaseStatus['isOpen']) {
+            return redirect()->back()->with('error', "Fase Saat KP sedang ditutup, Anda tidak dapat mengubah data KP.");
+        }
+
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
         $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
             ->latest()
@@ -526,11 +588,22 @@ class MahasiswaKpController extends Controller
     public function downloadTemplate(string $type)
     {
         $template = \Modules\EOffice\Models\TemplateDokumenKP::find($type);
-        if ($template && Storage::disk('public')->exists($template->file_path)) {
-            return Storage::disk('public')->download($template->file_path, $template->file_name);
+        
+        if (!$template || empty($template->file_path)) {
+            return redirect()->back()->with('error', 'File template belum diunggah atau tidak ditemukan.');
         }
 
-        return redirect()->back()->with('error', 'File template tidak ditemukan.');
+        // Cek jika file_path adalah absolute URL (bucket storage eksternal)
+        if (filter_var($template->file_path, FILTER_VALIDATE_URL)) {
+            return redirect($template->file_path);
+        }
+
+        // RAKIT LINK SUPABASE SECARA OTOMATIS
+        // Karena file ini dari Koordinator yang upload via SupabaseStorage
+        $directLink = $this->supabase->publicUrl($template->file_path, 'eoffice');
+        return redirect($directLink);
+
+        return redirect()->back()->with('error', 'File template tidak ditemukan. Path DB: ' . $template->file_path);
     }
 
     /**
@@ -618,17 +691,44 @@ class MahasiswaKpController extends Controller
                 ->with('error', 'Anda belum mendaftar KP.');
         }
 
+        if (empty($kp->dosen_pembimbing_id)) {
+            return redirect()
+                ->route('eoffice.kp.mahasiswa.pendaftaran')
+                ->with('error', 'Halaman Seminar KP belum dapat diakses. Silakan selesaikan seluruh fase pendaftaran terlebih dahulu.');
+        }
+
         // Kelompokkan dokumen berdasarkan jenis
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
 
         // Ambil dokumen spesifik secara eksplisit (untuk history)
         $cvDoc = $dokumenByJenis->get('CV')?->sortByDesc('created_at')->first();
         $fotoDoc = $dokumenByJenis->get('Foto')?->sortByDesc('created_at')->first();
+        $pengantarDoc = $dokumenByJenis->get('Surat Pengantar')?->sortByDesc('created_at')->first();
+        $khsDoc = $dokumenByJenis->get('KHS')?->sortByDesc('created_at')->first();
         $kartuHijauDoc = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
         $nilaiLapanganDoc = $dokumenByJenis->get('Nilai Lapangan')?->sortByDesc('created_at')->first();
 
         // Cek kelengkapan syarat seminar
         $syaratSeminar = $this->cekSyaratSeminar($kp, $dokumenByJenis);
+
+        $phaseStatus = $this->getPhaseStatus('pasca_kp');
+        $isOpen = $phaseStatus['isOpen'];
+        $phaseClosed = $phaseStatus['isClosed'];
+        $showReminder = $phaseStatus['showReminder'];
+        $startDate = $phaseStatus['startDate'];
+        $endDate = $phaseStatus['deadline'];
+        $periodeAktif = $phaseStatus['periodeAktif'];
+
+        // Ambil template untuk fase pasca_kp
+        try {
+            $templatesQuery = \Modules\EOffice\Models\TemplateDokumenKP::where('phase', 'pasca_kp');
+            if ($periodeAktif) {
+                $templatesQuery->where('periode_id', $periodeAktif->id);
+            }
+            $templatesDokumen = $templatesQuery->orderBy('created_at', 'desc')->get();
+        } catch (\Exception $e) {
+            $templatesDokumen = collect();
+        }
 
         return view('eoffice::kp.mahasiswa.seminar', compact(
             'mahasiswa',
@@ -637,8 +737,15 @@ class MahasiswaKpController extends Controller
             'syaratSeminar',
             'cvDoc',
             'fotoDoc',
+            'pengantarDoc',
+            'khsDoc',
             'kartuHijauDoc',
-            'nilaiLapanganDoc'
+            'nilaiLapanganDoc',
+            'templatesDokumen',
+            'isOpen',
+            'phaseClosed',
+            'showReminder',
+            'endDate'
         ));
     }
 
@@ -654,6 +761,11 @@ class MahasiswaKpController extends Controller
             'waktu_selesai' => 'required|date_format:H:i',
             'ruangan' => 'required|string|max:100',
         ]);
+
+        $phaseStatus = $this->getPhaseStatus('pasca_kp');
+        if (!$phaseStatus['isOpen']) {
+            return redirect()->back()->with('error', "Pendaftaran seminar saat ini sedang ditutup atau belum dimulai.");
+        }
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
         $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
@@ -696,6 +808,64 @@ class MahasiswaKpController extends Controller
     // =========================================================================
     // HELPERS (PRIVATE)
     // =========================================================================
+
+    /**
+     * Helper untuk mendapatkan status sebuah fase
+     * $phase: 'pra_kp', 'saat_kp', 'pasca_kp'
+     */
+    private function getPhaseStatus(string $phase): array
+    {
+        $now = now()->startOfDay();
+        $periodeAktif = \Modules\EOffice\Models\KpPeriode::where('is_active', true)->oldest()->first();
+
+        $status = [
+            'isOpen' => false,
+            'isClosed' => false,
+            'showReminder' => false,
+            'startDate' => '',
+            'deadline' => '',
+            'periodeAktif' => $periodeAktif,
+        ];
+
+        if ($periodeAktif) {
+            $mulaiField = "{$phase}_mulai";
+            $akhirField = "{$phase}_akhir";
+            $pengingatField = "{$phase}_pengingat";
+
+            $startDate = $periodeAktif->$mulaiField;
+            $endDate = $periodeAktif->$akhirField;
+            $pengingatDate = $periodeAktif->$pengingatField;
+
+            $status['startDate'] = $startDate;
+            $status['deadline'] = $endDate;
+
+            if ($startDate && $endDate) {
+                $start = \Carbon\Carbon::parse($startDate)->startOfDay();
+                $end = \Carbon\Carbon::parse($endDate)->endOfDay();
+                
+                if ($now->between($start, $end)) {
+                    $status['isOpen'] = true;
+                }
+                
+                if ($now->greaterThan($end)) {
+                    $status['isClosed'] = true;
+                }
+            } else {
+                $status['isClosed'] = true;
+            }
+
+            if ($status['isOpen'] && $pengingatDate) {
+                $reminder = \Carbon\Carbon::parse($pengingatDate)->startOfDay();
+                if ($now->greaterThanOrEqualTo($reminder)) {
+                    $status['showReminder'] = true;
+                }
+            }
+        } else {
+            $status['isClosed'] = true;
+        }
+
+        return $status;
+    }
 
     /**
      * Cek kelengkapan syarat seminar.

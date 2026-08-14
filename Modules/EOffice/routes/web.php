@@ -618,6 +618,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('/pengaturan/operasional', [$MRAdminPengaturanController, 'updateOperasional'])->name('pengaturan.operasional');
                 Route::post('/pengaturan/libur', [$MRAdminPengaturanController, 'addTanggalLibur'])->name('pengaturan.libur');
                 Route::delete('/pengaturan/libur/{id}', [$MRAdminPengaturanController, 'destroyTanggalLibur'])->name('pengaturan.libur.destroy');
+
+                // Hak Akses Menu
+                Route::get('/hak-akses', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\HakAksesController::class, 'index'])->name('hak-akses.index');
+                Route::post('/hak-akses', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\HakAksesController::class, 'update'])->name('hak-akses.update');
             });
         // ── USER / MAHASISWA ──────────────────────────────────────────────────
         $MRUserPeminjamanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\User\UserPeminjamanController::class;
