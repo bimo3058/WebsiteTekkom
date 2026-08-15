@@ -84,7 +84,7 @@
                                 <td style="text-align: center;">
                                     @if($pinjam->status === 'menunggu')
                                         <button @click="openAction({{ $pinjam->id }}, '{{ $pinjam->user->name }}')"
-                                            class="h-8 px-3 rounded-md bg-white border border-gray-200 text-[12px] font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600 hover:border-indigo-200 shadow-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-indigo-100">
+                                            class="h-8 px-3 rounded-md bg-[#293C79] text-white text-[12px] font-medium hover:bg-[#1e2a53] shadow-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-[#293C79]/50">
                                             Periksa
                                         </button>
                                     @endif

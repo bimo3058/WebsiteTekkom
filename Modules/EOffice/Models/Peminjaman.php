@@ -31,6 +31,15 @@ class Peminjaman extends Model
         'waktu_approval' => 'datetime',
     ];
 
+    public function getAlasanPenolakanAttribute($value)
+    {
+        // Secara dinamis mengubah teks usang di baris database lama saat dirender ke layar
+        if ($value === 'Sistem (Kadaluarsa otomatis - Waktu peminjaman sudah terlewat)') {
+            return 'Dibatalkan Sistem: Kedaluwarsa';
+        }
+        return $value;
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -59,7 +68,7 @@ class Peminjaman extends Model
         foreach ($expired as $pinjam) {
             $pinjam->update([
                 'status' => 'ditolak',
-                'alasan_penolakan' => 'Sistem (Kadaluarsa otomatis - Waktu peminjaman sudah terlewat)',
+                'alasan_penolakan' => 'Dibatalkan Sistem: Kedaluwarsa',
                 'waktu_approval' => now()
             ]);
         }
