@@ -396,15 +396,6 @@
             Reward = peningkatan nilai mata kuliah; mata kuliah final ditetapkan departemen.
         </div>
 
-        @if($rewardAturan->count())
-            <div class="aturan-box" style="margin-bottom:0;">
-                <div class="aturan-box-title">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Aturan Reward (SK FT 774)
-                </div>
-                @include('manajemenmahasiswa::verifikasi._aturan_links', ['items' => $rewardAturan])
-            </div>
-        @endif
     </div>
 
     @if($prestasiData->count() > 0)

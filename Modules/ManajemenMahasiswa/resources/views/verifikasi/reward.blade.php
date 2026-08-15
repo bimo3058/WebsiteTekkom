@@ -1,7 +1,6 @@
 <x-dynamic-component :component="$layout">
 @php
     $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
-    $canManageRewardAturan = $canManageRewardAturan ?? false;
     $canReview = $canReview ?? true;
 @endphp
 
@@ -107,35 +106,6 @@
     .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; color: #666D80; text-decoration: none; margin-bottom: 10px; transition: color .15s; }
     .back-link:hover { color: #0B266E; }
 
-    /* Kartu kelola dokumen aturan reward */
-    .aturan-card { background: #fff; border: 1px solid #DFE1E7; border-radius: 14px; padding: 16px 18px; margin-bottom: 20px; }
-    .aturan-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .aturan-title { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 700; color: #0D0D12; }
-    .aturan-sub { font-size: .78rem; color: #666D80; margin: 4px 0 0; }
-    .btn-aturan-add { background: rgba(11,38,110,0.06); color: #0B266E; border: 1px solid rgba(11,38,110,0.18); padding: 6px 14px; border-radius: 8px; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
-    .btn-aturan-add:hover { background: rgba(11,38,110,0.12); border-color: #3C518B; }
-    .aturan-upload { display: none; margin-top: 14px; padding: 14px; background: #fafafa; border: 1px solid #DFE1E7; border-radius: 10px; }
-    .aturan-upload.show { display: block; }
-    .aturan-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    .aturan-input { flex: 1; min-width: 220px; border: 1.5px solid #DFE1E7; border-radius: 10px; padding: 8px 12px; font-size: .85rem; color: #374151; }
-    .aturan-input:focus { border-color: #0B266E; outline: none; box-shadow: 0 0 0 3px rgba(11,38,110,.1); }
-    .aturan-file-input { font-size: .8rem; color: #374151; max-width: 260px; }
-    .btn-aturan-upload { background: #0B266E; color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .15s; }
-    .btn-aturan-upload:hover { background: #091958; }
-    .aturan-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
-    .aturan-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #DFE1E7; border-radius: 10px; background: #fff; }
-    .aturan-ico { width: 38px; height: 38px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: .72rem; font-weight: 800; color: #fff; }
-    .aturan-ico.pdf { background: #dc2626; }
-    .aturan-ico.img { background: #0ea5e9; }
-    .aturan-row-meta { flex: 1; min-width: 0; }
-    .aturan-row-judul { display: block; font-size: .87rem; font-weight: 700; color: #0D0D12; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .aturan-row-file { display: block; font-size: .72rem; color: #666D80; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .aturan-act { flex-shrink: 0; font-size: .8rem; font-weight: 600; border-radius: 8px; padding: 6px 12px; cursor: pointer; text-decoration: none; border: 1px solid transparent; transition: all .15s; }
-    .aturan-act.lihat { color: #0B266E; background: rgba(11,38,110,0.06); border-color: rgba(11,38,110,0.18); }
-    .aturan-act.lihat:hover { background: rgba(11,38,110,0.12); }
-    .aturan-act.hapus { color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; }
-    .aturan-act.hapus:hover { background: #fee2e2; }
-    .aturan-empty { font-size: .85rem; color: #666D80; margin-top: 12px; }
 </style>
 
 <!-- Flash Messages -->
@@ -172,56 +142,6 @@
     @endif
 </div>
 
-<!-- Dokumen Aturan Reward (SK FT 774) -->
-<div class="aturan-card">
-    <div class="aturan-head">
-        <div class="aturan-title">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Dokumen Aturan Reward (SK FT 774)
-        </div>
-        @if($canManageRewardAturan)
-            <button type="button" class="btn-aturan-add" onclick="document.getElementById('aturanUploadWrap').classList.toggle('show')">+ Tambah Dokumen</button>
-        @endif
-    </div>
-    <p class="aturan-sub">Unggah PDF/gambar aturan reward agar mahasiswa &amp; admin bisa membaca sumbernya saat mengajukan / meninjau reward.</p>
-
-    <!-- Form upload (toggle) -->
-    @if($canManageRewardAturan)
-    <div id="aturanUploadWrap" class="aturan-upload">
-        <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.aturan.store') }}" enctype="multipart/form-data" class="aturan-form">
-            @csrf
-            <input type="text" name="judul" class="aturan-input" maxlength="150" required placeholder="Judul dokumen (mis. SK FT No. 774/UN7.F3/AK/I/2025)">
-            <input type="file" name="file" class="aturan-file-input" required accept=".pdf,image/jpeg,image/png,image/webp">
-            <button type="submit" class="btn-aturan-upload">Unggah</button>
-        </form>
-        <small style="font-size:11px; color:#666D80;">Format: PDF, JPG, PNG, WEBP. Maks 10MB.</small>
-    </div>
-    @endif
-
-    <!-- Daftar dokumen -->
-    @if($rewardAturan->count())
-        <div class="aturan-list">
-            @foreach($rewardAturan as $a)
-                <div class="aturan-row">
-                    <span class="aturan-ico {{ $a->isImage() ? 'img' : 'pdf' }}">{{ $a->isImage() ? 'IMG' : 'PDF' }}</span>
-                    <div class="aturan-row-meta">
-                        <span class="aturan-row-judul">{{ $a->judul }}</span>
-                        <span class="aturan-row-file">{{ $a->nama_file }}@if($a->uploadedBy) • oleh {{ $a->uploadedBy->name }}@endif</span>
-                    </div>
-                    <a href="{{ $a->public_url }}" target="_blank" rel="noopener" class="aturan-act lihat">Lihat ↗</a>
-                    @if($canManageRewardAturan)
-                        <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.aturan.destroy', $a->id) }}" onsubmit="return confirm('Hapus dokumen aturan ini?');" style="margin:0;">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="aturan-act hapus">Hapus</button>
-                        </form>
-                    @endif
-                </div>
-            @endforeach
-        </div>
-    @else
-        <div class="aturan-empty">Belum ada dokumen aturan diunggah.</div>
-    @endif
-</div>
 
 <!-- Stat Cards (status klaim) -->
 <div class="admin-stats">

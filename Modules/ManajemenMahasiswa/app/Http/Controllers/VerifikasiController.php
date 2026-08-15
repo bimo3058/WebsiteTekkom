@@ -11,7 +11,6 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\VerifikasiBukti;
-use Modules\ManajemenMahasiswa\Models\RewardAturan;
 
 class VerifikasiController extends Controller
 {
@@ -297,8 +296,6 @@ class VerifikasiController extends Controller
             ->orderBy('angkatan', 'desc')
             ->pluck('angkatan');
 
-        $rewardAturan = RewardAturan::with('uploadedBy')->latest()->get();
-        $canManageRewardAturan = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
         // Pengawas mutu (GPM/Kadep) hanya melihat — sembunyikan tinjau/setujui/tolak/batalkan.
         $canReview = $this->isVerificator();
 
@@ -311,8 +308,6 @@ class VerifikasiController extends Controller
             'pendingPrestasiReward',
             'rewardStats',
             'kuotaMap',
-            'rewardAturan',
-            'canManageRewardAturan',
             'canReview',
         ))->with('layout', $this->resolveLayout());
     }
@@ -359,8 +354,6 @@ class VerifikasiController extends Controller
             ? $this->rewardKuotaTerpakai($mhs->id)
             : [Prestasi::KUOTA_UMUM => 0, Prestasi::KUOTA_INVENTION => 0];
 
-        $rewardAturan = RewardAturan::latest()->get();
-
         $isAlumni = $this->hasRole('alumni');
 
         return view('manajemenmahasiswa::verifikasi.mahasiswa', compact(
@@ -371,7 +364,6 @@ class VerifikasiController extends Controller
             'student',
             'kuota',
             'tab',
-            'rewardAturan',
             'isAlumni',
         ))->with('layout', $this->resolveLayout());
     }
@@ -927,53 +919,6 @@ class VerifikasiController extends Controller
         return $map;
     }
 
-    // -------------------------------------------------------------------------
-    // Dokumen Aturan Reward (SK FT 774) — admin upload/hapus, dirujuk 2 role
-    // -------------------------------------------------------------------------
-
-    public function aturanStore(Request $request)
-    {
-        $request->validate([
-            'judul' => 'required|string|max:150',
-            'file'  => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
-        ], [], ['file' => 'dokumen']);
-
-        $file     = $request->file('file');
-        $supabase = app(SupabaseStorage::class);
-        $path     = $supabase->upload($file, 'mk_verifikasi/aturan');
-
-        if (!$path) {
-            return redirect()
-                ->route('manajemenmahasiswa.verifikasi.reward.index')
-                ->with('error', 'Gagal mengunggah dokumen. Coba lagi.');
-        }
-
-        $isImage = str_starts_with((string) $file->getMimeType(), 'image/');
-
-        RewardAturan::create([
-            'judul'       => $request->judul,
-            'nama_file'   => $file->getClientOriginalName(),
-            'path_file'   => $path,
-            'tipe_file'   => $isImage ? RewardAturan::TIPE_IMAGE : RewardAturan::TIPE_DOCUMENT,
-            'uploaded_by' => Auth::id(),
-        ]);
-
-        return redirect()
-            ->route('manajemenmahasiswa.verifikasi.reward.index')
-            ->with('success', 'Dokumen aturan reward berhasil diunggah.');
-    }
-
-    public function aturanDestroy(int $id)
-    {
-        $aturan = RewardAturan::findOrFail($id);
-
-        app(SupabaseStorage::class)->delete($aturan->path_file);
-        $aturan->delete();
-
-        return redirect()
-            ->route('manajemenmahasiswa.verifikasi.reward.index')
-            ->with('success', 'Dokumen aturan reward dihapus.');
-    }
 
     // -------------------------------------------------------------------------
     // Helper — Upload bukti files ke Supabase

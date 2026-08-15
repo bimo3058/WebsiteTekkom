@@ -493,14 +493,6 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('prestasi.reward.batalkan')->where('id', '[0-9]+');
             });
 
-            // Dokumen aturan reward (SK FT 774 / aturan terbaru) â€” admin kelola
-            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
-                ->group(function () {
-                Route::post('/aturan', [VerifikasiController::class, 'aturanStore'])
-                    ->name('aturan.store');
-                Route::delete('/aturan/{id}', [VerifikasiController::class, 'aturanDestroy'])
-                    ->name('aturan.destroy')->where('id', '[0-9]+');
-            });
         });
 
     });
