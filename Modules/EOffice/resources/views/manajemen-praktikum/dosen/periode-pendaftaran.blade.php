@@ -41,16 +41,24 @@
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">
                         Pilih Praktikum <span style="color:#DF1C41;">*</span>
                     </label>
-                    <select name="praktikum_id" onchange="document.getElementById('form-praktikum').submit()"
-                        class="mp-input mp-select w-full">
-                        @foreach($praktikumList as $p)
-                            <option value="{{ $p->id }}" {{ $praktikumId == $p->id ? 'selected' : '' }}>
-                                {{ $p->nama }}
-                                @if($p->matkul) — [{{ $p->matkul->kode }}] {{ $p->matkul->nama }} @endif
-                                · Sem {{ $p->semester }} {{ $p->tahun_ajaran }}
-                            </option>
-                        @endforeach
-                    </select>
+                    @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
                 </form>
 
                 @if($praktikumDipilih)
@@ -62,7 +70,7 @@
                                 {{ $praktikumDipilih->semester }}</span>
                         @endif
                         @if($praktikumDipilih->koordinator)
-                            <span style="font-size:11px;color:#666D80;">Koor: {{ $praktikumDipilih->koordinator->name }}</span>
+                            <span style="font-size:11px;color:#666D80;">Koordinator: {{ $praktikumDipilih->koordinator->name }}</span>
                         @else
                             <span class="mp-badge warning sm">Belum Ada Koordinator</span>
                         @endif
@@ -108,7 +116,7 @@
                             </div>
                             <form method="POST"
                                 action="{{ route('eoffice.manprak.dosen.periode-pendaftaran.tutup', $periodeAktif->id) }}"
-                                style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran koor sekarang?')">
+                                style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran koordinator sekarang?')">
                                 @csrf
                                 <button type="submit" class="mp-btn error sm">🔒 Tutup Periode Sekarang</button>
                             </form>
@@ -130,7 +138,7 @@
                             <div style="display:flex;align-items:flex-end;">
                                 <div
                                     style="font-size:12px;color:#666D80;padding:8px;background:#F6F8FA;border-radius:8px;width:100%;">
-                                    💡 Membuka periode ini akan otomatis menutup periode koor aktif sebelumnya untuk praktikum
+                                    💡 Membuka periode ini akan otomatis menutup periode koordinator aktif sebelumnya untuk praktikum
                                     ini.
                                 </div>
                             </div>

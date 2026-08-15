@@ -5,15 +5,17 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Kelola Tugas Praktikum</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
         </div>
         <p class="mp-page-sub">Buat tugas dan nilai pengumpulan mahasiswa · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
     <div class="mp-page-actions">
+        @if(isset($praktikum) && $praktikum->is_active)
         <a href="{{ route('eoffice.manprak.asprak.tugas.create') }}" class="mp-btn primary md" style="text-decoration:none;display:flex;align-items:center;gap:6px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Buat Tugas Baru
         </a>
+        @endif
     </div>
 </div>
 
@@ -104,6 +106,7 @@
             </div>
 
             {{-- Action Buttons --}}
+            @if(isset($praktikum) && $praktikum->is_active)
             <div style="display:flex;gap:8px;align-items:center;">
                 <a href="{{ route('eoffice.manprak.asprak.tugas.edit', $tugas->id) }}"
                    class="mp-btn secondary sm"
@@ -125,6 +128,7 @@
                     </button>
                 </form>
             </div>
+            @endif
         </div>
     </div>
 

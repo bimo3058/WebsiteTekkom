@@ -46,7 +46,7 @@
                 $staticFaqs = [
                     ['cat'=>'Umum','popular'=>true,
                      'q'=>'Apa saja syarat untuk mendaftar Kerja Praktik?',
-                     'a'=>'Syarat utama mendaftar KP: (1) Telah menempuh minimal 100 SKS, (2) IPK minimal 2.50, (3) Telah lulus mata kuliah Metodologi Penelitian, (4) Memiliki rencana tempat KP yang jelas. Lengkapi dokumen: transkrip nilai, proposal KP, dan surat pengantar dari departemen.'],
+                     'a'=>'Syarat utama mendaftar KP: (1) Telah menempuh minimal 100 SKS, (2) IPK minimal 2.50, (3) Telah lulus mata kuliah Metodologi Penelitian, (4) Memiliki rencana tempat KP yang jelas. Lengkapi dokumen: KHS semester 4, proposal KP, dan surat pengantar dari departemen.'],
                     ['cat'=>'Umum','popular'=>true,
                      'q'=>'Berapa lama durasi Kerja Praktik yang diperbolehkan?',
                      'a'=>'Durasi KP minimal 1 bulan (30 hari kerja) dan maksimal 6 bulan. Disarankan melaksanakan KP selama 2–3 bulan agar materi yang didapat lebih mendalam dan laporan lebih berbobot.'],

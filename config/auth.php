@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+
 return [
 
     /*
@@ -62,7 +64,7 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'cached-eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => env('AUTH_MODEL', User::class),
         ],
 
         // 'users' => [
@@ -111,5 +113,21 @@ return [
     */
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication Cache & SSO Refresh
+    |--------------------------------------------------------------------------
+    */
+
+    'cache' => [
+        'user_ttl_seconds' => (int) env('AUTH_USER_CACHE_TTL_SECONDS', 28_800),
+    ],
+
+    'sso' => [
+        'sync_ttl_seconds' => (int) env('SSO_SYNC_TTL_SECONDS', 21_600),
+        'avatar_connect_timeout_seconds' => (float) env('SSO_AVATAR_CONNECT_TIMEOUT_SECONDS', 1.5),
+        'avatar_timeout_seconds' => (float) env('SSO_AVATAR_TIMEOUT_SECONDS', 3.0),
+    ],
 
 ];

@@ -10,8 +10,8 @@ use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\TaDefenseExaminer;
 use Modules\Capstone\Models\TaSubmission;
-use App\Models\User;
-use App\Services\SchedulingService;
+use Modules\Capstone\Services\SchedulingService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class ScheduleRequestController extends Controller
@@ -29,8 +29,9 @@ class ScheduleRequestController extends Controller
     public function myRequests(Request $request)
     {
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $group = $this->getStudentGroup($user->id);
+        $group = $this->getStudentGroup($studentId);
         if (!$group) {
             return response()->json(['data' => ['seminars' => [], 'ta_defense' => null]]);
         }
@@ -41,7 +42,7 @@ class ScheduleRequestController extends Controller
             ->get();
 
         $taDefense = TaDefenseSchedule::with(['examiners.examiner'])
-            ->where('student_id', $user->id)
+            ->where('student_id', $studentId)
             ->first();
 
         return response()->json([
@@ -78,12 +79,12 @@ class ScheduleRequestController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string|max:100',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         $user = $request->user();
-        $group = $this->getStudentGroup($user->id);
+        $group = $this->getStudentGroup(CapstoneActor::student($user)->id);
 
         if (!$group) {
             return response()->json(['message' => 'You are not in a group.'], 400);
@@ -151,14 +152,15 @@ class ScheduleRequestController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string|max:100',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
         // Eligibility: must have TA submission in TA_REGISTERED
-        $taSubmission = TaSubmission::where('student_id', $user->id)
+        $taSubmission = TaSubmission::where('student_id', $studentId)
             ->where('status', 'TA_REGISTERED')
             ->first();
 
@@ -174,7 +176,7 @@ class ScheduleRequestController extends Controller
         }
 
         // Anti-spam: no existing pending or active defense
-        $existingDefense = TaDefenseSchedule::where('student_id', $user->id)
+        $existingDefense = TaDefenseSchedule::where('student_id', $studentId)
             ->where('status', '!=', 'CANCELLED')
             ->exists();
 
@@ -191,7 +193,7 @@ class ScheduleRequestController extends Controller
 
         // Create as PENDING_APPROVAL
         $schedule = TaDefenseSchedule::create([
-            'student_id' => $user->id,
+            'student_id' => $studentId,
             'group_id' => $group->id,
             'date' => $request->date,
             'start_time' => $request->start_time,

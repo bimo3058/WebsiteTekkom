@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Period extends Model
 {
     protected $table = 'capstone_periods';
+
     use SoftDeletes;
+
     protected $fillable = [
         'name',
         'start_date',
@@ -28,6 +30,16 @@ class Period extends Model
         'min_group_size',
         'max_group_size',
         'max_supervise_load',
+        'is_finalized',
+        'bidding_reminder_at',
+        'pdc1_reminder_at',
+        'pdc2_reminder_at',
+        'expo_reminder_at',
+        'ta_reminder_at',
+        'max_supervisor_load',
+        'allow_solo',
+        'require_all_students_grouped',
+        'grade_configuration',
     ];
 
     protected $casts = [
@@ -45,6 +57,10 @@ class Period extends Model
         'expo_date' => 'date',
         'ta_start' => 'date',
         'ta_end' => 'date',
+        'is_finalized' => 'boolean',
+        'allow_solo' => 'boolean',
+        'require_all_students_grouped' => 'boolean',
+        'grade_configuration' => 'array',
     ];
 
     /**
@@ -77,6 +93,11 @@ class Period extends Model
         }
 
         return true;
+    }
+
+    public function isRegistrationOpen(): bool
+    {
+        return $this->is_active && ! $this->is_finalized;
     }
 
     public function groups()

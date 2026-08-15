@@ -58,7 +58,7 @@
     <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5" :class="sidebarCollapsed ? 'lg:px-2' : ''">
 
         <!-- Section label -->
-        <p x-show="!sidebarCollapsed" class="px-3 pt-2 pb-1.5 text-[11px] font-semibold text-grey-400 uppercase tracking-widest">Menu</p>
+        <p x-show="!sidebarCollapsed" class="px-3 pt-2 pb-1.5 text-[10px] font-semibold text-grey-400 uppercase tracking-widest">Menu</p>
 
         {{-- Dashboard --}}
         <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}"
@@ -70,8 +70,14 @@
         </a>
 
         {{-- Informasi (collapsible) --}}
-        <div x-data="{ open: {{ isActive('mahasiswa.proposal', $route) || isActive('mahasiswa.surat', $route) || isActive('mahasiswa.pengumuman', $route) || isActive('mahasiswa.faq', $route) ? 'true' : 'false' }} }">
-            <button @click="open = !open"
+        <div x-data="{ 
+                open: localStorage.getItem('sidebar_info_open') === 'true' || {{ isActive('mahasiswa.proposal', $route) || isActive('mahasiswa.surat', $route) || isActive('mahasiswa.pengumuman', $route) || isActive('mahasiswa.faq', $route) ? 'true' : 'false' }},
+                toggle() {
+                    this.open = !this.open;
+                    localStorage.setItem('sidebar_info_open', this.open);
+                }
+            }">
+            <button @click="toggle()"
                     class="sikape-nav-item w-full {{ isActive('mahasiswa.proposal', $route) || isActive('mahasiswa.surat', $route) || isActive('mahasiswa.pengumuman', $route) || isActive('mahasiswa.faq', $route) ? 'active' : '' }}">
                 <span class="sikape-nav-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -99,7 +105,7 @@
             </div>
         </div>
 
-        <p x-show="!sidebarCollapsed" class="px-3 pt-4 pb-1.5 text-[11px] font-semibold text-grey-400 uppercase tracking-widest">Alur KP</p>
+        <p x-show="!sidebarCollapsed" class="px-3 pt-4 pb-1.5 text-[10px] font-semibold text-grey-400 uppercase tracking-widest">Alur KP</p>
 
         {{-- Mendaftar KP --}}
         <a href="{{ route('eoffice.kp.mahasiswa.pendaftaran') }}"
@@ -108,7 +114,7 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </span>
             <span x-show="!sidebarCollapsed" class="whitespace-nowrap overflow-hidden">Mendaftar KP</span>
-            <span x-show="!sidebarCollapsed" class="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded bg-warning-100 text-warning-300">Pra</span>
+            <span class="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full text-white shadow-sm flex-shrink-0" style="background: linear-gradient(to right, #1e293b, #1e3a8a);">Pra</span>
         </a>
 
         {{-- Dokumen --}}
@@ -118,7 +124,7 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
             </span>
             <span x-show="!sidebarCollapsed" class="whitespace-nowrap overflow-hidden">Dokumen KP</span>
-            <span x-show="!sidebarCollapsed" class="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded bg-sky-100 text-sky-600">Saat</span>
+            <span class="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full text-white shadow-sm flex-shrink-0" style="background: linear-gradient(to right, #1e293b, #1e3a8a);">Saat</span>
         </a>
 
         {{-- Seminar --}}
@@ -128,7 +134,7 @@
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             </span>
             <span x-show="!sidebarCollapsed" class="whitespace-nowrap overflow-hidden">Seminar KP</span>
-            <span x-show="!sidebarCollapsed" class="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded bg-success-100 text-success-300">Pasca</span>
+            <span class="ml-auto text-[9px] font-semibold px-2 py-0.5 rounded-full text-white shadow-sm flex-shrink-0" style="background: linear-gradient(to right, #1e293b, #1e3a8a);">Pasca</span>
         </a>
 
     </nav>
@@ -237,10 +243,10 @@
 .sikape-nav-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    font-size: 16px;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 5px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--grey-600);
     transition: all 0.15s ease;
@@ -293,9 +299,9 @@ button.sikape-nav-item.active {
 
 .sikape-sub-item {
     display: block;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 16px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-size: 13px;
     font-weight: 500;
     color: var(--grey-500);
     transition: all 0.15s ease;

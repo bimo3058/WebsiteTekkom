@@ -3,19 +3,26 @@
 namespace App\Models;
 
 use App\Services\PermissionAssigner;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Support\Facades\Log;
+use Spatie\Permission\PermissionRegistrar;
 use Spatie\Permission\Traits\HasRoles;
+use Throwable;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes, HasApiTokens, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable, SoftDeletes;
+
+    public const AUTH_CACHE_HAS_REMEMBER_TOKEN = '__auth_has_remember_token';
+
+    public const AUTH_CACHE_REMEMBER_TOKEN_PLACEHOLDER = '__cached_remember_token__';
 
     protected $fillable = [
         'external_id',
@@ -74,20 +81,21 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function avatarUrl(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+        return Attribute::make(
             get: function ($value) {
-                if (!$value)
+                if (! $value) {
                     return null;
+                }
 
                 return cache()->remember(
-                    "user_avatar_{$this->id}_" . md5($value),
+                    "user_avatar_{$this->id}_".md5($value),
                     now()->addDay(),
                     function () use ($value) {
                         return str_starts_with($value, 'http')
                             ? $value
-                            : asset('storage/' . $value);
+                            : asset('storage/'.$value);
                     }
                 );
             },
@@ -142,6 +150,7 @@ class User extends Authenticatable
         if (empty($roleNames)) {
             $this->permissions()->detach();
             $this->clearUserCache();
+
             return;
         }
 
@@ -164,23 +173,90 @@ class User extends Authenticatable
 
     public function cacheUserData(): void
     {
-        Cache::put(
-            "user:{$this->id}:data",
-            $this->getAttributes(),
-            now()->addHours(8)
-        );
+        try {
+            Cache::put(
+                "user:{$this->id}:data",
+                $this->authCachePayload(),
+                max(1, (int) config('auth.cache.user_ttl_seconds', 28_800))
+            );
+        } catch (Throwable) {
+            // The database remains the source of truth when Redis is unavailable.
+        }
+    }
+
+    /**
+     * Cache auth-safe attributes without persisting password or remember token.
+     * The boolean flag lets the session guard rotate an existing token on
+     * logout after the model is hydrated from cache.
+     *
+     * @return array<string, mixed>
+     */
+    public function authCachePayload(): array
+    {
+        $attributes = collect($this->getAttributes())
+            ->except(['password', 'remember_token'])
+            ->all();
+
+        $attributes[self::AUTH_CACHE_HAS_REMEMBER_TOKEN] =
+            ! empty($this->getRawOriginal($this->getRememberTokenName()));
+
+        return $attributes;
+    }
+
+    /**
+     * @return Collection<int, array{id:mixed, name:string, module:mixed, is_academic:bool}>
+     */
+    public function getCachedRoleData(): Collection
+    {
+        $cacheKey = "user:{$this->id}:roles";
+
+        try {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached)) {
+                return collect($cached);
+            }
+        } catch (Throwable) {
+            // Fall through to the database.
+        }
+
+        $roles = $this->roles()->get()->map(fn ($role) => [
+            'id' => $role->id,
+            'name' => $role->name,
+            'module' => $role->module,
+            'is_academic' => (bool) $role->is_academic,
+        ])->values();
+
+        try {
+            Cache::put(
+                $cacheKey,
+                $roles->all(),
+                max(1, (int) config('auth.cache.user_ttl_seconds', 28_800))
+            );
+        } catch (Throwable) {
+            // The role query result remains valid for this request.
+        }
+
+        return $roles;
     }
 
     public function clearUserCache(): void
     {
-        Cache::forget("user:{$this->id}:data");
-        Cache::forget("user:{$this->id}:roles");
-        Cache::forget("user:{$this->id}:permissions");
-        Cache::forget("user:{$this->id}:all_permissions_final");
-        Cache::forget("user_permissions_{$this->id}");
+        try {
+            Cache::forget("user:{$this->id}:data");
+            Cache::forget("user:{$this->id}:roles");
+            Cache::forget("user:{$this->id}:permissions");
+            Cache::forget("user:{$this->id}:all_permissions_final");
+            Cache::forget("user_permissions_{$this->id}");
+            Cache::forget("user:{$this->id}:sso-academic-synced");
+        } catch (Throwable) {
+            // Cache invalidation must not block database updates.
+        }
 
-        // Bersihkan cache Spatie sekaligus
-        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        try {
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        } catch (Throwable) {
+            // Spatie will rebuild its cache on the next healthy request.
+        }
     }
 
     /*
@@ -191,7 +267,7 @@ class User extends Authenticatable
 
     public function isSuspended(): bool
     {
-        return !is_null($this->suspended_at);
+        return ! is_null($this->getAttributes()['suspended_at'] ?? null);
     }
 
     public function suspend(string $reason = ''): void
@@ -222,9 +298,16 @@ class User extends Authenticatable
 
     public function recordLogin(): void
     {
+        $loggedInAt = now();
+
         static::where('id', $this->id)->update([
-            'last_login' => now(),
+            'last_login' => $loggedInAt,
             'is_online' => DB::raw('true'),
+        ]);
+
+        $this->forceFill([
+            'last_login' => $loggedInAt,
+            'is_online' => true,
         ]);
     }
 }

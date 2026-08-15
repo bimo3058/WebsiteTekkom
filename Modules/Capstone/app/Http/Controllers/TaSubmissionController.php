@@ -7,7 +7,8 @@ use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\TaSubmission;
-use App\Services\GroupStateMachine;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -26,9 +27,10 @@ class TaSubmissionController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
         $submission = TaSubmission::with(['group.title', 'reviewer'])
-            ->where('student_id', $user->id)
+            ->where('student_id', $studentId)
             ->first();
 
         return response()->json(['data' => $submission]);
@@ -44,9 +46,10 @@ class TaSubmissionController extends Controller
         ]);
 
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
         // Find student's group
-        $membership = GroupMember::where('student_id', $user->id)->first();
+        $membership = GroupMember::where('student_id', $studentId)->first();
         if (!$membership) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
@@ -60,7 +63,7 @@ class TaSubmissionController extends Controller
 
         // Create or update TA submission
         $submission = TaSubmission::updateOrCreate(
-            ['student_id' => $user->id, 'group_id' => $group->id],
+            ['student_id' => $studentId, 'group_id' => $group->id],
             [
                 'status' => 'TA_DRAFT',
                 'file_path' => $request->file_path,
@@ -84,8 +87,9 @@ class TaSubmissionController extends Controller
         ]);
 
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $submission = TaSubmission::where('student_id', $user->id)->firstOrFail();
+        $submission = TaSubmission::where('student_id', $studentId)->firstOrFail();
 
         $submission->update([
             'status' => 'TA_REVISED',
@@ -105,8 +109,9 @@ class TaSubmissionController extends Controller
     public function register(Request $request)
     {
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $submission = TaSubmission::where('student_id', $user->id)->firstOrFail();
+        $submission = TaSubmission::where('student_id', $studentId)->firstOrFail();
 
         // Gate: status must be TA_READY
         if ($submission->status !== 'TA_READY') {
@@ -138,7 +143,9 @@ class TaSubmissionController extends Controller
         ]);
 
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
         $submission = TaSubmission::findOrFail($id);
+        $this->authorizeSupervisor($submission, $lecturerId);
 
         if ($request->result === 'APPROVE') {
             $submission->update([
@@ -166,7 +173,9 @@ class TaSubmissionController extends Controller
     public function defended(Request $request, $id)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
         $submission = TaSubmission::findOrFail($id);
+        $this->authorizeSupervisor($submission, $lecturerId);
 
         if ($submission->status !== 'TA_REGISTERED') {
             return response()->json(['message' => 'TA must be in TA_REGISTERED status.'], 400);
@@ -204,5 +213,14 @@ class TaSubmissionController extends Controller
                 'group' => $group->fresh(),
             ]);
         });
+    }
+
+    private function authorizeSupervisor(TaSubmission $submission, int $lecturerId): void
+    {
+        abort_unless(
+            $submission->group->supervisions()->where('supervisor_id', $lecturerId)->exists(),
+            403,
+            'Anda bukan dosen pembimbing mahasiswa ini.'
+        );
     }
 }

@@ -20,7 +20,8 @@ class DosenController extends Controller
             )->orWhere('employee_number', 'like', "%{$search}%");
         }
 
-        $dosens = $query->paginate(15)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $dosens = $query->paginate($perPage)->withQueryString();
 
         return view('eoffice::manajemen-praktikum.admin.dosen', compact('dosens'));
     }

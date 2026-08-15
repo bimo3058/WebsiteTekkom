@@ -14,8 +14,15 @@ class CheckSuspended
             return $next($request);
         }
         
-        if (Auth::check() && Auth::user()->suspended_at) {
-            $reason = Auth::user()->suspension_reason;
+        $user = Auth::user();
+
+        // Some authentication flows deliberately select only the identity
+        // columns they need. Reading a missing attribute through Eloquent can
+        // throw when missing-attribute protection is enabled, so inspect the
+        // loaded attributes directly here.
+        $attributes = $user?->getAttributes() ?? [];
+        if ($user && ($attributes['suspended_at'] ?? null)) {
+            $reason = $attributes['suspension_reason'] ?? null;
             Auth::logout();
 
             $request->session()->invalidate();

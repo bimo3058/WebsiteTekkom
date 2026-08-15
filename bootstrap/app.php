@@ -69,6 +69,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'          => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission'    => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'module.active' => CheckModuleActive::class,
+            'capstone.access' => \Modules\Capstone\Http\Middleware\CapstoneAccessMiddleware::class,
             'capstone.role' => \Modules\Capstone\Http\Middleware\CapstoneRoleMiddleware::class,
         ]);
     })

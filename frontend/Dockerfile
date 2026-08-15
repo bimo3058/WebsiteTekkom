@@ -17,12 +17,15 @@ WORKDIR /app
 # Accept build arguments for environment variables
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_WEBTEKKOM_URL
+ENV NEXT_PUBLIC_WEBTEKKOM_URL=${NEXT_PUBLIC_WEBTEKKOM_URL}
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build the application
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV NEXT_OUTPUT_MODE standalone
 RUN npm run build
 
 # Production image, copy all the files and run next

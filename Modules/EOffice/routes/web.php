@@ -19,7 +19,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranKoorCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolRoleController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\MatkulPraktikumController;
-use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PeriodePendaftaranController;
+
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumDetailController;
 
 
@@ -88,6 +88,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // CRUD Praktikum
                 Route::resource('praktikum', PraktikumController::class)
                     ->names('praktikum');
+                Route::patch('praktikum/{id}/toggle-active', [PraktikumController::class, 'toggleActive'])
+                    ->name('praktikum.toggle-active');
+                Route::post('praktikum/bulk-toggle-active', [PraktikumController::class, 'bulkToggleActive'])
+                    ->name('praktikum.bulk-toggle-active');
                 Route::put('praktikum/{id}/assign-koor', [PraktikumController::class, 'assignKoor'])
                     ->name('praktikum.assign-koor');
 
@@ -134,21 +138,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::delete('matkul-praktikum/{id}', [MatkulPraktikumController::class, 'destroy'])
                     ->name('matkul-praktikum.destroy');
 
-                // Periode Pendaftaran (koor & asprak)
-                Route::get('periode-pendaftaran', [PeriodePendaftaranController::class, 'index'])
-                    ->name('periode-pendaftaran.index');
-                Route::post('periode-pendaftaran', [PeriodePendaftaranController::class, 'store'])
-                    ->name('periode-pendaftaran.store');
-                Route::get('periode-pendaftaran/{id}/edit', [PeriodePendaftaranController::class, 'edit'])
-                    ->name('periode-pendaftaran.edit');
-                Route::put('periode-pendaftaran/{id}', [PeriodePendaftaranController::class, 'update'])
-                    ->name('periode-pendaftaran.update');
-                Route::post('periode-pendaftaran/assign-matkul', [PeriodePendaftaranController::class, 'assignMatkul'])
-                    ->name('periode-pendaftaran.assign-matkul');
-                Route::post('periode-pendaftaran/{id}/tutup', [PeriodePendaftaranController::class, 'tutup'])
-                    ->name('periode-pendaftaran.tutup');
-                Route::delete('periode-pendaftaran/{id}', [PeriodePendaftaranController::class, 'destroy'])
-                    ->name('periode-pendaftaran.destroy');
+
 
 
 
@@ -159,6 +149,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('kelola-role.assign');
                 Route::delete('kelola-role/{id}', [KelolRoleController::class, 'revokeRole'])
                     ->name('kelola-role.revoke');
+                Route::post('kelola-role/revoke-all/{praktikumId}', [KelolRoleController::class, 'revokeAll'])
+                    ->name('kelola-role.revokeAll');
+                Route::post('kelola-role/restore/{id}', [KelolRoleController::class, 'restoreRole'])
+                    ->name('kelola-role.restore');
             });
 
         // ── DOSEN ────────────────────────────────────────────────────────────
@@ -172,6 +166,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Tunjuk koordinator dari NIM
                 Route::post('tunjuk-koor', [DosenManprakDashboard::class, 'tunjukKoor'])
                     ->name('tunjuk-koor');
+                Route::get('search-praktikan', [DosenManprakDashboard::class, 'searchPraktikan'])
+                    ->name('search-praktikan');
 
                 // Kelola modul (read-only)
                 Route::get('modul/{praktikumId}', [DosenModulController::class, 'index'])
@@ -244,6 +240,16 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('praktikan.template');
                 Route::post('praktikan/import', [KoorManprakDashboard::class, 'importPraktikan'])
                     ->name('praktikan.import');
+                Route::post('praktikan/settings', [KoorManprakDashboard::class, 'updatePlotSettings'])
+                    ->name('praktikan.settings');
+                Route::post('praktikan/auto-plot', [KoorManprakDashboard::class, 'autoPlot'])
+                    ->name('praktikan.auto-plot');
+                Route::post('praktikan/reset-plot', [KoorManprakDashboard::class, 'resetPlot'])
+                    ->name('praktikan.reset-plot');
+                Route::post('praktikan/update-plot', [KoorManprakDashboard::class, 'updatePlot'])
+                    ->name('praktikan.update-plot');
+                Route::post('praktikan/save-group-members', [KoorManprakDashboard::class, 'saveGroupMembers'])
+                    ->name('praktikan.save-group-members');
 
                 // Modul (CRUD + generate kode + detail)
                 Route::get('modul', [KoorModulController::class, 'index'])
@@ -567,9 +573,73 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    // MANAJEMEN PEMINJAMAN
+    // MANAJEMEN PEMINJAMAN / RUANGAN
     // ════════════════════════════════════════════════════════════════════════
-    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Controller Imports
+    // ── Admin ────────────────────────────────────────────────────────────
+    $MRAdminUserController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\UserController::class;
+    $MRAdminRuanganController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\RuanganController::class;
+    $MRAdminPengaturanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PengaturanController::class;
+
+    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminUserController, $MRAdminRuanganController, $MRAdminPengaturanController) {
+        Route::get('/dashboard', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\DashboardController::class, 'index'])->name('dashboard');
+
+        // ── ADMIN ────────────────────────────────────────────────────────────
+        Route::middleware(['role:superadmin|admin_eoffice'])
+            ->prefix('admin')->name('admin.')
+            ->group(function () use ($MRAdminUserController, $MRAdminRuanganController, $MRAdminPengaturanController) {
+                Route::get('user', [$MRAdminUserController, 'index'])->name('user.index');
+                Route::get('user/{user}/history', [$MRAdminUserController, 'history'])->name('user.history');
+                Route::post('user/{user}/toggle-blacklist', [$MRAdminUserController, 'toggleBlacklist'])->name('user.toggleBlacklist');
+                Route::resource('ruangan', $MRAdminRuanganController);
+                Route::delete('ruangan/foto/{id}', [$MRAdminRuanganController, 'destroyFoto'])->name('ruangan.foto.destroy');
+
+                // Persetujuan Peminjaman & Riwayat...
+                Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');
+                Route::get('/riwayat-peminjaman', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'riwayat'])->name('riwayat.index');
+                Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
+
+                // Jadwal Akademik (Filter dari tabel Internal)
+                Route::get('jadwal-akademik', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'index'])->name('jadwal-akademik.index');
+                Route::delete('jadwal-akademik/reset', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'resetAkademik'])->name('jadwal-akademik.reset');
+                // Jadwal Internal Administrator (Rutin/Spesifik/Maintenance)
+                Route::resource('jadwal-internal', \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class)->except(['show', 'edit']);
+                Route::get('jadwal-akademik-download/template', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'downloadTemplateCSV'])->name('jadwal-akademik.template');
+                Route::post('jadwal-akademik-import/preview', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'importPreview'])->name('jadwal-akademik.import-preview');
+                Route::post('jadwal-akademik-import/execute', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'executeImport'])->name('jadwal-akademik.import-execute');
+
+                Route::get('kalender-global', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'index'])->name('kalender-global.index');
+                Route::post('kalender-global/express', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'expressBooking'])->name('kalender-global.express');
+                Route::get('kalender-global/search-users', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'searchUsers'])->name('kalender-global.search-users');
+
+
+                // Settings
+                Route::get('/pengaturan', [$MRAdminPengaturanController, 'index'])->name('pengaturan.index');
+                Route::post('/pengaturan/operasional', [$MRAdminPengaturanController, 'updateOperasional'])->name('pengaturan.operasional');
+                Route::post('/pengaturan/libur', [$MRAdminPengaturanController, 'addTanggalLibur'])->name('pengaturan.libur');
+                Route::delete('/pengaturan/libur/{id}', [$MRAdminPengaturanController, 'destroyTanggalLibur'])->name('pengaturan.libur.destroy');
+
+                // Hak Akses Menu
+                Route::get('/hak-akses', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\HakAksesController::class, 'index'])->name('hak-akses.index');
+                Route::post('/hak-akses', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\HakAksesController::class, 'update'])->name('hak-akses.update');
+            });
+        // ── USER / MAHASISWA ──────────────────────────────────────────────────
+        $MRUserPeminjamanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\User\UserPeminjamanController::class;
+
+        Route::middleware(['auth'])
+            ->prefix('user')->name('user.')
+            ->group(function () use ($MRUserPeminjamanController) {
+                // Booking Kalender & Catalog
+                Route::get('/booking', [$MRUserPeminjamanController, 'booking'])->name('booking');
+                Route::get('/booking/ruangan/{id}', [$MRUserPeminjamanController, 'showRuangan'])->name('booking.ruangan.show');
+                Route::post('/booking/store', [$MRUserPeminjamanController, 'storeBooking'])->name('booking.store');
+                Route::get('/kalender', [$MRUserPeminjamanController, 'kalender'])->name('kalender');
+
+                // Transaksi
+                Route::get('/saya', [$MRUserPeminjamanController, 'saya'])->name('saya');
+                Route::post('/saya/batal/{id}', [$MRUserPeminjamanController, 'batalkanBooking'])->name('saya.batal');
+                Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
+            });
+
     });
 });

@@ -2,6 +2,8 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 
 class AssessmentScore extends Model
@@ -28,7 +30,7 @@ class AssessmentScore extends Model
 
     public function evaluator()
     {
-        return $this->belongsTo(User::class, 'evaluator_id');
+        return $this->belongsTo(Lecturer::class, 'evaluator_id');
     }
 
     public function group()
@@ -38,6 +40,6 @@ class AssessmentScore extends Model
 
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 }
