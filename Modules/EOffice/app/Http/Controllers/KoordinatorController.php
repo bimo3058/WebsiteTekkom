@@ -1257,14 +1257,21 @@ class KoordinatorController extends Controller implements HasMiddleware
     public function createPeriode()
     {
         $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->orderBy('created_at', 'desc')->get();
-        return view('eoffice::koordinator.periode.create', compact('allPeriodes'));
+        $masterRubriks = \Modules\EOffice\Models\KpMasterRubrik::where('is_active', true)->get();
+        return view('eoffice::koordinator.periode.create', compact('allPeriodes', 'masterRubriks'));
     }
 
     public function storePeriode(Request $request)
     {
         $validated = $request->validate([
             'tahun_ajaran' => 'required|string',
-            'semester' => 'required|in:Ganjil,Genap',
+            'semester' => [
+                'required',
+                'in:Ganjil,Genap',
+                \Illuminate\Validation\Rule::unique('eo_kp_periode')->where(function ($query) use ($request) {
+                    return $query->where('tahun_ajaran', $request->tahun_ajaran);
+                })
+            ],
             'is_active' => 'nullable|boolean',
             'tanggal_buka' => 'required|date',
             'tanggal_tutup' => 'required|date',
@@ -1295,6 +1302,8 @@ class KoordinatorController extends Controller implements HasMiddleware
             foreach ($request->komponen_penilaian as $comp) {
                 \Modules\EOffice\Models\KpKomponenNilai::create([
                     'periode_id' => $periode->id,
+                    'master_rubrik_id' => $comp['master_rubrik_id'] ?? null,
+                    'kode' => $comp['kode'] ?? null,
                     'nama_komponen' => $comp['nama_komponen'],
                     'bobot' => $comp['bobot'],
                     'role_penilai' => $comp['role_penilai']
@@ -1310,7 +1319,8 @@ class KoordinatorController extends Controller implements HasMiddleware
         // Eager load the grading components for this period natively
         $periode = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->findOrFail($id);
         $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->where('id', '!=', $id)->orderBy('created_at', 'desc')->get();
-        return view('eoffice::koordinator.periode.edit', compact('periode', 'allPeriodes'));
+        $masterRubriks = \Modules\EOffice\Models\KpMasterRubrik::where('is_active', true)->get();
+        return view('eoffice::koordinator.periode.edit', compact('periode', 'allPeriodes', 'masterRubriks'));
     }
 
     public function updatePeriode(Request $request, $id)
@@ -1319,7 +1329,13 @@ class KoordinatorController extends Controller implements HasMiddleware
 
         $validated = $request->validate([
             'tahun_ajaran' => 'required|string',
-            'semester' => 'required|in:Ganjil,Genap',
+            'semester' => [
+                'required',
+                'in:Ganjil,Genap',
+                \Illuminate\Validation\Rule::unique('eo_kp_periode')->where(function ($query) use ($request) {
+                    return $query->where('tahun_ajaran', $request->tahun_ajaran);
+                })->ignore($id)
+            ],
             'is_active' => 'nullable|boolean',
             'tanggal_buka' => 'required|date',
             'tanggal_tutup' => 'required|date',
@@ -1353,6 +1369,8 @@ class KoordinatorController extends Controller implements HasMiddleware
                     $existing = \Modules\EOffice\Models\KpKomponenNilai::find($comp['id']);
                     if ($existing && $existing->periode_id == $periode->id) {
                         $existing->update([
+                            'master_rubrik_id' => $comp['master_rubrik_id'] ?? null,
+                            'kode' => $comp['kode'] ?? null,
                             'nama_komponen' => $comp['nama_komponen'],
                             'bobot' => $comp['bobot'],
                             'role_penilai' => $comp['role_penilai']
@@ -1362,6 +1380,8 @@ class KoordinatorController extends Controller implements HasMiddleware
                 } else {
                     $newComp = \Modules\EOffice\Models\KpKomponenNilai::create([
                         'periode_id' => $periode->id,
+                        'master_rubrik_id' => $comp['master_rubrik_id'] ?? null,
+                        'kode' => $comp['kode'] ?? null,
                         'nama_komponen' => $comp['nama_komponen'],
                         'bobot' => $comp['bobot'],
                         'role_penilai' => $comp['role_penilai']

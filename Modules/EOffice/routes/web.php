@@ -568,6 +568,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::put('/periode/{id}', [KoordinatorController::class, 'updatePeriode'])->name('periode.update');
             Route::delete('/periode/{id}', [KoordinatorController::class, 'destroyPeriode'])->name('periode.destroy');
 
+            Route::resource('master-rubrik', \Modules\EOffice\Http\Controllers\Koordinator\MasterRubrikController::class);
+
             Route::delete('/pendaftar/{id}', [KoordinatorController::class, 'resetPendaftar'])->name('pendaftar.destroy');
         });
     });
