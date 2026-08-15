@@ -251,13 +251,10 @@
                         <td>
                             @if($p->reward_status === $P::CLAIM_DISETUJUI)
                                 <span class="claim-badge disetujui">Disetujui</span>
-                                @if($p->reward_reviewed_at)<div class="reward-mini">{{ $p->reward_reviewed_at->translatedFormat('d M Y') }}</div>@endif
                             @elseif($p->reward_status === $P::CLAIM_DIAJUKAN)
                                 <span class="claim-badge diajukan">Menunggu</span>
-                                @if($p->claimed_at)<div class="reward-mini">{{ $p->claimed_at->translatedFormat('d M Y') }}</div>@endif
                             @elseif($p->reward_status === $P::CLAIM_DITOLAK)
                                 <span class="claim-badge ditolak">Ditolak</span>
-                                @if($p->reward_reviewed_at)<div class="reward-mini">{{ $p->reward_reviewed_at->translatedFormat('d M Y') }}</div>@endif
                             @endif
                         </td>
                         <td>
