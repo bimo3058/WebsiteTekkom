@@ -254,7 +254,8 @@
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.verifikasi.*') ? 'active' : '' }}">
                         <span class="nav-label">Verifikasi Pengumuman</span>
                         @if($pendingVerifCount > 0)
-                            <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
+                            <span
+                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
                         @endif
                     </a>
                 </div>
@@ -287,7 +288,8 @@
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.riwayat.verifikasi') ? 'active' : '' }}">
                         <span class="nav-label">Status Verifikasi</span>
                         @if($staffPendingCount > 0)
-                            <span style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
+                            <span
+                                style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
                         @endif
                     </a>
                 </div>
@@ -386,17 +388,17 @@
         </div>
 
         {{-- Dosen murni tidak punya akses verifikasi. GPM & Ketua Departemen kini boleh
-             melihat (read-only) sehingga menu ditampilkan untuk mereka. --}}
+        melihat (read-only) sehingga menu ditampilkan untuk mereka. --}}
         @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
             @php
                 $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
-                $verifTab    = request('tab', 'prestasi');
+                $verifTab = request('tab', 'prestasi');
 
                 // Badge jumlah pending — hanya untuk verifier (admin/kemahasiswaan)
-                $verifPendingRiwayat  = 0;
+                $verifPendingRiwayat = 0;
                 $verifPendingPrestasi = 0;
                 if (array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin'])) {
-                    $verifPendingRiwayat  = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count();
+                    $verifPendingRiwayat = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count();
                     $verifPendingPrestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
                 }
             @endphp
@@ -421,14 +423,16 @@
                         class="sub-item {{ $verifActive && $verifTab === 'prestasi' ? 'active' : '' }}">
                         <span class="nav-label">Verifikasi Prestasi</span>
                         @if($verifPendingPrestasi > 0)
-                            <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
+                            <span
+                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
                         @endif
                     </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']) }}"
                         class="sub-item {{ $verifActive && $verifTab === 'riwayat' ? 'active' : '' }}">
-                        <span class="nav-label">Verifikasi Riwayat Kegiatan</span>
+                        <span class="nav-label">Verifikasi Kegiatan</span>
                         @if($verifPendingRiwayat > 0)
-                            <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
+                            <span
+                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
                         @endif
                     </a>
                 </div>
