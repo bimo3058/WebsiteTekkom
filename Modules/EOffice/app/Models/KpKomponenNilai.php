@@ -10,6 +10,8 @@ class KpKomponenNilai extends Model
 
     protected $fillable = [
         'periode_id',
+        'master_rubrik_id',
+        'kode',
         'nama_komponen',
         'bobot',
         'role_penilai',

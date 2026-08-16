@@ -1,3 +1,8 @@
+@php
+    /** @var \Modules\EOffice\Models\Praktikum $praktikum */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\MatkulPraktikum[] $matkulList */
+    /** @var \Illuminate\Support\Collection|object[] $dosenList */
+@endphp
 <x-eoffice::manajemen-praktikum.layout pageTitle="Edit Praktikum — {{ $praktikum->nama }}">
 
     {{-- Header --}}
@@ -49,8 +54,6 @@
             <div>
                 <div style="font-size:14px;font-weight:700;color:#0D0D12;">{{ $praktikum->nama }}</div>
                 <div style="font-size:11px;color:#A4ABB8;">
-                    @if($praktikum->kode)<span
-                    style="font-family:monospace;color:#0B266E;">{{ $praktikum->kode }}</span> · @endif
                     {{ $praktikum->semester }} {{ $praktikum->tahun_ajaran }}
                 </div>
             </div>

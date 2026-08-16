@@ -1,5 +1,10 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Pembagian Modul ke Asisten">
 
+@php
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\AsistenPraktikum[] $asistenList */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Modul[] $modulList */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\ModulAsprak[] $distribusiList */
+@endphp
 {{-- Page Header --}}
 <div class="mp-page-header">
     <div>
@@ -19,12 +24,12 @@
 
 <div class="flex gap-[14px] flex-1 min-h-0">
 
-    {{-- Panel Kiri: Daftar Asprak --}}
+    {{-- Panel Kiri: Daftar Asisten Praktikum --}}
     <div class="mp-card flex-shrink-0" style="width:280px;">
         <div class="mp-card-header">
             <div>
                 <span class="mp-card-title">Asisten Praktikum</span>
-                <div style="font-size:12px;color:#666D80;margin-top:2px;">{{ $asistenList->count() }} asprak terdaftar</div>
+                <div style="font-size:12px;color:#666D80;margin-top:2px;">{{ $asistenList->count() }} asisten praktikum terdaftar</div>
             </div>
         </div>
         <div class="overflow-y-auto flex-1">
@@ -58,15 +63,16 @@
     <div class="flex flex-col gap-[14px] flex-1 min-w-0 overflow-y-auto">
 
         {{-- Form Assign --}}
+        @if(isset($praktikum) && $praktikum->is_active)
         <div class="mp-card flex-shrink-0" style="padding:20px;">
-            <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Assign Asprak ke Modul</div>
+            <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Assign Asisten Praktikum ke Modul</div>
             <form method="POST" action="{{ route('eoffice.manprak.koor.bagi-modul.store') }}">
                 @csrf
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <div>
                         <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pilih Asisten <span class="text-red-500">*</span></label>
                         <select name="asprak_id" required class="mp-input mp-select w-full">
-                            <option value="">— Pilih Asprak —</option>
+                            <option value="">— Pilih Asisten Praktikum —</option>
                             @foreach($asistenList ?? [] as $a)
                             <option value="{{ $a->id }}">{{ $a->user?->name }}</option>
                             @endforeach
@@ -74,17 +80,28 @@
                     </div>
                     <div>
                         <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pilih Modul <span class="text-red-500">*</span></label>
-                        <select name="modul_id" required class="mp-input mp-select w-full">
-                            <option value="">— Pilih Modul —</option>
-                            @foreach($modulList ?? [] as $m)
-                            <option value="{{ $m->id }}">{{ $m->nama }}</option>
-                            @endforeach
-                        </select>
+                        @php
+                $modulOptions = [];
+                if(isset($modulList)) {
+                    foreach($modulList as $m) {
+                        $modulOptions[] = ['value' => (string)$m->id, 'label' => $m->judul];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="modul_id"
+                :options="$modulOptions"
+                :selected="(string)request('modul_id', (isset($modul) ? $modul?->id : ''))"
+                placeholder="Pilih Modul..."
+                onChange="$event.target.form.submit()"
+                minWidth="200px"
+            />
                     </div>
                 </div>
                 <button type="submit" class="mp-btn primary md">Assign Modul</button>
             </form>
         </div>
+        @endif
 
         {{-- Tabel Distribusi Saat Ini --}}
         <div class="mp-card flex-1 min-h-0">
@@ -116,11 +133,15 @@
                                 </div>
                             </td>
                             <td style="padding:12px 16px;">
+                                @if(isset($praktikum) && $praktikum->is_active)
                                 <form method="POST" action="{{ route('eoffice.manprak.koor.bagi-modul.destroy', $d->id) }}"
                                       onsubmit="return confirm('Hapus distribusi ini?')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="mp-btn destructive sm">Hapus</button>
                                 </form>
+                                @else
+                                <span style="font-size:11px;color:#808897;">Read-only</span>
+                                @endif
                             </td>
                         </tr>
                         @empty

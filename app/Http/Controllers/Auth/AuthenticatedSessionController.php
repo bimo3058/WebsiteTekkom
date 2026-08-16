@@ -8,7 +8,6 @@ use App\Services\AuditLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -33,14 +32,15 @@ class AuthenticatedSessionController extends Controller
 
             $message = 'Akun Anda telah ditangguhkan.';
             if ($user->suspension_reason) {
-                $message .= ' Alasan: ' . $user->suspension_reason;
+                $message .= ' Alasan: '.$user->suspension_reason;
             }
+
             return back()->withErrors(['email' => $message])->onlyInput('email');
         }
 
         // 2. Query roles sekali, pakai untuk cache + redirect logic
-        $userRoles  = $user->roles()->get();
-        $roleNames  = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
+        $userRoles = $user->getCachedRoleData();
+        $roleNames = $userRoles->pluck('name')->map(fn ($role) => strtolower($role));
 
         // 3. Cache user data (roles di-cache oleh Spatie secara otomatis)
         $user->cacheUserData();
@@ -48,14 +48,12 @@ class AuthenticatedSessionController extends Controller
         // 4. Simpan session_version agar middleware CheckSessionVersion bisa bekerja
         $request->session()->put('session_version', $user->session_version);
 
-        $user->recordLogin();
-
         // 5. Audit Log
         AuditLogger::log(
-            module:      'auth',
-            action:      'LOGIN',
+            module: 'auth',
+            action: 'LOGIN',
             description: "Login ke sistem sebagai {$roleNames->implode(', ')}",
-            userId:      $user->id,
+            userId: $user->id,
         );
 
         // 6. Redirect Logic
@@ -67,9 +65,9 @@ class AuthenticatedSessionController extends Controller
 
         // Admin modul — masing-masing dikunci ke dashboard modulnya
         $adminRedirects = [
-            'admin_banksoal'      => 'banksoal.dashboard',
-            'admin_capstone'      => 'capstone.dashboard',
-            'admin_eoffice'       => 'eoffice.dashboard',
+            'admin_banksoal' => 'banksoal.dashboard',
+            'admin_capstone' => 'capstone.dashboard',
+            'admin_eoffice' => 'eoffice.dashboard',
             'admin_kemahasiswaan' => 'manajemenmahasiswa.dashboard',
         ];
 
@@ -90,7 +88,7 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('login')->withErrors([
-            'email' => 'Akun Anda belum memiliki akses (Role) yang terdaftar. Silakan hubungi Administrator.'
+            'email' => 'Akun Anda belum memiliki akses (Role) yang terdaftar. Silakan hubungi Administrator.',
         ]);
     }
 
@@ -100,10 +98,10 @@ class AuthenticatedSessionController extends Controller
 
         if ($user) {
             AuditLogger::log(
-                module:      'auth',
-                action:      'LOGOUT',
-                description: "Logout dari sistem",
-                userId:      $user->id,
+                module: 'auth',
+                action: 'LOGOUT',
+                description: 'Logout dari sistem',
+                userId: $user->id,
             );
 
             $user->clearUserCache();

@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  * untuk memastikan relasi roles tersedia di view/controller. Setelah refactor:
  *
  * - Roles di-cache saat login via AuthenticatedSessionController
- * - getCachedRoles() di User.php menangani lazy load dari cache secara otomatis
+ * - getCachedRoleData() di User.php menangani lazy load dari cache secara otomatis
  *   tanpa query DB kalau cache sudah ada
  *
  * Middleware ini dibiarkan sebagai pass-through untuk menghindari error

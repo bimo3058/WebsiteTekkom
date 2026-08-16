@@ -10,9 +10,12 @@ use Modules\Capstone\Models\TaDefenseEvaluation;
 use Modules\Capstone\Models\TaDefenseExaminer;
 use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\TaSubmission;
-use App\Models\User;
-use App\Services\GroupStateMachine;
-use App\Services\SchedulingService;
+use App\Models\Lecturer;
+use App\Models\Student;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Services\SchedulingService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class TaDefenseController extends Controller
@@ -50,13 +53,13 @@ class TaDefenseController extends Controller
     public function schedule(Request $request)
     {
         $request->validate([
-            'student_id' => 'required|exists:users,id',
+            'student_id' => 'required|exists:students,id',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         // Find student's TA submission
@@ -72,8 +75,10 @@ class TaDefenseController extends Controller
 
         // Validate examiners are dosen
         foreach (['examiner_1_id', 'examiner_2_id'] as $field) {
-            $user = User::find($request->$field);
-            if (!$user || $user->role !== 'dosen') {
+            $lecturer = Lecturer::whereKey($request->$field)
+                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+                ->first();
+            if (! $lecturer) {
                 return response()->json(['message' => "{$field} must be a dosen."], 400);
             }
         }
@@ -163,9 +168,9 @@ class TaDefenseController extends Controller
         ]);
 
         // Send notifications
-        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService = app(NotificationService::class);
         $notificationService->send(
-            $request->student_id,
+            Student::findOrFail($request->student_id)->user_id,
             'SCHEDULE_APPROVED',
             'TA Defense Scheduled',
             "Your TA defense schedule has been set for {$schedule->date} at {$schedule->start_time}.",
@@ -180,7 +185,7 @@ class TaDefenseController extends Controller
             $supervisor2?->supervisor_id,
         ]));
         $notificationService->sendToMany(
-            $examinerIds,
+            Lecturer::whereIn('id', $examinerIds)->pluck('user_id')->all(),
             'SCHEDULE_APPROVED',
             'You are assigned as an examiner/supervisor',
             "You have been assigned to a TA defense on {$schedule->date} at {$schedule->start_time}.",
@@ -206,9 +211,10 @@ class TaDefenseController extends Controller
         ]);
 
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $evaluation = TaDefenseEvaluation::where('schedule_id', $scheduleId)
-            ->where('examiner_id', $user->id)
+            ->where('examiner_id', $lecturerId)
             ->first();
 
         if (!$evaluation) {
@@ -241,9 +247,10 @@ class TaDefenseController extends Controller
     public function myDefense(Request $request)
     {
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
         $schedule = TaDefenseSchedule::with(['examiners.examiner', 'evaluations.examiner'])
-            ->where('student_id', $user->id)
+            ->where('student_id', $studentId)
             ->first();
 
         return response()->json(['data' => $schedule]);
@@ -260,8 +267,8 @@ class TaDefenseController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         $schedule = TaDefenseSchedule::where('id', $id)
@@ -349,9 +356,9 @@ class TaDefenseController extends Controller
         ]);
 
         // Send notifications
-        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService = app(NotificationService::class);
         $notificationService->send(
-            $schedule->student_id,
+            $schedule->student->user_id,
             'SCHEDULE_APPROVED',
             'TA Defense Schedule Approved',
             "Your TA defense schedule request for {$schedule->date} at {$schedule->start_time} has been approved.",
@@ -360,7 +367,7 @@ class TaDefenseController extends Controller
         );
 
         $notificationService->sendToMany(
-            $allParticipantIds,
+            Lecturer::whereIn('id', $allParticipantIds)->pluck('user_id')->all(),
             'SCHEDULE_APPROVED',
             'You are assigned to a TA Defense',
             "You have been assigned as an examiner/supervisor for a TA defense on {$schedule->date} at {$schedule->start_time}.",
@@ -390,8 +397,8 @@ class TaDefenseController extends Controller
             'rejection_reason' => $request->rejection_reason,
         ]);
 
-        app(\App\Services\NotificationService::class)->send(
-            $schedule->student_id,
+        app(NotificationService::class)->send(
+            $schedule->student->user_id,
             'SCHEDULE_REJECTED',
             'TA Defense Schedule Rejected',
             "Your TA defense schedule request was rejected. Reason: {$request->rejection_reason}",

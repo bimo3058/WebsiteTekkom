@@ -72,6 +72,11 @@ class DashboardController extends Controller
                 ->get()
             : collect();
 
+        $currentYear = now()->year;
+        $currentSemester = now()->month <= 6 ? 'Genap' : 'Ganjil';
+        $defaultTahunAjaran = $currentSemester === 'Genap' ? $currentYear - 1 : $currentYear;
+        $semesterLabel = "Semester {$currentSemester} {$defaultTahunAjaran}/" . ($defaultTahunAjaran + 1);
+
         return view('eoffice::manajemen-praktikum.asprak.dashboard', compact(
             'asprak',
             'allAsprak',
@@ -82,7 +87,8 @@ class DashboardController extends Controller
             'absensiHariIni',
             'tugasMendatang',
             'pengumpulanPending',
-            'pengumumanTerbaru'
+            'pengumumanTerbaru',
+            'semesterLabel'
         ));
     }
 }

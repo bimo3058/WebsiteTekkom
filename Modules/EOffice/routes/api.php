@@ -6,7 +6,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DosenController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 
 // ─── Routes EOffice yang sudah ada ────────────────────────────────────────────
-Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
+Route::middleware(['auth:sanctum'])->prefix('v1')->name('api.')->group(function () {
     Route::apiResource('eoffices', EOfficeController::class)->names('eoffice');
 });
 
@@ -16,7 +16,7 @@ Route::middleware(['auth:sanctum'])->prefix('v1')->group(function () {
 // Middleware 'role:...' = RoleMiddleware global (app/Http/Middleware/RoleMiddleware.php).
 Route::middleware(['auth:sanctum', 'module.active:eoffice'])
     ->prefix('v1/eoffice/manprak')
-    ->name('eoffice.manprak.')
+    ->name('api.eoffice.manprak.')
     ->group(function () {
 
         // ── Admin routes (role: superadmin atau admin_eoffice) ────────────────

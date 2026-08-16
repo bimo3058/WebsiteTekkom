@@ -27,6 +27,7 @@ class PendaftaranKoordinator extends Model
         'catatan_dosen',
         'alasan_penolakan',
         'transkrip_path',
+        'berkas_cerc_path',
         'direview_oleh',
         'direview_pada',
     ];

@@ -11,7 +11,7 @@ class PendaftaranAsprakController extends Controller
 {
     public function index(Request $request)
     {
-        $query = PendaftaranAsprak::with(['user', 'praktikum'])
+        $query = PendaftaranAsprak::with(['user.student', 'praktikum' => fn($q) => $q->withTrashed()])
             ->orderByDesc('created_at');
 
         if ($status = $request->input('status')) {
@@ -19,7 +19,7 @@ class PendaftaranAsprakController extends Controller
         }
 
         if ($search = $request->input('search')) {
-            $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            $query->whereHas('user', fn($q) => $q->whereRaw('LOWER(name) like ?', ['%' . strtolower($search) . '%']));
         }
         if ($praktikumId = $request->input('praktikum_id')) {
             $query->where('praktikum_id', $praktikumId);
@@ -28,7 +28,7 @@ class PendaftaranAsprakController extends Controller
             $query->where('status_koor', $statusKoor);
         }
 
-        $pendaftaran = $query->paginate(15)->withQueryString();
+        $pendaftaran = $query->paginate($request->input('per_page', 5))->withQueryString();
 
         $praktikumList = \Modules\EOffice\Models\Praktikum::with('matkul')
             ->where('status', 'aktif')

@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -34,12 +35,12 @@ class SeminarSchedule extends Model
 
     public function examiner1(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'examiner_1_id');
+        return $this->belongsTo(Lecturer::class, 'examiner_1_id');
     }
 
     public function examiner2(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'examiner_2_id');
+        return $this->belongsTo(Lecturer::class, 'examiner_2_id');
     }
 
     public function evaluations(): HasMany

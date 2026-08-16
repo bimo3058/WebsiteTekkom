@@ -1,9 +1,9 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Asprak & Koordinator">
+<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Asisten Praktikum & Koordinator">
 
 <div class="mp-page-header">
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h1 class="mp-page-title">Pendaftaran Asprak & Koordinator</h1>
+            <h1 class="mp-page-title">Pendaftaran Asisten Praktikum & Koordinator</h1>
             <span class="mp-badge warning sm"><span class="dot"></span>Mahasiswa</span>
         </div>
         <p class="mp-page-sub">Daftarkan diri sebagai calon asisten atau koordinator praktikum · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
@@ -37,7 +37,7 @@
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
         </svg>
         <div style="font-size:15px;font-weight:600;color:#0D0D12;margin-bottom:4px;">Belum ada pendaftaran yang dibuka</div>
-        <div style="font-size:13px;color:#666D80;">Admin belum membuka periode pendaftaran asprak atau koordinator saat ini.</div>
+        <div style="font-size:13px;color:#666D80;">Admin belum membuka periode pendaftaran asisten praktikum atau koordinator saat ini.</div>
     </div>
 </div>
 
@@ -52,25 +52,24 @@
 <div class="mp-card flex-shrink-0">
     <div style="padding:14px 18px;">
         <form method="GET" class="flex gap-2 flex-wrap">
-            <select name="praktikum_id" class="mp-input mp-select" style="max-width:360px;"
-                    onchange="this.form.submit()">
-                <option value="">-- Pilih Praktikum --</option>
-                @foreach($praktikumDenganPeriode as $p)
-                @php
-                    $pAsprak = $periodeAktif[$p->id]['asprak'] ?? null;
-                    $pKoor = $periodeAktif[$p->id]['koor'] ?? null;
-                    $badge = [];
-                    if($pAsprak) $badge[] = 'Asprak';
-                    if($pKoor) $badge[] = 'Koor';
-                @endphp
-                <option value="{{ $p->id }}" {{ request('praktikum_id') == $p->id ? 'selected' : '' }}>
-                    {{ $p->nama }}
-
-                    {{ $p->semester }} {{ $p->tahun_ajaran }}
-                    {{ count($badge) ? '(' . implode('+', $badge) . ')' : '' }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
     </div>
 </div>
@@ -109,10 +108,10 @@
 
 
 
-{{-- Dua kolom: Asprak | Koor --}}
+{{-- Dua kolom: Asisten Praktikum | Koordinator --}}
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
 
-    {{-- ====== ASPRAK ====== --}}
+    {{-- ====== ASISTEN PRAKTIKUM ====== --}}
     <div>
         <div class="sec-head">
             <span class="sec-bar"></span>
@@ -128,7 +127,7 @@
         @if(!$pAsprak)
         <div class="mp-card flex-shrink-0">
             <div style="padding:32px;text-align:center;">
-                <div style="font-size:13px;color:#666D80;">Pendaftaran asprak belum dibuka untuk praktikum ini.</div>
+                <div style="font-size:13px;color:#666D80;">Pendaftaran asisten praktikum belum dibuka untuk praktikum ini.</div>
             </div>
         </div>
 
@@ -158,7 +157,7 @@
         </div>
 
         @else
-        {{-- Form daftar asprak --}}
+        {{-- Form daftar asisten praktikum --}}
         <div class="mp-card flex-shrink-0">
             <div class="mp-card-header">
                 <span class="mp-card-title">Form Pendaftaran Asisten Praktikum</span>
@@ -184,6 +183,11 @@
                 <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
                     <input type="file" name="transkrip" accept=".pdf" required class="mp-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Keanggotaan CERC <span style="font-weight:400;color:#666D80;">(Opsional, .pdf, .jpg, .png, .csv, .xlsx)</span></label>
+                    <input type="file" name="berkas_cerc" accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx" class="mp-input" style="width:100%;">
                 </div>
 
                 <div>
@@ -258,7 +262,7 @@
         </div>
 
         @else
-        {{-- Form daftar koor --}}
+        {{-- Form daftar koordinator --}}
         <div class="mp-card flex-shrink-0">
             <div class="mp-card-header">
                 <span class="mp-card-title">Form Pendaftaran Koordinator</span>
@@ -284,6 +288,11 @@
                 <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
                     <input type="file" name="transkrip" accept=".pdf" required class="mp-input" style="width:100%;">
+                </div>
+
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Keanggotaan CERC <span style="font-weight:400;color:#666D80;">(Opsional, .pdf, .jpg, .png, .csv, .xlsx)</span></label>
+                    <input type="file" name="berkas_cerc" accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx" class="mp-input" style="width:100%;">
                 </div>
 
                 <button type="submit" class="mp-btn primary md" style="margin-top:6px;">

@@ -15,16 +15,19 @@ class KelolRoleController extends Controller
     public function index(Request $request)
     {
         $praktikumList = Praktikum::with(['dosens', 'koordinator'])
+            ->where('is_active', true)
             ->orderBy('nama')
             ->get();
 
-        $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
-        $praktikum   = $praktikumList->firstWhere('id', $praktikumId);
+        $praktikumId = $request->input('praktikum_id');
+        $praktikum   = $praktikumList->firstWhere('id', $praktikumId) ?? $praktikumList->first();
+        $praktikumId = $praktikum?->id;
 
         $anggota = $praktikumId
-            ? AsprakPraktikum::with('user')
+            ? AsprakPraktikum::withTrashed()
+                ->with('user')
                 ->where('praktikum_id', $praktikumId)
-                ->whereNull('deleted_at')
+                ->orderByRaw('deleted_at IS NOT NULL') // Active first
                 ->orderBy('role')
                 ->get()
             : collect();
@@ -138,5 +141,85 @@ class KelolRoleController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    public function revokeAll(Request $request, $praktikumId)
+    {
+        $praktikum = Praktikum::findOrFail($praktikumId);
+        $records = AsprakPraktikum::with('user')->where('praktikum_id', $praktikumId)->get();
+
+        foreach($records as $record) {
+            $user = $record->user;
+            $role = $record->role;
+            $userId = $record->user_id;
+
+            $record->delete();
+
+            if ($role === 'koor') {
+                $praktikum->update(['koor_id' => null]);
+            }
+
+            $roleName = $role === 'koor' ? 'koor_prak' : 'asprak';
+            $stillHasRole = AsprakPraktikum::where('user_id', $userId)
+                ->where('role', $role)
+                ->where('id', '!=', $record->id)
+                ->exists();
+
+            if ($user && !$stillHasRole) {
+                try {
+                    if ($user->hasRole($roleName)) {
+                        $user->removeRole($roleName);
+                    }
+                } catch (\Exception $e) {
+                    $spatieRole = Role::where('name', $roleName)
+                        ->where('module', 'eoffice')
+                        ->first();
+                    if ($spatieRole) {
+                        $user->roles()->detach($spatieRole->id);
+                    }
+                }
+
+                app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+                \DB::table('users')
+                    ->where('id', $userId)
+                    ->increment('session_version');
+            }
+        }
+
+        // 3. Update status praktikum menjadi non-aktif (read-only)
+        $praktikum->update([
+            'is_active' => false,
+            'status' => 'nonaktif'
+        ]);
+
+        return redirect()->route('eoffice.manprak.admin.kelola-role.index')->with('success', "Seluruh role koordinator & asprak pada praktikum {$praktikum->nama} berhasil dicabut, dan praktikum dinonaktifkan.");
+    }
+
+    public function restoreRole($id)
+    {
+        $record = AsprakPraktikum::withTrashed()->with('user')->findOrFail($id);
+        $user   = $record->user;
+        $name   = $user?->name ?? 'User';
+        $role   = $record->role;
+
+        // 1. Restore the soft-deleted record
+        $record->restore();
+
+        // 2. Jika role = koor, update koor_id di eo_praktikum
+        if ($role === 'koor') {
+            Praktikum::where('id', $record->praktikum_id)
+                ->update(['koor_id' => $record->user_id]);
+        }
+
+        // 3. Kembalikan Role Spatie
+        $roleName = $role === 'koor' ? 'koor_prak' : 'asprak';
+        $spatieRole = Role::where('name', $roleName)->where('module', 'eoffice')->first();
+        if ($spatieRole && $user) {
+            $user->roles()->syncWithoutDetaching([$spatieRole->id]);
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+        }
+
+        return back()->with('success', "Role {$role} berhasil dikembalikan untuk {$name}.");
     }
 }

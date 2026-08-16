@@ -10,6 +10,9 @@ use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\TaDefenseEvaluation;
 use Modules\Capstone\Models\TaDefenseExaminer;
 use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\AssessmentScore;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class SeminarDashboardController extends Controller
@@ -20,7 +23,8 @@ class SeminarDashboardController extends Controller
     public function studentSchedules(Request $request)
     {
         $user = $request->user();
-        $membership = GroupMember::where('student_id', $user->id)->first();
+        $studentId = CapstoneActor::student($user)->id;
+        $membership = GroupMember::where('student_id', $studentId)->first();
 
         if (!$membership) {
             return response()->json(['data' => ['seminars' => [], 'ta_defense' => null]]);
@@ -31,7 +35,7 @@ class SeminarDashboardController extends Controller
             ->get();
 
         $taDefense = TaDefenseSchedule::with(['examiners.examiner', 'evaluations.examiner'])
-            ->where('student_id', $user->id)
+            ->where('student_id', $studentId)
             ->first();
 
         return response()->json([
@@ -48,9 +52,10 @@ class SeminarDashboardController extends Controller
     public function supervisorSchedules(Request $request)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         // Groups I supervise
-        $groupIds = Supervision::where('supervisor_id', $user->id)->pluck('group_id');
+        $groupIds = Supervision::where('supervisor_id', $lecturerId)->pluck('group_id');
 
         $seminars = SeminarSchedule::with(['group.title', 'examiner1', 'examiner2', 'evaluations.examiner'])
             ->whereIn('group_id', $groupIds)
@@ -76,9 +81,10 @@ class SeminarDashboardController extends Controller
     public function examinerSchedules(Request $request)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         // Seminar schedules where I'm examiner
-        $seminarScheduleIds = SeminarEvaluation::where('examiner_id', $user->id)
+        $seminarScheduleIds = SeminarEvaluation::where('examiner_id', $lecturerId)
             ->pluck('schedule_id');
 
         $seminars = SeminarSchedule::with([
@@ -86,8 +92,8 @@ class SeminarDashboardController extends Controller
             'group.members.student',
             'examiner1',
             'examiner2',
-            'evaluations' => function ($q) use ($user) {
-                $q->where('examiner_id', $user->id);
+            'evaluations' => function ($q) use ($lecturerId) {
+                $q->where('examiner_id', $lecturerId);
             }
         ])
             ->whereIn('id', $seminarScheduleIds)
@@ -95,7 +101,7 @@ class SeminarDashboardController extends Controller
             ->get();
 
         // TA defense schedules where I'm examiner
-        $taScheduleIds = TaDefenseExaminer::where('examiner_id', $user->id)
+        $taScheduleIds = TaDefenseExaminer::where('examiner_id', $lecturerId)
             ->pluck('schedule_id');
 
         $taDefenses = TaDefenseSchedule::with([
@@ -103,8 +109,8 @@ class SeminarDashboardController extends Controller
             'group.title',
             'group.members.student',
             'examiners.examiner',
-            'evaluations' => function ($q) use ($user) {
-                $q->where('examiner_id', $user->id);
+            'evaluations' => function ($q) use ($lecturerId) {
+                $q->where('examiner_id', $lecturerId);
             }
         ])
             ->whereIn('id', $taScheduleIds)
@@ -125,18 +131,19 @@ class SeminarDashboardController extends Controller
     public function evaluationContext(Request $request, $type, $id)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         if ($type === 'SEMINAR') {
             $evaluation = SeminarEvaluation::where('id', $id)
-                ->where('examiner_id', $user->id)
+                ->where('examiner_id', $lecturerId)
                 ->firstOrFail();
             $schedule = SeminarSchedule::with(['group.title', 'group.members.student', 'examiner1', 'examiner2'])
                 ->findOrFail($evaluation->schedule_id);
-            $components = \App\Models\AssessmentComponent::where('period_id', $schedule->group->period_id)
+            $components = AssessmentComponent::where('period_id', $schedule->group->period_id)
                 ->where('type', $schedule->type)
                 ->orderBy('sort_order')
                 ->get();
-            $existingScores = \App\Models\AssessmentScore::where('evaluator_id', $user->id)
+            $existingScores = AssessmentScore::where('evaluator_id', $lecturerId)
                 ->where('group_id', $schedule->group_id)
                 ->where('evaluation_type', $schedule->type)
                 ->get()
@@ -154,15 +161,15 @@ class SeminarDashboardController extends Controller
             ]);
         } else {
             $evaluation = TaDefenseEvaluation::where('id', $id)
-                ->where('examiner_id', $user->id)
+                ->where('examiner_id', $lecturerId)
                 ->firstOrFail();
             $schedule = TaDefenseSchedule::with(['student', 'group.title', 'group.members.student', 'examiners.examiner'])
                 ->findOrFail($evaluation->schedule_id);
-            $components = \App\Models\AssessmentComponent::where('period_id', $schedule->group->period_id)
+            $components = AssessmentComponent::where('period_id', $schedule->group->period_id)
                 ->where('type', 'SIDANG_TA')
                 ->orderBy('sort_order')
                 ->get();
-            $existingScores = \App\Models\AssessmentScore::where('evaluator_id', $user->id)
+            $existingScores = AssessmentScore::where('evaluator_id', $lecturerId)
                 ->where('group_id', $schedule->group_id)
                 ->where('evaluation_type', 'SIDANG_TA')
                 ->get()

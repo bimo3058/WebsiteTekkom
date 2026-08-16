@@ -22,7 +22,7 @@ class PendaftaranKoorController extends Controller
 
     public function index(Request $request)
     {
-        $query = PendaftaranKoordinator::with(['user', 'praktikum', 'direviewOleh'])
+        $query = PendaftaranKoordinator::with(['user.student', 'praktikum', 'direviewOleh'])
             ->orderByDesc('created_at');
 
         if ($status = $request->input('status')) {
@@ -32,13 +32,13 @@ class PendaftaranKoorController extends Controller
             $query->where('status_dosen', $statusDosen);
         }
         if ($search = $request->input('search')) {
-            $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
+            $query->whereHas('user', fn($q) => $q->whereRaw('LOWER(name) like ?', ['%' . strtolower($search) . '%']));
         }
         if ($praktikumId = $request->input('praktikum_id')) {
             $query->where('praktikum_id', $praktikumId);
         }
 
-        $pendaftaran = $query->paginate(15)->withQueryString();
+        $pendaftaran = $query->paginate($request->input('per_page', 5))->withQueryString();
         
         $praktikumList = \Modules\EOffice\Models\Praktikum::with('matkul')
             ->where('status', 'aktif')

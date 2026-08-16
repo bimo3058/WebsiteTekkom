@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -35,14 +36,16 @@ return new class extends Migration
             ]);
         }
 
-        // 3. Drop old column
+        // 3. Drop dependent index and old column
         Schema::table('eo_praktikum', function (Blueprint $table) {
+            $table->dropIndex(['tahun_ajaran', 'semester']);
             $table->dropColumn('tahun_ajaran');
         });
 
         // 4. Rename new column to original name
         Schema::table('eo_praktikum', function (Blueprint $table) {
             $table->renameColumn('tahun_ajaran_new', 'tahun_ajaran');
+            $table->index(['tahun_ajaran', 'semester']);
         });
     }
 
@@ -76,11 +79,13 @@ return new class extends Migration
         }
 
         Schema::table('eo_praktikum', function (Blueprint $table) {
+            $table->dropIndex(['tahun_ajaran', 'semester']);
             $table->dropColumn('tahun_ajaran');
         });
 
         Schema::table('eo_praktikum', function (Blueprint $table) {
             $table->renameColumn('tahun_ajaran_old', 'tahun_ajaran');
+            $table->index(['tahun_ajaran', 'semester']);
         });
     }
 };

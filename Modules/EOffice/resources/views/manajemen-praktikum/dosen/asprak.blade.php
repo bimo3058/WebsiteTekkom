@@ -24,16 +24,24 @@
         <div class="mp-alert warning">Anda belum mengampu praktikum aktif manapun.</div>
         @else
         <form method="GET" class="flex gap-2 flex-wrap">
-            <select name="praktikum_id" class="mp-input mp-select" style="max-width:320px;"
-                    onchange="this.form.submit()">
-                @foreach($praktikumList as $p)
-                <option value="{{ $p->id }}" {{ ($praktikum?->id == $p->id) ? 'selected' : '' }}>
-                    {{ $p->nama }}
-
-                    · {{ $p->semester }} {{ $p->tahun_ajaran }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
         @endif
     </div>
@@ -41,12 +49,12 @@
 
 @if($praktikum)
 
-{{-- Tabel Asprak --}}
+{{-- Tabel Asisten Praktikum --}}
 <div class="sec-head">
     <span class="sec-bar"></span>
-    <span class="sec-title">Daftar Asprak — {{ $praktikum->nama }}</span>
+    <span class="sec-title">Daftar Asisten Praktikum — {{ $praktikum->nama }}</span>
     <span class="sec-rule"></span>
-    <span class="mp-badge navy sm">{{ $aspraks->count() }} asprak</span>
+    <span class="mp-badge navy sm">{{ $aspraks->count() }} asisten praktikum</span>
 </div>
 
 @if($aspraks->isEmpty())
@@ -58,7 +66,7 @@
             <path d="M23 11l-3.5 3.5-1.5-1.5"/>
         </svg>
         <div style="font-size:14px;font-weight:600;color:#0D0D12;margin-bottom:4px;">Belum Ada Asisten Praktikum</div>
-        <div style="font-size:12px;color:#666D80;">Belum ada asprak yang bertugas pada praktikum ini.</div>
+        <div style="font-size:12px;color:#666D80;">Belum ada asisten praktikum yang bertugas pada praktikum ini.</div>
     </div>
 </div>
 @else
