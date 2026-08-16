@@ -55,8 +55,6 @@ class DosenController extends Controller
             'm.nim as nim_user',
             'u.email as email_mahasiswa',
             'ud.name as nama_dosen',
-            'p.nilai_seminar_pembimbing',
-            'p.nilai_lapangan',
             's.id as seminar_id',
             's.status_validasi_syarat as status_seminar'
         )
@@ -72,7 +70,7 @@ class DosenController extends Controller
             $query->whereNull('eo_kerja_praktik.id');
         }
 
-        $bimbingan = $query->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
+        $bimbingan = $query->with(['nilaiDetail.komponen'])->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
 
         $mahasiswas = $bimbingan->map(function ($kp) {
             $sudahDaftarSeminar = !is_null($kp->seminar_id);
@@ -285,17 +283,23 @@ class DosenController extends Controller
             ]);
 
             $existing = \Modules\EOffice\Models\KpPenilaian::where('kp_id', $kp->id)->first();
-            if ($existing && $existing->nilai_lapangan !== null) {
-                $validated['nilai_akhir'] = round(
-                    ($existing->nilai_lapangan * 0.6) + ($validated['nilai_seminar_pembimbing'] * 0.4),
+            
+            $nilai_akhir = null;
+            if ($existing && $kp->nilai_lapangan !== null) {
+                $nilai_akhir = round(
+                    ($kp->nilai_lapangan * 0.6) + ($validated['nilai_seminar_pembimbing'] * 0.4),
                     2
                 );
             }
 
-            \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
-                ['kp_id' => $kp->id],
-                $validated
-            );
+            if ($nilai_akhir !== null) {
+                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                    ['kp_id' => $kp->id],
+                    [
+                        'nilai_akhir' => $nilai_akhir,
+                    ]
+                );
+            }
         }
 
         // Update status KP menjadi completed setelah dosen memberi nilai
@@ -320,8 +324,7 @@ class DosenController extends Controller
             's.tanggal_seminar',
             's.waktu_seminar',
             's.ruangan',
-            's.status_validasi_dosen',
-            'p.nilai_seminar_pembimbing'
+            's.status_validasi_dosen'
         )
             ->join('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->join('users as u', 'm.user_id', '=', 'u.id')
@@ -334,7 +337,7 @@ class DosenController extends Controller
             $query->whereNull('eo_kerja_praktik.id');
         }
 
-        $seminars = $query->orderBy('s.created_at', 'desc')->get();
+        $seminars = $query->with(['nilaiDetail.komponen'])->orderBy('s.created_at', 'desc')->get();
 
         return view('eoffice::dosen.penilaian_seminar', compact('seminars'));
     }

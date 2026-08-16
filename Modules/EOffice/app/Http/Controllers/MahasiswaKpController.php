@@ -426,6 +426,23 @@ class MahasiswaKpController extends Controller
         }
     }
 
+    /**
+     * Tombol khusus untuk langsung lanjut ke fase Saat KP tanpa syarat (Bypass)
+     */
+    public function lanjutSaatKp()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)->latest()->first();
+
+        if ($kp && !in_array($kp->status_kp, ['Saat KP', 'Pasca KP', 'Selesai'])) {
+            $kp->status_kp = 'Saat KP';
+            $kp->is_acc_admin = true; // Anggap di-acc secara otomatis
+            $kp->save();
+        }
+
+        return redirect()->route('eoffice.kp.mahasiswa.dokumen')->with('success', 'Berhasil lanjut ke fase Saat KP.');
+    }
+
     // =========================================================================
     // DOKUMEN (SAAT KP)
     // =========================================================================
@@ -665,6 +682,21 @@ class MahasiswaKpController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Terjadi kesalahan saat membuat dokumen A2: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Lanjut ke fase Pasca KP
+     */
+    public function lanjutPascaKp()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->latest()
+            ->firstOrFail();
+            
+        $kp->update(['status_kp' => 'Pasca KP']);
+        
+        return redirect()->route('eoffice.kp.mahasiswa.seminar')->with('success', 'Berhasil lanjut ke fase Pasca KP.');
     }
 
     // =========================================================================

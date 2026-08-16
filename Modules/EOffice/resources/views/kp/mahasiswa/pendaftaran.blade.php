@@ -125,6 +125,18 @@
                             <p class="text-slate-700 font-medium text-sm">Persyaratan Anda telah di-ACC oleh Koordinator KP. Silakan menunggu pengumuman Dosen Pembimbing.</p>
                         </div>
                     @endif
+
+                    @if($existingKp)
+                        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-col items-center justify-center">
+                            <form action="{{ route('eoffice.kp.mahasiswa.pendaftaran.lanjut_saat_kp') }}" method="POST">
+                                @csrf
+                                <button type="submit" onclick="return confirm('Apakah Anda yakin ingin lanjut ke fase berikutnya tanpa syarat?')"
+                                    class="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto">
+                                    Lanjut ke Fase Berikutnya (Saat KP)
+                                </button>
+                            </form>
+                        </div>
+                    @endif
                 </div>
 
                 @if($existingKp)

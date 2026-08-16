@@ -197,17 +197,17 @@
                                         @php
                                             $namaHari = ['-', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
                                         @endphp
-                                        <div style="font-weight: 600; color:#0D0D12;">
+                                        <div style="font-weight: 500; color:#0D0D12;">
                                             {{ $namaHari[$j->hari] ?? 'Tidak Valid' }}
                                         </div>
                                     @else
-                                        <div style="font-weight: 600; color:#0D0D12;">
+                                        <div style="font-weight: 500; color:#0D0D12;">
                                             {{ \Carbon\Carbon::parse($j->tanggal_spesifik)->translatedFormat('d F Y') }}
                                         </div>
                                     @endif
                                 </td>
                                 <td>
-                                    <div style="font-weight: 700; color: #0D0D12;">
+                                    <div style="font-weight: 500; color: #0D0D12;">
                                         {{ substr($j->jam_mulai, 0, 5) }} - {{ substr($j->jam_selesai, 0, 5) }}
                                     </div>
                                 </td>
@@ -218,10 +218,10 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 700; color: #0D0D12;">
+                                    <div style="font-weight: 500; color: #0D0D12;">
                                         {{ $j->ruangan->nama ?? 'Tidak Diketahui' }}
                                         <span
-                                            style="font-size: 12px; color: #666D80; margin-left: 4px; font-weight: 500;">(Lt.
+                                            style="font-size: 13px; color: #666D80; margin-left: 4px; font-weight: 500;">(Lt.
                                             {{ $j->ruangan->lantai ?? '-' }})</span>
                                     </div>
                                 </td>

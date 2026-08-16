@@ -154,19 +154,17 @@
                             <td class="py-4 px-5 align-middle">
                                 @php
                                     $style = '';
-                                    if ($pinjam->status === 'disetujui')
-                                        $style = 'border-emerald-500 text-emerald-600 bg-emerald-50/30';
-                                    elseif ($pinjam->status === 'ditolak')
-                                        $style = 'border-red-500 text-red-600 bg-red-50/30';
-                                    elseif ($pinjam->status === 'menunggu')
-                                        $style = 'border-amber-500 text-amber-600 bg-amber-50/30';
+                                    if (strtolower($pinjam->status) === 'disetujui')
+                                        $style = 'bg-[#ECF9F7] text-[#267666]';
+                                    elseif (strtolower($pinjam->status) === 'ditolak')
+                                        $style = 'bg-[#FEF2F2] text-[#B91C1C]';
+                                    elseif (strtolower($pinjam->status) === 'menunggu')
+                                        $style = 'bg-[#FFF9ED] text-[#A77B2E]';
                                     else
-                                        $style = 'border-gray-400 text-gray-700 bg-gray-50';
+                                        $style = 'bg-[#ECEFF3] text-[#0D0D12]';
                                 @endphp
                                 <span
-                                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border {{ $style }} text-[12px] font-medium">
-                                    <span
-                                        class="w-1.5 h-1.5 rounded-full {{ str_replace(['border-', ' text-', ' bg-', '/30', '500', '600', '700', '400'], ['bg-', '', '', '', '500', '500', '500', '500'], current(explode(' ', $style))) }}"></span>
+                                    class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-full {{ $style }} text-[12px] font-medium tracking-wide">
                                     {{ ucfirst($pinjam->status) }}
                                 </span>
                             </td>

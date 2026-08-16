@@ -502,12 +502,14 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
             Route::get('/pendaftaran', [MahasiswaKpController::class, 'pendaftaran'])->name('pendaftaran');
             Route::post('/pendaftaran', [MahasiswaKpController::class, 'storePendaftaran'])->name('pendaftaran.store');
+            Route::post('/pendaftaran/lanjut-saat-kp', [MahasiswaKpController::class, 'lanjutSaatKp'])->name('pendaftaran.lanjut_saat_kp');
             Route::get('/dokumen', [MahasiswaKpController::class, 'dokumen'])->name('dokumen');
             Route::post('/dokumen', [MahasiswaKpController::class, 'storeDokumen'])->name('dokumen.store');
             Route::put('/dokumen/update-data', [MahasiswaKpController::class, 'updateDataKp'])->name('dokumen.update_data');
             Route::get('/dokumen/template/{type}', [MahasiswaKpController::class, 'downloadTemplate'])->name('dokumen.template');
             Route::post('/dokumen/export-a2', [MahasiswaKpController::class, 'exportA2'])->name('dokumen.export_a2');
             Route::post('/dokumen/generate-a2', [MahasiswaKpController::class, 'generateA2'])->name('dokumen.generate_a2');
+            Route::post('/dokumen/lanjut-pasca-kp', [MahasiswaKpController::class, 'lanjutPascaKp'])->name('dokumen.lanjut_pasca_kp');
             Route::get('/seminar', [MahasiswaKpController::class, 'seminar'])->name('seminar');
             Route::post('/seminar', [MahasiswaKpController::class, 'storeSeminar'])->name('seminar.store');
         });
@@ -567,6 +569,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/periode/{id}/edit', [KoordinatorController::class, 'editPeriode'])->name('periode.edit');
             Route::put('/periode/{id}', [KoordinatorController::class, 'updatePeriode'])->name('periode.update');
             Route::delete('/periode/{id}', [KoordinatorController::class, 'destroyPeriode'])->name('periode.destroy');
+
+            Route::resource('master-rubrik', \Modules\EOffice\Http\Controllers\Koordinator\MasterRubrikController::class);
 
             Route::delete('/pendaftar/{id}', [KoordinatorController::class, 'resetPendaftar'])->name('pendaftar.destroy');
         });

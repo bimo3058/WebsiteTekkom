@@ -21,14 +21,13 @@ class DataMahasiswaExport implements FromCollection, WithHeadings, WithMapping
             'u.name as nama',
             'm.nim as nim',
             'd.nama_lengkap as dosen_pembimbing',
-            'p.nilai_seminar_pembimbing',
-            'p.nilai_lapangan',
             'p.nilai_akhir'
         )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
             ->leftJoin('eo_kp_dosen as d', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'd.id')
             ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
+            ->with(['nilaiDetail.komponen'])
             ->orderBy('eo_kerja_praktik.created_at', 'desc')
             ->get();
     }
