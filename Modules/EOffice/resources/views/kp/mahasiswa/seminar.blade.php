@@ -169,11 +169,104 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2 space-y-6">
+            <div class="grid grid-cols-1 gap-8">
+                <div class="space-y-6">
 
                 {{-- ═══════════════════════════════════════════ --}}
-                {{-- CARD 2: NILAI LAPANGAN                     --}}
+                {{-- ═══════════════════════════════════════════ --}}
+                {{-- CARD 1: DOKUMEN PERSYARATAN (DINAMIS)      --}}
+                {{-- ═══════════════════════════════════════════ --}}
+                @if($templatesDokumen && $templatesDokumen->isNotEmpty())
+                <div class="mt-8 pt-6">
+                    <h3 class="text-sm font-bold text-slate-800">Dokumen yang Diperlukan</h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Silakan download template (jika tersedia) dan upload file yang diminta.</p>
+                    
+                    <div class="mt-4 space-y-3">
+                        @foreach($templatesDokumen as $tmpl)
+                            @php
+                                $jenis = $tmpl->title;
+                                $docGroup = $dokumenByJenis->get($jenis);
+                                $latestDoc = $docGroup ? $docGroup->sortByDesc('created_at')->first() : null;
+                                $status = $latestDoc ? strtolower($latestDoc->approval_status ?? $latestDoc->status_validasi) : 'belum';
+                                
+                                $statusMap = [
+                                    'belum' => ['label' => 'Belum Ada', 'class' => 'bg-slate-100 text-slate-500'],
+                                    'menunggu' => ['label' => 'Menunggu Validasi', 'class' => 'bg-amber-100 text-amber-700'],
+                                    'pending' => ['label' => 'Menunggu Validasi', 'class' => 'bg-amber-100 text-amber-700'],
+                                    'disetujui' => ['label' => 'Disetujui', 'class' => 'bg-emerald-100 text-emerald-700'],
+                                    'approved' => ['label' => 'Disetujui', 'class' => 'bg-emerald-100 text-emerald-700'],
+                                    'ditolak' => ['label' => 'Revisi', 'class' => 'bg-rose-100 text-rose-700'],
+                                    'rejected' => ['label' => 'Ditolak', 'class' => 'bg-red-100 text-red-700'],
+                                    'revision' => ['label' => 'Revisi', 'class' => 'bg-rose-100 text-rose-700'],
+                                ];
+                                $st = $statusMap[$status] ?? $statusMap['belum'];
+                            @endphp
+
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm transition-all gap-4">
+                                
+                                {{-- Info Dokumen --}}
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-50 text-slate-500 shadow-sm border border-slate-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-bold text-slate-800">{{ $tmpl->title }}</p>
+                                            @if($tmpl->is_uploadable && $latestDoc)
+                                            <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest {{ $st['class'] }}">
+                                                {{ $st['label'] }}
+                                            </span>
+                                            @endif
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 mt-0.5">{{ $tmpl->description ?? 'Dokumen Pasca KP' }}</p>
+                                        
+                                        @if($tmpl->is_uploadable && $latestDoc)
+                                        <div class="mt-1 flex items-center gap-2">
+                                            <p class="text-[10px] text-slate-400">v.{{ \Carbon\Carbon::parse($latestDoc->created_at)->format('d.m.Y') }}</p>
+                                            <a href="{{ $latestDoc->file_url }}" target="_blank" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">LIHAT FILE</a>
+                                        </div>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                {{-- Action Buttons --}}
+                                <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                    @if($tmpl->is_downloadable && !empty($tmpl->file_path))
+                                        <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $tmpl->id) }}"
+                                           class="inline-flex items-center px-3 py-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4"/></svg>
+                                            Template
+                                        </a>
+                                    @endif
+                                    
+                                    @if($tmpl->is_uploadable)
+                                    <form action="{{ route('eoffice.kp.mahasiswa.dokumen.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2 w-full sm:w-auto" x-data="{ fileName: '' }">
+                                        @csrf
+                                        <input type="hidden" name="jenis_dokumen" value="{{ $tmpl->title }}">
+                                        <div class="relative w-full sm:w-auto">
+                                            <input type="file" name="file" id="dokumen_{{ $tmpl->id }}" 
+                                                   class="sr-only peer" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" required
+                                                   x-on:change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                                            <label for="dokumen_{{ $tmpl->id }}"
+                                                   class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-slate-300">
+                                                <svg class="w-4 h-4 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4"/></svg>
+                                                <span x-text="fileName ? fileName : '{{ $latestDoc ? 'Unggah Ulang' : 'Upload File' }}'" class="truncate max-w-[120px]"></span>
+                                            </label>
+                                        </div>
+                                        <button type="submit" x-show="fileName" style="display: none;" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                                            Simpan
+                                        </button>
+                                    </form>
+                                    @endif
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- ═══════════════════════════════════════════ --}}
+                {{-- CARD 2: NILAI LAPANGAN (FORM A2)           --}}
                 {{-- ═══════════════════════════════════════════ --}}
                 @php
                     $nlBadgeMap = [
@@ -185,62 +278,65 @@
                     $nlB = $nlBadgeMap[$nlStatus] ?? $nlBadgeMap['belum'];
                     $nilaiLap = $penilaian?->nilai_lapangan;
                 @endphp
-                <div class="bg-white rounded-2xl border overflow-hidden transition-all duration-300
-                    {{ $currentStep === 1 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step1Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
-
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 1 ? 'bg-indigo-50/40' : '' }}">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                                {{ $step1Done ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white' }}">
-                                @if($step1Done)<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>@else 1 @endif
-                            </div>
-                            <div>
-                                <h2 class="text-base font-bold text-slate-900">Presensi & Nilai Lapangan (A2)</h2>
-                                <p class="text-[11px] text-slate-500">Unggah form A2 yang sudah ditandatangani pembimbing lapangan.</p>
-                            </div>
-                        </div>
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $nlB['cls'] }}">{{ $nlB['txt'] }}</span>
-                    </div>
-
-                    <div class="p-6" x-data="{ modalOpen: false }">
-
-                        {{-- Riwayat Validasi --}}
-                        <div class="mb-5">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Riwayat Validasi</p>
-                            <div class="relative pl-5 space-y-3">
-                                <div class="absolute left-1.5 top-2 bottom-2 w-0.5 bg-slate-100"></div>
-                                <div class="flex items-start gap-3">
-                                    <div class="w-3 h-3 rounded-full mt-0.5 -ml-[18px] flex-shrink-0 border-2 border-white shadow {{ $nilaiLapanganDoc ? 'bg-indigo-500' : 'bg-slate-200' }}"></div>
-                                    <div>
-                                        <p class="text-xs font-semibold {{ $nilaiLapanganDoc ? 'text-slate-800' : 'text-slate-400' }}">
-                                            {{ $nilaiLapanganDoc ? 'Form A2 berhasil diunggah' : 'Menunggu form A2 diunggah' }}
-                                        </p>
+                <div class="mt-8 pt-6 border-t border-slate-200">
+                    <h3 class="text-sm font-bold text-slate-800">Form A2 (Presensi & Nilai Lapangan)</h3>
+                    <p class="text-[11px] text-slate-500 mt-0.5">Unggah form A2 yang sudah ditandatangani pembimbing lapangan.</p>
+                    
+                    <div class="mt-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm transition-all gap-4">
+                            
+                            {{-- Info Dokumen --}}
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-slate-50 text-slate-500 shadow-sm border border-slate-100">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-sm font-bold text-slate-800">Form A2</p>
                                         @if($nilaiLapanganDoc)
-                                            <p class="text-[10px] text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($nilaiLapanganDoc->created_at)->translatedFormat('d M Y \p\u\k\u\l H:i') }}</p>
+                                        <span class="inline-flex px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest {{ $nlB['cls'] }}">
+                                            {{ $nlB['txt'] }}
+                                        </span>
                                         @endif
                                     </div>
-                                </div>
-                                @if($nilaiLapanganDoc)
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-3 h-3 rounded-full mt-0.5 -ml-[18px] flex-shrink-0 border-2 border-white shadow
-                                            {{ $nlStatus === 'disetujui' ? 'bg-emerald-500' : ($nlStatus === 'ditolak' ? 'bg-rose-500' : 'bg-amber-400') }}"></div>
-                                        <div>
-                                            <p class="text-xs font-semibold {{ $nlStatus === 'disetujui' ? 'text-emerald-700' : ($nlStatus === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
-                                                @if($nlStatus === 'disetujui') ✓ Disetujui — nilai lapangan telah diinput
-                                                @elseif($nlStatus === 'ditolak') ✗ Ditolak — perlu revisi
-                                                @else ⏳ Menunggu validasi & input nilai dari Koordinator
-                                                @endif
-                                            </p>
-                                            <p class="text-[10px] text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($nilaiLapanganDoc->updated_at)->translatedFormat('d M Y \p\u\k\u\l H:i') }}</p>
-                                        </div>
+                                    <p class="text-[11px] text-slate-500 mt-0.5">Presensi & Nilai Lapangan dari Instansi</p>
+                                    
+                                    @if($nilaiLapanganDoc)
+                                    <div class="mt-1 flex items-center gap-2">
+                                        <p class="text-[10px] text-slate-400">v.{{ \Carbon\Carbon::parse($nilaiLapanganDoc->created_at)->format('d.m.Y') }}</p>
+                                        <a href="{{ $nilaiLapanganDoc->file_url }}" target="_blank" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">LIHAT FILE</a>
                                     </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Action Buttons --}}
+                            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                                @if($nlStatus !== 'disetujui')
+                                <form action="{{ route('eoffice.kp.mahasiswa.dokumen.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2 w-full sm:w-auto" x-data="{ fileName: '' }">
+                                    @csrf
+                                    <input type="hidden" name="jenis_dokumen" value="Nilai Lapangan">
+                                    <div class="relative w-full sm:w-auto">
+                                        <input type="file" name="file" id="dokumen_a2" 
+                                               class="sr-only peer" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" required
+                                               x-on:change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
+                                        <label for="dokumen_a2"
+                                               class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-slate-300">
+                                            <svg class="w-4 h-4 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4"/></svg>
+                                            <span x-text="fileName ? fileName : '{{ $nilaiLapanganDoc ? 'Unggah Ulang' : 'Upload File' }}'" class="truncate max-w-[120px]"></span>
+                                        </label>
+                                    </div>
+                                    <button type="submit" x-show="fileName" style="display: none;" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                                        Simpan
+                                    </button>
+                                </form>
                                 @endif
                             </div>
                         </div>
 
                         {{-- Nilai Lapangan dari Dosen (tampil jika sudah diinput) --}}
                         @if($nilaiLap !== null)
-                            <div class="mb-5 p-4 rounded-2xl border border-emerald-100 bg-emerald-50">
+                            <div class="mt-4 p-4 rounded-2xl border border-emerald-100 bg-emerald-50">
                                 <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-2">Nilai Lapangan dari Pembimbing</p>
                                 <div class="flex items-center gap-4">
                                     <div class="w-16 h-16 rounded-2xl bg-white border border-emerald-200 shadow-sm flex items-center justify-center">
@@ -257,65 +353,6 @@
                                 </div>
                             </div>
                         @endif
-
-                        {{-- File preview --}}
-                        @if($nilaiLapanganDoc)
-                            <div class="mb-4 flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <p class="text-[11px] text-slate-600 flex-1 font-medium">form_a2.{{ pathinfo($nilaiLapanganDoc->file_path, PATHINFO_EXTENSION) }}</p>
-                                <a href="{{ $nilaiLapanganDoc->file_url }}" target="_blank" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex-shrink-0 uppercase">Lihat File</a>
-                            </div>
-                        @endif
-
-                        {{-- Action --}}
-                        @if($nlStatus !== 'disetujui')
-                            <button @click="modalOpen = true"
-                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 transition-all active:scale-95">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                {{ $nilaiLapanganDoc ? 'Unggah Ulang Form A2' : 'Unggah Form A2' }}
-                            </button>
-                        @else
-                            <div class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
-                                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <p class="text-sm font-bold text-emerald-700">Form A2 telah diverifikasi ✓</p>
-                            </div>
-                        @endif
-
-                        {{-- Modal Upload A2 --}}
-                        <div x-show="modalOpen" class="fixed inset-0 z-50" style="display:none;">
-                            <div class="flex items-center justify-center min-h-screen px-4">
-                                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="modalOpen = false"></div>
-                                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
-                                    <form action="{{ route('eoffice.kp.mahasiswa.dokumen.store') }}" method="POST" enctype="multipart/form-data">
-                                        @csrf
-                                        <input type="hidden" name="jenis_dokumen" value="Nilai Lapangan">
-                                        <div class="p-6">
-                                            <div class="flex items-center gap-4 mb-5">
-                                                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-bold text-slate-900">Unggah Form A2</h3>
-                                                    <p class="text-xs text-slate-400">Presensi & Nilai Lapangan &mdash; PDF/JPG/PNG, maks. 10MB</p>
-                                                </div>
-                                            </div>
-                                            <div x-data="{ fn: '' }" class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-amber-400 hover:bg-white transition-all text-center">
-                                                <input type="file" name="file" required id="nl-file" class="hidden" @change="fn = $event.target.files[0].name">
-                                                <label for="nl-file" class="cursor-pointer block">
-                                                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                                                    <p class="text-sm font-semibold text-slate-600" x-text="fn || 'Klik untuk memilih file'"></p>
-                                                    <p class="text-[10px] text-slate-400 mt-1">Format PDF/JPG/PNG</p>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3">
-                                            <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-md transition-all active:scale-95">Simpan Unggahan</button>
-                                            <button type="button" @click="modalOpen = false" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Batal</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -557,49 +594,8 @@
 
             </div>{{-- end lg:col-span-2 --}}
 
-            {{-- Kolom Kanan: Download Templates --}}
-            <div class="space-y-8">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-5 border-b border-slate-50 bg-indigo-50/20">
-                        <h2 class="text-base font-bold text-indigo-900">Template Dokumen</h2>
-                        <p class="text-[11px] text-indigo-700/70 mt-0.5">Template dokumen Pasca KP</p>
-                    </div>
-                    <div class="p-5 space-y-3">
-                        @forelse($templatesDokumen ?? collect() as $tmpl)
-                        @php
-                            $isPdf = strtolower($tmpl->file_type ?? '') === 'pdf';
-                        @endphp
-                        <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $tmpl->id) }}"
-                           class="flex items-center p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all group">
-                            <div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3 flex-shrink-0 transition-all
-                                 {{ $isPdf ? 'bg-rose-50 text-rose-400 group-hover:bg-rose-100 group-hover:text-rose-600' : 'bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-indigo-600' }} shadow-sm">
-                                @if($isPdf)
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-                                @else
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                @endif
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-xs font-bold text-slate-800 truncate">{{ $tmpl->title }}</p>
-                                <div class="flex items-center gap-1.5 mt-0.5">
-                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border bg-violet-50 text-violet-600 border-violet-100">Pasca KP</span>
-                                    <span class="text-[9px] text-slate-400 uppercase">{{ $tmpl->file_type ?? 'file' }}</span>
-                                </div>
-                            </div>
-                            <svg class="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-indigo-400 transition-colors ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                        </a>
-                        @empty
-                        <div class="flex flex-col items-center justify-center py-8 text-center">
-                            <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-300">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            </div>
-                            <p class="text-xs font-semibold text-slate-400">Belum ada template</p>
-                            <p class="text-[10px] text-slate-300 mt-0.5">Koordinator belum mengupload template dokumen.</p>
-                        </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
+            </div>{{-- end lg:col-span-2 --}}
+
 
             </div>{{-- end grid --}}
             @endif

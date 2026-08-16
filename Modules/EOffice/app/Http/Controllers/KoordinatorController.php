@@ -721,15 +721,13 @@ class KoordinatorController extends Controller implements HasMiddleware
             'u.name as nama',
             'm.nim as nim',
             'd.nama_lengkap as dosen_pembimbing',
-            'p.nilai_seminar_pembimbing',
-            'p.nilai_lapangan',
             'p.nilai_akhir'
         )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
             ->leftJoin('eo_kp_dosen as d', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'd.id')
             ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
-            ->with(['nilaiDetail'])
+            ->with(['nilaiDetail.komponen'])
             ->orderBy('eo_kerja_praktik.created_at', 'desc')
             ->get();
 
@@ -893,10 +891,8 @@ class KoordinatorController extends Controller implements HasMiddleware
 
             // Maintain fallback average for legacy interfaces
             if ($countInput > 0) {
-                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
-                    ['kp_id' => $kp->id],
-                    ['nilai_lapangan' => ($totalInput / $countInput)]
-                );
+                // Not saving to eo_kp_penilaian->nilai_lapangan anymore because it was dropped.
+                // It is already dynamically saved in eo_kp_nilai_detail.
             }
 
             if ($request->has('nilai_akhir')) {
