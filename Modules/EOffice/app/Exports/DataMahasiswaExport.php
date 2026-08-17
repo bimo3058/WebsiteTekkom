@@ -73,8 +73,10 @@ class DataMahasiswaExport implements FromCollection, WithHeadings, WithMapping
             $row->nama ?? '-',
             $tahap,
             $row->dosen_pembimbing ?? 'Belum ada pembimbing',
-            $row->nilai_seminar_pembimbing ?? '-',
-            $row->nilai_lapangan ?? '-',
+            // $row->nilai_seminar_pembimbing ?? '-',
+            // $row->nilai_lapangan ?? '-',
+            '-',
+            '-',
             $row->nilai_akhir ?? '-'
         ];
     }

@@ -88,8 +88,8 @@ class DosenController extends Controller
                     : null,
                 'status_kp' => $kp->status_kp,
                 'status_dokumen' => 'Lengkap',
-                'nilai_seminar' => $kp->nilai_seminar_pembimbing,
-                'nilai_laporan' => $kp->nilai_lapangan,
+                'nilai_seminar' => null, // Legacy deprecated
+                'nilai_laporan' => null, // Legacy deprecated
                 'sudah_daftar_seminar' => $sudahDaftarSeminar,
                 'status_seminar' => $kp->status_seminar,
                 'progress' => $kp->status_kp === 'completed' ? 100
@@ -100,6 +100,93 @@ class DosenController extends Controller
 
 
         return view('eoffice::dosen.bimbingan', compact('mahasiswas'));
+    }
+
+    /**
+     * Halaman Penilaian Mahasiswa (Dosen) - Menampilkan tabel khusus penilaian
+     */
+    public function penilaianIndex()
+    {
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
+        $query = KerjaPraktik::select(
+            'eo_kerja_praktik.*',
+            'u.name as nama_mahasiswa',
+            'm.nim as nim_user',
+            'u.email as email_mahasiswa',
+            'ud.name as nama_dosen',
+            'p.nilai_akhir',
+            's.id as seminar_id',
+            's.status_validasi_syarat as status_seminar'
+        )
+            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
+            ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id')
+            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
+            ->leftJoin('eo_kp_seminar as s', 'eo_kerja_praktik.id', '=', 's.kp_id');
+
+        if ($kpDosen) {
+            $query->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
+            // Optional: Filter hanya mahasiswa yang setidaknya sudah aktif KP atau siap dinilai
+            $query->whereIn('eo_kerja_praktik.status_kp', ['active', 'completed']);
+        } else {
+            $query->whereNull('eo_kerja_praktik.id');
+        }
+
+        $bimbingan = $query->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
+
+        $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->get();
+
+        $mahasiswas = $bimbingan->map(function ($kp) use ($allPeriodes) {
+            $sudahDaftarSeminar = !is_null($kp->seminar_id);
+
+            // Bind Rubrik Items for Dosen
+            $rubrikItems = [];
+            $matchedPeriodeId = $kp->periode_id; // Using our custom accessor!
+            if ($matchedPeriodeId) {
+                $periode = $allPeriodes->firstWhere('id', $matchedPeriodeId);
+                if ($periode && $periode->komponenNilai) {
+                    $dosenRubrik = $periode->komponenNilai->where('role_penilai', 'dosen_pembimbing');
+
+                    // Fetch existing scores if evaluated
+                    $details = \Modules\EOffice\Models\KpNilaiDetail::where('kp_id', $kp->id)->get();
+
+                    $rubrikItems = $dosenRubrik->map(function ($r) use ($details) {
+                        $saved = $details->firstWhere('komponen_id', $r->id);
+                        return [
+                            'id' => $r->id,
+                            'deskripsi' => $r->deskripsi,
+                            'bobot' => $r->bobot,
+                            'nilai_angka' => $saved ? $saved->nilai_angka : null
+                        ];
+                    })->values()->toArray();
+                }
+            }
+
+            return (object) [
+                'id' => $kp->id,
+                'nama' => $kp->nama_mahasiswa ?? 'Unknown',
+                'nim' => $kp->nim ?? $kp->nim_user ?? '-',
+                'judul_kp' => $kp->judul_kp ?? 'Belum ada judul',
+                'tempat_kp' => $kp->instansi_kp ?? 'Belum ada tempat',
+                'tanggal_mulai' => $kp->tanggal_mulai
+                    ? \Carbon\Carbon::parse($kp->tanggal_mulai)->translatedFormat('d M Y')
+                    : null,
+                'tanggal_selesai' => $kp->tanggal_selesai
+                    ? \Carbon\Carbon::parse($kp->tanggal_selesai)->translatedFormat('d M Y')
+                    : null,
+                'status_kp' => $kp->status_kp,
+                'status_dokumen' => 'Lengkap',
+                'nilai_akhir' => $kp->nilai_akhir,
+                'sudah_daftar_seminar' => $sudahDaftarSeminar,
+                'status_seminar' => $kp->status_seminar,
+                'progress' => $kp->status_kp === 'completed' ? 100
+                    : ($kp->status_kp === 'active' ? 60 : 20),
+                'rubrik_items' => $rubrikItems,
+            ];
+        });
+
+        return view('eoffice::dosen.penilaian_index', compact('mahasiswas'));
     }
 
     /**
@@ -131,7 +218,7 @@ class DosenController extends Controller
     public function approveDokumen($id, $dokumenId)
     {
         $dokumen = \Modules\EOffice\Models\KpDokumen::where('kp_id', $id)->findOrFail($dokumenId);
-        $dokumen->status_validasi = 'approved';
+        $dokumen->approval_status = 'approved';
         $dokumen->save();
 
         return back()->with('success', 'Dokumen ' . $dokumen->jenis_dokumen . ' berhasil disetujui (ACC).');
@@ -143,7 +230,7 @@ class DosenController extends Controller
     public function rejectDokumen(Request $request, $id, $dokumenId)
     {
         $dokumen = \Modules\EOffice\Models\KpDokumen::where('kp_id', $id)->findOrFail($dokumenId);
-        $dokumen->status_validasi = 'rejected';
+        $dokumen->approval_status = 'rejected';
         $dokumen->save();
 
         return back()->with('error', 'Dokumen ' . $dokumen->jenis_dokumen . ' ditolak. Mahasiswa harus merevisi dan mengunggah ulang.');
@@ -178,7 +265,7 @@ class DosenController extends Controller
             $query->whereNull('kp.id'); // Kosongkan jika dosen belum terdaftar
         }
 
-        $allDokumens = $query->orderByRaw("CASE eo_kp_dokumen.status_validasi WHEN 'pending' THEN 0 ELSE 1 END")
+        $allDokumens = $query->orderByRaw("CASE eo_kp_dokumen.approval_status WHEN 'pending' THEN 0 ELSE 1 END")
             ->orderBy('eo_kp_dokumen.tanggal_upload', 'desc')
             ->with(['kerjaPraktik'])
             ->get();
@@ -202,9 +289,9 @@ class DosenController extends Controller
         // Statistik ringkas untuk header halaman
         $stats = [
             'total' => $dokumens->count(),
-            'pending' => $dokumens->where('status_validasi', 'pending')->count(),
-            'approved' => $dokumens->where('status_validasi', 'approved')->count(),
-            'rejected' => $dokumens->where('status_validasi', 'rejected')->count(),
+            'pending' => $dokumens->where('approval_status', 'pending')->count(),
+            'approved' => $dokumens->where('approval_status', 'approved')->count(),
+            'rejected' => $dokumens->where('approval_status', 'rejected')->count(),
         ];
 
         return view('eoffice::dosen.validasi_berkas', compact('dokumens', 'stats'));
@@ -256,13 +343,14 @@ class DosenController extends Controller
         }
 
         if ($komponenDosen && $komponenDosen->isNotEmpty()) {
-            // Dynamic Grading Based on Components
+
             $rules = [];
             foreach ($komponenDosen as $komp) {
                 $rules['nilai_' . $komp->id] = 'required|numeric|min:0|max:100';
             }
             $validated = $request->validate($rules);
 
+            // 1. Simpan kepingan nilai ke dalam Detail Penilaian
             foreach ($komponenDosen as $komp) {
                 \Modules\EOffice\Models\KpNilaiDetail::updateOrCreate(
                     ['kp_id' => $kp->id, 'komponen_id' => $komp->id],
@@ -270,11 +358,23 @@ class DosenController extends Controller
                 );
             }
 
-            // Logic to calculate `nilai_akhir` from the pivot if Koordinator also filled theirs
+            // 2. Kalkulasi ulang Total Nilai Akhir dari KESELURUHAN komponen (baik yang diisi Dosen & Koord)
             $allComponents = $matchedPeriode->komponenNilai;
-            $totalAllWeight = $allComponents->sum('bobot');
-            // Let Mahasiswa or integration instructions handle the complex weighted sum for total Nilai Akhir
-            // The Dosen component storage is complete.
+            $allDetails = \Modules\EOffice\Models\KpNilaiDetail::where('kp_id', $kp->id)->get();
+
+            $totalAccumulated = 0;
+            foreach ($allComponents as $comp) {
+                $detail = $allDetails->firstWhere('komponen_id', $comp->id);
+                $angka = $detail ? (float) $detail->nilai_angka : 0;
+                $bobotPersen = ($comp->bobot / 100);
+                $totalAccumulated += ($angka * $bobotPersen);
+            }
+
+            // 3. Simpan Kalkulasi Final sebagai Snapshot ke tabel master eo_kp_penilaian
+            \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                ['kp_id' => $kp->id],
+                ['nilai_akhir' => round($totalAccumulated, 2)]
+            );
 
         } else {
             // Fallback for Legacy without Rubric Configuration
@@ -283,7 +383,7 @@ class DosenController extends Controller
             ]);
 
             $existing = \Modules\EOffice\Models\KpPenilaian::where('kp_id', $kp->id)->first();
-            
+
             $nilai_akhir = null;
             if ($existing && $kp->nilai_lapangan !== null) {
                 $nilai_akhir = round(

@@ -797,15 +797,17 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'nim' => $kp->nim ?? '-',
                 'prodi' => 'Teknik Komputer',
                 'kelas' => $kp->kelas ?? '-',
+                'ipk' => $kp->ipk ?? '-',
+                'sks_diambil' => $kp->sks_diambil ?? '-',
                 'tempat_kp' => $kp->instansi_kp ?? 'Belum ditentukan',
                 'judul_kp' => $kp->judul_kp ?? 'Belum ditentukan',
                 'dosen_pembimbing' => $kp->dosen_pembimbing,
                 'status_kp' => $statusStr,
                 'semester' => 'Genap',
                 'tahun_kp' => date('Y', strtotime($kp->created_at)),
-                'nilai_seminar' => $kp->nilai_seminar_pembimbing,
-                'nilai_laporan' => $kp->nilai_seminar_pembimbing, // alias, sama dengan nilai_seminar (diisi dosen)
-                'nilai_lapangan' => $kp->nilai_lapangan,            // diisi koordinator dari menu nilai lapangan
+                'nilai_seminar' => '-',
+                'nilai_laporan' => '-',
+                'nilai_lapangan' => '-',
                 'nilai_akhir' => $kp->nilai_akhir,
                 'status_dokumen' => '-',
                 'riwayat_approval' => [
@@ -814,6 +816,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'status_seminar' => '-',
                 'periode_id' => $periodeId,
                 'periode_name' => $periodeName,
+                'kelas_dibuka' => $matchedPeriode && $matchedPeriode->kelas_dibuka ? $matchedPeriode->kelas_dibuka : [],
                 'komponen_koordinator' => $komponenKoor,
                 'semua_nilai' => $semuaNilai,
             ];
@@ -837,7 +840,9 @@ class KoordinatorController extends Controller implements HasMiddleware
             'dosen_pembimbing_id' => 'nullable|exists:eo_kp_dosen,id',
             'nilai_lapangan' => 'nullable|numeric|min:0|max:100',
             'kelas' => 'nullable|string|max:50',
-            // Kita bisa juga override status_kp di sini jika user menyediakan
+            // Migrasi & Override Status validations
+            'force_status' => 'nullable|string|in:pending,active,completed',
+            'force_periode' => 'nullable|exists:eo_kp_periode,id'
         ]);
 
         if ($request->has('kelas')) {
@@ -861,11 +866,13 @@ class KoordinatorController extends Controller implements HasMiddleware
             }
         }
 
-        $kp->save();
+        // Administrator Override Mode
+        if ($request->filled('force_status')) {
+            $kp->status_kp = $request->force_status;
+        }
 
-        // Check if period has components for koordinator
         $komponenKoor = null;
-        if ($kp->periode && $kp->periode->komponenNilai) {
+        if ($kp && $kp->periode && $kp->periode->komponenNilai) {
             $komponenKoor = $kp->periode->komponenNilai->where('role_penilai', 'koordinator');
         }
 
@@ -895,33 +902,20 @@ class KoordinatorController extends Controller implements HasMiddleware
                 // Not saving to eo_kp_penilaian->nilai_lapangan anymore because it was dropped.
                 // It is already dynamically saved in eo_kp_nilai_detail.
             }
+        }
 
-            if ($request->has('nilai_akhir')) {
-                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
-                    ['kp_id' => $kp->id],
-                    ['nilai_akhir' => $request->nilai_akhir]
-                );
-            }
-
-        } else {
-            if ($request->has('nilai_lapangan') || $request->has('nilai_akhir')) {
-                $penilaianData = [];
-                if ($request->has('nilai_lapangan')) {
-                    $penilaianData['nilai_lapangan'] = $request->nilai_lapangan;
-                }
-                if ($request->has('nilai_akhir')) {
-                    // Di sistem aslinya, nilai akhir dihitung otomatis. Namun request bilang ada field override Nilai.
-                    $penilaianData['nilai_akhir'] = $request->nilai_akhir;
-                }
-
-                if (!empty($penilaianData)) {
-                    \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
-                        ['kp_id' => $kp->id],
-                        $penilaianData
-                    );
-                }
+        if ($request->filled('force_periode')) {
+            $targetPeriode = \Modules\EOffice\Models\KpPeriode::find($request->force_periode);
+            if ($targetPeriode && $targetPeriode->pra_kp_mulai) {
+                // Majukan created_at ke 1 hari setelah pra_kp_mulai di periode yang ditargetkan
+                // Dengan begini, logic filter periode otomatis mendeteksi mahasiswa ini masuk ke jadwal periode baru (Migrasi)
+                $kp->created_at = \Carbon\Carbon::parse($targetPeriode->pra_kp_mulai)->addDay()->format('Y-m-d H:i:s');
             }
         }
+
+        $kp->save();
+
+
 
         return redirect()->back()->with('success', 'Data Mahasiswa berhasil diperbarui!');
     }
