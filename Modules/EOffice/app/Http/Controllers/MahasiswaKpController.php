@@ -392,8 +392,9 @@ class MahasiswaKpController extends Controller
                     if ($request->hasFile($inputName)) {
                         $file = $request->file($inputName);
                         $fileName = $file->getClientOriginalName();
+                        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
                         $safeTitle = \Illuminate\Support\Str::slug($tmpl->title);
-                        $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/pra-kp", 'eoffice');
+                        $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/pra-kp", 'eoffice', $baseName);
 
                         if (!$path) {
                             throw new \Exception("Gagal mengunggah dokumen {$tmpl->title} ke penyimpanan.");
@@ -522,8 +523,9 @@ class MahasiswaKpController extends Controller
         // Simpan file
         $file = $request->file('file');
         $fileName = $file->getClientOriginalName();
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
         $folder = strtolower(str_replace(' ', '_', $validated['jenis_dokumen']));
-        $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/{$activePhase}", 'eoffice');
+        $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/{$activePhase}", 'eoffice', $baseName);
 
         if (!$path) {
             return redirect()->back()->with('error', "Gagal mengunggah dokumen {$validated['jenis_dokumen']} ke penyimpanan.");

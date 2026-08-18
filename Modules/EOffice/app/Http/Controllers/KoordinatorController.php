@@ -511,138 +511,7 @@ class KoordinatorController extends Controller implements HasMiddleware
         return redirect()->back()->with('success', 'Template berhasil dihapus!');
     }
 
-    public function validasiBerkas()
-    {
-        $templates = \Modules\EOffice\Models\TemplateDokumenKP::all()->groupBy('periode_id');
-        $kps = KerjaPraktik::with(['mahasiswa.user', 'dosenPembimbing.user', 'dokumen'])
-            ->orderBy('created_at', 'desc')
-            ->get();
 
-        $mahasiswas = $kps->map(function ($kp) use ($templates) {
-            $dokumens = $kp->dokumen;
-            $periodTemplates = $templates[$kp->periode_id] ?? collect();
-
-            // Map status_validasi to UI status
-            $mapStatus = function ($status) {
-                if ($status === 'disetujui' || $status === 'approved')
-                    return 'approved';
-                if ($status === 'ditolak' || $status === 'rejected')
-                    return 'rejected';
-                return 'pending';
-            };
-
-            $praKp = $dokumens->filter(function ($d) use ($periodTemplates) {
-                $isDraft = strtolower($d->status_validasi) === 'draft';
-                if ($isDraft)
-                    return false;
-                $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
-                return $t && $t->phase === 'pra_kp' && $t->approver_role === 'koordinator';
-            })->map(fn($d) => (object) [
-                    'id' => $d->id,
-                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
-                    'file_url' => $d->file_path ? $d->file_url : null,
-                    'jenis' => $d->jenis_dokumen,
-                    'tanggal' => date('Y-m-d', strtotime($d->created_at)),
-                    'ukuran' => '-', // Can't easily get file size without storage hit
-                    'status' => $mapStatus($d->status_validasi ?? $d->approval_status),
-                    'catatan' => $d->revision_note ?? ''
-                ])->values();
-
-            $saatKp = $dokumens->filter(function ($d) use ($periodTemplates) {
-                $isDraft = strtolower($d->status_validasi) === 'draft';
-                if ($isDraft)
-                    return false;
-                $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
-                return $t && $t->phase === 'saat_kp' && $t->approver_role === 'koordinator';
-            })->map(fn($d) => (object) [
-                    'id' => $d->id,
-                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
-                    'file_url' => $d->file_path ? $d->file_url : null,
-                    'jenis' => $d->jenis_dokumen,
-                    'tanggal' => date('Y-m-d', strtotime($d->created_at)),
-                    'ukuran' => '-',
-                    'status' => $mapStatus($d->status_validasi ?? $d->approval_status),
-                    'catatan' => $d->revision_note ?? ''
-                ])->values();
-
-            $pascaKp = $dokumens->filter(function ($d) use ($periodTemplates) {
-                $isDraft = strtolower($d->status_validasi) === 'draft';
-                if ($isDraft)
-                    return false;
-                $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
-                return $t && $t->phase === 'pasca_kp' && $t->approver_role === 'koordinator';
-            })->map(fn($d) => (object) [
-                    'id' => $d->id,
-                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
-                    'file_url' => $d->file_path ? $d->file_url : null,
-                    'jenis' => $d->jenis_dokumen,
-                    'tanggal' => date('Y-m-d', strtotime($d->created_at)),
-                    'ukuran' => '-',
-                    'status' => $mapStatus($d->status_validasi ?? $d->approval_status),
-                    'catatan' => $d->revision_note ?? ''
-                ])->values();
-
-            // Status keseluruhan (hanya berdasarkan dokumen yang divalidasi koordinator)
-            $allDocsKoord = $praKp->concat($saatKp)->concat($pascaKp);
-            $status_keseluruhan = 'Belum Upload';
-
-            if ($allDocsKoord->count() > 0) {
-                if ($allDocsKoord->contains(fn($d) => in_array($d->status, ['rejected']))) {
-                    $status_keseluruhan = 'Revisi';
-                } elseif ($allDocsKoord->contains(fn($d) => in_array($d->status, ['pending']))) {
-                    $status_keseluruhan = 'Menunggu Review';
-                } else {
-                    $status_keseluruhan = 'Disetujui';
-                }
-            }
-
-            return (object) [
-                'id' => $kp->id,
-                'nama' => $kp->mahasiswa->user->name ?? 'Unknown',
-                'nim' => $kp->mahasiswa->nim ?? '-',
-                'prodi' => 'Teknik Komputer',
-                'dosen_pembimbing' => $kp->dosenPembimbing->nama_lengkap ?? null,
-                'tempat_kp' => $kp->instansi_kp ?? '-',
-                'judul_kp' => $kp->judul_kp ?? '-',
-                'durasi_kp' => ($kp->tanggal_mulai ? date('d M Y', strtotime($kp->tanggal_mulai)) : '-') . ' - ' . ($kp->tanggal_selesai ? date('d M Y', strtotime($kp->tanggal_selesai)) : '-'),
-                'status_keseluruhan' => $status_keseluruhan,
-                'tahap_aktif' => $kp->status_kp === 'active' ? 'Saat KP' : ($kp->status_kp === 'Selesai' || $kp->status_kp === 'Pasca KP' ? 'Pasca KP' : 'Pra KP'),
-                'jumlah_dokumen' => $allDocsKoord->count(),
-                'dokumen' => [
-                    'pra_kp' => $praKp,
-                    'saat_kp' => $saatKp,
-                    'pasca_kp' => $pascaKp
-                ]
-            ];
-        });
-
-        return view('eoffice::koordinator.validasi_berkas', compact('mahasiswas'));
-    }
-
-    public function approveDokumen($id)
-    {
-        $dokumen = \Modules\EOffice\Models\KpDokumen::findOrFail($id);
-        $dokumen->update([
-            'status_validasi' => 'disetujui',
-            'approval_status' => 'approved',
-            'approved_by' => auth()->id(),
-            'approved_at' => now(),
-            'revision_note' => null
-        ]);
-        return response()->json(['success' => true]);
-    }
-
-    public function rejectDokumen(Request $request, $id)
-    {
-        $request->validate(['catatan' => 'required|string']);
-        $dokumen = \Modules\EOffice\Models\KpDokumen::findOrFail($id);
-        $dokumen->update([
-            'status_validasi' => 'ditolak',
-            'approval_status' => 'rejected',
-            'revision_note' => $request->catatan
-        ]);
-        return response()->json(['success' => true]);
-    }
 
     /**
      * Halaman FAQ & Dokumen Panduan
@@ -929,133 +798,120 @@ class KoordinatorController extends Controller implements HasMiddleware
         return redirect()->back()->with('success', 'Data Mahasiswa berhasil diperbarui!');
     }
 
-    public function nilaiLapangan()
+    public function approveDokumen($kp_id, $dokumen_id)
     {
-        $kps = \Modules\EOffice\Models\KerjaPraktik::select(
-            'eo_kerja_praktik.*',
-            'u.name as nama',
-            'm.nim as nim'
-        )
-            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->with([
-                'periode.komponenNilai',
-                'nilaiDetail',
-                'dokumen' => function ($query) {
-                    $query->whereIn('jenis_dokumen', ['Nilai Lapangan', 'Form Penilaian Pembimbing', 'Form Penilaian'])
-                        ->where('status_validasi', '!=', 'draft');
-                }
-            ])
-            ->orderBy('eo_kerja_praktik.created_at', 'desc')
-            ->get();
+        $dokumen = \Modules\EOffice\Models\KpDokumen::where('kp_id', $kp_id)->findOrFail($dokumen_id);
 
-        $mahasiswas = $kps->map(function ($kp) {
-            $dokumen_nilai = $kp->dokumen->first();
+        $dokumen->status_validasi = 'disetujui';
+        $dokumen->approval_status = 'approved';
+        $dokumen->approved_by = auth()->id();
+        $dokumen->approved_at = now();
+        $dokumen->revision_note = null;
+        $dokumen->save();
 
-            $status_nilai = 'Menunggu Berkas';
-            if ($dokumen_nilai) {
-                if ($dokumen_nilai->nilai_status === 'valid') {
-                    $status_nilai = 'Sudah Dinilai';
-                } elseif ($dokumen_nilai->nilai_status === 'pending') {
-                    $status_nilai = 'Belum Dinilai';
-                } elseif ($dokumen_nilai->nilai_status === 'rejected') {
-                    $status_nilai = 'Ditolak';
-                }
-            }
+        return redirect()->back()->with('success', 'Dokumen berhasil disetujui (Approved).');
+    }
 
-            $komponen = [];
-            if ($kp->periode && $kp->periode->komponenNilai) {
-                foreach ($kp->periode->komponenNilai->where('role_penilai', 'koordinator') as $komp) {
-                    $existingVal = '';
-                    if ($kp->nilaiDetail) {
-                        $det = $kp->nilaiDetail->where('komponen_id', $komp->id)->first();
-                        if ($det)
-                            $existingVal = $det->nilai_angka;
-                    }
+    public function rejectDokumen(Request $request, $kp_id, $dokumen_id)
+    {
+        $dokumen = \Modules\EOffice\Models\KpDokumen::where('kp_id', $kp_id)->findOrFail($dokumen_id);
 
-                    $komponen[] = [
-                        'id' => $komp->id,
-                        'nama_komponen' => $komp->nama_komponen,
-                        'bobot' => $komp->bobot,
-                        'nilai_angka' => $existingVal
-                    ];
-                }
-            }
+        $dokumen->status_validasi = 'ditolak';
+        $dokumen->approval_status = 'rejected';
+        if ($request->filled('revision_note')) {
+            $dokumen->revision_note = $request->input('revision_note');
+        }
+        $dokumen->save();
 
-            return (object) [
-                'id' => $kp->id,
-                'dokumen_id' => $dokumen_nilai ? $dokumen_nilai->id : null,
-                'nama' => $kp->nama ?? 'Unknown',
-                'nim' => $kp->nim ?? '-',
-                'file_nilai' => $dokumen_nilai ? ($dokumen_nilai->file_name ?? basename($dokumen_nilai->file_path)) : null,
-                'file_path' => $dokumen_nilai ? $dokumen_nilai->file_path : null,
-                'nilai_input_mahasiswa' => $dokumen_nilai ? $dokumen_nilai->nilai_input_mahasiswa : null,
-                'nilai_validasi_koordinator' => $dokumen_nilai ? $dokumen_nilai->nilai_validasi_koordinator : null,
-                'status_nilai' => $status_nilai,
-                'komponen_koordinator' => $komponen
-            ];
+        return redirect()->back()->with('success', 'Dokumen ditolak dan pesan revisi telah dikirim.');
+    }
+
+    public function detailMahasiswa($id)
+    {
+        $kp = \Modules\EOffice\Models\KerjaPraktik::with([
+            'mahasiswa.user',
+            'dosenPembimbing.user',
+            'dokumen',
+            'nilaiDetail.komponen'
+        ])->findOrFail($id);
+
+        $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->orderBy('created_at', 'desc')->get();
+        // Matching logic identical to dataMahasiswa
+        $matchedPeriode = $allPeriodes->first(function ($p) use ($kp) {
+            if (!$kp->created_at || !$p->pra_kp_mulai)
+                return false;
+            $endDate = $p->pasca_kp_akhir ? clone $p->pasca_kp_akhir : (clone $p->pra_kp_akhir)->addMonths(6);
+            return $kp->created_at->format('Y-m-d') >= $p->pra_kp_mulai->format('Y-m-d')
+                && $kp->created_at->format('Y-m-d') <= $endDate->format('Y-m-d');
         });
 
-        return view('eoffice::koordinator.nilai_lapangan', compact('mahasiswas'));
-    }
-
-    public function updateNilaiLapangan(Request $request, $id)
-    {
-        $dokumen = \Modules\EOffice\Models\KpDokumen::with('kerjaPraktik.periode.komponenNilai')->findOrFail($id);
-        $kp = $dokumen->kerjaPraktik;
-
-        $komponenKoor = null;
-        if ($kp && $kp->periode && $kp->periode->komponenNilai) {
-            $komponenKoor = $kp->periode->komponenNilai->where('role_penilai', 'koordinator');
+        // 1. Dokumen Koordinator vs Dosen
+        $periodTemplates = \Modules\EOffice\Models\TemplateDokumenKP::where('periode_id', $matchedPeriode ? $matchedPeriode->id : null)->get();
+        if ($periodTemplates->isEmpty()) {
+            $periodTemplates = \Modules\EOffice\Models\TemplateDokumenKP::whereNull('periode_id')->get(); // Fallback master
         }
 
-        if ($komponenKoor && $komponenKoor->isNotEmpty()) {
-            $rules = [
-                'nilai_status' => 'required|in:valid,rejected,pending'
-            ];
-            foreach ($komponenKoor as $komp) {
-                $rules['nilai_' . $komp->id] = 'required|numeric|min:0|max:100';
+        $dokumens = $kp->dokumen;
+        $dokumenKoor = collect();
+        $dokumenDosen = collect();
+
+        foreach ($dokumens as $d) {
+            $isDraft = strtolower($d->status_validasi) === 'draft';
+            if ($isDraft)
+                continue;
+
+            $template = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
+            $role = $template ? $template->approver_role : 'koordinator'; // fallback
+
+            if ($role === 'koordinator') {
+                $dokumenKoor->push($d);
+            } else {
+                $dokumenDosen->push($d);
             }
-            $validated = $request->validate($rules);
+        }
 
-            // Still update the doc status and fallback fields
-            $dokumen->update([
-                'nilai_status' => $validated['nilai_status'],
-                'nilai_validasi_koordinator' => collect($komponenKoor)->map(function ($k) use ($validated) {
-                    return $validated['nilai_' . $k->id];
-                })->avg() // simple avg fallback for legacy tables
-            ]);
+        // 2. Info Mahasiswa Object
+        $m = (object) [
+            'id' => $kp->id,
+            'nama' => $kp->mahasiswa->user->name ?? 'Unknown',
+            'nim' => $kp->mahasiswa->nim ?? '-',
+            'dosen_pembimbing' => $kp->dosenPembimbing->nama_lengkap ?? '-',
+            'dosen_pembimbing_id' => $kp->dosen_pembimbing_id,
+            'kelas' => $kp->kelas ?? '-',
+            'judul_kp' => $kp->judul_kp ?? '-',
+            'tempat_kp' => $kp->instansi_kp ?? '-',
+            'status_kp' => $kp->status_kp ?? 'Pra KP',
+            'periode_id' => $matchedPeriode ? $matchedPeriode->id : null,
+            'kelas_dibuka' => $matchedPeriode && $matchedPeriode->kelas_dibuka ? $matchedPeriode->kelas_dibuka : []
+        ];
 
-            if ($validated['nilai_status'] === 'valid') {
-                foreach ($komponenKoor as $komp) {
-                    \Modules\EOffice\Models\KpNilaiDetail::updateOrCreate(
-                        ['kp_id' => $kp->id, 'komponen_id' => $komp->id],
-                        ['nilai_angka' => $validated['nilai_' . $komp->id]]
-                    );
+        // 3. Rubrik Koordinator
+        $komponenKoor = collect();
+        if ($matchedPeriode && $matchedPeriode->komponenNilai) {
+            $baseKomps = $matchedPeriode->komponenNilai->where('role_penilai', 'koordinator');
+            foreach ($baseKomps as $komp) {
+                $val = '';
+                if ($kp->nilaiDetail) {
+                    $det = $kp->nilaiDetail->where('komponen_id', $komp->id)->first();
+                    if ($det && $det->nilai_angka !== null) {
+                        $val = $det->nilai_angka;
+                    }
                 }
-            }
-
-        } else {
-            $request->validate([
-                'nilai_validasi_koordinator' => 'required|numeric|min:0|max:100',
-                'nilai_status' => 'required|in:valid,rejected,pending'
-            ]);
-
-            $dokumen->update([
-                'nilai_validasi_koordinator' => $request->nilai_validasi_koordinator,
-                'nilai_status' => $request->nilai_status
-            ]);
-
-            if ($request->nilai_status === 'valid') {
-                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
-                    ['kp_id' => $dokumen->kp_id],
-                    ['nilai_lapangan' => $request->nilai_validasi_koordinator]
-                );
+                $komponenKoor->push((object) [
+                    'id' => $komp->id,
+                    'nama_komponen' => $komp->nama_komponen,
+                    'bobot' => $komp->bobot,
+                    'nilai_angka' => $val
+                ]);
             }
         }
 
-        return redirect()->back()->with('success', 'Nilai Evaluasi berhasil diperbarui.');
+        $dosens = \Modules\EOffice\Models\KpDosen::with('user')->get();
+        $periodes = $allPeriodes;
+
+        return view('eoffice::koordinator.mahasiswa_detail', compact('kp', 'm', 'dokumenKoor', 'dokumenDosen', 'komponenKoor', 'dosens', 'periodes'));
     }
+
 
     public function balancingDosen()
     {

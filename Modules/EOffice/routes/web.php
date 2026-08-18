@@ -557,14 +557,11 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::delete('/faq/{id}', [KoordinatorController::class, 'destroyFaq'])->name('faq.destroy');
             Route::get('/upload-berkas', [KoordinatorController::class, 'uploadBerkas'])->name('upload_berkas');
             Route::post('/upload-berkas/template-a2', [KoordinatorController::class, 'storeTemplateA2'])->name('upload_berkas.template_a2');
-            Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
-            Route::post('/validasi-berkas/{id}/approve', [KoordinatorController::class, 'approveDokumen'])->name('validasi_berkas.approve');
-            Route::post('/validasi-berkas/{id}/reject', [KoordinatorController::class, 'rejectDokumen'])->name('validasi_berkas.reject');
-            Route::get('/kelola-role', [KoordinatorController::class, 'kelolaRole'])->name('kelola_role');
-            Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
-            Route::post('/nilai-lapangan/{id}/update', [KoordinatorController::class, 'updateNilaiLapangan'])->name('nilai_lapangan.update');
 
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
+            Route::get('/data-mahasiswa/{id}/detail', [KoordinatorController::class, 'detailMahasiswa'])->name('data_mahasiswa.show');
+            Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/approve', [KoordinatorController::class, 'approveDokumen'])->name('data_mahasiswa.dokumen.approve');
+            Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/reject', [KoordinatorController::class, 'rejectDokumen'])->name('data_mahasiswa.dokumen.reject');
             Route::get('/data-mahasiswa/export', [KoordinatorController::class, 'exportDataMahasiswa'])->name('data_mahasiswa.export');
             Route::put('/data-mahasiswa/{id}', [KoordinatorController::class, 'updateDataMahasiswa'])->name('data_mahasiswa.update');
             Route::get('/periode', [KoordinatorController::class, 'periode'])->name('periode');
