@@ -155,6 +155,28 @@
                                 }
                             }
                         }
+                        
+                        $isPernahDikunci = false;
+
+                        foreach ($templatesDokumen as $tmpl) {
+                            $jenis = $tmpl->title;
+                            $docGroup = $dokumenByJenis->get($jenis);
+                            $latestDoc = $docGroup ? $docGroup->sortByDesc('created_at')->first() : null;
+
+                            if ($latestDoc) {
+                                $status = strtolower($latestDoc->status_validasi ?? '');
+                                
+                                if (in_array($status, ['menunggu', 'pending', 'ditolak', 'rejected', 'revisi', 'revision'])) {
+                                    $isPernahDikunci = true;
+                                }
+                                if ($tmpl->approver_role !== 'tanpa_review' && in_array($status, ['disetujui', 'approved'])) {
+                                    $isPernahDikunci = true;
+                                }
+                                if ($status === 'draft' && !empty($latestDoc->revision_note) && $latestDoc->revision_note !== '-') {
+                                    $isPernahDikunci = true;
+                                }
+                            }
+                        }
 
                         if (!$step1 || !$semuaLengkap || $adaDraft) {
                             $curState = 0; // Melengkapi Dokumen
@@ -194,7 +216,7 @@
 
                                     <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 relative transition-all duration-300 flex-shrink-0"
                                         style="background:{{ $i <= $curState ? '#4f46e5' : 'var(--grey-100)' }};
-                                                                                                        {{ $i === $curState ? 'box-shadow:0 0 0 4px #e0e7ff;' : '' }}">
+                                                                                                                            {{ $i === $curState ? 'box-shadow:0 0 0 4px #e0e7ff;' : '' }}">
                                         @if($i < $curState)
                                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -271,7 +293,17 @@
                         @endif
 
                         {{-- Main Content --}}
-                        <div class="grid grid-cols-1 gap-8">
+                        <div class="grid grid-cols-1 gap-8" x-data="{
+                            showModal: false,
+                            instansi: {{ json_encode($kp->instansi_kp ?? '', JSON_HEX_APOS | JSON_HEX_QUOT) }},
+                            judul: {{ json_encode($kp->judul_kp ?? '', JSON_HEX_APOS | JSON_HEX_QUOT) }},
+                            tglMulai: '{{ $kp->tanggal_mulai ?? '' }}',
+                            tglSelesai: '{{ $kp->tanggal_selesai ?? '' }}',
+                            
+                            get isDataLengkap() {
+                                return this.instansi.trim() !== '' && this.judul.trim() !== '' && this.tglMulai !== '' && this.tglSelesai !== '';
+                            }
+                        }">
                             {{-- Kolom Utama: Form & Data KP --}}
                             <div class="space-y-8">
 
@@ -280,58 +312,48 @@
                                     class="bg-white rounded-2xl border transition-all duration-300 {{ $currentStep === 1 ? 'border-indigo-500 ring-4 ring-indigo-200 shadow-lg shadow-indigo-100/50' : 'border-slate-200 shadow-sm' }} overflow-hidden">
                                     <div
                                         class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 1 ? 'bg-indigo-50/30' : '' }}">
-                                        <div class="flex items-center gap-3">
-                                            <span
-                                                class="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] flex items-center justify-center font-bold">1</span>
-                                            <h2 class="text-base font-bold text-slate-800">Data Instansi & Laporan Fix</h2>
+                                        <div class="flex flex-col gap-1">
+                                            <h2 class="text-base font-bold text-slate-800">Data Instansi & Laporan</h2>
+                                            <p class="text-xs text-slate-500">Silakan melengkapi dan memverifikasi data di
+                                                bawah ini. Anda dapat memperbarui data jika terdapat perbedaan dengan
+                                                informasi yang diajukan pada saat pendaftaran awal.</p>
                                         </div>
-                                        @if($step1)
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700">
-                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path fill-rule="evenodd"
-                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                                        clip-rule="evenodd" />
-                                                </svg>
-                                                Terverifikasi
-                                            </span>
-                                        @endif
+
                                     </div>
-                                    <form action="{{ route('eoffice.kp.mahasiswa.dokumen.update_data') }}" method="POST"
-                                        class="p-6">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+                                    <div class="p-6">
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                             <div>
                                                 <label
                                                     class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tempat
-                                                    Instansi Fix</label>
-                                                <input type="text" name="instansi_kp"
-                                                    value="{{ old('instansi_kp', $kp->instansi_kp) }}" required
+                                                    Instansi</label>
+                                                <input type="text" x-model="instansi" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
                                                     placeholder="Nama instansi tempat Anda diterima..."
-                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all">
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                                             </div>
                                             <div>
                                                 <label
                                                     class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Judul
-                                                    Laporan Fix</label>
-                                                <input type="text" name="judul_kp"
-                                                    value="{{ old('judul_kp', $kp->judul_kp) }}" required
+                                                    Laporan</label>
+                                                <input type="text" x-model="judul" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
                                                     placeholder="Judul laporan akhir KP Anda..."
-                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all">
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal
+                                                    Mulai KP</label>
+                                                <input type="date" x-model="tglMulai" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal
+                                                    Selesai KP</label>
+                                                <input type="date" x-model="tglSelesai" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                                             </div>
                                         </div>
-                                        <div class="flex justify-end border-t border-slate-50 pt-5">
-                                            <button type="submit"
-                                                class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all shadow-sm active:scale-95">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                                </svg>
-                                                Simpan Draft Data
-                                            </button>
-                                        </div>
-                                    </form>
+                                    </div>
                                 </div> {{-- Section Dokumen Pelaksanaan (Dinamis) --}}
                                 <div class="space-y-6">
                                     <div class="flex items-center justify-between px-2">
@@ -455,6 +477,10 @@
                                                                 x-data="{ isUploading: false }">
                                                                 @csrf
                                                                 <input type="hidden" name="jenis_dokumen" value="{{ $tmpl->title }}">
+                                                                <input type="hidden" name="instansi_kp" x-bind:value="instansi">
+                                                                <input type="hidden" name="judul_kp" x-bind:value="judul">
+                                                                <input type="hidden" name="tanggal_mulai" x-bind:value="tglMulai">
+                                                                <input type="hidden" name="tanggal_selesai" x-bind:value="tglSelesai">
                                                                 <div class="relative w-full sm:w-auto" x-show="!isUploading">
                                                                     <input type="file" name="file" id="dokumen_{{ $tmpl->id }}"
                                                                         class="sr-only peer" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
@@ -509,59 +535,38 @@
                                     </div>
                                 </div>
 
-                                <div class="p-6 rounded-2xl bg-amber-50 border border-amber-100">
-                                    <div class="flex items-center gap-3 mb-3">
-                                        <div
-                                            class="w-8 h-8 rounded-lg bg-amber-100 text-amber-600 flex items-center justify-center">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                        <h3 class="text-sm font-bold text-amber-900">Informasi Penting</h3>
-                                    </div>
-                                    <p class="text-[11px] text-amber-800 leading-relaxed italic">
-                                        Pastikan "Data Instansi & Laporan Fix" telah diisi dengan benar sebelum mengunggah
-                                        draf laporan. Data ini akan muncul secara otomatis di lembar pengesahan dan undangan
-                                        seminar.
-                                    </p>
-                                </div>
 
                                 {{-- Tombol Lanjut ke Pasca KP / Batch Submit --}}
                                 <div class="mt-8 flex justify-end">
                                     @if($curState === 0)
-                                        @if(!$step1 || !$semuaLengkap)
+                                        <div x-show="!isDataLengkap || {{ !$semuaLengkap ? 'true' : 'false' }}">
                                             <button disabled
                                                 class="inline-flex items-center gap-2 px-6 py-3 bg-slate-300 text-white text-sm font-bold rounded-xl cursor-not-allowed">
-                                                Lengkapi Semua Dokumen Dahulu
+                                                Lengkapi Semua Dokumen & Form Dahulu
                                             </button>
-                                        @else
-                                            <form action="{{ route('eoffice.kp.mahasiswa.dokumen.submit_validasi') }}"
+                                        </div>
+                                        <div x-cloak x-show="isDataLengkap && {{ $semuaLengkap ? 'true' : 'false' }}">
+                                            <form x-ref="kunciForm" action="{{ route('eoffice.kp.mahasiswa.dokumen.submit_validasi') }}"
                                                 method="POST">
                                                 @csrf
-                                                <button type="submit"
-                                                    onclick="return confirm('Apakah Anda yakin dokumen draf sudah FINAL?\n\nSetelah diklik, dokumen akan terkunci dan dikirimkan ke Meja Dosen Pembimbing untuk divalidasi.')"
+                                                <input type="hidden" name="instansi_kp" x-bind:value="instansi">
+                                                <input type="hidden" name="judul_kp" x-bind:value="judul">
+                                                <input type="hidden" name="tanggal_mulai" x-bind:value="tglMulai">
+                                                <input type="hidden" name="tanggal_selesai" x-bind:value="tglSelesai">
+                                                <button type="button" @click="showModal = true"
                                                     class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm active:scale-95">
-                                                    Kunci & Lanjut Menunggu Dosen
+                                                    Simpan
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                                                     </svg>
                                                 </button>
                                             </form>
-                                        @endif
+                                        </div>
                                     @elseif($curState === 1)
                                         <button disabled
-                                            class="inline-flex items-center gap-2 px-6 py-3 bg-amber-500 text-white text-sm font-bold rounded-xl cursor-wait shadow-sm">
-                                            <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                                    stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                                </path>
-                                            </svg>
-                                            Menunggu Dosen Pembimbing...
+                                            class="inline-flex items-center gap-2 px-6 py-3 bg-slate-200 text-slate-500 text-sm font-bold rounded-xl cursor-not-allowed">
+                                            Simpan
                                         </button>
                                     @elseif($curState === 2)
                                         <form action="{{ route('eoffice.kp.mahasiswa.dokumen.lanjut_pasca_kp') }}"
@@ -579,6 +584,54 @@
                                             </button>
                                         </form>
                                     @endif
+                                </div>
+                            </div>
+                            
+                            {{-- Modal Confirm --}}
+                            <div x-cloak style="display: none;" x-show="showModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                                <!-- Backdrop -->
+                                <div x-show="showModal" class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0"
+                                    x-transition:enter-end="opacity-100"
+                                    x-transition:leave="transition ease-in duration-200"
+                                    x-transition:leave-start="opacity-100"
+                                    x-transition:leave-end="opacity-0"
+                                    @click="showModal = false">
+                                </div>
+                            
+                                <!-- Modal Panel -->
+                                <div x-show="showModal" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 overflow-hidden"
+                                    x-transition:enter="transition ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                    x-transition:leave="transition ease-in duration-200"
+                                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                                    
+                                    <div class="flex items-start gap-4">
+                                        <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center text-amber-600">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-bold text-slate-900">Peringatan Sistem</h3>
+                                            <p class="mt-2 text-[13px] text-slate-600 leading-relaxed">
+                                                Pastikan kembali status seluruh dokumen Anda sudah lengkap dan benar. Setelah disimpan, data laporan dan dokumen ini akan dikunci dan <span class="font-bold text-slate-800">tidak dapat diubah lagi</span> kecuali jika ditolak/direvisi.
+                                            </p>
+                                            <p class="mt-3 text-[13px] font-bold text-amber-800">Lanjutkan menyimpan?</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-8 flex justify-end gap-3 pt-5 border-t border-slate-100">
+                                        <button @click="showModal = false" type="button" class="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">
+                                            Batal
+                                        </button>
+                                        <button @click="$refs.kunciForm.submit()" type="button" class="px-5 py-2.5 rounded-xl bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 shadow-sm transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:-translate-y-0.5">
+                                            Yakin, Simpan & Kunci
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

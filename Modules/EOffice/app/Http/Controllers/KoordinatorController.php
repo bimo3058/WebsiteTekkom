@@ -826,6 +826,19 @@ class KoordinatorController extends Controller implements HasMiddleware
         return redirect()->back()->with('success', 'Dokumen ditolak dan pesan revisi telah dikirim.');
     }
 
+    public function resetDokumen($kp_id, $dokumen_id)
+    {
+        $dokumen = \Modules\EOffice\Models\KpDokumen::where('kp_id', $kp_id)->findOrFail($dokumen_id);
+
+        $dokumen->status_validasi = 'menunggu';
+        $dokumen->approval_status = 'pending';
+        // Hapus catatan karena dikembalikan menjadi 'menunggu' untuk diproses ulang oleh Dosen
+        $dokumen->revision_note = null;
+        $dokumen->save();
+
+        return redirect()->back()->with('success', 'Berhasil melakukan Reset. Akses validasi dokumen ini telah dibuka kembali untuk Dosen Pembimbing.');
+    }
+
     public function detailMahasiswa($id)
     {
         $kp = \Modules\EOffice\Models\KerjaPraktik::with([

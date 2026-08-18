@@ -309,9 +309,11 @@
                                     </span>
                                 </td>
                                 <td class="py-3 px-4 align-middle text-center relative" x-data="{ menuOpen: false }"
-                                    @click.outside="menuOpen = false">
+                                    @click.outside="menuOpen = false"
+                                    @close-other-menus.window="if ($event.detail !== m.id) menuOpen = false">
                                     <div class="flex items-center justify-center pointer-events-auto" @click.stop>
-                                        <button type="button" @click="menuOpen = !menuOpen"
+                                        <button type="button"
+                                            @click="menuOpen = !menuOpen; if(menuOpen) $dispatch('close-other-menus', m.id)"
                                             class="p-1 px-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none">
                                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">

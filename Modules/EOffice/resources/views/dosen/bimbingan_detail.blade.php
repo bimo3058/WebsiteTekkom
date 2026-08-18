@@ -167,7 +167,7 @@
                                                 <td class="px-6 py-4">
                                                     <span
                                                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border
-                                                                                                                                                                                {{ $dokumen->approval_status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                                                                                                                                                                                        {{ $dokumen->approval_status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                             ($dokumen->approval_status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200') }}">
                                                         @if($dokumen->approval_status === 'approved')
                                                             <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -209,7 +209,7 @@
                                                 <td class="px-6 py-4 text-right">
                                                     <div class="flex items-center justify-end gap-2">
                                                         <!-- Reject Action with Alpine Modal -->
-                                                        @if($dokumen->approval_status !== 'approved')
+                                                        @if($dokumen->approval_status === 'pending' && $dokumen->status_validasi === 'menunggu')
                                                             <div x-data="{ openRejectModal: false, note: '' }">
                                                                 <form
                                                                     action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$kp->id, $dokumen->id]) }}"
@@ -304,7 +304,7 @@
                                                             </div>
                                                         @endif
                                                         <!-- Approve Action -->
-                                                        @if($dokumen->approval_status !== 'approved')
+                                                        @if($dokumen->approval_status === 'pending' && $dokumen->status_validasi === 'menunggu')
                                                             <form
                                                                 action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$kp->id, $dokumen->id]) }}"
                                                                 method="POST">

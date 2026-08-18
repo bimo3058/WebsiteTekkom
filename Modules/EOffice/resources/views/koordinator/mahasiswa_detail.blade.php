@@ -280,10 +280,21 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ $dok->file_url }}" target="_blank" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-[13px] font-bold shadow-sm hover:text-indigo-600 hover:border-indigo-200 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                            Pantau File
-                                        </a>
+                                        <div class="flex items-center justify-end gap-2 flex-wrap">
+                                            <a href="{{ $dok->file_url }}" target="_blank" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-[13px] font-bold shadow-sm hover:text-indigo-600 hover:border-indigo-200 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                                                Pantau File
+                                            </a>
+                                            @if($dok->approval_status === 'approved' || $dok->approval_status === 'rejected' || $dok->status_validasi === 'disetujui' || $dok->status_validasi === 'ditolak')
+                                            <form action="{{ route('eoffice.kp.koordinator.data_mahasiswa.dokumen.reset', ['kp_id' => $kp->id, 'dokumen_id' => $dok->id]) }}" method="POST" class="inline">
+                                                @csrf
+                                                <button type="submit" onclick="return confirm('Reset validasi? Dokumen akan kembali berstatus Menunggu untuk diproses ulang oleh Dosen.')" class="px-3 py-1.5 bg-white border border-amber-300 text-amber-600 rounded-lg text-[13px] font-bold shadow-sm hover:border-amber-400 hover:bg-amber-50 transition-colors flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                                    Batal Validasi
+                                                </button>
+                                            </form>
+                                            @endif
+                                        </div>
                                     </td>
                                 </tr>
                             @endforeach

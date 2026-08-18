@@ -28,6 +28,7 @@ class KerjaPraktik extends Model
         'tanggal_selesai',
         'status_kp',
         'is_acc_admin',
+        'periode_id',
     ];
 
     /**
@@ -141,8 +142,9 @@ class KerjaPraktik extends Model
         $details = $this->nilaiDetail()->whereHas('komponen', function ($q) {
             $q->where('role_penilai', 'dosen_pembimbing');
         })->get();
-        
-        if ($details->isEmpty()) return null;
+
+        if ($details->isEmpty())
+            return null;
         return round($details->avg('nilai_angka'), 2);
     }
 
@@ -154,8 +156,9 @@ class KerjaPraktik extends Model
         $details = $this->nilaiDetail()->whereHas('komponen', function ($q) {
             $q->where('role_penilai', 'koordinator');
         })->get();
-        
-        if ($details->isEmpty()) return null;
+
+        if ($details->isEmpty())
+            return null;
         return round($details->avg('nilai_angka'), 2);
     }
 

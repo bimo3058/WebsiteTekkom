@@ -562,6 +562,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/data-mahasiswa/{id}/detail', [KoordinatorController::class, 'detailMahasiswa'])->name('data_mahasiswa.show');
             Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/approve', [KoordinatorController::class, 'approveDokumen'])->name('data_mahasiswa.dokumen.approve');
             Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/reject', [KoordinatorController::class, 'rejectDokumen'])->name('data_mahasiswa.dokumen.reject');
+            Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/reset', [KoordinatorController::class, 'resetDokumen'])->name('data_mahasiswa.dokumen.reset');
             Route::get('/data-mahasiswa/export', [KoordinatorController::class, 'exportDataMahasiswa'])->name('data_mahasiswa.export');
             Route::put('/data-mahasiswa/{id}', [KoordinatorController::class, 'updateDataMahasiswa'])->name('data_mahasiswa.update');
             Route::get('/periode', [KoordinatorController::class, 'periode'])->name('periode');

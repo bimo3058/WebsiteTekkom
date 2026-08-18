@@ -384,6 +384,7 @@ class MahasiswaKpController extends Controller
                 'tanggal_selesai' => $validated['tanggal_selesai'],
                 'status_kp' => 'Pra-KP',
                 'is_acc_admin' => false,
+                'periode_id' => $activePeriod->id,
             ]);
 
             if (isset($templatesDokumen)) {
@@ -500,6 +501,11 @@ class MahasiswaKpController extends Controller
             ->latest()
             ->firstOrFail();
 
+        // Save incoming pending text data to DB before processing document
+        if ($request->hasAny(['instansi_kp', 'judul_kp', 'tanggal_mulai', 'tanggal_selesai'])) {
+            $kp->update($request->only(['instansi_kp', 'judul_kp', 'tanggal_mulai', 'tanggal_selesai']));
+        }
+
         // Determine phase based on status_kp
         $activePhase = 'pra_kp';
         $status_kp = strtolower($kp->status_kp);
@@ -572,12 +578,16 @@ class MahasiswaKpController extends Controller
     public function updateDataKp(Request $request)
     {
         $validated = $request->validate([
-            'judul_kp' => 'required|string|max:255',
-            'instansi_kp' => 'required|string|max:255',
+            'judul_kp' => 'nullable|string|max:255',
+            'instansi_kp' => 'nullable|string|max:255',
+            'tanggal_mulai' => 'nullable|date',
+            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
         ]);
 
         $phaseStatus = $this->getPhaseStatus('saat_kp');
         if (!$phaseStatus['isOpen']) {
+            if ($request->wantsJson())
+                return response()->json(['error' => 'Fase ditutup'], 403);
             return redirect()->back()->with('error', "Fase Saat KP sedang ditutup, Anda tidak dapat mengubah data KP.");
         }
 
@@ -587,6 +597,10 @@ class MahasiswaKpController extends Controller
             ->firstOrFail();
 
         KerjaPraktik::where('id', $kp->id)->update($validated);
+
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'data' => $validated]);
+        }
 
         return redirect()->back()->with('success', 'Judul dan tempat KP berhasil diperbarui!');
     }
@@ -680,12 +694,17 @@ class MahasiswaKpController extends Controller
     /**
      * Mengunci dokumen Draft dan mengirimnya ke Dosen (Batch Submit)
      */
-    public function submitBatchValidasi()
+    public function submitBatchValidasi(Request $request)
     {
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
         $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
             ->latest()
             ->firstOrFail();
+
+        if ($request->hasAny(['instansi_kp', 'judul_kp', 'tanggal_mulai', 'tanggal_selesai'])) {
+            $kp->update($request->only(['instansi_kp', 'judul_kp', 'tanggal_mulai', 'tanggal_selesai']));
+            $kp->refresh(); // Refresh state for validation logic later
+        }
 
         $requiredTemplates = \Modules\EOffice\Models\TemplateDokumenKP::where('phase', 'saat_kp')
             ->where('is_uploadable', true)
@@ -718,6 +737,10 @@ class MahasiswaKpController extends Controller
         if (!empty($belumLengkap)) {
             $msg = 'Tidak dapat menyerahkan berkas. Dokumen berikut belum Anda unggah: ' . implode(', ', $belumLengkap);
             return redirect()->back()->with('error', $msg);
+        }
+
+        if (empty($kp->instansi_kp) || empty($kp->judul_kp) || empty($kp->tanggal_mulai) || empty($kp->tanggal_selesai)) {
+            return redirect()->back()->with('error', 'Tidak dapat menyerahkan berkas. Data Instansi & Laporan belum dilengkapi.');
         }
 
         if (!empty($dokumenDraftId)) {
