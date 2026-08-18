@@ -98,9 +98,9 @@
                             <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/5">
                                 Progress & Status</th>
                             <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
-                                Laporan</th>
+                                Nilai Akhir</th>
                             <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">
-                                Seminar</th>
+                                Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -151,24 +151,26 @@
                                     </div>
                                 </td>
                                 <td class="py-4 px-6 text-center">
-                                    <template x-if="item.nilai_laporan !== null && item.nilai_laporan !== undefined">
+                                    <template x-if="item.nilai_akhir !== null && item.nilai_akhir !== undefined">
                                         <span
-                                            class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-700 font-extrabold text-lg border border-blue-100 shadow-sm"
-                                            x-text="item.nilai_laporan"></span>
+                                            class="inline-flex items-center justify-center px-4 py-1.5 rounded-full bg-blue-50 text-blue-700 font-extrabold text-sm border border-blue-100 shadow-sm"
+                                            x-text="item.nilai_akhir"></span>
                                     </template>
-                                    <template x-if="item.nilai_laporan === null || item.nilai_laporan === undefined">
-                                        <span class="text-xs font-medium text-slate-400 italic">Belum</span>
+                                    <template x-if="item.nilai_akhir === null || item.nilai_akhir === undefined">
+                                        <span
+                                            class="text-xs font-medium text-slate-400 italic cursor-default px-2 py-0.5 rounded border border-slate-100 bg-slate-50">Belum
+                                            Dinilai</span>
                                     </template>
                                 </td>
                                 <td class="py-4 px-6 text-center">
-                                    <template x-if="item.nilai_seminar !== null">
-                                        <span
-                                            class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 font-extrabold text-lg border border-emerald-100 shadow-sm"
-                                            x-text="item.nilai_seminar"></span>
-                                    </template>
-                                    <template x-if="item.nilai_seminar === null">
-                                        <span class="text-xs font-medium text-slate-400 italic">Belum</span>
-                                    </template>
+                                    <a :href="'/eoffice/kp/dosen/bimbingan/' + item.id"
+                                        class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-[#F8F9FB] border border-[#E9EAEC] text-[#353849] hover:bg-[#0065FF] hover:border-[#0065FF] hover:text-white rounded-lg text-[13px] font-semibold transition-colors duration-200 shadow-sm">
+                                        Buka Ruang
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                                        </svg>
+                                    </a>
                                 </td>
                             </tr>
                         </template>
@@ -222,253 +224,6 @@
     </div>
 
 
-    <!-- Side Detail Drawer -->
-    <div x-cloak x-show="drawerOpen" class="relative z-50" aria-labelledby="slide-over-title" role="dialog"
-        aria-modal="true">
-        <div x-show="drawerOpen" x-transition.opacity
-            class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" @click="closeDrawer()"></div>
-
-        <div class="fixed inset-0 overflow-hidden">
-            <div class="absolute inset-0 overflow-hidden">
-                <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
-                    <div x-show="drawerOpen"
-                        x-transition:enter="transform transition ease-out duration-300 sm:duration-400"
-                        x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
-                        x-transition:leave="transform transition ease-in duration-300"
-                        x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full"
-                        class="pointer-events-auto w-screen max-w-xl">
-
-                        <div
-                            class="flex h-full flex-col overflow-y-scroll bg-white shadow-2xl border-l border-slate-200">
-
-                            <!-- Drawer Header -->
-                            <div
-                                class="px-6 py-6 border-b border-slate-100 bg-slate-50/50 sticky top-0 z-10 backdrop-blur-md flex items-center justify-between">
-                                <div>
-                                    <h2 class="text-xl font-bold text-slate-900" id="slide-over-title">Detail
-                                        Mahasiswa Bimbingan</h2>
-                                    <p class="text-sm text-slate-500 mt-1">Informasi lengkap dan progres Kerja
-                                        Praktik.</p>
-                                </div>
-                                <button type="button" @click="closeDrawer()"
-                                    class="rounded-lg bg-white p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 shadow-sm border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                                    <span class="sr-only">Close panel</span>
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <!-- Drawer Body -->
-                            <div class="flex-1 px-6 py-6 space-y-8" x-show="selectedData">
-
-                                <!-- Profile Section -->
-                                <div class="flex items-start gap-5">
-                                    <div
-                                        class="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-2xl shrink-0 border border-indigo-200 shadow-sm">
-                                        <span x-text="selectedData?.nama?.charAt(0)"></span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h3 class="text-xl font-bold text-slate-900" x-text="selectedData?.nama">
-                                        </h3>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <span class="text-sm font-medium text-slate-600"
-                                                x-text="selectedData?.nim"></span>
-                                        </div>
-                                        <div class="mt-3">
-                                            <span
-                                                class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border"
-                                                :class="getStatusBadgeClass(selectedData?.status_kp)">
-                                                <span class="w-1.5 h-1.5 rounded-full mr-1.5"
-                                                    :class="getStatusDotClass(selectedData?.status_kp)"></span>
-                                                <span x-text="getStatusLabel(selectedData?.status_kp)"></span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Detail Informasi KP -->
-                                <!-- Detail Informasi KP -->
-                                <div>
-                                    <h4
-                                        class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
-                                        Informasi Kerja Praktik</h4>
-                                    <div class="space-y-4">
-
-                                        <!-- Judul KP - samping -->
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                                            <div class="text-sm font-medium text-slate-500 sm:col-span-1">Judul KP
-                                            </div>
-                                            <div class="text-sm font-semibold text-slate-900 sm:col-span-2 leading-relaxed"
-                                                x-text="selectedData?.judul_kp"></div>
-                                        </div>
-
-                                        <!-- Tempat KP - samping -->
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                                            <div class="text-sm font-medium text-slate-500 sm:col-span-1">Tempat KP
-                                            </div>
-                                            <div class="text-sm font-semibold text-slate-900 sm:col-span-2"
-                                                x-text="selectedData?.tempat_kp"></div>
-                                        </div>
-
-                                        <!-- Tanggal Mulai & Selesai - berdampingan vertikal dalam 2 kolom -->
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Tanggal Mulai</p>
-                                                <div class="flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span class="text-sm font-bold text-slate-800"
-                                                        x-text="selectedData?.tanggal_mulai ?? '-'"></span>
-                                                </div>
-                                            </div>
-                                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-3">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Tanggal Selesai
-                                                </p>
-                                                <div class="flex items-center gap-1.5">
-                                                    <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none"
-                                                        stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2"
-                                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                                    </svg>
-                                                    <span class="text-sm font-bold text-slate-800"
-                                                        x-text="selectedData?.tanggal_selesai ?? '-'"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Status Dokumen - vertikal -->
-                                        <div>
-                                            <p class="text-xs font-medium text-slate-500 mb-1.5">Status Dokumen</p>
-                                            <span
-                                                class="inline-flex items-center text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs font-bold border border-emerald-100"
-                                                x-show="selectedData?.status_dokumen === 'Lengkap'">Lengkap</span>
-                                            <span
-                                                class="inline-flex items-center text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-xs font-bold border border-amber-100"
-                                                x-show="selectedData?.status_dokumen !== 'Lengkap'"
-                                                x-text="selectedData?.status_dokumen"></span>
-                                        </div>
-
-                                    </div>
-                                </div>
-
-                                <!-- Progress Tracker -->
-                                <div>
-                                    <div class="flex items-center justify-between mb-2">
-                                        <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                                            Progress Bimbingan</h4>
-                                        <span class="text-sm font-bold text-indigo-600"
-                                            x-text="selectedData?.progress + '%'"></span>
-                                    </div>
-                                    <div
-                                        class="w-full bg-slate-100 rounded-full h-2.5 mb-6 border border-slate-200 overflow-hidden">
-                                        <div class="bg-gradient-to-r from-indigo-500 to-indigo-500 h-2.5 rounded-full transition-all duration-1000"
-                                            :style="'width: ' + selectedData?.progress + '%'"></div>
-                                    </div>
-
-                                    <!-- Simple Timeline -->
-                                    <div class="relative border-l-2 border-slate-100 ml-3 space-y-6">
-                                        <div class="relative pl-6">
-                                            <span
-                                                class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full bg-indigo-500 ring-4 ring-white"></span>
-                                            <p class="text-xs font-bold text-indigo-600 uppercase mb-0.5">Pra KP</p>
-                                            <p class="text-sm font-medium text-slate-900">Pendaftaran & Topik
-                                                Disetujui</p>
-                                            <p class="text-xs text-slate-500 mt-1">Selesai</p>
-                                        </div>
-                                        <div class="relative pl-6">
-                                            <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full"
-                                                :class="selectedData?.progress >= 50 ? 'bg-indigo-500 ring-4 ring-white' : 'bg-slate-200 ring-4 ring-white'"></span>
-                                            <p class="text-xs font-bold uppercase mb-0.5"
-                                                :class="selectedData?.progress >= 50 ? 'text-indigo-600' : 'text-slate-400'">
-                                                Saat KP</p>
-                                            <p class="text-sm font-medium"
-                                                :class="selectedData?.progress >= 50 ? 'text-slate-900' : 'text-slate-500'">
-                                                Pelaksanaan & Bimbingan Laporan</p>
-                                        </div>
-                                        <div class="relative pl-6">
-                                            <span class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full"
-                                                :class="selectedData?.progress >= 100 ? 'bg-emerald-500 ring-4 ring-white' : 'bg-slate-200 ring-4 ring-white'"></span>
-                                            <p class="text-xs font-bold uppercase mb-0.5"
-                                                :class="selectedData?.progress >= 100 ? 'text-emerald-600' : 'text-slate-400'">
-                                                Pasca KP</p>
-                                            <p class="text-sm font-medium"
-                                                :class="selectedData?.progress >= 100 ? 'text-slate-900' : 'text-slate-500'">
-                                                Seminar & Penilaian</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Input Nilai Seminar Section -->
-                                <div class="bg-slate-50 rounded-2xl border border-slate-200 p-6">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <div
-                                            class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-sm font-bold text-slate-900">Penilaian Seminar Dosen
-                                            </h4>
-                                            <p class="text-xs text-slate-500">Input atau ubah nilai seminar
-                                                mahasiswa.</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Form actually posts to the backend route if we submit properly, but for UI demo we use Alpine.prevent to show toast -->
-                                    <form @submit.prevent="submitNilai">
-                                        <div class="grid grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <label class="block text-sm font-bold text-slate-700 mb-2">Nilai
-                                                    Laporan (0-100) <span class="text-red-500">*</span></label>
-                                                <input type="number" x-model="formNilai.laporan" min="0" max="100"
-                                                    required
-                                                    class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-center text-lg font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 border bg-white outline-none transition-all"
-                                                    placeholder="0" :disabled="isSubmitting">
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-bold text-slate-700 mb-2">Nilai
-                                                    Seminar (0-100) <span class="text-red-500">*</span></label>
-                                                <input type="number" x-model="formNilai.seminar" min="0" max="100"
-                                                    required
-                                                    class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-center text-lg font-bold focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 border bg-white outline-none transition-all"
-                                                    placeholder="0" :disabled="isSubmitting">
-                                            </div>
-                                        </div>
-
-                                        <div class="flex justify-end gap-3">
-                                            <button type="submit"
-                                                class="inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 outline-none w-full sm:w-auto disabled:opacity-70 disabled:cursor-not-allowed"
-                                                :disabled="isSubmitting">
-                                                <svg x-show="isSubmitting"
-                                                    class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none"
-                                                    viewBox="0 0 24 24">
-                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
-                                                        stroke="currentColor" stroke-width="4"></circle>
-                                                    <path class="opacity-75" fill="currentColor"
-                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                                    </path>
-                                                </svg>
-                                                <span x-show="!isSubmitting">Simpan Nilai</span>
-                                                <span x-show="isSubmitting">Menyimpan...</span>
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     </div>
@@ -568,36 +323,7 @@
                         return classes[status] || 'bg-slate-400';
                     },
 
-                    openDrawer(data) {
-                        this.selectedData = data;
-                        this.formNilai.laporan = data.nilai_laporan;
-                        this.formNilai.seminar = data.nilai_seminar;
-                        this.drawerOpen = true;
-                    },
 
-                    closeDrawer() {
-                        this.drawerOpen = false;
-                        // setTimeout(() => { this.selectedData = null; }, 300);
-                    },
-
-                    simpanNilai() {
-                        if (!this.formNilai.laporan || !this.formNilai.seminar) {
-                            this.showToast('error', 'Semua form nilai harus diisi dengan angka.');
-                            return;
-                        }
-
-                        // Simulate Confirm Modal
-                        if (!confirm(`Simpan nilai Laporan (${this.formNilai.laporan}) & Seminar (${this.formNilai.seminar}) untuk mahasiswa ${this.selectedData.nama}?`)) return;
-
-                        this.isSubmitting = true;
-
-                        // Simulate save
-                        setTimeout(() => {
-                            this.isSubmitting = false;
-                            this.closeDrawer();
-                            this.showToast('success', `Nilai ${this.selectedData.nama} berhasil disimpan.`);
-                        }, 800);
-                    },
 
                     showToast(type, message) {
                         this.toast.type = type;

@@ -532,6 +532,9 @@ class KoordinatorController extends Controller implements HasMiddleware
             };
 
             $praKp = $dokumens->filter(function ($d) use ($periodTemplates) {
+                $isDraft = strtolower($d->status_validasi) === 'draft';
+                if ($isDraft)
+                    return false;
                 $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
                 return $t && $t->phase === 'pra_kp' && $t->approver_role === 'koordinator';
             })->map(fn($d) => (object) [
@@ -546,6 +549,9 @@ class KoordinatorController extends Controller implements HasMiddleware
                 ])->values();
 
             $saatKp = $dokumens->filter(function ($d) use ($periodTemplates) {
+                $isDraft = strtolower($d->status_validasi) === 'draft';
+                if ($isDraft)
+                    return false;
                 $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
                 return $t && $t->phase === 'saat_kp' && $t->approver_role === 'koordinator';
             })->map(fn($d) => (object) [
@@ -560,6 +566,9 @@ class KoordinatorController extends Controller implements HasMiddleware
                 ])->values();
 
             $pascaKp = $dokumens->filter(function ($d) use ($periodTemplates) {
+                $isDraft = strtolower($d->status_validasi) === 'draft';
+                if ($isDraft)
+                    return false;
                 $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
                 return $t && $t->phase === 'pasca_kp' && $t->approver_role === 'koordinator';
             })->map(fn($d) => (object) [
@@ -933,7 +942,8 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'periode.komponenNilai',
                 'nilaiDetail',
                 'dokumen' => function ($query) {
-                    $query->whereIn('jenis_dokumen', ['Nilai Lapangan', 'Form Penilaian Pembimbing', 'Form Penilaian']);
+                    $query->whereIn('jenis_dokumen', ['Nilai Lapangan', 'Form Penilaian Pembimbing', 'Form Penilaian'])
+                        ->where('status_validasi', '!=', 'draft');
                 }
             ])
             ->orderBy('eo_kerja_praktik.created_at', 'desc')
@@ -1416,7 +1426,7 @@ class KoordinatorController extends Controller implements HasMiddleware
             $kp->dokumen()->delete();
         }
         $kp->delete();
-        return redirect()->route('eoffice.kp.koordinator.pendaftar')->with('success', 'Data pendaftar berhasil di-reset!');
+        return redirect()->route('eoffice.kp.koordinator.data_mahasiswa')->with('success', 'Data mahasiswa berhasil di-reset!');
     }
 
     // ════════════════════════════════════════════════════════════════════════

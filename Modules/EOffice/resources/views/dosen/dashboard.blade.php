@@ -23,7 +23,8 @@
                         <svg class="w-[18px] h-[18px] text-[#4338CA]" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
                         </svg>
                     </div>
                     <span class="text-[13px] font-semibold text-[#0D0D12]"
@@ -74,7 +75,8 @@
                         <svg class="w-[18px] h-[18px] text-[#4338CA]" fill="none" stroke="currentColor" stroke-width="2"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                            </path>
                         </svg>
                     </div>
                     <span class="text-[13px] font-semibold text-[#0D0D12]"
@@ -111,7 +113,8 @@
                 </h3>
                 <p
                     style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; line-height:1.6; color:#666D80; letter-spacing:0.01em; flex:1; margin-bottom:24px;">
-                    Kelola daftar mahasiswa bimbingan, pantau progres, lihat riwayat bimbingan, dan berikan nilai seminar akhir Kerja Praktik.
+                    Kelola daftar mahasiswa bimbingan, pantau progres, lihat riwayat bimbingan, dan berikan nilai
+                    seminar akhir Kerja Praktik.
                 </p>
                 <a href="{{ route('eoffice.kp.dosen.bimbingan.index') }}" style="
                     display:inline-flex; align-items:center; justify-content:center;
@@ -128,45 +131,6 @@
                 </a>
             </div>
 
-            {{-- Action Card 2 --}}
-            <div style="
-                background:#ffffff; border-radius:16px;
-                border:1px solid #F1F1F3;
-                box-shadow:0px 1px 3px rgba(0,0,0,0.06), 0px 1px 2px rgba(0,0,0,0.04);
-                padding:24px; display:flex; flex-direction:column;
-                transition:box-shadow 0.2s, border-color 0.2s;
-            " onmouseover="this.style.borderColor='#BBF7D0'; this.style.boxShadow='0px 4px 12px rgba(21,128,61,0.1), 0px 1px 3px rgba(21,128,61,0.06)';"
-                onmouseout="this.style.borderColor='#F1F1F3'; this.style.boxShadow='0px 1px 3px rgba(0,0,0,0.06), 0px 1px 2px rgba(0,0,0,0.04)';">
-                <div
-                    style="width:48px; height:48px; background:#F0FDF4; border-radius:10px; border:1px solid #BBF7D0; display:flex; align-items:center; justify-content:center; margin-bottom:20px;">
-                    <svg width="22" height="22" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" viewBox="0 0 24 24">
-                        <path
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                </div>
-                <h3
-                    style="font-family:'Inter Tight',sans-serif; font-size:18px; font-weight:600; line-height:1.35; color:#0D0D12; margin-bottom:12px;">
-                    Penilaian Laporan
-                </h3>
-                <p
-                    style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; line-height:1.6; color:#666D80; letter-spacing:0.01em; flex:1; margin-bottom:24px;">
-                    Periksa, berikan revisi, dan lakukan persetujuan (approval) terhadap laporan maupun makalah mahasiswa bimbingan Anda.
-                </p>
-                <a href="{{ route('eoffice.kp.dosen.validasi_berkas') }}" style="
-                    display:inline-flex; align-items:center; justify-content:center;
-                    gap:8px; padding:10px 20px; background:#ffffff; color:#15803D;
-                    font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600;
-                    border-radius:10px; border:1.5px solid #15803D; text-decoration:none;
-                    width:fit-content; transition:background 0.2s; letter-spacing:0.01em;
-                " onmouseover="this.style.background='#F0FDF4';" onmouseout="this.style.background='#ffffff';">
-                    Buka Penilaian Laporan
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
-                        <path d="M9 5l7 7-7 7" />
-                    </svg>
-                </a>
-            </div>
         </div>
 
     </div>

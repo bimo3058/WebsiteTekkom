@@ -502,7 +502,6 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
             Route::get('/pendaftaran', [MahasiswaKpController::class, 'pendaftaran'])->name('pendaftaran');
             Route::post('/pendaftaran', [MahasiswaKpController::class, 'storePendaftaran'])->name('pendaftaran.store');
-            Route::post('/pendaftaran/lanjut-saat-kp', [MahasiswaKpController::class, 'lanjutSaatKp'])->name('pendaftaran.lanjut_saat_kp');
             Route::get('/dokumen', [MahasiswaKpController::class, 'dokumen'])->name('dokumen');
             Route::post('/dokumen', [MahasiswaKpController::class, 'storeDokumen'])->name('dokumen.store');
             Route::put('/dokumen/update-data', [MahasiswaKpController::class, 'updateDataKp'])->name('dokumen.update_data');
@@ -510,6 +509,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::post('/dokumen/export-a2', [MahasiswaKpController::class, 'exportA2'])->name('dokumen.export_a2');
             Route::post('/dokumen/generate-a2', [MahasiswaKpController::class, 'generateA2'])->name('dokumen.generate_a2');
             Route::post('/dokumen/lanjut-pasca-kp', [MahasiswaKpController::class, 'lanjutPascaKp'])->name('dokumen.lanjut_pasca_kp');
+            Route::post('/dokumen/submit-validasi', [MahasiswaKpController::class, 'submitBatchValidasi'])->name('dokumen.submit_validasi');
             Route::get('/seminar', [MahasiswaKpController::class, 'seminar'])->name('seminar');
             Route::post('/seminar', [MahasiswaKpController::class, 'storeSeminar'])->name('seminar.store');
         });
@@ -517,19 +517,20 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         Route::prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
             Route::get('/bimbingan', [DosenController::class, 'bimbingan'])->name('bimbingan.index');
-            Route::get('/bimbingan/{id}', [DosenController::class, 'show'])->name('bimbingan.show');
+            // Unified Workspace Routes (Bimbingan Detail)
+            Route::get('/bimbingan/{id}', [DosenController::class, 'showBimbinganDetail'])->name('bimbingan.detail');
+
+            // Re-routed Form A2 / Document Approvals inside Workspace
             Route::post('/bimbingan/{id}/approve-pra-kp', [DosenController::class, 'approvePraKp'])->name('bimbingan.approve_pra_kp');
             Route::post('/bimbingan/{id}/dokumen/{dokumenId}/approve', [DosenController::class, 'approveDokumen'])->name('bimbingan.dokumen.approve');
             Route::post('/bimbingan/{id}/dokumen/{dokumenId}/reject', [DosenController::class, 'rejectDokumen'])->name('bimbingan.dokumen.reject');
 
-            // Penilaian Rubrik Dosen
-            Route::get('/penilaian-mahasiswa', [DosenController::class, 'penilaianIndex'])->name('penilaian_mahasiswa.index');
-            Route::get('/bimbingan/{id}/penilaian', [DosenController::class, 'showPenilaian'])->name('bimbingan.penilaian');
-            Route::post('/bimbingan/{id}/penilaian', [DosenController::class, 'storePenilaian'])->name('bimbingan.penilaian.store');
-            Route::get('/validasi-berkas', [DosenController::class, 'validasiBerkas'])->name('validasi_berkas');
-            Route::get('/penilaian-seminar', [DosenController::class, 'penilaianSeminar'])->name('penilaian_seminar');
-            Route::post('/penilaian-seminar/{id}/approve', [DosenController::class, 'approveSeminar'])->name('penilaian_seminar.approve');
-            Route::post('/penilaian-seminar/{id}/reject', [DosenController::class, 'rejectSeminar'])->name('penilaian_seminar.reject');
+            // Re-routed Penilaian Rubrik Dosen inside Workspace
+            Route::post('/bimbingan/{id}/penilaian-rubrik', [DosenController::class, 'storePenilaian'])->name('bimbingan.penilaian.store');
+
+            // Seminar Scheduling Approval inside Workspace
+            Route::post('/bimbingan/{id}/penilaian-seminar/approve', [DosenController::class, 'approveSeminar'])->name('penilaian_seminar.approve');
+            Route::post('/bimbingan/{id}/penilaian-seminar/reject', [DosenController::class, 'rejectSeminar'])->name('penilaian_seminar.reject');
         });
 
         Route::prefix('koordinator')->name('koordinator.')->group(function () {

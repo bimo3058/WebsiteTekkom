@@ -76,16 +76,10 @@
                     x-transition.opacity.duration.200ms>Manajemen KP</p>
 
                 @php
-                    $isBimbingan = request()->routeIs('eoffice.kp.dosen.bimbingan*') && !request()->routeIs('eoffice.kp.dosen.bimbingan.penilaian');
-                    $isValidasi = request()->routeIs('eoffice.kp.dosen.validasi_berkas*');
-                    $isPenilaianMahasiswa = request()->routeIs('eoffice.kp.dosen.penilaian_mahasiswa.*') || request()->routeIs('eoffice.kp.dosen.bimbingan.penilaian');
-                    $isPenilaianSeminar = request()->routeIs('eoffice.kp.dosen.penilaian_seminar*');
+                    $isBimbingan = request()->routeIs('eoffice.kp.dosen.bimbingan*');
                     // $isPengajuanTugas = request()->routeIs('eoffice.kp.dosen.pengajuan_tugas*');
                     $menuItems = [
-                        ['active' => $isBimbingan, 'route' => 'eoffice.kp.dosen.bimbingan.index', 'label' => 'Bimbingan', 'icon' => 'users'],
-                        ['active' => $isPenilaianMahasiswa, 'route' => 'eoffice.kp.dosen.penilaian_mahasiswa.index', 'label' => 'Penilaian', 'icon' => 'checkdoc'],
-                        ['active' => $isValidasi, 'route' => 'eoffice.kp.dosen.validasi_berkas', 'label' => 'Validasi Laporan', 'icon' => 'doc'],
-                        ['active' => $isPenilaianSeminar, 'route' => 'eoffice.kp.dosen.penilaian_seminar', 'label' => 'Seminar (Legacy)', 'icon' => 'checkdoc'],
+                        ['active' => $isBimbingan, 'route' => 'eoffice.kp.dosen.bimbingan.index', 'label' => 'Bimbingan Mahasiswa', 'icon' => 'users'],
                         ['active' => false, 'route' => 'eoffice.kp.dosen.dashboard', 'label' => 'Pengajuan Tugas', 'icon' => 'balance'],
                     ];
                 @endphp
@@ -97,7 +91,7 @@
                         @endif
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                                            {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')

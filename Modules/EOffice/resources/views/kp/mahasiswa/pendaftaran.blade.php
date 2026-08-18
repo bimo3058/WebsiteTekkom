@@ -42,11 +42,6 @@
                         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pendaftaran Kerja Praktik</h1>
                         <p class="text-sm text-slate-500 mt-1">Lengkapi data di bawah ini untuk mengajukan Kerja Praktik.</p>
                     </div>
-                    @if(!$existingKp && $registrationOpen)
-                    <button type="submit" form="form-pendaftaran" class="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap">
-                        Kirim Pengajuan KP
-                    </button>
-                    @endif
                 </div>
 
                 <div class="space-y-6">
@@ -123,18 +118,6 @@
                     @elseif($step2_done && !$step3_done)
                         <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
                             <p class="text-slate-700 font-medium text-sm">Persyaratan Anda telah di-ACC oleh Koordinator KP. Silakan menunggu pengumuman Dosen Pembimbing.</p>
-                        </div>
-                    @endif
-
-                    @if($existingKp)
-                        <div class="mt-6 pt-5 border-t border-slate-100 flex flex-col items-center justify-center">
-                            <form action="{{ route('eoffice.kp.mahasiswa.pendaftaran.lanjut_saat_kp') }}" method="POST">
-                                @csrf
-                                <button type="submit" onclick="return confirm('Apakah Anda yakin ingin lanjut ke fase berikutnya tanpa syarat?')"
-                                    class="px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto">
-                                    Lanjut ke Fase Berikutnya (Saat KP)
-                                </button>
-                            </form>
                         </div>
                     @endif
                 </div>
@@ -342,6 +325,12 @@
                                         </div>
                                     @endforelse
                                 </div>
+                            </div>
+                            
+                            <div class="mt-8 border-t border-slate-200 pt-6 flex justify-end bg-slate-50/50 -mx-6 -mb-6 px-6 pb-6 rounded-b-xl border">
+                                <button type="submit" class="px-8 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap active:scale-95">
+                                    Kirim Pengajuan KP
+                                </button>
                             </div>
                         </form>
 

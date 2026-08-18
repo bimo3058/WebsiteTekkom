@@ -114,8 +114,8 @@
                 $semStatus = $kp->seminar ? strtolower($kp->seminar->status_validasi_dosen) : 'belum';
                 $penilaian = $kp->penilaian;
 
-                // Untuk dokumen, kita anggap "selesai" (bisa lanjut ke step berikutnya) jika statusnya 'disetujui'
-                $step1Done = ($nlStatus === 'disetujui');
+                // Step 1 dianggap selesai jika semua template dokumen syarat telah disetujui (dinamis)
+                $step1Done = $syaratSeminar['semua_terpenuhi'];
                 $step2Done = in_array($semStatus, ['pending', 'approved']);
                 $step3Done = $penilaian && ($penilaian->nilai_seminar_pembimbing !== null);
 
