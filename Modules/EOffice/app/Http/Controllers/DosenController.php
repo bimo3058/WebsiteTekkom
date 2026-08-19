@@ -34,9 +34,9 @@ class DosenController extends Controller
 
         $stats = [
             'total_bimbingan' => $bimbingan->count(),
-            'menunggu_acc' => $bimbingan->where('status_kp', 'pending')->count(),
-            'sedang_kp' => $bimbingan->where('status_kp', 'active')->count(),
-            'selesai_kp' => $bimbingan->where('status_kp', 'completed')->count(),
+            'menunggu_acc' => $bimbingan->where('status_kp', 'Pra-KP')->count(),
+            'sedang_kp' => $bimbingan->where('status_kp', 'Saat KP')->count(),
+            'selesai_kp' => $bimbingan->whereIn('status_kp', ['Pasca KP', 'Selesai'])->count(),
         ];
 
         return view('eoffice::dosen.dashboard', compact('bimbingan', 'stats'));
@@ -92,8 +92,9 @@ class DosenController extends Controller
                 'nilai_laporan' => null, // Legacy deprecated
                 'sudah_daftar_seminar' => $sudahDaftarSeminar,
                 'status_seminar' => $kp->status_seminar,
-                'progress' => $kp->status_kp === 'completed' ? 100
-                    : ($kp->status_kp === 'active' ? 60 : 20),
+                'progress' => in_array($kp->status_kp, ['Selesai', 'Selesai KP']) ? 100
+                    : ($kp->status_kp === 'Pasca KP' ? 80
+                        : ($kp->status_kp === 'Saat KP' ? 50 : 20)),
             ];
         });
 

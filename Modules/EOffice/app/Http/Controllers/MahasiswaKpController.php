@@ -902,14 +902,10 @@ class MahasiswaKpController extends Controller
 
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
 
-        $kartuHijauDoc = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
-        $nilaiLapanganDoc = $dokumenByJenis->get('Nilai Lapangan')?->sortByDesc('created_at')->first();
+        $syaratSeminar = $this->cekSyaratSeminar($kp, $dokumenByJenis);
 
-        $khStatus = $kartuHijauDoc ? strtolower($kartuHijauDoc->status_validasi) : 'belum';
-        $nlStatus = $nilaiLapanganDoc ? strtolower($nilaiLapanganDoc->status_validasi) : 'belum';
-
-        if ($khStatus !== 'disetujui' || $nlStatus !== 'disetujui') {
-            return redirect()->back()->with('error', 'Tidak dapat mengajukan seminar. Syarat dokumen (Kartu Hijau dan Form A2) harus diunggah dan disetujui Koordinator terlebih dahulu.');
+        if (!$syaratSeminar['semua_terpenuhi']) {
+            return redirect()->back()->with('error', 'Tidak dapat mengajukan seminar. Seluruh syarat dokumen Pasca KP harus diunggah dan disetujui terlebih dahulu.');
         }
 
         // Buat atau update seminar
