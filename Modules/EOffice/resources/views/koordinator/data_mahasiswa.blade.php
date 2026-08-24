@@ -304,7 +304,8 @@
                                         :class="{
                                             'bg-amber-50 text-amber-600': m.status_kp === 'Pra KP',
                                             'bg-blue-50 text-blue-600': m.status_kp === 'Saat KP',
-                                            'bg-emerald-50 text-emerald-600': m.status_kp === 'Pasca KP'
+                                            'bg-emerald-50 text-emerald-600': ['Pasca KP', 'Selesai'].includes(m.status_kp),
+                                            'bg-rose-50 text-rose-600': ['Dibatalkan', 'Gagal'].includes(m.status_kp)
                                         }" x-text="m.status_kp">
                                     </span>
                                 </td>
@@ -398,7 +399,9 @@
                                                     <div>
                                                         <template x-for="n in m.semua_nilai" :key="n.nama">
                                                             <div class="flex justify-between items-center gap-4 py-0.5">
-                                                                <span class="text-[13px] font-medium text-slate-400"
+                                                                <span
+                                                                    class="text-[13px] font-medium text-slate-400 cursor-help"
+                                                                    :title="n.full_nama || n.nama"
                                                                     x-text="n.nama"></span>
                                                                 <span class="text-[13px] font-bold text-slate-800"
                                                                     x-text="n.nilai !== null && n.nilai !== '' ? n.nilai : '-'"></span>

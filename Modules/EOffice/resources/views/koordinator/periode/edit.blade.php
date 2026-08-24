@@ -361,11 +361,33 @@
                                     <span class="text-[14px] font-bold text-[#0D0D12]"
                                         x-text="formData.komponen_penilaian.length"></span>
                                 </div>
-                                <div class="flex justify-between items-center mb-6">
-                                    <span class="text-[13px] text-[#848A9C] font-semibold">Total Bobot</span>
-                                    <span class="px-3 py-0.5 rounded-[12px] border text-[12px] font-bold"
-                                        :class="totalBobot() === 100 ? 'bg-[#ECFDF3] text-[#027A48] border-[#ABEFC6]' : 'bg-red-50 text-red-600 border-red-200'"
-                                        x-text="totalBobot() + '%'"></span>
+                                <!-- The Budget Tracker -->
+                                <div class="mb-6 p-4 rounded-xl border transition-colors duration-300"
+                                    :class="totalBobot() === 100 ? 'border-[#ABEFC6] bg-[#F6FEF9]' : (totalBobot() > 100 ? 'border-red-200 bg-[#FFF4F3]' : 'border-[#E2E8F0] bg-[#F8F9FA]')">
+                                    <div class="flex justify-between items-end mb-3">
+                                        <div class="flex flex-col">
+                                            <span class="text-[11px] font-bold uppercase tracking-wider mb-0.5"
+                                                :class="totalBobot() === 100 ? 'text-[#027A48]' : (totalBobot() > 100 ? 'text-[#B42318]' : 'text-[#344054]')">
+                                                Total Bobot
+                                            </span>
+                                            <span class="text-[12px] font-medium"
+                                                :class="totalBobot() === 100 ? 'text-[#027A48]/80' : (totalBobot() > 100 ? 'text-[#B42318]/80' : 'text-[#666D80]')"
+                                                x-text="totalBobot() === 100 ? 'Alokasi valid siap disimpan' : (totalBobot() > 100 ? 'Kelebihan ' + (totalBobot() - 100) + '%' : 'Sisa kuota ' + (100 - totalBobot()) + '%')"></span>
+                                        </div>
+                                        <div class="text-right flex flex-col items-end">
+                                            <span class="text-[22px] font-black leading-none"
+                                                :class="totalBobot() === 100 ? 'text-[#027A48]' : (totalBobot() > 100 ? 'text-[#B42318]' : 'text-[#0D0D12]')"
+                                                x-text="totalBobot() + '%'"></span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Progress Bar -->
+                                    <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full transition-all duration-300 ease-out rounded-full"
+                                            :style="'width: ' + Math.min(totalBobot(), 100) + '%'"
+                                            :class="totalBobot() === 100 ? 'bg-[#12B76A]' : (totalBobot() > 100 ? 'bg-[#F04438]' : 'bg-[#0065FF]')">
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <h4 class="text-[15px] font-bold text-[#0D0D12] mb-4 mt-2">Komponen terpilih :</h4>
@@ -700,10 +722,15 @@
                                         </template>
                                     </div>
                                 </div>
-                                <div class="flex justify-between text-sm font-bold text-gray-800 mt-2 px-1">
-                                    <span>Total Bobot:</span>
-                                    <span :class="totalBobot() === 100 ? 'text-[#027A48]' : 'text-red-500'"
-                                        x-text="totalBobot() + '%'"></span>
+                                <div class="mt-4 p-4 rounded-xl border"
+                                    :class="totalBobot() === 100 ? 'border-[#ABEFC6] bg-[#F6FEF9]' : 'border-red-200 bg-[#FFF4F3]'">
+                                    <div class="flex justify-between items-center text-[13px] font-bold">
+                                        <span :class="totalBobot() === 100 ? 'text-[#027A48]' : 'text-[#B42318]'">Total
+                                            Bobot Keseluruhan:</span>
+                                        <span class="text-[16px]"
+                                            :class="totalBobot() === 100 ? 'text-[#027A48]' : 'text-[#B42318]'"
+                                            x-text="totalBobot() + '%'"></span>
+                                    </div>
                                 </div>
                             </div>
 

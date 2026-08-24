@@ -56,7 +56,8 @@ class DosenController extends Controller
             'u.email as email_mahasiswa',
             'ud.name as nama_dosen',
             's.id as seminar_id',
-            's.status_validasi_syarat as status_seminar'
+            's.status_validasi_syarat as status_seminar',
+            'p.nilai_akhir'
         )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
@@ -90,6 +91,7 @@ class DosenController extends Controller
                 'status_dokumen' => 'Lengkap',
                 'nilai_seminar' => null, // Legacy deprecated
                 'nilai_laporan' => null, // Legacy deprecated
+                'nilai_akhir' => $kp->nilai_akhir,
                 'sudah_daftar_seminar' => $sudahDaftarSeminar,
                 'status_seminar' => $kp->status_seminar,
                 'progress' => in_array($kp->status_kp, ['Selesai', 'Selesai KP']) ? 100
@@ -166,7 +168,7 @@ class DosenController extends Controller
         $kp = KerjaPraktik::findOrFail($id);
 
         // Sesuai Activity Diagram: Dosen menyetujui Topik dan Tempat KP
-        $kp->status_kp = 'active'; // Berubah dari pending (Pra KP) menjadi active (Saat KP)
+        $kp->status_kp = 'Saat KP'; // Berubah dari pending (Pra KP) menjadi Saat KP
         $kp->save();
 
         return redirect()->back()->with('success', 'Topik dan Tempat KP berhasil disetujui. Mahasiswa sekarang berada di fase SAAT KP.');
@@ -263,8 +265,8 @@ class DosenController extends Controller
             return back()->with('error', 'Cetakan Master Rubrik untuk periode mahasiswa ini belum diatur oleh Koordinator! Harap hubungi Koordinator KP sebelum memberikan nilai.');
         }
 
-        // Update status KP menjadi completed setelah dosen memberi nilai
-        $kp->status_kp = 'completed';
+        // Update status KP menjadi Selesai setelah dosen memberi nilai
+        $kp->status_kp = 'Selesai';
         $kp->save();
 
         return back()->with('success', 'Nilai Penilaian berhasil disimpan!');

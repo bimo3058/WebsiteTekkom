@@ -450,7 +450,7 @@
                                                                 viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                     stroke-width="2"
-                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4" />
+                                                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                             </svg>
                                                             Template
                                                         </a>
@@ -488,11 +488,11 @@
                                                                         x-on:change="isUploading = true; $event.target.closest('form').submit()">
                                                                     <label for="dokumen_{{ $tmpl->id }}"
                                                                         class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-slate-300">
-                                                                        <svg class="w-4 h-4 mr-1.5 text-slate-400" fill="none"
+                                                                        <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none"
                                                                             stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                                 stroke-width="2"
-                                                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4-4m0 0l-4-4m4 4V4" />
+                                                                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                                                                         </svg>
                                                                         <span class="truncate max-w-[120px]">
                                                                             {{ $latestDoc ? 'Unggah Ulang' : 'Upload File' }}

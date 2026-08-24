@@ -628,6 +628,9 @@ class KoordinatorController extends Controller implements HasMiddleware
             } elseif (in_array($rawStatus, ['completed', 'pasca kp', 'pasca-kp', 'selesai'])) {
                 $statusStr = 'Pasca KP';
                 $tahap = 'Pasca KP';
+            } elseif (in_array($rawStatus, ['dibatalkan', 'gagal'])) {
+                $statusStr = 'Dibatalkan';
+                $tahap = 'Dibatalkan';
             }
 
             // Find matching periode based on dates (because eo_kerja_praktik lacks exact periode_id)
@@ -644,6 +647,12 @@ class KoordinatorController extends Controller implements HasMiddleware
 
             $komponenKoor = [];
             $semuaNilai = [];
+
+            $isDosenGraded = false;
+            $isKoorGraded = false;
+            $hasDosenRole = false;
+            $hasKoorRole = false;
+
             if ($matchedPeriode && $matchedPeriode->komponenNilai) {
                 foreach ($matchedPeriode->komponenNilai as $komp) {
                     $val = '-';
@@ -653,12 +662,19 @@ class KoordinatorController extends Controller implements HasMiddleware
                             $val = $det->nilai_angka;
                         }
                     }
+                    $namaDisplay = $komp->kode ? $komp->kode : (strlen($komp->nama_komponen) > 18 ? substr($komp->nama_komponen, 0, 15) . '...' : $komp->nama_komponen);
+
                     $semuaNilai[] = [
-                        'nama' => $komp->nama_komponen,
+                        'nama' => $namaDisplay,
+                        'full_nama' => $komp->nama_komponen, // for debugging or tooltips
                         'nilai' => $val
                     ];
 
                     if ($komp->role_penilai === 'koordinator') {
+                        $hasKoorRole = true;
+                        if ($val !== '-')
+                            $isKoorGraded = true;
+
                         $komponenKoor[] = [
                             'id' => $komp->id,
                             'nama_komponen' => $komp->nama_komponen,
@@ -666,8 +682,19 @@ class KoordinatorController extends Controller implements HasMiddleware
                             'nilai_angka' => $val !== '-' ? $val : ''
                         ];
                     }
+
+                    if ($komp->role_penilai === 'dosen_pembimbing') {
+                        $hasDosenRole = true;
+                        if ($val !== '-')
+                            $isDosenGraded = true;
+                    }
                 }
             }
+            $isFullyGraded = true;
+            if ($hasDosenRole && !$isDosenGraded)
+                $isFullyGraded = false;
+            if ($hasKoorRole && !$isKoorGraded)
+                $isFullyGraded = false;
 
             return (object) [
                 'id' => $kp->id,
@@ -686,7 +713,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'nilai_seminar' => '-',
                 'nilai_laporan' => '-',
                 'nilai_lapangan' => '-',
-                'nilai_akhir' => $kp->nilai_akhir,
+                'nilai_akhir' => $isFullyGraded ? $kp->nilai_akhir : null,
                 'status_dokumen' => '-',
                 'riwayat_approval' => [
                     ['tanggal' => date('Y-m-d', strtotime($kp->updated_at)), 'status' => 'Info', 'keterangan' => 'Tahap saat ini: ' . $tahap]
@@ -697,6 +724,10 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'kelas_dibuka' => $matchedPeriode && $matchedPeriode->kelas_dibuka ? $matchedPeriode->kelas_dibuka : [],
                 'komponen_koordinator' => $komponenKoor,
                 'semua_nilai' => $semuaNilai,
+                'is_dosen_graded' => $isDosenGraded,
+                'is_koor_graded' => $isKoorGraded,
+                'has_dosen_role' => $hasDosenRole,
+                'has_koor_role' => $hasKoorRole,
             ];
         });
 
@@ -719,7 +750,8 @@ class KoordinatorController extends Controller implements HasMiddleware
             'nilai_lapangan' => 'nullable|numeric|min:0|max:100',
             'kelas' => 'nullable|string|max:50',
             // Migrasi & Override Status validations
-            'force_status' => 'nullable|string|in:pending,active,completed',
+            'force_status' => 'nullable|string|in:pending,active,completed,Dibatalkan,Selesai',
+            'keterangan_status' => 'nullable|string',
             'force_periode' => 'nullable|exists:eo_kp_periode,id'
         ]);
 
@@ -732,6 +764,9 @@ class KoordinatorController extends Controller implements HasMiddleware
 
             // Juga update status balancing menjadi finalized bila override manual
             if ($request->dosen_pembimbing_id) {
+                // Saat Koordinator meng-assign dosen, otomatis pendaftaran mahasiswa diverifikasi/di-ACC
+                $kp->is_acc_admin = true;
+
                 \Modules\EOffice\Models\KpBalancing::updateOrCreate(
                     ['kp_id' => $kp->id],
                     [
@@ -747,6 +782,12 @@ class KoordinatorController extends Controller implements HasMiddleware
         // Administrator Override Mode
         if ($request->filled('force_status')) {
             $kp->status_kp = $request->force_status;
+
+            if ($request->force_status === 'Dibatalkan' || $request->force_status === 'Gagal') {
+                $kp->keterangan_status = $request->input('keterangan_status');
+            } else {
+                $kp->keterangan_status = null; // Bersihkan jika status kembali normal
+            }
         }
 
         $komponenKoor = null;
@@ -775,10 +816,25 @@ class KoordinatorController extends Controller implements HasMiddleware
                 }
             }
 
-            // Maintain fallback average for legacy interfaces
+            // 2. Kalkulasi ulang Total Nilai Akhir dari KESELURUHAN komponen (baik yang diisi Dosen & Koord)
             if ($countInput > 0) {
-                // Not saving to eo_kp_penilaian->nilai_lapangan anymore because it was dropped.
-                // It is already dynamically saved in eo_kp_nilai_detail.
+                $allComponents = $kp->periode->komponenNilai;
+                $allDetails = \Modules\EOffice\Models\KpNilaiDetail::where('kp_id', $kp->id)->get();
+
+                $totalAccumulated = 0;
+                // Hitung akumulasi
+                foreach ($allComponents as $comp) {
+                    $detail = $allDetails->firstWhere('komponen_id', $comp->id);
+                    $angka = $detail ? (float) $detail->nilai_angka : 0;
+                    $bobotPersen = ($comp->bobot / 100);
+                    $totalAccumulated += ($angka * $bobotPersen);
+                }
+
+                // 3. Simpan Kalkulasi Final sebagai Snapshot ke tabel master eo_kp_penilaian
+                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                    ['kp_id' => $kp->id],
+                    ['nilai_akhir' => round($totalAccumulated, 2)]
+                );
             }
         }
 
@@ -893,8 +949,11 @@ class KoordinatorController extends Controller implements HasMiddleware
             'kelas' => $kp->kelas ?? '-',
             'judul_kp' => $kp->judul_kp ?? '-',
             'tempat_kp' => $kp->instansi_kp ?? '-',
+            'ipk' => $kp->ipk ?? '-',
+            'sks_diambil' => $kp->sks_diambil ?? '-',
             'status_kp' => $kp->status_kp ?? 'Pra KP',
             'periode_id' => $matchedPeriode ? $matchedPeriode->id : null,
+            'periode_name' => $matchedPeriode ? ('Sem. ' . $matchedPeriode->semester . ' ' . $matchedPeriode->tahun_ajaran) : '-',
             'kelas_dibuka' => $matchedPeriode && $matchedPeriode->kelas_dibuka ? $matchedPeriode->kelas_dibuka : []
         ];
 

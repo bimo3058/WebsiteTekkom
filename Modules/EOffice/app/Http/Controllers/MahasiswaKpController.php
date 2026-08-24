@@ -84,6 +84,48 @@ class MahasiswaKpController extends Controller
             $templates = collect();
         }
 
+        $finalGradeDisplay = null;
+        if ($kp && $kp->penilaian && $kp->penilaian->nilai_akhir) {
+            $isFullyGraded = true;
+            $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->get();
+            $matchedPeriode = $allPeriodes->first(function ($p) use ($kp) {
+                if (!$kp->created_at || !$p->pra_kp_mulai)
+                    return false;
+                $endDate = $p->pasca_kp_akhir ? clone $p->pasca_kp_akhir : (clone $p->pra_kp_akhir)->addMonths(6);
+                return $kp->created_at->format('Y-m-d') >= $p->pra_kp_mulai->format('Y-m-d')
+                    && $kp->created_at->format('Y-m-d') <= $endDate->format('Y-m-d');
+            });
+
+            if ($matchedPeriode && $matchedPeriode->komponenNilai) {
+                $details = \Modules\EOffice\Models\KpNilaiDetail::where('kp_id', $kp->id)->get();
+                $hasDosenRole = false;
+                $hasKoorRole = false;
+                $isDosenGraded = false;
+                $isKoorGraded = false;
+
+                foreach ($matchedPeriode->komponenNilai as $komp) {
+                    $val = $details->where('komponen_id', $komp->id)->first();
+                    $hasValue = ($val && $val->nilai_angka !== null);
+
+                    if ($komp->role_penilai === 'koordinator') {
+                        $hasKoorRole = true;
+                        if ($hasValue)
+                            $isKoorGraded = true;
+                    }
+                    if ($komp->role_penilai === 'dosen_pembimbing') {
+                        $hasDosenRole = true;
+                        if ($hasValue)
+                            $isDosenGraded = true;
+                    }
+                }
+                if ($hasDosenRole && !$isDosenGraded)
+                    $isFullyGraded = false;
+                if ($hasKoorRole && !$isKoorGraded)
+                    $isFullyGraded = false;
+            }
+            $finalGradeDisplay = $isFullyGraded ? $kp->penilaian->nilai_akhir : null;
+        }
+
         return view('eoffice::kp.mahasiswa.dashboard', compact(
             'mahasiswa',
             'kp',
@@ -91,7 +133,8 @@ class MahasiswaKpController extends Controller
             'timeline',
             'dokumenStats',
             'templates',
-            'activePhase'
+            'activePhase',
+            'finalGradeDisplay'
         ));
     }
 
@@ -282,10 +325,20 @@ class MahasiswaKpController extends Controller
     {
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
 
-        // Cek apakah sudah punya KP yang belum selesai
-        $existingKp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
-            ->whereNotIn('status_kp', ['Selesai'])
+        // Cek apakah sedang jalan KP atau sudah lulus selamanya
+        $existingKp = KerjaPraktik::with('periode')
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->whereIn('status_kp', ['Pra-KP', 'Saat KP', 'Pasca KP', 'Selesai'])
             ->first();
+
+        // Lazy Evaluation: Jika periode sudah berakhir, otomatis gagalkan
+        if ($existingKp && $existingKp->status_kp !== 'Selesai' && $existingKp->periode) {
+            $deadline = $existingKp->periode->pasca_kp_akhir ?? $existingKp->periode->tanggal_tutup;
+            if ($deadline && now()->startOfDay()->gt(\Carbon\Carbon::parse($deadline)->startOfDay())) {
+                $existingKp->update(['status_kp' => 'Gagal']);
+                $existingKp = null; // Kosongkan agar bisa mendaftar ulang
+            }
+        }
 
         // Cek pendaftaran berdasarkan menu periode
         $phaseStatus = $this->getPhaseStatus('pra_kp');
@@ -359,13 +412,23 @@ class MahasiswaKpController extends Controller
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
 
-        // Cegah duplikasi: mahasiswa hanya boleh punya 1 KP aktif
-        $existingKp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
-            ->whereNotIn('status_kp', ['Selesai'])
+        // Cegah duplikasi: mahasiswa tidak boleh daftar jika sedang jalan KP atau sudah Lulus
+        $existingKp = KerjaPraktik::with('periode')
+            ->where('mahasiswa_id', $mahasiswa->id)
+            ->whereIn('status_kp', ['Pra-KP', 'Saat KP', 'Pasca KP', 'Selesai'])
             ->first();
 
+        // Lazy Evaluation: Jika periode sudah berakhir, otomatis gagalkan
+        if ($existingKp && $existingKp->status_kp !== 'Selesai' && $existingKp->periode) {
+            $deadline = $existingKp->periode->pasca_kp_akhir ?? $existingKp->periode->tanggal_tutup;
+            if ($deadline && now()->startOfDay()->gt(\Carbon\Carbon::parse($deadline)->startOfDay())) {
+                $existingKp->update(['status_kp' => 'Gagal']);
+                $existingKp = null;
+            }
+        }
+
         if ($existingKp) {
-            return redirect()->back()->with('error', 'Anda sudah memiliki pendaftaran KP yang sedang berjalan.');
+            return redirect()->back()->with('error', 'Anda tidak dapat mendaftar. Anda memiliki pendaftaran KP yang sedang berjalan atau riwayat KP Anda sudah berstatus Selesai.');
         }
 
         \Illuminate\Support\Facades\DB::beginTransaction();
@@ -455,10 +518,22 @@ class MahasiswaKpController extends Controller
                 ->with('error', 'Anda belum mendaftar KP. Silakan daftar terlebih dahulu.');
         }
 
+        if ($kp->is_acc_admin == false) {
+            return redirect()
+                ->route('eoffice.kp.mahasiswa.pendaftaran')
+                ->with('error', 'Halaman Dokumen KP belum dapat diakses. Pendaftaran KP Anda belum diverifikasi oleh Koordinator.');
+        }
+
         if (empty($kp->dosen_pembimbing_id)) {
             return redirect()
                 ->route('eoffice.kp.mahasiswa.pendaftaran')
-                ->with('error', 'Halaman Dokumen KP belum dapat diakses. Silakan selesaikan seluruh fase pendaftaran terlebih dahulu.');
+                ->with('error', 'Halaman Dokumen KP belum dapat diakses. Anda belum memiliki Dosen Pembimbing.');
+        }
+
+        if (in_array(strtolower($kp->status_kp), ['dibatalkan', 'gagal'])) {
+            return redirect()
+                ->route('eoffice.kp.mahasiswa.pendaftaran')
+                ->with('error', 'Perhatian: Status pendaftaran KP Anda telat Dibatalkan / Gagal. Anda tidak lagi dapat berinteraksi dengan fase upload dokumen untuk registrasi ini.');
         }
 
         // Kelompokkan dokumen berdasarkan jenis
@@ -819,10 +894,18 @@ class MahasiswaKpController extends Controller
                 ->with('error', 'Anda belum mendaftar KP.');
         }
 
+        if ($kp->is_acc_admin == false) {
+            return redirect()->route('eoffice.kp.mahasiswa.pendaftaran')->with('error', 'Halaman Seminar KP belum dapat diakses. Pendaftaran KP Anda belum diverifikasi oleh Koordinator.');
+        }
+
         if (empty($kp->dosen_pembimbing_id)) {
+            return redirect()->route('eoffice.kp.mahasiswa.pendaftaran')->with('error', 'Halaman Seminar KP belum dapat diakses. Anda belum memiliki Dosen Pembimbing.');
+        }
+
+        if (in_array(strtolower($kp->status_kp), ['dibatalkan', 'gagal'])) {
             return redirect()
                 ->route('eoffice.kp.mahasiswa.pendaftaran')
-                ->with('error', 'Halaman Seminar KP belum dapat diakses. Silakan selesaikan seluruh fase pendaftaran terlebih dahulu.');
+                ->with('error', 'Perhatian: Status pendaftaran KP Anda telat Dibatalkan / Gagal. Anda tidak dapat mengakses laman persyaratan Seminar.');
         }
 
         // Kelompokkan dokumen berdasarkan jenis

@@ -1,8 +1,13 @@
 <x-eoffice::layouts.dosen title="Bimbingan Mahasiswa">
     @section('breadcrumbs')
         <span class="text-[#272835] font-semibold" style="font-family:'Inter Tight',sans-serif;">Bimbingan Mahasiswa</span>
-    @endsection
-    <div x-data="bimbinganApp()" x-init="initData({{ json_encode($mahasiswas) }})" class="max-w-7xl mx-auto">
+    <script>
+        window.initialMahasiswaData = {!! json_encode($mahasiswas) !!};
+    </script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+    <div x-data="bimbinganApp()" x-init="initData(window.initialMahasiswaData)" class="max-w-7xl mx-auto">
 
         <!-- Toast Notification -->
         <div x-cloak x-show="toast.show" x-transition:enter="transition ease-out duration-300 transform"
@@ -64,10 +69,10 @@
                 <select x-model="filterStatus"
                     class="block w-full sm:w-48 py-2 px-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors outline-none cursor-pointer">
                     <option value="all">Semua Status</option>
-                    <option value="active">Aktif KP</option>
-                    <option value="pending">Menunggu Seminar</option>
-                    <option value="completed">Selesai KP</option>
-                    <option value="revisi">Revisi</option>
+                    <option value="Pra-KP">Pra-KP (Menunggu)</option>
+                    <option value="Saat KP">Saat KP (Berjalan)</option>
+                    <option value="Pasca KP">Pasca KP (Seminar)</option>
+                    <option value="Selesai">Selesai KP</option>
                 </select>
                 <select x-model="sortOrder"
                     class="block w-full sm:w-48 py-2 px-3 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors outline-none cursor-pointer">
@@ -295,30 +300,36 @@
 
                     getStatusLabel(status) {
                         const labels = {
-                            'active': 'Aktif KP',
-                            'pending': 'Menunggu Seminar',
-                            'completed': 'Selesai KP',
-                            'revisi': 'Revisi'
+                            'Pra-KP': 'Pra-KP',
+                            'Saat KP': 'Saat KP',
+                            'Pasca KP': 'Pasca KP',
+                            'Selesai': 'Selesai KP',
+                            'Dibatalkan': 'Dibatalkan',
+                            'Gagal': 'Gagal'
                         };
                         return labels[status] || status;
                     },
 
                     getStatusBadgeClass(status) {
                         const classes = {
-                            'active': 'text-indigo-600 bg-indigo-50 border-indigo-100',
-                            'pending': 'text-amber-600 bg-amber-50 border-amber-100',
-                            'completed': 'text-emerald-600 bg-emerald-50 border-emerald-100',
-                            'revisi': 'text-red-600 bg-red-50 border-red-100'
+                            'Pra-KP': 'text-amber-600 bg-amber-50 border-amber-100',
+                            'Saat KP': 'text-indigo-600 bg-indigo-50 border-indigo-100',
+                            'Pasca KP': 'text-purple-600 bg-purple-50 border-purple-100',
+                            'Selesai': 'text-emerald-600 bg-emerald-50 border-emerald-100',
+                            'Dibatalkan': 'text-rose-600 bg-rose-50 border-rose-100',
+                            'Gagal': 'text-rose-600 bg-rose-50 border-rose-100'
                         };
                         return classes[status] || 'text-slate-600 bg-slate-50 border-slate-200';
                     },
 
                     getStatusDotClass(status) {
                         const classes = {
-                            'active': 'bg-indigo-500',
-                            'pending': 'bg-amber-500',
-                            'completed': 'bg-emerald-500',
-                            'revisi': 'bg-red-500'
+                            'Pra-KP': 'bg-amber-500',
+                            'Saat KP': 'bg-indigo-500',
+                            'Pasca KP': 'bg-purple-500',
+                            'Selesai': 'bg-emerald-500',
+                            'Dibatalkan': 'bg-rose-500',
+                            'Gagal': 'bg-rose-500'
                         };
                         return classes[status] || 'bg-slate-400';
                     },
