@@ -518,16 +518,10 @@ class MahasiswaKpController extends Controller
                 ->with('error', 'Anda belum mendaftar KP. Silakan daftar terlebih dahulu.');
         }
 
-        if ($kp->is_acc_admin == false) {
-            return redirect()
-                ->route('eoffice.kp.mahasiswa.pendaftaran')
-                ->with('error', 'Halaman Dokumen KP belum dapat diakses. Pendaftaran KP Anda belum diverifikasi oleh Koordinator.');
-        }
-
         if (empty($kp->dosen_pembimbing_id)) {
             return redirect()
                 ->route('eoffice.kp.mahasiswa.pendaftaran')
-                ->with('error', 'Halaman Dokumen KP belum dapat diakses. Anda belum memiliki Dosen Pembimbing.');
+                ->with('error', 'Halaman Dokumen KP belum dapat diakses. Anda belum didistribusikan ke Dosen Pembimbing.');
         }
 
         if (in_array(strtolower($kp->status_kp), ['dibatalkan', 'gagal'])) {
@@ -892,10 +886,6 @@ class MahasiswaKpController extends Controller
             return redirect()
                 ->route('eoffice.kp.mahasiswa.pendaftaran')
                 ->with('error', 'Anda belum mendaftar KP.');
-        }
-
-        if ($kp->is_acc_admin == false) {
-            return redirect()->route('eoffice.kp.mahasiswa.pendaftaran')->with('error', 'Halaman Seminar KP belum dapat diakses. Pendaftaran KP Anda belum diverifikasi oleh Koordinator.');
         }
 
         if (empty($kp->dosen_pembimbing_id)) {

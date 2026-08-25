@@ -13,33 +13,106 @@ class DosenController extends Controller
     {
         $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
 
-        // Ambil data KP + nama mahasiswa dari tabel global users (READ ONLY, tidak mengubah apapun)
-        $bimbinganQuery = KerjaPraktik::select(
-            'eo_kerja_praktik.*',
-            'u.name as nama_mahasiswa',
-            'u.email as email_mahasiswa',
-            'ud.name as nama_dosen',
-        )
-            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id');
-
-        if ($kpDosen) {
-            $bimbinganQuery->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
-        } else {
-            $bimbinganQuery->whereNull('eo_kerja_praktik.id'); // Kosongkan jika dosen belum terdaftar
+        if (!$kpDosen) {
+            $stats = [
+                'total_bimbingan' => 0,
+                'menunggu_acc' => 0,
+                'sedang_kp' => 0,
+                'selesai_kp' => 0,
+                'dokumen_pending' => 0,
+                'seminar_mendatang' => 0,
+            ];
+            return view('eoffice::dosen.dashboard', ['stats' => $stats, 'todoList' => collect()]);
         }
 
-        $bimbingan = $bimbinganQuery->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
+        // Fetch all active KPs for this Dosen
+        $kps = KerjaPraktik::with([
+            'dokumen' => function ($q) {
+                // Fetch only pending/waiting documents
+                $q->whereIn('approval_status', ['pending', 'menunggu', 'revisi'])
+                    ->where('status_validasi', '!=', 'draft');
+            },
+            'seminar',
+            'mahasiswa.user'
+        ])
+            ->where('dosen_pembimbing_id', $kpDosen->id)
+            ->whereNotIn('status_kp', ['Dibatalkan', 'Gagal'])
+            ->get();
+
+        $templates = \Modules\EOffice\Models\TemplateDokumenKP::all()->groupBy('periode_id');
+        $todoList = collect();
+        $dokumenPendingCount = 0;
+        $seminarMendatangCount = 0;
+        $aktifCount = 0;
+
+        foreach ($kps as $kp) {
+            if (!in_array($kp->status_kp, ['Selesai', 'Selesai KP'])) {
+                $aktifCount++;
+            }
+
+            $periodTemplates = collect();
+            if ($kp->periode_id && isset($templates[$kp->periode_id])) {
+                $periodTemplates = $templates[$kp->periode_id];
+            }
+
+            // 1. Process Pending Documents for To-Do
+            foreach ($kp->dokumen as $d) {
+                $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
+                $isDosenRole = false;
+                if ($t) {
+                    $isDosenRole = in_array($t->approver_role, ['dosen_pembimbing', 'keduanya']);
+                } else {
+                    $isDosenRole = in_array($d->jenis_dokumen, ['Laporan', 'Makalah']);
+                }
+
+                if ($isDosenRole) {
+                    $dokumenPendingCount++;
+                    $todoList->push((object) [
+                        'type' => 'dokumen',
+                        'title' => 'Validasi ' . $d->jenis_dokumen,
+                        'mahasiswa' => $kp->mahasiswa->user->name ?? 'Unknown',
+                        'date' => $d->created_at,
+                        'description' => 'Dokumen baru membutuhkan validasi Anda.',
+                        'url' => route('eoffice.kp.dosen.bimbingan.detail', $kp->id),
+                        'icon' => 'document'
+                    ]);
+                }
+            }
+
+            // 2. Process Upcoming Seminars
+            if ($kp->seminar && in_array(strtolower($kp->seminar->status_validasi_syarat), ['disetujui', 'diterima', 'approved'])) {
+                // If there's a scheduled date and it is >= today or not yet graded
+                $seminarDate = $kp->seminar->tanggal_pelaksanaan ? \Carbon\Carbon::parse($kp->seminar->tanggal_pelaksanaan) : null;
+                $isOvr = false; // check if not graded
+
+                // We'll consider it upcoming/todo if it's within the last 7 days or in the future
+                if ($seminarDate && $seminarDate->isAfter(now()->subDays(7))) {
+                    $seminarMendatangCount++;
+                    $todoList->push((object) [
+                        'type' => 'seminar',
+                        'title' => 'Menghadiri Seminar KP',
+                        'mahasiswa' => $kp->mahasiswa->user->name ?? 'Unknown',
+                        'date' => $seminarDate,
+                        'description' => 'Seminar dilaksanakan di ' . ($kp->seminar->ruangan ?? 'Ruang belum ditentukan') . ' pukul ' . ($kp->seminar->waktu_mulai ?? '-'),
+                        'url' => route('eoffice.kp.dosen.bimbingan.detail', $kp->id),
+                        'icon' => 'calendar'
+                    ]);
+                }
+            }
+        }
 
         $stats = [
-            'total_bimbingan' => $bimbingan->count(),
-            'menunggu_acc' => $bimbingan->where('status_kp', 'Pra-KP')->count(),
-            'sedang_kp' => $bimbingan->where('status_kp', 'Saat KP')->count(),
-            'selesai_kp' => $bimbingan->whereIn('status_kp', ['Pasca KP', 'Selesai'])->count(),
+            'total_bimbingan' => $aktifCount, // Only active
+            'sedang_kp' => $kps->where('status_kp', 'Saat KP')->count(),
+            'selesai_kp' => $kps->whereIn('status_kp', ['Pasca KP', 'Selesai'])->count(),
+            'dokumen_pending' => $dokumenPendingCount,
+            'seminar_mendatang' => $seminarMendatangCount,
         ];
 
-        return view('eoffice::dosen.dashboard', compact('bimbingan', 'stats'));
+        // Sort To-Do list newest first (or upcoming first)
+        $todoList = $todoList->sortByDesc('date')->values();
+
+        return view('eoffice::dosen.dashboard', compact('stats', 'todoList'));
     }
 
     /**

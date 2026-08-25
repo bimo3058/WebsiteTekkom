@@ -51,7 +51,7 @@
     </style>
 </head>
 
-<body style="background:#f9fafb;" x-data="{ sidebarOpen: false }">
+<body style="background:#f9fafb;" x-data="{ sidebarOpen: false, globalUploading: false }">
     <div class="flex h-screen w-full overflow-hidden">
 
         @include('eoffice::kp.mahasiswa.partials.sidebar')
@@ -485,7 +485,7 @@
                                                                     <input type="file" name="file" id="dokumen_{{ $tmpl->id }}"
                                                                         class="sr-only peer" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                                                                         required
-                                                                        x-on:change="isUploading = true; $event.target.closest('form').submit()">
+                                                                        x-on:change="isUploading = true; globalUploading = true; $event.target.closest('form').submit()">
                                                                     <label for="dokumen_{{ $tmpl->id }}"
                                                                         class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors peer-focus:ring-2 peer-focus:ring-offset-2 peer-focus:ring-slate-300">
                                                                         <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none"
@@ -641,6 +641,26 @@
             </div>
         </div>
     </div>
+
+    {{-- Global Fullscreen Loading Overlay --}}
+    <div x-cloak x-show="globalUploading" class="fixed inset-0 z-[999] flex flex-col items-center justify-center bg-slate-900/50 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-slate-100 transform transition-all">
+            <div class="relative w-20 h-20 mb-6 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-4 border-indigo-100"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
+                <svg class="w-8 h-8 text-indigo-600 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+            </div>
+            <h3 class="text-xl font-black text-slate-800 mb-2">Mengunggah File...</h3>
+            <p class="text-sm font-medium text-slate-500 text-center leading-relaxed">
+                Tindakan Anda sedang diproses oleh sistem. Harap tunggu sejenak dan jangan menutup atau merefresh halaman ini.
+            </p>
+        </div>
+    </div>
+
 </body>
 
 </html>

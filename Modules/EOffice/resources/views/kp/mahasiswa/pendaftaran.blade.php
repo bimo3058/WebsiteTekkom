@@ -67,8 +67,11 @@
                         ['label' => 'Pengumuman Dosen', 'desc' => $step3_done ? 'Selesai' : ($step2_done ? 'Menunggu' : 'Belum'), 'icon' => 'M8 7v14m-4-4h8M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z', 'done' => $step3_done],
                     ];
                     $cur = 0;
-                    if ($step3_done) $cur = 2;
-                    elseif ($step2_done) $cur = 1;
+                    if ($step3_done) {
+                        $cur = 2;
+                    } elseif ($step1_done) {
+                        $cur = 1;
+                    }
                 @endphp
                 <div class="sikape-card p-6">
                     <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--grey-400);">Status Pendaftaran Kerja Praktik</p>
