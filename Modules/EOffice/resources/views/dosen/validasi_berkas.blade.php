@@ -153,19 +153,19 @@
                                                 {{ $dok->tanggal_upload ? \Carbon\Carbon::parse($dok->tanggal_upload)->format('d M Y') : '—' }}
                                             </td>
                                             <td class="px-5 py-4 whitespace-nowrap">
-                                                @if($dok->status_validasi == 'pending')
+                                                @if($dok->approval_status == 'pending')
                                                     <span
                                                         class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5"></span>Menunggu
                                                         Review
                                                     </span>
-                                                @elseif($dok->status_validasi == 'approved')
+                                                @elseif($dok->approval_status == 'approved')
                                                     <span
                                                         class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
                                                         <span
                                                             class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>Disetujui
                                                     </span>
-                                                @elseif($dok->status_validasi == 'rejected')
+                                                @elseif($dok->approval_status == 'rejected')
                                                     <span
                                                         class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
                                                         <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span>Perlu Revisi
@@ -173,7 +173,7 @@
                                                 @endif
                                             </td>
                                             <td class="px-5 py-4 whitespace-nowrap text-right">
-                                                @if($dok->status_validasi == 'pending')
+                                                @if($dok->approval_status == 'pending')
                                                     <div class="flex items-center justify-end gap-2">
                                                         <form
                                                             action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}"
@@ -199,7 +199,7 @@
                                                             </button>
                                                         </form>
                                                     </div>
-                                                @elseif($dok->status_validasi == 'approved')
+                                                @elseif($dok->approval_status == 'approved')
                                                     <span class="text-xs text-slate-400">Sudah di-ACC</span>
                                                 @else
                                                     <span class="text-xs text-slate-400">Menunggu revisi</span>
@@ -229,10 +229,10 @@
                                                 </p>
                                             </div>
                                         </div>
-                                        @if($dok->status_validasi == 'pending')
+                                        @if($dok->approval_status == 'pending')
                                             <span
                                                 class="px-2 py-1 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700">Pending</span>
-                                        @elseif($dok->status_validasi == 'approved')
+                                        @elseif($dok->approval_status == 'approved')
                                             <span
                                                 class="px-2 py-1 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">ACC</span>
                                         @else
@@ -246,7 +246,7 @@
                                             {{ basename($dok->file_path) }}
                                         </a>
                                     @endif
-                                    @if($dok->status_validasi == 'pending')
+                                    @if($dok->approval_status == 'pending')
                                         <div class="flex gap-2 mt-2">
                                             <form
                                                 action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}"
