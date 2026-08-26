@@ -364,8 +364,13 @@ class DosenController extends Controller
     {
         $seminar = \Modules\EOffice\Models\KpSeminar::where('kp_id', $id)->firstOrFail();
         $seminar->status_validasi_dosen = 'rejected';
+
+        if ($request->has('catatan_dosen')) {
+            $seminar->catatan_dosen = $request->catatan_dosen;
+        }
+
         $seminar->save();
 
-        return back()->with('error', 'Seminar ditolak.');
+        return back()->with('error', 'Jadwal seminar ditolak.');
     }
 }

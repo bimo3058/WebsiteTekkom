@@ -177,7 +177,10 @@
 
                                     // Step 1 dianggap selesai jika semua template dokumen syarat telah disetujui (dinamis)
                                     $step1Done = $syaratSeminar['semua_terpenuhi'];
-                                    $step2Done = in_array($semStatus, ['pending', 'approved']);
+                                    
+                                    // Step 2 dianggap selesai HANYA JIKA Dosen sudah setuju
+                                    $step2Done = $semStatus === 'approved';
+                                    
                                     $step3Done = $penilaian && ($penilaian->nilai_akhir !== null);
 
                                     $currentStep = 1;
@@ -498,6 +501,34 @@
                                                             </div>
                                                         </div>
                                                     @else
+                                                        {{-- Peringatan Ditolak Dosen --}}
+                                                        @if($semStatus === 'rejected')
+                                                            <div class="flex items-start gap-4 p-4 mb-6 bg-red-50 border border-red-200 rounded-2xl w-full relative overflow-hidden">
+                                                                <div class="absolute right-0 top-0 opacity-5">
+                                                                    <svg class="w-32 h-32 text-red-900" fill="currentColor" viewBox="0 0 24 24">
+                                                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 text-red-600 border border-red-200">
+                                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                    </svg>
+                                                                </div>
+                                                                <div class="flex-1 relative z-10">
+                                                                    <h3 class="text-sm font-bold text-red-900">Jadwal Seminar Ditolak Dosen</h3>
+                                                                    <p class="text-xs text-red-700 mt-1 mb-2 leading-relaxed">
+                                                                        Dosen Pembimbing Anda telah menolak usulan jadwal seminar sebelumnya. Silakan perhatikan catatan berikut dan ajukan ulang jadwal yang baru.
+                                                                    </p>
+                                                                    <div class="bg-white/60 p-3 rounded-lg border border-red-100/50">
+                                                                        <p class="text-[10px] font-bold text-red-800 uppercase tracking-widest mb-1">Catatan Peringatan:</p>
+                                                                        <p class="text-[13px] text-red-950 font-medium italic">
+                                                                            "{{ $kp->seminar->catatan_dosen ?? 'Tidak ada catatan tambahan.' }}"
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endif
+
                                                         {{-- Form Konfirmasi Seminar --}}
 
                                                         @if(!$kp->seminar || $semStatus === 'rejected')

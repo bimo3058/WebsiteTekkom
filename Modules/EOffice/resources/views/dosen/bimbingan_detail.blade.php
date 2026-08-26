@@ -94,8 +94,10 @@
                         </div>
                         @if($seminar->status_validasi_dosen === 'pending')
                             <div class="flex gap-2">
-                                <form action="{{ route('eoffice.kp.dosen.penilaian_seminar.reject', $kp->id) }}" method="POST">
+                                <form action="{{ route('eoffice.kp.dosen.penilaian_seminar.reject', $kp->id) }}" method="POST"
+                                    onsubmit="let note = prompt('Masukkan alasan penolakan dan usulan jadwal baru:'); if(note == null) return false; this.querySelector('.catatan-dosen').value = note;">
                                     @csrf
+                                    <input type="hidden" name="catatan_dosen" class="catatan-dosen" value="">
                                     <button type="submit"
                                         class="px-4 py-2 bg-white hover:bg-slate-50 border-2 border-red-200 text-red-600 font-bold text-sm rounded-lg transition-colors">Tolak/Reschedule</button>
                                 </form>
@@ -113,9 +115,7 @@
         @endif
 
         @php
-            // Hitung dokumen yang butuh validasi (pending / belum upload dsb).
-            // Harapannya semua file yang 'required' untuk dosen harus 'approved'.
-            // Di sini kita simplifikasi: kalau ada yang diunggah tapi statusnya selain approved, belum bisa nilai.
+            // 1. Validasi Dokumen: Semua file yang diunggah harus disetujui (minimal 1 file harus ada).
             $unapprovedExists = false;
             foreach ($kp->dokumen as $dok) {
                 if ($dok->approval_status !== 'approved') {
@@ -123,10 +123,14 @@
                     break;
                 }
             }
-
-            // Asumsikan harus upload minimal 1 dokumen agar bisa validasi.
             $hasFiles = $kp->dokumen->count() > 0;
-            $rubrikLocked = !$hasFiles || $unapprovedExists;
+            $dokumenTervalidasi = $hasFiles && !$unapprovedExists;
+
+            // 2. Validasi Operasional: Jadwal Seminar harus sudah dikonfirmasi
+            $seminarConfirmed = $seminar && $seminar->status_validasi_dosen === 'approved';
+
+            // 3. Double-Lock: Kunci rubrik jika dokumen BELUM tervalidasi ATAU seminar BELUM dikonfirmasi.
+            $rubrikLocked = !$dokumenTervalidasi || !$seminarConfirmed;
         @endphp
 
         <!-- Card: Table Dokumen Syarat -->
@@ -167,7 +171,7 @@
                                                 <td class="px-6 py-4">
                                                     <span
                                                         class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border
-                                                                                                                                                                                                                        {{ $dokumen->approval_status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                                                                                                                                                                                                                                                {{ $dokumen->approval_status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                             ($dokumen->approval_status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200') }}">
                                                         @if($dokumen->approval_status === 'approved')
                                                             <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
@@ -338,23 +342,26 @@
         </div>
 
         <!-- Card: Table Rubrik Penilaian -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8 relative">
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
 
             @if($rubrikLocked)
-                <div
-                    class="absolute inset-0 z-10 bg-white/60 backdrop-blur-sm flex flex-col justify-center items-center rounded-2xl border border-slate-200 p-8 text-center">
-                    <div
-                        class="w-16 h-16 bg-slate-100 rounded-full flex justify-center items-center mb-4 shadow-inner border border-slate-200">
-                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                            </path>
+                <!-- Educational Banner Alert -->
+                <div class="bg-amber-50 border-b border-amber-200 px-6 py-4 flex items-start gap-4">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <svg class="h-5 w-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">Penilaian Terkunci</h3>
-                    <p class="text-slate-500 max-w-md">Anda belum bisa memberikan nilai karena dokumen syarat mahasiswa
-                        belum diunggah atau belum 100% Anda setujui pada tabel di atas. Harap <strong>Approve</strong> semua
-                        file sebelumnya.</p>
+                    <div>
+                        <h3 class="text-sm font-bold text-amber-800">Pengisian Nilai Terkunci</h3>
+                        <p class="text-sm text-amber-700 mt-1">
+                            Anda dapat meninjau komponen rubrik ini, namun form input baru akan <strong>terbuka
+                                otomatis</strong> setelah seluruh dokumen syarat disetujui penuh DAN jadwal pelaksanaan
+                            seminar KP telah dikonfirmasi.
+                        </p>
+                    </div>
                 </div>
             @endif
 
