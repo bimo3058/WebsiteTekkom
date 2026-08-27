@@ -252,7 +252,7 @@
                                 Action</th>
                         </tr>
                     </thead>
-                    <template x-for="m in filteredMahasiswas" :key="m.id">
+                    <template x-for="m in paginatedMahasiswas" :key="m.id">
                         <tbody x-data="{ expanded: false }" class="border-b border-slate-100">
                             <!-- Main Row -->
                             <tr @click="expanded = !expanded"
@@ -474,22 +474,51 @@
             </div>
 
             <!-- Pagination -->
-            <div class="border-t border-slate-200 bg-slate-50/50 px-6 py-4 flex items-center justify-between">
-                <p class="text-sm text-slate-500 font-medium">Menampilkan <span class="font-bold text-slate-700"
-                        x-text="filteredMahasiswas.length"></span> data</p>
-                <div class="flex items-center gap-1">
-                    <button
-                        class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                        disabled>
+            <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4"
+                x-show="filteredMahasiswas.length > 0" x-cloak>
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+                        <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per
+                            halaman</span>
+                        <select x-model.number="perPage"
+                            class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat"
+                            style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <p class="text-xs font-medium text-slate-600">Menampilkan <span class="font-bold text-slate-800"
+                            x-text="((currentPage - 1) * perPage) + 1"></span> sampai <span
+                            class="font-bold text-slate-800"
+                            x-text="Math.min(currentPage * perPage, filteredMahasiswas.length)"></span> dari <span
+                            x-text="filteredMahasiswas.length"></span> entri</p>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <button @click="currentPage--" :disabled="currentPage === 1"
+                        :class="{'text-slate-300 cursor-not-allowed': currentPage === 1, 'text-slate-600 hover:bg-slate-50': currentPage > 1}"
+                        class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
-                    <button
-                        class="px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 text-sm font-bold">1</button>
-                    <button
-                        class="p-2 rounded-lg border border-slate-200 bg-white text-slate-400 hover:text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                        disabled>
+
+                    <div
+                        class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+                        <template x-for="page in pageNumbers" :key="page">
+                            <button @click="currentPage = page"
+                                :class="{'bg-[#354371] text-white': page === currentPage, 'text-slate-600 hover:bg-slate-50': page !== currentPage}"
+                                class="w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors"
+                                x-text="page"></button>
+                        </template>
+                    </div>
+
+                    <button @click="currentPage++" :disabled="currentPage === totalPages"
+                        :class="{'text-slate-300 cursor-not-allowed': currentPage === totalPages, 'text-slate-600 hover:bg-slate-50': currentPage < totalPages}"
+                        class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
@@ -520,6 +549,41 @@
                         this.$watch('detailModal', value => {
                             if (!value) setTimeout(() => { this.selectedMahasiswa = null; this.modalTab = 'profil'; }, 300);
                         });
+
+                        this.$watch('search', () => this.currentPage = 1);
+                        this.$watch('filterStatus', () => this.currentPage = 1);
+                        this.$watch('filterPeriode', () => this.currentPage = 1);
+                        this.$watch('perPage', () => this.currentPage = 1);
+                    },
+
+                    currentPage: 1,
+                    perPage: 10,
+
+                    get paginatedMahasiswas() {
+                        const start = (this.currentPage - 1) * this.perPage;
+                        const end = start + this.perPage;
+                        return this.filteredMahasiswas.slice(start, end);
+                    },
+
+                    get totalPages() {
+                        return Math.max(1, Math.ceil(this.filteredMahasiswas.length / this.perPage));
+                    },
+
+                    get pageNumbers() {
+                        const maxPages = 5;
+                        let startPage = Math.max(1, this.currentPage - Math.floor(maxPages / 2));
+                        let endPage = startPage + maxPages - 1;
+
+                        if (endPage > this.totalPages) {
+                            endPage = this.totalPages;
+                            startPage = Math.max(1, endPage - maxPages + 1);
+                        }
+
+                        const pages = [];
+                        for (let i = startPage; i <= endPage; i++) {
+                            pages.push(i);
+                        }
+                        return pages;
                     },
 
 

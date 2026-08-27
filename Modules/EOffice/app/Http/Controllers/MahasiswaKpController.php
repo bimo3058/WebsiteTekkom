@@ -292,7 +292,7 @@ class MahasiswaKpController extends Controller
     {
         $pengumumanItems = KpPengumuman::with('pembuat')
             ->where('is_active', true)
-            ->whereIn('tipe', ['pengumuman', 'timeline'])
+            ->where('tipe', 'pengumuman')
             ->orderByDesc('updated_at')
             ->get();
 
@@ -1013,25 +1013,27 @@ class MahasiswaKpController extends Controller
     private function getPhaseStatus(string $phase): array
     {
         $now = now()->startOfDay();
-        $periodeAktif = \Modules\EOffice\Models\KpPeriode::where('is_active', true)->oldest()->first();
+        $activePeriods = \Modules\EOffice\Models\KpPeriode::where('is_active', true)->orderBy('created_at', 'desc')->get();
 
-        $status = [
-            'isOpen' => false,
-            'isClosed' => false,
-            'showReminder' => false,
-            'startDate' => '',
-            'deadline' => '',
-            'periodeAktif' => $periodeAktif,
-        ];
+        $chosenStatus = null;
 
-        if ($periodeAktif) {
+        foreach ($activePeriods as $periode) {
+            $status = [
+                'isOpen' => false,
+                'isClosed' => false,
+                'showReminder' => false,
+                'startDate' => '',
+                'deadline' => '',
+                'periodeAktif' => $periode,
+            ];
+
             $mulaiField = "{$phase}_mulai";
             $akhirField = "{$phase}_akhir";
             $pengingatField = "{$phase}_pengingat";
 
-            $startDate = $periodeAktif->$mulaiField;
-            $endDate = $periodeAktif->$akhirField;
-            $pengingatDate = $periodeAktif->$pengingatField;
+            $startDate = $periode->$mulaiField;
+            $endDate = $periode->$akhirField;
+            $pengingatDate = $periode->$pengingatField;
 
             $status['startDate'] = $startDate;
             $status['deadline'] = $endDate;
@@ -1057,11 +1059,30 @@ class MahasiswaKpController extends Controller
                     $status['showReminder'] = true;
                 }
             }
-        } else {
-            $status['isClosed'] = true;
+
+            // Jika menemukan periode yang sedang BUKA, segera pakai ini dan berhenti mencari
+            if ($status['isOpen']) {
+                $chosenStatus = $status;
+                break;
+            }
+
+            // Jika belum ada yang buka, simpan yang terbaru ini sebagai cadangan statis
+            $chosenStatus = $status;
         }
 
-        return $status;
+        // Fallback jika sama sekali tidak ada list aktif
+        if (!$chosenStatus) {
+            return [
+                'isOpen' => false,
+                'isClosed' => true,
+                'showReminder' => false,
+                'startDate' => '',
+                'deadline' => '',
+                'periodeAktif' => null,
+            ];
+        }
+
+        return $chosenStatus;
     }
 
     /**

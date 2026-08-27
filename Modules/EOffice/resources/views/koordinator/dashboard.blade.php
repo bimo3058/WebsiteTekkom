@@ -12,14 +12,27 @@
         }
     }">
 
-        {{-- ── Page Header ── --}}
-        <div class="mb-6 lg:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <h1 style="font-family:'Inter Tight',sans-serif; font-size:20px; font-weight:600; color:#0D0D12;">
-                Dashboard
-            </h1>
+        {{-- Header Section --}}
+        <div class="mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
+            <div>
+                <div class="flex items-center gap-3 mb-1.5">
+                    <h1 class="text-2xl font-bold text-slate-900 tracking-tight"
+                        style="font-family:'Inter Tight',sans-serif;">
+                        Dashboard Koordinator
+                    </h1>
+                    <span
+                        class="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold uppercase tracking-wider border border-emerald-100">
+                        Koordinator
+                    </span>
+                </div>
+                <p class="text-sm font-medium text-slate-500">
+                    Selamat datang, {{ auth()->user()->name }} &middot;
+                    {{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}
+                </p>
+            </div>
 
             {{-- Period Selector Dropdown --}}
-            <div style="min-width:220px;">
+            <div style="min-width:220px;" class="mt-2 sm:mt-0">
                 <select x-model="selectedPeriode" style="
                     width:100%; padding:8px 12px;
                     border:1px solid #E4E7EC; border-radius:8px;
@@ -35,77 +48,86 @@
             </div>
         </div>
 
-        {{-- ── Stats Cards ── --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {{-- ── Ringkasan Section ── --}}
+        <div>
+            <div class="flex items-center gap-2.5 mb-5">
+                <div class="h-6 w-1 rounded-full bg-slate-800"></div>
+                <h2 class="text-lg font-bold text-slate-900" style="font-family:'Inter Tight', sans-serif;">
+                    Ringkasan
+                </h2>
+            </div>
 
-            {{-- Stat 1 — Total Pendaftar --}}
-            <div class="bg-white border border-[#EAECF0] rounded-[10px] p-[18px] flex flex-col gap-3">
-                <div class="flex items-center gap-[10px]">
-                    <div class="w-9 h-9 rounded-full bg-[#EEF2FF] flex items-center justify-center">
-                        <svg class="w-[18px] h-[18px] text-[#4338CA]" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+
+                {{-- Stat 1 — Total Pendaftar --}}
+                <div
+                    class="bg-white border border-slate-200 rounded-[12px] p-3.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </div>
-                    <span class="text-[13px] font-semibold text-[#0D0D12]"
-                        style="font-family:'Inter Tight',sans-serif;">Total Pendaftar</span>
+                    <div>
+                        <div class="text-[22px] font-black text-slate-900 leading-none mb-1"
+                            x-text="stats.total_pendaftar"></div>
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Total Pendaftar</h3>
+                    </div>
                 </div>
-                <div class="text-[26px] font-bold text-[#0D0D12] mt-2 leading-none"
-                    style="font-family:'Inter Tight',sans-serif;" x-text="stats.total_pendaftar"></div>
-            </div>
 
-            {{-- Stat 2 — Periode Aktif --}}
-            <div class="bg-white border border-[#EAECF0] rounded-[10px] p-[18px] flex flex-col gap-3">
-                <div class="flex items-center gap-[10px]">
-                    <div class="w-9 h-9 rounded-full bg-[#EEF2FF] flex items-center justify-center">
-                        <svg class="w-[18px] h-[18px] text-[#4338CA]" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
+                {{-- Stat 2 — Periode Aktif --}}
+                <div
+                    class="bg-white border border-slate-200 rounded-[12px] p-3.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
                         </svg>
                     </div>
-                    <span class="text-[13px] font-semibold text-[#0D0D12]"
-                        style="font-family:'Inter Tight',sans-serif;">Periode Aktif</span>
+                    <div>
+                        <div class="text-[22px] font-black text-slate-900 leading-none mb-1"
+                            x-text="stats.periode_aktif"></div>
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Periode Aktif</h3>
+                    </div>
                 </div>
-                <div class="text-[26px] font-bold text-[#0D0D12] mt-2 leading-none"
-                    style="font-family:'Inter Tight',sans-serif;" x-text="stats.periode_aktif"></div>
-            </div>
 
-            {{-- Stat 3 — Menunggu Balancing --}}
-            <div class="bg-white border border-[#EAECF0] rounded-[10px] p-[18px] flex flex-col gap-3">
-                <div class="flex items-center gap-[10px]">
-                    <div class="w-9 h-9 rounded-full bg-[#EEF2FF] flex items-center justify-center">
-                        <svg class="w-[18px] h-[18px] text-[#4338CA]" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
+                {{-- Stat 3 — Menunggu Balancing --}}
+                <div
+                    class="bg-white border border-slate-200 rounded-[12px] p-3.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                             </path>
                         </svg>
                     </div>
-                    <span class="text-[13px] font-semibold text-[#0D0D12]"
-                        style="font-family:'Inter Tight',sans-serif;">Menunggu Balancing</span>
+                    <div>
+                        <div class="text-[22px] font-black text-slate-900 leading-none mb-1"
+                            x-text="stats.menunggu_balancing"></div>
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Menunggu Balancing</h3>
+                    </div>
                 </div>
-                <div class="text-[26px] font-bold text-[#0D0D12] mt-2 leading-none"
-                    style="font-family:'Inter Tight',sans-serif;" x-text="stats.menunggu_balancing"></div>
-            </div>
 
-            {{-- Stat 4 — Butuh Validasi --}}
-            <div class="bg-white border border-[#EAECF0] rounded-[10px] p-[18px] flex flex-col gap-3">
-                <div class="flex items-center gap-[10px]">
-                    <div class="w-9 h-9 rounded-full bg-[#EEF2FF] flex items-center justify-center">
-                        <svg class="w-[18px] h-[18px] text-[#4338CA]" fill="none" stroke="currentColor" stroke-width="2"
-                            viewBox="0 0 24 24">
+                {{-- Stat 4 — Butuh Validasi --}}
+                <div
+                    class="bg-white border border-slate-200 rounded-[12px] p-3.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
                     </div>
-                    <span class="text-[13px] font-semibold text-[#0D0D12]"
-                        style="font-family:'Inter Tight',sans-serif;">Butuh Validasi</span>
+                    <div>
+                        <div class="text-[22px] font-black text-slate-900 leading-none mb-1"
+                            x-text="stats.butuh_validasi"></div>
+                        <h3 class="text-[11px] font-bold text-slate-500 uppercase tracking-wide">Butuh Validasi</h3>
+                    </div>
                 </div>
-                <div class="text-[26px] font-bold text-[#0D0D12] mt-2 leading-none"
-                    style="font-family:'Inter Tight',sans-serif;" x-text="stats.butuh_validasi"></div>
             </div>
         </div>
 

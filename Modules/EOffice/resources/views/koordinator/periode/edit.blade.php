@@ -38,12 +38,14 @@
 
             {{-- Submit/Next Button top right (optional, keep at bottom if preferred, but image has Lanjut at top right)
             --}}
-            <button type="button" x-show="step < 4" @click="nextStep()"
-                class="flex items-center justify-center px-4 py-2 bg-slate-900 border border-transparent text-white rounded-xl hover:bg-slate-800 transition-colors shadow-sm text-sm font-semibold">
+            <button type="button" x-show="step < 4" @click="nextStep()" :disabled="step === 3 && totalBobot() !== 100"
+                class="flex items-center justify-center px-4 py-2 border border-transparent text-white rounded-xl transition-colors shadow-sm text-sm font-semibold"
+                :class="(step === 3 && totalBobot() !== 100) ? 'bg-slate-400 cursor-not-allowed opacity-70' : 'bg-slate-900 hover:bg-slate-800'">
                 Lanjut
             </button>
-            <button type="submit" form="periodeWizardForm" x-show="step === 4"
-                class="flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm text-sm font-semibold">
+            <button type="submit" form="periodeWizardForm" x-show="step === 4" :disabled="totalBobot() !== 100"
+                class="flex items-center justify-center px-4 py-2 border border-transparent text-white rounded-xl transition-colors shadow-sm text-sm font-semibold"
+                :class="totalBobot() !== 100 ? 'bg-emerald-400 cursor-not-allowed opacity-70' : 'bg-emerald-600 hover:bg-emerald-700'">
                 Simpan
             </button>
         </div>
@@ -488,8 +490,10 @@
                                 <div
                                     class="px-5 py-3 bg-[#F9FAFB] border-b border-[#E2E8F0] flex items-center text-[13px] font-semibold text-[#848A9C]">
                                     <div class="w-[45px] flex items-center justify-start">
-                                        <input type="checkbox" disabled
-                                            class="w-[18px] h-[18px] rounded-[4px] border-[#D0D5DD] text-[#2E3C5B] bg-white">
+                                        <input type="checkbox"
+                                            :checked="paginatedRubriks.length > 0 && paginatedRubriks.every(r => formData.komponen_penilaian.some(c => c.master_rubrik_id == r.id))"
+                                            @change="toggleAll($event.target.checked)"
+                                            class="w-[18px] h-[18px] rounded-[4px] border-[#D0D5DD] text-[#2E3C5B] bg-white cursor-pointer focus:ring-[#2E3C5B] focus:border-[#2E3C5B]">
                                     </div>
                                     <div class="w-[60px]">Kode</div>
                                     <div class="w-[130px]">Penilai</div>
@@ -879,6 +883,24 @@
                 },
                 removeComponent(index) {
                     this.formData.komponen_penilaian.splice(index, 1);
+                },
+                toggleAll(checked) {
+                    if (checked) {
+                        this.paginatedRubriks.forEach(mr => {
+                            if (!this.formData.komponen_penilaian.some(c => c.master_rubrik_id == mr.id)) {
+                                this.formData.komponen_penilaian.push({
+                                    master_rubrik_id: mr.id,
+                                    kode: mr.kode,
+                                    deskripsi: mr.deskripsi,
+                                    bobot: mr.bobot,
+                                    role_penilai: mr.role_penilai
+                                });
+                            }
+                        });
+                    } else {
+                        const paginatedIds = this.paginatedRubriks.map(r => r.id);
+                        this.formData.komponen_penilaian = this.formData.komponen_penilaian.filter(c => !paginatedIds.includes(parseInt(c.master_rubrik_id)));
+                    }
                 },
                 totalBobot() {
                     return this.formData.komponen_penilaian.reduce((sum, item) => sum + (parseInt(item.bobot) || 0), 0);

@@ -25,8 +25,11 @@ class DosenController extends Controller
             return view('eoffice::dosen.dashboard', ['stats' => $stats, 'todoList' => collect()]);
         }
 
+        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        $selectedPeriode = request()->query('periode_id', 'all');
+
         // Fetch all active KPs for this Dosen
-        $kps = KerjaPraktik::with([
+        $query = KerjaPraktik::with([
             'dokumen' => function ($q) {
                 // Fetch only pending/waiting documents
                 $q->whereIn('approval_status', ['pending', 'menunggu', 'revisi'])
@@ -36,13 +39,19 @@ class DosenController extends Controller
             'mahasiswa.user'
         ])
             ->where('dosen_pembimbing_id', $kpDosen->id)
-            ->whereNotIn('status_kp', ['Dibatalkan', 'Gagal'])
-            ->get();
+            ->whereNotIn('status_kp', ['Dibatalkan', 'Gagal']);
+
+        if ($selectedPeriode !== 'all') {
+            $query->where('periode_id', $selectedPeriode);
+        }
+
+        $kps = $query->get();
 
         $templates = \Modules\EOffice\Models\TemplateDokumenKP::all()->groupBy('periode_id');
         $todoList = collect();
         $dokumenPendingCount = 0;
         $seminarMendatangCount = 0;
+        $menungguNilaiCount = 0;
         $aktifCount = 0;
 
         foreach ($kps as $kp) {
@@ -83,7 +92,10 @@ class DosenController extends Controller
             if ($kp->seminar && in_array(strtolower($kp->seminar->status_validasi_syarat), ['disetujui', 'diterima', 'approved'])) {
                 // If there's a scheduled date and it is >= today or not yet graded
                 $seminarDate = $kp->seminar->tanggal_pelaksanaan ? \Carbon\Carbon::parse($kp->seminar->tanggal_pelaksanaan) : null;
-                $isOvr = false; // check if not graded
+
+                if ($seminarDate && ($seminarDate->isPast() || $seminarDate->isToday()) && empty($kp->nilai_seminar_pembimbing)) {
+                    $menungguNilaiCount++;
+                }
 
                 // We'll consider it upcoming/todo if it's within the last 7 days or in the future
                 if ($seminarDate && $seminarDate->isAfter(now()->subDays(7))) {
@@ -92,7 +104,10 @@ class DosenController extends Controller
                         'type' => 'seminar',
                         'title' => 'Menghadiri Seminar KP',
                         'mahasiswa' => $kp->mahasiswa->user->name ?? 'Unknown',
+                        'nim' => $kp->mahasiswa->nim ?? '-',
                         'date' => $seminarDate,
+                        'waktu_mulai' => $kp->seminar->waktu_mulai ?? '-',
+                        'ruangan' => $kp->seminar->ruangan ?? 'Ruang belum ditentukan',
                         'description' => 'Seminar dilaksanakan di ' . ($kp->seminar->ruangan ?? 'Ruang belum ditentukan') . ' pukul ' . ($kp->seminar->waktu_mulai ?? '-'),
                         'url' => route('eoffice.kp.dosen.bimbingan.detail', $kp->id),
                         'icon' => 'calendar'
@@ -107,12 +122,13 @@ class DosenController extends Controller
             'selesai_kp' => $kps->whereIn('status_kp', ['Pasca KP', 'Selesai'])->count(),
             'dokumen_pending' => $dokumenPendingCount,
             'seminar_mendatang' => $seminarMendatangCount,
+            'menunggu_nilai' => $menungguNilaiCount,
         ];
 
         // Sort To-Do list newest first (or upcoming first)
         $todoList = $todoList->sortByDesc('date')->values();
 
-        return view('eoffice::dosen.dashboard', compact('stats', 'todoList'));
+        return view('eoffice::dosen.dashboard', compact('stats', 'todoList', 'periodes', 'selectedPeriode'));
     }
 
     /**
