@@ -117,7 +117,11 @@ class KoordinatorController extends Controller implements HasMiddleware
     public function pengumuman()
     {
         $allData = \Modules\EOffice\Models\KpPengumuman::with('pembuat')->orderBy('created_at', 'desc')->get();
-        $pengumumen = $allData->where('tipe', 'pengumuman');
+        $pengumumen = \Modules\EOffice\Models\KpPengumuman::with('pembuat')
+            ->where('tipe', 'pengumuman')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         $faqs = $allData->where('tipe', 'faq');
         $timelines = $allData->where('tipe', 'timeline');
         $keperluans = $allData->where('tipe', 'keperluan_perusahaan');
@@ -1179,7 +1183,8 @@ class KoordinatorController extends Controller implements HasMiddleware
      */
     public function periode()
     {
-        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        $perPage = (int) request()->get('per_page', 5);
+        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->paginate($perPage)->appends(request()->query());
         return view('eoffice::koordinator.periode.index', compact('periodes'));
     }
 

@@ -292,7 +292,7 @@ class MahasiswaKpController extends Controller
     {
         $pengumumanItems = KpPengumuman::with('pembuat')
             ->where('is_active', true)
-            ->whereIn('tipe', ['pengumuman', 'timeline'])
+            ->where('tipe', 'pengumuman')
             ->orderByDesc('updated_at')
             ->get();
 

@@ -141,26 +141,26 @@
                                 @if($periode->is_active)
                                     <span
                                         style="
-                                                                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
-                                                                                                                                                                                    padding:4px 10px;
-                                                                                                                                                                                    background:#F0FDF4;
-                                                                                                                                                                                    border:1px solid #BBF7D0;
-                                                                                                                                                                                    border-radius:9999px;
-                                                                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
-                                                                                                                                                                                ">
+                                                                                                                                                                                            display:inline-flex; align-items:center; gap:6px;
+                                                                                                                                                                                            padding:4px 10px;
+                                                                                                                                                                                            background:#F0FDF4;
+                                                                                                                                                                                            border:1px solid #BBF7D0;
+                                                                                                                                                                                            border-radius:9999px;
+                                                                                                                                                                                            font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
+                                                                                                                                                                                        ">
                                         <span style="width:6px; height:6px; background:#15803D; border-radius:50%;"></span>
                                         Aktif
                                     </span>
                                 @else
                                     <span
                                         style="
-                                                                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
-                                                                                                                                                                                    padding:4px 10px;
-                                                                                                                                                                                    background:#F1F1F3;
-                                                                                                                                                                                    border:1px solid #E2E8F0;
-                                                                                                                                                                                    border-radius:9999px;
-                                                                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
-                                                                                                                                                                                ">
+                                                                                                                                                                                            display:inline-flex; align-items:center; gap:6px;
+                                                                                                                                                                                            padding:4px 10px;
+                                                                                                                                                                                            background:#F1F1F3;
+                                                                                                                                                                                            border:1px solid #E2E8F0;
+                                                                                                                                                                                            border-radius:9999px;
+                                                                                                                                                                                            font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
+                                                                                                                                                                                        ">
                                         <span style="width:6px; height:6px; background:#666D80; border-radius:50%;"></span>
                                         Nonaktif
                                     </span>
@@ -290,27 +290,32 @@
             </table>
         </div>
 
-        {{-- Pagination Mockup --}}
-        <div class="flex items-center justify-between mt-6 border-t border-[#F1F1F3] pt-4">
-            <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#666D80;">
-                Menampilkan 1 hingga {{ $periodes->count() }} dari {{ $periodes->count() }} entri
-            </span>
-            <div class="flex items-center gap-2">
-                <button disabled
-                    style="padding:6px 10px; border:1px solid #E2E8F0; border-radius:6px; background:#F8F9FB; color:#A0AABF; cursor:not-allowed;">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
-                    </svg>
-                </button>
-                <button
-                    style="padding:4px 12px; border:1px solid #0B266E; border-radius:6px; background:#F8F5FF; color:#0B266E; font-weight:600; font-size:13px; font-family:'Inter Tight',sans-serif;">1</button>
-                <button disabled
-                    style="padding:6px 10px; border:1px solid #E2E8F0; border-radius:6px; background:#F8F9FB; color:#A0AABF; cursor:not-allowed;">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                </button>
+        @if($periodes->total() > 0)
+            <div class="mt-6 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-[#F1F1F3] pt-4">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+                        <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per
+                            halaman</span>
+                        <select autocomplete="off"
+                            onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); window.location.href = url.toString()"
+                            class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat"
+                            style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                            <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>5</option>
+                            <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                        </select>
+                    </div>
+                    <p class="text-[13px] font-medium text-slate-600 border-none p-0 inline-flex"
+                        style="font-family:'Inter Tight',sans-serif;">
+                        Menampilkan {{ $periodes->firstItem() ?? 0 }} sampai
+                        &nbsp;<span class="font-bold text-slate-800">{{ $periodes->lastItem() ?? 0 }}</span>&nbsp;
+                        dari {{ $periodes->total() }} entri
+                    </p>
+                </div>
+                {{ $periodes->links('eoffice::components.pagination-eoffice') }}
             </div>
-        </div>
+        @endif
     </div>
 </x-eoffice::layouts.koordinator>
