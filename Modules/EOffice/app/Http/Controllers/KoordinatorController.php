@@ -81,10 +81,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                     && $kp->created_at->format('Y-m-d') <= $endDate->format('Y-m-d');
             });
 
-            // Jika masih kosong karena data dummy kotor, fallback ke semua KP sementara.
-            if ($kpsInPeriode->isEmpty() && $allKps->count() > 0 && $p->is_active) {
-                $kpsInPeriode = $allKps;
-            }
+            // (Fallback khusus demo dummy dihilangkan agar perhitungan period akurat ketika nol)
 
             $periodeStats[$p->id] = [
                 'total_pendaftar' => $kpsInPeriode->count(),
