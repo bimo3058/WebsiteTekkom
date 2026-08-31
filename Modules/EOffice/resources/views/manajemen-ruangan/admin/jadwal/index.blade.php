@@ -1,5 +1,5 @@
 <x-eoffice::manajemen-ruangan.layout
-    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Event & Maintenance' }}">
+    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Event dan Maintenance' }}">
 
     <div
         x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}' }">
@@ -261,8 +261,7 @@
                                         <h4 class="text-[13px] font-bold text-green-800 mb-1">Mekanisme Keamanan Impor
                                         </h4>
                                         <p class="text-[12.5px] leading-relaxed text-green-700/80">
-                                            Data jadwal yang diunggah tidak akan langsung dimanifestasikan ke database.
-                                            Sistem akan menampilkan layar Pratinjau (Sandbox) terlebih dulu.
+                                            Seluruh data jadwal yang diunggah tidak langsung diproses ke dalam basis data (database). Sistem akan menampilkan halaman Pratinjau agar pengguna dapat melakukan pengecekan data sebelum konfirmasi akhir.
                                         </p>
 
                                     </div>
@@ -744,7 +743,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" style="text-align:center; padding: 40px; color: #666D80;">
+                                    <td colspan="7" style="text-align:center; padding: 40px; color: #666D80;">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0"
                                             stroke-width="1.5" stroke-linecap="round" style="margin: 0 auto 10px auto;">
                                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -764,9 +763,56 @@
                     </table>
                 </div>
 
-                <div style="padding: 16px;">
-                    {{ $jadwals->appends(['tipe' => $tipe])->links('pagination::tailwind') }}
-                </div>
+                <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2">
+    <div class="flex items-center gap-4">
+        <div class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+            <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per halaman</span>
+            <select aria-label="Per halaman" onchange="window.location.href=this.value" class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                <!-- Catatan: Pastikan Controller kamu menerima request('per_page') kalau ingin angkanya berfungsi dinamis, kalau backendnya statis 10, select ini tetap akan berubah halamannya saja -->
+                <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+            </select>
+        </div>
+        <p class="text-xs font-medium text-slate-600">
+            Menampilkan <span class="font-bold text-slate-800">{{ $jadwals->firstItem() ?? 0 }}</span> 
+            sampai <span class="font-bold text-slate-800">{{ $jadwals->lastItem() ?? 0 }}</span> 
+            dari <span class="font-bold text-slate-800">{{ $jadwals->total() }}</span> entri
+        </p>
+    </div>
+
+    <div class="flex items-center gap-1.5">
+        @if ($jadwals->onFirstPage())
+            <button disabled class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+        @else
+            <a href="{{ $jadwals->previousPageUrl() }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </a>
+        @endif
+
+        <div class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+            @foreach ($jadwals->getUrlRange(max(1, $jadwals->currentPage() - 2), min($jadwals->lastPage(), $jadwals->currentPage() + 2)) as $page => $url)
+                @if ($page == $jadwals->currentPage())
+                    <span class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                @else
+                    <a href="{{ $url }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
+                @endif
+            @endforeach
+        </div>
+
+        @if ($jadwals->hasMorePages())
+            <a href="{{ $jadwals->nextPageUrl() }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </a>
+        @else
+            <button disabled class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+        @endif
+    </div>
+</div>
             </div>
         </div>
 

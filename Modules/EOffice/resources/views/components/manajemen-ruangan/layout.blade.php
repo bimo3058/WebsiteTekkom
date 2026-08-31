@@ -560,8 +560,6 @@
                 $admGroups['Sistem Ruangan'] = $admSisRuangan;
 
             $admMasterData = [];
-            if ($sb_adm_usu)
-                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.user.index'), 'label' => 'Manajemen User', 'match' => 'admin.user', 'icon' => $iUser];
             if ($sb_adm_rua)
                 $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.ruangan.index'), 'label' => 'Manajemen Ruangan', 'match' => 'admin.ruangan', 'icon' => $iBook];
             $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.hak-akses.index'), 'label' => 'Hak Akses Menu', 'match' => 'admin.hak-akses', 'icon' => $iKey];
@@ -632,14 +630,9 @@
 
             <div class="relative px-[10px] pt-[18px] pb-[10px]">
                 <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-[10px]">
-                    <div
-                        class="flex items-center justify-center w-[34px] h-[34px] rounded-[9px] flex-shrink-0 bg-[#F3F4F6] shadow-sm overflow-hidden border border-[#E5E7EB]">
-                        {{-- Ruangan Icon --}}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"
-                            stroke-linecap="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="9" y1="3" x2="9" y2="21"></line>
-                        </svg>
+                    <div class="flex items-center justify-center w-[34px] h-[34px] flex-shrink-0">
+                        <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP"
+                            class="w-full h-full object-contain drop-shadow-sm">
                     </div>
                     <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200"
                         :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">

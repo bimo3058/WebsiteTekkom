@@ -583,20 +583,18 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     // ════════════════════════════════════════════════════════════════════════
     // Controller Imports
     // ── Admin ────────────────────────────────────────────────────────────
-    $MRAdminUserController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\UserController::class;
+
     $MRAdminRuanganController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\RuanganController::class;
     $MRAdminPengaturanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PengaturanController::class;
 
-    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminUserController, $MRAdminRuanganController, $MRAdminPengaturanController) {
+    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminRuanganController, $MRAdminPengaturanController) {
         Route::get('/dashboard', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\DashboardController::class, 'index'])->name('dashboard');
 
         // ── ADMIN ────────────────────────────────────────────────────────────
         Route::middleware(['role:superadmin|admin_eoffice'])
             ->prefix('admin')->name('admin.')
-            ->group(function () use ($MRAdminUserController, $MRAdminRuanganController, $MRAdminPengaturanController) {
-                Route::get('user', [$MRAdminUserController, 'index'])->name('user.index');
-                Route::get('user/{user}/history', [$MRAdminUserController, 'history'])->name('user.history');
-                Route::post('user/{user}/toggle-blacklist', [$MRAdminUserController, 'toggleBlacklist'])->name('user.toggleBlacklist');
+            ->group(function () use ($MRAdminRuanganController, $MRAdminPengaturanController) {
+
                 Route::resource('ruangan', $MRAdminRuanganController);
                 Route::delete('ruangan/foto/{id}', [$MRAdminRuanganController, 'destroyFoto'])->name('ruangan.foto.destroy');
 
