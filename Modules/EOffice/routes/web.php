@@ -597,6 +597,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 Route::resource('ruangan', $MRAdminRuanganController);
                 Route::delete('ruangan/foto/{id}', [$MRAdminRuanganController, 'destroyFoto'])->name('ruangan.foto.destroy');
+                Route::post('fasilitas/bulk-destroy', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\FasilitasController::class, 'bulkDestroy'])->name('fasilitas.bulkDestroy');
+                Route::resource('fasilitas', \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\FasilitasController::class)->only(['index', 'store', 'destroy']);
 
                 // Persetujuan Peminjaman & Riwayat...
                 Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');

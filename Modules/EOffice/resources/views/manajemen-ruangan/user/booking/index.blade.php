@@ -40,16 +40,6 @@
                     $bookedToday = $room->peminjamans
                         ->whereIn('status', ['menunggu', 'disetujui'])
                         ->count();
-                    $facilityIcons = [
-                        'Proyektor' => '📽️',
-                        'AC' => '❄️',
-                        'Whiteboard' => '🖊️',
-                        'WiFi' => '📶',
-                        'Sound System' => '🔊',
-                        'CCTV' => '📷',
-                        'Meja' => '🪑',
-                        'Komputer' => '💻',
-                    ];
                     $detailUrl = route('eoffice.peminjaman.user.booking.ruangan.show', $room->id);
                     $kalenderUrl = route('eoffice.peminjaman.user.kalender', ['ruangan_id' => $room->id]);
                 @endphp
@@ -72,8 +62,8 @@
                                 <span class="text-[11px] font-semibold text-indigo-400 tracking-wide uppercase">Foto segera hadir</span>
                             </div>
                         @endif
-                        <span class="absolute top-3 right-3 bg-white text-[11px] font-bold text-indigo-700 border border-indigo-200 rounded-full px-2.5 py-0.5 shadow-sm">
-                            👥 {{ $room->kapasitas }} orang
+                        <span class="absolute top-3 right-3 bg-white text-[11px] font-bold text-[#0B266E] border border-gray-200 rounded-full px-2.5 py-0.5 shadow-sm">
+                            {{ $room->kapasitas }} orang
                         </span>
                     </a>
 
@@ -84,7 +74,7 @@
                                 <h3 class="font-bold text-gray-900 text-[15px] leading-tight">{{ $room->nama }}</h3>
                             </a>
                             <p class="text-[12px] text-gray-500 mt-0.5">
-                                🏢 {{ $room->lokasi ?? 'Gedung Utama' }}
+                                {{ $room->lokasi ?? 'Gedung Utama' }}
                                 @if ($room->lantai)
                                     · Lantai {{ $room->lantai }}
                                 @endif
@@ -97,7 +87,7 @@
                                 @foreach (array_slice($fasilitas, 0, 4) as $fas)
                                     <span
                                         class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
-                                        {{ $facilityIcons[$fas] ?? '✅' }} {{ $fas }}
+                                        {{ $fas }}
                                     </span>
                                 @endforeach
                                 @if (count($fasilitas) > 4)
@@ -123,7 +113,7 @@
                                 </a>
                                 {{-- Schedule Button --}}
                                 <a href="{{ $kalenderUrl }}"
-                                    class="inline-flex items-center px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-bold transition-colors shadow-sm whitespace-nowrap">
+                                    class="inline-flex items-center px-4 py-1.5 rounded-lg bg-[#0B266E] hover:bg-[#071946] text-white text-[12px] font-bold transition-colors shadow-sm whitespace-nowrap">
                                     Jadwal
                                 </a>
                             </div>

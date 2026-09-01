@@ -96,7 +96,7 @@
                                 <a href="{{ route('eoffice.peminjaman.admin.riwayat.index') }}"
                                     class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-transparent">Reset</a>
                                 <button type="submit"
-                                    class="px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md hover:bg-black">Terapkan
+                                    class="px-3 py-1.5 text-xs font-medium text-white bg-[#060E2A] rounded-md hover:bg-[#030715] transition-colors">Terapkan
                                     Filter</button>
                             </div>
                         </div>
@@ -106,14 +106,14 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto bg-[#F9FAFB]/50">
+        <div class="overflow-x-auto bg-white">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-gray-100 bg-[#F9FAFB]/80">
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Pengaju</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Ruangan & Tujuan</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Waktu Acara</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Status</th>
+                    <tr class="border-y border-slate-200 bg-white">
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Pengaju</th>
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Ruangan & Tujuan</th>
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Waktu Acara</th>
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Status</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
@@ -133,7 +133,7 @@
                                 @if($pinjam->berkas_pendukung)
                                     <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
                                         target="_blank"
-                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 mt-1">
+                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-[#0065ff] hover:text-[#0052cc] transition-colors mt-1">
                                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
@@ -155,13 +155,15 @@
                                 @php
                                     $style = '';
                                     if (strtolower($pinjam->status) === 'disetujui')
-                                        $style = 'bg-[#ECF9F7] text-[#267666]';
+                                        $style = 'bg-emerald-100 text-emerald-800';
                                     elseif (strtolower($pinjam->status) === 'ditolak')
-                                        $style = 'bg-[#FEF2F2] text-[#B91C1C]';
+                                        $style = 'bg-red-100 text-red-800';
                                     elseif (strtolower($pinjam->status) === 'menunggu')
-                                        $style = 'bg-[#FFF9ED] text-[#A77B2E]';
-                                    else
-                                        $style = 'bg-[#ECEFF3] text-[#0D0D12]';
+                                        $style = 'bg-amber-100 text-amber-800';
+                                    elseif (strtolower($pinjam->status) === 'selesai')
+                                        $style = 'bg-purple-100 text-purple-800';
+                                    else // dibatalkan / draft / dll
+                                        $style = 'bg-gray-100 text-gray-800';
                                 @endphp
                                 <span
                                     class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-full {{ $style }} text-[12px] font-medium tracking-wide">

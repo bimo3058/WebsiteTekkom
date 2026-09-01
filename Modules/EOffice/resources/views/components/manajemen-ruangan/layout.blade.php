@@ -532,7 +532,7 @@
         $sb_adm_evt = $isSuperadmin || filter_var($rawSettings['sb_admin_event'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_set = $isSuperadmin || filter_var($rawSettings['sb_admin_persetujuan'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_ars = $isSuperadmin || filter_var($rawSettings['sb_admin_arsip'] ?? true, FILTER_VALIDATE_BOOLEAN);
-        $sb_adm_usu = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenuser'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_fas = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenfasilitas'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_rua = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenruangan'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_pgt = $isSuperadmin || filter_var($rawSettings['sb_admin_pengaturan'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
@@ -560,8 +560,12 @@
                 $admGroups['Sistem Ruangan'] = $admSisRuangan;
 
             $admMasterData = [];
-            if ($sb_adm_rua)
+            if ($sb_adm_rua) {
                 $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.ruangan.index'), 'label' => 'Manajemen Ruangan', 'match' => 'admin.ruangan', 'icon' => $iBook];
+            }
+            if ($sb_adm_fas) {
+                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.fasilitas.index'), 'label' => 'Manajemen Fasilitas', 'match' => 'admin.fasilitas', 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'];
+            }
             $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.hak-akses.index'), 'label' => 'Hak Akses Menu', 'match' => 'admin.hak-akses', 'icon' => $iKey];
 
             if (count($admMasterData) > 0)
