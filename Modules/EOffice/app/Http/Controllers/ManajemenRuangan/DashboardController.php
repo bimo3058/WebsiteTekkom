@@ -20,6 +20,20 @@ class DashboardController extends Controller
                 ->whereDate('tanggal_pinjam', \Carbon\Carbon::today())
                 ->count();
             $recentRuangan = Ruangan::orderBy('created_at', 'desc')->take(5)->get();
+            $recentRuangan->each(function ($ruangan) {
+                $ruangan->upcomingBooking = Peminjaman::where('ruangan_id', $ruangan->id)
+                    ->where('status', 'disetujui')
+                    ->where(function ($q) {
+                        $q->whereDate('tanggal_pinjam', '>', \Carbon\Carbon::today())
+                            ->orWhere(function ($subq) {
+                                $subq->whereDate('tanggal_pinjam', \Carbon\Carbon::today())
+                                    ->whereTime('jam_selesai', '>', \Carbon\Carbon::now()->format('H:i:s'));
+                            });
+                    })
+                    ->orderBy('tanggal_pinjam', 'asc')
+                    ->orderBy('jam_mulai', 'asc')
+                    ->first();
+            });
 
             Peminjaman::autoExpirePending(); // Ensure garbage collection triggers metrics updates
             $pendingApproval = Peminjaman::where('status', 'menunggu')->count();

@@ -40,7 +40,8 @@
                 </svg></div>
             <div class="mp-stat-label">Menunggu Approval</div>
             <div class="mp-stat-value" {!! ($pendingApproval ?? 0) > 0 ? 'style="color: #D97706;"' : '' !!}>
-                {{ number_format($pendingApproval ?? 0) }}</div>
+                {{ number_format($pendingApproval ?? 0) }}
+            </div>
             <div class="mp-stat-sub">Butuh tindakan admin</div>
         </a>
         <div class="mp-stat">
@@ -84,7 +85,23 @@
                                 <td>{{ $r->lokasi }} <span style="font-size:11px; color:#A4ABB8;">(Lt.
                                         {{ $r->lantai ?? '-' }})</span></td>
                                 <td>{{ $r->kapasitas }} Orang</td>
-                                <td><span style="font-size:12px; color:#A4ABB8;">Segera Hadir...</span></td>
+                                <td>
+                                    @if($r->upcomingBooking)
+                                        @php 
+                                                                                $tgl = \Carbon\Carbon::parse($r->upcomingBooking->tanggal_pinjam);
+                                            $jamMulai = \Carbon\Carbon::parse($r->upcomingBooking->jam_mulai)->format('H:i');
+                                            $strTgl = $tgl->isToday() ? 'Hari ini' : ($tgl->isTomorrow() ? 'Besok' : $tgl->translatedFormat('d M Y'));
+                                        @endphp
+                                        <div style="font-size:12px; color:#1F2937; font-weight:600;">
+                                            {{ $strTgl }}
+                                        </div>
+                                        <div style="font-size:11px; color:#6B7280; margin-top:2px;">
+                                            Jam {{ $jamMulai }}
+                                        </div>
+                                    @else
+                                        <span style="font-size:12px; color:#9CA3AF; font-style: italic;">Belum ada jadwal</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if($r->is_active)
                                         <span class="mp-badge success sm">Aktif</span>
