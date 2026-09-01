@@ -18,7 +18,7 @@ class FasilitasController extends Controller
             $query->whereRaw('LOWER(nama_fasilitas) LIKE ?', ['%' . strtolower($search) . '%']);
         }
 
-        $fasilitas = $query->orderBy('nama_fasilitas', 'asc')->paginate(10)->withQueryString();
+        $fasilitas = $query->orderBy('nama_fasilitas', 'asc')->paginate($request->query('per_page', 10))->withQueryString();
 
         return view('eoffice::manajemen-ruangan.admin.fasilitas.index', compact('fasilitas'));
     }

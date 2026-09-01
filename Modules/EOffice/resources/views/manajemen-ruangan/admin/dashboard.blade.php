@@ -60,10 +60,10 @@
 
     <div class="mp-card" style="margin-top: 24px;">
         <div class="mp-card-header">
-            <h3 class="mp-card-title">Ruangan Baru Ditambahkan</h3>
+            <h3 class="mp-card-title">Jadwal Terdekat & Antrean Peminjaman</h3>
             <div class="right">
-                <a href="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" class="mp-btn secondary sm">Lihat
-                    Semua</a>
+                <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" class="mp-btn secondary sm">Kelola
+                    Jadwal</a>
             </div>
         </div>
         <div class="mp-card-body">
@@ -71,52 +71,49 @@
                 <table class="mp-table">
                     <thead>
                         <tr>
-                            <th>NAMA RUANG</th>
-                            <th>LOKASI</th>
-                            <th>KAPASITAS</th>
-                            <th>JADWAL TERPAKAI</th>
+                            <th>PEMINJAM</th>
+                            <th>RUANGAN</th>
+                            <th>TUJUAN</th>
+                            <th>WAKTU PEMAKAIAN</th>
                             <th>STATUS</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($recentRuangan as $r)
+                        @forelse($upcomingActivities as $act)
                             <tr class="mp-tr">
-                                <td style="font-weight: 600;">{{ $r->nama }}</td>
-                                <td>{{ $r->lokasi }} <span style="font-size:11px; color:#A4ABB8;">(Lt.
-                                        {{ $r->lantai ?? '-' }})</span></td>
-                                <td>{{ $r->kapasitas }} Orang</td>
-                                <td>
-                                    @if($r->upcomingBooking)
-                                        @php 
-                                                                                $tgl = \Carbon\Carbon::parse($r->upcomingBooking->tanggal_pinjam);
-                                            $jamMulai = \Carbon\Carbon::parse($r->upcomingBooking->jam_mulai)->format('H:i');
-                                            $strTgl = $tgl->isToday() ? 'Hari ini' : ($tgl->isTomorrow() ? 'Besok' : $tgl->translatedFormat('d M Y'));
-                                        @endphp
-                                        <div style="font-size:12px; color:#1F2937; font-weight:600;">
-                                            {{ $strTgl }}
-                                        </div>
-                                        <div style="font-size:11px; color:#6B7280; margin-top:2px;">
-                                            Jam {{ $jamMulai }}
-                                        </div>
-                                    @else
-                                        <span style="font-size:12px; color:#9CA3AF; font-style: italic;">Belum ada jadwal</span>
-                                    @endif
+                                <td style="font-weight: 600;">
+                                    {{ $act->user->name ?? 'Pegawai / Mahasiswa' }}
+                                </td>
+                                <td>{{ $act->ruangan->nama ?? '-' }}</td>
+                                <td style="max-width: 200px;" class="truncate" title="{{ $act->tujuan }}">{{ $act->tujuan }}
                                 </td>
                                 <td>
-                                    @if($r->is_active)
-                                        <span class="mp-badge success sm">Aktif</span>
+                                    @php 
+                                                                            $tgl = \Carbon\Carbon::parse($act->tanggal_pinjam);
+                                        $strTgl = $tgl->isToday() ? 'Hari ini' : ($tgl->isTomorrow() ? 'Besok' : $tgl->translatedFormat('d M Y'));
+                                    @endphp
+                                    <div style="font-size:12px; color:#1F2937; font-weight:600;">
+                                        {{ $strTgl }}
+                                    </div>
+                                    <div style="font-size:11px; color:#6B7280; margin-top:2px;">
+                                        Jam {{ \Carbon\Carbon::parse($act->jam_mulai)->format('H:i') }} -
+                                        {{ \Carbon\Carbon::parse($act->jam_selesai)->format('H:i') }}
+                                    </div>
+                                </td>
+                                <td>
+                                    @if(strtolower($act->status) === 'disetujui')
+                                        <span class="mp-badge success sm">Disetujui</span>
+                                    @elseif(strtolower($act->status) === 'menunggu')
+                                        <span class="mp-badge sm" style="background:#FFF9ED; color:#A77B2E;">Menunggu</span>
                                     @else
-                                        <span class="mp-badge sm" style="background:#FADAE1; color:#710E21;">Non-aktif</span>
+                                        <span class="mp-badge secondary sm">{{ ucfirst($act->status) }}</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
                             <tr>
                                 <td colspan="5" style="text-align:center; padding: 30px; color: #666D80;">
-                                    Belum ada data ruangan yang ditambahkan.<br>
-                                    <a href="{{ route('eoffice.peminjaman.admin.ruangan.create') }}"
-                                        style="color:#0B266E; font-weight:600; text-decoration:none; margin-top:8px; display:inline-block;">+
-                                        Tambah Ruangan</a>
+                                    Belum ada aktivitas peminjaman terdekat atau antrean baru.<br>
                                 </td>
                             </tr>
                         @endforelse

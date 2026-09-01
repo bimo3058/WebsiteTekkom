@@ -68,7 +68,7 @@
                         @csrf
                         <input type="hidden" name="ids" x-bind:value="selectedItems.join(',')">
                         <button type="submit"
-                            class="h-[38px] px-3.5 bg-red-50 text-red-600 border border-red-100 rounded-lg flex items-center gap-1.5 text-[13.5px] font-medium hover:bg-red-100 hover:text-red-700 transition-colors w-full justify-center whitespace-nowrap">
+                            class="h-[38px] px-3.5 bg-red-50 text-red-600 border border-red-100 rounded-lg flex items-center gap-1.5 text-[13.5px] font-medium hover:bg-red-100 hover:text-red-700 transition-colors w-full justify-center whitespace-nowrap cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -91,13 +91,13 @@
                         </svg>
                     </div>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        class="w-full h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400"
+                        class="w-full h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400"
                         placeholder="Cari fasilitas...">
                 </form>
 
                 {{-- Quick Add Button --}}
                 <button type="button" @click="showAddModal = true; setTimeout(() => $refs.nama_fasilitas.focus(), 100)"
-                    class="h-[38px] px-4 bg-[#0B266E] text-white rounded-lg flex items-center gap-2 text-[13px] font-medium hover:bg-[#07194A] transition-colors w-full md:w-auto justify-center">
+                    class="h-[38px] px-4 bg-[#0B266E] text-white rounded-lg flex items-center gap-2 text-[13px] font-medium hover:bg-[#07194A] transition-colors w-full md:w-auto justify-center cursor-pointer">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -144,7 +144,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit"
-                                            class="w-8 h-8 rounded-md flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                                            class="w-8 h-8 rounded-md flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors cursor-pointer"
                                             title="Hapus">
                                             <svg class="w-[18px] h-[18px]" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -167,18 +167,81 @@
         </div>
 
         {{-- Pagination Pagination Custom Sama Kayak Arsip --}}
-        @if($fasilitas->hasPages())
-            <div
-                class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row flex-wrap items-center justify-between gap-4 rounded-b-[12px]">
-                <div class="text-[13px] text-gray-500 font-medium">
-                    Menampilkan {{ $fasilitas->firstItem() }} ke {{ $fasilitas->lastItem() }} dari {{ $fasilitas->total() }}
-                    fasilitas.
+        <div
+            class="border-t border-slate-200 bg-slate-50/50 px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-b-[12px]">
+            <div class="flex flex-col md:flex-row md:items-center gap-3">
+                <div
+                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-xs shadow-sm">
+                    <span class="px-2.5 py-1.5 bg-slate-50 border-r border-slate-200 text-slate-500 font-medium">Per
+                        halaman</span>
+                    <select aria-label="Per halaman" onchange="window.location.href=this.value"
+                        class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat"
+                        style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                    </select>
                 </div>
-                <div>
-                    {{ $fasilitas->links('pagination::tailwind') }}
+                <div class="text-[13px] text-slate-500 font-medium">
+                    @if ($fasilitas->total() > 0)
+                        <p>
+                            Menampilkan <span class="font-bold text-slate-800">{{ $fasilitas->firstItem() ?? 0 }}</span>
+                            sampai <span class="font-bold text-slate-800">{{ $fasilitas->lastItem() ?? 0 }}</span>
+                            dari <span class="font-bold text-slate-800">{{ $fasilitas->total() }}</span> fasilitas.
+                        </p>
+                    @else
+                        <p>Belum ada data fasilitas.</p>
+                    @endif
                 </div>
             </div>
-        @endif
+
+            <div class="flex items-center gap-1.5">
+                @if ($fasilitas->onFirstPage())
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                @else
+                    <a href="{{ $fasilitas->previousPageUrl() }}"
+                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                @endif
+
+                <div
+                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+                    @foreach ($fasilitas->getUrlRange(max(1, $fasilitas->currentPage() - 2), min($fasilitas->lastPage(), $fasilitas->currentPage() + 2)) as $page => $url)
+                        @if ($page == $fasilitas->currentPage())
+                            <span
+                                class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}"
+                                class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</a>
+                        @endif
+                    @endforeach
+                </div>
+
+                @if ($fasilitas->hasMorePages())
+                    <a href="{{ $fasilitas->nextPageUrl() }}"
+                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                @else
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                @endif
+            </div>
+        </div>
 
         {{-- ================= QUICK ADD MODAL ================= --}}
         <div x-show="showAddModal" style="display: none;"
@@ -218,9 +281,9 @@
                     </div>
                     <div class="px-5 py-4 border-t border-gray-100 flex justify-end gap-2 bg-gray-50/50">
                         <button type="button" @click="showAddModal = false"
-                            class="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors">Batal</button>
+                            class="px-4 py-2 text-[13px] font-semibold text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">Batal</button>
                         <button type="submit"
-                            class="px-4 py-2 text-[13px] font-bold bg-[#0B266E] text-white rounded-lg hover:bg-[#07194A] transition-colors shadow-sm">Simpan</button>
+                            class="px-4 py-2 text-[13px] font-bold bg-[#0B266E] text-white rounded-lg hover:bg-[#07194A] transition-colors shadow-sm cursor-pointer">Simpan</button>
                     </div>
                 </form>
             </div>
@@ -254,11 +317,11 @@
 
                     <div class="flex justify-center gap-3">
                         <button type="button" @click="showDeleteModal = false"
-                            class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2">
+                            class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2 cursor-pointer">
                             Batal
                         </button>
                         <button type="button" @click="executeDelete()"
-                            class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2">
+                            class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2 cursor-pointer">
                             Ya, Hapus
                         </button>
                     </div>

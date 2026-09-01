@@ -172,7 +172,7 @@ class UserPeminjamanController extends Controller
         ]);
 
         $feedbackMsg = $statusAkhir == 'disetujui'
-            ? 'Akses VIP Dosen: Form Booking Ruangan berhasil diajukan dan LANGSUNG DISETUJUI oleh sistem.'
+            ? 'Pengajuan peminjaman ruangan Anda telah berhasil diproses dan disetujui secara otomatis oleh sistem.'
             : 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
 
         return redirect()->route('eoffice.peminjaman.user.saya')
