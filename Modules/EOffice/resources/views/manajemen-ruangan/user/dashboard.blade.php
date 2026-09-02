@@ -21,10 +21,7 @@
             <p class="text-[13px] text-gray-500 mt-1.5">Kelola dan pantau pengajuan peminjaman ruangan Anda disini.</p>
         </div>
         <div class="flex-shrink-0">
-            <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="inline-flex items-center justify-center bg-indigo-600 hover:bg-indigo-700 text-white text-[13px] font-semibold px-4 py-[11px] rounded-xl transition-all shadow-sm shadow-indigo-600/20 hover:shadow-md focus:ring-2 focus:ring-offset-1 focus:ring-indigo-500 gap-2 border border-indigo-700/50 w-full sm:w-auto">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                    <path d="M12 5v14M5 12h14" />
-                </svg>
+            <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-[11px] rounded-xl transition-all shadow-sm hover:shadow-md w-full sm:w-auto">
                 Pinjam Ruang
             </a>
         </div>

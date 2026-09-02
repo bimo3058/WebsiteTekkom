@@ -7,12 +7,8 @@
         <!-- Logo / Header -->
         <div class="flex items-center justify-between px-4 py-[18px] border-b border-[#DFE1E6]">
             <div class="flex items-center gap-3 min-w-0">
-                <!-- Logo Icon -->
-                <div class="w-9 h-9 bg-[#081031] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                <div class="w-9 h-9 flex items-center justify-center flex-shrink-0">
+                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="Logo" class="w-full h-full object-contain">
                 </div>
                 <div x-show="sidebarOpen" class="flex flex-col min-w-0 overflow-hidden"
                     x-transition.opacity.duration.200ms>
@@ -79,14 +75,10 @@
                     $isPeriode = request()->routeIs('eoffice.kp.koordinator.periode*');
                     $isDataMhs = request()->routeIs('eoffice.kp.koordinator.data_mahasiswa');
                     $isBalancing = request()->routeIs('eoffice.kp.koordinator.balancing');
-                    $isValidasi = request()->routeIs('eoffice.kp.koordinator.validasi_berkas');
-                    $isNilai = request()->routeIs('eoffice.kp.koordinator.nilai_lapangan');
                     $menuItems = [
                         ['active' => $isPeriode, 'route' => 'eoffice.kp.koordinator.periode', 'label' => 'Periode', 'icon' => 'periode'],
                         ['active' => $isDataMhs, 'route' => 'eoffice.kp.koordinator.data_mahasiswa', 'label' => 'Data Mahasiswa', 'icon' => 'users'],
                         ['active' => $isBalancing, 'route' => 'eoffice.kp.koordinator.balancing', 'label' => 'Balancing Dosen', 'icon' => 'balance'],
-                        ['active' => $isValidasi, 'route' => 'eoffice.kp.koordinator.validasi_berkas', 'label' => 'Approval Berkas', 'icon' => 'doc'],
-                        ['active' => $isNilai, 'route' => 'eoffice.kp.koordinator.nilai_lapangan', 'label' => 'Nilai Lapangan', 'icon' => 'checkdoc'],
                     ];
                 @endphp
 
@@ -97,7 +89,7 @@
                         @endif
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')
@@ -170,6 +162,45 @@
                 @endforeach
             </div>
 
+            <!-- ── DATA MASTER ── -->
+            <div>
+                <p x-show="sidebarOpen"
+                    class="px-4 mb-2 text-[10px] font-semibold text-[#A4ABB8] uppercase tracking-widest"
+                    x-transition.opacity.duration.200ms>Data Master</p>
+
+                @php
+                    $isRubrik = request()->routeIs('eoffice.kp.koordinator.master-rubrik.*');
+                @endphp
+
+                <div class="relative px-2">
+                    @if($isRubrik)
+                        <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
+                    @endif
+                    <a href="{{ route('eoffice.kp.koordinator.master-rubrik.index') }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
+                                {{ $isRubrik ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                        @if($isRubrik)
+                            <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                    </path>
+                                </svg>
+                            </span>
+                        @else
+                            <svg class="w-[18px] h-[18px] flex-shrink-0 text-[#A4ABB8] group-hover:text-[#666D80]"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                </path>
+                            </svg>
+                        @endif
+                        <span x-show="sidebarOpen"
+                            class="text-[13px] whitespace-nowrap {{ $isRubrik ? 'font-semibold text-[#272835]' : 'text-[#666D80] group-hover:text-[#353849]' }}"
+                            x-transition.opacity.duration.200ms>Rubrik Penilaian</span>
+                    </a>
+                </div>
+            </div>
+
             <!-- ── INFORMASI ── -->
             <div>
                 <p x-show="sidebarOpen"
@@ -194,7 +225,7 @@
                         @endif
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'annc')

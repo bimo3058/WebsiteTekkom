@@ -109,11 +109,11 @@
                 @endphp
                 <!-- STATE: EXAM FINISHED -->
                 <div
-                    class="flex flex-col border-2 {{ $lulus ? 'border-emerald-500 bg-white' : 'border-red-500 bg-red-50' }} rounded-2xl shadow-sm overflow-hidden rounded-2xl shadow-sm overflow-hidden">
+                    class="flex flex-col border-2 border-slate-200 bg-white rounded-2xl shadow-sm overflow-hidden rounded-2xl shadow-sm overflow-hidden">
                     <div class="p-8 sm:p-10 flex flex-col items-start h-full">
                         <span
-                            class="inline-flex items-center px-3 py-1 {{ $lulus ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-red-100 text-red-800 border-red-200' }} text-[11px] font-bold tracking-widest uppercase border  rounded-full mb-6">
-                            {{ $lulus ? 'Ujian Selesai - Lulus' : 'Ujian Selesai - Tidak Lulus' }}
+                            class="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-700 border-slate-200 text-[11px] font-bold tracking-widest uppercase border  rounded-full mb-6">
+                            Ujian Selesai
                         </span>
 
                         <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-8">
@@ -121,15 +121,14 @@
                         </h3>
 
                         <div
-                            class="flex items-center gap-6 p-6 border {{ $lulus ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-white' }} w-full max-w-md  rounded-xl shadow-sm mb-8">
+                            class="flex items-center gap-6 p-6 border border-slate-200 bg-slate-50 w-full max-w-md  rounded-xl shadow-sm mb-8">
                             <div class="flex-shrink-0">
                                 <span
-                                    class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Skor
-                                    Akhir</span>
+                                    class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Total Poin</span>
                                 <span
-                                    class="text-5xl font-black {{ $lulus ? 'text-emerald-700' : 'text-red-700' }}">{{ $skor }}</span>
+                                    class="text-5xl font-black text-slate-900">{{ (int)$skor }}</span>
                             </div>
-                            <div class="border-l {{ $lulus ? 'border-emerald-200' : 'border-red-200' }} h-16 mx-2"></div>
+                            <div class="border-l border-slate-200 h-16 mx-2"></div>
                             <div>
                                 <span
                                     class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Status</span>
@@ -139,7 +138,7 @@
                         </div>
 
                         <a href="{{ route('komprehensif.mahasiswa.riwayat') }}"
-                            class="py-3 px-6 {{ $lulus ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors shadow-sm inline-block rounded-xl">
+                            class="py-3 px-6 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm tracking-widest uppercase transition-colors shadow-sm inline-block rounded-xl">
                             Lihat Riwayat Ujian
                         </a>
                     </div>
@@ -262,26 +261,41 @@
                             }"
                             class="lg:col-span-7 border-t border-slate-200 pt-5 mt-2 lg:mt-0 {{ !$isUjianBerlangsung ? 'opacity-50 pointer-events-none' : '' }}">
                             <form x-ref="examForm" action="{{ route('komprehensif.mahasiswa.engine.validate') }}" method="POST"
-                                class="flex flex-col sm:flex-row items-end gap-3 pb-2 sm:pb-4"
+                                class="flex flex-col gap-3 pb-2 sm:pb-4"
                                 @submit.prevent="checkAndConfirm()">
                                 @csrf
                                 @php
                                     $hasTokenError = $errors->has('token') || session('error');
                                     $tokenErrorMessage = $errors->first('token') ?: session('error');
                                 @endphp
-                                <div class="flex-1 max-w-[280px] space-y-2 relative">
+                                <div class="flex-1 w-full sm:max-w-[280px]">
                                     <label for="token"
                                         class="block text-[11px] font-bold uppercase tracking-widest text-slate-900">Token
                                         Ujian</label>
-                                    <input type="text" id="token" name="token" required
-                                        :class="tokenError ? 'border-red-500 bg-red-50 focus:border-red-600' : 'bg-white border-slate-300 focus:border-slate-900'"
-                                        class="w-full h-12 px-4 text-xl tracking-[0.5em] font-mono font-bold text-slate-900 border-2 focus:ring-0 outline-none transition-colors uppercase placeholder:text-slate-300 {{ $hasTokenError ? 'border-red-500 bg-red-50' : '' }}"
-                                        placeholder="XXXXXX" maxlength="6" {{ !$isUjianBerlangsung ? 'disabled' : '' }} value="{{ old('token') }}"
-                                        @input="tokenError = ''" />
+                                    <div class="flex flex-row items-center gap-3 mt-2 relative">
+                                        <input type="text" id="token" name="token" required
+                                            :class="tokenError ? 'border-red-500 bg-red-50 focus:border-red-600' : 'bg-white border-slate-300 focus:border-slate-900'"
+                                            class="flex-1 h-12 px-4 text-xl tracking-[0.5em] font-mono font-bold text-slate-900 border-2 focus:ring-0 outline-none transition-colors uppercase placeholder:text-slate-300 {{ $hasTokenError ? 'border-red-500 bg-red-50' : '' }}"
+                                            placeholder="XXXXXX" maxlength="6" {{ !$isUjianBerlangsung ? 'disabled' : '' }} value="{{ old('token') }}"
+                                            @input="tokenError = ''" />
+                                        <button type="submit"
+                                            :disabled="checking"
+                                            class="h-12 px-6 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-primary hover:bg-primary/90 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center whitespace-nowrap rounded-xl shadow-sm"
+                                            {{ !$isUjianBerlangsung ? 'disabled' : '' }}>
+                                            <span x-show="!checking">Mulai Ujian</span>
+                                            <span x-show="checking" x-cloak class="flex items-center gap-2">
+                                                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                                </svg>
+                                                Memeriksa...
+                                            </span>
+                                        </button>
+                                    </div>
 
                                     {{-- Server-side error (from redirect back) --}}
                                     @if($hasTokenError)
-                                        <div class="absolute top-full left-0 flex items-center gap-1.5 mt-1 sm:mt-1.5">
+                                        <div class="flex items-center gap-1.5 mt-1.5">
                                             <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                             <p class="text-xs font-bold text-red-600 tracking-wide">{{ $tokenErrorMessage }}</p>
                                         </div>
@@ -289,25 +303,10 @@
 
                                     {{-- AJAX error (Alpine.js) --}}
                                     <div x-show="tokenError" x-cloak
-                                         class="absolute top-full left-0 flex items-center gap-1.5 mt-1 sm:mt-1.5">
+                                         class="flex items-center gap-1.5 mt-1.5">
                                         <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         <p class="text-xs font-bold text-red-600 tracking-wide" x-text="tokenError"></p>
                                     </div>
-                                </div>
-                                <div class="w-full sm:w-auto">
-                                    <button type="submit"
-                                        :disabled="checking"
-                                        class="w-full sm:w-auto h-12 px-8 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-primary hover:bg-primary/90 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
-                                        {{ !$isUjianBerlangsung ? 'disabled' : '' }}>
-                                        <span x-show="!checking">Masuk Ujian →</span>
-                                        <span x-show="checking" x-cloak class="flex items-center gap-2">
-                                            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
-                                            </svg>
-                                            Memeriksa...
-                                        </span>
-                                    </button>
                                 </div>
                             </form>
 
@@ -413,7 +412,7 @@
                             <h3 class="text-3xl font-extrabold text-amber-900 tracking-tight mb-4">Pendaftaran Ditutup</h3>
                             <p class="text-base text-amber-800 leading-relaxed mb-10 max-w-xl">
                                 Pendaftaran untuk <strong>{{ $activePeriode->nama_periode }}</strong> telah ditutup lebih awal
-                                oleh staf akademik. Silakan hubungi BAAK untuk informasi lebih lanjut.
+                                oleh staf akademik. Silakan hubungi admin untuk informasi lebih lanjut.
                             </p>
                         </div>
                     </div>

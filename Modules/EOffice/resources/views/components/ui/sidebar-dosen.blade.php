@@ -7,12 +7,8 @@
         <!-- Logo / Header -->
         <div class="flex items-center justify-between px-4 py-[18px] border-b border-[#DFE1E6]">
             <div class="flex items-center gap-3 min-w-0">
-                <!-- Logo Icon -->
-                <div class="w-9 h-9 bg-[#081031] rounded-lg flex items-center justify-center flex-shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
+                <div class="w-9 h-9 flex items-center justify-center flex-shrink-0">
+                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="Logo" class="w-full h-full object-contain">
                 </div>
                 <div x-show="sidebarOpen" class="flex flex-col min-w-0 overflow-hidden"
                     x-transition.opacity.duration.200ms>
@@ -77,13 +73,9 @@
 
                 @php
                     $isBimbingan = request()->routeIs('eoffice.kp.dosen.bimbingan*');
-                    $isValidasi = request()->routeIs('eoffice.kp.dosen.validasi_berkas*');
-                    $isPenilaianSeminar = request()->routeIs('eoffice.kp.dosen.penilaian_seminar*');
                     // $isPengajuanTugas = request()->routeIs('eoffice.kp.dosen.pengajuan_tugas*');
                     $menuItems = [
-                        ['active' => $isBimbingan, 'route' => 'eoffice.kp.dosen.bimbingan.index', 'label' => 'Bimbingan', 'icon' => 'users'],
-                        ['active' => $isValidasi, 'route' => 'eoffice.kp.dosen.validasi_berkas', 'label' => 'Penilaian Laporan', 'icon' => 'doc'],
-                        ['active' => $isPenilaianSeminar, 'route' => 'eoffice.kp.dosen.penilaian_seminar', 'label' => 'Penilaian Seminar', 'icon' => 'checkdoc'],
+                        ['active' => $isBimbingan, 'route' => 'eoffice.kp.dosen.bimbingan.index', 'label' => 'Bimbingan Mahasiswa', 'icon' => 'users'],
                         ['active' => false, 'route' => 'eoffice.kp.dosen.dashboard', 'label' => 'Pengajuan Tugas', 'icon' => 'balance'],
                     ];
                 @endphp
@@ -95,7 +87,7 @@
                         @endif
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')

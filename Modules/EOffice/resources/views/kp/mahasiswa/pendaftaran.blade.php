@@ -42,11 +42,6 @@
                         <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Pendaftaran Kerja Praktik</h1>
                         <p class="text-sm text-slate-500 mt-1">Lengkapi data di bawah ini untuk mengajukan Kerja Praktik.</p>
                     </div>
-                    @if(!$existingKp && $registrationOpen)
-                    <button type="submit" form="form-pendaftaran" class="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap">
-                        Kirim Pengajuan KP
-                    </button>
-                    @endif
                 </div>
 
                 <div class="space-y-6">
@@ -72,8 +67,11 @@
                         ['label' => 'Pengumuman Dosen', 'desc' => $step3_done ? 'Selesai' : ($step2_done ? 'Menunggu' : 'Belum'), 'icon' => 'M8 7v14m-4-4h8M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z', 'done' => $step3_done],
                     ];
                     $cur = 0;
-                    if ($step3_done) $cur = 2;
-                    elseif ($step2_done) $cur = 1;
+                    if ($step3_done) {
+                        $cur = 2;
+                    } elseif ($step1_done) {
+                        $cur = 1;
+                    }
                 @endphp
                 <div class="sikape-card p-6">
                     <p class="text-xs font-semibold uppercase tracking-widest mb-5" style="color:var(--grey-400);">Status Pendaftaran Kerja Praktik</p>
@@ -330,6 +328,12 @@
                                         </div>
                                     @endforelse
                                 </div>
+                            </div>
+                            
+                            <div class="mt-8 border-t border-slate-200 pt-6 flex justify-end bg-slate-50/50 -mx-6 -mb-6 px-6 pb-6 rounded-b-xl border">
+                                <button type="submit" class="px-8 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap active:scale-95">
+                                    Kirim Pengajuan KP
+                                </button>
                             </div>
                         </form>
 

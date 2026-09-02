@@ -10,8 +10,6 @@ class KpPenilaian extends Model
 
     protected $fillable = [
         'kp_id',
-        'nilai_lapangan',
-        'nilai_seminar_pembimbing',
         'nilai_akhir',
     ];
 
