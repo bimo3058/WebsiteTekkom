@@ -56,7 +56,7 @@
                                         @if($booking->berkas_pendukung)
                                             <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($booking->berkas_pendukung) }}"
                                                 target="_blank"
-                                                class="inline-flex items-center gap-1.5 text-[12px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                                                class="inline-flex items-center gap-1.5 text-[12px] font-medium text-primary-500 hover:text-primary-500 transition-colors">
                                                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
@@ -123,7 +123,7 @@
                         <p class="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Anda tidak memiliki pengajuan peminjaman
                             ruangan yang sedang berjalan atau aktif saat ini.</p>
                         <a href="{{ route('eoffice.peminjaman.user.booking') }}"
-                            class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[14px] font-semibold px-6 py-[11px] rounded-full transition-colors shadow-md shadow-blue-900/10">Mulai
+                            class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[14px] font-semibold px-6 py-[11px] rounded-full transition-colors shadow-md shadow-primary-500/10">Mulai
                             Ajukan Peminjaman</a>
                     </div>
                 </div>

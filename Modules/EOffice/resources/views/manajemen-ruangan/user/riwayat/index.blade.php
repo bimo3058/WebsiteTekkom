@@ -87,7 +87,7 @@
                                         @if($riwayat->berkas_pendukung)
                                             <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($riwayat->berkas_pendukung) }}"
                                                 target="_blank"
-                                                class="inline-flex items-center justify-end gap-1.5 text-[12px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+                                                class="inline-flex items-center justify-end gap-1.5 text-[12px] font-medium text-primary-500 hover:text-primary-500 transition-colors">
                                                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">

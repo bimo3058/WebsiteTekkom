@@ -15,9 +15,9 @@
         }
 
         :root {
-            --primary-50: #eef2ff;
-            --primary-100: #e0e7ff;
-            --primary-500: #4f46e5;
+            --primary-50: #EBEDF6;
+            --primary-100: #D0D6E9;
+            --primary-500: #2A3A7C;
             --grey-0: #fff;
             --grey-50: #f9fafb;
             --grey-100: #f3f4f6;
@@ -148,7 +148,7 @@
                                         </div>
                                         <div class="flex-1">
                                             <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                                                <h4 class="text-sm font-bold text-amber-900">⏰ Pengingat Batas Akhir</h4>
+                                                <h4 class="text-sm font-bold text-amber-900">Pengingat Batas Akhir</h4>
                                                 @if($endDate)
                                                     <span
                                                         class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-100 text-rose-700 text-[10px] rounded-full font-bold border border-rose-200">
@@ -212,18 +212,18 @@
                                             <div class="flex-1 flex flex-col items-center relative">
                                                 @if($i > 0)
                                                     <div class="absolute h-0.5 z-0"
-                                                        style="top:20px; left:0; right:50%; background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-200)' }};">
+                                                        style="top:20px; left:0; right:50%; background:{{ $i <= $cur ? '#2A3A7C' : 'var(--grey-200)' }};">
                                                     </div>
                                                 @endif
                                                 @if($i < count($steps) - 1)
                                                     <div class="absolute h-0.5 z-0"
-                                                        style="top:20px; left:50%; right:0; background:{{ $i < $cur ? '#4f46e5' : 'var(--grey-200)' }};">
+                                                        style="top:20px; left:50%; right:0; background:{{ $i < $cur ? '#2A3A7C' : 'var(--grey-200)' }};">
                                                     </div>
                                                 @endif
 
                                                 <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 relative transition-all duration-300 flex-shrink-0"
-                                                    style="background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-100)' }};
-                                                            {{ $i === $cur ? 'box-shadow:0 0 0 4px #e0e7ff;' : '' }}">
+                                                    style="background:{{ $i <= $cur ? '#2A3A7C' : 'var(--grey-100)' }};
+                                                            {{ $i === $cur ? 'box-shadow:0 0 0 4px #D0D6E9;' : '' }}">
                                                     @if($i < $cur)
                                                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
@@ -290,7 +290,7 @@
                                                         @endphp
 
                                                         <div
-                                                            class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm transition-all gap-4">
+                                                            class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-primary-300 hover:shadow-sm transition-all gap-4">
 
                                                             {{-- Info Dokumen --}}
                                                             <div class="flex items-center gap-3">
@@ -322,7 +322,7 @@
                                                                                 v.{{ \Carbon\Carbon::parse($latestDoc->created_at)->format('d.m.Y') }}
                                                                             </p>
                                                                             <a href="{{ $latestDoc->file_url }}" target="_blank"
-                                                                                class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">LIHAT
+                                                                                class="text-[10px] font-bold text-primary-500 hover:text-primary-500">LIHAT
                                                                                 FILE</a>
                                                                         </div>
                                                                     @endif
@@ -333,7 +333,7 @@
                                                             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                                                 @if($tmpl->is_downloadable && !empty($tmpl->file_path))
                                                                     <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $tmpl->id) }}"
-                                                                        class="inline-flex items-center px-3 py-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                                                        class="inline-flex items-center px-3 py-2 text-xs font-medium text-primary-500 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors">
                                                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
                                                                             viewBox="0 0 24 24">
                                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -370,7 +370,7 @@
                                                                             </label>
                                                                         </div>
                                                                         <button type="submit" x-show="fileName" style="display: none;"
-                                                                            class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors">
+                                                                            class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 text-xs font-medium text-white bg-primary-500 rounded-lg hover:bg-primary-500 transition-colors">
                                                                             Simpan
                                                                         </button>
                                                                     </form>
@@ -409,14 +409,14 @@
                                         @endphp
                                         <div
                                             class="bg-white rounded-2xl border overflow-hidden transition-all duration-300
-                                    {{ $currentStep === 2 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step2Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
+                                    {{ $currentStep === 2 ? 'border-primary-500 ring-4 ring-primary-100 shadow-lg shadow-primary-100/40' : ($step2Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
 
                                             <div
-                                                class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 2 ? 'bg-indigo-50/40' : '' }}">
+                                                class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 2 ? 'bg-primary-50/40' : '' }}">
                                                 <div class="flex items-center gap-3">
                                                     <div
                                                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                                                {{ $step2Done ? 'bg-indigo-600 text-white' : ($currentStep === 2 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400') }}">
+                                                {{ $step2Done ? 'bg-primary-500 text-white' : ($currentStep === 2 ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-400') }}">
                                                         @if($step2Done)<svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
@@ -459,11 +459,11 @@
 
                                                     @if($semStatus === 'approved')
                                                         <div
-                                                            class="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start justify-between gap-4">
+                                                            class="p-4 bg-primary-50 border border-primary-100 rounded-2xl flex items-start justify-between gap-4">
                                                             <div>
-                                                                <p class="text-sm font-bold text-blue-900">🎉 Jadwal Seminar Telah
+                                                                <p class="text-sm font-bold text-primary-500">🎉 Jadwal Seminar Telah
                                                                     Disetujui!</p>
-                                                                <p class="text-xs text-blue-700 mt-1">Jadwal seminar Anda telah disetujui
+                                                                <p class="text-xs text-primary-500 mt-1">Jadwal seminar Anda telah disetujui
                                                                     oleh Dosen Pembimbing.</p>
                                                             </div>
                                                         </div>
@@ -555,21 +555,21 @@
                                                                             Seminar <span class="text-rose-500">*</span></label>
                                                                         <input type="date" name="tanggal_seminar" required
                                                                             min="{{ date('Y-m-d') }}"
-                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-indigo-500 focus:ring-indigo-500 focus:bg-white transition-all">
+                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-primary-500 focus:ring-primary-500 focus:bg-white transition-all">
                                                                     </div>
                                                                     <div>
                                                                         <label
                                                                             class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Jam
                                                                             Mulai <span class="text-rose-500">*</span></label>
                                                                         <input type="time" name="waktu_mulai" required
-                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-indigo-500 focus:ring-indigo-500 focus:bg-white transition-all">
+                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-primary-500 focus:ring-primary-500 focus:bg-white transition-all">
                                                                     </div>
                                                                     <div>
                                                                         <label
                                                                             class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Jam
                                                                             Selesai <span class="text-rose-500">*</span></label>
                                                                         <input type="time" name="waktu_selesai" required
-                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-indigo-500 focus:ring-indigo-500 focus:bg-white transition-all">
+                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-primary-500 focus:ring-primary-500 focus:bg-white transition-all">
                                                                     </div>
                                                                     <div class="md:col-span-2">
                                                                         <label
@@ -577,7 +577,7 @@
                                                                             / Ruangan <span class="text-rose-500">*</span></label>
                                                                         <input type="text" name="ruangan" required
                                                                             placeholder="Contoh: Ruang Rapat Lt.2 Gedung B"
-                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-indigo-500 focus:ring-indigo-500 focus:bg-white transition-all">
+                                                                            class="w-full rounded-xl border-slate-200 text-sm py-2.5 px-4 border bg-slate-50 focus:border-primary-500 focus:ring-primary-500 focus:bg-white transition-all">
                                                                     </div>
                                                                 </div>
                                                                 <div
@@ -585,7 +585,7 @@
                                                                     <p class="text-[10px] text-slate-400">* Pastikan jadwal telah dikonfirmasi
                                                                         dengan dosen pembimbing.</p>
                                                                     <button type="submit"
-                                                                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-md transition-all active:scale-95">
+                                                                        class="inline-flex items-center gap-2 px-6 py-2.5 bg-primary-500 text-white text-sm font-bold rounded-xl hover:bg-primary-500 shadow-md transition-all active:scale-95">
                                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                                             viewBox="0 0 24 24">
                                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -609,14 +609,14 @@
                                         @endphp
                                         <div
                                             class="bg-white rounded-2xl border overflow-hidden transition-all duration-300
-                                    {{ $currentStep === 3 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step3Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
+                                    {{ $currentStep === 3 ? 'border-primary-500 ring-4 ring-primary-100 shadow-lg shadow-primary-100/40' : ($step3Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
 
                                             <div
-                                                class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 3 ? 'bg-indigo-50/40' : '' }}">
+                                                class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 3 ? 'bg-primary-50/40' : '' }}">
                                                 <div class="flex items-center gap-3">
                                                     <div
                                                         class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                                                {{ $step3Done ? 'bg-indigo-600 text-white' : ($currentStep === 3 ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400') }}">
+                                                {{ $step3Done ? 'bg-primary-500 text-white' : ($currentStep === 3 ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-400') }}">
                                                         @if($step3Done)<svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"

@@ -32,9 +32,9 @@
             </div>
 
             {{-- Period Selector Dropdown --}}
-            <div style="min-width:220px;" class="mt-2 sm:mt-0">
+            <div style="min-width:220px;" class="mt-2 sm:mt-0 relative">
                 <select x-model="selectedPeriode" style="
-                    width:100%; padding:8px 12px;
+                    width:100%; padding:8px 32px 8px 12px; appearance:none;
                     border:1px solid #E4E7EC; border-radius:8px;
                     font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#09090B;
                     background:#fff; cursor:pointer;
@@ -45,6 +45,9 @@
                         <option value="{{ $p->id }}">Semester {{ $p->semester }} {{ $p->tahun_ajaran }}</option>
                     @endforeach
                 </select>
+                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
             </div>
         </div>
 
@@ -63,7 +66,7 @@
                 <div
                     class="bg-white border border-slate-200 rounded-[12px] p-3.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
                     <div
-                        class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        class="w-10 h-10 rounded-xl bg-primary-50 text-primary-500 flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -98,7 +101,7 @@
                 <div
                     class="bg-white border border-slate-200 rounded-[12px] p-3.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
                     <div
-                        class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                        class="w-10 h-10 rounded-xl bg-primary-50 text-primary-500 flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">

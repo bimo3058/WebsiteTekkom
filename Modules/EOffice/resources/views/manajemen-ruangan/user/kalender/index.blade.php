@@ -115,11 +115,11 @@
                 {{-- Mode Toggle --}}
                 <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
                         Mingguan
                     </a>
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
                         Bulanan
                     </a>
                 </div>
@@ -149,7 +149,7 @@
             <div class="flex items-center justify-between mb-4">
                 @if($canGoBackWeek)
                     <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                         ← Minggu Lalu
                     </a>
                 @else
@@ -159,7 +159,7 @@
                     {{ $weekStart->translatedFormat('d M Y') }} — {{ $weekEnd->translatedFormat('d M Y') }}
                 </div>
                 <a href="{{ request()->fullUrlWithQuery(['week_start' => $nextWeek]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                     Minggu Depan →
                 </a>
             </div>
@@ -250,10 +250,10 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                                                                                        {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                                                                                                                                                        {{ $day->isToday() ? 'background: #EBEDF6; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
-                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
+                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#5D6DA2' : '#6B7280' }}; margin-top:2px;">
                                             {{ $day->format('d/m') }}
                                         </div>
                                     </th>
@@ -434,7 +434,7 @@
             <div class="flex items-center justify-between mb-4">
                 @if($canGoBackMonth)
                     <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                         ← Bulan Lalu
                     </a>
                 @else
@@ -444,7 +444,7 @@
                     {{ $monthDate->translatedFormat('F Y') }}
                 </div>
                 <a href="{{ request()->fullUrlWithQuery(['month' => $nextMonth]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                     Bulan Depan →
                 </a>
             </div>
@@ -502,7 +502,7 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #5D6DA2' : '1px solid #E5E7EB' }};
                                                                                                                                                                                                                                                                                                           transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
@@ -532,7 +532,7 @@
 
             <div class="mt-4 text-[12px] text-gray-500 font-medium">
                 💡 <strong>Tips:</strong> Klik tanggal manapun untuk beralih ke tampilan <span
-                    class="text-indigo-600 font-bold">Mingguan</span> di minggu tersebut secara detail.
+                    class="text-primary-500 font-bold">Mingguan</span> di minggu tersebut secara detail.
             </div>
         @endif
 
@@ -639,23 +639,23 @@
                                     placeholder="Misal: Rapat Kerja HIMASKOM" required>
                             </div>
 
-                            <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-lg">
+                            <div class="bg-primary-50 border border-primary-100 p-4 rounded-lg">
                                 <label
-                                    class="block text-[11px] uppercase tracking-wider font-bold text-indigo-800 mb-1.5 flex items-center gap-1.5">
+                                    class="block text-[11px] uppercase tracking-wider font-bold text-primary-500 mb-1.5 flex items-center gap-1.5">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                     </svg>
-                                    File Berkas Proposal <span class="text-indigo-500 font-normal">(Opsional)</span>
+                                    File Berkas Proposal <span class="text-primary-500 font-normal">(Opsional)</span>
                                 </label>
                                 <input type="file" name="file_berkas" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded-md file:border-0
                                 file:text-sm file:font-semibold
-                                file:bg-indigo-600 file:text-white
-                                hover:file:bg-indigo-700
+                                file:bg-primary-500 file:text-white
+                                hover:file:bg-primary-500
                                 cursor-pointer transition-colors">
-                                <p class="text-[10px] text-indigo-400 mt-2">Format PDF/Word maksimal 2MB. Hanya
+                                <p class="text-[10px] text-primary-400 mt-2">Format PDF/Word maksimal 2MB. Hanya
                                     diperlukan untuk acara formal.</p>
                             </div>
                         </div>
@@ -669,7 +669,7 @@
                         Batal
                     </button>
                     <button type="submit" form="bookingForm"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-500 border border-transparent rounded-lg shadow-sm hover:bg-primary-500 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                         Kirim Pengajuan
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

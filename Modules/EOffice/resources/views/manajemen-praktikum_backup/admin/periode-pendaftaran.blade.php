@@ -53,7 +53,7 @@
         @if($matkulDipilih)
 
         {{-- Info matkul terpilih --}}
-        <div style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 16px;border-radius:10px;background:#EEF2FF;">
+        <div style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 16px;border-radius:10px;background:#EBEDF6;">
             <span style="font-family:monospace;font-size:12px;font-weight:700;color:#0B266E;background:white;padding:2px 8px;border-radius:4px;border:1px solid #C7D2FE;">
                 {{ $matkulDipilih->kode }}
             </span>

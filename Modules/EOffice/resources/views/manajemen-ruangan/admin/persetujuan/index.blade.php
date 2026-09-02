@@ -46,7 +46,7 @@
                                     @if($pinjam->berkas_pendukung)
                                         <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
                                             target="_blank"
-                                            class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 mt-1">
+                                            class="inline-flex items-center gap-1 text-[11px] font-medium text-primary-500 hover:text-primary-500 mt-1">
                                             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
@@ -146,7 +146,7 @@
 
                     <div class="p-6">
                         <p class="text-sm text-gray-600 mb-6">Tentukan status pengajuan ruangan dari <span
-                                class="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded"
+                                class="font-semibold text-primary-500 bg-primary-50 px-1.5 py-0.5 rounded"
                                 x-text="selectedName"></span>.</p>
 
                         <form id="actionForm" method="POST" :action="getFormAction()">

@@ -34,7 +34,7 @@
                         </svg>
                     </div>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-gray-400"
                         placeholder="Search" x-on:input.debounce.700ms="$el.form.submit()">
                 </div>
 
@@ -49,7 +49,7 @@
                         </svg>
                         Filter
                         @if(request()->hasAny(['status', 'ruangan_id', 'start_date', 'end_date']) && array_filter(request()->only(['status', 'ruangan_id', 'start_date', 'end_date'])))
-                            <span class="w-2 h-2 rounded-full bg-indigo-500 absolute -top-0.5 -right-0.5"></span>
+                            <span class="w-2 h-2 rounded-full bg-primary-500 absolute -top-0.5 -right-0.5"></span>
                         @endif
                     </button>
 
@@ -62,14 +62,14 @@
                                     Waktu</label>
                                 <div class="flex gap-2">
                                     <input type="date" name="start_date" value="{{ request('start_date') }}"
-                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-indigo-500">
+                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-primary-500">
                                     <input type="date" name="end_date" value="{{ request('end_date') }}"
-                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-indigo-500">
+                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-primary-500">
                                 </div>
                             </div>
                             <div>
                                 <label
-                                    class="block text-xs font-semibold text-gray-700 mb-1.5 focus:border-indigo-500 relative z-10 w-full bg-white">Ruangan</label>
+                                    class="block text-xs font-semibold text-gray-700 mb-1.5 focus:border-primary-500 relative z-10 w-full bg-white">Ruangan</label>
                                 <select name="ruangan_id"
                                     class="w-full text-xs border border-gray-200 rounded block p-2 outline-none">
                                     <option value="">Semua Ruangan</option>
@@ -82,7 +82,7 @@
                                 <label
                                     class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Status</label>
                                 <select name="status"
-                                    class="w-full text-xs border border-gray-200 rounded block p-2 outline-none focus:border-indigo-500">
+                                    class="w-full text-xs border border-gray-200 rounded block p-2 outline-none focus:border-primary-500">
                                     <option value="">Semua Status</option>
                                     <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>
                                         Disetujui</option>
@@ -133,7 +133,7 @@
                                 @if($pinjam->berkas_pendukung)
                                     <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
                                         target="_blank"
-                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 mt-1">
+                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-primary-500 hover:text-primary-500 mt-1">
                                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">

@@ -10,7 +10,7 @@
     <style>
         * { font-family: 'Inter Tight', sans-serif; }
         :root {
-            --primary-50:#eef2ff;--primary-100:#e0e7ff;--primary-500:#4f46e5;
+            --primary-50:#EBEDF6;--primary-100:#D0D6E9;--primary-500:#2A3A7C;
             --grey-0:#fff;--grey-50:#f9fafb;--grey-100:#f3f4f6;--grey-200:#e5e7eb;
             --grey-400:#9ca3af;--grey-500:#6b7280;--grey-600:#4b5563;
             --grey-700:#374151;--grey-800:#1f2937;--grey-900:#030712;
@@ -81,19 +81,19 @@
                             {{-- Left half-line --}}
                             @if($i > 0)
                             <div class="absolute h-0.5 z-0"
-                                    style="top:20px; left:0; right:50%; background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-200)' }};"></div>
+                                    style="top:20px; left:0; right:50%; background:{{ $i <= $cur ? '#2A3A7C' : 'var(--grey-200)' }};"></div>
                             @endif
 
                             {{-- Right half-line --}}
                             @if($i < count($steps) - 1)
                             <div class="absolute h-0.5 z-0"
-                                    style="top:20px; left:50%; right:0; background:{{ $i < $cur ? '#4f46e5' : 'var(--grey-200)' }};"></div>
+                                    style="top:20px; left:50%; right:0; background:{{ $i < $cur ? '#2A3A7C' : 'var(--grey-200)' }};"></div>
                             @endif
 
                             {{-- Circle --}}
                             <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 relative transition-all duration-300 flex-shrink-0"
-                                    style="background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-100)' }};
-                                        {{ $i === $cur ? 'box-shadow:0 0 0 4px #e0e7ff;' : '' }}">
+                                    style="background:{{ $i <= $cur ? '#2A3A7C' : 'var(--grey-100)' }};
+                                        {{ $i === $cur ? 'box-shadow:0 0 0 4px #D0D6E9;' : '' }}">
                                 @if($i < $cur || $step['done'])
                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 @else
@@ -115,8 +115,8 @@
                             </p>
                         </div>
                     @elseif($step1_done && !$step2_done)
-                        <div class="p-4 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
-                            <p class="text-blue-800 font-medium text-sm">Berhasil mendaftar! silahkan menunggu verifikasi oleh koordinator</p>
+                        <div class="p-4 bg-primary-50 rounded-lg border border-primary-100 shadow-sm">
+                            <p class="text-primary-500 font-medium text-sm">Berhasil mendaftar! silahkan menunggu verifikasi oleh koordinator</p>
                         </div>
                     @elseif($step2_done && !$step3_done)
                         <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
@@ -160,7 +160,7 @@
                             </div>
                             <div class="flex-1">
                                 <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                                    <h4 class="text-sm font-bold text-amber-900">⏰ Pengingat Batas Akhir</h4>
+                                    <h4 class="text-sm font-bold text-amber-900">Pengingat Batas Akhir</h4>
                                     @if($periodeAktif)
                                         <span class="px-2.5 py-0.5 bg-amber-200 text-amber-800 text-[10px] rounded-full uppercase tracking-wider font-semibold">
                                             Periode: {{ $periodeAktif->semester }} {{ $periodeAktif->tahun_ajaran }}
@@ -180,24 +180,24 @@
                         </div>
 
                     @elseif($periodeAktif)
-                        <div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
-                            <div class="p-2 bg-blue-100 rounded-lg text-blue-700 flex-shrink-0">
+                        <div class="mb-6 bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3 shadow-sm">
+                            <div class="p-2 bg-primary-100 rounded-lg text-primary-500 flex-shrink-0">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                             </div>
                             <div class="flex-1">
                                 <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                                    <h4 class="text-sm font-bold text-blue-900">Pemberitahuan Pendaftaran</h4>
-                                    <span class="px-2.5 py-0.5 bg-blue-200 text-blue-800 text-[10px] rounded-full uppercase tracking-wider font-semibold">
+                                    <h4 class="text-sm font-bold text-primary-500">Pemberitahuan Pendaftaran</h4>
+                                    <span class="px-2.5 py-0.5 bg-primary-200 text-primary-500 text-[10px] rounded-full uppercase tracking-wider font-semibold">
                                         Periode: {{ $periodeAktif->semester }} {{ $periodeAktif->tahun_ajaran }}
                                     </span>
                                     @if($endDate)
-                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] rounded-full font-bold border border-indigo-200">
+                                        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-primary-100 text-primary-500 text-[10px] rounded-full font-bold border border-primary-200">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                             Berakhir: {{ \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') }}
                                         </span>
                                     @endif
                                 </div>
-                                <p class="text-xs text-blue-700 leading-relaxed">
+                                <p class="text-xs text-primary-500 leading-relaxed">
                                     Pendaftaran Kerja Praktik untuk periode ini sedang dibuka. Pastikan Anda melengkapi data yang dibutuhkan.
                                 </p>
                             </div>
@@ -219,7 +219,7 @@
                                 <div class="md:col-span-2">
                                     <label for="judul_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP <span class="text-red-500">*</span></label>
                                     <input type="text" name="judul_kp" id="judul_kp" value="{{ old('judul_kp') }}" required placeholder="Contoh: Pembuatan Sistem Otomasi Jaringan..."
-                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border">
                                     @error('judul_kp') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
@@ -227,7 +227,7 @@
                                 <div class="md:col-span-2">
                                     <label for="instansi_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tempat Instansi <span class="text-red-500">*</span></label>
                                     <input type="text" name="instansi_kp" id="instansi_kp" value="{{ old('instansi_kp') }}" required placeholder="Contoh: PT Telekomunikasi Indonesia (Telkom)"
-                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border">
                                     @error('instansi_kp') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
@@ -235,7 +235,7 @@
                                 <div>
                                     <label for="ipk" class="block text-sm font-medium text-slate-700 mb-1">Indeks Prestasi Kumulatif (IPK) <span class="text-red-500">*</span></label>
                                     <input type="number" name="ipk" id="ipk" value="{{ old('ipk') }}" step="0.01" min="0" max="4.00" required placeholder="Contoh: 3.50"
-                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border">
                                     @error('ipk') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
@@ -243,7 +243,7 @@
                                 <div>
                                     <label for="kelas" class="block text-sm font-medium text-slate-700 mb-1">Kelas <span class="text-red-500">*</span></label>
                                     <select name="kelas" id="kelas" required
-                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border text-slate-700 bg-white">
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border text-slate-700 bg-white">
                                         <option value="" disabled {{ old('kelas') == '' ? 'selected' : '' }}>Pilih Kelas</option>
                                         @foreach($listKelas as $kls)
                                             <option value="{{ $kls }}" {{ old('kelas') == $kls ? 'selected' : '' }}>{{ $kls }}</option>
@@ -256,7 +256,7 @@
                                 <div class="md:col-span-2">
                                     <label for="sks_diambil" class="block text-sm font-medium text-slate-700 mb-1">Jumlah SKS yang Telah Diambil <span class="text-red-500">*</span></label>
                                     <input type="number" name="sks_diambil" id="sks_diambil" value="{{ old('sks_diambil') }}" min="0" required placeholder="Contoh: 110"
-                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border">
                                     @error('sks_diambil') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
@@ -264,7 +264,7 @@
                                 <div>
                                     <label for="tanggal_mulai" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tanggal Mulai <span class="text-red-500">*</span></label>
                                     <input type="date" name="tanggal_mulai" id="tanggal_mulai" value="{{ old('tanggal_mulai') }}" required
-                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border text-slate-600">
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border text-slate-600">
                                     @error('tanggal_mulai') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
@@ -272,7 +272,7 @@
                                 <div>
                                     <label for="tanggal_selesai" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tanggal Selesai <span class="text-red-500">*</span></label>
                                     <input type="date" name="tanggal_selesai" id="tanggal_selesai" value="{{ old('tanggal_selesai') }}" required
-                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border text-slate-600">
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border text-slate-600">
                                     @error('tanggal_selesai') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
@@ -285,7 +285,7 @@
                                 
                                 <div class="mt-4 space-y-3">
                                     @forelse($templatesDokumen ?? collect() as $tmpl)
-                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm transition-all gap-4">
+                                        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-primary-300 hover:shadow-sm transition-all gap-4">
                                             
                                             {{-- Info Dokumen --}}
                                             <div class="flex items-center gap-3">
@@ -302,7 +302,7 @@
                                             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                                 @if($tmpl->is_downloadable)
                                                     <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $tmpl->id) }}"
-                                                       class="inline-flex items-center px-3 py-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                                       class="inline-flex items-center px-3 py-2 text-xs font-medium text-primary-500 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors">
                                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                                         Template
                                                     </a>
@@ -331,7 +331,7 @@
                             </div>
                             
                             <div class="mt-8 border-t border-slate-200 pt-6 flex justify-end bg-slate-50/50 -mx-6 -mb-6 px-6 pb-6 rounded-b-xl border">
-                                <button type="submit" class="px-8 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-sm transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 whitespace-nowrap active:scale-95">
+                                <button type="submit" class="px-8 py-3 bg-primary-500 text-white text-sm font-bold rounded-xl hover:bg-primary-500 shadow-sm transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 whitespace-nowrap active:scale-95">
                                     Kirim Pengajuan KP
                                 </button>
                             </div>

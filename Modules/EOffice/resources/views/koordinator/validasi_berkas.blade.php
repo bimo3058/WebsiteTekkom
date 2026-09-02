@@ -75,7 +75,7 @@
 
                     <div class="relative mb-4">
                         <input type="text" x-model="searchQuery" placeholder="Cari nama atau NIM..."
-                            class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm">
+                            class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm">
                         <svg class="absolute left-3.5 top-3 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -85,14 +85,14 @@
 
                     <div class="flex gap-2">
                         <select x-model="filterStatus"
-                            class="flex-1 bg-white border border-slate-200 rounded-lg text-xs font-medium px-3 py-2 focus:outline-none focus:border-indigo-500 text-slate-600 shadow-sm">
+                            class="flex-1 bg-white border border-slate-200 rounded-lg text-xs font-medium px-3 py-2 focus:outline-none focus:border-primary-500 text-slate-600 shadow-sm">
                             <option value="all">Semua Status</option>
                             <option value="Menunggu Review">Menunggu Review</option>
                             <option value="Revisi">Revisi</option>
                             <option value="Disetujui">Disetujui</option>
                         </select>
                         <select x-model="filterTahap"
-                            class="flex-1 bg-white border border-slate-200 rounded-lg text-xs font-medium px-3 py-2 focus:outline-none focus:border-indigo-500 text-slate-600 shadow-sm">
+                            class="flex-1 bg-white border border-slate-200 rounded-lg text-xs font-medium px-3 py-2 focus:outline-none focus:border-primary-500 text-slate-600 shadow-sm">
                             <option value="all">Semua Tahapan</option>
                             <option value="Pra KP">Pra KP</option>
                             <option value="Saat KP">Saat KP</option>
@@ -105,10 +105,10 @@
                     <template x-for="mhs in filteredMahasiswas" :key="mhs.id">
                         <button @click="selectStudent(mhs)"
                             class="w-full text-left p-4 rounded-2xl border transition-all duration-200 relative group overflow-hidden"
-                            :class="selectedStudent && selectedStudent.id === mhs.id ? 'bg-indigo-50/50 border-indigo-200 shadow-sm' : 'bg-white border-slate-200 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100/50'">
+                            :class="selectedStudent && selectedStudent.id === mhs.id ? 'bg-primary-50/50 border-primary-200 shadow-sm' : 'bg-white border-slate-200 hover:border-primary-200 hover:shadow-md hover:shadow-primary-100/50'">
                             <div class="flex justify-between items-start mb-2">
                                 <div>
-                                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors"
+                                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-primary-500 transition-colors"
                                         x-text="mhs.nama"></h3>
                                     <p class="text-xs text-slate-500 font-medium mt-0.5" x-text="mhs.nim"></p>
                                 </div>
@@ -159,8 +159,8 @@
                 <div x-show="selectedStudent === null"
                     class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 bg-white">
                     <div
-                        class="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 border-8 border-indigo-50/50">
-                        <svg class="w-10 h-10 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mb-6 border-8 border-primary-50/50">
+                        <svg class="w-10 h-10 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
@@ -177,7 +177,7 @@
                         <!-- Mobile back button -->
                         <div class="lg:hidden p-4 border-b border-slate-200 bg-white flex items-center shrink-0">
                             <button @click="selectedStudent = null"
-                                class="flex items-center text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+                                class="flex items-center text-sm font-bold text-slate-600 hover:text-primary-500 transition-colors">
                                 <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 19l-7-7 7-7" />
@@ -192,7 +192,7 @@
                                 <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
                                     <div class="flex gap-5 items-start">
                                         <div
-                                            class="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-2xl shrink-0 shadow-sm">
+                                            class="w-16 h-16 rounded-2xl bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-500 font-bold text-2xl shrink-0 shadow-sm">
                                             <span x-text="selectedStudent.nama.charAt(0)"></span>
                                         </div>
                                         <div>
@@ -253,21 +253,21 @@
                             <div class="max-w-4xl mx-auto flex gap-6">
                                 <button @click="activeTab = 'pra_kp'"
                                     class="pb-3 text-sm font-bold transition-all relative border-b-2"
-                                    :class="activeTab === 'pra_kp' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
+                                    :class="activeTab === 'pra_kp' ? 'text-primary-500 border-primary-500' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
                                     Pra KP <span
                                         class="ml-1.5 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-[10px]"
                                         x-text="selectedStudent.dokumen.pra_kp.length"></span>
                                 </button>
                                 <button @click="activeTab = 'saat_kp'"
                                     class="pb-3 text-sm font-bold transition-all relative border-b-2"
-                                    :class="activeTab === 'saat_kp' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
+                                    :class="activeTab === 'saat_kp' ? 'text-primary-500 border-primary-500' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
                                     Saat KP <span
                                         class="ml-1.5 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-[10px]"
                                         x-text="selectedStudent.dokumen.saat_kp.length"></span>
                                 </button>
                                 <button @click="activeTab = 'pasca_kp'"
                                     class="pb-3 text-sm font-bold transition-all relative border-b-2"
-                                    :class="activeTab === 'pasca_kp' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
+                                    :class="activeTab === 'pasca_kp' ? 'text-primary-500 border-primary-500' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
                                     Pasca KP <span
                                         class="ml-1.5 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-[10px]"
                                         x-text="selectedStudent.dokumen.pasca_kp.length"></span>
@@ -281,7 +281,7 @@
 
                                 <template x-for="doc in currentDocuments" :key="doc.id">
                                     <div
-                                        class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md hover:border-indigo-100">
+                                        class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md hover:border-primary-100">
                                         <div
                                             class="flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between">
                                             <div class="flex items-start gap-4 flex-1 min-w-0">
@@ -323,7 +323,7 @@
                                                 class="flex items-center gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
                                                 <template x-if="doc.file_url">
                                                     <a :href="doc.file_url" target="_blank"
-                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl border flex items-center gap-1.5 justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100 cursor-pointer">
+                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl border flex items-center gap-1.5 justify-center bg-primary-50 text-primary-500 hover:bg-primary-100 border-primary-100 cursor-pointer">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -471,7 +471,7 @@
                                     class="text-red-500">*</span></label>
                             <textarea x-model="rejectReason" rows="3"
                                 placeholder="Tuliskan alasan atau bagian yang perlu diperbaiki..."
-                                class="w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border outline-none resize-y"></textarea>
+                                class="w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 border outline-none resize-y"></textarea>
                         </div>
                     </div>
                     <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">

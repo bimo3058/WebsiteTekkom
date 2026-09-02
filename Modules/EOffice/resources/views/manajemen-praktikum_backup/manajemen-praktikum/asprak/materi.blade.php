@@ -76,7 +76,7 @@
                     <template x-for="(file, index) in files" :key="index">
                         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#FAFBFC;border:1px solid #EDF0F4;border-radius:8px;">
                             <div style="display:flex;align-items:center;gap:10px;overflow:hidden;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5D6DA2" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                                 <div>
                                     <div x-text="file.name" style="font-size:13px;font-weight:500;color:#353849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;"></div>
                                     <div x-text="(file.size / 1024 / 1024).toFixed(2) + ' MB'" style="font-size:11px;color:#808897;"></div>
@@ -130,8 +130,8 @@
              onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''">
             <div style="display:flex;align-items:flex-start;gap:16px;">
                 {{-- File Icon --}}
-                <div style="width:48px;height:48px;border-radius:10px;background:#E0E7FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round">
+                <div style="width:48px;height:48px;border-radius:10px;background:#D0D6E9;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5D6DA2" stroke-width="2" stroke-linecap="round">
                         <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
                     </svg>
                 </div>

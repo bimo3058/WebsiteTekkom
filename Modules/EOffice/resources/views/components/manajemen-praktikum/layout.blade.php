@@ -45,7 +45,7 @@
             white-space:nowrap; font-family:'Inter Tight',sans-serif; border:1px solid transparent; }
 .mp-badge.sm { font-size:11px; padding:2px 8px; }
 .mp-badge.lg { font-size:13px; padding:4px 12px; }
-.mp-badge.primary  { background:#EEF2FF; color:#0B266E; border-color:#C7D2FE; }
+.mp-badge.primary  { background:#EBEDF6; color:#0B266E; border-color:#C7D2FE; }
 .mp-badge.primary-fill { background:#0B266E; color:#fff; border-color:#0B266E; }
 .mp-badge.success  { background:#F0FDF9; color:#0D9488; border-color:#99F6E4; }
 .mp-badge.success-fill { background:#0D9488; color:#fff; border-color:#0D9488; }
@@ -158,7 +158,7 @@
 .mp-av.green  { background:#DDF2EE; color:#174E43; }
 .mp-av.yellow { background:#F9ECCB; color:#956321; }
 .mp-av.red    { background:#FADAE1; color:#95122B; }
-.mp-av.violet { background:#E4DFFD; color:#6B39F4; }
+.mp-av.violet { background:#E4DFFD; color:#2A3A7C; }
 
 /* Mobile overrides */
 @media (max-width:767px) {
@@ -262,7 +262,7 @@
     if ($isKoor) {
         $sections[] = [
             'label' => 'Koordinator',
-            'color' => '#6366F1',
+            'color' => '#5D6DA2',
             'bg'    => 'rgba(99,102,241,0.08)',
             'match' => 'manprak.koor',
             'groups' => [

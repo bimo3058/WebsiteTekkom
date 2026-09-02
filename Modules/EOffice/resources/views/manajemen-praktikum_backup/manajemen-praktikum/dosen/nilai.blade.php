@@ -48,7 +48,7 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Absensi & Nilai</h1>
-            <span class="mp-badge" style="background:#E0E7FF;color:#6366F1;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#6366F1;"></span>Dosen</span>
+            <span class="mp-badge" style="background:#D0D6E9;color:#5D6DA2;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#5D6DA2;"></span>Dosen</span>
         </div>
         <p class="mp-page-sub">{{ $praktikum->nama }} · {{ $praktikum->semester }} {{ $praktikum->tahun_ajaran }}</p>
     </div>
@@ -136,11 +136,11 @@
                         <input x-ref="searchKel" type="text" x-model="searchStr" placeholder="Cari kelompok..." class="mp-input" style="padding: 6px 10px; font-size:12px; width:100%; border-color:#DFE1E7; box-shadow:none;">
                     </div>
                     <div style="overflow-y:auto; flex:1; max-height: 200px;">
-                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === '' ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== '') this.style.background='#F6F8FA'" onmouseout="if(kelompok !== '') this.style.background='transparent'">
+                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === '' ? 'background:#EBEDF6; color:#2A3A7C; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== '') this.style.background='#F6F8FA'" onmouseout="if(kelompok !== '') this.style.background='transparent'">
                             Semua Kelompok
                         </div>
                         <template x-for="opt in filtered" :key="opt">
-                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === opt ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== opt) this.style.background='#F6F8FA'" onmouseout="if(kelompok !== opt) this.style.background='transparent'" x-text="opt">
+                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === opt ? 'background:#EBEDF6; color:#2A3A7C; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== opt) this.style.background='#F6F8FA'" onmouseout="if(kelompok !== opt) this.style.background='transparent'" x-text="opt">
                             </div>
                         </template>
                         <div x-show="filtered.length === 0" class="px-3 py-[12px] text-[12px] text-center" style="color:#A4ABB8;">
@@ -179,11 +179,11 @@
                         <input x-ref="searchShf" type="text" x-model="searchStr" placeholder="Cari shift..." class="mp-input" style="padding: 6px 10px; font-size:12px; width:100%; border-color:#DFE1E7; box-shadow:none;">
                     </div>
                     <div style="overflow-y:auto; flex:1; max-height: 200px;">
-                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === '' ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== '') this.style.background='#F6F8FA'" onmouseout="if(shift !== '') this.style.background='transparent'">
+                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === '' ? 'background:#EBEDF6; color:#2A3A7C; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== '') this.style.background='#F6F8FA'" onmouseout="if(shift !== '') this.style.background='transparent'">
                             Semua Shift
                         </div>
                         <template x-for="opt in filtered" :key="opt">
-                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === opt ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== opt) this.style.background='#F6F8FA'" onmouseout="if(shift !== opt) this.style.background='transparent'" x-text="opt">
+                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === opt ? 'background:#EBEDF6; color:#2A3A7C; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== opt) this.style.background='#F6F8FA'" onmouseout="if(shift !== opt) this.style.background='transparent'" x-text="opt">
                             </div>
                         </template>
                         <div x-show="filtered.length === 0" class="px-3 py-[12px] text-[12px] text-center" style="color:#A4ABB8;">
@@ -204,7 +204,7 @@
                     <th class="mp-th text-center" style="padding:12px 16px;width:90px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">Kelompok</th>
                     <th class="mp-th text-center" style="padding:12px 16px;width:70px;border-right:1px solid #DFE1E7;">Shift</th>
                     <th class="mp-th text-center" style="padding:12px 16px; width:90px;">Kehadiran</th>
-                    <th class="mp-th text-center" style="padding:12px 16px; min-width:120px; background:#EEF2FF;">Tugas Pendahuluan</th>
+                    <th class="mp-th text-center" style="padding:12px 16px; min-width:120px; background:#EBEDF6;">Tugas Pendahuluan</th>
                     <th class="mp-th text-center" style="padding:12px 16px; min-width:100px; background:#F0FDF4;">Praktikum</th>
                     <th class="mp-th text-center" style="padding:12px 16px; min-width:100px; background:#FEF9C3;">Laporan</th>
                     <th class="mp-th text-center" style="padding:12px 16px; min-width:100px; background:#FFF7ED;">Responsi</th>
@@ -249,7 +249,7 @@
                         @endif
                     </td>
                     {{-- Tugas Pendahuluan --}}
-                    <td style="padding:12px 16px;text-align:center;background:#EEF2FF;font-weight:700;color:#4338CA;font-size:13px;">
+                    <td style="padding:12px 16px;text-align:center;background:#EBEDF6;font-weight:700;color:#4338CA;font-size:13px;">
                         {{ isset($njMap['tugas_pendahuluan']) ? number_format($njMap['tugas_pendahuluan'], 1) : '—' }}
                     </td>
                     {{-- Praktikum --}}
@@ -299,7 +299,7 @@
 @endphp
 
 <div class="sec-head" style="margin-top: 32px;">
-    <span class="sec-bar" style="background:#6366F1;"></span>
+    <span class="sec-bar" style="background:#5D6DA2;"></span>
     <span class="sec-title">Publikasi Nilai</span>
     <span class="sec-rule"></span>
 </div>
@@ -327,7 +327,7 @@
         <div style="flex-shrink:0;">
             <form method="POST" action="{{ route('eoffice.manprak.dosen.nilai.approve', $praktikum->id) }}">
                 @csrf
-                <button type="submit" class="mp-btn primary md" style="background:#6366F1;box-shadow:0 2px 6px rgba(99,102,241,.3);" onmouseover="this.style.background='#4F46E5'" onmouseout="this.style.background='#6366F1'" onclick="return confirm('Publikasi semua nilai di praktikum ini?')">
+                <button type="submit" class="mp-btn primary md" style="background:#5D6DA2;box-shadow:0 2px 6px rgba(99,102,241,.3);" onmouseover="this.style.background='#2A3A7C'" onmouseout="this.style.background='#5D6DA2'" onclick="return confirm('Publikasi semua nilai di praktikum ini?')">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     Publikasi (Setujui Nilai)
                 </button>

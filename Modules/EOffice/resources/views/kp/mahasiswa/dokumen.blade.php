@@ -19,9 +19,9 @@
         }
 
         :root {
-            --primary-50: #eef2ff;
-            --primary-100: #e0e7ff;
-            --primary-500: #4f46e5;
+            --primary-50: #EBEDF6;
+            --primary-100: #D0D6E9;
+            --primary-500: #2A3A7C;
             --grey-0: #fff;
             --grey-50: #f9fafb;
             --grey-100: #f3f4f6;
@@ -209,18 +209,18 @@
                                 <div class="flex-1 flex flex-col items-center relative">
                                     @if($i > 0)
                                         <div class="absolute h-0.5 z-0"
-                                            style="top:20px; left:0; right:50%; background:{{ $i <= $curState ? '#4f46e5' : 'var(--grey-200)' }};">
+                                            style="top:20px; left:0; right:50%; background:{{ $i <= $curState ? '#2A3A7C' : 'var(--grey-200)' }};">
                                         </div>
                                     @endif
                                     @if($i < count($steps) - 1)
                                         <div class="absolute h-0.5 z-0"
-                                            style="top:20px; left:50%; right:0; background:{{ $i < $curState ? '#4f46e5' : 'var(--grey-200)' }};">
+                                            style="top:20px; left:50%; right:0; background:{{ $i < $curState ? '#2A3A7C' : 'var(--grey-200)' }};">
                                         </div>
                                     @endif
 
                                     <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 relative transition-all duration-300 flex-shrink-0"
-                                        style="background:{{ $i <= $curState ? '#4f46e5' : 'var(--grey-100)' }};
-                                                                                                                            {{ $i === $curState ? 'box-shadow:0 0 0 4px #e0e7ff;' : '' }}">
+                                        style="background:{{ $i <= $curState ? '#2A3A7C' : 'var(--grey-100)' }};
+                                                                                                                            {{ $i === $curState ? 'box-shadow:0 0 0 4px #D0D6E9;' : '' }}">
                                         @if($i < $curState)
                                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
@@ -275,7 +275,7 @@
                                 </div>
                                 <div class="flex-1">
                                     <div class="flex flex-wrap items-center gap-2 mb-1.5">
-                                        <h4 class="text-sm font-bold text-amber-900">⏰ Pengingat Batas Akhir</h4>
+                                        <h4 class="text-sm font-bold text-amber-900">Pengingat Batas Akhir</h4>
                                         @if($endDate)
                                             <span
                                                 class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-rose-100 text-rose-700 text-[10px] rounded-full font-bold border border-rose-200">
@@ -313,9 +313,9 @@
 
                                 {{-- Card Step 1: Judul Fix & Tempat Fix --}}
                                 <div id="step-1"
-                                    class="bg-white rounded-2xl border transition-all duration-300 {{ $currentStep === 1 ? 'border-indigo-500 ring-4 ring-indigo-200 shadow-lg shadow-indigo-100/50' : 'border-slate-200 shadow-sm' }} overflow-hidden">
+                                    class="bg-white rounded-2xl border transition-all duration-300 {{ $currentStep === 1 ? 'border-primary-500 ring-4 ring-primary-200 shadow-lg shadow-primary-100/50' : 'border-slate-200 shadow-sm' }} overflow-hidden">
                                     <div
-                                        class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 1 ? 'bg-indigo-50/30' : '' }}">
+                                        class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 1 ? 'bg-primary-50/30' : '' }}">
                                         <div class="flex flex-col gap-1">
                                             <h2 class="text-base font-bold text-slate-800">Data Instansi & Laporan</h2>
                                             <p class="text-xs text-slate-500">Silakan melengkapi dan memverifikasi data di
@@ -332,7 +332,7 @@
                                                     Instansi</label>
                                                 <input type="text" x-model="instansi" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
                                                     placeholder="Nama instansi tempat Anda diterima..."
-                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                                             </div>
                                             <div>
                                                 <label
@@ -340,21 +340,21 @@
                                                     Laporan</label>
                                                 <input type="text" x-model="judul" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
                                                     placeholder="Judul laporan akhir KP Anda..."
-                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                                             </div>
                                             <div>
                                                 <label
                                                     class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal
                                                     Mulai KP</label>
                                                 <input type="date" x-model="tglMulai" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
-                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                                             </div>
                                             <div>
                                                 <label
                                                     class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tanggal
                                                     Selesai KP</label>
                                                 <input type="date" x-model="tglSelesai" {{ ($currentStep > 1 || $isPernahDikunci) ? 'disabled' : '' }}
-                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
+                                                    class="w-full rounded-xl border-slate-200 shadow-sm focus:border-primary-500 focus:ring-primary-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed">
                                             </div>
                                         </div>
                                     </div>
@@ -395,7 +395,7 @@
                                             @endphp
 
                                             <div
-                                                class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 hover:shadow-sm transition-all gap-4">
+                                                class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-primary-300 hover:shadow-sm transition-all gap-4">
 
                                                 {{-- Info Dokumen --}}
                                                 <div class="flex items-center gap-3">
@@ -428,7 +428,7 @@
                                                                     v.{{ \Carbon\Carbon::parse($latestDoc->created_at)->format('d.m.Y') }}
                                                                 </p>
                                                                 <a href="{{ $latestDoc->file_url }}" target="_blank"
-                                                                    class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700">LIHAT
+                                                                    class="text-[10px] font-bold text-primary-500 hover:text-primary-500">LIHAT
                                                                     FILE</a>
                                                             </div>
                                                             @if(in_array($status, ['ditolak', 'rejected', 'revisi', 'revision']) && !empty($latestDoc->revision_note) && $latestDoc->revision_note !== '-')
@@ -449,7 +449,7 @@
                                                 <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                                                     @if($tmpl->is_downloadable && !empty($tmpl->file_path))
                                                         <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $tmpl->id) }}"
-                                                            class="inline-flex items-center px-3 py-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors">
+                                                            class="inline-flex items-center px-3 py-2 text-xs font-medium text-primary-500 bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100 transition-colors">
                                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -505,7 +505,7 @@
                                                                 </div>
                                                                 <div x-show="isUploading" style="display: none;"
                                                                     class="inline-flex items-center justify-center px-4 py-2 text-xs font-medium text-slate-500 bg-slate-50 border border-slate-200 rounded-lg">
-                                                                    <svg class="animate-spin w-4 h-4 mr-1.5 text-indigo-500"
+                                                                    <svg class="animate-spin w-4 h-4 mr-1.5 text-primary-500"
                                                                         xmlns="http://www.w3.org/2000/svg" fill="none"
                                                                         viewBox="0 0 24 24">
                                                                         <circle class="opacity-25" cx="12" cy="12" r="10"
@@ -546,7 +546,11 @@
                                         <div x-show="!isDataLengkap || {{ !$semuaLengkap ? 'true' : 'false' }}">
                                             <button disabled
                                                 class="inline-flex items-center gap-2 px-6 py-3 bg-slate-300 text-white text-sm font-bold rounded-xl cursor-not-allowed">
-                                                Lengkapi Semua Dokumen & Form Dahulu
+                                                Simpan
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                </svg>
                                             </button>
                                         </div>
                                         <div x-cloak x-show="isDataLengkap && {{ $semuaLengkap ? 'true' : 'false' }}">
@@ -558,7 +562,7 @@
                                                 <input type="hidden" name="tanggal_mulai" x-bind:value="tglMulai">
                                                 <input type="hidden" name="tanggal_selesai" x-bind:value="tglSelesai">
                                                 <button type="button" @click="showModal = true"
-                                                    class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all shadow-sm active:scale-95">
+                                                    class="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 text-white text-sm font-bold rounded-xl hover:bg-primary-500 transition-all shadow-sm active:scale-95">
                                                     Simpan
                                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -577,7 +581,6 @@
                                             method="POST">
                                             @csrf
                                             <button type="submit"
-                                                onclick="return confirm('Selamat! Semua persyaratan telah Disetujui Dosen.\n\nKlik OK untuk masuk ke Halaman Pendaftaran Seminar.')"
                                                 class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-sm active:scale-95">
                                                 Lanjut Registrasi Seminar
                                                 <svg class="w-5 h-5 animate-bounce" fill="none" stroke="currentColor"
@@ -632,7 +635,7 @@
                                         <button @click="showModal = false" type="button" class="px-5 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-all">
                                             Batal
                                         </button>
-                                        <button @click="$refs.kunciForm.submit()" type="button" class="px-5 py-2.5 rounded-xl bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 shadow-sm transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:-translate-y-0.5">
+                                        <button @click="$refs.kunciForm.submit()" type="button" class="px-5 py-2.5 rounded-xl bg-primary-500 text-sm font-bold text-white hover:bg-primary-500 shadow-sm transition-all focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 hover:-translate-y-0.5">
                                             Yakin, Simpan & Kunci
                                         </button>
                                     </div>
@@ -652,9 +655,9 @@
         x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
         <div class="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4 border border-slate-100 transform transition-all">
             <div class="relative w-20 h-20 mb-6 flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full border-4 border-indigo-100"></div>
-                <div class="absolute inset-0 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"></div>
-                <svg class="w-8 h-8 text-indigo-600 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="absolute inset-0 rounded-full border-4 border-primary-100"></div>
+                <div class="absolute inset-0 rounded-full border-4 border-primary-500 border-t-transparent animate-spin"></div>
+                <svg class="w-8 h-8 text-primary-500 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
             </div>

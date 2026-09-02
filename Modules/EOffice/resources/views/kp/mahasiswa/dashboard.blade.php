@@ -15,9 +15,9 @@
         }
 
         :root {
-            --primary-50: #eef2ff;
-            --primary-100: #e0e7ff;
-            --primary-500: #4f46e5;
+            --primary-50: #EBEDF6;
+            --primary-100: #D0D6E9;
+            --primary-500: #2A3A7C;
             --grey-0: #fff;
             --grey-50: #f9fafb;
             --grey-100: #f3f4f6;
@@ -118,21 +118,21 @@
                                         {{-- Left half-line: from left edge → center of this circle --}}
                                         @if($i > 0)
                                             <div class="absolute h-0.5 z-0"
-                                                style="top:20px; left:0; right:50%; background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-200)' }};">
+                                                style="top:20px; left:0; right:50%; background:{{ $i <= $cur ? '#2A3A7C' : 'var(--grey-200)' }};">
                                             </div>
                                         @endif
 
                                         {{-- Right half-line: from center of this circle → right edge --}}
                                         @if($i < count($steps) - 1)
                                             <div class="absolute h-0.5 z-0"
-                                                style="top:20px; left:50%; right:0; background:{{ $i < $cur ? '#4f46e5' : 'var(--grey-200)' }};">
+                                                style="top:20px; left:50%; right:0; background:{{ $i < $cur ? '#2A3A7C' : 'var(--grey-200)' }};">
                                             </div>
                                         @endif
 
                                         {{-- Circle --}}
                                         <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 relative transition-all duration-300 flex-shrink-0"
-                                            style="background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-100)' }};
-                                            {{ $i === $cur ? 'box-shadow:0 0 0 4px #e0e7ff;' : '' }}">
+                                            style="background:{{ $i <= $cur ? '#2A3A7C' : 'var(--grey-100)' }};
+                                            {{ $i === $cur ? 'box-shadow:0 0 0 4px #D0D6E9;' : '' }}">
                                             @if($i < $cur)
                                                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
@@ -287,7 +287,7 @@
                                                                     style="background:rgba(15,23,42,0.35);" @click="fullscreen = true">
                                                                     <button
                                                                         class="bg-white text-slate-900 px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2">
-                                                                        <svg class="w-4 h-4 text-indigo-600" fill="none"
+                                                                        <svg class="w-4 h-4 text-primary-500" fill="none"
                                                                             stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                                                 stroke-width="2"
@@ -314,7 +314,7 @@
                                                                         </div>
                                                                         <div class="flex items-center gap-2">
                                                                             <a href="{{ $fileUrl }}" target="_blank"
-                                                                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
+                                                                                class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-primary-500 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors">
                                                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                                                     viewBox="0 0 24 24">
                                                                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -440,7 +440,7 @@
                                         <div class="flex items-start justify-between gap-3">
                                             <div class="flex items-start gap-3">
                                                 <div
-                                                    class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                                    class="w-8 h-8 rounded-lg bg-primary-50 text-primary-500 flex items-center justify-center flex-shrink-0">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -461,7 +461,7 @@
                                                 </div>
                                             </div>
                                             <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $template->id) }}"
-                                                class="inline-flex items-center justify-center p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-all shadow-sm">
+                                                class="inline-flex items-center justify-center p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-primary-500 hover:bg-primary-50 hover:border-primary-200 transition-all shadow-sm">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />

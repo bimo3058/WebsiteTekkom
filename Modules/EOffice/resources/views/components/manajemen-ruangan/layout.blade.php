@@ -358,7 +358,7 @@
 
         .mp-stat-icon.violet {
             background: linear-gradient(135deg, #f3f0ff, #e4dffd);
-            color: #6B39F4;
+            color: #2A3A7C;
         }
 
         .mp-stat-icon.sky {
@@ -487,7 +487,7 @@
 
         .mp-av.violet {
             background: #E4DFFD;
-            color: #6B39F4;
+            color: #2A3A7C;
         }
     </style>
 </head>

@@ -190,7 +190,7 @@
                                         class="absolute right-10 top-10 mt-0 w-32 bg-white rounded-lg shadow-lg border border-slate-100 overflow-hidden z-50 text-left">
 
                                         <a href="{{ route('eoffice.kp.koordinator.periode.edit', $periode->id) }}"
-                                            class="block w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                            class="block w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary-500 transition-colors">
                                             Edit
                                         </a>
                                         <form action="{{ route('eoffice.kp.koordinator.periode.destroy', $periode->id) }}"

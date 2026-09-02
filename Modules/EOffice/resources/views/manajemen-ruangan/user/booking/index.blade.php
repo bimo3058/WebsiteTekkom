@@ -17,10 +17,10 @@
                     </svg>
                     <input type="text" id="searchInput" onkeyup="filterRooms()"
                         placeholder="Cari nama ruangan..."
-                        class="pl-9 pr-4 py-2 text-[13px] w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        class="pl-9 pr-4 py-2 text-[13px] w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all">
                 </div>
                 <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-[13px] font-semibold border border-indigo-200 hover:bg-indigo-100 transition-colors">
+                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-primary-50 text-primary-500 text-[13px] font-semibold border border-primary-200 hover:bg-primary-100 transition-colors">
                     Lihat Kalender
                 </a>
             </div>
@@ -59,20 +59,20 @@
 
                     {{-- Room Image Placeholder / Actual Photo --}}
                     <a href="{{ $detailUrl }}"
-                        class="block w-full aspect-video relative border-b border-gray-100 overflow-hidden group bg-gradient-to-br from-indigo-50 to-indigo-100">
+                        class="block w-full aspect-video relative border-b border-gray-100 overflow-hidden group bg-gradient-to-br from-primary-50 to-primary-100">
                         @if($room->fotos->count() > 0)
                             <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($room->fotos->first()->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @else
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
-                                <svg class="w-12 h-12 text-indigo-300 mb-1 group-hover:text-indigo-400 transition-colors"
+                                <svg class="w-12 h-12 text-primary-300 mb-1 group-hover:text-primary-400 transition-colors"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M3 3v18h18M8 17V9m4 8V5m4 12v-4" />
                                 </svg>
-                                <span class="text-[11px] font-semibold text-indigo-400 tracking-wide uppercase">Foto segera hadir</span>
+                                <span class="text-[11px] font-semibold text-primary-400 tracking-wide uppercase">Foto segera hadir</span>
                             </div>
                         @endif
-                        <span class="absolute top-3 right-3 bg-white text-[11px] font-bold text-indigo-700 border border-indigo-200 rounded-full px-2.5 py-0.5 shadow-sm">
+                        <span class="absolute top-3 right-3 bg-white text-[11px] font-bold text-primary-500 border border-primary-200 rounded-full px-2.5 py-0.5 shadow-sm">
                             👥 {{ $room->kapasitas }} orang
                         </span>
                     </a>
@@ -80,7 +80,7 @@
                     {{-- Room Info --}}
                     <div class="p-4 flex-1 flex flex-col">
                         <div class="mb-3">
-                            <a href="{{ $detailUrl }}" class="hover:text-indigo-700 transition-colors">
+                            <a href="{{ $detailUrl }}" class="hover:text-primary-500 transition-colors">
                                 <h3 class="font-bold text-gray-900 text-[15px] leading-tight">{{ $room->nama }}</h3>
                             </a>
                             <p class="text-[12px] text-gray-500 mt-0.5">
@@ -96,7 +96,7 @@
                             <div class="flex flex-wrap gap-1.5 mb-4">
                                 @foreach (array_slice($fasilitas, 0, 4) as $fas)
                                     <span
-                                        class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                        class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-primary-50 text-primary-500 border border-primary-100">
                                         {{ $facilityIcons[$fas] ?? '✅' }} {{ $fas }}
                                     </span>
                                 @endforeach
@@ -123,7 +123,7 @@
                                 </a>
                                 {{-- Schedule Button --}}
                                 <a href="{{ $kalenderUrl }}"
-                                    class="inline-flex items-center px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-bold transition-colors shadow-sm whitespace-nowrap">
+                                    class="inline-flex items-center px-4 py-1.5 rounded-lg bg-primary-500 hover:bg-primary-500 text-white text-[12px] font-bold transition-colors shadow-sm whitespace-nowrap">
                                     Jadwal
                                 </a>
                             </div>
@@ -138,8 +138,8 @@
         </div>
     @else
         <div class="text-center py-20 px-6 border border-gray-200 rounded-2xl bg-white mt-4">
-            <div class="w-16 h-16 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-16 h-16 rounded-full bg-primary-50 flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-primary-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                         d="M3 3v18h18M8 17V9m4 8V5m4 12v-4" />
                 </svg>

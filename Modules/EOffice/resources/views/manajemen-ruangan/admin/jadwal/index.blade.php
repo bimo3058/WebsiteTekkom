@@ -124,9 +124,9 @@
                                 <input type="hidden" name="kategori" value="Jadwal Akademik (Kuliah)">
                                 <input type="hidden" name="keterangan" value="Matkul Akademik">
 
-                                <div class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-4">
+                                <div class="p-4 bg-primary-50/50 border border-primary-100 rounded-xl space-y-4">
                                     <h4
-                                        class="text-[13px] font-bold text-indigo-900 border-b border-indigo-100 pb-2 mb-3">
+                                        class="text-[13px] font-bold text-primary-500 border-b border-primary-100 pb-2 mb-3">
                                         Informasi Mata Kuliah</h4>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
@@ -272,8 +272,8 @@
                             <div class="mb-5" x-data="{ fileName: '' }">
                                 <label class="block mb-2 text-sm font-semibold text-gray-700">Pilih File Ekspor
                                     SIAP (*.xlsx, *.csv)</label>
-                                <div :class="fileName ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-900'"
-                                    class="relative block w-full border-2 border-dashed rounded-lg p-5 text-center hover:border-gray-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-colors">
+                                <div :class="fileName ? 'border-primary-400 bg-primary-50 text-primary-500' : 'border-gray-300 text-gray-900'"
+                                    class="relative block w-full border-2 border-dashed rounded-lg p-5 text-center hover:border-gray-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-colors">
                                     <input type="file" name="file_excel"
                                         accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                                         required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -347,7 +347,7 @@
                                 </div>
                                 <input type="text" name="search" value="{{ request('search') }}" onblur="this.form.submit()"
                                     placeholder="Search"
-                                    class="w-full sm:w-[240px] pl-10 pr-3 py-[9px] text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all placeholder-gray-400">
+                                    class="w-full sm:w-[240px] pl-10 pr-3 py-[9px] text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all placeholder-gray-400">
                             </div>
 
                             <!-- Filter Button -->
@@ -380,7 +380,7 @@
                                                 class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
                                                 Hari</label>
                                             <select name="hari"
-                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors">
+                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors">
                                                 <option value="">Semua Hari</option>
                                                 <option value="1" {{ request('hari') == '1' ? 'selected' : '' }}>Senin
                                                 </option>
@@ -400,7 +400,7 @@
                                                 class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
                                                 Ruangan</label>
                                             <select name="ruangan_id"
-                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors">
+                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors">
                                                 <option value="">Semua Ruangan</option>
                                                 @foreach($ruangans as $r)
                                                     <option value="{{ $r->id }}" {{ request('ruangan_id') == $r->id ? 'selected' : '' }}>
@@ -411,7 +411,7 @@
                                         </div>
                                         <div class="flex gap-2 pt-3 border-t border-gray-100 mt-2">
                                             <button type="submit"
-                                                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Terapkan</button>
+                                                class="flex-1 bg-primary-500 hover:bg-primary-500 text-white font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Terapkan</button>
                                             @if(request('search') || request('hari') || request('ruangan_id'))
                                                 <a href="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}"
                                                     class="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Reset</a>
@@ -450,7 +450,7 @@
                                         </div>
                                         <div>
                                             <select name="sort" onchange="this.form.submit()"
-                                                class="w-full px-3 py-3 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors cursor-pointer">
+                                                class="w-full px-3 py-3 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors cursor-pointer">
                                                 <option value="waktu" {{ request('sort', 'waktu') === 'waktu' ? 'selected' : '' }}>Hari & Waktu Terawal</option>
                                                 <option value="matkul_asc" {{ request('sort') === 'matkul_asc' ? 'selected' : '' }}>Mata Kuliah (A-Z)</option>
                                                 <option value="matkul_desc" {{ request('sort') === 'matkul_desc' ? 'selected' : '' }}>Mata Kuliah (Z-A)</option>
@@ -503,7 +503,7 @@
                                     </td>
                                     <td style="text-align: center;">
                                         <div
-                                            style="font-size: 13px; font-weight: 700; color:#3730A3; display: inline-block; padding: 2px 8px; background: #EEF2FF; border-radius: 6px; border: 1px solid #C7D2FE;">
+                                            style="font-size: 13px; font-weight: 700; color:#3730A3; display: inline-block; padding: 2px 8px; background: #EBEDF6; border-radius: 6px; border: 1px solid #C7D2FE;">
                                             {{ $j->kelas ?: '-' }}
                                         </div>
                                     </td>
@@ -644,9 +644,9 @@
                                                                 value="{{ $j->keterangan ?: 'Matkul Akademik' }}">
 
                                                             <div
-                                                                class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-4">
+                                                                class="p-4 bg-primary-50/50 border border-primary-100 rounded-xl space-y-4">
                                                                 <h4
-                                                                    class="text-[13px] font-bold text-indigo-900 border-b border-indigo-100 pb-2 mb-3">
+                                                                    class="text-[13px] font-bold text-primary-500 border-b border-primary-100 pb-2 mb-3">
                                                                     Informasi Mata Kuliah</h4>
                                                                 <div class="grid grid-cols-2 gap-4">
                                                                     <div>
