@@ -19,12 +19,24 @@ class DashboardController extends Controller
             $dipakaiHariIni = Peminjaman::where('status', 'disetujui')
                 ->whereDate('tanggal_pinjam', \Carbon\Carbon::today())
                 ->count();
-            $recentRuangan = Ruangan::orderBy('created_at', 'desc')->take(5)->get();
+            $upcomingActivities = Peminjaman::with(['ruangan', 'user'])
+                ->whereIn('status', ['disetujui', 'menunggu'])
+                ->where(function ($q) {
+                    $q->whereDate('tanggal_pinjam', '>', \Carbon\Carbon::today())
+                        ->orWhere(function ($subq) {
+                            $subq->whereDate('tanggal_pinjam', \Carbon\Carbon::today())
+                                ->whereTime('jam_selesai', '>', \Carbon\Carbon::now()->format('H:i:s'));
+                        });
+                })
+                ->orderBy('tanggal_pinjam', 'asc')
+                ->orderBy('jam_mulai', 'asc')
+                ->take(7)
+                ->get();
 
             Peminjaman::autoExpirePending(); // Ensure garbage collection triggers metrics updates
             $pendingApproval = Peminjaman::where('status', 'menunggu')->count();
 
-            return view('eoffice::manajemen-ruangan.admin.dashboard', compact('totalRuangan', 'dipakaiHariIni', 'recentRuangan', 'pendingApproval'));
+            return view('eoffice::manajemen-ruangan.admin.dashboard', compact('totalRuangan', 'dipakaiHariIni', 'upcomingActivities', 'pendingApproval'));
         }
 
         // Return regular user dashboard

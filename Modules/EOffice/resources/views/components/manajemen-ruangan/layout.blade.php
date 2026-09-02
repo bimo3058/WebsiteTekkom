@@ -532,7 +532,7 @@
         $sb_adm_evt = $isSuperadmin || filter_var($rawSettings['sb_admin_event'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_set = $isSuperadmin || filter_var($rawSettings['sb_admin_persetujuan'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_ars = $isSuperadmin || filter_var($rawSettings['sb_admin_arsip'] ?? true, FILTER_VALIDATE_BOOLEAN);
-        $sb_adm_usu = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenuser'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_fas = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenfasilitas'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_rua = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenruangan'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $sb_adm_pgt = $isSuperadmin || filter_var($rawSettings['sb_admin_pengaturan'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
@@ -560,10 +560,12 @@
                 $admGroups['Sistem Ruangan'] = $admSisRuangan;
 
             $admMasterData = [];
-            if ($sb_adm_usu)
-                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.user.index'), 'label' => 'Manajemen User', 'match' => 'admin.user', 'icon' => $iUser];
-            if ($sb_adm_rua)
+            if ($sb_adm_rua) {
                 $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.ruangan.index'), 'label' => 'Manajemen Ruangan', 'match' => 'admin.ruangan', 'icon' => $iBook];
+            }
+            if ($sb_adm_fas) {
+                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.fasilitas.index'), 'label' => 'Manajemen Fasilitas', 'match' => 'admin.fasilitas', 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'];
+            }
             $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.hak-akses.index'), 'label' => 'Hak Akses Menu', 'match' => 'admin.hak-akses', 'icon' => $iKey];
 
             if (count($admMasterData) > 0)
@@ -632,14 +634,9 @@
 
             <div class="relative px-[10px] pt-[18px] pb-[10px]">
                 <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-[10px]">
-                    <div
-                        class="flex items-center justify-center w-[34px] h-[34px] rounded-[9px] flex-shrink-0 bg-[#F3F4F6] shadow-sm overflow-hidden border border-[#E5E7EB]">
-                        {{-- Ruangan Icon --}}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"
-                            stroke-linecap="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="9" y1="3" x2="9" y2="21"></line>
-                        </svg>
+                    <div class="flex items-center justify-center w-[34px] h-[34px] flex-shrink-0">
+                        <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP"
+                            class="w-full h-full object-contain drop-shadow-sm">
                     </div>
                     <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200"
                         :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">

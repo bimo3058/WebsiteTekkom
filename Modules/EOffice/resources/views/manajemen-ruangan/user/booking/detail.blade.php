@@ -2,7 +2,7 @@
 
     {{-- =================== BREADCRUMB =================== --}}
     <div class="flex items-center gap-2 text-[12px] text-gray-500 mb-4">
-        <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="hover:text-primary-500 font-medium transition-colors">
+        <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="hover:text-indigo-600 font-medium transition-colors">
             Katalog Ruangan
         </a>
         <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +18,7 @@
 
             {{-- Photo Area / Actual Photo --}}
             <div class="mp-card overflow-hidden">
-                <div class="aspect-video w-full relative flex items-center justify-center bg-gradient-to-br from-primary-100 via-primary-50 to-primary-50">
+                <div class="aspect-video w-full relative flex items-center justify-center bg-gradient-to-br from-indigo-100 via-indigo-50 to-blue-50">
                     <style>
                         .gallery-slider::-webkit-scrollbar { display: none; }
                         .gallery-slider { -ms-overflow-style: none; scrollbar-width: none; }
@@ -44,11 +44,11 @@
                         @endif
                     @else
                         <div class="text-center">
-                            <svg class="w-16 h-16 text-primary-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-16 h-16 text-indigo-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V9m4 8V5m4 12v-4" />
                             </svg>
-                            <p class="text-sm font-semibold text-primary-400 uppercase tracking-wider">Foto Ruangan Segera Hadir</p>
-                            <p class="text-[11px] text-primary-300 mt-1">Foto akan ditambahkan oleh administrator</p>
+                            <p class="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Foto Ruangan Segera Hadir</p>
+                            <p class="text-[11px] text-indigo-300 mt-1">Foto akan ditambahkan oleh administrator</p>
                         </div>
                     @endif
                 </div>
@@ -57,14 +57,14 @@
                         <div>
                             <h1 class="text-2xl font-bold text-gray-900">{{ $room->nama }}</h1>
                             <p class="text-[13px] text-gray-500 mt-1">
-                                🏢 {{ $room->lokasi ?? 'Gedung Utama' }}
+                                {{ $room->lokasi ?? 'Gedung Utama' }}
                                 @if ($room->lantai)
                                     &nbsp;·&nbsp; Lantai {{ $room->lantai }}
                                 @endif
                             </p>
                         </div>
-                        <span class="flex-shrink-0 bg-primary-50 text-primary-500 border border-primary-200 text-sm font-bold px-3 py-1.5 rounded-full">
-                            👥 {{ $room->kapasitas }} orang
+                        <span class="flex-shrink-0 bg-indigo-50 text-indigo-700 border border-indigo-200 text-sm font-bold px-3 py-1.5 rounded-full">
+                            {{ $room->kapasitas }} orang
                         </span>
                     </div>
                 </div>
@@ -78,17 +78,14 @@
                 <div class="mp-card-body p-5">
                     <div class="grid grid-cols-3 divide-x divide-gray-100">
                         <div class="pr-6 text-center">
-                            <p class="text-3xl mb-1.5">🏢</p>
                             <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Gedung</p>
                             <p class="text-[14px] font-bold text-gray-800">{{ $room->lokasi ?? 'Gedung Utama' }}</p>
                         </div>
                         <div class="px-6 text-center">
-                            <p class="text-3xl mb-1.5">📐</p>
                             <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Lantai</p>
                             <p class="text-[14px] font-bold text-gray-800">{{ $room->lantai ?? '–' }}</p>
                         </div>
                         <div class="pl-6 text-center">
-                            <p class="text-3xl mb-1.5">👥</p>
                             <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Kapasitas</p>
                             <p class="text-[14px] font-bold text-gray-800">{{ $room->kapasitas }} orang</p>
                         </div>
@@ -104,23 +101,22 @@
                 <div class="mp-card-body p-5">
                     @php
                         $facilityIcons = [
-                            'Proyektor' => ['icon' => '📽️', 'color' => 'bg-primary-50 text-primary-500 border-primary-100'],
-                            'AC' => ['icon' => '❄️', 'color' => 'bg-primary-50 text-primary-500 border-primary-100'],
-                            'Whiteboard' => ['icon' => '🖊️', 'color' => 'bg-gray-50 text-gray-700 border-gray-200'],
-                            'WiFi' => ['icon' => '📶', 'color' => 'bg-primary-50 text-primary-500 border-primary-100'],
-                            'Sound System' => ['icon' => '🔊', 'color' => 'bg-amber-50 text-amber-700 border-amber-100'],
-                            'CCTV' => ['icon' => '📷', 'color' => 'bg-red-50 text-red-700 border-red-100'],
-                            'Meja' => ['icon' => '🪑', 'color' => 'bg-orange-50 text-orange-700 border-orange-100'],
-                            'Komputer' => ['icon' => '💻', 'color' => 'bg-emerald-50 text-emerald-700 border-emerald-100'],
+                            'Proyektor' => ['color' => 'bg-purple-50 text-purple-700 border-purple-100'],
+                            'AC' => ['color' => 'bg-blue-50 text-blue-700 border-blue-100'],
+                            'Whiteboard' => ['color' => 'bg-gray-50 text-gray-700 border-gray-200'],
+                            'WiFi' => ['color' => 'bg-indigo-50 text-indigo-700 border-indigo-100'],
+                            'Sound System' => ['color' => 'bg-amber-50 text-amber-700 border-amber-100'],
+                            'CCTV' => ['color' => 'bg-red-50 text-red-700 border-red-100'],
+                            'Meja' => ['color' => 'bg-orange-50 text-orange-700 border-orange-100'],
+                            'Komputer' => ['color' => 'bg-emerald-50 text-emerald-700 border-emerald-100'],
                         ];
                     @endphp
 
                     @if (count($fasilitas) > 0)
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             @foreach ($fasilitas as $fas)
-                                @php $fInfo = $facilityIcons[$fas] ?? ['icon' => '✅', 'color' => 'bg-gray-50 text-gray-700 border-gray-200']; @endphp
+                                @php $fInfo = $facilityIcons[$fas] ?? ['color' => 'bg-gray-50 text-gray-700 border-gray-200']; @endphp
                                 <div class="flex items-center gap-2.5 p-3 rounded-xl border {{ $fInfo['color'] }}">
-                                    <span class="text-xl">{{ $fInfo['icon'] }}</span>
                                     <span class="text-[13px] font-semibold">{{ $fas }}</span>
                                 </div>
                             @endforeach
@@ -137,7 +133,7 @@
         <div class="space-y-5">
 
             {{-- CTA Card --}}
-            <div class="mp-card bg-gradient-to-br from-primary-500 to-primary-500 text-white overflow-hidden">
+            <div class="mp-card bg-gradient-to-br from-[#0B266E] to-[#1a3c94] text-white overflow-hidden">
                 <div class="p-5">
                     <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,10 +141,10 @@
                         </svg>
                     </div>
                     <h3 class="text-[15px] font-bold mb-1">Ingin memakai ruangan ini?</h3>
-                    <p class="text-[12px] text-primary-200 mb-4 leading-relaxed">Cek kalender jadwal mingguan untuk slot kosong yang tersedia lalu ajukan booking langsung!</p>
+                    <p class="text-[12px] text-indigo-200 mb-4 leading-relaxed">Cek kalender jadwal mingguan untuk slot kosong yang tersedia lalu ajukan booking langsung!</p>
                     <a href="{{ $kalenderUrl }}"
-                        class="block w-full py-2.5 text-center text-[13px] font-bold bg-white text-primary-500 rounded-lg hover:bg-primary-50 transition-colors shadow-sm">
-                        📅 Lihat Kalender & Booking
+                        class="block w-full py-2.5 text-center text-[13px] font-bold bg-white text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
+                        Lihat Kalender & Booking
                     </a>
                 </div>
             </div>
@@ -191,8 +187,6 @@
                             @endforeach
                         </div>
                     @else
-                        <div class="py-8 text-center px-4">
-                            <p class="text-2xl mb-2">🟢</p>
                             <p class="text-[13px] font-bold text-gray-700 mb-0.5">Kosong</p>
                             <p class="text-[11px] text-gray-400">Tidak ada booking dalam 7 hari ke depan!</p>
                         </div>

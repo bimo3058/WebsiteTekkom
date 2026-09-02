@@ -34,7 +34,7 @@
                         </svg>
                     </div>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all placeholder-gray-400"
+                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
                         placeholder="Search" x-on:input.debounce.700ms="$el.form.submit()">
                 </div>
 
@@ -49,7 +49,7 @@
                         </svg>
                         Filter
                         @if(request()->hasAny(['status', 'ruangan_id', 'start_date', 'end_date']) && array_filter(request()->only(['status', 'ruangan_id', 'start_date', 'end_date'])))
-                            <span class="w-2 h-2 rounded-full bg-primary-500 absolute -top-0.5 -right-0.5"></span>
+                            <span class="w-2 h-2 rounded-full bg-indigo-500 absolute -top-0.5 -right-0.5"></span>
                         @endif
                     </button>
 
@@ -62,14 +62,14 @@
                                     Waktu</label>
                                 <div class="flex gap-2">
                                     <input type="date" name="start_date" value="{{ request('start_date') }}"
-                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-primary-500">
+                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-indigo-500">
                                     <input type="date" name="end_date" value="{{ request('end_date') }}"
-                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-primary-500">
+                                        class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-indigo-500">
                                 </div>
                             </div>
                             <div>
                                 <label
-                                    class="block text-xs font-semibold text-gray-700 mb-1.5 focus:border-primary-500 relative z-10 w-full bg-white">Ruangan</label>
+                                    class="block text-xs font-semibold text-gray-700 mb-1.5 focus:border-indigo-500 relative z-10 w-full bg-white">Ruangan</label>
                                 <select name="ruangan_id"
                                     class="w-full text-xs border border-gray-200 rounded block p-2 outline-none">
                                     <option value="">Semua Ruangan</option>
@@ -82,7 +82,7 @@
                                 <label
                                     class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Status</label>
                                 <select name="status"
-                                    class="w-full text-xs border border-gray-200 rounded block p-2 outline-none focus:border-primary-500">
+                                    class="w-full text-xs border border-gray-200 rounded block p-2 outline-none focus:border-indigo-500">
                                     <option value="">Semua Status</option>
                                     <option value="disetujui" {{ request('status') === 'disetujui' ? 'selected' : '' }}>
                                         Disetujui</option>
@@ -96,7 +96,7 @@
                                 <a href="{{ route('eoffice.peminjaman.admin.riwayat.index') }}"
                                     class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-transparent">Reset</a>
                                 <button type="submit"
-                                    class="px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md hover:bg-black">Terapkan
+                                    class="px-3 py-1.5 text-xs font-medium text-white bg-[#060E2A] rounded-md hover:bg-[#030715] transition-colors">Terapkan
                                     Filter</button>
                             </div>
                         </div>
@@ -106,14 +106,14 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto bg-[#F9FAFB]/50">
+        <div class="overflow-x-auto bg-white">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="border-b border-gray-100 bg-[#F9FAFB]/80">
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Pengaju</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Ruangan & Tujuan</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Waktu Acara</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Status</th>
+                    <tr class="border-y border-slate-200 bg-white">
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Pengaju</th>
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Ruangan & Tujuan</th>
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Waktu Acara</th>
+                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Status</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
@@ -133,7 +133,7 @@
                                 @if($pinjam->berkas_pendukung)
                                     <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
                                         target="_blank"
-                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-primary-500 hover:text-primary-500 mt-1">
+                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-[#0065ff] hover:text-[#0052cc] transition-colors mt-1">
                                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
                                                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
@@ -155,13 +155,15 @@
                                 @php
                                     $style = '';
                                     if (strtolower($pinjam->status) === 'disetujui')
-                                        $style = 'bg-[#ECF9F7] text-[#267666]';
+                                        $style = 'bg-emerald-100 text-emerald-800';
                                     elseif (strtolower($pinjam->status) === 'ditolak')
-                                        $style = 'bg-[#FEF2F2] text-[#B91C1C]';
+                                        $style = 'bg-red-100 text-red-800';
                                     elseif (strtolower($pinjam->status) === 'menunggu')
-                                        $style = 'bg-[#FFF9ED] text-[#A77B2E]';
-                                    else
-                                        $style = 'bg-[#ECEFF3] text-[#0D0D12]';
+                                        $style = 'bg-amber-100 text-amber-800';
+                                    elseif (strtolower($pinjam->status) === 'selesai')
+                                        $style = 'bg-purple-100 text-purple-800';
+                                    else // dibatalkan / draft / dll
+                                        $style = 'bg-gray-100 text-gray-800';
                                 @endphp
                                 <span
                                     class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-full {{ $style }} text-[12px] font-medium tracking-wide">
@@ -179,26 +181,75 @@
             </table>
         </div>
 
-        @if($peminjamans->hasPages())
-            <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-                <div class="flex items-center gap-2 text-[13px] text-gray-600">
-                    <span>Per page</span>
-                    <select class="border border-gray-200 rounded px-1.5 py-0.5 outline-none font-medium text-gray-800">
-                        <option>15</option>
+        <div
+            class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+            <div class="flex items-center gap-4">
+                <div
+                    class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+                    <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per
+                        halaman</span>
+                    <select aria-label="Per halaman" onchange="window.location.href=this.value"
+                        class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat"
+                        style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     </select>
-                    <span class="ml-2">Showing {{ $peminjamans->firstItem() }} to {{ $peminjamans->lastItem() }} of
-                        {{ $peminjamans->total() }} results</span>
+                </div>
+                <p class="text-xs font-medium text-slate-600">
+                    Menampilkan <span class="font-bold text-slate-800">{{ $peminjamans->firstItem() ?? 0 }}</span>
+                    sampai <span class="font-bold text-slate-800">{{ $peminjamans->lastItem() ?? 0 }}</span>
+                    dari <span class="font-bold text-slate-800">{{ $peminjamans->total() }}</span> entri
+                </p>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                @if ($peminjamans->onFirstPage())
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                @else
+                    <a href="{{ $peminjamans->previousPageUrl() }}"
+                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                @endif
+
+                <div
+                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+                    @foreach ($peminjamans->getUrlRange(max(1, $peminjamans->currentPage() - 2), min($peminjamans->lastPage(), $peminjamans->currentPage() + 2)) as $page => $url)
+                        @if ($page == $peminjamans->currentPage())
+                            <span
+                                class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}"
+                                class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
+                        @endif
+                    @endforeach
                 </div>
 
-                <div class="flex items-center">
-                    {{ $peminjamans->links('pagination::tailwind') }}
-                </div>
+                @if ($peminjamans->hasMorePages())
+                    <a href="{{ $peminjamans->nextPageUrl() }}"
+                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                @else
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                @endif
             </div>
-        @else
-            <div class="flex items-center gap-2 text-[13px] text-gray-600 px-5 py-3 border-t border-gray-100">
-                <span>Showing {{ $peminjamans->count() }} results</span>
-            </div>
-        @endif
+        </div>
     </div>
 
     <script>

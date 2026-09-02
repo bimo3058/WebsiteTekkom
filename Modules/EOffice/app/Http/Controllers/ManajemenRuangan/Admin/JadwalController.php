@@ -75,7 +75,7 @@ class JadwalController extends Controller
             $query->where('tipe_jadwal', $tipe);
         }
 
-        $jadwals = $query->paginate(15)->withQueryString();
+        $jadwals = $query->paginate((int) $request->query('per_page', 10))->withQueryString();
         $ruangans = Ruangan::where('is_active', true)->get();
 
         $bladeFile = $isAkademik ? 'index' : 'maintenance';
