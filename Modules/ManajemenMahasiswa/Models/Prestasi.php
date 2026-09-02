@@ -30,6 +30,9 @@ class Prestasi extends Model
         'reward_penyelenggara',
         'reward_capaian',
         'reward_is_invention',
+        // Dibekukan saat klaim diajukan — lihat SK_BERLAKU
+        'reward_kuota_grup',
+        'reward_sk_ref',
         'reward_jml_mk_max',
         'reward_sks_max',
         'reward_mk_diajukan',
@@ -102,6 +105,21 @@ class Prestasi extends Model
     // Reward — Penyelenggara & Capaian (dasar SK FT Undip No. 774/2025)
     // -------------------------------------------------------------------------
 
+    /**
+     * SK yang berlaku untuk pengajuan reward BARU.
+     *
+     * Nilainya dicap ke tiap klaim saat diajukan, bersama kelompok kuotanya,
+     * supaya keputusan lama tidak pernah dihitung ulang dengan aturan baru.
+     *
+     * Saat SK berganti, developer cukup mengubah konstanta ini dan menambahkan
+     * aturan barunya di hitungJatahReward()/tentukanKuotaGrup(). Tiga hal yang
+     * TIDAK boleh dilakukan, karena akan merusak klaim lama:
+     *   1. menghapus kategori penyelenggara/capaian lama — baris lama menunjuk ke sana;
+     *   2. mengganti nama kode kategori yang sudah pernah tersimpan;
+     *   3. mengisi ulang reward_sk_ref / reward_kuota_grup pada klaim yang sudah ada.
+     */
+    const SK_BERLAKU = 'SK FT Undip No. 774/2025';
+
     const PENYELENGGARA_BELMAWA = 'belmawa_puspresnas'; // Ditjen Belmawa / Puspresnas (poin 1)
     const PENYELENGGARA_LAINNYA = 'lainnya';            // Selain Belmawa/Puspresnas (poin 2)
 
@@ -159,6 +177,14 @@ class Prestasi extends Model
     const KUOTA_MAKS = [
         self::KUOTA_UMUM      => 2,
         self::KUOTA_INVENTION => 1,
+    ];
+
+    // Sebutan grup kuota untuk mahasiswa & admin. Satu tempat, karena label ini
+    // muncul di pesan guard, rambu kuota modal, dan banner kuota mahasiswa —
+    // ketiganya harus menyebut grup yang sama dengan nama yang sama.
+    const KUOTA_LABELS = [
+        self::KUOTA_UMUM      => 'umum',
+        self::KUOTA_INVENTION => 'invention/expo/fair',
     ];
 
     // -------------------------------------------------------------------------
@@ -456,9 +482,22 @@ class Prestasi extends Model
             : self::KUOTA_UMUM;
     }
 
-    /** Grup kuota untuk instance ini. */
+    /**
+     * Grup kuota untuk instance ini.
+     *
+     * Memakai kelompok yang dibekukan saat pengajuan bila ada. Menghitung ulang
+     * hanya dilakukan untuk baris yang belum sempat dicap — kalau tidak, keputusan
+     * lama akan bergeser sendiri begitu aturan pengelompokan di SK berubah.
+     */
     public function rewardKuotaGrup(): string
     {
-        return self::tentukanKuotaGrup($this->reward_penyelenggara, (bool) $this->reward_is_invention);
+        return $this->reward_kuota_grup
+            ?: self::tentukanKuotaGrup($this->reward_penyelenggara, (bool) $this->reward_is_invention);
+    }
+
+    /** Klaim ini diputus di bawah SK yang kini sudah diganti. */
+    public function rewardSkSudahDiganti(): bool
+    {
+        return $this->reward_sk_ref !== null && $this->reward_sk_ref !== self::SK_BERLAKU;
     }
 }

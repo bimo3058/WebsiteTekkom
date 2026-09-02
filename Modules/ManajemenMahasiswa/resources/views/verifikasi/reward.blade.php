@@ -20,8 +20,8 @@
     .admin-stat-card.pending .stat-num { color: #d97706; }
     .admin-stat-card.approved .stat-icon { background: #ECFDF5; color: #059669; }
     .admin-stat-card.approved .stat-num { color: #059669; }
-    .admin-stat-card.rejected .stat-icon { background: #fef2f2; color: #dc2626; }
-    .admin-stat-card.rejected .stat-num { color: #dc2626; }
+    .admin-stat-card.rejected .stat-icon { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
+    .admin-stat-card.rejected .stat-num { color: var(--c-error, #dc2626); }
     .filter-chip {
         padding: 7px 16px; border-radius: 8px; border: 1px solid #DFE1E7;
         background: #fff; color: #666D80; font-size: .82rem; font-weight: 600;
@@ -60,39 +60,20 @@
     .claim-badge.belum { background: #f3f4f6; color: #666D80; }
     .claim-badge.diajukan { background: #dbeafe; color: #1e40af; }
     .claim-badge.disetujui { background: #ECFDF5; color: #059669; }
-    .claim-badge.ditolak { background: #fef2f2; color: #dc2626; }
+    .claim-badge.ditolak { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
     .reward-mini { font-size: .72rem; color: #666D80; margin-top: 4px; max-width: 220px; line-height: 1.4; }
 
-    .btn-tinjau { background: rgba(11,38,110,0.06); color: #0B266E; border: 1px solid rgba(11,38,110,0.18); padding: 5px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 4px; }
-    .btn-tinjau:hover { background: rgba(11,38,110,0.12); border-color: #3C518B; }
     .btn-batal-reward { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 5px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s; }
     .btn-batal-reward:hover { background: #fee2e2; border-color: #fca5a5; }
-    .btn-detail { background: #f3f4f6; color: #374151; border: 1px solid #DFE1E7; padding: 5px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 4px; }
-    .btn-detail:hover { background: #DFE1E7; color: #0D0D12; }
-    .detail-info-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: .87rem; }
-    .detail-info-grid .dlbl { color: #666D80; font-weight: 500; }
-    .detail-info-grid .dval { color: #0D0D12; font-weight: 600; }
-    .detail-divider { border: none; border-top: 1px solid #f3f4f6; margin: 14px 0; }
     .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .73rem; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
     .detail-status-pill.disetujui { background: #ECFDF5; color: #059669; }
-    .detail-status-pill.ditolak { background: #fef2f2; color: #dc2626; }
+    .detail-status-pill.ditolak { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
     .detail-status-pill.diajukan { background: #dbeafe; color: #1e40af; }
-
-    .tinjau-info { font-size: .87rem; color: #374151; background: #fafafa; border: 1px solid #DFE1E7; border-radius: 10px; padding: 12px 14px; line-height: 1.7; }
-    .tinjau-info .lbl { color: #666D80; }
 
     /* MK pilihan mahasiswa (read-only) */
     .mk-by-mhs { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 2px 8px; margin-left: 4px; }
     .mk-readonly { display: flex; flex-wrap: wrap; gap: 6px; background: #fafafa; border: 1px solid #DFE1E7; border-radius: 10px; padding: 10px 12px; min-height: 42px; }
     .mk-tag { display: inline-flex; align-items: center; font-size: .8rem; font-weight: 600; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 4px 12px; }
-
-    /* Bukti prestasi di modal tinjau */
-    .tr-bukti { display: flex; flex-wrap: wrap; gap: 8px; }
-    .tr-bukti-item { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 10px; border: 1px solid #DFE1E7; overflow: hidden; background: #fafafa; text-decoration: none; font-size: 24px; transition: border-color .15s; }
-    .tr-bukti-item img { width: 100%; height: 100%; object-fit: cover; }
-    .tr-bukti-item:hover { border-color: #0B266E; }
-    .kuota-pill { display: inline-block; margin-top: 10px; font-size: .8rem; font-weight: 600; padding: 5px 12px; border-radius: 50px; background: rgba(11,38,110,0.06); color: #0B266E; }
-    .kuota-pill.penuh { background: #fef2f2; color: #dc2626; }
 
     .empty-state { text-align: center; padding: 50px 20px; color: #666D80; }
     .empty-state-icon { display: flex; justify-content: center; margin-bottom: 12px; color: #C1C7CF; }
@@ -106,7 +87,12 @@
     .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; color: #666D80; text-decoration: none; margin-bottom: 10px; transition: color .15s; }
     .back-link:hover { color: #0B266E; }
 
+    /* Kolom data di sini memuat kuota, mata kuliah, dan penjelasan SK,
+       jadi butuh lebih lega daripada halaman Verifikasi Prestasi */
+    #tinjauRewardModal { --tp-lebar-data: 420px; }
 </style>
+
+@include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 
 <!-- Flash Messages -->
 @if(session('success'))
@@ -183,7 +169,7 @@
     <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
         <div class="search-wrapper w-100 me-0 me-md-2">
             <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
-            <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari nama / NIM mahasiswa..." value="{{ request('search') }}">
+            <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari nama, NIM, prestasi, tingkat..." value="{{ request('search') }}">
         </div>
         <div class="d-flex gap-3">
             <select name="angkatan" class="form-select border-1 filter-select-custom" onchange="document.getElementById('filterForm').submit()">
@@ -214,10 +200,17 @@
                 @foreach($rewardData as $i => $p)
                     @php
                         $grup = $p->rewardKuotaGrup();
-                        $kuotaTerpakai = $kuotaMap[$p->kemahasiswaan_id][$grup] ?? 0;
+                        // Daftar klaim yang memakan kuota grup ini — jumlahnya dihitung
+                        // dari daftar yang sama, jadi angka & rinciannya tidak bisa beda.
+                        $kuotaDipakai = $kuotaMap[$p->kemahasiswaan_id][$grup] ?? [];
+                        $kuotaTerpakai = count($kuotaDipakai);
                         $kuotaMaks = $P::KUOTA_MAKS[$grup];
-                        // Payload detail read-only — dipakai tombol "Detail" (admin & pengawas).
-                        $detailPayload = [
+                        // Satu payload untuk semua baris. Klaim yang masih menunggu membuka
+                        // modal dengan panel keputusan; yang sudah diputus membuka modal yang
+                        // sama dalam mode baca-saja — jadi tidak ada dua tampilan berbeda.
+                        $rewardPayload = [
+                            "id"             => $p->id,
+                            "pending"        => $canReview && $p->reward_status === $P::CLAIM_DIAJUKAN,
                             "nama"           => $p->nama_prestasi,
                             "mahasiswa"      => $p->kemahasiswaan->nama ?? "-",
                             "nim"            => $p->kemahasiswaan->nim ?? "-",
@@ -230,7 +223,11 @@
                             "mk_disetujui"   => $p->reward_mk_disetujui,
                             "kuota_terpakai" => $kuotaTerpakai,
                             "kuota_maks"     => $kuotaMaks,
+                            "kuota_dipakai"  => $kuotaDipakai,
                             "grup"           => $grup,
+                            // Dasar aturan yang dicap saat klaim diajukan
+                            "sk_ref"         => $p->reward_sk_ref,
+                            "sk_lawas"       => $p->rewardSkSudahDiganti(),
                             "status"         => $p->reward_status,
                             "note"           => $p->reward_note,
                             "reviewer"       => $p->reviewedBy->name ?? null,
@@ -258,42 +255,18 @@
                             @endif
                         </td>
                         <td>
-                            @if($canReview && $p->reward_status === $P::CLAIM_DIAJUKAN)
-                                <button type="button" class="btn-tinjau" onclick="openTinjauReward(@js([
-                                    "id"             => $p->id,
-                                    "nama"           => $p->nama_prestasi,
-                                    "mahasiswa"      => $p->kemahasiswaan->nama ?? "-",
-                                    "nim"            => $p->kemahasiswaan->nim ?? "-",
-                                    "penyelenggara"  => $p->reward_penyelenggara_label,
-                                    "capaian"        => $p->reward_capaian_label,
-                                    "invention"      => (bool) $p->reward_is_invention,
-                                    "jml_mk_max"     => $p->reward_jml_mk_max,
-                                    "sks_max"        => $p->reward_sks_max,
-                                    "mk_diajukan"    => $p->reward_mk_diajukan ?? [],
-                                    "kuota_terpakai" => $kuotaTerpakai,
-                                    "kuota_maks"     => $kuotaMaks,
-                                    "grup"           => $grup,
-                                    "bukti"          => $p->buktiFiles->map(fn ($b) => [
-                                        "url"      => $b->public_url,
-                                        "nama"     => $b->nama_file,
-                                        "is_image" => $b->isImage(),
-                                    ])->values()->all(),
-                                ]))">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+                            <div class="d-flex gap-1 flex-wrap">
+                                {{-- Semua baris memakai tombol & modal yang sama; klaim yang sudah
+                                     diputus tinggal membuka modal itu tanpa panel keputusan. --}}
+                                <button type="button" class="btn-tinjau" onclick="openTinjauReward(@js($rewardPayload))">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Tinjau
                                 </button>
-                            @else
-                                <div class="d-flex gap-1 flex-wrap">
-                                    <button type="button" class="btn-detail" onclick="openDetailReward(@js($detailPayload))">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                        Detail
-                                    </button>
-                                    @if($canReview && $p->reward_status === $P::CLAIM_DISETUJUI)
-                                        <button type="button" class="btn-batal-reward"
-                                                onclick="openBatalReward(@js($p->id), @js($p->nama_prestasi), @js($p->kemahasiswaan->nama ?? '-'))">Batalkan</button>
-                                    @endif
-                                </div>
-                            @endif
+                                @if($canReview && $p->reward_status === $P::CLAIM_DISETUJUI)
+                                    <button type="button" class="btn-batal-reward"
+                                            onclick="openBatalReward(@js($p->id), @js($p->nama_prestasi), @js($p->kemahasiswaan->nama ?? '-'))">Batalkan</button>
+                                @endif
+                            </div>
                         </td>
                     </tr>
                 @endforeach
@@ -309,10 +282,12 @@
     </div>
 @endif
 
-<!-- Tinjau Reward Modal -->
-<div class="modal fade" id="tinjauRewardModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
+{{-- Tinjau Reward Modal — kerangka split-pane yang sama dengan halaman Verifikasi
+     Prestasi: bukti di kiri, data & keputusan di kanan. Klaim yang sudah diputus
+     memakai modal ini juga, hanya panel keputusannya diganti ringkasan hasil. --}}
+<div class="modal fade tinjau-modal" id="tinjauRewardModal" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="overflow: hidden;">
             <form id="tinjauRewardForm" method="POST">
                 @csrf @method('PATCH')
                 <div class="modal-header">
@@ -322,35 +297,69 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
-                    <div class="tinjau-info" id="trInfo"></div>
-                    <div id="trKuotaWarn"></div>
-                    <div class="mb-3 mt-3">
-                        <label class="form-label fw-bold mb-1" style="font-size: 13px;">
-                            Mata Kuliah yang Dinaikkan Nilainya
-                            <span class="mk-by-mhs">pilihan mahasiswa</span>
-                        </label>
-                        <div id="trMkView" class="mk-readonly"></div>
-                        <small style="font-size: 11px; color: #666D80;">Diisi oleh mahasiswa &amp; tidak dapat diubah admin. Pastikan MK bernilai min. C (SK 774 poin 3 &amp; 4). Keputusan final tetap di Bidang Akademik Fakultas.</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold mb-1" style="font-size: 13px;">Bukti Prestasi</label>
-                        <div id="trBukti" class="tr-bukti"></div>
-                        <small style="font-size: 11px; color: #666D80;">Klik untuk membuka bukti di tab baru.</small>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label fw-bold mb-1" style="font-size: 13px;">Catatan <span style="font-weight: 400; color: #666D80;">(wajib untuk menolak)</span></label>
-                        <textarea name="reward_note" id="trNote" class="form-control" rows="2" maxlength="300"
-                                  placeholder="Catatan persetujuan / alasan penolakan"
-                                  style="border-radius: 10px; font-size: 14px;"></textarea>
-                    </div>
-                    <div id="trError" style="display: none; font-size: 12px; color: #dc2626; margin-top: 6px;"></div>
-                </div>
-                <div class="modal-footer" style="justify-content: space-between;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Tutup</button>
-                    <div class="d-flex gap-2">
-                        <button type="button" id="trTolakBtn" style="padding: 8px 18px; border-radius: 10px; border: none; background: #dc2626; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">Tolak</button>
-                        <button type="button" id="trSetujuiBtn" style="padding: 8px 18px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">Setujui</button>
+                <div class="modal-body" style="padding: 0;">
+                    <div class="tp-grid">
+                        {{-- Kiri: sertifikat yang jadi dasar konversi nilai --}}
+                        <div class="tp-pane-bukti">
+                            <div id="trPreview" style="width: 100%; display: flex; align-items: center; justify-content: center;"></div>
+                            <div id="trThumbs" class="tp-thumbs"></div>
+                            <a id="trOpenTab" href="#" target="_blank" rel="noopener"
+                               style="font-size: 11.5px; font-weight: 600; color: var(--c-primary, #0B266E); text-decoration: none;">
+                                Buka bukti di tab baru &#8599;
+                            </a>
+                        </div>
+
+                        {{-- Kanan: rambu keputusan lebih dulu, baru datanya --}}
+                        <div class="tp-pane-data">
+                            <div id="trStatusArea" style="display: none; margin-bottom: 12px;"></div>
+
+                            {{-- Kuota sengaja paling atas: inilah yang menentukan boleh
+                                 tidaknya klaim disetujui, jadi harus terbaca lebih dulu --}}
+                            <div id="trKuotaWarn" style="margin-bottom: 12px;"></div>
+
+                            {{-- Rincian klaim yang memakan kuota tersebut, supaya angkanya
+                                 bisa diperiksa dan admin tahu mana yang harus dibatalkan
+                                 bila ternyata keliru --}}
+                            <div id="trKuotaDipakai"></div>
+
+                            <p class="tp-pane-heading">Data klaim reward</p>
+                            <div class="tinjau-info" id="trInfo"></div>
+
+                            {{-- Muncul bila klaim ini diajukan di bawah SK yang kini
+                                 sudah diganti — keputusannya tetap memakai aturan lama --}}
+                            <div id="trSkLawas" class="sk-lawas" style="display: none;"></div>
+
+                            <div style="margin-top: 14px;">
+                                <label class="form-label fw-bold mb-1" style="font-size: 13px;">
+                                    Mata Kuliah yang Dinaikkan Nilainya
+                                    <span class="mk-by-mhs">pilihan mahasiswa</span>
+                                </label>
+                                <div id="trMkView" class="mk-readonly"></div>
+                                <small style="font-size: 11px; color: #666D80;">Diisi oleh mahasiswa &amp; tidak dapat diubah admin. Pastikan MK bernilai min. C (SK 774 poin 3 &amp; 4). Keputusan final tetap di Bidang Akademik Fakultas.</small>
+                            </div>
+
+                            <div id="trActions" style="margin-top: auto; padding-top: 18px;">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label fw-bold mb-0" style="font-size: 12.5px;">Catatan <span style="font-weight: 400; color: #666D80;">(wajib untuk menolak)</span></label>
+                                    <span class="text-muted" style="font-size: 11px;" id="charCount_tr">0 / 300 huruf</span>
+                                </div>
+                                <textarea name="reward_note" id="trNote" class="form-control" rows="3" maxlength="300"
+                                          placeholder="Catatan persetujuan / alasan penolakan"
+                                          style="border-radius: 10px; font-size: 13.5px;"
+                                          oninput="document.getElementById('charCount_tr').innerText = this.value.length + ' / 300 huruf'; document.getElementById('trError').style.display = 'none';"></textarea>
+                                <div id="trError" style="display: none; font-size: 12px; font-weight: 600; color: #dc2626; margin-top: 6px;"></div>
+                                <div class="tp-aksi">
+                                    <button type="button" id="trTolakBtn" class="tp-btn-tolak">Tolak</button>
+                                    <button type="button" id="trSetujuiBtn" class="tp-btn-setujui">Setujui</button>
+                                </div>
+                            </div>
+
+                            <div id="trReadonly" style="display: none; margin-top: auto; padding-top: 18px;">
+                                <div id="trReviewArea"></div>
+                                <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal"
+                                        style="border-radius: 10px; margin-top: 14px; font-weight: 600; font-size: 13.5px;">Tutup</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -387,102 +396,251 @@
     </div>
 </div>
 
-<!-- Detail Reward Modal (read-only) -->
-<div class="modal fade" id="detailRewardModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" style="color: #374151;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    Detail Klaim Reward
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <div id="drStatusArea" style="margin-bottom: 14px;"></div>
-                <div class="tinjau-info" id="drInfo"></div>
-                <div id="drKuotaWarn" style="margin-top: 10px;"></div>
-                <hr class="detail-divider">
-                <div class="mb-3">
-                    <label class="form-label fw-bold mb-1" style="font-size: 13px;">Mata Kuliah yang Diajukan</label>
-                    <div id="drMkView" class="mk-readonly"></div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold mb-1" style="font-size: 13px;">Bukti Prestasi</label>
-                    <div id="drBukti" class="tr-bukti"></div>
-                </div>
-                <div id="drReviewArea"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Tutup</button>
-            </div>
-        </div>
-    </div>
-</div>
 <script>
+// ── Modal Tinjau Reward ────────────────────────────────────────────────
+// Satu modal untuk klaim yang masih menunggu maupun yang sudah diputus:
+// mode baca-saja hanya menyembunyikan panel keputusan dan menggantinya
+// dengan ringkasan hasil, jadi tidak ada dua tampilan yang bisa melenceng.
 let trData = null;
+
 function openTinjauReward(data) {
     trData = data;
-    document.getElementById('trNote').value = '';
-    document.getElementById('trError').style.display = 'none';
 
-    const inv = data.invention ? ' (invention/expo/fair)' : '';
-    document.getElementById('trInfo').innerHTML =
-        '<div><span class="lbl">Mahasiswa:</span> <b>' + data.mahasiswa + '</b></div>' +
-        '<div><span class="lbl">Prestasi:</span> ' + data.nama + '</div>' +
-        '<div><span class="lbl">Penyelenggara:</span> ' + (data.penyelenggara || '-') + '</div>' +
-        '<div><span class="lbl">Capaian:</span> ' + (data.capaian || '-') + inv + '</div>' +
-        '<div><span class="lbl">Maks. konversi:</span> ' + data.jml_mk_max + ' mata kuliah (setara ' + data.sks_max + ' SKS)</div>';
+    // Kuota tampil paling atas — inilah yang menentukan boleh tidaknya disetujui
+    const penuh   = data.kuota_terpakai >= data.kuota_maks;
+    const kuotaEl = document.getElementById('trKuotaWarn');
+    kuotaEl.innerHTML = '';
+    const pill = document.createElement('span');
+    pill.className = 'kuota-pill' + (penuh ? ' penuh' : '');
+    pill.textContent = 'Kuota ' + data.grup + ': ' + data.kuota_terpakai + '/' + data.kuota_maks
+                     + (penuh && data.pending ? ' — PENUH, tidak bisa disetujui' : '');
+    kuotaEl.appendChild(pill);
+
+    trRenderKuotaDipakai(data);
+
+    // Ringkasan klaim. Dirakit sebagai node, bukan innerHTML — nama prestasi
+    // berasal dari input mahasiswa dan tidak boleh dieksekusi sebagai HTML.
+    const infoEl = document.getElementById('trInfo');
+    infoEl.innerHTML = '';
+    [
+        ['Mahasiswa',      data.mahasiswa + ' (' + data.nim + ')'],
+        ['Prestasi',       data.nama],
+        ['Penyelenggara',  data.penyelenggara || '-'],
+        ['Capaian',        (data.capaian || '-') + (data.invention ? ' (invention/expo/fair)' : '')],
+        ['Maks. konversi', data.jml_mk_max + ' mata kuliah (setara ' + data.sks_max + ' SKS)'],
+        ['Dasar aturan',   data.sk_ref || '-'],
+    ].forEach(function (pair) {
+        const baris = document.createElement('div');
+        const lbl   = document.createElement('span');
+        lbl.className   = 'lbl';
+        lbl.textContent = pair[0] + ': ';
+        baris.appendChild(lbl);
+        baris.appendChild(document.createTextNode(pair[1]));
+        infoEl.appendChild(baris);
+    });
+
+    // Peringatan bila SK yang jadi dasar klaim ini sudah diganti. Penting saat
+    // klaim lama baru sempat ditinjau setelah aturan baru turun: keputusannya
+    // tetap harus memakai aturan yang berlaku ketika mahasiswa mengajukan.
+    const skEl = document.getElementById('trSkLawas');
+    skEl.textContent = data.sk_lawas
+        ? 'SK ini sudah diganti. Klaim tetap dinilai dengan aturan yang berlaku saat diajukan.'
+        : '';
+    skEl.style.display = data.sk_lawas ? 'block' : 'none';
 
     // MK pilihan mahasiswa — tampil read-only sebagai chip
     const mkView = document.getElementById('trMkView');
     mkView.innerHTML = '';
     const mks = data.mk_diajukan || [];
     if (mks.length) {
-        mks.forEach(function(nama) {
+        mks.forEach(function (nama) {
             const tag = document.createElement('span');
             tag.className = 'mk-tag';
             tag.textContent = nama;
             mkView.appendChild(tag);
         });
     } else {
-        mkView.innerHTML = '<span style="font-size:12px; color:#666D80;">Mahasiswa belum memilih mata kuliah.</span>';
+        const kosong = document.createElement('span');
+        kosong.style.cssText = 'font-size:12px; color:#666D80;';
+        kosong.textContent = 'Mahasiswa belum memilih mata kuliah.';
+        mkView.appendChild(kosong);
     }
 
-    // Bukti prestasi — thumbnail gambar / ikon dokumen, klik buka tab baru
-    const buktiEl = document.getElementById('trBukti');
-    buktiEl.innerHTML = '';
-    const bukti = data.bukti || [];
-    if (bukti.length) {
-        bukti.forEach(function(b) {
-            const a = document.createElement('a');
-            a.href = b.url;
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.title = b.nama || 'Bukti';
-            a.className = 'tr-bukti-item';
-            if (b.is_image) {
-                const img = document.createElement('img');
-                img.src = b.url;
-                img.alt = b.nama || 'Bukti';
-                a.appendChild(img);
-            } else {
-                a.classList.add('doc');
-                a.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
-            }
-            buktiEl.appendChild(a);
-        });
+    trRenderBukti(0);
+
+    // Klaim yang sudah diputus hanya bisa dilihat
+    document.getElementById('trActions').style.display    = data.pending ? 'block' : 'none';
+    document.getElementById('trReadonly').style.display   = data.pending ? 'none'  : 'block';
+    document.getElementById('trStatusArea').style.display = data.pending ? 'none'  : 'block';
+
+    if (data.pending) {
+        document.getElementById('trNote').value = '';
+        document.getElementById('charCount_tr').innerText = '0 / 300 huruf';
+        document.getElementById('trError').style.display = 'none';
     } else {
-        buktiEl.innerHTML = '<span style="font-size:12px; color:#666D80;">Tidak ada bukti terlampir.</span>';
+        trRenderHasil(data);
     }
-
-    const penuh = data.kuota_terpakai >= data.kuota_maks;
-    document.getElementById('trKuotaWarn').innerHTML =
-        '<span class="kuota-pill' + (penuh ? ' penuh' : '') + '">Kuota ' + data.grup + ': ' + data.kuota_terpakai + '/' + data.kuota_maks + (penuh ? ' — PENUH, tidak bisa disetujui' : '') + '</span>';
 
     new bootstrap.Modal(document.getElementById('tinjauRewardModal')).show();
+}
+
+// Rincian klaim yang sudah memakan kuota grup ini. Tanpa ini, angka "2/2"
+// hanyalah vonis yang tidak bisa diperiksa — dan admin tidak punya cara tahu
+// klaim mana yang harus dibatalkan bila salah satunya keliru.
+function trRenderKuotaDipakai(data) {
+    const wadah = document.getElementById('trKuotaDipakai');
+    wadah.innerHTML = '';
+    wadah.className = '';
+
+    const dipakai = data.kuota_dipakai || [];
+    if (!dipakai.length) return;
+
+    wadah.className = 'kuota-dipakai-blok';
+
+    const judul = document.createElement('p');
+    judul.className = 'tp-pane-heading';
+    judul.textContent = 'Kuota terpakai untuk';
+    wadah.appendChild(judul);
+
+    // Kotak yang sama persis dengan blok "Data klaim reward" di bawahnya
+    const kotak = document.createElement('div');
+    kotak.className = 'tinjau-info';
+
+    dipakai.forEach(function (k) {
+        const baris = document.createElement('div');
+        baris.className = 'kuota-dipakai-item';
+
+        // textContent — nama prestasi berasal dari input mahasiswa
+        const nama = document.createElement('div');
+        nama.className = 'kuota-dipakai-nama';
+        nama.textContent = k.nama;
+        baris.appendChild(nama);
+
+        // Klaim yang sedang dibuka bisa ikut terhitung bila sudah disetujui,
+        // jadi ditandai agar tidak terbaca sebagai klaim lain
+        const ket = [
+            k.id === data.id ? 'klaim ini' : null,
+            k.mk ? 'MK: ' + k.mk : null,
+            k.tanggal,
+        ].filter(Boolean).join(' • ');
+
+        if (ket) {
+            const sub = document.createElement('div');
+            sub.className = 'kuota-dipakai-ket';
+            sub.textContent = ket;
+            baris.appendChild(sub);
+        }
+
+        kotak.appendChild(baris);
+    });
+
+    wadah.appendChild(kotak);
+}
+
+// Ringkasan keputusan untuk klaim yang sudah disetujui/ditolak
+function trRenderHasil(data) {
+    const label = { disetujui: 'Disetujui', ditolak: 'Ditolak', diajukan: 'Menunggu' };
+
+    const statusEl = document.getElementById('trStatusArea');
+    statusEl.innerHTML = '';
+    const pill = document.createElement('span');
+    pill.className   = 'detail-status-pill ' + (data.status || '');
+    pill.textContent = label[data.status] || data.status || '-';
+    statusEl.appendChild(pill);
+
+    const jejak = [data.reviewer ? 'oleh ' + data.reviewer : null, data.reviewed_at].filter(Boolean).join(' • ');
+    if (jejak) {
+        const ket = document.createElement('span');
+        ket.style.cssText = 'font-size:12px; color:#666D80; margin-left:6px;';
+        ket.textContent = jejak;
+        statusEl.appendChild(ket);
+    }
+
+    const reviewEl = document.getElementById('trReviewArea');
+    reviewEl.innerHTML = '';
+
+    if (data.mk_disetujui) {
+        reviewEl.appendChild(trBarisHasil('MK disetujui: ', data.mk_disetujui, '#059669', false));
+    }
+    if (data.note) {
+        reviewEl.appendChild(trBarisHasil('Catatan: ', data.note, data.status === 'ditolak' ? '#dc2626' : '#059669', true));
+    }
+}
+
+function trBarisHasil(label, isi, warna, berkotak) {
+    const baris = document.createElement('div');
+    baris.style.cssText = berkotak
+        ? 'font-size:13px; padding:10px 14px; background:#f8fafc; border:1px solid #DFE1E7; border-radius:10px;'
+        : 'font-size:13px; margin-bottom:10px;';
+
+    const lbl = document.createElement('span');
+    lbl.style.color   = '#666D80';
+    lbl.textContent   = label;
+
+    const val = document.createElement('span');
+    val.style.cssText = 'font-weight:600; color:' + warna + ';';
+    val.textContent   = isi;
+
+    baris.appendChild(lbl);
+    baris.appendChild(val);
+    return baris;
+}
+
+function trRenderBukti(idx) {
+    const pane    = document.getElementById('trPreview');
+    const thumbs  = document.getElementById('trThumbs');
+    const openTab = document.getElementById('trOpenTab');
+    const bukti   = (trData && trData.bukti) || [];
+
+    pane.innerHTML   = '';
+    thumbs.innerHTML = '';
+
+    if (!bukti.length) {
+        const kosong = document.createElement('div');
+        kosong.style.cssText = 'padding: 70px 0; text-align: center; font-size: 13px; color: #666D80;';
+        kosong.textContent = 'Tidak ada bukti dilampirkan';
+        pane.appendChild(kosong);
+        openTab.style.display = 'none';
+        return;
+    }
+
+    const b = bukti[idx] || bukti[0];
+    if (b.is_image) {
+        const img = document.createElement('img');
+        img.src = b.url;
+        img.alt = b.nama || 'Bukti';
+        img.className = 'tp-viewer-img';
+        pane.appendChild(img);
+    } else {
+        const frame = document.createElement('iframe');
+        frame.src = b.url + '#view=FitH';
+        frame.title = b.nama || 'Bukti';
+        frame.className = 'tp-viewer';
+        pane.appendChild(frame);
+    }
+
+    openTab.href = b.url;
+    openTab.style.display = 'inline';
+
+    // Selector hanya perlu bila klaim punya lebih dari satu berkas
+    if (bukti.length > 1) {
+        bukti.forEach(function (f, i) {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'tp-thumb' + (i === idx ? ' active' : '');
+            btn.title = f.nama || 'Bukti';
+            btn.onclick = function () { trRenderBukti(i); };
+            if (f.is_image) {
+                const th = document.createElement('img');
+                th.src = f.url;
+                th.alt = '';
+                btn.appendChild(th);
+            } else {
+                btn.textContent = 'PDF';
+            }
+            thumbs.appendChild(btn);
+        });
+    }
 }
 
 (function() {
@@ -535,82 +693,5 @@ function openBatalReward(id, nama, mahasiswa) {
     });
 })();
 
-// Detail Reward Modal (read-only, untuk reward yang sudah disetujui/ditolak)
-function openDetailReward(data) {
-    const inv = data.invention ? ' (invention/expo/fair)' : '';
-    const statusMap = { 'disetujui': ['disetujui', 'Disetujui'], 'ditolak': ['ditolak', 'Ditolak'], 'diajukan': ['diajukan', 'Menunggu'] };
-    const st = statusMap[data.status] || ['', data.status];
-
-    // Status area
-    document.getElementById('drStatusArea').innerHTML =
-        '<span class="detail-status-pill ' + st[0] + '">' + st[1] + '</span>' +
-        (data.reviewer ? ' <span style="font-size:12px; color:#666D80;">oleh ' + data.reviewer + '</span>' : '') +
-        (data.reviewed_at ? ' <span style="font-size:12px; color:#666D80;">• ' + data.reviewed_at + '</span>' : '');
-
-    // Info grid
-    document.getElementById('drInfo').innerHTML =
-        '<div class="detail-info-grid">' +
-        '<span class="dlbl">Mahasiswa</span><span class="dval">' + data.mahasiswa + ' (' + data.nim + ')</span>' +
-        '<span class="dlbl">Prestasi</span><span class="dval">' + data.nama + '</span>' +
-        '<span class="dlbl">Penyelenggara</span><span class="dval">' + (data.penyelenggara || '-') + '</span>' +
-        '<span class="dlbl">Capaian</span><span class="dval">' + (data.capaian || '-') + inv + '</span>' +
-        '<span class="dlbl">Maks. Konversi</span><span class="dval">' + data.jml_mk_max + ' mata kuliah (setara ' + data.sks_max + ' SKS)</span>' +
-        '</div>';
-
-    // Kuota
-    var penuh = data.kuota_terpakai >= data.kuota_maks;
-    document.getElementById('drKuotaWarn').innerHTML =
-        '<span class="kuota-pill' + (penuh ? ' penuh' : '') + '">Kuota ' + data.grup + ': ' + data.kuota_terpakai + '/' + data.kuota_maks + '</span>';
-
-    // MK
-    var mkView = document.getElementById('drMkView');
-    mkView.innerHTML = '';
-    var mks = data.mk_diajukan || [];
-    if (mks.length) {
-        mks.forEach(function(nama) {
-            var tag = document.createElement('span');
-            tag.className = 'mk-tag';
-            tag.textContent = nama;
-            mkView.appendChild(tag);
-        });
-    } else {
-        mkView.innerHTML = '<span style="font-size:12px; color:#666D80;">Tidak ada MK diajukan.</span>';
-    }
-
-    // Bukti
-    var buktiEl = document.getElementById('drBukti');
-    buktiEl.innerHTML = '';
-    var bukti = data.bukti || [];
-    if (bukti.length) {
-        bukti.forEach(function(b) {
-            var a = document.createElement('a');
-            a.href = b.url; a.target = '_blank'; a.rel = 'noopener';
-            a.title = b.nama || 'Bukti'; a.className = 'tr-bukti-item';
-            if (b.is_image) {
-                var img = document.createElement('img');
-                img.src = b.url; img.alt = b.nama || 'Bukti';
-                a.appendChild(img);
-            } else {
-                a.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>';
-            }
-            buktiEl.appendChild(a);
-        });
-    } else {
-        buktiEl.innerHTML = '<span style="font-size:12px; color:#666D80;">Tidak ada bukti terlampir.</span>';
-    }
-
-    // Review area (catatan, MK disetujui)
-    var reviewHtml = '';
-    if (data.mk_disetujui) {
-        reviewHtml += '<div style="margin-bottom:10px;"><span class="dlbl" style="font-size:13px; font-weight:600;">MK Disetujui:</span> <span style="font-size:13px; font-weight:600; color:#059669;">' + data.mk_disetujui + '</span></div>';
-    }
-    if (data.note) {
-        var noteColor = data.status === 'ditolak' ? '#dc2626' : '#059669';
-        reviewHtml += '<div style="font-size:13px; padding:10px 14px; background:#f8fafc; border:1px solid #DFE1E7; border-radius:10px;"><span style="color:#666D80;">Catatan:</span> <span style="color:' + noteColor + '; font-weight:600;">' + data.note + '</span></div>';
-    }
-    document.getElementById('drReviewArea').innerHTML = reviewHtml;
-
-    new bootstrap.Modal(document.getElementById('detailRewardModal')).show();
-}
 </script>
 </x-dynamic-component>

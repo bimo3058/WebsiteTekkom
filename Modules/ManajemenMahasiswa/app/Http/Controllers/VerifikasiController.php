@@ -5,6 +5,7 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Student;
 use App\Services\SupabaseStorage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
@@ -78,6 +79,101 @@ class VerifikasiController extends Controller
     }
 
     // -------------------------------------------------------------------------
+    // Helper — Pencarian bebas pada daftar verifikasi
+    //
+    // Cakupan pencarian sengaja dibuat sama persis dengan kolom yang tampil di
+    // tabel: apa pun yang admin baca pada sebuah baris harus bisa dipakai untuk
+    // menemukan baris itu kembali. Menampilkan kolom yang tidak bisa dicari
+    // membuat admin mengira datanya hilang.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Pola pencocokan untuk ILIKE.
+     *
+     * ILIKE, bukan LIKE: basis data ini PostgreSQL, dan di sana LIKE bersifat
+     * case-sensitive — "surya" tidak akan menemukan "Surya Hari Putra".
+     * % dan _ yang diketik admin di-escape agar diperlakukan sebagai teks biasa,
+     * bukan wildcard yang menarik seluruh isi tabel.
+     */
+    private function likePattern(string $search): string
+    {
+        return '%' . str_replace(['%', '_'], ['\\%', '\\_'], $search) . '%';
+    }
+
+    /**
+     * Tingkat prestasi yang cocok dengan kata kunci.
+     *
+     * Dicocokkan dari awal kata, bukan LIKE %...%, supaya "nasional" tidak ikut
+     * menarik "internasional". Daftarnya tetap dan pendek, jadi pencocokan di
+     * PHP lebih murah sekaligus lebih mudah ditebak hasilnya.
+     *
+     * @return list<string>
+     */
+    private function cocokkanTingkat(string $search): array
+    {
+        $kata = mb_strtolower(trim($search));
+
+        if ($kata === '') {
+            return [];
+        }
+
+        return array_values(array_filter(
+            Prestasi::TINGKAT_LIST,
+            fn (string $tingkat) => str_starts_with($tingkat, $kata)
+        ));
+    }
+
+    /**
+     * Cari riwayat kegiatan berdasarkan kolom yang tampil di tabel admin:
+     * nama & NIM mahasiswa, nama kegiatan, dan peran.
+     */
+    private function applyRiwayatSearch(Builder $query, string $search): void
+    {
+        $like = $this->likePattern($search);
+
+        $query->where(function ($q) use ($like) {
+            $q->whereHas('student.user', function ($u) use ($like) {
+                $u->where('name', 'ilike', $like);
+            })
+            ->orWhereHas('student', function ($s) use ($like) {
+                $s->where('student_number', 'ilike', $like);
+            })
+            ->orWhere('nama_kegiatan_manual', 'ilike', $like)
+            // Dua kolom peran: daftar admin hanya memuat entri manual, tetapi
+            // keduanya ikut dicari agar sama dengan yang ditampilkan kolom Peran
+            // (lihat RiwayatKegiatan::getPeranLabelAttribute).
+            ->orWhere('peran_manual', 'ilike', $like)
+            ->orWhere('peran', 'ilike', $like);
+        });
+    }
+
+    /**
+     * Cari prestasi berdasarkan kolom yang tampil di tabel Verifikasi Prestasi
+     * dan Klaim Reward: nama & NIM mahasiswa, nama prestasi, dan tingkat.
+     */
+    private function applyPrestasiSearch(Builder $query, string $search): void
+    {
+        $like    = $this->likePattern($search);
+        $tingkat = $this->cocokkanTingkat($search);
+
+        $query->where(function ($q) use ($like, $tingkat) {
+            // Closure dalam wajib: tanpa itu orWhere('nim') lepas dari kunci
+            // relasi, sehingga exists() cocok untuk semua baris prestasi.
+            $q->whereHas('kemahasiswaan', function ($k) use ($like) {
+                $k->where(function ($w) use ($like) {
+                    $w->where('nama', 'ilike', $like)
+                      ->orWhere('nim', 'ilike', $like);
+                });
+            })
+            ->orWhere('nama_prestasi', 'ilike', $like);
+
+            if ($tingkat) {
+                $q->orWhereIn('tingkat', $tingkat);
+            }
+        });
+    }
+
+    // -------------------------------------------------------------------------
     // Helper — Auto-provision student + kemahasiswaan record jika belum ada
     // Digunakan agar pengurus (ketua_unit, dll) bisa langsung submit tanpa
     // harus didaftarkan manual oleh admin terlebih dahulu.
@@ -140,6 +236,14 @@ class VerifikasiController extends Controller
         $search = $request->get('search');
         $angkatan = $request->get('angkatan');
 
+        // Filter tingkat — hanya berlaku pada tab Prestasi; riwayat kegiatan tidak
+        // punya kolom tingkat. Nilai di luar daftar resmi dianggap "semua" supaya
+        // URL yang diubah manual tidak menghasilkan tabel kosong tanpa penjelasan.
+        $tingkat = $request->get('tingkat');
+        if (!\in_array($tingkat, Prestasi::TINGKAT_LIST, true)) {
+            $tingkat = 'semua';
+        }
+
         // ── Riwayat Kegiatan (manual only) ──
         $riwayatQuery = RiwayatKegiatan::with(['student.user', 'kegiatan', 'verifiedBy', 'buktiFiles'])
             ->manualOnly();
@@ -149,13 +253,7 @@ class VerifikasiController extends Controller
         }
 
         if ($search) {
-            $riwayatQuery->where(function ($query) use ($search) {
-                $query->whereHas('student.user', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%");
-                })->orWhereHas('student', function ($q) use ($search) {
-                    $q->where('student_number', 'like', "%{$search}%");
-                });
-            });
+            $this->applyRiwayatSearch($riwayatQuery, $search);
         }
 
         if ($angkatan && $angkatan !== 'semua') {
@@ -177,18 +275,17 @@ class VerifikasiController extends Controller
         }
 
         if ($search) {
-            $prestasiQuery->whereHas('kemahasiswaan', function ($q) use ($search) {
-                $q->where(function ($query) use ($search) {
-                    $query->where('nama', 'like', "%{$search}%")
-                          ->orWhere('nim', 'like', "%{$search}%");
-                });
-            });
+            $this->applyPrestasiSearch($prestasiQuery, $search);
         }
 
         if ($angkatan && $angkatan !== 'semua') {
             $prestasiQuery->whereHas('kemahasiswaan', function ($q) use ($angkatan) {
                 $q->where('angkatan', $angkatan);
             });
+        }
+
+        if ($tingkat !== 'semua') {
+            $prestasiQuery->where('tingkat', $tingkat);
         }
 
         $prestasiData = $prestasiQuery->orderByDesc('created_at')->paginate(15, ['*'], 'prestasi_page');
@@ -219,6 +316,11 @@ class VerifikasiController extends Controller
             ->orderBy('angkatan', 'desc')
             ->pluck('angkatan');
 
+        // Daftar tingkat diambil dari konstanta, bukan dari data: tingkat adalah
+        // enum tetap, jadi pilihannya harus utuh dan urutannya konsisten meskipun
+        // salah satu tingkat belum pernah dipakai.
+        $tingkatList = Prestasi::TINGKAT_LIST;
+
         // Pengawas (GPM/Kadep) hanya melihat — sembunyikan tombol setujui/tolak.
         $canVerify = !$readOnly;
         // Tombol "Klaim Reward" tetap tampil untuk pengawas (akses halaman read-only).
@@ -234,6 +336,8 @@ class VerifikasiController extends Controller
             'search',
             'angkatan',
             'angkatanList',
+            'tingkat',
+            'tingkatList',
             'pendingPrestasiReward',
             'adminStats',
             'canVerify',
@@ -262,12 +366,7 @@ class VerifikasiController extends Controller
             ->where('claim_status', $claimStatus);
 
         if ($search) {
-            $rewardQuery->whereHas('kemahasiswaan', function ($q) use ($search) {
-                $q->where(function ($query) use ($search) {
-                    $query->where('nama', 'like', "%{$search}%")
-                          ->orWhere('nim', 'like', "%{$search}%");
-                });
-            });
+            $this->applyPrestasiSearch($rewardQuery, $search);
         }
 
         if ($angkatan && $angkatan !== 'semua') {
@@ -350,9 +449,13 @@ class VerifikasiController extends Controller
             $stats['rejected'] += $prestasiData->where('verification_status', 'rejected')->count();
         }
 
-        $kuota = $mhs
-            ? $this->rewardKuotaTerpakai($mhs->id)
-            : [Prestasi::KUOTA_UMUM => 0, Prestasi::KUOTA_INVENTION => 0];
+        // Rincian dulu, angkanya diturunkan dari situ — supaya "2/2" yang dibaca
+        // mahasiswa selalu sama isinya dengan daftar yang menjelaskannya.
+        $kuotaDipakai = $mhs
+            ? $this->rewardKuotaDipakai($mhs->id)
+            : [Prestasi::KUOTA_UMUM => [], Prestasi::KUOTA_INVENTION => []];
+
+        $kuota = array_map('count', $kuotaDipakai);
 
         $isAlumni = $this->hasRole('alumni');
 
@@ -363,6 +466,7 @@ class VerifikasiController extends Controller
             'mhs',
             'student',
             'kuota',
+            'kuotaDipakai',
             'tab',
             'isAlumni',
         ))->with('layout', $this->resolveLayout());
@@ -656,6 +760,19 @@ class VerifikasiController extends Controller
                 ->with('error', 'Kombinasi penyelenggara dan capaian tidak valid.');
         }
 
+        // Guard 3: kuota grup ini sudah penuh (SK 774 poin 4 & 5). Pasangan dari
+        // guard yang sama saat admin menyetujui — tanpa ini, pengajuan yang sudah
+        // pasti ditolak tetap masuk antrean dan mahasiswa menunggu tanpa hasil.
+        $grup = Prestasi::tentukanKuotaGrup($penyelenggara, $isInvention);
+        $maks = Prestasi::KUOTA_MAKS[$grup];
+
+        if (($this->rewardKuotaTerpakai($prestasi->kemahasiswaan_id)[$grup] ?? 0) >= $maks) {
+            $labelGrup = Prestasi::KUOTA_LABELS[$grup];
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', "Kuota reward {$labelGrup} Anda sudah penuh (maks {$maks}×). Buka \"Rincian kuota\" pada keterangan di atas tabel untuk melihat prestasi mana yang sudah memakainya.");
+        }
+
         $jatah = Prestasi::hitungJatahReward($penyelenggara, $capaian, $isInvention);
 
         // Usulan MK: hanya MK kurikulum yang valid, jumlah maks sesuai jatah (SK 774)
@@ -691,6 +808,11 @@ class VerifikasiController extends Controller
             'reward_penyelenggara' => $penyelenggara,
             'reward_capaian'       => $capaian,
             'reward_is_invention'  => $isInvention,
+            // Dasar aturan dibekukan di sini, satu momen dengan jatah MK/SKS,
+            // supaya satu klaim selalu tunduk pada satu SK secara utuh —
+            // termasuk bila SK berganti sementara klaim ini masih menunggu.
+            'reward_kuota_grup'    => Prestasi::tentukanKuotaGrup($penyelenggara, $isInvention),
+            'reward_sk_ref'        => Prestasi::SK_BERLAKU,
             'reward_jml_mk_max'    => $jatah['jml_mk_max'],
             'reward_sks_max'       => $jatah['sks_max'],
             'reward_mk_diajukan'   => $mkDiajukan,
@@ -776,7 +898,7 @@ class VerifikasiController extends Controller
         $terpakai = $this->rewardKuotaTerpakai($prestasi->kemahasiswaan_id);
 
         if (($terpakai[$grup] ?? 0) >= $maks) {
-            $labelGrup = $grup === Prestasi::KUOTA_INVENTION ? 'invention/expo/fair' : 'umum';
+            $labelGrup = Prestasi::KUOTA_LABELS[$grup];
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.reward.index')
                 ->with('error', "Kuota reward {$labelGrup} mahasiswa ini sudah penuh (maks {$maks}×). Pengajuan tidak dapat disetujui.");
@@ -877,29 +999,44 @@ class VerifikasiController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Helper — Hitung kuota reward terpakai (disetujui) per mahasiswa
+    // Helper — Kuota reward terpakai (disetujui) untuk satu mahasiswa
     // -------------------------------------------------------------------------
+
+    /**
+     * Klaim yang memakan kuota, per grup — selalu kedua grup ada kuncinya.
+     *
+     * Dipakai halaman mahasiswa untuk merinci angka kuotanya sendiri. Sengaja
+     * lewat rewardKuotaMap(): daftar & jumlahnya lahir dari baris yang sama,
+     * jadi rincian yang dibaca mahasiswa tidak mungkin berbeda dari angka yang
+     * dipakai guard saat admin menyetujui.
+     */
+    private function rewardKuotaDipakai(int $kemahasiswaanId): array
+    {
+        $map = $this->rewardKuotaMap([$kemahasiswaanId])[$kemahasiswaanId] ?? [];
+
+        return [
+            Prestasi::KUOTA_UMUM      => $map[Prestasi::KUOTA_UMUM] ?? [],
+            Prestasi::KUOTA_INVENTION => $map[Prestasi::KUOTA_INVENTION] ?? [],
+        ];
+    }
 
     private function rewardKuotaTerpakai(int $kemahasiswaanId): array
     {
-        $terpakai = [Prestasi::KUOTA_UMUM => 0, Prestasi::KUOTA_INVENTION => 0];
-
-        $rows = Prestasi::rewardDisetujui()
-            ->where('kemahasiswaan_id', $kemahasiswaanId)
-            ->get(['reward_penyelenggara', 'reward_is_invention']);
-
-        foreach ($rows as $r) {
-            $grup = Prestasi::tentukanKuotaGrup($r->reward_penyelenggara, (bool) $r->reward_is_invention);
-            $terpakai[$grup]++;
-        }
-
-        return $terpakai;
+        return array_map('count', $this->rewardKuotaDipakai($kemahasiswaanId));
     }
 
     // -------------------------------------------------------------------------
     // Helper — Peta kuota terpakai untuk banyak mahasiswa sekaligus (admin view)
     // -------------------------------------------------------------------------
 
+    /**
+     * Peta klaim yang sudah memakan kuota reward, per mahasiswa & per grup.
+     *
+     * Sengaja menyimpan barisnya, bukan hanya jumlahnya: modal Tinjau perlu
+     * menunjukkan klaim mana yang memakai kuota, supaya angka "2/2" bisa
+     * diperiksa dan admin tahu klaim mana yang harus dibatalkan bila keliru.
+     * Jumlahnya tinggal count(). Tetap satu query untuk seluruh halaman.
+     */
     private function rewardKuotaMap(array $kemahasiswaanIds): array
     {
         if (empty($kemahasiswaanIds)) {
@@ -908,12 +1045,41 @@ class VerifikasiController extends Controller
 
         $rows = Prestasi::rewardDisetujui()
             ->whereIn('kemahasiswaan_id', $kemahasiswaanIds)
-            ->get(['kemahasiswaan_id', 'reward_penyelenggara', 'reward_is_invention']);
+            ->orderBy('reward_reviewed_at')
+            ->get([
+                'id',
+                'kemahasiswaan_id',
+                'nama_prestasi',
+                'reward_kuota_grup',
+                'reward_penyelenggara',
+                'reward_is_invention',
+                'reward_mk_diajukan',
+                'reward_mk_disetujui',
+                'reward_reviewed_at',
+            ]);
 
         $map = [];
         foreach ($rows as $r) {
-            $grup = Prestasi::tentukanKuotaGrup($r->reward_penyelenggara, (bool) $r->reward_is_invention);
-            $map[$r->kemahasiswaan_id][$grup] = ($map[$r->kemahasiswaan_id][$grup] ?? 0) + 1;
+            // Kelompok yang dibekukan saat pengajuan — bukan dihitung ulang,
+            // supaya daftar ini tidak berubah isinya saat SK berganti.
+            $grup = $r->rewardKuotaGrup();
+
+            // MK final tetap teks di reward_mk_disetujui — itu yang diputus admin.
+            // Bentuk daftarnya hanya dipakai bila keduanya memang identik: nama MK
+            // bisa memuat koma ("Switching, Routing dan Jaringan Nirkabel"), jadi
+            // teks itu tidak boleh dipecah sendiri di sisi tampilan.
+            $mkList = $r->reward_mk_diajukan ?? [];
+            if (implode(', ', $mkList) !== (string) $r->reward_mk_disetujui) {
+                $mkList = [];
+            }
+
+            $map[$r->kemahasiswaan_id][$grup][] = [
+                'id'      => $r->id,
+                'nama'    => $r->nama_prestasi,
+                'mk'      => $r->reward_mk_disetujui,
+                'mk_list' => $mkList,
+                'tanggal' => $r->reward_reviewed_at?->translatedFormat('d M Y'),
+            ];
         }
 
         return $map;
