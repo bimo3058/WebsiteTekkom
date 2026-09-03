@@ -66,6 +66,12 @@ class JadwalController extends Controller
             }
         } else {
             $query->where('kategori', '!=', 'Jadwal Akademik (Kuliah)');
+
+            if ($search) {
+                $searchTerm = strtolower($search);
+                $query->whereRaw('LOWER(keterangan) LIKE ?', ["%{$searchTerm}%"]);
+            }
+
             if ($filterKategori) {
                 $query->where('kategori', $filterKategori);
             }

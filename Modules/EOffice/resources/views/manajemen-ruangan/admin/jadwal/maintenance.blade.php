@@ -16,21 +16,6 @@
                 @endif
             </div>
             <div class="mp-page-actions flex items-center gap-3">
-                <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.index') }}" method="GET" class="flex">
-                    <select name="kategori"
-                        class="mp-input text-[13px] py-2 h-[42px] px-3 w-[220px] bg-white border border-gray-200 rounded-lg shadow-sm"
-                        onchange="this.form.submit()">
-                        <option value="">Semua Kategori Acara</option>
-                        <option value="Event / Kegiatan" {{ request('kategori') == 'Event / Kegiatan' ? 'selected' : '' }}>Event / Kegiatan Mahasiswa</option>
-                        <option value="Rapat Internal" {{ request('kategori') == 'Rapat Internal' ? 'selected' : '' }}>
-                            Rapat Internal Dosen</option>
-                        <option value="Ujian / Evaluasi" {{ request('kategori') == 'Ujian / Evaluasi' ? 'selected' : '' }}>Ujian / Evaluasi (UTS/UAS)</option>
-                        <option value="Maintenance / Perbaikan" {{ request('kategori') == 'Maintenance / Perbaikan' ? 'selected' : '' }}>Maintenance / Perbaikan</option>
-                        <option value="Lainnya" {{ request('kategori') == 'Lainnya' ? 'selected' : '' }}>Lainnya...
-                        </option>
-                    </select>
-                </form>
-
                 <button @click="showModal = true" class="mp-btn primary md">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round">
@@ -176,13 +161,50 @@
         </div>
     @endif
 
-    <div class="mp-card" style="margin-top: 15px;">
-        <div class="mp-card-body">
+    <div class="bg-white border border-gray-200 rounded-[12px] mt-6" style="box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+        <div
+            class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
+            <h2 class="text-base font-bold text-gray-900 tracking-tight">Daftar Jadwal</h2>
+
+            <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.index') }}" method="GET"
+                class="flex flex-wrap items-center gap-2.5">
+                {{-- Search --}}
+                <div class="relative w-full sm:w-auto">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" name="search" value="{{ request('search') }}"
+                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400"
+                        placeholder="Cari acara..." x-on:input.debounce.700ms="$el.form.submit()">
+                </div>
+
+                <div
+                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-xs shadow-sm">
+                    <select name="kategori"
+                        class="px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat w-full max-w-[140px] sm:max-w-[180px] truncate"
+                        style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;"
+                        onchange="this.form.submit()">
+                        <option value="">Semua Kategori</option>
+                        <option value="Event / Kegiatan" {{ request('kategori') == 'Event / Kegiatan' ? 'selected' : '' }}>Event / Kegiatan Mahasiswa</option>
+                        <option value="Rapat Internal" {{ request('kategori') == 'Rapat Internal' ? 'selected' : '' }}>
+                            Rapat Internal Dosen</option>
+                        <option value="Ujian / Evaluasi" {{ request('kategori') == 'Ujian / Evaluasi' ? 'selected' : '' }}>Ujian / Evaluasi (UTS/UAS)</option>
+                        <option value="Maintenance / Perbaikan" {{ request('kategori') == 'Maintenance / Perbaikan' ? 'selected' : '' }}>Maintenance / Perbaikan</option>
+                        <option value="Lainnya" {{ request('kategori') == 'Lainnya' ? 'selected' : '' }}>Lainnya...
+                        </option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="mp-card-body p-0 mt-4 rounded-b-[12px] overflow-hidden">
             <div class="mp-table-wrap">
-                <table class="mp-table" style="table-layout: auto; width: 100%;">
+                <table class="mp-table">
                     <thead>
                         <tr>
-                            <th>HARI / TANGGAL</th>
+                            <th>TANGGAL</th>
                             <th>WAKTU</th>
                             <th>NAMA ACARA</th>
                             <th>RUANGAN</th>
@@ -197,12 +219,12 @@
                                         @php
                                             $namaHari = ['-', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
                                         @endphp
-                                        <div style="font-weight: 500; color:#0D0D12;">
+                                        <div style="font-weight: 600; color:#3730A3;">
                                             {{ $namaHari[$j->hari] ?? 'Tidak Valid' }}
                                         </div>
                                     @else
-                                        <div style="font-weight: 500; color:#0D0D12;">
-                                            {{ \Carbon\Carbon::parse($j->tanggal_spesifik)->translatedFormat('d F Y') }}
+                                        <div style="font-weight: 600; color:#3730A3;">
+                                            {{ \Carbon\Carbon::parse($j->tanggal_spesifik)->translatedFormat('d M Y') }}
                                         </div>
                                     @endif
                                 </td>
@@ -211,9 +233,9 @@
                                         {{ substr($j->jam_mulai, 0, 5) }} - {{ substr($j->jam_selesai, 0, 5) }}
                                     </div>
                                 </td>
-                                <td style="max-width: 300px;">
+                                <td>
                                     <div
-                                        style="font-size: 13px; color:#4B5563; white-space: normal; overflow-wrap: anywhere; word-break: break-word;">
+                                        style="font-size: 13px; font-weight: 500; color:#0D0D12; white-space: normal; word-wrap: break-word; max-width: 300px;">
                                         {{ $j->keterangan ?: '-' }}
                                     </div>
                                 </td>
@@ -221,16 +243,16 @@
                                     <div style="font-weight: 500; color: #0D0D12;">
                                         {{ $j->ruangan->nama ?? 'Tidak Diketahui' }}
                                         <span
-                                            style="font-size: 13px; color: #666D80; margin-left: 4px; font-weight: 500;">(Lt.
+                                            style="font-size: 12px; color: #666D80; margin-left: 4px; font-weight: 500;">(Lt.
                                             {{ $j->ruangan->lantai ?? '-' }})</span>
                                     </div>
                                 </td>
                                 <td style="text-align: center;"
                                     x-data="{ showDropdown: false, showEditModal: false, formType: '{{ $j->tipe_jadwal }}', kategoriType: '{{ $j->kategori }}' }">
-                                    <div class="relative inline-flex justify-center w-full relative z-[1]">
+                                    <div class="relative inline-flex flex-col items-center justify-center w-full z-[1]">
                                         <button type="button" @click="showDropdown = !showDropdown"
                                             @click.away="showDropdown = false"
-                                            class="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-1.5 rounded-md transition-colors">
+                                            class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer">
                                             <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                 <path
                                                     d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
@@ -421,19 +443,19 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" style="text-align:center; padding: 40px; color: #666D80;">
+                                <td colspan="5" class="py-12 text-center text-gray-500 text-[13px]">
                                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0"
-                                        stroke-width="1.5" stroke-linecap="round" style="margin: 0 auto 10px auto;">
+                                        stroke-width="1.5" stroke-linecap="round" class="mx-auto mb-3">
                                         <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
                                         <line x1="16" y1="2" x2="16" y2="6"></line>
                                         <line x1="8" y1="2" x2="8" y2="6"></line>
                                         <line x1="3" y1="10" x2="21" y2="10"></line>
                                     </svg>
-                                    <div style="font-weight: 600; font-size:14px;">Belum Ada Jadwal Internal & Akademik
+                                    <div class="font-bold text-[14px]">Belum Ada Jadwal Internal & Akademik
                                     </div>
-                                    <div style="font-size:12px; margin-top:4px;">Gunakan tombol Tambah Jadwal di pojok
-                                        kanan
-                                        atas untuk mulai mengunci ruangan.</div>
+                                    <div class="text-[12px] mt-1 text-gray-400">Gunakan tombol Tambah Jadwal di pojok kanan
+                                        atas
+                                        untuk mulai mengunci ruangan.</div>
                                 </td>
                             </tr>
                         @endforelse

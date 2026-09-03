@@ -34,14 +34,14 @@
                         </svg>
                     </div>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400"
                         placeholder="Search" x-on:input.debounce.700ms="$el.form.submit()">
                 </div>
 
                 {{-- Filter Engine Dropdown --}}
                 <div class="relative" x-data="{ open: false }">
                     <button type="button" @click="open = !open"
-                        class="h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                        class="h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
@@ -96,7 +96,7 @@
                                 <a href="{{ route('eoffice.peminjaman.admin.riwayat.index') }}"
                                     class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-transparent">Reset</a>
                                 <button type="submit"
-                                    class="px-3 py-1.5 text-xs font-medium text-white bg-[#060E2A] rounded-md hover:bg-[#030715] transition-colors">Terapkan
+                                    class="px-3 py-1.5 text-xs font-medium text-white bg-[#060E2A] rounded-md hover:bg-[#030715] transition-colors cursor-pointer">Terapkan
                                     Filter</button>
                             </div>
                         </div>
@@ -106,28 +106,37 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto bg-white">
-            <table class="w-full text-left border-collapse">
+        <div class="mp-table-wrap mt-0 border-t-0">
+            <table class="mp-table" style="table-layout: auto; width: 100%;">
                 <thead>
-                    <tr class="border-y border-slate-200 bg-white">
-                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Pengaju</th>
-                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Ruangan & Tujuan</th>
-                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Waktu Acara</th>
-                        <th class="py-4 px-5 text-[13px] font-bold text-slate-600">Status</th>
+                    <tr>
+                        <th>PENGAJU</th>
+                        <th>RUANGAN & TUJUAN</th>
+                        <th>WAKTU ACARA</th>
+                        <th>STATUS</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
+                <tbody>
                     @forelse($peminjamans as $pinjam)
-                        <tr class="hover:bg-gray-50/50 transition-colors group">
-                            <td class="py-4 px-5 align-middle">
-                                <div class="flex items-center gap-3">
-                                    <div class="text-[13px] font-medium text-[#111827]">
-                                        {{ $pinjam->user->name ?? 'User Tidak Diketahui' }}
-                                    </div>
+                        <tr class="mp-tr">
+                            <td>
+                                <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
+                                    {{ $pinjam->user->name ?? 'User Tidak Diketahui' }}
+                                    @if($pinjam->created_by && $pinjam->created_by !== $pinjam->user_id)
+                                        <span
+                                            class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider"
+                                            title="Didaftarkan oleh Sistem/Admin">By Admin</span>
+                                    @endif
+                                </div>
+                                <div class="text-[11px] text-gray-500 mt-0.5">
+                                    @if(!empty($pinjam->user->external_id))({{ $pinjam->user->external_id }})
+                                    @endif{{ $pinjam->nomor_telepon ?: '-' }}
                                 </div>
                             </td>
-                            <td class="py-4 px-5 align-middle">
-                                <div class="text-[13px] text-[#111827]">{{ $pinjam->ruangan->nama ?? 'Dihapus' }}</div>
+                            <td>
+                                <div class="text-[13px] font-medium text-[#111827]">
+                                    {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
+                                </div>
                                 <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
                                     title="{{ $pinjam->tujuan }}">{{ $pinjam->tujuan }}</div>
                                 @if($pinjam->berkas_pendukung)
@@ -143,15 +152,15 @@
                                     </a>
                                 @endif
                             </td>
-                            <td class="py-4 px-5 align-middle">
-                                <div class="text-[13px] text-[#111827]">
-                                    {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d F Y') }} <span
-                                        class="text-gray-400 mx-1">•</span>
+                            <td>
+                                <div class="text-[13px] font-medium text-[#111827]">
+                                    {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}
+                                    <span class="text-gray-400 mx-1">•</span>
                                     {{ \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') }} -
                                     {{ \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') }} WIB
                                 </div>
                             </td>
-                            <td class="py-4 px-5 align-middle">
+                            <td>
                                 @php
                                     $style = '';
                                     if (strtolower($pinjam->status) === 'disetujui')
@@ -162,7 +171,7 @@
                                         $style = 'bg-amber-100 text-amber-800';
                                     elseif (strtolower($pinjam->status) === 'selesai')
                                         $style = 'bg-purple-100 text-purple-800';
-                                    else // dibatalkan / draft / dll
+                                    else
                                         $style = 'bg-gray-100 text-gray-800';
                                 @endphp
                                 <span
@@ -172,7 +181,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
+                        <tr class="mp-tr">
                             <td colspan="4" class="py-12 text-center text-gray-500 text-[13px]">Belum ada arsip peminjaman
                                 yang tersedia.</td>
                         </tr>

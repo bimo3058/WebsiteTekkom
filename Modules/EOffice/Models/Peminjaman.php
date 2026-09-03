@@ -24,6 +24,7 @@ class Peminjaman extends Model
         'status',
         'alasan_penolakan',
         'waktu_approval',
+        'created_by',
     ];
 
     protected $casts = [
@@ -43,6 +44,11 @@ class Peminjaman extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function ruangan()
@@ -72,5 +78,7 @@ class Peminjaman extends Model
                 'waktu_approval' => now()
             ]);
         }
+
+
     }
 }

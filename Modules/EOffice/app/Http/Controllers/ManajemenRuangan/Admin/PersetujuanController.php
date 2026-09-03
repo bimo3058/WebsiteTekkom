@@ -8,18 +8,48 @@ use Modules\EOffice\Models\Peminjaman;
 
 class PersetujuanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // System Event: Auto-kill expired dangling pending requests
         \Modules\EOffice\Models\Peminjaman::autoExpirePending();
 
-        $peminjamans = Peminjaman::with(['user', 'ruangan'])
-            ->where('status', 'menunggu')
+        $now = now();
+        $date = $now->format('Y-m-d');
+        $time = $now->format('H:i:s');
+
+        $query = Peminjaman::with(['user', 'ruangan'])
+            ->where(function ($q) use ($date, $time) {
+                $q->where('status', 'menunggu')
+                    ->orWhere(function ($q2) use ($date, $time) {
+                        $q2->where('status', 'disetujui')
+                            ->whereRaw("(tanggal_pinjam > ? OR (tanggal_pinjam = ? AND jam_selesai > ?))", [$date, $date, $time]);
+                    });
+            });
+
+        if ($request->filled('ruangan_id')) {
+            $query->where('ruangan_id', $request->ruangan_id);
+        }
+
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
+                })->orWhereHas('ruangan', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
+                });
+            });
+        }
+
+        $peminjamans = $query->orderByRaw("CASE WHEN status = 'menunggu' THEN 0 ELSE 1 END")
             ->orderBy('tanggal_pinjam', 'asc')
             ->orderBy('jam_mulai', 'asc')
-            ->get();
+            ->paginate((int) $request->input('per_page', 10))->withQueryString();
 
-        return view('eoffice::manajemen-ruangan.admin.persetujuan.index', compact('peminjamans'));
+        $ruangans = \Modules\EOffice\Models\Ruangan::orderBy('nama', 'asc')->get();
+
+        return view('eoffice::manajemen-ruangan.admin.persetujuan.index', compact('peminjamans', 'ruangans'));
     }
 
     public function riwayat(Request $request)
@@ -27,7 +57,19 @@ class PersetujuanController extends Controller
         // System Event: Auto-kill expired dangling pending requests
         \Modules\EOffice\Models\Peminjaman::autoExpirePending();
 
-        $query = Peminjaman::with(['user', 'ruangan'])->where('status', '!=', 'menunggu');
+        $now = now();
+        $date = $now->format('Y-m-d');
+        $time = $now->format('H:i:s');
+
+        $query = Peminjaman::with(['user', 'ruangan'])
+            ->where('status', '!=', 'menunggu')
+            ->where(function ($q) use ($date, $time) {
+                $q->where('status', '!=', 'disetujui')
+                    ->orWhere(function ($q2) use ($date, $time) {
+                        $q2->where('status', 'disetujui')
+                            ->whereRaw("(tanggal_pinjam < ? OR (tanggal_pinjam = ? AND jam_selesai <= ?))", [$date, $date, $time]);
+                    });
+            });
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -46,13 +88,15 @@ class PersetujuanController extends Controller
         }
 
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = strtolower($request->search);
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($sq) use ($search) {
-                    $sq->where('name', 'like', "%{$search}%");
+                    $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
                 })->orWhereHas('ruangan', function ($sq) use ($search) {
-                    $sq->where('nama', 'like', "%{$search}%");
-                });
+                    $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
+                })->orWhereRaw('LOWER(tujuan) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(nomor_telepon) LIKE ?', ["%{$search}%"]);
             });
         }
 
