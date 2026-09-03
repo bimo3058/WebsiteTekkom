@@ -124,7 +124,7 @@
                                 </td>
                                 <td style="text-align: center;">
                                     <button
-                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ $pinjam->status }}')"
+                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}')"
                                         class="h-8 px-4 rounded-md bg-white border border-gray-200 text-[#0B266E] text-[12px] font-bold hover:bg-gray-50 shadow-sm transition-colors">
                                         Kelola
                                     </button>
@@ -220,10 +220,11 @@
                 <div x-show="modalTindakan" x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4"
                     x-transition:enter-end="opacity-100 translate-y-0"
-                    class="relative bg-white rounded-[16px] shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-gray-100">
+                    class="relative bg-white rounded-[16px] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
 
-                    <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-                        <h3 class="font-bold text-gray-900 text-lg tracking-tight">Verifikasi Pengajuan</h3>
+                    <div
+                        class="px-6 py-4 border-b border-gray-100 flex-shrink-0 flex justify-between items-center bg-white z-10">
+                        <h3 class="font-bold text-gray-900 text-lg tracking-tight">Verifikasi & Kelola Pengajuan</h3>
                         <button type="button" @click="closeModal()"
                             class="text-gray-400 hover:text-gray-600 transition-colors">
                             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
@@ -232,14 +233,15 @@
                         </button>
                     </div>
 
-                    <div class="p-6">
-                        <p class="text-sm text-gray-600 mb-6">Tentukan status pengajuan ruangan dari <span
-                                class="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded"
-                                x-text="selectedName"></span>.</p>
+                    <form id="actionForm" method="POST" :action="getFormAction()"
+                        class="flex flex-col flex-1 overflow-hidden">
+                        @csrf
+                        <input type="hidden" name="status" x-model="selectedAction">
 
-                        <form id="actionForm" method="POST" :action="getFormAction()">
-                            @csrf
-                            <input type="hidden" name="status" x-model="selectedAction">
+                        <div class="px-6 py-6 flex-1 overflow-y-auto bg-slate-50/30">
+                            <p class="text-sm text-gray-600 mb-6">Tentukan penanganan pengajuan ruangan dari <span
+                                    class="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded"
+                                    x-text="selectedName"></span>.</p>
 
                             <!-- Jika Status Menunggu -->
                             <div x-show="selectedStatus === 'menunggu'" class="grid grid-cols-2 gap-3 mb-5">
@@ -280,23 +282,110 @@
                                             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
                                         </path>
                                     </svg>
-                                    <p>Status permohonan ini sudah <strong>Disetujui</strong>. Pembatalkan sepihak akan
-                                        langsung merebut hak ruangan dari pihak yang bersangkutan.</p>
+                                    <p>Perhatian: Status permohonan ini <strong>Telah Disetujui</strong>. Segala bentuk
+                                        modifikasi akan langsung berdampak pada jadwal resmi ruangan.</p>
                                 </div>
 
-                                <label class="cursor-pointer block">
-                                    <input type="radio" x-model="selectedAction" value="ditolak" class="peer sr-only">
-                                    <div
-                                        class="rounded-xl border-2 border-gray-100 px-4 py-3.5 peer-checked:border-red-500 peer-checked:bg-red-50/50 hover:bg-gray-50 transition-all text-center text-gray-700 peer-checked:text-red-700 font-semibold text-sm flex items-center justify-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M6 18L18 6M6 6l12 12">
-                                            </path>
-                                        </svg>
-                                        Cabut Hak Penggunaan (Batal)
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="cursor-pointer block">
+                                        <input type="radio" x-model="selectedAction" value="ditolak"
+                                            class="peer sr-only">
+                                        <div
+                                            class="rounded-xl border-2 border-gray-100 px-3 py-2.5 peer-checked:border-red-500 peer-checked:bg-red-50/50 hover:bg-gray-50 transition-all text-center text-gray-700 peer-checked:text-red-700 font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
+                                            <svg class="w-4 h-4 text-red-600/70" fill="none" stroke="currentColor"
+                                                stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                                </path>
+                                            </svg>
+                                            <span>Cabut Hak<br>(Batalkan)</span>
+                                        </div>
+                                    </label>
+
+                                    <label class="cursor-pointer block">
+                                        <input type="radio" x-model="selectedAction" value="edit" class="peer sr-only">
+                                        <div
+                                            class="rounded-xl border-2 border-gray-100 px-3 py-2.5 peer-checked:border-[#0B266E] peer-checked:bg-blue-50/50 hover:bg-gray-50 transition-all text-center text-gray-700 peer-checked:text-[#0B266E] font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
+                                            <svg class="w-4 h-4 text-[#0B266E]/70" fill="none" stroke="currentColor"
+                                                stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                </path>
+                                            </svg>
+                                            <span>Modifikasi<br>Waktu & Ruang</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Formulir Edit Overrride (Tampil Jika dipilih) -->
+                            <div x-show="selectedAction === 'edit'" x-transition
+                                class="mt-4 mb-2 p-4 bg-slate-50 border border-slate-100 rounded-xl relative overflow-hidden group">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-[#0B266E]"></div>
+                                <h4 class="text-[13px] font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                    Konfigurasi Jadwal Baru
+                                </h4>
+
+                                <div class="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label
+                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Pindahkan
+                                            Ke Ruangan <span class="text-red-500">*</span></label>
+                                        <select name="override_ruangan_id" x-model="currentRoom"
+                                            class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
+                                            :required="selectedAction === 'edit'">
+                                            <option value="">Pilih Ruangan...</option>
+                                            @foreach($ruangans as $ruangan)
+                                                <option value="{{ $ruangan->id }}">{{ $ruangan->nama }}</option>
+                                            @endforeach
+                                        </select>
                                     </div>
-                                </label>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label
+                                                class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Ubah
+                                                Tanggal <span class="text-red-500">*</span></label>
+                                            <input type="date" name="override_tanggal_pinjam" x-model="currentDate"
+                                                class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
+                                                :required="selectedAction === 'edit'">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label
+                                                    class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam
+                                                    Mulai</label>
+                                                <input type="time" name="override_jam_mulai" x-model="currentJamMulai"
+                                                    class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
+                                                    :required="selectedAction === 'edit'">
+                                            </div>
+                                            <div>
+                                                <label
+                                                    class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Sampai</label>
+                                                <input type="time" name="override_jam_selesai"
+                                                    x-model="currentJamSelesai"
+                                                    class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
+                                                    :required="selectedAction === 'edit'">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div x-show="conflictError" x-transition
+                                    class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
+                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                        </path>
+                                    </svg>
+                                    <span x-text="conflictError"></span>
+                                </div>
                             </div>
 
                             <div x-show="selectedAction === 'ditolak'" x-transition class="mt-4 mb-2">
@@ -308,16 +397,19 @@
                                     rows="3" placeholder="Contoh: Jadwal bentrok dengan acara jurusan..."
                                     :required="selectedAction === 'ditolak'"></textarea>
                             </div>
+                        </div> <!-- End of scrollable body -->
 
-                            <div class="mt-8 flex gap-3">
-                                <button type="button" @click="closeModal()"
-                                    class="flex-1 py-2.5 px-4 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors">Tutup</button>
-                                <button type="submit"
-                                    class="flex-1 py-2.5 px-4 bg-[#0B266E] text-white rounded-xl font-medium text-sm hover:bg-[#071946] shadow-sm hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                    :disabled="!selectedAction">Simpan Status</button>
-                            </div>
-                        </form>
-                    </div>
+                        <!-- Fixed Footer -->
+                        <div
+                            class="px-6 py-4 border-t border-gray-100 bg-white flex-shrink-0 flex gap-3 z-10 w-full justify-end rounded-b-[16px]">
+                            <button type="button" @click="closeModal()"
+                                class="py-2.5 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 flex-1 sm:flex-none transition-colors">Batalkan</button>
+                            <button type="submit"
+                                class="py-2.5 px-6 bg-[#0B266E] text-white rounded-xl font-medium text-sm hover:bg-[#071946] shadow-sm flex-1 sm:flex-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                :disabled="!selectedAction || (selectedAction === 'edit' && (conflictError !== '' || isCheckingOut))">Simpan
+                                Perubahan</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -333,10 +425,69 @@
                 selectedStatus: '',
                 selectedAction: '',
 
-                openAction(id, name, status) {
+                currentRoom: '',
+                currentDate: '',
+                currentJamMulai: '',
+                currentJamSelesai: '',
+
+                conflictError: '',
+                isCheckingOut: false,
+                checkTimeout: null,
+
+                init() {
+                    this.$watch('currentRoom', () => this.triggerCheck());
+                    this.$watch('currentDate', () => this.triggerCheck());
+                    this.$watch('currentJamMulai', () => this.triggerCheck());
+                    this.$watch('currentJamSelesai', () => this.triggerCheck());
+                },
+
+                triggerCheck() {
+                    if (this.selectedAction !== 'edit') {
+                        this.conflictError = '';
+                        return;
+                    }
+                    if (this.checkTimeout) clearTimeout(this.checkTimeout);
+
+                    this.isCheckingOut = true;
+                    this.checkTimeout = setTimeout(() => {
+                        this.executeCheck();
+                    }, 500);
+                },
+
+                async executeCheck() {
+                    if (!this.currentRoom || !this.currentDate || !this.currentJamMulai || !this.currentJamSelesai) {
+                        this.isCheckingOut = false;
+                        return;
+                    }
+
+                    try {
+                        let url = `{{ route('eoffice.peminjaman.admin.persetujuan.check-collision') }}?ruangan_id=${this.currentRoom}&tanggal_pinjam=${this.currentDate}&jam_mulai=${this.currentJamMulai}&jam_selesai=${this.currentJamSelesai}&exclude_id=${this.selectedId}`;
+                        let res = await fetch(url);
+                        let data = await res.json();
+
+                        if (data.conflict) {
+                            this.conflictError = data.message;
+                        } else {
+                            this.conflictError = '';
+                        }
+                    } catch (e) {
+                        console.error(e);
+                    } finally {
+                        this.isCheckingOut = false;
+                    }
+                },
+
+                openAction(id, name, status, room, date, jamMulai, jamSelesai) {
                     this.selectedId = id;
                     this.selectedName = name;
                     this.selectedStatus = status;
+
+                    this.currentRoom = room;
+                    this.currentDate = date;
+                    this.currentJamMulai = jamMulai;
+                    this.currentJamSelesai = jamSelesai;
+                    this.conflictError = '';
+
                     if (status === 'disetujui') {
                         this.selectedAction = 'ditolak';
                     } else {
@@ -348,12 +499,19 @@
                 closeModal() {
                     this.modalTindakan = false;
                     this.selectedId = null;
+                    if (this.checkTimeout) clearTimeout(this.checkTimeout);
                 },
 
                 getFormAction() {
                     if (!this.selectedId) return '#';
-                    let baseUrl = "{{ route('eoffice.peminjaman.admin.persetujuan.update', 'REPLACE_ID') }}";
-                    return baseUrl.replace('REPLACE_ID', this.selectedId);
+
+                    if (this.selectedAction === 'edit') {
+                        let baseUrl = "{{ route('eoffice.peminjaman.admin.persetujuan.override', 'REPLACE_ID') }}";
+                        return baseUrl.replace('REPLACE_ID', this.selectedId);
+                    } else {
+                        let baseUrl = "{{ route('eoffice.peminjaman.admin.persetujuan.update', 'REPLACE_ID') }}";
+                        return baseUrl.replace('REPLACE_ID', this.selectedId);
+                    }
                 }
             }))
         })

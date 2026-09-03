@@ -173,4 +173,147 @@ class PersetujuanController extends Controller
         $msg = $request->status == 'disetujui' ? 'berhasil disetujui' : 'telah ditolak';
         return redirect()->back()->with('success', "Pengajuan peminjaman {$msg}.");
     }
+    public function updateOverride(Request $request, $id)
+    {
+        $request->validate([
+            'override_ruangan_id' => 'required|exists:eo_mr_ruangans,id',
+            'override_tanggal_pinjam' => 'required|date',
+            'override_jam_mulai' => 'required|date_format:H:i',
+            'override_jam_selesai' => 'required|date_format:H:i|after:override_jam_mulai',
+        ]);
+
+        $peminjaman = Peminjaman::findOrFail($id);
+
+        if ($peminjaman->status !== 'disetujui') {
+            return redirect()->back()->withErrors(['Status Error' => 'Hanya peminjaman berstatus disetujui yang dapat di-override.']);
+        }
+
+        // Re-check Collision - Peminjaman
+        $isConflict = Peminjaman::where('ruangan_id', $request->override_ruangan_id)
+            ->where('tanggal_pinjam', $request->override_tanggal_pinjam)
+            ->where('status', 'disetujui')
+            ->where('id', '!=', $peminjaman->id)
+            ->where(function ($q) use ($request) {
+                $q->where('jam_mulai', '<', $request->override_jam_selesai)
+                    ->where('jam_selesai', '>', $request->override_jam_mulai);
+            })
+            ->first();
+
+        if ($isConflict) {
+            $range = \Carbon\Carbon::parse($isConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isConflict->jam_selesai)->format('H:i');
+            $tujuanStr = $isConflict->tujuan ? " ('{$isConflict->tujuan}')" : "";
+            return redirect()->back()->withErrors(['Bentrok' => "Gagal mengubah jadwal! Rentang waktu menabrak peminjaman lain$tujuanStr pada jam {$range}."]);
+        }
+
+        // Re-check Collision - Jadwal Internal (Akademik)
+        $dayOfWeek = \Carbon\Carbon::parse($request->override_tanggal_pinjam)->format('N');
+        $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $request->override_ruangan_id)
+            ->where(function ($query) use ($request, $dayOfWeek) {
+                $query->where(function ($q) use ($dayOfWeek, $request) {
+                    $q->where('tipe_jadwal', 'rutin')
+                        ->where('hari', $dayOfWeek)
+                        ->where(function ($tq) use ($request) {
+                            $tq->whereNull('tgl_mulai_efektif')
+                                ->orWhere('tgl_mulai_efektif', '<=', $request->override_tanggal_pinjam);
+                        })
+                        ->where(function ($tq) use ($request) {
+                            $tq->whereNull('tgl_selesai_efektif')
+                                ->orWhere('tgl_selesai_efektif', '>=', $request->override_tanggal_pinjam);
+                        });
+                })->orWhere(function ($q) use ($request) {
+                    $q->where('tipe_jadwal', 'spesifik')->where('tanggal_spesifik', $request->override_tanggal_pinjam);
+                });
+            })
+            ->where(function ($query) use ($request) {
+                $query->where('jam_mulai', '<', $request->override_jam_selesai)
+                    ->where('jam_selesai', '>', $request->override_jam_mulai);
+            })
+            ->first();
+
+        if ($isInternalConflict) {
+            $range = \Carbon\Carbon::parse($isInternalConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isInternalConflict->jam_selesai)->format('H:i');
+            return redirect()->back()->withErrors(['Sistem Internal' => "Gagal mengubah jadwal! Rentang waktu menabrak Jadwal Akademik: {$isInternalConflict->keterangan} pada jam {$range}."]);
+        }
+
+        $peminjaman->update([
+            'ruangan_id' => $request->override_ruangan_id,
+            'tanggal_pinjam' => $request->override_tanggal_pinjam,
+            'jam_mulai' => $request->override_jam_mulai,
+            'jam_selesai' => $request->override_jam_selesai,
+        ]);
+
+        return redirect()->back()->with('success', 'Override sukses! Waktu dan Ruangan peminjaman tersebut berhasil diubah.');
+    }
+
+    /**
+     * Mengecek bentrok secara asynchronous via AJAX/Fetch
+     * Mencegah hit lemot ke database dengan memberikan API endpoint spesifik
+     */
+    public function checkCollision(Request $request)
+    {
+        $ruanganId = $request->ruangan_id;
+        $tanggal = $request->tanggal_pinjam;
+        $jamMulai = $request->jam_mulai;
+        $jamSelesai = $request->jam_selesai;
+        $excludeId = $request->exclude_id; // ID Peminjaman yang sedang diedit (biar tidak bentrok dengan diri sendiri)
+
+        if (!$ruanganId || !$tanggal || !$jamMulai || !$jamSelesai) {
+            return response()->json(['conflict' => false]);
+        }
+
+        // 1. Cek bentrok peminjaman lain
+        $isConflict = Peminjaman::where('ruangan_id', $ruanganId)
+            ->where('tanggal_pinjam', $tanggal)
+            ->where('status', 'disetujui')
+            ->when($excludeId, function ($query, $excludeId) {
+                return $query->where('id', '!=', $excludeId);
+            })
+            ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                $query->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            })->first();
+
+        if ($isConflict) {
+            $range = \Carbon\Carbon::parse($isConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isConflict->jam_selesai)->format('H:i');
+            return response()->json([
+                'conflict' => true,
+                'message' => "Ruangan terisi pihak lain pada jam {$range}."
+            ]);
+        }
+
+        // 2. Cek Jadwal Internal Akademik
+        $dayOfWeek = \Carbon\Carbon::parse($tanggal)->format('N');
+        $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $ruanganId)
+            ->where(function ($query) use ($tanggal, $dayOfWeek) {
+                $query->where(function ($q) use ($dayOfWeek, $tanggal) {
+                    $q->where('tipe_jadwal', 'rutin')
+                        ->where('hari', $dayOfWeek)
+                        ->where(function ($tq) use ($tanggal) {
+                            $tq->whereNull('tgl_mulai_efektif')
+                                ->orWhere('tgl_mulai_efektif', '<=', $tanggal);
+                        })
+                        ->where(function ($tq) use ($tanggal) {
+                            $tq->whereNull('tgl_selesai_efektif')
+                                ->orWhere('tgl_selesai_efektif', '>=', $tanggal);
+                        });
+                })->orWhere(function ($q) use ($tanggal) {
+                    $q->where('tipe_jadwal', 'spesifik')->where('tanggal_spesifik', $tanggal);
+                });
+            })
+            ->where(function ($query) use ($jamMulai, $jamSelesai) {
+                $query->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            })
+            ->first();
+
+        if ($isInternalConflict) {
+            $range = \Carbon\Carbon::parse($isInternalConflict->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($isInternalConflict->jam_selesai)->format('H:i');
+            return response()->json([
+                'conflict' => true,
+                'message' => "Menabrak Jadwal Akademik: {$isInternalConflict->keterangan} (Jam {$range})."
+            ]);
+        }
+
+        return response()->json(['conflict' => false]);
+    }
 }
