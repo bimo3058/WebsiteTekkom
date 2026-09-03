@@ -135,7 +135,7 @@
     {{-- Pengumpulan Section --}}
     <div style="margin-top:20px;padding-top:20px;border-top:1px solid #DFE1E7;">
         <button @click="open = !open" type="button"
-                style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#6366F1;cursor:pointer;padding:8px 0;border:none;background:none;">
+                style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#5D6DA2;cursor:pointer;padding:8px 0;border:none;background:none;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                  :class="open ? 'rotate-90' : ''" style="transition:transform .2s;">
                 <polyline points="9 18 15 12 9 6"/>
@@ -291,7 +291,7 @@
                                         @endif
                                         @if($peng->riwayat->isNotEmpty())
                                         <div x-data="{ openRiwayat: false }" style="position:relative;">
-                                            <button type="button" @click="openRiwayat = !openRiwayat" style="background:none;border:none;padding:0;font-size:10px;color:#6366F1;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:1px;">
+                                            <button type="button" @click="openRiwayat = !openRiwayat" style="background:none;border:none;padding:0;font-size:10px;color:#5D6DA2;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:1px;">
                                                 Riwayat ({{ $peng->riwayat->count() }})
                                                 <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
                                             </button>

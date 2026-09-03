@@ -25,7 +25,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mb-6">
         <div class="flex items-center gap-4">
             <div
-                class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg border-2 border-white shadow-sm flex-shrink-0">
+                class="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-500 font-bold text-lg border-2 border-white shadow-sm flex-shrink-0">
                 {{ strtoupper(substr($kp->nama_mahasiswa ?? $kp->nim ?? 'M', 0, 2)) }}
             </div>
             <div>
@@ -38,14 +38,14 @@
     </div>
 
     <!-- Info Box -->
-    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
-        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div class="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+        <svg class="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-            <p class="text-sm font-semibold text-blue-800">Nilai Dosen Pembimbing</p>
-            <p class="text-xs text-blue-600 mt-1">Bagian ini hanya untuk <strong>Nilai Seminar Pembimbing</strong>.
+            <p class="text-sm font-semibold text-primary-500">Nilai Dosen Pembimbing</p>
+            <p class="text-xs text-primary-500 mt-1">Bagian ini hanya untuk <strong>Nilai Seminar Pembimbing</strong>.
                 Nilai Lapangan diisi oleh Koordinator KP.</p>
         </div>
     </div>
@@ -86,7 +86,7 @@
                             <input type="number" id="nilai_{{ $komp->id }}" name="nilai_{{ $komp->id }}" min="0" max="100"
                                 step="0.01" value="{{ old('nilai_' . $komp->id, $existingValue) }}" placeholder="Contoh: 85"
                                 data-bobot="{{ $komp->bobot }}"
-                                class="w-full px-4 py-3 text-2xl font-bold text-slate-900 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:font-normal placeholder:text-base dynamic-grade-input"
+                                class="w-full px-4 py-3 text-2xl font-bold text-slate-900 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:font-normal placeholder:text-base dynamic-grade-input"
                                 oninput="updateAverage()" required>
                             @error('nilai_' . $komp->id)
                                 <p class="text-red-600 text-xs mt-1.5">{{ $message }}</p>
@@ -114,7 +114,7 @@
                                     class="font-normal">45-54</span></div>
                             <div class="bg-yellow-100 text-yellow-700 rounded-lg p-1.5 font-semibold">C/C+<br><span
                                     class="font-normal">55-64</span></div>
-                            <div class="bg-blue-100 text-blue-700 rounded-lg p-1.5 font-semibold">B/B+<br><span
+                            <div class="bg-primary-100 text-primary-500 rounded-lg p-1.5 font-semibold">B/B+<br><span
                                     class="font-normal">65-79</span></div>
                             <div class="bg-emerald-100 text-emerald-700 rounded-lg p-1.5 font-semibold">A<br><span
                                     class="font-normal">80-100</span></div>
@@ -133,7 +133,7 @@
                             step="0.01"
                             value="{{ $kp->penilaian ? $kp->penilaian->nilai_seminar_pembimbing : old('nilai_seminar_pembimbing') }}"
                             placeholder="Contoh: 85"
-                            class="w-full px-4 py-3 text-2xl font-bold text-slate-900 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:font-normal placeholder:text-base dynamic-grade-input-legacy"
+                            class="w-full px-4 py-3 text-2xl font-bold text-slate-900 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:font-normal placeholder:text-base dynamic-grade-input-legacy"
                             oninput="updateLegacyGrade()" required>
                         @error('nilai_seminar_pembimbing')
                             <p class="text-red-600 text-xs mt-1.5">{{ $message }}</p>
@@ -160,7 +160,7 @@
                                     class="font-normal">45-54</span></div>
                             <div class="bg-yellow-100 text-yellow-700 rounded-lg p-1.5 font-semibold">C/C+<br><span
                                     class="font-normal">55-64</span></div>
-                            <div class="bg-blue-100 text-blue-700 rounded-lg p-1.5 font-semibold">B/B+<br><span
+                            <div class="bg-primary-100 text-primary-500 rounded-lg p-1.5 font-semibold">B/B+<br><span
                                     class="font-normal">65-79</span></div>
                             <div class="bg-emerald-100 text-emerald-700 rounded-lg p-1.5 font-semibold">A<br><span
                                     class="font-normal">80-100</span></div>
@@ -188,7 +188,7 @@
                     Batal
                 </a>
                 <button type="submit"
-                    class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
+                    class="flex-1 px-6 py-3 bg-primary-500 hover:bg-primary-500 text-white font-bold rounded-xl shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>

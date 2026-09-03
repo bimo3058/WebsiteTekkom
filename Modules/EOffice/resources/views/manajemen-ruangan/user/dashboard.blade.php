@@ -30,7 +30,7 @@
     {{-- Stats Row --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
         <div class="bg-white rounded-[16px] border border-gray-200 p-5 flex items-center gap-5 shadow-sm hover:shadow-md transition-all">
-            <div class="w-[52px] h-[52px] flex-shrink-0 rounded-[14px] bg-indigo-50 flex items-center justify-center text-indigo-600 border border-indigo-100">
+            <div class="w-[52px] h-[52px] flex-shrink-0 rounded-[14px] bg-primary-50 flex items-center justify-center text-primary-500 border border-primary-100">
                 <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
             </div>
             <div>
@@ -39,13 +39,13 @@
             </div>
         </div>
 
-        <div class="relative bg-gradient-to-br from-[#0B266E] to-[#1a3c94] rounded-[16px] border border-blue-900 p-5 flex items-center overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer" onclick="window.location.href='{{ route('eoffice.peminjaman.user.kalender') }}'">
+        <div class="relative bg-gradient-to-br from-[#0B266E] to-[#1a3c94] rounded-[16px] border border-primary-500 p-5 flex items-center overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer" onclick="window.location.href='{{ route('eoffice.peminjaman.user.kalender') }}'">
             <div class="absolute top-0 right-0 -mt-6 -mr-6 w-32 h-32 bg-white opacity-5 rounded-full blur-2xl"></div>
-            <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-24 h-24 bg-blue-400 opacity-20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-700"></div>
+            <div class="absolute bottom-0 left-0 -mb-6 -ml-6 w-24 h-24 bg-primary-400 opacity-20 rounded-full blur-xl group-hover:scale-125 transition-transform duration-700"></div>
             
             <div class="relative z-10 w-full flex items-center justify-between gap-4">
                 <div class="flex-1">
-                    <div class="text-blue-200 font-medium text-[13px] mb-1">Perlu Ruangan Segera?</div>
+                    <div class="text-primary-200 font-medium text-[13px] mb-1">Perlu Ruangan Segera?</div>
                     <div class="text-white text-[16px] font-bold tracking-tight leading-snug">Cek Kalender Ketersediaan</div>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/20 text-white backdrop-blur-sm group-hover:bg-white/20 group-hover:scale-105 transition-all flex-shrink-0 shadow-inner">

@@ -21,9 +21,9 @@
 
         <!-- Form Card -->
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
-            <div class="px-8 py-6 bg-gradient-to-r from-blue-600 to-indigo-700">
+            <div class="px-8 py-6 bg-gradient-to-r from-primary-500 to-primary-500">
                 <h2 class="text-xl font-semibold text-white">Formulir Pengajuan</h2>
-                <p class="text-blue-100 text-sm mt-1">Lengkapi data di bawah ini dengan benar sesuai rencana KP kamu.</p>
+                <p class="text-primary-100 text-sm mt-1">Lengkapi data di bawah ini dengan benar sesuai rencana KP kamu.</p>
             </div>
             
             <div class="p-8">
@@ -46,28 +46,28 @@
                         <div class="col-span-2">
                             <label for="instansi_kp" class="block text-sm font-medium text-slate-700 mb-1">Nama Instansi / Perusahaan Tujuan</label>
                             <input type="text" name="instansi_kp" id="instansi_kp" placeholder="Contoh: PT. Telekomunikasi Indonesia (Telkom)" required
-                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out py-3 px-4 border">
+                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition duration-150 ease-in-out py-3 px-4 border">
                         </div>
 
                         <!-- Rencana Judul -->
                         <div class="col-span-2">
                             <label for="judul_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP</label>
                             <input type="text" name="judul_kp" id="judul_kp" placeholder="Masukkan rencana topik yang akan dikerjakan" required
-                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out py-3 px-4 border">
+                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition duration-150 ease-in-out py-3 px-4 border">
                         </div>
 
                         <!-- Tanggal Mulai -->
                         <div>
                             <label for="tanggal_mulai" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tanggal Mulai</label>
                             <input type="date" name="tanggal_mulai" id="tanggal_mulai" required
-                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out py-3 px-4 border text-slate-600">
+                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition duration-150 ease-in-out py-3 px-4 border text-slate-600">
                         </div>
 
                         <!-- Tanggal Selesai -->
                         <div>
                             <label for="tanggal_selesai" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tanggal Selesai</label>
                             <input type="date" name="tanggal_selesai" id="tanggal_selesai" required
-                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out py-3 px-4 border text-slate-600">
+                                class="w-full rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 transition duration-150 ease-in-out py-3 px-4 border text-slate-600">
                         </div>
                     </div>
 
@@ -90,7 +90,7 @@
                     <!-- Submit Button -->
                     <div class="pt-4 flex justify-end">
                         <button type="submit" 
-                            class="inline-flex justify-center py-3 px-8 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-105">
+                            class="inline-flex justify-center py-3 px-8 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-primary-500 hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-all duration-200 transform hover:scale-105">
                             Kirim Pengajuan KP
                         </button>
                     </div>

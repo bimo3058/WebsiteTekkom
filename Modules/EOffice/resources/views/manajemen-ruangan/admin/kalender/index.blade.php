@@ -150,11 +150,11 @@
                 {{-- Mode Toggle --}}
                 <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
                         Mingguan
                     </a>
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
                         Bulanan
                     </a>
                 </div>
@@ -184,7 +184,7 @@
             <div class="flex items-center justify-between mb-4">
                 @if($canGoBackWeek)
                     <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                         ← Minggu Lalu
                     </a>
                 @else
@@ -194,7 +194,7 @@
                     {{ $weekStart->translatedFormat('d M Y') }} — {{ $weekEnd->translatedFormat('d M Y') }}
                 </div>
                 <a href="{{ request()->fullUrlWithQuery(['week_start' => $nextWeek]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                     Minggu Depan →
                 </a>
             </div>
@@ -283,10 +283,10 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}"
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                                                                                                                                {{ $day->isToday() ? 'background: #EBEDF6; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
-                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
+                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#5D6DA2' : '#6B7280' }}; margin-top:2px;">
                                             {{ $day->format('d/m') }}
                                         </div>
                                     </th>
@@ -401,7 +401,7 @@
             <div class="flex items-center justify-between mb-4">
                 @if($canGoBackMonth)
                     <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                         ← Bulan Lalu
                     </a>
                 @else
@@ -411,7 +411,7 @@
                     {{ $monthDate->translatedFormat('F Y') }}
                 </div>
                 <a href="{{ request()->fullUrlWithQuery(['month' => $nextMonth]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-primary-500 font-semibold px-3 py-2 rounded-lg hover:bg-primary-50 transition-colors">
                     Bulan Depan →
                 </a>
             </div>
@@ -469,7 +469,7 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                  background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                  background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #5D6DA2' : '1px solid #E5E7EB' }};
                                                                                                                                                                                                                                                                                   transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
@@ -499,7 +499,7 @@
 
             <div class="mt-4 text-[12px] text-gray-500 font-medium">
                 💡 <strong>Tips:</strong> Klik tanggal manapun untuk beralih ke tampilan <span
-                    class="text-indigo-600 font-bold">Mingguan</span> di minggu tersebut secara detail.
+                    class="text-primary-500 font-bold">Mingguan</span> di minggu tersebut secara detail.
             </div>
         @endif
 
@@ -531,9 +531,9 @@
                     <div class="flex justify-between items-center mb-4">
                         <div class="flex items-center gap-2">
                             <span class="px-3 py-1 text-[11px] font-bold uppercase tracking-wider rounded-md" :class="{
-                                  'bg-blue-100 text-blue-800': type === 'Peminjaman',
+                                  'bg-primary-100 text-primary-500': type === 'Peminjaman',
                                   'bg-red-100 text-red-800': type === 'Agenda Internal',
-                                  'bg-purple-100 text-purple-800': type === 'Jadwal Mingguan'
+                                  'bg-primary-100 text-primary-500': type === 'Jadwal Mingguan'
                               }" x-text="type"></span>
                         </div>
                         <button @click="open = false"
@@ -550,7 +550,7 @@
 
                     <div class="space-y-4">
                         <div class="flex items-start gap-3">
-                            <div class="mt-0.5 p-1.5 bg-indigo-50 rounded text-indigo-500">
+                            <div class="mt-0.5 p-1.5 bg-primary-50 rounded text-primary-500">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -564,7 +564,7 @@
                         </div>
 
                         <div class="flex items-start gap-3">
-                            <div class="mt-0.5 p-1.5 bg-indigo-50 rounded text-indigo-500">
+                            <div class="mt-0.5 p-1.5 bg-primary-50 rounded text-primary-500">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
@@ -578,7 +578,7 @@
                         </div>
 
                         <div class="flex items-start gap-3" x-show="telepon && telepon !== '-'">
-                            <div class="mt-0.5 p-1.5 bg-indigo-50 rounded text-indigo-500">
+                            <div class="mt-0.5 p-1.5 bg-primary-50 rounded text-primary-500">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
@@ -595,7 +595,7 @@
 
 
                         <div class="flex items-start gap-3">
-                            <div class="mt-0.5 p-1.5 bg-indigo-50 rounded text-indigo-500">
+                            <div class="mt-0.5 p-1.5 bg-primary-50 rounded text-primary-500">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -693,8 +693,8 @@
                         <div>
                             <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Input Peminjaman</h3>
                             <p class="text-sm text-gray-500 mt-1">Mengunci penjadwalan paksa untuk <span
-                                    class="font-semibold text-indigo-600" x-text="ruangan_nama"></span> pada <span
-                                    class="font-semibold text-indigo-600"
+                                    class="font-semibold text-primary-500" x-text="ruangan_nama"></span> pada <span
+                                    class="font-semibold text-primary-500"
                                     x-text="tanggal + ' pukul ' + jam + ' WIB'"></span>.</p>
                         </div>
                         <button type="button" @click="show = false"
@@ -723,11 +723,11 @@
                                         Mode Tindakan</label>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label class="border rounded-lg p-3 cursor-pointer transition-colors"
-                                            :class="modeAction === 'internal' ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                            :class="modeAction === 'internal' ? 'bg-primary-50 border-primary-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
                                             <input type="radio" name="tipe_aksi" value="internal" x-model="modeAction"
                                                 class="hidden">
                                             <div class="font-bold text-sm"
-                                                :class="modeAction === 'internal' ? 'text-indigo-700' : 'text-gray-700'">
+                                                :class="modeAction === 'internal' ? 'text-primary-500' : 'text-gray-700'">
                                                 Jadwal Internal</div>
                                             <div class="text-[10px] text-gray-500 mt-1">Blokir Kuliah / Maintenance
                                             </div>
@@ -781,20 +781,20 @@
                                 <!-- Academic Metadata Panel (Dynamic) -->
                                 <div x-show="kategoriType === 'Jadwal Akademik (Kuliah)' && modeAction === 'internal'"
                                     style="display:none;"
-                                    class="bg-indigo-50 border border-indigo-100 p-4 rounded-lg space-y-4 mt-2">
+                                    class="bg-primary-50 border border-primary-100 p-4 rounded-lg space-y-4 mt-2">
                                     <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-indigo-800 mb-1.5 flex items-center gap-1.5">
+                                        class="block text-[11px] uppercase tracking-wider font-bold text-primary-500 mb-1.5 flex items-center gap-1.5">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
                                         Metadata Akademik Tambahan <span
-                                            class="text-indigo-500 font-normal">(Opsional)</span>
+                                            class="text-primary-500 font-normal">(Opsional)</span>
                                     </label>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
                                             <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Mata
+                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Mata
                                                 Kuliah</label>
                                             <input type="text" name="mata_kuliah"
                                                 :required="kategoriType === 'Jadwal Akademik (Kuliah)'"
@@ -802,7 +802,7 @@
                                         </div>
                                         <div>
                                             <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Kode
+                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Kode
                                                 MK</label>
                                             <input type="text" name="kode_mk" class="mp-input w-full"
                                                 placeholder="Contoh: TKK102">
@@ -811,25 +811,25 @@
                                     <div class="grid grid-cols-3 gap-4">
                                         <div>
                                             <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Kelas</label>
+                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Kelas</label>
                                             <input type="text" name="kelas" class="mp-input w-full"
                                                 placeholder="Misal: A">
                                         </div>
                                         <div>
                                             <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">SKS</label>
+                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">SKS</label>
                                             <input type="number" name="sks" class="mp-input w-full" placeholder="0-4">
                                         </div>
                                         <div>
                                             <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Kuota</label>
+                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Kuota</label>
                                             <input type="number" name="kuota" class="mp-input w-full"
                                                 placeholder="Kuota">
                                         </div>
                                     </div>
                                     <div>
                                         <label
-                                            class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Nama
+                                            class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Nama
                                             Dosen Pengampu</label>
                                         <input type="text" name="pengampu" class="mp-input w-full"
                                             placeholder="Dosen Pengampu Mata Kuliah">
@@ -848,7 +848,7 @@
                                         autocomplete="off" :required="modeAction === 'dosen'">
 
                                     <!-- LOADING SPINNER -->
-                                    <div x-show="isSearching" class="absolute right-3 top-8 text-indigo-500">
+                                    <div x-show="isSearching" class="absolute right-3 top-8 text-primary-500">
                                         <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
                                             viewBox="0 0 24 24">
                                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
@@ -864,7 +864,7 @@
                                         style="display: none;">
                                         <template x-for="user in suggestions" :key="user.id">
                                             <li @click="selectUser(user)"
-                                                class="px-4 py-2.5 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                                                class="px-4 py-2.5 hover:bg-primary-50 cursor-pointer border-b border-gray-100 last:border-b-0">
                                                 <div class="font-bold text-sm text-gray-800" x-text="user.name"></div>
                                                 <div
                                                     class="flex items-center gap-2 mt-0.5 text-[11px] font-medium text-gray-500">
@@ -898,7 +898,7 @@
                             Batal
                         </button>
                         <button type="submit" form="expressBookingForm"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-500 border border-transparent rounded-lg shadow-sm hover:bg-primary-500 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
                             Simpan
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

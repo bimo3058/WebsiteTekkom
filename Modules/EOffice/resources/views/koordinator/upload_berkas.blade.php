@@ -45,7 +45,7 @@
             class="fixed inset-y-0 left-0 z-30 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
             <div class="h-20 flex items-center px-8 border-b border-slate-100">
                 <div
-                    class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold mr-4 shadow-md shadow-indigo-200 flex-shrink-0">
+                    class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-white font-bold mr-4 shadow-md shadow-primary-200 flex-shrink-0">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
@@ -63,7 +63,7 @@
                 </div>
 
                 <a href="{{ route('eoffice.kp.koordinator.dashboard') }}"
-                    class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                    class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-primary-500 hover:bg-primary-50 rounded-xl transition-all text-sm font-medium">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -74,7 +74,7 @@
                 <!-- Informasi Menu (Expanded) -->
                 <div class="mb-1" x-data="{ expanded: false }">
                     <button @click="expanded = !expanded"
-                        class="w-full flex items-center justify-between px-4 py-3 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                        class="w-full flex items-center justify-between px-4 py-3 text-slate-600 hover:text-primary-500 hover:bg-primary-50 rounded-xl transition-all text-sm font-medium">
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -89,18 +89,18 @@
                     </button>
                     <div x-show="expanded" x-collapse class="pl-11 pr-4 py-2 space-y-1">
                         <a href="{{ route('eoffice.kp.koordinator.pengumuman') }}"
-                            class="flex items-center px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors relative before:absolute before:-left-5 before:top-1/2 before:w-3 before:h-px before:bg-slate-200">
+                            class="flex items-center px-3 py-2 text-sm font-medium text-slate-500 hover:text-primary-500 hover:bg-slate-50 rounded-lg transition-colors relative before:absolute before:-left-5 before:top-1/2 before:w-3 before:h-px before:bg-slate-200">
                             Pengumuman
                         </a>
                         <a href="{{ route('eoffice.kp.koordinator.faq') }}"
-                            class="flex items-center px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors relative before:absolute before:-left-5 before:top-1/2 before:w-3 before:h-px before:bg-slate-200">
+                            class="flex items-center px-3 py-2 text-sm font-medium text-slate-500 hover:text-primary-500 hover:bg-slate-50 rounded-lg transition-colors relative before:absolute before:-left-5 before:top-1/2 before:w-3 before:h-px before:bg-slate-200">
                             FAQ & Dokumen
                         </a>
                     </div>
                 </div>
 
                 <a href="{{ route('eoffice.kp.koordinator.data_mahasiswa') }}"
-                    class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                    class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-primary-500 hover:bg-primary-50 rounded-xl transition-all text-sm font-medium">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -109,7 +109,7 @@
                 </a>
 
                 <a href="{{ route('eoffice.kp.koordinator.balancing') }}"
-                    class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                    class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-primary-500 hover:bg-primary-50 rounded-xl transition-all text-sm font-medium">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -123,7 +123,7 @@
             <div class="p-4 border-t border-slate-100">
                 <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                     <div
-                        class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">
+                        class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-500 font-bold text-sm shadow-sm border border-primary-200">
                         K
                     </div>
                     <div class="flex-1 min-w-0">
@@ -149,7 +149,7 @@
                         </svg>
                     </button>
                     <nav class="hidden sm:flex items-center space-x-2 text-sm text-slate-500 font-medium">
-                        <span class="text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md">Upload
+                        <span class="text-primary-500 font-semibold bg-primary-50 px-2.5 py-1 rounded-md">Upload
                             Berkas</span>
                     </nav>
                 </div>
@@ -204,7 +204,7 @@
                             class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-8 hover:shadow-md transition-shadow">
                             <div class="flex items-start gap-4 mb-6">
                                 <div
-                                    class="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    class="w-12 h-12 bg-primary-50 text-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -227,19 +227,19 @@
                                 </p>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 text-[11px] font-mono">
                                     <div class="bg-white p-2 rounded border border-slate-200"><span
-                                            class="text-indigo-600">${nama}</span> : Nama Mahasiswa</div>
+                                            class="text-primary-500">${nama}</span> : Nama Mahasiswa</div>
                                     <div class="bg-white p-2 rounded border border-slate-200"><span
-                                            class="text-indigo-600">${nip}</span> : NIM Mahasiswa</div>
+                                            class="text-primary-500">${nip}</span> : NIM Mahasiswa</div>
                                     <div class="bg-white p-2 rounded border border-slate-200"><span
-                                            class="text-indigo-600">${topik}</span> : Topik Kerja Praktek</div>
+                                            class="text-primary-500">${topik}</span> : Topik Kerja Praktek</div>
                                     <div class="bg-white p-2 rounded border border-slate-200"><span
-                                            class="text-indigo-600">${nama_pembimbing}</span> : Nama Pembimbing</div>
+                                            class="text-primary-500">${nama_pembimbing}</span> : Nama Pembimbing</div>
                                     <div class="bg-white p-2 rounded border border-slate-200"><span
-                                            class="text-indigo-600">${nip_pembimbing}</span> : NIP Pembimbing</div>
+                                            class="text-primary-500">${nip_pembimbing}</span> : NIP Pembimbing</div>
                                     <div class="bg-white p-2 rounded border border-slate-200"><span
-                                            class="text-indigo-600">${jabatan_pembimbing}</span> : Jabatan</div>
+                                            class="text-primary-500">${jabatan_pembimbing}</span> : Jabatan</div>
                                     <div class="bg-white p-2 rounded border border-slate-200"><span
-                                            class="text-indigo-600">${perusahaan}</span> : Nama Perusahaan</div>
+                                            class="text-primary-500">${perusahaan}</span> : Nama Perusahaan</div>
                                 </div>
                             </div>
 
@@ -247,23 +247,23 @@
                                 enctype="multipart/form-data" class="space-y-4">
                                 @csrf
                                 <div
-                                    class="border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl p-6 transition-colors flex flex-col items-center justify-center cursor-pointer relative bg-slate-50/20 group">
+                                    class="border-2 border-dashed border-slate-200 hover:border-primary-400 rounded-xl p-6 transition-colors flex flex-col items-center justify-center cursor-pointer relative bg-slate-50/20 group">
                                     <input type="file" name="template_a2" id="template_a2"
                                         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                         accept=".docx,.doc" onchange="updateFileName(this)">
-                                    <svg class="w-10 h-10 text-slate-400 group-hover:text-indigo-500 mb-3 transition-colors"
+                                    <svg class="w-10 h-10 text-slate-400 group-hover:text-primary-500 mb-3 transition-colors"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                                     </svg>
-                                    <span class="text-sm font-bold text-slate-700 group-hover:text-indigo-600"
+                                    <span class="text-sm font-bold text-slate-700 group-hover:text-primary-500"
                                         id="file-label">Pilih atau Drag Template Word (.docx)</span>
                                     <span class="text-xs text-slate-400 mt-1">Ukuran maksimal file 10MB</span>
                                 </div>
 
                                 <div class="flex justify-end pt-2">
                                     <button type="submit"
-                                        class="inline-flex items-center justify-center px-5 py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200">
+                                        class="inline-flex items-center justify-center px-5 py-2.5 bg-primary-500 text-white font-bold text-sm rounded-xl hover:bg-primary-500 transition-colors shadow-sm shadow-primary-200">
                                         Simpan & Sinkronkan
                                     </button>
                                 </div>
@@ -282,7 +282,7 @@
             const label = document.getElementById('file-label');
             if (input.files && input.files[0]) {
                 label.textContent = "File Terpilih: " + input.files[0].name;
-                label.className = "text-sm font-bold text-indigo-600";
+                label.className = "text-sm font-bold text-primary-500";
             }
         }
     </script>

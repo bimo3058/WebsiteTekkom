@@ -117,7 +117,7 @@
 <div class="mp-card flex-shrink-0" style="margin-bottom:20px;">
     {{-- Modul Header --}}
     <div class="mp-card-header" style="background:#F9FAFB;border-bottom:1px solid #EDF0F4;border-radius:12px 12px 0 0;display:flex;align-items:center;gap:12px;">
-        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#5D6DA2,#8B5CF6);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round">
                 <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/>
             </svg>
@@ -212,7 +212,7 @@
 .sec-bar {
     width: 4px;
     height: 18px;
-    background: #6366F1;
+    background: #5D6DA2;
     border-radius: 2px;
     flex-shrink: 0;
 }

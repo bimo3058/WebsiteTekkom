@@ -1,5 +1,5 @@
 <x-eoffice::manajemen-ruangan.layout
-    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Event & Maintenance' }}">
+    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Event dan Maintenance' }}">
 
     <div
         x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}' }">
@@ -124,9 +124,9 @@
                                 <input type="hidden" name="kategori" value="Jadwal Akademik (Kuliah)">
                                 <input type="hidden" name="keterangan" value="Matkul Akademik">
 
-                                <div class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-4">
+                                <div class="p-4 bg-primary-50/50 border border-primary-100 rounded-xl space-y-4">
                                     <h4
-                                        class="text-[13px] font-bold text-indigo-900 border-b border-indigo-100 pb-2 mb-3">
+                                        class="text-[13px] font-bold text-primary-500 border-b border-primary-100 pb-2 mb-3">
                                         Informasi Mata Kuliah</h4>
                                     <div class="grid grid-cols-2 gap-4">
                                         <div>
@@ -261,8 +261,7 @@
                                         <h4 class="text-[13px] font-bold text-green-800 mb-1">Mekanisme Keamanan Impor
                                         </h4>
                                         <p class="text-[12.5px] leading-relaxed text-green-700/80">
-                                            Data jadwal yang diunggah tidak akan langsung dimanifestasikan ke database.
-                                            Sistem akan menampilkan layar Pratinjau (Sandbox) terlebih dulu.
+                                            Seluruh data jadwal yang diunggah tidak langsung diproses ke dalam basis data (database). Sistem akan menampilkan halaman Pratinjau agar pengguna dapat melakukan pengecekan data sebelum konfirmasi akhir.
                                         </p>
 
                                     </div>
@@ -272,8 +271,8 @@
                             <div class="mb-5" x-data="{ fileName: '' }">
                                 <label class="block mb-2 text-sm font-semibold text-gray-700">Pilih File Ekspor
                                     SIAP (*.xlsx, *.csv)</label>
-                                <div :class="fileName ? 'border-indigo-400 bg-indigo-50 text-indigo-700' : 'border-gray-300 text-gray-900'"
-                                    class="relative block w-full border-2 border-dashed rounded-lg p-5 text-center hover:border-gray-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:border-transparent transition-colors">
+                                <div :class="fileName ? 'border-primary-400 bg-primary-50 text-primary-500' : 'border-gray-300 text-gray-900'"
+                                    class="relative block w-full border-2 border-dashed rounded-lg p-5 text-center hover:border-gray-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-colors">
                                     <input type="file" name="file_excel"
                                         accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                                         required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -347,7 +346,7 @@
                                 </div>
                                 <input type="text" name="search" value="{{ request('search') }}" onblur="this.form.submit()"
                                     placeholder="Search"
-                                    class="w-full sm:w-[240px] pl-10 pr-3 py-[9px] text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all placeholder-gray-400">
+                                    class="w-full sm:w-[240px] pl-10 pr-3 py-[9px] text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-100 focus:border-primary-400 outline-none transition-all placeholder-gray-400">
                             </div>
 
                             <!-- Filter Button -->
@@ -380,7 +379,7 @@
                                                 class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
                                                 Hari</label>
                                             <select name="hari"
-                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors">
+                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors">
                                                 <option value="">Semua Hari</option>
                                                 <option value="1" {{ request('hari') == '1' ? 'selected' : '' }}>Senin
                                                 </option>
@@ -400,7 +399,7 @@
                                                 class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
                                                 Ruangan</label>
                                             <select name="ruangan_id"
-                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors">
+                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors">
                                                 <option value="">Semua Ruangan</option>
                                                 @foreach($ruangans as $r)
                                                     <option value="{{ $r->id }}" {{ request('ruangan_id') == $r->id ? 'selected' : '' }}>
@@ -411,7 +410,7 @@
                                         </div>
                                         <div class="flex gap-2 pt-3 border-t border-gray-100 mt-2">
                                             <button type="submit"
-                                                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Terapkan</button>
+                                                class="flex-1 bg-primary-500 hover:bg-primary-500 text-white font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Terapkan</button>
                                             @if(request('search') || request('hari') || request('ruangan_id'))
                                                 <a href="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}"
                                                     class="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Reset</a>
@@ -450,7 +449,7 @@
                                         </div>
                                         <div>
                                             <select name="sort" onchange="this.form.submit()"
-                                                class="w-full px-3 py-3 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors cursor-pointer">
+                                                class="w-full px-3 py-3 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors cursor-pointer">
                                                 <option value="waktu" {{ request('sort', 'waktu') === 'waktu' ? 'selected' : '' }}>Hari & Waktu Terawal</option>
                                                 <option value="matkul_asc" {{ request('sort') === 'matkul_asc' ? 'selected' : '' }}>Mata Kuliah (A-Z)</option>
                                                 <option value="matkul_desc" {{ request('sort') === 'matkul_desc' ? 'selected' : '' }}>Mata Kuliah (Z-A)</option>
@@ -503,7 +502,7 @@
                                     </td>
                                     <td style="text-align: center;">
                                         <div
-                                            style="font-size: 13px; font-weight: 700; color:#3730A3; display: inline-block; padding: 2px 8px; background: #EEF2FF; border-radius: 6px; border: 1px solid #C7D2FE;">
+                                            style="font-size: 13px; font-weight: 700; color:#3730A3; display: inline-block; padding: 2px 8px; background: #EBEDF6; border-radius: 6px; border: 1px solid #C7D2FE;">
                                             {{ $j->kelas ?: '-' }}
                                         </div>
                                     </td>
@@ -644,9 +643,9 @@
                                                                 value="{{ $j->keterangan ?: 'Matkul Akademik' }}">
 
                                                             <div
-                                                                class="p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-4">
+                                                                class="p-4 bg-primary-50/50 border border-primary-100 rounded-xl space-y-4">
                                                                 <h4
-                                                                    class="text-[13px] font-bold text-indigo-900 border-b border-indigo-100 pb-2 mb-3">
+                                                                    class="text-[13px] font-bold text-primary-500 border-b border-primary-100 pb-2 mb-3">
                                                                     Informasi Mata Kuliah</h4>
                                                                 <div class="grid grid-cols-2 gap-4">
                                                                     <div>
@@ -744,7 +743,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" style="text-align:center; padding: 40px; color: #666D80;">
+                                    <td colspan="7" style="text-align:center; padding: 40px; color: #666D80;">
                                         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0"
                                             stroke-width="1.5" stroke-linecap="round" style="margin: 0 auto 10px auto;">
                                             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -764,9 +763,56 @@
                     </table>
                 </div>
 
-                <div style="padding: 16px;">
-                    {{ $jadwals->appends(['tipe' => $tipe])->links('pagination::tailwind') }}
-                </div>
+                <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2">
+    <div class="flex items-center gap-4">
+        <div class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+            <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per halaman</span>
+            <select aria-label="Per halaman" onchange="window.location.href=this.value" class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                <!-- Catatan: Pastikan Controller kamu menerima request('per_page') kalau ingin angkanya berfungsi dinamis, kalau backendnya statis 10, select ini tetap akan berubah halamannya saja -->
+                <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+            </select>
+        </div>
+        <p class="text-xs font-medium text-slate-600">
+            Menampilkan <span class="font-bold text-slate-800">{{ $jadwals->firstItem() ?? 0 }}</span> 
+            sampai <span class="font-bold text-slate-800">{{ $jadwals->lastItem() ?? 0 }}</span> 
+            dari <span class="font-bold text-slate-800">{{ $jadwals->total() }}</span> entri
+        </p>
+    </div>
+
+    <div class="flex items-center gap-1.5">
+        @if ($jadwals->onFirstPage())
+            <button disabled class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </button>
+        @else
+            <a href="{{ $jadwals->previousPageUrl() }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" /></svg>
+            </a>
+        @endif
+
+        <div class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+            @foreach ($jadwals->getUrlRange(max(1, $jadwals->currentPage() - 2), min($jadwals->lastPage(), $jadwals->currentPage() + 2)) as $page => $url)
+                @if ($page == $jadwals->currentPage())
+                    <span class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                @else
+                    <a href="{{ $url }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
+                @endif
+            @endforeach
+        </div>
+
+        @if ($jadwals->hasMorePages())
+            <a href="{{ $jadwals->nextPageUrl() }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </a>
+        @else
+            <button disabled class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+            </button>
+        @endif
+    </div>
+</div>
             </div>
         </div>
 

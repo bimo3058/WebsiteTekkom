@@ -61,7 +61,7 @@
             </div>
             <div class="flex items-center gap-3">
                 <a href="{{ route('eoffice.kp.koordinator.data_mahasiswa.export') }}"
-                    class="flex items-center justify-center px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm text-sm font-semibold">
+                    class="flex items-center justify-center px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 hover:text-primary-500 transition-colors shadow-sm text-sm font-semibold">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -121,28 +121,28 @@
                             <label style="display:flex; align-items:center; padding:8px 12px; gap:8px; cursor:pointer;"
                                 class="hover:bg-gray-50 rounded-md">
                                 <input type="radio" x-model="filterStatus" value="" name="status_kp"
-                                    class="text-indigo-600 focus:ring-indigo-500">
+                                    class="text-primary-500 focus:ring-primary-500">
                                 <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#4B5563;">Semua
                                     Status</span>
                             </label>
                             <label style="display:flex; align-items:center; padding:8px 12px; gap:8px; cursor:pointer;"
                                 class="hover:bg-gray-50 rounded-md">
                                 <input type="radio" x-model="filterStatus" value="Pra KP" name="status_kp"
-                                    class="text-indigo-600 focus:ring-indigo-500">
+                                    class="text-primary-500 focus:ring-primary-500">
                                 <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#4B5563;">Pra
                                     KP</span>
                             </label>
                             <label style="display:flex; align-items:center; padding:8px 12px; gap:8px; cursor:pointer;"
                                 class="hover:bg-gray-50 rounded-md">
                                 <input type="radio" x-model="filterStatus" value="Saat KP" name="status_kp"
-                                    class="text-indigo-600 focus:ring-indigo-500">
+                                    class="text-primary-500 focus:ring-primary-500">
                                 <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#4B5563;">Saat
                                     KP</span>
                             </label>
                             <label style="display:flex; align-items:center; padding:8px 12px; gap:8px; cursor:pointer;"
                                 class="hover:bg-gray-50 rounded-md">
                                 <input type="radio" x-model="filterStatus" value="Pasca KP" name="status_kp"
-                                    class="text-indigo-600 focus:ring-indigo-500">
+                                    class="text-primary-500 focus:ring-primary-500">
                                 <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#4B5563;">Pasca
                                     KP</span>
                             </label>
@@ -177,7 +177,7 @@
                             <label style="display:flex; align-items:center; padding:8px 12px; gap:8px; cursor:pointer;"
                                 class="hover:bg-gray-50 rounded-md text-left">
                                 <input type="radio" x-model="filterPeriode" value="" name="filter_periode"
-                                    class="text-indigo-600 focus:ring-indigo-500">
+                                    class="text-primary-500 focus:ring-primary-500">
                                 <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#4B5563;">Semua
                                     Periode</span>
                             </label>
@@ -186,7 +186,7 @@
                                 <label style="display:flex; align-items:center; padding:8px 12px; gap:8px; cursor:pointer;"
                                     class="hover:bg-gray-50 rounded-md text-left">
                                     <input type="radio" x-model="filterPeriode" value="{{ $p->id }}" name="filter_periode"
-                                        class="text-indigo-600 focus:ring-indigo-500">
+                                        class="text-primary-500 focus:ring-primary-500">
                                     <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#4B5563;">
                                         Semester {{ $p->semester }} {{ $p->tahun_ajaran }}
                                     </span>
@@ -196,7 +196,7 @@
                             <label style="display:flex; align-items:center; padding:8px 12px; gap:8px; cursor:pointer;"
                                 class="hover:bg-gray-50 rounded-md text-left">
                                 <input type="radio" x-model="filterPeriode" value="unknown" name="filter_periode"
-                                    class="text-indigo-600 focus:ring-indigo-500">
+                                    class="text-primary-500 focus:ring-primary-500">
                                 <span style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#4B5563;">Tidak
                                     Terklasifikasi</span>
                             </label>
@@ -257,17 +257,17 @@
                             <!-- Main Row -->
                             <tr @click="expanded = !expanded"
                                 class="hover:bg-slate-50/80 transition-colors cursor-pointer group"
-                                :class="expanded ? 'bg-indigo-50/30' : ''">
+                                :class="expanded ? 'bg-primary-50/30' : ''">
                                 <td class="py-3 px-4 align-middle">
                                     <div class="flex items-center gap-3">
                                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24"
-                                            :class="expanded ? 'rotate-90 text-indigo-500' : 'text-slate-400'"
+                                            :class="expanded ? 'rotate-90 text-primary-500' : 'text-slate-400'"
                                             class="transition-transform duration-200 shrink-0">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7">
                                             </path>
                                         </svg>
-                                        <div class="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs flex-shrink-0"
+                                        <div class="w-8 h-8 rounded-full bg-primary-50 border border-primary-100 flex items-center justify-center text-primary-500 font-bold text-xs flex-shrink-0"
                                             x-text="m.nama.charAt(0)"></div>
                                         <div class="min-w-0">
                                             <p class="text-[13px] font-bold text-slate-900 truncate" x-text="m.nama">
@@ -294,7 +294,7 @@
                                 </td>
                                 <td class="py-3 px-4 align-middle text-center">
                                     <span x-show="m.nilai_akhir !== null"
-                                        class="inline-flex items-center justify-center px-2 py-1 rounded text-[13px] font-black bg-indigo-100 text-indigo-700 shadow-sm"
+                                        class="inline-flex items-center justify-center px-2 py-1 rounded text-[13px] font-black bg-primary-100 text-primary-500 shadow-sm"
                                         x-text="m.nilai_akhir"></span>
                                     <span x-show="m.nilai_akhir === null" class="text-slate-400 text-xs">-</span>
                                 </td>
@@ -303,7 +303,7 @@
                                         class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
                                         :class="{
                                             'bg-amber-50 text-amber-600': m.status_kp === 'Pra KP',
-                                            'bg-blue-50 text-blue-600': m.status_kp === 'Saat KP',
+                                            'bg-primary-50 text-primary-500': m.status_kp === 'Saat KP',
                                             'bg-emerald-50 text-emerald-600': ['Pasca KP', 'Selesai'].includes(m.status_kp),
                                             'bg-rose-50 text-rose-600': ['Dibatalkan', 'Gagal'].includes(m.status_kp)
                                         }" x-text="m.status_kp">
@@ -335,7 +335,7 @@
                                             class="absolute right-10 top-10 mt-0 w-32 bg-white rounded-lg shadow-lg border border-slate-100 overflow-hidden z-50 text-left">
 
                                             <a :href="`{{ route('eoffice.kp.koordinator.data_mahasiswa.show', 'DUMMY_ID') }}`.replace('DUMMY_ID', m.id)"
-                                                class="block w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                                class="block w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-primary-500 transition-colors">
                                                 Detail Mahasiswa
                                             </a>
                                             <form
@@ -441,7 +441,7 @@
                                                     class="flex justify-between items-center gap-4 pt-2 mt-2 border-t border-slate-200">
                                                     <span class="text-[11px] font-bold text-slate-800 uppercase">Nilai
                                                         Mutu Akhir</span>
-                                                    <span class="text-sm font-black text-indigo-600"
+                                                    <span class="text-sm font-black text-primary-500"
                                                         x-text="m.nilai_akhir !== null ? m.nilai_akhir : '-'"></span>
                                                 </div>
                                             </div>

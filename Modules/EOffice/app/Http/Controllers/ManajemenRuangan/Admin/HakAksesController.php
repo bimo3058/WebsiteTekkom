@@ -18,7 +18,7 @@ class HakAksesController extends Controller
         $adminEvt = filter_var($settings['sb_admin_event'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $adminSet = filter_var($settings['sb_admin_persetujuan'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $adminArs = filter_var($settings['sb_admin_arsip'] ?? true, FILTER_VALIDATE_BOOLEAN);
-        $adminUsu = filter_var($settings['sb_admin_manajemenuser'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $adminFas = filter_var($settings['sb_admin_manajemenfasilitas'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $adminRua = filter_var($settings['sb_admin_manajemenruangan'] ?? true, FILTER_VALIDATE_BOOLEAN);
         $adminPgt = filter_var($settings['sb_admin_pengaturan'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
@@ -34,7 +34,7 @@ class HakAksesController extends Controller
             'adminEvt',
             'adminSet',
             'adminArs',
-            'adminUsu',
+            'adminFas',
             'adminRua',
             'adminPgt',
             'usrKat',
@@ -63,7 +63,7 @@ class HakAksesController extends Controller
             Pengaturan::updateOrCreate(['key' => 'sb_admin_event'], ['value' => $request->has('adm_evt') ? '1' : '0']);
             Pengaturan::updateOrCreate(['key' => 'sb_admin_persetujuan'], ['value' => $request->has('adm_set') ? '1' : '0']);
             Pengaturan::updateOrCreate(['key' => 'sb_admin_arsip'], ['value' => $request->has('adm_ars') ? '1' : '0']);
-            Pengaturan::updateOrCreate(['key' => 'sb_admin_manajemenuser'], ['value' => $request->has('adm_usu') ? '1' : '0']);
+            Pengaturan::updateOrCreate(['key' => 'sb_admin_manajemenfasilitas'], ['value' => $request->has('adm_fas') ? '1' : '0']);
             Pengaturan::updateOrCreate(['key' => 'sb_admin_manajemenruangan'], ['value' => $request->has('adm_rua') ? '1' : '0']);
             Pengaturan::updateOrCreate(['key' => 'sb_admin_pengaturan'], ['value' => $request->has('adm_pgt') ? '1' : '0']);
         }

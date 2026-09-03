@@ -1015,13 +1015,8 @@ class KoordinatorController extends Controller implements HasMiddleware
 
         if ($activePeriod) {
             // Get mahasiswas strictly bound to the detected active period and their current draft/finalized assignment
-            // Karena eo_kerja_praktik tidak punya periode_id, kita filter berdasarkan waktu pendaftaran
-            $mulai = $activePeriod->pra_kp_mulai ? $activePeriod->pra_kp_mulai->format('Y-m-d') : '2000-01-01';
-            $akhir = $activePeriod->pra_kp_akhir ? $activePeriod->pra_kp_akhir->format('Y-m-d') : '2099-12-31';
-
             $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])
-                ->whereDate('created_at', '>=', $mulai)
-                ->whereDate('created_at', '<=', $akhir)
+                ->where('periode_id', $activePeriod->id)
                 ->get();
         } else {
             $kps = collect(); // Kosongkan jika tak ada periode yang relevan

@@ -39,8 +39,8 @@
                                     ['name' => 'adm_evt', 'title' => 'Event & Maintenance', 'val' => $adminEvt, 'desc' => 'Pemblokiran manual internal.'],
                                     ['name' => 'adm_set', 'title' => 'Persetujuan Peminjaman', 'val' => $adminSet, 'desc' => 'Menerima/Tolak request.'],
                                     ['name' => 'adm_ars', 'title' => 'Arsip & Rekap', 'val' => $adminArs, 'desc' => 'Melihat history historis global.'],
-                                    ['name' => 'adm_usu', 'title' => 'Manajemen User', 'val' => $adminUsu, 'desc' => 'Mengatur tamu dan suspend.'],
-                                    ['name' => 'adm_rua', 'title' => 'Manajemen Ruangan', 'val' => $adminRua, 'desc' => 'Atur inventaris & fasilitas.'],
+                                    ['name' => 'adm_rua', 'title' => 'Manajemen Ruangan', 'val' => $adminRua, 'desc' => 'Atur ruangan dan inventaris.'],
+                                    ['name' => 'adm_fas', 'title' => 'Manajemen Fasilitas', 'val' => $adminFas, 'desc' => 'Atur daftar fasilitas master.'],
                                     ['name' => 'adm_pgt', 'title' => 'Pengaturan Peminjaman', 'val' => $adminPgt, 'desc' => 'Jam operasional & libur.'],
                                 ];
                             @endphp
@@ -63,9 +63,7 @@
                     </div>
                     <div style="padding: 16px 24px; border-top:1px solid #E2E8F0; background:#fff; text-align:right;">
                         <button type="submit" class="mp-btn primary"
-                            style="background:#2563EB; box-shadow:0 2px 6px rgba(37, 99, 235, .22); padding: 10px 24px; font-size: 13px; border-radius: 8px;">Simpan
-                            Akses
-                            Admin</button>
+                            style="padding: 10px 24px; font-size: 13px; border-radius: 8px;">Simpan Akses Admin</button>
                     </div>
                 </form>
             </div>
@@ -120,8 +118,7 @@
                 <div style="padding: 16px 24px; border-top:1px solid #E2E8F0; background:#fff; text-align:right;">
                     <button type="submit" class="mp-btn primary"
                         style="background:#059669; box-shadow:0 2px 6px rgba(5, 150, 105, .22); padding: 10px 24px; font-size: 13px; border-radius: 8px;">Simpan
-                        Akses
-                        Mahasiswa</button>
+                        Akses Mahasiswa</button>
                 </div>
             </form>
         </div>

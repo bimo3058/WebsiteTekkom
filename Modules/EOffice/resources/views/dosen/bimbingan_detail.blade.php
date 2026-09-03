@@ -3,7 +3,7 @@
         @section('breadcrumbs')
             <div class="flex items-center gap-2 text-sm text-slate-500">
                 <a href="{{ route('eoffice.kp.dosen.bimbingan.index') }}"
-                    class="hover:text-indigo-600 transition-colors">Bimbingan Mahasiswa</a>
+                    class="hover:text-primary-500 transition-colors">Bimbingan Mahasiswa</a>
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                 </svg>
@@ -32,34 +32,66 @@
         <!-- Card: Student Info -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
             <div
-                class="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-gradient-to-br from-indigo-900 to-slate-900 text-white">
+                class="p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-gradient-to-br from-primary-500 to-slate-900 text-white">
                 <div class="flex items-center gap-5">
                     <div
-                        class="w-16 h-16 rounded-full bg-indigo-500/30 flex items-center justify-center border border-indigo-400/30 text-2xl font-bold">
+                        class="w-16 h-16 rounded-full bg-primary-500/30 flex items-center justify-center border border-primary-400/30 text-2xl font-bold">
                         {{ substr($kp->nama_mahasiswa ?? 'M', 0, 1) }}
                     </div>
                     <div>
                         <h1 class="text-2xl font-bold mb-1">{{ $kp->nama_mahasiswa ?? 'Nama Mahasiswa' }}</h1>
-                        <p class="text-indigo-200 text-sm font-medium">{{ $kp->nim ?? '-' }}</p>
+                        <p class="text-primary-200 text-sm font-medium">{{ $kp->nim ?? '-' }}</p>
                     </div>
                 </div>
                 <div class="flex flex-col gap-3 md:items-end">
                     <div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-sm font-bold shadow-sm uppercase tracking-wider
                         @if($kp->status_kp === 'completed') bg-emerald-500/20 text-emerald-300 border-emerald-500/30
-                        @elseif($kp->status_kp === 'active') bg-blue-500/20 text-blue-300 border-blue-500/30
+                        @elseif($kp->status_kp === 'active') bg-primary-500/20 text-primary-300 border-primary-500/30
                         @else bg-slate-500/20 text-slate-300 border-slate-500/30 @endif">
                         <span
-                            class="w-2 h-2 rounded-full @if($kp->status_kp === 'completed') bg-emerald-400 @elseif($kp->status_kp === 'active') bg-blue-400 @else bg-slate-400 @endif"></span>
+                            class="w-2 h-2 rounded-full @if($kp->status_kp === 'completed') bg-emerald-400 @elseif($kp->status_kp === 'active') bg-primary-400 @else bg-slate-400 @endif"></span>
                         {{ strtoupper($kp->status_kp) }}
                     </div>
                     @if($kp->status_kp === 'pending')
-                        <form action="{{ route('eoffice.kp.dosen.bimbingan.approve_pra_kp', $kp->id) }}" method="POST">
-                            @csrf
-                            <button type="submit" onclick="return confirm('Setujui Topik dan Tempat KP mahasiswa ini?')"
-                                class="px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 border border-indigo-400 text-white font-bold text-sm rounded-xl transition-all shadow-lg hover:shadow-indigo-500/30">
-                                Validasi Topik (Aktifkan KP)
-                            </button>
-                        </form>
+                        <div x-data="{ openApprovePraKpModal: false }">
+                            <form action="{{ route('eoffice.kp.dosen.bimbingan.approve_pra_kp', $kp->id) }}" method="POST" x-ref="approvePraKpForm">
+                                @csrf
+                                <button type="button" @click="openApprovePraKpModal = true"
+                                    class="px-5 py-2.5 bg-primary-500 hover:bg-primary-500 border border-primary-400 text-white font-bold text-sm rounded-xl transition-all shadow-lg hover:shadow-primary-500/30">
+                                    Validasi Topik (Aktifkan KP)
+                                </button>
+
+                                <!-- Modal Setuju -->
+                                <div x-cloak x-show="openApprovePraKpModal" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                    <div x-show="openApprovePraKpModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+                                    <div class="fixed inset-0 z-[101] w-screen overflow-y-auto">
+                                        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                            <div x-show="openApprovePraKpModal" @click.away="openApprovePraKpModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                                                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                                    <div class="sm:flex sm:items-start">
+                                                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10">
+                                                            <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                            </svg>
+                                                        </div>
+                                                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                                            <h3 class="text-lg font-bold leading-6 text-slate-800" id="modal-title">Setujui Topik dan Tempat KP</h3>
+                                                            <div class="mt-2">
+                                                                <p class="text-sm text-slate-600 leading-relaxed">Apakah Anda yakin ingin menyetujui topik dan tempat KP mahasiswa ini? Setelah disetujui, KP akan aktif.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                                    <button type="button" @click="$refs.approvePraKpForm.submit()" class="inline-flex w-full justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 sm:ml-3 sm:w-auto transition-colors">Ya, Setujui</button>
+                                                    <button type="button" @click="openApprovePraKpModal = false" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">Batal</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                     @endif
                 </div>
             </div>
@@ -70,7 +102,7 @@
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
                     <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
                             </path>
@@ -89,24 +121,88 @@
                             <p class="text-xl font-black text-slate-800">
                                 {{ \Carbon\Carbon::parse($seminar->tanggal_seminar)->translatedFormat('l, d M Y') }}
                                 <span
-                                    class="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-lg text-lg ml-2">{{ $seminar->waktu_seminar }}</span>
+                                    class="text-primary-500 bg-primary-50 px-2 py-0.5 rounded-lg text-lg ml-2">{{ $seminar->waktu_seminar }}</span>
                             </p>
                         </div>
                         @if($seminar->status_validasi_dosen === 'pending')
-                            <div class="flex gap-2">
-                                <form action="{{ route('eoffice.kp.dosen.penilaian_seminar.reject', $kp->id) }}" method="POST"
-                                    onsubmit="let note = prompt('Masukkan alasan penolakan dan usulan jadwal baru:'); if(note == null) return false; this.querySelector('.catatan-dosen').value = note;">
+                            <div class="flex gap-2" x-data="{ openRejectSeminarModal: false, openApproveSeminarModal: false, note: '' }">
+                                <!-- Form Tolak/Reschedule -->
+                                <form action="{{ route('eoffice.kp.dosen.penilaian_seminar.reject', $kp->id) }}" method="POST" x-ref="rejectSeminarForm">
                                     @csrf
-                                    <input type="hidden" name="catatan_dosen" class="catatan-dosen" value="">
-                                    <button type="submit"
+                                    <input type="hidden" name="catatan_dosen" x-model="note">
+                                    <button type="button" @click="openRejectSeminarModal = true"
                                         class="px-4 py-2 bg-white hover:bg-slate-50 border-2 border-red-200 text-red-600 font-bold text-sm rounded-lg transition-colors">Tolak/Reschedule</button>
                                 </form>
-                                <form action="{{ route('eoffice.kp.dosen.penilaian_seminar.approve', $kp->id) }}" method="POST">
+
+                                <!-- Form Setuju -->
+                                <form action="{{ route('eoffice.kp.dosen.penilaian_seminar.approve', $kp->id) }}" method="POST" x-ref="approveSeminarForm">
                                     @csrf
-                                    <button type="submit"
-                                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-lg shadow-sm transition-colors">Setujui
-                                        Waktu</button>
+                                    <button type="button" @click="openApproveSeminarModal = true"
+                                        class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm rounded-lg shadow-sm transition-colors">Setujui Waktu</button>
                                 </form>
+
+                                <!-- Modal Setuju Seminar -->
+                                <div x-cloak x-show="openApproveSeminarModal" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                    <div x-show="openApproveSeminarModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+                                    <div class="fixed inset-0 z-[101] w-screen overflow-y-auto">
+                                        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                            <div x-show="openApproveSeminarModal" @click.away="openApproveSeminarModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                                                <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                                    <div class="sm:flex sm:items-start">
+                                                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10">
+                                                            <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                            </svg>
+                                                        </div>
+                                                        <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                                            <h3 class="text-lg font-bold leading-6 text-slate-800" id="modal-title">Setujui Waktu Seminar</h3>
+                                                            <div class="mt-2">
+                                                                <p class="text-sm text-slate-600 leading-relaxed">Apakah Anda yakin menyetujui usulan jadwal seminar akhir ini?</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                                    <button type="button" @click="$refs.approveSeminarForm.submit()" class="inline-flex w-full justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 sm:ml-3 sm:w-auto transition-colors">Ya, Setujui</button>
+                                                    <button type="button" @click="openApproveSeminarModal = false" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">Batal</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Modal Tolak/Reschedule Seminar -->
+                                <div x-cloak x-show="openRejectSeminarModal" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                    <div x-show="openRejectSeminarModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+                                    <div class="fixed inset-0 z-[101] w-screen overflow-y-auto">
+                                        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                            <div x-show="openRejectSeminarModal" @click.away="openRejectSeminarModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl border border-slate-200 transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                                                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                                                    <div class="sm:flex sm:items-start text-left">
+                                                        <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                                                            <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                                            </svg>
+                                                        </div>
+                                                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                                            <h3 class="text-lg leading-6 font-bold text-slate-900" id="modal-title">Tolak / Reschedule Seminar</h3>
+                                                            <div class="mt-2">
+                                                                <p class="text-sm text-slate-500">Apakah Anda yakin ingin menolak usulan jadwal seminar ini? Silakan tulis alasan atau usulan jadwal baru di bawah.</p>
+                                                                <textarea x-model="note" rows="3" required
+                                                                    class="mt-4 w-full rounded-xl border-slate-300 shadow-sm focus:border-red-500 focus:ring-2 focus:ring-red-200 sm:text-sm font-medium text-slate-800 placeholder-slate-400 p-3"
+                                                                    placeholder="Contoh: Saya berhalangan di tanggal tersebut, tolong reschedule ke hari Jumat..."></textarea>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100">
+                                                    <button type="button" @click="if(note.trim() === '') { alert('Alasan penolakan tidak boleh kosong.'); return; } $refs.rejectSeminarForm.submit()" class="inline-flex w-full justify-center rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto transition-colors">Tolak & Kirim Catatan</button>
+                                                    <button type="button" @click="openRejectSeminarModal = false; note = ''" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">Batal</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -309,16 +405,48 @@
                                                         @endif
                                                         <!-- Approve Action -->
                                                         @if($dokumen->approval_status === 'pending' && $dokumen->status_validasi === 'menunggu')
-                                                            <form
-                                                                action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$kp->id, $dokumen->id]) }}"
-                                                                method="POST">
-                                                                @csrf
-                                                                <button type="submit" onclick="return confirm('Setujui dokumen ini?')"
-                                                                    class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white border-transparent rounded-lg text-sm font-bold transition-all shadow-sm shadow-emerald-500/20"
-                                                                    title="Setujui Dokumen">
-                                                                    Approve
-                                                                </button>
-                                                            </form>
+                                                            <div x-data="{ openApproveDocModal: false }">
+                                                                <form
+                                                                    action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$kp->id, $dokumen->id]) }}"
+                                                                    method="POST" x-ref="approveDocForm">
+                                                                    @csrf
+                                                                    <button type="button" @click="openApproveDocModal = true"
+                                                                        class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white border-transparent rounded-lg text-sm font-bold transition-all shadow-sm shadow-emerald-500/20"
+                                                                        title="Setujui Dokumen">
+                                                                        Approve
+                                                                    </button>
+
+                                                                    <!-- Modal Setuju Dokumen -->
+                                                                    <div x-cloak x-show="openApproveDocModal" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                                                        <div x-show="openApproveDocModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+                                                                        <div class="fixed inset-0 z-[101] w-screen overflow-y-auto">
+                                                                            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                                                                <div x-show="openApproveDocModal" @click.away="openApproveDocModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                                                                                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                                                                        <div class="sm:flex sm:items-start">
+                                                                                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 sm:mx-0 sm:h-10 sm:w-10">
+                                                                                                <svg class="h-6 w-6 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                                                                </svg>
+                                                                                            </div>
+                                                                                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                                                                                <h3 class="text-lg font-bold leading-6 text-slate-800" id="modal-title">Setujui Dokumen</h3>
+                                                                                                <div class="mt-2">
+                                                                                                    <p class="text-sm text-slate-600 leading-relaxed">Apakah Anda yakin ingin menyetujui dokumen <span class="font-bold text-slate-700">{{ $dokumen->jenis_dokumen }}</span> ini?</p>
+                                                                                                </div>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                                                                                        <button type="button" @click="$refs.approveDocForm.submit()" class="inline-flex w-full justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-emerald-700 sm:ml-3 sm:w-auto transition-colors">Ya, Setujui</button>
+                                                                                        <button type="button" @click="openApproveDocModal = false" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">Batal</button>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </form>
+                                                            </div>
                                                         @endif
                                                     </div>
                                                 </td>
@@ -397,7 +525,7 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($rubrikItems as $index => $item)
                                 <tr
-                                    class="hover:bg-indigo-50/30 transition-colors {{ $item->nilai_angka !== null ? 'bg-indigo-50/10' : '' }}">
+                                    class="hover:bg-primary-50/30 transition-colors {{ $item->nilai_angka !== null ? 'bg-primary-50/10' : '' }}">
                                     <td class="px-6 py-4 text-center font-bold text-slate-500">{{ $index + 1 }}</td>
                                     <td class="px-6 py-4">
                                         <p class="font-bold text-slate-800">{{ $item->deskripsi }}</p>
@@ -413,7 +541,7 @@
                                             <input type="number" step="0.01" min="0" max="100" name="nilai_{{ $item->id }}"
                                                 value="{{ old('nilai_' . $item->id, $item->nilai_angka) }}" required
                                                 placeholder="0" {{ $rubrikLocked ? 'disabled' : '' }}
-                                                class="w-28 text-center rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 font-bold text-lg text-indigo-900 bg-white disabled:bg-slate-100 disabled:text-slate-400">
+                                                class="w-28 text-center rounded-lg border-slate-300 shadow-sm focus:border-primary-500 focus:ring focus:ring-primary-200 font-bold text-lg text-primary-500 bg-white disabled:bg-slate-100 disabled:text-slate-400">
                                         </div>
                                         @error('nilai_' . $item->id)
                                             <p class="mt-1 text-xs text-red-600 font-medium w-full text-right">{{ $message }}
@@ -434,16 +562,47 @@
                 </div>
 
                 @if(!$rubrikLocked && !empty($rubrikItems))
-                    <div class="px-6 py-5 bg-slate-50 border-t border-slate-200 flex justify-end">
-                        <button type="submit"
-                            onclick="return confirm('Simpan hasil evaluasi matriks ini? (Tindakan ini akan mengoverwrite Nilai Akhir mahasiswa secara otomatis)')"
-                            class="px-6 py-2.5 bg-[#0065FF] hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg border border-blue-600 hover:shadow-blue-500/30 transition-all flex items-center gap-2">
+                    <div class="px-6 py-5 bg-slate-50 border-t border-slate-200 flex justify-end" x-data="{ openRubrikModal: false }">
+                        <button type="button" @click="openRubrikModal = true"
+                            class="px-6 py-2.5 bg-[#0065FF] hover:bg-primary-500 text-white font-bold rounded-xl shadow-lg border border-primary-500 hover:shadow-primary-500/30 transition-all flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
                                 </path>
                             </svg>
                             Simpan Evaluasi Rubrik Dosen
                         </button>
+
+                        <!-- Modal Simpan Rubrik -->
+                        <div x-cloak x-show="openRubrikModal" class="relative z-[100]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                            <div x-show="openRubrikModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm transition-opacity"></div>
+                            <div class="fixed inset-0 z-[101] w-screen overflow-y-auto">
+                                <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                                    <div x-show="openRubrikModal" @click.away="openRubrikModal = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                                        <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                            <div class="flex flex-col items-center">
+                                                <div class="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-primary-50 ring-8 ring-primary-50/50 mb-4">
+                                                    <svg class="h-8 w-8 text-primary-500" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+                                                    </svg>
+                                                </div>
+                                                <div class="mt-2 text-center">
+                                                    <h3 class="text-xl font-bold leading-6 text-slate-900" id="modal-title">Simpan Hasil Evaluasi?</h3>
+                                                    <div class="mt-3">
+                                                        <p class="text-sm text-slate-500 leading-relaxed">
+                                                            Tindakan ini akan menggantikan (overwrite) Nilai Akhir mahasiswa secara otomatis. Pastikan nilai rubrik sudah sesuai.
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="bg-slate-50 px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6 justify-center gap-2 border-t border-slate-100">
+                                            <button type="button" @click="$el.closest('form').submit()" class="inline-flex w-full justify-center rounded-xl bg-primary-500 px-8 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-primary-500 sm:w-auto transition-colors">Ya, Simpan</button>
+                                            <button type="button" @click="openRubrikModal = false" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-8 py-2.5 text-sm font-bold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">Batal</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 @endif
             </form>

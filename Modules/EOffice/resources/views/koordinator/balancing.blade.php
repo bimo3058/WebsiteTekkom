@@ -66,14 +66,15 @@
                 <div class="flex items-center gap-3">
                     <button type="button" @click="confirmAutoBalance()"
                         class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors">
-                        <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-4 h-4 mr-2 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
                         Auto Balancing
                     </button>
                     <button type="button" @click="submitForm('finalize')"
-                        class="inline-flex items-center justify-center px-5 py-2 bg-indigo-600 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors"
+                        class="inline-flex items-center justify-center px-5 py-2 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm transition-colors"
+                        style="background-color: #1E3A8A;"
                         :disabled="isSaving" :class="{'opacity-75 cursor-not-allowed': isSaving}">
                         <svg x-show="!isSaving" class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
@@ -98,7 +99,7 @@
                     <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">Pengaturan Kuota Dosen</h2>
                     <div class="relative w-64">
                         <input type="text" x-model="searchDosen" placeholder="Cari dosen..."
-                            class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none shadow-sm">
+                            class="w-full pl-9 pr-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none shadow-sm">
                         <svg class="absolute left-3 top-2 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -131,7 +132,7 @@
                                 </div>
                                 <div class="w-16">
                                     <input type="number" min="1" x-model.number="dosen.kuota_maksimal"
-                                        class="w-full text-center py-1 px-2 text-xs border border-slate-200 rounded-md focus:ring-blue-500 focus:border-blue-500 bg-slate-50">
+                                        class="w-full text-center py-1 px-2 text-xs border border-slate-200 rounded-md focus:ring-primary-500 focus:border-primary-500 bg-slate-50">
                                 </div>
                             </div>
                             <div class="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
@@ -147,28 +148,29 @@
 
             <!-- Auto Balancing Banner -->
             <div
-                class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-5 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+                class="border rounded-xl p-5 mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm" style="background-color: #EFFBFF; border-color: rgba(30, 58, 138, 0.2);">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg class="w-5 h-5" style="color: #1E3A8A;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M13 10V3L4 14h7v7l9-11h-7z" />
                         </svg>
-                        <h3 class="font-bold text-blue-900">Sistem Auto Balancing</h3>
+                        <h3 class="font-bold" style="color: #1E3A8A;">Sistem Auto Balancing</h3>
                     </div>
-                    <p class="text-sm text-blue-700">Sistem akan membagi mahasiswa secara otomatis berdasarkan kuota
+                    <p class="text-sm" style="color: #1E3A8A;">Sistem akan membagi mahasiswa secara otomatis berdasarkan kuota
                         dosen yang tersedia.</p>
                     <div class="flex items-center gap-4 mt-3 text-xs font-medium">
                         <span
-                            class="px-2.5 py-1 bg-white rounded-md text-blue-800 border border-blue-200 shadow-sm"><span
+                            class="px-2.5 py-1 bg-white rounded-md border shadow-sm" style="color: #1E3A8A; border-color: rgba(30, 58, 138, 0.2);"><span
                                 x-text="unassignedStudents.length"></span> Mahasiswa belum mendapat dosen</span>
                         <span
-                            class="px-2.5 py-1 bg-white rounded-md text-indigo-800 border border-indigo-200 shadow-sm"><span
+                            class="px-2.5 py-1 bg-white rounded-md border shadow-sm" style="color: #1E3A8A; border-color: rgba(30, 58, 138, 0.2);"><span
                                 x-text="totalSisaKuota"></span> Total kuota tersedia</span>
                     </div>
                 </div>
                 <button type="button" @click="confirmAutoBalance()"
-                    class="shrink-0 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center">
+                    class="shrink-0 px-5 py-2.5 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center justify-center"
+                    style="background-color: #1E3A8A;">
                     Jalankan Auto Balancing
                 </button>
             </div>
@@ -177,16 +179,16 @@
             <div class="flex flex-col lg:flex-row gap-6">
                 <!-- Left Col: Unassigned Students -->
                 <div class="w-full lg:w-1/3 flex flex-col gap-4">
-                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col sticky top-6 max-h-[calc(100vh-2rem)]" style="min-height: 500px;">
                         <div class="p-4 border-b border-slate-100">
                             <h3 class="font-bold text-slate-800 flex items-center justify-between">
                                 Mahasiswa Belum Dapat Dosen
-                                <span class="bg-slate-100 text-slate-600 py-0.5 px-2.5 rounded-full text-xs"
+                                <span class="bg-slate-100 text-slate-600 py-0.5 px-2.5 rounded-full text-xs font-semibold shadow-inner"
                                     x-text="unassignedStudents.length"></span>
                             </h3>
                             <div class="mt-3 relative">
                                 <input type="text" x-model="searchStudent" placeholder="Cari nama/NIM..."
-                                    class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                                    class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none transition-colors">
                                 <svg class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -194,40 +196,40 @@
                                 </svg>
                             </div>
                         </div>
-                        <div class="flex-1 overflow-y-auto p-3 bg-slate-50/50 space-y-2"
+                        <div class="flex-1 overflow-y-auto p-3 bg-slate-50/50 space-y-2 relative scrollbar-thin"
                             @dragover.prevent="dragOverTarget = 'unassigned'" @dragleave="dragOverTarget = null"
                             @drop.prevent="onDropUnassigned()"
-                            :class="{'bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg m-2': dragOverTarget === 'unassigned'}">
+                            :class="{'bg-primary-50/50 ring-2 ring-inset ring-primary-400 border-dashed border-2 border-transparent rounded-lg': dragOverTarget === 'unassigned'}">
                             <template x-if="filteredUnassigned.length === 0">
                                 <div
-                                    class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400">
-                                    <svg class="w-12 h-12 mb-3 text-slate-300" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p class="text-sm font-medium">Semua mahasiswa yang dicari sudah ter-assign.</p>
+                                    class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 opacity-80">
+                                    <div class="w-14 h-14 bg-white shadow-sm rounded-full flex items-center justify-center mb-3 border border-slate-200 text-emerald-500">
+                                        <svg class="w-7 h-7" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <p class="text-sm font-bold text-slate-600">Ter-assign Semua!</p>
+                                    <p class="text-xs mt-1 text-slate-500">Tidak ada mahasiswa yang dicari di sini.</p>
                                 </div>
                             </template>
                             <template x-for="mhs in filteredUnassigned" :key="mhs.id">
-                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-move hover:border-blue-300 hover:shadow-md transition-all group"
+                                <div class="bg-white p-3 rounded-lg border border-slate-200 shadow-sm cursor-move hover:border-primary-400 hover:shadow-md transition-all group relative overflow-hidden"
                                     draggable="true" @dragstart="startDrag(mhs, 'unassigned', null)"
                                     @dragend="endDrag()">
-                                    <div class="flex items-start justify-between">
+                                    <!-- Drag handle visual -->
+                                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-100 group-hover:bg-primary-400 transition-colors"></div>
+                                    <div class="flex items-start justify-between pl-2">
                                         <div>
-                                            <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors"
+                                            <p class="text-sm font-bold text-slate-800 group-hover:text-primary-500 transition-colors"
                                                 x-text="mhs.nama_mahasiswa"></p>
-                                            <p class="text-xs text-slate-500 mt-0.5" x-text="mhs.nim"></p>
+                                            <p class="text-[11px] text-slate-500 font-medium mt-0.5" x-text="mhs.nim"></p>
                                         </div>
                                         <span
-                                            class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium"
+                                            class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-bold tracking-wide uppercase shadow-sm"
                                             :class="getBadgeClass(mhs.status)" x-text="getBadgeText(mhs.status)"></span>
                                     </div>
-                                    <p class="text-[11px] font-semibold text-blue-700 mt-2 line-clamp-1 border-t border-slate-50 pt-2"
-                                        :title="mhs.instansi_kp"
-                                        x-text="mhs.instansi_kp || 'Belum ada tempat KP'"></p>
-                                    <p class="text-[10px] text-slate-500 line-clamp-1" :title="mhs.judul_kp"
-                                        x-text="mhs.judul_kp || 'Belum ada rencana judul'"></p>
                                 </div>
                             </template>
                         </div>
@@ -239,8 +241,8 @@
                     <div class="bg-slate-100/50 rounded-xl p-4 h-[600px] overflow-y-auto border border-slate-200/60">
                         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                             <template x-for="dosen in filteredDosens" :key="dosen.id">
-                                <div class="bg-white rounded-xl border shadow-sm flex flex-col h-72 transition-all"
-                                    :class="[getDosenStatusColor(dosen).border, dragOverTarget === dosen.id ? 'ring-2 ring-blue-400 shadow-md scale-[1.02]' : '']"
+                                <div class="bg-white rounded-xl border shadow-sm flex flex-col transition-all min-h-[100px]"
+                                    :class="[getDosenStatusColor(dosen).border, dragOverTarget === dosen.id ? 'ring-2 ring-primary-400 border-dashed shadow-md scale-[1.01]' : '']"
                                     @dragover.prevent="dragOverTarget = dosen.id" @dragleave="dragOverTarget = null"
                                     @drop.prevent="onDropDosen(dosen)">
                                     <div
@@ -264,37 +266,33 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="flex-1 p-2 overflow-y-auto space-y-2 bg-slate-50/30">
+                                    <div class="flex-1 p-2 overflow-y-auto space-y-1.5 bg-slate-50/30">
                                         <template x-if="dosen.mahasiswas.length === 0">
-                                            <div class="h-full flex items-center justify-center">
-                                                <p
-                                                    class="text-[11px] text-slate-400 text-center px-4 border-2 border-dashed border-slate-200 rounded-lg w-full py-6">
-                                                    Tarik mahasiswa ke sini</p>
+                                            <div class="flex items-center justify-center py-4">
+                                                <p class="text-[11px] font-medium text-slate-400 text-center transition-opacity duration-200"
+                                                    x-show="dragOverTarget !== dosen.id">Belum ada mahasiswa</p>
+                                                <p class="text-[11px] font-bold text-primary-500 text-center transition-opacity duration-200"
+                                                    x-show="dragOverTarget === dosen.id">Drop di sini!</p>
                                             </div>
                                         </template>
                                         <template x-for="mhs in dosen.mahasiswas" :key="mhs.id">
-                                            <div class="bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm text-sm cursor-move hover:border-slate-300 transition-colors group relative"
+                                            <div class="bg-white p-2 rounded-lg border border-slate-200 shadow-sm cursor-move hover:border-slate-300 transition-colors group relative flex items-center justify-between"
                                                 draggable="true" @dragstart="startDrag(mhs, 'dosen', dosen.id)"
                                                 @dragend="endDrag()">
-                                                <div class="flex justify-between items-start pr-6">
+                                                <div class="flex items-center gap-2 overflow-hidden">
+                                                    <div class="w-6 h-6 rounded-full bg-slate-100 flex flex-shrink-0 items-center justify-center border border-slate-200">
+                                                        <span class="text-[9px] font-bold text-slate-500" x-text="mhs.nama_mahasiswa.substring(0,1).toUpperCase()"></span>
+                                                    </div>
                                                     <div class="truncate">
                                                         <p class="text-xs font-bold text-slate-800 truncate"
                                                             :title="mhs.nama_mahasiswa" x-text="mhs.nama_mahasiswa"></p>
-                                                        <div class="flex items-center gap-2 mt-0.5">
-                                                            <p class="text-[10px] text-slate-500" x-text="mhs.nim"></p>
-                                                            <span
-                                                                class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider"
-                                                                :class="getBadgeClass(mhs.status)"
-                                                                x-text="getBadgeText(mhs.status)"></span>
-                                                        </div>
-                                                        <p class="text-[10px] text-blue-600 font-semibold truncate mt-1"
-                                                            :title="mhs.instansi_kp" x-text="mhs.instansi_kp"></p>
+                                                        <p class="text-[9px] text-slate-500" x-text="mhs.nim"></p>
                                                     </div>
                                                 </div>
                                                 <button type="button" @click.stop="removeFromDosen(dosen.id, mhs)"
-                                                    class="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition-colors"
+                                                    class="text-slate-300 hover:text-red-500 transition-colors p-1"
                                                     title="Hapus dari dosen ini">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
                                                             stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -322,7 +320,7 @@
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <p class="text-xs text-slate-500 font-medium mb-1">Sudah Penempatan</p>
-                    <p class="text-xl font-bold text-blue-600" x-text="totalAssigned"></p>
+                    <p class="text-xl font-bold text-primary-500" x-text="totalAssigned"></p>
                 </div>
                 <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                     <p class="text-xs text-slate-500 font-medium mb-1">Belum Penempatan</p>
@@ -349,7 +347,7 @@
                     x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
                     <div class="p-6">
                         <div
-                            class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-4 mx-auto">
+                            class="w-12 h-12 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center mb-4 mx-auto">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
@@ -363,7 +361,8 @@
                             <button type="button" @click="showConfirmModal = false"
                                 class="flex-1 px-4 py-2 bg-slate-100 text-slate-700 text-sm font-semibold rounded-lg hover:bg-slate-200 transition-colors">Batal</button>
                             <button type="button" @click="executeAutoBalance()"
-                                class="flex-1 px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors">Jalankan</button>
+                                class="flex-1 px-4 py-2 text-white text-sm font-semibold rounded-lg transition-colors"
+                                style="background-color: #1E3A8A;">Jalankan</button>
                         </div>
                     </div>
                 </div>
@@ -373,7 +372,8 @@
             <div
                 class="mt-6 flex justify-end gap-3 sticky bottom-0 bg-slate-50/80 backdrop-blur-sm p-4 border-t border-slate-200 -mx-6 lg:-mx-8">
                 <button type="button" @click="submitForm('finalize')"
-                    class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-sm transition-all text-sm"
+                    class="px-6 py-2 text-white font-semibold rounded-lg shadow-sm transition-all text-sm"
+                    style="background-color: #1E3A8A;"
                     :disabled="isSaving" :class="{'opacity-75 cursor-not-allowed': isSaving}">
                     <span x-text="isSaving ? 'Menyimpan...' : 'Finalisasi Balancing'"></span>
                 </button>
@@ -399,8 +399,8 @@
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                             <div class="sm:flex sm:items-start">
                                 <div
-                                    class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
-                                    <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24"
+                                    class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 sm:mx-0 sm:h-10 sm:w-10">
+                                    <svg class="h-6 w-6 text-primary-500" fill="none" viewBox="0 0 24 24"
                                         stroke-width="1.5" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -419,7 +419,8 @@
                         <div
                             class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100">
                             <button type="button" @click="submitForm('finalize'); showFinalizeModal = false"
-                                class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto">Lanjutkan</button>
+                                class="inline-flex w-full justify-center rounded-lg px-3 py-2 text-sm font-semibold text-white shadow-sm sm:ml-3 sm:w-auto"
+                                style="background-color: #1E3A8A;">Lanjutkan</button>
                             <button type="button" @click="showFinalizeModal = false"
                                 class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">Batal</button>
                         </div>
@@ -584,7 +585,7 @@
                     },
 
                     getBadgeClass(status) {
-                        if (status === 'finalized') return 'bg-indigo-100 text-indigo-700 border-indigo-200 border';
+                        if (status === 'finalized') return 'bg-primary-100 text-primary-500 border-primary-200 border';
                         if (status === 'pending') return 'bg-amber-100 text-amber-700 border-amber-200 border';
                         return 'bg-slate-100 text-slate-600 border-slate-200 border';
                     },

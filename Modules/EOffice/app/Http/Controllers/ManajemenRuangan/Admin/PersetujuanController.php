@@ -58,7 +58,7 @@ class PersetujuanController extends Controller
 
         $peminjamans = $query->orderBy('waktu_approval', 'desc')
             ->orderBy('created_at', 'desc')
-            ->paginate(15)->withQueryString();
+            ->paginate((int) $request->input('per_page', 10))->withQueryString();
 
         $ruangans = \Modules\EOffice\Models\Ruangan::orderBy('nama', 'asc')->get();
 

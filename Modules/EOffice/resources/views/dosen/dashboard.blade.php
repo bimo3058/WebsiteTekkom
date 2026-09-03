@@ -13,7 +13,7 @@
                         Dashboard Dosen
                     </h1>
                     <span
-                        class="px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold uppercase tracking-wider border border-indigo-100">
+                        class="px-2.5 py-0.5 rounded-full bg-primary-50 text-primary-500 text-xs font-semibold uppercase tracking-wider border border-primary-100">
                         Dosen
                     </span>
                 </div>
@@ -24,10 +24,10 @@
             </div>
 
             {{-- Period Filter --}}
-            <div style="min-width:220px;" class="mt-2 sm:mt-0">
+            <div style="min-width:220px;" class="mt-2 sm:mt-0 relative">
                 <form action="{{ route('eoffice.kp.dosen.dashboard') }}" method="GET" id="filterForm">
                     <select name="periode_id" onchange="document.getElementById('filterForm').submit()" style="
-                        width:100%; padding:8px 12px;
+                        width:100%; padding:8px 32px 8px 12px; appearance:none;
                         border:1px solid #E4E7EC; border-radius:8px;
                         font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#09090B;
                         background:#fff; cursor:pointer;
@@ -42,6 +42,9 @@
                             @endforeach
                         @endif
                     </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
                 </form>
             </div>
         </div>
@@ -60,7 +63,7 @@
                 <div
                     class="bg-white border border-slate-200 rounded-[12px] p-3.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-4">
                     <div
-                        class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
+                        class="w-10 h-10 rounded-xl bg-primary-50 text-primary-500 flex items-center justify-center shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -184,7 +187,7 @@
                                         </td>
                                         <td class="px-4 py-3 align-middle text-center">
                                             <a href="{{ $todos->first()->url }}"
-                                                class="inline-flex items-center justify-center px-4 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded hover:bg-slate-50 hover:text-indigo-600 hover:border-slate-300 shadow-sm transition-all focus:ring-2 focus:ring-slate-200">
+                                                class="inline-flex items-center justify-center px-4 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded hover:bg-slate-50 hover:text-primary-500 hover:border-slate-300 shadow-sm transition-all focus:ring-2 focus:ring-slate-200">
                                                 Lihat
                                             </a>
                                         </td>
@@ -195,7 +198,7 @@
                         @if($totalStudents > 5)
                             <div class="p-3 border-t border-slate-200 bg-slate-50 text-center">
                                 <a href="{{ route('eoffice.kp.dosen.bimbingan.index') }}"
-                                    class="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center justify-center gap-1">
+                                    class="text-xs font-bold text-primary-500 hover:text-primary-500 flex items-center justify-center gap-1">
                                     👉 Lihat Semua Validasi ({{ $totalStudents }} Antrean Mahasiswa)
                                 </a>
                             </div>
@@ -283,7 +286,7 @@
                                                 $isPassed = \Carbon\Carbon::parse($seminar->date)->isPast() || \Carbon\Carbon::parse($seminar->date)->isToday();
                                             @endphp
                                             <a href="{{ $seminar->url }}"
-                                                class="inline-flex items-center justify-center px-4 py-1.5 border border-slate-200 text-xs font-bold rounded shadow-sm transition-all focus:ring-2 focus:ring-slate-200 {{ $isPassed ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:border-indigo-700 border-indigo-600' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-indigo-600 hover:border-slate-300' }}">
+                                                class="inline-flex items-center justify-center px-4 py-1.5 border border-slate-200 text-xs font-bold rounded shadow-sm transition-all focus:ring-2 focus:ring-slate-200 {{ $isPassed ? 'bg-primary-500 text-white hover:bg-primary-500 hover:border-primary-500 border-primary-500' : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-primary-500 hover:border-slate-300' }}">
                                                 {{ $isPassed ? 'Input Nilai' : 'Lihat Laporan' }}
                                             </a>
                                         </td>
@@ -294,7 +297,7 @@
                         @if($seminarTodos->count() > 5)
                             <div class="p-3 border-t border-slate-200 bg-slate-50 text-center">
                                 <a href="{{ route('eoffice.kp.dosen.bimbingan.index') }}"
-                                    class="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center justify-center gap-1">
+                                    class="text-xs font-bold text-primary-500 hover:text-primary-500 flex items-center justify-center gap-1">
                                     👉 Lihat Semua Jadwal ({{ $seminarTodos->count() }} Seminar)
                                 </a>
                             </div>

@@ -63,7 +63,7 @@
 
                 @if($praktikumDipilih)
                     <div
-                        style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 16px;border-radius:10px;background:#EEF2FF;">
+                        style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 16px;border-radius:10px;background:#EBEDF6;">
                         <div style="flex:1;font-size:13px;font-weight:600;color:#0D0D12;">{{ $praktikumDipilih->nama }}</div>
                         @if($praktikumDipilih->matkul)
                             <span style="font-size:11px;color:#666D80;">{{ $praktikumDipilih->matkul->kode }} · Sem
