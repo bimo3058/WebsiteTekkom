@@ -447,8 +447,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         Route::prefix('verifikasi')->name('verifikasi.')->group(function () {
 
             // Index — mahasiswa, alumni (read-only), pengurus himpunan, admin, verifikator,
-            // serta pengawas mutu GPM & Ketua Departemen (read-only, tanpa approve/reject)
-            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen')
+            // serta Ketua Departemen (read-only, tanpa approve/reject).
+            //
+            // GPM sengaja TIDAK diberi akses: scope penjaminan mutu berhenti pada
+            // angka agregat di dashboard analitik, tidak sampai ke data verifikasi
+            // per-mahasiswa. Menu sidebar & pintasan dari analitik juga ditutup,
+            // jadi route ini ikut ditutup agar URL langsung tidak jadi celah.
+            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
                 ->get('/', [VerifikasiController::class, 'index'])->name('index');
 
             // Submit pengajuan — mahasiswa, semua pengurus himpunan, admin (alumni TIDAK diizinkan)
@@ -465,9 +470,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Halaman daftar klaim reward prestasi (Request Bu Bellia / B.2) —
-            // verifikator (admin group + DPM) + pengawas mutu GPM & Ketua Departemen
-            // (read-only, tanpa tinjau/setujui/tolak — selaras Verifikasi Prestasi).
-            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen')
+            // verifikator (admin group + DPM) + Ketua Departemen (read-only, tanpa
+            // tinjau/setujui/tolak — selaras Verifikasi Prestasi). GPM dikecualikan,
+            // alasannya sama dengan route index di atas.
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
                 ->get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
                 ->name('reward.index');
 

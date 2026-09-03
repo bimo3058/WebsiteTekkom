@@ -387,9 +387,22 @@
             </div>
         </div>
 
-        {{-- Dosen murni tidak punya akses verifikasi. GPM & Ketua Departemen kini boleh
-        melihat (read-only) sehingga menu ditampilkan untuk mereka. --}}
-        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
+        {{-- Daftar putih, bukan daftar larangan, dan isinya disalin dari middleware
+        route verifikasi.index. Pola sebelumnya menyembunyikan menu untuk siapa pun
+        yang memegang role dosen — padahal role menumpuk: akun GPM memegang
+        "dosen" + "gpm" sekaligus, sehingga menunya hilang karena role dosennya,
+        bukan karena keputusan tentang GPM. Daftar putih membuat yang boleh masuk
+        tertulis eksplisit, dan role di luar daftar (mis. dosen_koor) tidak lagi
+        melihat menu yang berujung 403. --}}
+        @php
+            $canViewVerifikasi = (bool) array_intersect($sidebarRoles, [
+                'mahasiswa', 'alumni',
+                'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan',
+                'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+                'ketua_departemen',
+            ]);
+        @endphp
+        @if($canViewVerifikasi)
             @php
                 $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
                 $verifTab = request('tab', 'prestasi');

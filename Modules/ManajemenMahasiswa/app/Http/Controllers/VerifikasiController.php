@@ -36,19 +36,23 @@ class VerifikasiController extends Controller
     }
 
     /**
-     * Pengawas mutu (read-only): GPM & Ketua Departemen.
+     * Pengawas (read-only): Ketua Departemen.
      * Boleh MELIHAT seluruh daftar verifikasi, tetapi TIDAK boleh menyetujui/menolak.
-     * Selaras dengan akses view-only mereka di Manajemen Kegiatan dan dashboard
-     * analitik (scope evaluasi mutu).
+     *
+     * GPM tidak termasuk. Penjaminan mutu bekerja pada angka agregat — itu sudah
+     * disediakan dashboard analitik scope evaluasi mutu — bukan pada berkas
+     * verifikasi milik mahasiswa per orang. Batas ini ditegakkan berlapis: route
+     * verifikasi menolak GPM, sidebar tidak menampilkan menunya, dan pintasan
+     * "Verifikasi →" pada dashboard analitik disembunyikan untuk scope GPM.
      */
     private function isPengawas(): bool
     {
-        return $this->hasRole('gpm', 'ketua_departemen');
+        return $this->hasRole('ketua_departemen');
     }
 
     /**
      * Boleh membuka halaman Klaim Reward Prestasi.
-     * Verifikator (kelola) + pengawas mutu GPM & Ketua Departemen (read-only).
+     * Verifikator (kelola) + Ketua Departemen (read-only).
      */
     private function canAccessReward(): bool
     {
@@ -61,8 +65,8 @@ class VerifikasiController extends Controller
         $roles = $user->roles->pluck('name')->toArray();
 
         if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)
-            || \in_array('gpm', $roles) || \in_array('ketua_departemen', $roles)) {
-            // GPM & Ketua Departemen melihat tabel monitoring read-only → gunakan shell admin
+            || \in_array('ketua_departemen', $roles)) {
+            // Ketua Departemen melihat tabel monitoring read-only → gunakan shell admin
             return 'manajemenmahasiswa::layouts.admin';
         }
 
