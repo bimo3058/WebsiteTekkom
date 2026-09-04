@@ -83,6 +83,9 @@ class PeriodePendaftaranController extends Controller
             'nama'         => 'nullable|string|max:255',
             'dibuka_pada'  => 'nullable|date',
             'ditutup_pada' => 'required|date|after_or_equal:dibuka_pada',
+            'judul'        => 'nullable|string|max:255',
+            'deskripsi'    => 'nullable|string',
+            'nama_berkas_tambahan' => 'nullable|string|max:255',
         ]);
 
         // Pastikan praktikum milik dosen ini
@@ -108,6 +111,9 @@ class PeriodePendaftaranController extends Controller
             'ditutup_pada' => $request->ditutup_pada,
             'is_aktif'     => true,
             'dibuka_oleh'  => $user->id,
+            'judul'        => $request->judul,
+            'deskripsi'    => $request->deskripsi,
+            'nama_berkas_tambahan' => $request->nama_berkas_tambahan,
         ]);
 
         $batasTeks = $periode->ditutup_pada

@@ -91,11 +91,11 @@
                         <input x-ref="searchKel" type="text" x-model="searchStr" placeholder="Cari kelompok..." class="mp-input" style="padding: 6px 10px; font-size:12px; width:100%; border-color:#DFE1E7; box-shadow:none;">
                     </div>
                     <div style="overflow-y:auto; flex:1; max-height: 200px;">
-                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === '' ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== '') this.style.background='#F6F8FA'" onmouseout="if(kelompok !== '') this.style.background='transparent'">
+                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === '' ? 'background:#EAF0FA; color:#0D1D53; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== '') this.style.background='#F6F8FA'" onmouseout="if(kelompok !== '') this.style.background='transparent'">
                             Semua Kelompok
                         </div>
                         <template x-for="opt in filtered" :key="opt">
-                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === opt ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== opt) this.style.background='#F6F8FA'" onmouseout="if(kelompok !== opt) this.style.background='transparent'" x-text="opt">
+                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === opt ? 'background:#EAF0FA; color:#0D1D53; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== opt) this.style.background='#F6F8FA'" onmouseout="if(kelompok !== opt) this.style.background='transparent'" x-text="opt">
                             </div>
                         </template>
                         <div x-show="filtered.length === 0" class="px-3 py-[12px] text-[12px] text-center" style="color:#A4ABB8;">
@@ -134,11 +134,11 @@
                         <input x-ref="searchShf" type="text" x-model="searchStr" placeholder="Cari shift..." class="mp-input" style="padding: 6px 10px; font-size:12px; width:100%; border-color:#DFE1E7; box-shadow:none;">
                     </div>
                     <div style="overflow-y:auto; flex:1; max-height: 200px;">
-                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === '' ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== '') this.style.background='#F6F8FA'" onmouseout="if(shift !== '') this.style.background='transparent'">
+                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === '' ? 'background:#EAF0FA; color:#0D1D53; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== '') this.style.background='#F6F8FA'" onmouseout="if(shift !== '') this.style.background='transparent'">
                             Semua Shift
                         </div>
                         <template x-for="opt in filtered" :key="opt">
-                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === opt ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== opt) this.style.background='#F6F8FA'" onmouseout="if(shift !== opt) this.style.background='transparent'" x-text="opt">
+                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === opt ? 'background:#EAF0FA; color:#0D1D53; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== opt) this.style.background='#F6F8FA'" onmouseout="if(shift !== opt) this.style.background='transparent'" x-text="opt">
                             </div>
                         </template>
                         <div x-show="filtered.length === 0" class="px-3 py-[12px] text-[12px] text-center" style="color:#A4ABB8;">
@@ -153,17 +153,17 @@
     </div>
 
     <div style="overflow-x:auto; padding-bottom: 24px;">
-        <table class="mp-table" style="min-width: 1400px;">
+        <table class="mp-table" style="min-width: 1400px; font-family: 'Inter', sans-serif;">
             <thead>
                 <tr style="background:#F9FAFB;">
-                    <th class="mp-th text-left" style="padding:10px 16px;width:40px;position:sticky;left:0;background:#F9FAFB;z-index:2;">#</th>
-                    <th class="mp-th text-left" style="padding:10px 16px;min-width:200px;position:sticky;left:40px;background:#F9FAFB;z-index:2;border-right:1px solid #DFE1E7;">Mahasiswa</th>
+                    <th class="mp-th text-left" style="padding:10px 16px;width:40px;position:sticky;left:0;background:#F9FAFB;z-index:2;">NO</th>
+                    <th class="mp-th text-left" style="padding:10px 16px;min-width:200px;position:sticky;left:40px;background:#F9FAFB;z-index:2;border-right:1px solid #DFE1E7;">NAMA MAHASISWA</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:90px;border-right:1px solid #DFE1E7;">KELOMPOK</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:70px;border-right:1px solid #DFE1E7;">Shift</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:60px;">Hadir</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:60px;">Izin</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:60px;border-right:1px solid #DFE1E7;">Alpha</th>
-                    <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#EEF2FF;">Pendahuluan</th>
+                    <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#EAF0FA;">Pendahuluan</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#F0FDF4;">Praktikum</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FEF9C3;">Laporan</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FFF7ED;">Responsi</th>
@@ -174,7 +174,7 @@
             @forelse($praktikans as $idx => $p)
                 @php
                     $row      = $absensi[$p->id] ?? null;
-                    $status   = $row?->status ?? 'hadir';
+                    $status   = $row?->status ?? '';
                     
                     $njMap    = $nilaiJenis[$p->id] ?? collect();
                     $nilaiTP  = $njMap['tugas_pendahuluan']->nilai ?? null;
@@ -195,7 +195,7 @@
                             <div class="mp-av yellow" style="flex-shrink:0;">{{ strtoupper(substr($p->user?->name ?? 'M', 0, 2)) }}</div>
                             <div style="min-width:0;">
                                 <div style="font-weight:600;color:#0D0D12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $p->user?->name ?? '-' }}</div>
-                                <div style="font-size:11px;color:#666D80;font-family:monospace;letter-spacing:0.02em;">{{ $p->user?->student?->student_number ?? '-' }}</div>
+                                <div style="font-size:11px;color:#666D80;">{{ $p->user?->student?->student_number ?? '-' }}</div>
                             </div>
                         </div>
                     </td>
@@ -222,7 +222,7 @@
                     </td>
 
                     {{-- Tugas Pendahuluan --}}
-                    <td style="padding:8px 12px;text-align:center;vertical-align:middle;" :style="status === 'hadir' ? 'background:#EEF2FF;' : 'background:#F1F5F9;'">
+                    <td style="padding:8px 12px;text-align:center;vertical-align:middle;" :style="status === 'hadir' ? 'background:#EAF0FA;' : 'background:#F1F5F9;'">
                         <input type="number" name="nilai[{{ $p->id }}][tugas_pendahuluan]"
                                value="{{ $nilaiTP !== null ? $nilaiTP : '' }}"
                                min="0" max="100" step="0.5"

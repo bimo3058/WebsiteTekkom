@@ -1,0 +1,1 @@
+﻿<?php require "vendor/autoload.php"; $app = require_once "bootstrap/app.php"; $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap(); foreach(\Modules\EOffice\Models\Modul::all() as $m) { $m->deskripsi = str_ireplace("halo hai", "", (string)$m->deskripsi); $m->save(); echo "fixed"; }

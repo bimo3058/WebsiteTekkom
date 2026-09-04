@@ -168,6 +168,17 @@
                 @csrf
                 <input type="hidden" name="praktikum_id" value="{{ $selectedPraktikum->id }}">
 
+                  @if($pKoor && ($pKoor->judul || $pKoor->deskripsi))
+                  <div style="background: #F6F8FA; border: 1px solid #DFE1E7; border-radius: 8px; padding: 16px; margin-bottom: 8px;">
+                      @if($pKoor->judul)
+                      <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #0D0D12;">{{ $pKoor->judul }}</h4>
+                      @endif
+                      @if($pKoor->deskripsi)
+                      <p style="margin: 0; font-size: 13px; color: #353849; white-space: pre-wrap;">{{ $pKoor->deskripsi }}</p>
+                      @endif
+                  </div>
+                  @endif
+
                 <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">IPK <span style="color:#DF1C41;">*</span></label>
                     <input type="number" name="ipk" step="0.01" min="0" max="4" required placeholder="3.50"
@@ -191,6 +202,11 @@
                 </div>
 
                 <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Keanggotaan CERC <span style="font-weight:400;color:#666D80;">(Opsional, .pdf, .jpg, .png, .csv, .xlsx)</span></label>
+                    <input type="file" name="berkas_cerc" accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx" class="mp-input" style="width:100%;">
+                </div>
+
+                <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:8px;">Jadwal Ketersediaan</label>
                     <div style="display:flex;flex-wrap:wrap;gap:12px;">
                         @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'] as $hari)
@@ -202,7 +218,14 @@
                     </div>
                 </div>
 
-                <button type="submit" class="mp-btn primary md" style="margin-top:6px;">
+                @if($pKoor && $pKoor->nama_berkas_tambahan)
+                  <div>
+                      <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">{{ $pKoor->nama_berkas_tambahan }} <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;">(PDF/Gambar)</span></label>
+                      <input type="file" name="berkas_tambahan" accept=".pdf,.jpg,.jpeg,.png" required class="mp-input" style="width:100%;">
+                  </div>
+                  @endif
+
+                  <button type="submit" class="mp-btn primary md" style="margin-top:6px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                     Kirim Pendaftaran
                 </button>
@@ -273,26 +296,41 @@
                 @csrf
                 <input type="hidden" name="praktikum_id" value="{{ $selectedPraktikum->id }}">
 
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">IPK <span style="color:#DF1C41;">*</span></label>
-                    <input type="number" name="ipk" step="0.01" min="0" max="4" required placeholder="3.60"
-                           class="mp-input" style="width:100%;">
+                <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+                    <div style="flex: 1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Nama Mahasiswa</label>
+                        <input type="text" value="{{ auth()->user()->name }}" class="mp-input w-full" disabled style="background:#F9FAFB; color:#808897;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">NIM</label>
+                        <input type="text" value="{{ auth()->user()->username ?? '-' }}" class="mp-input w-full" disabled style="background:#F9FAFB; color:#808897;">
+                    </div>
                 </div>
 
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Motivasi & Visi</label>
-                    <textarea name="motivasi" rows="4" placeholder="Jelaskan visi Anda sebagai koordinator praktikum..."
-                              class="mp-input" style="width:100%;resize:none;"></textarea>
+                <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+                    <div style="flex: 1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">IPK <span style="color:#DF1C41;">*</span></label>
+                        <input type="number" name="ipk" step="0.01" min="0" max="4" required placeholder="3.60" class="mp-input w-full">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip Nilai <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
+                        <input type="file" name="transkrip" accept=".pdf" required class="mp-input w-full" style="padding: 6px 12px;">
+                    </div>
                 </div>
 
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
-                    <input type="file" name="transkrip" accept=".pdf" required class="mp-input" style="width:100%;">
-                </div>
-
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Keanggotaan CERC <span style="font-weight:400;color:#666D80;">(Opsional, .pdf, .jpg, .png, .csv, .xlsx)</span></label>
-                    <input type="file" name="berkas_cerc" accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx" class="mp-input" style="width:100%;">
+                <div style="display: flex; gap: 24px; margin-bottom: 16px;">
+                    <div style="flex: 1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Keanggotaan CERC <span style="font-weight:400;color:#666D80;">(Opsional)</span></label>
+                        <input type="file" name="berkas_cerc" accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx" class="mp-input w-full" style="padding: 6px 12px;">
+                    </div>
+                    @if($pKoor && $pKoor->nama_berkas_tambahan)
+                    <div style="flex: 1;">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">{{ $pKoor->nama_berkas_tambahan }} <span style="color:#DF1C41;">*</span></label>
+                        <input type="file" name="berkas_tambahan" accept=".pdf,.jpg,.jpeg,.png" required class="mp-input w-full" style="padding: 6px 12px;">
+                    </div>
+                    @else
+                    <div style="flex: 1;"></div>
+                    @endif
                 </div>
 
                 <button type="submit" class="mp-btn primary md" style="margin-top:6px;">

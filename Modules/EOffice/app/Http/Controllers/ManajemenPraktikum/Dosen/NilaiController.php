@@ -39,7 +39,7 @@ class NilaiController extends Controller
         
         $modulFilter = $request->input('modul_id');
         $modulsQuery = Modul::where('praktikum_id', $praktikum->id)
-            ->with('tugas')
+            ->with(['tugas', 'modulAsprak.asprak.user'])
             ->orderBy('urutan');
             
         if ($modulFilter) {
@@ -174,5 +174,32 @@ class NilaiController extends Controller
             ]);
 
         return back()->with('success', 'Nilai berhasil disetujui dan dipublikasikan ke mahasiswa.');
+    }
+
+    /**
+     * Dosen membatalkan persetujuan dan publikasi nilai.
+     */
+    public function unapprove(Request $request, string $praktikumId)
+    {
+        $user = auth()->user();
+
+        $praktikum = Praktikum::where('id', $praktikumId)
+            ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
+            ->first();
+
+        if (!$praktikum) {
+            return back()->with('error', 'Praktikum tidak ditemukan.');
+        }
+
+        $daftarIds = DaftarPraktikan::where('praktikum_id', $praktikum->id)->pluck('id');
+
+        // Batalkan approve & publikasi
+        Nilai::whereIn('daftar_praktikan_id', $daftarIds)
+            ->update([
+                'disetujui_dosen' => false,
+                'dipublikasikan'  => false,
+            ]);
+
+        return back()->with('success', 'Publikasi nilai berhasil dibatalkan.');
     }
 }

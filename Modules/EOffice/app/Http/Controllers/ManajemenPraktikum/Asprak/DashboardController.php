@@ -16,24 +16,24 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         // Ambil dari middleware EnsureAsprakOwnership (sudah di-resolve via session/param)
-        $asprak    = $request->attributes->get('asprak');
+        $asprak = $request->attributes->get('asprak');
         $allAsprak = $request->attributes->get('all_asprak') ?? collect();
 
         // Fallback jika bypass (koor/admin masuk halaman asprak)
-        if (! $asprak) {
-            $user   = auth()->user();
+        if (!$asprak) {
+            $user = auth()->user();
             $asprak = AsistenPraktikum::with(['praktikum.dosens', 'modulAsprak.modul'])
                 ->where('user_id', $user->id)->where('role', 'asprak')->whereNull('deleted_at')->first();
         }
 
-        $modulDiampu = ModulAsprak::with(['modul.materi', 'modul.tugas'])
+        $modulDiampu = ModulAsprak::with(['modul.materi', 'modul.tugas.pengumpulan', 'modul.asprak.user'])
             ->where('asprak_id', $asprak?->id)
             ->get()
             ->pluck('modul')
             ->filter()
             ->values();
 
-        $totalModul  = $modulDiampu->count();
+        $totalModul = $modulDiampu->count();
         $totalMateri = $modulDiampu->sum(fn($m) => $m?->materi?->count() ?? 0);
 
         if ($asprak && $totalModul === 0) {
@@ -42,8 +42,9 @@ class DashboardController extends Controller
 
         // Pengumpulan tugas yang belum dinilai (status: belum_dicek)
         $tugasPendingNilai = PengumpulanTugas::whereHas(
-                'tugas.modul.modulAsprak', fn($q) => $q->where('asprak_id', $asprak?->id)
-            )
+            'tugas.modul.modulAsprak',
+            fn($q) => $q->where('asprak_id', $asprak?->id)
+        )
             ->where('status_pengumpulan', PengumpulanTugas::STATUS_BELUM_DICEK)
             ->count();
 

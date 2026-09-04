@@ -176,10 +176,12 @@
                     </a>
                     @endif
                     @if(isset($praktikum) && $praktikum->is_active)
+                    @if(isset($praktikum) && $praktikum->is_active)
                     <form method="POST" action="{{ route('eoffice.manprak.asprak.materi.destroy', $materi->id) }}" style="display:inline;" onsubmit="return confirm('Hapus materi ini? Tindakan tidak dapat dibatalkan.')">
                         @csrf @method('DELETE')
                         <button type="submit" class="mp-btn secondary sm" style="color:#DF1C41;">Hapus</button>
                     </form>
+                    @endif
                     @endif
                 </div>
             </div>

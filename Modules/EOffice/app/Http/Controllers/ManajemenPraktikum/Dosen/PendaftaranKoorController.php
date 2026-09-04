@@ -24,14 +24,19 @@ class PendaftaranKoorController extends Controller
     {
         $user = auth()->user();
 
-        // Praktikum yang diampu dosen ini (ambil sebagai array string UUID)
-        $praktikumIds = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
-            ->pluck('id')
-            ->map(fn($id) => (string) $id)
-            ->toArray();
+        $praktikumList = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
+            ->orderByDesc('created_at')
+            ->get();
 
-        $query = PendaftaranKoordinator::with(['user', 'praktikum'])
-            ->whereIn('praktikum_id', $praktikumIds);
+        $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
+        $praktikum = $praktikumList->firstWhere('id', $praktikumId);
+
+        if ($praktikum) {
+            $praktikum->load(['koordinator.student']);
+        }
+
+        $query = PendaftaranKoordinator::with(['user.student', 'praktikum'])
+            ->where('praktikum_id', $praktikumId);
 
         $sort = $request->input('sort', 'terbaru');
         if ($sort === 'ipk_tertinggi') {
@@ -46,16 +51,33 @@ class PendaftaranKoorController extends Controller
         if ($search = $request->input('search')) {
             $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
-        if ($praktikumId = $request->input('praktikum_id')) {
-            $query->where('praktikum_id', (string) $praktikumId);
+
+        $pendaftaran = $query->paginate(request('per_page', 10))->withQueryString();
+
+        $koordinator = $praktikum ? $praktikum->koordinator : null;
+        $koorPendaftaran = null;
+        if ($koordinator) {
+            $koorPendaftaran = PendaftaranKoordinator::where('praktikum_id', $praktikumId)
+                ->where('user_id', $koordinator->id)
+                ->first();
         }
 
-        $pendaftaran = $query->paginate(15)->withQueryString();
-        $praktikumList = Praktikum::whereIn('id', $praktikumIds)->orderBy('nama')->get();
+        $periode = null;
+        if ($praktikumId) {
+            $periode = \Modules\EOffice\Models\PeriodePendaftaran::where('praktikum_id', $praktikumId)
+                ->where('jenis', 'koor')
+                ->where('is_aktif', true)
+                ->orderByDesc('created_at')
+                ->first();
+        }
 
         return view('eoffice::manajemen-praktikum.dosen.pendaftaran-koor', compact(
             'pendaftaran',
-            'praktikumList'
+            'praktikum',
+            'praktikumList',
+            'koordinator',
+            'koorPendaftaran',
+            'periode'
         ));
     }
 

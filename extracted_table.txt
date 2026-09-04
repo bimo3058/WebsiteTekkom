@@ -1,0 +1,113 @@
+<table class="w-full" style="font-size:13px; min-width: max-content;">
+                        <thead style="background:#F9FAFB; border-bottom:1px solid #E5E7EB;">
+                            <tr>
+                                <th class="mp-th text-left" style="padding:14px 20px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">NO</th>
+                                <th class="mp-th text-left" style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">NAMA MAHASISWA</th>
+                                <th class="mp-th text-left" style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">NIM</th>
+                                <th class="mp-th text-center" style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">IPK</th>
+                                <th class="mp-th text-left" style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">TRANSKRIP NILAI</th>
+                                <th class="mp-th text-left" style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">KEANGGOTAAN CERC</th>
+                                <th class="mp-th text-center" style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">STATUS</th>
+                                <th class="mp-th text-left" style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($pendaftaran as $index => $p)
+                                @php
+                                    $namaParts = explode(' ', $p->user?->name ?? 'UN');
+                                    $initials = strtoupper(substr($namaParts[0] ?? 'U', 0, 1) . substr($namaParts[1] ?? $namaParts[0] ?? 'N', 0, 1));
+                                    $avColors = ['sky', 'navy', 'green', 'yellow', 'violet', 'red'];
+                                    $avColor = $avColors[crc32($p->user?->email ?? '') % count($avColors)];
+                                    $ipkOk = ($p->ipk ?? 0) >= 3.0;
+                                    
+                                    $emailStr = $p->user?->email ?? '';
+                                    $nim = explode('@', $emailStr)[0];
+                                    if(empty($nim)) $nim = '—';
+                                @endphp
+                                <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;">
+                                    <td style="padding:14px 20px; color:#0B266E; font-weight:600; font-size: 13px;">
+                                        {{ $pendaftaran->firstItem() + $index }}
+                                    </td>
+                                    
+                                    <td style="padding:14px 16px;">
+                                        <div class="flex items-center gap-3">
+                                            <div class="mp-av {{ $avColor }}">{{ $initials }}</div>
+                                            <div>
+                                                <div style="font-weight:600;color:#0D0D12; font-size: 13px;">{{ $p->user?->name ?? '—' }}</div>
+                                                <div style="font-size:11px;color:#666D80;margin-top:2px;">{{ $p->user?->email }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    
+                                    <td style="padding:14px 16px; color:#4B5563; font-size: 13px; font-weight: 400;">
+                                        {{ $nim }}
+                                    </td>
+                                    
+                                    <td style="padding:14px 16px; text-align:center;">
+                                        <span style="font-weight:400; color:#353849; font-size: 13px;">{{ number_format($p->ipk ?? 0, 2) }}</span>
+                                    </td>
+                                    
+                                    <td style="padding:14px 16px;">
+                                        @if($p->transkrip_path)
+                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}"
+                                                target="_blank"
+                                                style="font-size:13px; font-weight:600; color:#0B266E; text-decoration:none;"
+                                                class="hover:underline">Lihat Berkas</a>
+                                        @else
+                                            <span style="font-size:13px; color:#808897;">—</span>
+                                        @endif
+                                    </td>
+                                    
+                                    <td style="padding:14px 16px;">
+                                        @if($p->berkas_cerc_path)
+                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}"
+                                                target="_blank"
+                                                style="font-size:13px; font-weight:600; color:#0B266E; text-decoration:none;"
+                                                class="hover:underline">Lihat Berkas</a>
+                                        @else
+                                            <span style="font-size:13px; color:#808897;">—</span>
+                                        @endif
+                                    </td>
+                                    
+                                    <td style="padding:14px 16px; text-align:center;">
+                                        @if($p->status_dosen === 'disetujui')
+                                            <span style="display:inline-flex; align-items:center; border:1px solid #c3e6cb; color:#155724; background:#d4edda; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:500;">Disetujui</span>
+                                        @elseif($p->status_dosen === 'ditolak')
+                                            <span style="display:inline-flex; align-items:center; border:1px solid #f5c6cb; color:#721c24; background:#f8d7da; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:500;">Ditolak</span>
+                                        @else
+                                            <span style="display:inline-flex; align-items:center; border:1px solid #F5D565; color:#B47D00; background:#FFFdf2; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:500;">Menunggu Review</span>
+                                        @endif
+                                    </td>
+                                    
+                                    <td style="padding:14px 16px;">
+                                        <div class="flex items-center gap-2">
+                                            @if($p->status_dosen === 'menunggu')
+                                                <form action="{{ route('pendaftaran-koor.update-status', $p->id) }}" method="POST">
+                                                    @csrf @method('PUT')
+                                                    <input type="hidden" name="status_dosen" value="disetujui">
+                                                    <button type="submit" class="mp-btn sm" style="background:#F3F4F6;color:#0B266E;font-weight:600;display:flex;gap:4px;border:none;">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Setujui
+                                                    </button>
+                                                </form>
+                                                <form action="{{ route('pendaftaran-koor.update-status', $p->id) }}" method="POST">
+                                                    @csrf @method('PUT')
+                                                    <input type="hidden" name="status_dosen" value="ditolak">
+                                                    <button type="submit" class="mp-btn sm" style="background:#DF1C41;color:white;font-weight:600;display:flex;gap:4px;border:none;">
+                                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Tolak
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <span style="font-size:12px;color:#808897;font-style:italic;">Diproses</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center" style="padding:32px 16px; color:#666D80; font-size:13px;">
+                                        Belum ada pendaftar koordinator untuk praktikum ini.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>

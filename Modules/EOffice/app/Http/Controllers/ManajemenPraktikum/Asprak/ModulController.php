@@ -17,7 +17,7 @@ class ModulController extends Controller
      */
     public function index(Request $request)
     {
-        $user   = auth()->user();
+        $user = auth()->user();
         $asprak = $request->attributes->get('asprak')
             ?? AsprakPraktikum::where('user_id', $user->id)
                 ->where('role', 'asprak')
@@ -38,6 +38,9 @@ class ModulController extends Controller
             ? ModulAsprak::where('asprak_id', $asprak->id)->pluck('modul_id')
             : collect();
 
+        // PraktikumList untuk asprak-header component
+        $praktikumList = $asprak ? collect([$praktikum])->filter() : collect();
+
         if ($asprak && $assignedModulIds->isEmpty()) {
             return redirect()->route('eoffice.manprak.asprak.dashboard')->with('error', 'Akses ditolak: Anda belum di-assign ke modul manapun di praktikum ini.');
         }
@@ -46,7 +49,8 @@ class ModulController extends Controller
             'praktikum',
             'moduls',
             'asprak',
-            'assignedModulIds'
+            'assignedModulIds',
+            'praktikumList'
         ));
     }
 
@@ -56,13 +60,13 @@ class ModulController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama'          => 'required|string|max:255',
-            'deskripsi'     => 'nullable|string',
-            'urutan'        => 'required|integer|min:1',
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'urutan' => 'required|integer|min:1',
             'jadwal_minggu' => 'nullable|string|max:100',
         ]);
 
-        $user   = auth()->user();
+        $user = auth()->user();
         $asprak = $request->attributes->get('asprak')
             ?? AsprakPraktikum::where('user_id', $user->id)
                 ->where('role', 'asprak')
@@ -74,16 +78,16 @@ class ModulController extends Controller
             ->firstOrFail();
 
         $modul = Modul::create([
-            'praktikum_id'  => $praktikum->id,
-            'nama'          => $request->nama,
-            'deskripsi'     => $request->deskripsi,
-            'urutan'        => $request->urutan,
+            'praktikum_id' => $praktikum->id,
+            'nama' => $request->nama,
+            'deskripsi' => $request->deskripsi,
+            'urutan' => $request->urutan,
             'jadwal_minggu' => $request->jadwal_minggu,
         ]);
 
         // Otomatis assign asprak pembuat ke modul ini
         ModulAsprak::firstOrCreate([
-            'modul_id'  => $modul->id,
+            'modul_id' => $modul->id,
             'asprak_id' => $asprak->id,
         ]);
 
@@ -95,7 +99,7 @@ class ModulController extends Controller
      */
     public function show(Request $request, int $id)
     {
-        $user   = auth()->user();
+        $user = auth()->user();
         $asprak = $request->attributes->get('asprak')
             ?? AsprakPraktikum::where('user_id', $user->id)
                 ->where('role', 'asprak')
@@ -139,13 +143,15 @@ class ModulController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'nama'          => 'required|string|max:255',
-            'deskripsi'     => 'nullable|string',
-            'urutan'        => 'required|integer|min:1',
+            'nama' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string|max:500',
+            'urutan' => 'nullable|integer|min:1',
             'jadwal_minggu' => 'nullable|string|max:100',
+            'lampiran' => 'nullable|array|max:3',
+            'lampiran.*' => 'file|max:5120',
         ]);
 
-        $user   = auth()->user();
+        $user = auth()->user();
         $asprak = $request->attributes->get('asprak')
             ?? AsprakPraktikum::where('user_id', $user->id)
                 ->where('role', 'asprak')
@@ -157,12 +163,51 @@ class ModulController extends Controller
         $isAssigned = ModulAsprak::where('modul_id', $modul->id)
             ->where('asprak_id', $asprak->id)
             ->exists();
-        
+
         if (!$isAssigned) {
             return back()->with('error', 'Gagal menyimpan: Anda belum di-assign sebagai pengampu pada modul ini.');
         }
 
-        $modul->update($request->only(['nama', 'deskripsi', 'urutan', 'jadwal_minggu']));
+        $modul->update(array_merge(
+            $request->only(['nama', 'deskripsi']),
+            [
+                'urutan' => $request->input('urutan', $modul->urutan),
+                'jadwal_minggu' => $request->input('jadwal_minggu', $modul->jadwal_minggu),
+            ]
+        ));
+        $modul->touch(); // Paksa update timestamp meskipun tidak ada atribut utama yg berubah
+
+        $supabase = app(\App\Services\SupabaseStorage::class);
+
+        // Hapus materi yang ditandai dihapus
+        if ($request->has('deleted_files') && is_array($request->deleted_files)) {
+            $materiToDel = $modul->materi()->whereIn('id', $request->deleted_files)->get();
+            foreach ($materiToDel as $materiLama) {
+                if ($materiLama->file_path) {
+                    $supabase->delete($materiLama->file_path, 'eoffice');
+                }
+                $materiLama->delete();
+            }
+        }
+
+        // Jika upload file baru tanpa limit per modul
+        if ($request->hasFile('lampiran')) {
+            $files = $request->file('lampiran');
+            foreach ($files as $file) {
+                $path = $supabase->upload($file, 'materi-modul', 'eoffice');
+                if ($path) {
+                    \Modules\EOffice\Models\MateriModul::create([
+                        'modul_id' => $modul->id,
+                        'user_id' => $user->id,
+                        'judul' => count($files) > 1 ? 'Materi - ' . $file->getClientOriginalName() : 'Materi Modul',
+                        'deskripsi' => $request->deskripsi,
+                        'file_path' => $path,
+                        'tipe_file' => $file->getClientMimeType(),
+                    ]);
+                    $modul->touch(); // Paksa lagi incase
+                }
+            }
+        }
 
         return back()->with('success', 'Modul berhasil diperbarui.');
     }
@@ -172,7 +217,7 @@ class ModulController extends Controller
      */
     public function destroy(Request $request, int $id)
     {
-        $user   = auth()->user();
+        $user = auth()->user();
         $asprak = $request->attributes->get('asprak')
             ?? AsprakPraktikum::where('user_id', $user->id)
                 ->where('role', 'asprak')
@@ -184,7 +229,7 @@ class ModulController extends Controller
         $isAssigned = ModulAsprak::where('modul_id', $modul->id)
             ->where('asprak_id', $asprak->id)
             ->exists();
-        
+
         if (!$isAssigned) {
             return back()->with('error', 'Gagal menghapus: Anda belum di-assign sebagai pengampu pada modul ini.');
         }

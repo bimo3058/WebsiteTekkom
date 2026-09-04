@@ -57,7 +57,7 @@ class PengumumanController extends Controller
             'konten'       => 'required|string',
             'is_published' => 'boolean',
             'lampiran'     => 'nullable|array|max:3',
-            'lampiran.*'   => 'file|max:5120',
+            'lampiran.*'   => 'file|mimes:pdf|max:5120',
         ]);
 
         $user   = auth()->user();
@@ -99,6 +99,44 @@ class PengumumanController extends Controller
         ])->with('success', 'Pengumuman berhasil diunggah.');
     }
 
+        public function update(Request $request, int $id)
+    {
+        $request->validate([
+            'judul'        => 'required|string|max:255',
+            'konten'       => 'required|string',
+            'lampiran'     => 'nullable|array|max:3',
+            'lampiran.*'   => 'file|mimes:pdf|max:5120',
+        ]);
+
+        $user       = auth()->user();
+        $pengumuman = Pengumuman::findOrFail($id);
+
+        if ($pengumuman->user_id !== $user->id) {
+            return back()->with('error', 'Anda hanya bisa mengedit pengumuman milik sendiri.');
+        }
+
+        $lampiranPaths = $pengumuman->lampiran ?? [];
+        if ($request->hasFile('lampiran')) {
+            $storage = app(SupabaseStorage::class);
+            foreach ($request->file('lampiran') as $file) {
+                $path = $storage->upload($file, 'pengumuman', 'eoffice');
+                if ($path) {
+                    $lampiranPaths[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                    ];
+                }
+            }
+        }
+
+        $pengumuman->update([
+            'judul'        => $request->judul,
+            'konten'       => $request->konten,
+            'lampiran'     => empty($lampiranPaths) ? null : $lampiranPaths,
+        ]);
+
+        return back()->with('success', 'Pengumuman berhasil diperbarui.');
+    }
     public function destroy(int $id)
     {
         $user       = auth()->user();
@@ -116,3 +154,5 @@ class PengumumanController extends Controller
         ])->with('success', 'Pengumuman berhasil dihapus.');
     }
 }
+
+

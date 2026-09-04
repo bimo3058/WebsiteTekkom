@@ -1,181 +1,411 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Kelola Modul">
+@php
+    $pageTitle = ($praktikum->nama ?? 'Praktikum') . ' / Modul';
+@endphp
+<x-eoffice::manajemen-praktikum.layout :pageTitle="$pageTitle">
+    <div x-data="modulManager()">
 
-{{-- Header --}}
-<div class="mp-page-header">
-    <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h1 class="mp-page-title">Kelola Modul</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
-        </div>
-        <p class="mp-page-sub">{{ $praktikum?->nama ?? 'Belum terdaftar di praktikum manapun' }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
-    </div>
-</div>
-
-@if(!$praktikum)
-<div class="mp-alert warning flex-shrink-0">Anda belum terdaftar sebagai Asisten Praktikum aktif.</div>
-@else
-
-{{-- Form Buat Modul Baru --}}
-<div class="sec-head">
-    <span class="sec-bar"></span>
-    <span class="sec-title">Buat Modul Baru</span>
-    <span class="sec-rule"></span>
-</div>
-
-<div class="mp-card flex-shrink-0" style="padding:20px;">
-    <form method="POST" action="{{ route('eoffice.manprak.asprak.modul.store') }}"
-          style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        @csrf
-        <div>
-            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">
-                Nama Modul <span style="color:#DF1C41;">*</span>
-            </label>
-            <input name="nama" value="{{ old('nama') }}" required class="mp-input" style="width:100%;"
-                   placeholder="cth. Modul 1 — Pengenalan">
-        </div>
-        <div>
-            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Jadwal / Minggu</label>
-            <input name="jadwal_minggu" value="{{ old('jadwal_minggu') }}" class="mp-input" style="width:100%;"
-                   placeholder="cth. Minggu 1 / Senin 08.00–10.00">
-        </div>
-        <div>
-            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">
-                Urutan <span style="color:#DF1C41;">*</span>
-            </label>
-            <input type="number" name="urutan" value="{{ old('urutan', $moduls->count() + 1) }}" min="1"
-                   required class="mp-input" style="width:100%;">
-        </div>
-        <div style="grid-row:span 2;display:flex;flex-direction:column;">
-            <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Deskripsi</label>
-            <textarea name="deskripsi" rows="4" class="mp-input" style="width:100%;flex:1;"
-                      placeholder="Deskripsi singkat modul ini">{{ old('deskripsi') }}</textarea>
-        </div>
-        <div style="grid-column:1/-1;display:flex;justify-content:flex-end;">
-            <button class="mp-btn primary md">+ Tambah Modul</button>
-        </div>
-    </form>
-</div>
-
-{{-- Daftar Modul --}}
-<div class="sec-head">
-    <span class="sec-bar"></span>
-    <span class="sec-title">Semua Modul Praktikum</span>
-    <span class="sec-rule"></span>
-    <span class="mp-badge neutral sm">{{ $moduls->count() }} modul</span>
-</div>
-
-<div class="mp-card flex-1 min-h-0">
-    <div class="mp-card-header">
-        <span class="mp-card-title">Semua Modul Praktikum</span>
-        <div class="right">
-            <span style="font-size:12px;color:#666D80;">{{ $moduls->count() }} modul</span>
-        </div>
-    </div>
-
-    @forelse($moduls as $modul)
-    @php $isMine = $assignedModulIds->contains($modul->id); @endphp
-    <div class="mp-tr" style="display:flex;align-items:flex-start;gap:16px;padding:16px 20px;border-bottom:1px solid #DFE1E7;"
-         onmouseover="this.style.background='#F6F8FA'" onmouseout="this.style.background=''">
-
-        {{-- Urutan Badge --}}
-        <div style="width:36px;height:36px;border-radius:50%;font-size:13px;font-weight:700;
-                    display:flex;align-items:center;justify-content:center;flex-shrink:0;
-                    background:{{ $isMine ? '#F6F8FA' : '#F0F1F4' }};
-                    color:{{ $isMine ? '#0B266E' : '#666D80' }};">
-            {{ $modul->urutan }}
-        </div>
-
-        <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-                <span style="font-size:14px;font-weight:600;color:#0D0D12;">{{ $modul->nama }}</span>
-                @if($isMine)
-                <span class="mp-badge success sm"><span class="dot"></span>Diampu Anda</span>
-                @endif
+        {{-- Flash Messages --}}
+        @if(session('success'))
+            <div class="mp-flash mp-flash-success flex-shrink-0 mb-[16px]">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {{ session('success') }}
             </div>
-            <div style="font-size:12px;color:#666D80;margin-bottom:4px;">{{ $modul->jadwal_minggu ?? '—' }}</div>
-            @if($modul->deskripsi)
-            <div style="font-size:12px;color:#353849;margin-bottom:8px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">{{ $modul->deskripsi }}</div>
-            @endif
-            <div style="display:flex;gap:12px;font-size:11px;color:#666D80;">
-                <span>{{ $modul->materi->count() }} materi</span>
-                <span>{{ $modul->tugas->count() }} tugas</span>
-                <span>{{ $modul->modulAsprak->count() }} asisten praktikum</span>
+        @endif
+        @if(session('error'))
+            <div class="mp-flash mp-flash-error flex-shrink-0 mb-[16px]">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="15" y1="9" x2="9" y2="15" />
+                    <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+                {{ session('error') }}
             </div>
-        </div>
+        @endif
 
-        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            @if($isMine)
-                <a href="{{ route('eoffice.manprak.asprak.modul.show', $modul->id) }}" class="mp-btn primary sm" style="text-decoration:none;">Detail</a>
-                <button onclick="openEdit({{ $modul->id }}, '{{ addslashes($modul->nama) }}', {{ $modul->urutan }}, '{{ addslashes($modul->jadwal_minggu ?? '') }}', '{{ addslashes($modul->deskripsi ?? '') }}')"
-                        class="mp-btn secondary sm">Edit</button>
-                <form method="POST" action="{{ route('eoffice.manprak.asprak.modul.destroy', $modul->id) }}"
-                      onsubmit="return confirm('Hapus modul {{ addslashes($modul->nama) }}? Materi dan tugas di dalamnya juga akan dihapus.')">
-                    @csrf @method('DELETE')
-                    <button class="mp-btn secondary sm" style="color:#DF1C41;border-color:#DF1C41;">Hapus</button>
-                </form>
-            @else
-                <button class="mp-btn secondary sm" disabled title="Anda bukan pengampu modul ini" style="opacity:0.5;cursor:not-allowed;">Tidak ada akses</button>
-            @endif
-        </div>
-    </div>
-    @empty
-    <div style="padding:48px;text-align:center;">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;">
-            <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-        </svg>
-        <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada modul. Buat modul pertama di atas.</div>
-    </div>
-    @endforelse
-</div>
+        @if(isset($praktikum) && $praktikum)
+            <x-eoffice::manajemen-praktikum.asprak-header :praktikum="$praktikum" activeTab="modul" />
+        @endif
 
-{{-- Modal Edit Modul --}}
-<div id="modal-edit" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
-    <div style="background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.18);width:100%;max-width:480px;margin:0 16px;padding:24px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-            <div style="font-weight:700;font-size:15px;color:#0D0D12;">Edit Modul</div>
-            <button onclick="document.getElementById('modal-edit').classList.add('hidden')"
-                    style="color:#666D80;font-size:18px;line-height:1;border:none;background:transparent;cursor:pointer;">✕</button>
-        </div>
-        <form id="form-edit" method="POST" style="display:flex;flex-direction:column;gap:12px;">
-            @csrf @method('PUT')
-            <div>
-                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Nama Modul</label>
-                <input id="edit-nama" name="nama" required class="mp-input" style="width:100%;">
+        @if($praktikumList->isEmpty())
+            <div class="mp-alert warning flex-shrink-0">Anda belum terdaftar sebagai asisten praktikum di praktikum manapun.
+                Hubungi koordinator untuk aktivasi.</div>
+        @else
+
+
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                @forelse($moduls as $modul)
+                    @php $isMine = $assignedModulIds->contains($modul->id); @endphp
+                    @if($isMine)
+                        <div
+                            style="border:1px solid #DFE1E7; border-radius:12px; background:#fff; padding:24px; position:relative;">
+
+                            {{-- Header Modul --}}
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size:16px; font-weight:700; color:#111827; margin:0 0 4px 0;">
+                                        {{ $modul->nama }}</div>
+                                    <div style="font-size:12px; color:#374151; font-weight:400; margin-bottom:4px;">
+                                        Asisten:
+                                        @forelse($modul->modulAsprak as $ma)
+                                            <span>{{ $ma->asprak?->user?->name ?? '—' }}</span>@if(!$loop->last), @endif
+                                        @empty
+                                            <span>—</span>
+                                        @endforelse
+                                    </div>
+                                    <div style="font-size:12px; color:#6B7280; font-weight:400;">
+                                        @php $firstMateri = $modul->materi->sortBy('created_at')->first(); @endphp
+                                        @if($firstMateri)
+                                            {{ \Carbon\Carbon::parse($firstMateri->created_at)->locale('id')->translatedFormat('d M Y, H:i') }}
+                                            @if($modul->updated_at && $modul->updated_at->diffInSeconds($firstMateri->created_at) > 5)
+                                                <span style="font-style:italic; color:#9CA3AF;">(Diedit {{ \Carbon\Carbon::parse($modul->updated_at)->locale('id')->translatedFormat('d M Y, H:i') }})</span>
+                                            @endif
+                                        @endif
+                                    </div>
+                                </div>
+
+                                @if($isMine)
+                                    <button type="button" data-modul-id="{{ $modul->id }}" data-modul-nama="{{ $modul->nama }}"
+                                        data-modul-deskripsi="{{ $modul->deskripsi ?? '' }}"
+                                        @click="openEditModal($el.dataset.modulId, $el.dataset.modulNama, $el.dataset.modulDeskripsi, {{ json_encode($modul->materi->map(function ($m) {
+                                    return ['id' => $m->id, 'name' => basename($m->file_path ?? 'File'), 'url' => app(\App\Services\SupabaseStorage::class)->publicUrl($m->file_path, 'eoffice')]; })) }})"
+                                        title="Edit Modul"
+                                        style="background:#EEF2FF; border:none; padding:10px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; flex-shrink:0; margin-left:12px; width:40px; height:40px;"
+                                        onmouseover="this.style.background='#E0E7FF'" onmouseout="this.style.background='#EEF2FF'">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                        </svg>
+                                    </button>
+                                @endif
+                            </div>
+
+                            {{-- Deskripsi --}}
+                            @if($modul->deskripsi)
+                                <div style="margin:20px 0 0 0; padding-top:20px; border-top:1px solid #DFE1E7;">
+                                    <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6;">
+                                        {{ $modul->deskripsi }}</p>
+                                </div>
+                            @else
+                                <div style="margin:20px 0 0 0; padding-top:20px; border-top:1px solid #DFE1E7;"></div>
+                            @endif
+
+                            {{-- Lampiran Modul (MateriModul) --}}
+                            @if($modul->materi->isNotEmpty())
+                                <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:20px;">
+                                    @foreach($modul->materi as $materi)
+                                        <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') : '#' }}"
+                                            target="_blank"
+                                            style="display:flex; flex-direction:column; width:180px; height:160px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
+                                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
+                                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+
+                                            {{-- Top Empty Area --}}
+                                            <div
+                                                style="flex:1; display:flex; align-items:center; justify-content:center; background:#FAFAFA;">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB"
+                                                    stroke-width="1.5" stroke-linecap="round">
+                                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                                    <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                            </div>
+
+                                            {{-- Bottom Name Area --}}
+                                            <div style="background:#293C79; padding:12px 14px; display:flex; align-items:center;">
+                                                <span
+                                                    style="color:#FFF; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">
+                                                    {{ $materi->judul ?? basename($materi->file_path ?? 'File') }}
+                                                </span>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    @endif
+                @empty
+                    <div
+                        style="min-height:180px;display:flex;align-items:center;justify-content:center;border:1px dashed #DFE1E7;border-radius:12px;">
+                        <div style="padding:36px;text-align:center;">
+                            <div
+                                style="width:48px;height:48px;border-radius:12px;background:#FAFAFA;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;border:1px solid #DFE1E7;">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5"
+                                    stroke-linecap="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                    <path d="M3 9h18M9 21V9" />
+                                </svg>
+                            </div>
+                            <div style="font-size:14px;font-weight:600;color:#111827;margin-bottom:4px;">Belum Ada Modul</div>
+                            <div style="font-size:12px;color:#6B7280;">Belum ada modul yang di-assign ke Anda.</div>
+                        </div>
+                    </div>
+                @endforelse
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Urutan</label>
-                    <input id="edit-urutan" type="number" name="urutan" min="1" required class="mp-input" style="width:100%;">
+
+
+
+            {{-- ══════════════════════════════════════════════════════════════ --}}
+            {{-- Modal: Edit Modul --}}
+            {{-- ══════════════════════════════════════════════════════════════ --}}
+            <div x-show="editModal.open" style="display:none;"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+                x-cloak>
+
+                <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto"
+                    style="border:1px solid #E5E7EB;" @click.away="editModal.open = false" x-show="editModal.open"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+
+                    <div
+                        style="padding:20px 24px; border-bottom:1px solid #E5E7EB; display:flex; justify-content:space-between; align-items:center;">
+                        <h2 style="font-size:18px; font-weight:700; color:#111827; margin:0;">Edit Modul</h2>
+                        <button type="button" @click="editModal.open = false"
+                            style="background:none; border:none; cursor:pointer; color:#6B7280;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <line x1="18" y1="6" x2="6" y2="18" />
+                                <line x1="6" y1="6" x2="18" y2="18" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div style="padding:24px;">
+                        <form :action="`/eoffice/manprak/asprak/modul/${editModal.id}`" method="POST"
+                            enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:16px;"
+                            @submit="injectDeletedFiles($event)">
+                            @csrf
+                            @method('PUT')
+
+                            {{-- Nama Modul (Dropdown, styled exactly like Create) --}}
+                            <div>
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
+                                    Nama Modul <span style="color:#DF1C41;">*</span>
+                                </label>
+                                <select name="id" required x-model="editModal.id" disabled
+                                    style="width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; color:#111827; background:#F9FAFB; appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%236B7280%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>'); background-repeat:no-repeat; background-position:right 12px center; background-size:16px; cursor:not-allowed;">
+                                    @foreach($moduls as $modul)
+                                        @if($assignedModulIds->contains($modul->id))
+                                            <option value="{{ $modul->id }}">{{ $modul->nama }}</option>
+                                        @endif
+                                    @endforeach
+                                </select>
+                                <input type="hidden" name="nama" x-model="editModal.nama">
+                            </div>
+
+                            {{-- Deskripsi --}}
+                            <div>
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
+                                    Deskripsi <span style="font-weight:400; color:#9CA3AF;">(Opsional, maks. 500
+                                        karakter)</span>
+                                </label>
+                                <textarea name="deskripsi" rows="3" maxlength="500" placeholder="Deskripsi singkat..."
+                                    x-model="editModal.deskripsi"
+                                    style="width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; color:#111827; resize:vertical; min-height:80px; max-height:120px; box-sizing:border-box;"></textarea>
+                            </div>
+
+                            {{-- Lampiran Berkas --}}
+                            <div>
+                                <label
+                                    style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
+                                    Berkas Lampiran <span style="color:#DF1C41;">*</span>
+                                </label>
+
+                                <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+                                    <button type="button" @click="$refs.fileInputEdit.click()"
+                                        style="width:100%; padding:10px; border:1px dashed #D1D5DB; border-radius:8px; background:#F9FAFB; color:#293C79; font-size:13px; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:8px; transition:all 0.2s;"
+                                        onmouseover="this.style.background='#F3F4F6'; this.style.borderColor='#9CA3AF';"
+                                        onmouseout="this.style.background='#F9FAFB'; this.style.borderColor='#D1D5DB';">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round">
+                                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        </svg>
+                                        Tambah Berkas
+                                    </button>
+                                    <div
+                                        style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#9CA3AF;">
+                                        <span x-text="editFiles.length + ' / 3 file terpilih'"></span>
+                                        <span>Maks. 5MB per file</span>
+                                    </div>
+                                </div>
+                                <input type="file" x-ref="fileInputEdit" style="display:none" multiple accept="*/*"
+                                    @change="addFiles($event, 'edit')">
+                                <input type="file" id="hidden-lampiran-edit" name="lampiran[]" multiple
+                                    style="display:none">
+
+                                {{-- Files to upload (New) --}}
+                                <div style="display:flex;flex-direction:column;gap:6px;">
+                                    <template x-for="(file, index) in editFiles" :key="index">
+                                        <div
+                                            style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:6px;">
+                                            <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280"
+                                                    stroke-width="2" stroke-linecap="round">
+                                                    <path
+                                                        d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                                                </svg>
+                                                <span x-text="file.name"
+                                                    style="font-size:12px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;"></span>
+                                            </div>
+                                            <button type="button" @click="removeFile(index, 'edit')" title="Hapus"
+                                                style="color:#DC2626;background:none;border:none;cursor:pointer;">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                {{-- Existing Files Preview --}}
+                                <template x-if="editModal.existingFiles.filter(f => !f.deleted).length > 0">
+                                    <div style="margin-top:10px;">
+                                        <div style="font-size:13px; font-weight:600; color:#374151; margin-bottom:6px;">
+                                            Berkas Saat Ini:</div>
+                                        <div style="display:flex;flex-direction:column;gap:6px;">
+                                            <template x-for="(file, index) in editModal.existingFiles" :key="index">
+                                                <div x-show="!file.deleted">
+                                                    <div
+                                                        style="display:flex;flex-direction:row;align-items:center;padding:5px 12px;background:#FAFAFA;border:1px solid #E5E7EB;border-radius:6px;gap:8px;">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                            stroke="#6B7280" stroke-width="2" stroke-linecap="round"
+                                                            style="flex-shrink:0;">
+                                                            <path
+                                                                d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                                                        </svg>
+                                                        <a :href="file.url" target="_blank"
+                                                            style="font-size:12px;color:#293C79;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;"
+                                                            x-text="file.name"></a>
+                                                        <button type="button" @click="removeExistingFile(index)"
+                                                            title="Hapus Berkas"
+                                                            style="color:#9CA3AF;background:none;border:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;padding:0;"
+                                                            onmouseover="this.style.color='#DC2626'"
+                                                            onmouseout="this.style.color='#9CA3AF'">
+                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2.5"
+                                                                stroke-linecap="round">
+                                                                <line x1="18" y1="6" x2="6" y2="18" />
+                                                                <line x1="6" y1="6" x2="18" y2="18" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div style="display:flex;justify-content:flex-end; gap:12px; margin-top:8px;">
+                                <button type="submit"
+                                    style="padding:10px 20px; font-size:14px; font-weight:600; color:white; background:#293C79; border:none; border-radius:8px; cursor:pointer;"
+                                    onmouseover="this.style.background='#1F2D59'"
+                                    onmouseout="this.style.background='#293C79'">Simpan</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div>
-                    <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Jadwal</label>
-                    <input id="edit-jadwal" name="jadwal_minggu" class="mp-input" style="width:100%;">
-                </div>
             </div>
-            <div>
-                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">Deskripsi</label>
-                <textarea id="edit-deskripsi" name="deskripsi" rows="3" class="mp-input" style="width:100%;"></textarea>
-            </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px;">
-                <button type="button" onclick="document.getElementById('modal-edit').classList.add('hidden')"
-                        class="mp-btn secondary md">Batal</button>
-                <button class="mp-btn primary md">Simpan</button>
-            </div>
-        </form>
+
+        @endif {{-- end if praktikumList not empty --}}
     </div>
-</div>
 
-<script>
-function openEdit(id, nama, urutan, jadwal, deskripsi) {
-    document.getElementById('form-edit').action = '/eoffice/manprak/asprak/modul/' + id;
-    document.getElementById('edit-nama').value    = nama;
-    document.getElementById('edit-urutan').value  = urutan;
-    document.getElementById('edit-jadwal').value  = jadwal;
-    document.getElementById('edit-deskripsi').value = deskripsi;
-    document.getElementById('modal-edit').classList.remove('hidden');
-}
-</script>
+    <script>
+        function modulManager() {
+            return {
+                createModal: { open: false, modulId: '' },
+                editModal: { open: false, id: null, nama: '', deskripsi: '', existingFiles: [] },
+                createFiles: [],
+                editFiles: [],
 
-@endif
+                openEditModal(id, nama, deskripsi, existingFiles) {
+                    this.editModal.id = id;
+                    this.editModal.nama = nama;
+                    this.editModal.deskripsi = deskripsi;
+                    this.editModal.existingFiles = existingFiles ? existingFiles.map(f => ({ ...f, deleted: false })) : [];
+                    this.editFiles = [];
+                    this.syncInput('edit');
+                    this.editModal.open = true;
+                },
 
+                removeExistingFile(index) {
+                    this.editModal.existingFiles[index].deleted = true;
+                },
+
+                addFiles(e, type) {
+                    let selectedFiles = Array.from(e.target.files);
+                    let currentFiles = type === 'edit' ? this.editFiles : this.createFiles;
+                    let existingFileCount = type === 'edit' ? this.editModal.existingFiles.filter(f => !f.deleted).length : 0;
+                    let totalFiles = currentFiles.length + selectedFiles.length + existingFileCount;
+
+                    if (totalFiles > 3) {
+                        alert('Maksimal 3 file yang dapat dilampirkan!');
+                        let available = 3 - (currentFiles.length + existingFileCount);
+                        selectedFiles = available > 0 ? selectedFiles.slice(0, available) : [];
+                    }
+
+                    if (type === 'edit') {
+                        this.editFiles = [...this.editFiles, ...selectedFiles];
+                    } else {
+                        this.createFiles = [...this.createFiles, ...selectedFiles];
+                    }
+
+                    this.syncInput(type);
+                    e.target.value = ''; // reset so same file can be picked again
+                },
+
+                removeFile(index, type) {
+                    if (type === 'edit') {
+                        this.editFiles.splice(index, 1);
+                    } else {
+                        this.createFiles.splice(index, 1);
+                    }
+                    this.syncInput(type);
+                },
+
+                injectDeletedFiles(e) {
+                    const form = e.target;
+                    // Hapus input deleted_files lama jika ada
+                    form.querySelectorAll('input[data-deleted-file]').forEach(el => el.remove());
+                    // Inject hanya file yang ditandai deleted
+                    this.editModal.existingFiles.forEach(f => {
+                        if (f.deleted) {
+                            const inp = document.createElement('input');
+                            inp.type = 'hidden';
+                            inp.name = 'deleted_files[]';
+                            inp.value = f.id;
+                            inp.setAttribute('data-deleted-file', '1');
+                            form.appendChild(inp);
+                        }
+                    });
+                    // Biarkan form submit secara normal
+                },
+
+                syncInput(type) {
+                    let dt = new DataTransfer();
+                    let currentFiles = type === 'edit' ? this.editFiles : this.createFiles;
+
+                    currentFiles.forEach(file => dt.items.add(file));
+
+                    if (type === 'edit') {
+                        document.getElementById('hidden-lampiran-edit').files = dt.files;
+                    } else {
+                        document.getElementById('hidden-lampiran-create').files = dt.files;
+                    }
+                }
+            };
+        }
+    </script>
 </x-eoffice::manajemen-praktikum.layout>

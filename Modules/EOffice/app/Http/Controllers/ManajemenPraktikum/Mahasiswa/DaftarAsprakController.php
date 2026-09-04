@@ -174,9 +174,9 @@ class DaftarAsprakController extends Controller
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'ipk'          => 'required|numeric|min:0|max:4',
-            'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
             'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',
+            'berkas_tambahan' => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png',
         ]);
 
         $user = auth()->user();
@@ -203,14 +203,18 @@ class DaftarAsprakController extends Controller
         $berkasCercPath = $request->hasFile('berkas_cerc')
             ? $this->supabase->upload($request->file('berkas_cerc'), 'koor-cerc/' . $user->id, 'eoffice')
             : null;
+            
+        $berkasTambahanPath = $request->hasFile('berkas_tambahan')
+            ? $this->supabase->upload($request->file('berkas_tambahan'), 'koor-tambahan/' . $user->id, 'eoffice')
+            : null;
 
         PendaftaranKoordinator::create([
             'user_id'        => $user->id,
             'praktikum_id'   => $request->praktikum_id,
             'ipk'            => $request->ipk,
-            'motivasi'       => $request->motivasi,
             'transkrip_path' => $transkripPath,
             'berkas_cerc_path' => $berkasCercPath,
+            'berkas_tambahan_path' => $berkasTambahanPath,
             'status'         => 'pending',
         ]);
 

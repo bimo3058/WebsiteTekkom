@@ -253,7 +253,7 @@
                                 </td>
 
                                 {{-- NIM --}}
-                                <td style="padding:12px 16px;vertical-align:middle;font-size:12px;font-family:monospace;font-weight:600;color:#353849;letter-spacing:.03em;">
+                                <td style="padding:12px 16px;vertical-align:middle;font-size:12px;font-weight:600;color:#353849;">
                                     {{ $pr->user?->student?->student_number ?? '-' }}
                                 </td>
 

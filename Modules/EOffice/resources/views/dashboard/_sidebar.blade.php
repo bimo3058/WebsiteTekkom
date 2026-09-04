@@ -41,14 +41,9 @@
             'link'  => route('eoffice.manprak.dosen.dashboard'),
             'icon'  => 'M12 14l9-5-9-5-9 5 9 5z M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z',
             'subs'  => [
-                ['href' => route('eoffice.manprak.dosen.dashboard'),                          'label' => 'Ringkasan',          'match' => 'dosen.dashboard'],
+                ['href' => route('eoffice.manprak.dosen.dashboard'),                          'label' => 'Dashboard',          'match' => 'dosen.dashboard'],
+                ['href' => route('eoffice.manprak.dosen.praktikum.index'),                    'label' => 'Praktikum',          'match' => 'dosen.praktikum'],
                 ['href' => route('eoffice.manprak.dosen.pendaftaran-koor.index'),             'label' => 'Seleksi Koor',       'match' => 'dosen.pendaftaran-koor'],
-                ['href' => route('eoffice.manprak.dosen.asprak.index'),                       'label' => 'Asisten Praktikum',  'match' => 'dosen.asprak'],
-                ['href' => route('eoffice.manprak.dosen.daftar-praktikan.index'),             'label' => 'Daftar Praktikan',   'match' => 'dosen.daftar-praktikan'],
-                ['href' => route('eoffice.manprak.dosen.pengumuman.index'),                   'label' => 'Pengumuman',         'match' => 'dosen.pengumuman'],
-                ['href' => route('eoffice.manprak.dosen.tugas.index'),                        'label' => 'Daftar Tugas',       'match' => 'dosen.tugas'],
-                ['href' => route('eoffice.manprak.dosen.modul.index', ['praktikumId' => 0]), 'label' => 'Daftar Modul',       'match' => 'dosen.modul'],
-                ['href' => route('eoffice.manprak.dosen.nilai.index', ['praktikumId' => 0]), 'label' => 'Absensi & Nilai',    'match' => 'dosen.nilai'],
             ],
         ];
     }
@@ -61,13 +56,9 @@
             'link'  => route('eoffice.manprak.koor.dashboard'),
             'icon'  => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4',
             'subs'  => [
-                ['href' => route('eoffice.manprak.koor.dashboard'),                  'label' => 'Ringkasan',        'match' => 'koor.dashboard'],
-                ['href' => route('eoffice.manprak.koor.pendaftaran-asprak.index'),   'label' => 'Seleksi Asprak',   'match' => 'koor.pendaftaran-asprak'],
-                ['href' => route('eoffice.manprak.koor.modul.index'),                'label' => 'Kelola Modul',     'match' => 'koor.modul'],
-                ['href' => route('eoffice.manprak.koor.bagi-modul.index'),           'label' => 'Bagi Modul',       'match' => 'bagi-modul'],
-                ['href' => route('eoffice.manprak.koor.pengumuman.index'),           'label' => 'Pengumuman',       'match' => 'koor.pengumuman'],
-                ['href' => route('eoffice.manprak.koor.praktikan.index'),            'label' => 'Data Praktikan',   'match' => 'koor.praktikan'],
-                ['href' => route('eoffice.manprak.koor.nilai.index'),                'label' => 'Absensi & Nilai',  'match' => 'koor.nilai'],
+                ['href' => route('eoffice.manprak.koor.dashboard'),       'label' => 'Dashboard', 'match' => 'koor.dashboard'],
+                ['href' => route('eoffice.manprak.koor.praktikum.index'), 'label' => 'Praktikum', 'match' => 'koor.praktikum'],
+
             ],
         ];
     }
