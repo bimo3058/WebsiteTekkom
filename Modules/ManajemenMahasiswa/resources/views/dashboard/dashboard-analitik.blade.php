@@ -539,7 +539,11 @@
                 @forelse($dpmPelaksanaan['pelaksanaan_mendatang'] ?? [] as $kegiatan)
                     @php
                         $tanggalMulaiDpm = $kegiatan->tanggal_mulai ? \Illuminate\Support\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') : '-';
-                        $dosenDpm = $kegiatan->dosenPendamping?->user?->name ?? $kegiatan->dosenPendamping?->name ?? '-';
+                        $dosenDpm = $kegiatan->dosenPendampings
+                            ->map(fn ($d) => $d->user?->name ?? $d->name)
+                            ->filter()
+                            ->implode(', ');
+                        $dosenDpm = $dosenDpm !== '' ? $dosenDpm : '-';
                     @endphp
                     <tr>
                         <td style="font-weight:600;color:#1e1b4b;">{{ $kegiatan->nama_kegiatan ?? '-' }}</td>

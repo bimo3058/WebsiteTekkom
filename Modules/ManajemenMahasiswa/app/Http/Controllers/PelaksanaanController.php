@@ -68,9 +68,14 @@ class PelaksanaanController extends Controller
             $query->where('tahun', $request->tahun);
         }
 
-        // Search
+        // Search judul + deskripsi
+        // Dibungkus closure supaya orWhere tidak "membocorkan" filter bidang/tahun di atas.
         if ($request->filled('search')) {
-            $query->where('judul', 'like', '%' . $request->search . '%');
+            $term = '%' . $request->search . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('judul', 'like', $term)
+                  ->orWhere('deskripsi', 'like', $term);
+            });
         }
 
         $pelaksanaanList = $query->paginate(12);
@@ -90,7 +95,7 @@ class PelaksanaanController extends Controller
     {
         $proker = Kegiatan::with([
             'bidangs', 'kategoris',
-            'ketuaPelaksana.user', 'dosenPendamping.user',
+            'ketuaPelaksana.user', 'dosenPendampings.user',
             'panitia.user', 'creator', 'disetujuiOleh',
             'repoMulmed',
         ])->whereIn('status', [
@@ -136,7 +141,7 @@ class PelaksanaanController extends Controller
     {
         $proker = Kegiatan::with([
             'bidangs', 'kategoris',
-            'ketuaPelaksana.user', 'dosenPendamping.user',
+            'ketuaPelaksana.user', 'dosenPendampings.user',
             'panitia.user', 'creator',
             'repoMulmed',
         ])->whereIn('status', [
@@ -210,7 +215,8 @@ class PelaksanaanController extends Controller
             'target_peserta'            => 'nullable|integer|min:1',
             'anggaran'                  => 'nullable|numeric|min:0',
             'ketua_pelaksana_id'        => 'nullable|exists:students,id',
-            'dosen_pendamping_id'       => 'nullable|exists:lecturers,id',
+            'dosen_pendamping_ids'      => 'nullable|array',
+            'dosen_pendamping_ids.*'    => 'exists:lecturers,id',
             'panitia_ids'               => 'nullable|array',
             'panitia_ids.*'             => 'exists:students,id',
             'panitia_peran'             => 'nullable|array',
@@ -240,7 +246,6 @@ class PelaksanaanController extends Controller
             'target_peserta'     => $validated['target_peserta'] ?? null,
             'anggaran'           => $validated['anggaran'] ?? null,
             'ketua_pelaksana_id' => $validated['ketua_pelaksana_id'] ?? null,
-            'dosen_pendamping_id'=> $validated['dosen_pendamping_id'] ?? null,
             'is_pelaksanaan_updated' => true,
         ]);
 
@@ -283,6 +288,9 @@ class PelaksanaanController extends Controller
             $panitiaSyncData[$pid] = ['peran' => $panitiaPeran[$pid] ?? null];
         }
         $proker->panitia()->sync($panitiaSyncData);
+
+        // Sync dosen pendamping (many-to-many)
+        $proker->dosenPendampings()->sync($validated['dosen_pendamping_ids'] ?? []);
 
         // Upload banner — simpan ke kolom `banner` di mk_kegiatan (bukan repo_mulmed)
         if ($request->hasFile('banner')) {

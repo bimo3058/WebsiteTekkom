@@ -230,11 +230,13 @@
         </div>
         @endif
 
-        @if($proker->dosenPendamping)
+        @if($proker->dosenPendampings->isNotEmpty())
         <div class="meta-item">
             <div class="meta-item-label">Dosen Pendamping</div>
-            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $proker->dosenPendamping->user->name ?? '-' }}
+            @foreach($proker->dosenPendampings as $dosenItem)
+            <div class="meta-item-value" @if(!$loop->first) style="margin-top:4px;" @endif><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $dosenItem->user->name ?? '-' }}
             </div>
+            @endforeach
         </div>
         @endif
 

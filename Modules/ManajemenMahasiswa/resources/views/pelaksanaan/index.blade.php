@@ -52,7 +52,7 @@
         <div class="search-wrapper w-100 me-0 me-md-2">
             <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <input type="text" name="search" class="form-control search-input"
-                   placeholder="Cari kegiatan..." value="{{ request('search') }}">
+                   placeholder="Cari judul atau deskripsi kegiatan..." value="{{ request('search') }}">
         </div>
         <div class="d-flex gap-2">
             <select name="tahun" class="filter-select-custom" style="min-width:130px;" onchange="document.getElementById('filterForm').submit()">
