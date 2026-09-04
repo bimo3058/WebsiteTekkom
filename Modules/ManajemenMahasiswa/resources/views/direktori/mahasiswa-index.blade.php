@@ -219,10 +219,6 @@
         letter-spacing: 0.05em;
     }
 
-    .last-active {
-        font-size: 11px;
-        color: #666D80;
-    }
 </style>
 
 <!-- Flash Messages -->
@@ -400,7 +396,6 @@
                     <th>NIM</th>
                     <th>Angkatan</th>
                     <th>Status</th>
-                    <th>Aktivitas</th>
                     <th style="width: 160px;">Aksi</th>
                 </tr>
             </thead>
@@ -444,15 +439,6 @@
                                     @default {{ ucfirst($mhs->status) }}
                                 @endswitch
                             </span>
-                        </td>
-                        <td>
-                            @if($mhs->user && $mhs->user->last_login)
-                                <div class="last-active">
-                                    {{ $mhs->user->last_login->diffForHumans() }}
-                                </div>
-                            @else
-                                <span class="last-active">Belum login</span>
-                            @endif
                         </td>
                         <td>
                             <div class="d-flex gap-2">
