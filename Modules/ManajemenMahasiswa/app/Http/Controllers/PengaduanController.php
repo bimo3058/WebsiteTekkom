@@ -181,6 +181,12 @@ class PengaduanController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $pengaduan->getCollection()->each(function ($item) {
+            if ($item->is_anonim) {
+                $item->setRelation('pelapor', null);
+            }
+        });
+
         $kategoriOptions = $this->kategoriMetaNew();
         $statusOptions = [
             Pengaduan::STATUS_BARU => 'Baru',
@@ -338,6 +344,15 @@ class PengaduanController extends Controller
         }
 
         $pengaduan->load(['delegasi.delegatedBy', 'delegasi.delegatedTo', 'logs.actor', 'delegasiAktif', 'delegasiTerakhir.delegatedTo', 'delegasiTerakhir.delegatedBy']);
+
+        if ($pengaduan->is_anonim) {
+            $pengaduan->setRelation('pelapor', null);
+            $template = $pengaduan->data_template;
+            if (is_array($template)) {
+                unset($template['angkatan']);
+                $pengaduan->data_template = $template;
+            }
+        }
 
         $isDelegatedToMe = $pengaduan->delegasiAktif && $pengaduan->delegasiAktif->delegated_to === $user->id && $pengaduan->delegasiAktif->status === 'aktif';
 

@@ -347,8 +347,6 @@ class DirektoriMahasiswaController extends Controller
         $isGpm      = $this->hasRole('gpm');
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
-        // Admin group, GPM, DPM, dan Ketua Departemen boleh generate CV mahasiswa lain
-        $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen');
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -358,7 +356,6 @@ class DirektoriMahasiswaController extends Controller
             'isGpm',
             'isPengurus',
             'isMahasiswa',
-            'isCanCv',
         ))->with('layout', $this->resolveLayout())
             ->with('error', isset($mahasiswa) && $mahasiswa->isEmpty() && !$request->hasAny(['search', 'angkatan', 'status'])
                 ? 'Koneksi database sedang tidak stabil. Silakan muat ulang halaman.'
@@ -394,8 +391,6 @@ class DirektoriMahasiswaController extends Controller
             $isPengurus = $this->hasRole('pengurus_himpunan');
             $isGpm      = $this->hasRole('gpm');
             $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
-            // Admin group, GPM, DPM, dan Ketua Departemen boleh generate CV mahasiswa lain
-            $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen');
             // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
             $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
 
@@ -407,7 +402,6 @@ class DirektoriMahasiswaController extends Controller
                 'isPengurus',
                 'isGpm',
                 'isMahasiswa',
-                'isCanCv',
                 'isCanSeeIpk',
                 'cvProfile',
             ))->with('layout', $this->resolveLayout());

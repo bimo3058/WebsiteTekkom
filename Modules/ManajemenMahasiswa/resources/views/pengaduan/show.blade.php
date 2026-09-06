@@ -333,19 +333,20 @@
                                 <x-manajemenmahasiswa::ui.icon name="check-circle" size="15" /> Mulai Proses
                             </button>
                         </form>
-                    @endif
-                    @if(in_array($pengaduan->status, [\Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN]))
-                        <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#delegateModal">
-                            <x-manajemenmahasiswa::ui.icon name="arrow-circle-right" size="15" /> Delegasi Ulang?
-                        </button>
                     @else
-                        <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #293C79; color: #fff; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#delegateModal">
-                            <x-manajemenmahasiswa::ui.icon name="mail-05" size="15" /> Delegasikan ke Dosen
+                        @if($pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN)
+                            <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#delegateModal">
+                                <x-manajemenmahasiswa::ui.icon name="arrow-circle-right" size="15" /> Delegasi Ulang?
+                            </button>
+                        @else
+                            <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #293C79; color: #fff; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#delegateModal">
+                                <x-manajemenmahasiswa::ui.icon name="mail-05" size="15" /> Delegasikan ke Dosen
+                            </button>
+                        @endif
+                        <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#closeAdminModal">
+                            <x-manajemenmahasiswa::ui.icon name="minus" size="15" /> Tutup Tiket
                         </button>
                     @endif
-                    <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#closeAdminModal">
-                        <x-manajemenmahasiswa::ui.icon name="minus" size="15" /> Tutup Tiket
-                    </button>
                 @endif
                 @if($canDelete)
                     <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#deleteShowModal">

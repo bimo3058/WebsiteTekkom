@@ -432,7 +432,6 @@ class DirektoriAlumniController extends Controller
 
             // Permission flags — mudah diperluas lewat canSeeHistory() / canManageHistory()
             $isAdmin         = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-            $canGenerateCv   = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_departemen');
             $canSeeHistory   = $this->canSeeHistory();
             $canManageHistory = $this->canManageHistory();
             // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
@@ -444,7 +443,6 @@ class DirektoriAlumniController extends Controller
                 'riwayatKegiatan',
                 'semuaKegiatan',
                 'isAdmin',
-                'canGenerateCv',
                 'canSeeHistory',
                 'canManageHistory',
                 'isCanSeeIpk',

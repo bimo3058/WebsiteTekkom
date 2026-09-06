@@ -385,12 +385,6 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
                 });
 
-                // Generate CV — admin group, GPM, DPM, Ketua Departemen
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')
-                    ->group(function () {
-                    Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
-                        ->name('cv')->where('id', '[0-9]+');
-                });
             });
 
             // Subbab: Alumni
@@ -414,12 +408,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('show')->where('id', '[0-9]+');
                 });
 
-                // Generate CV alumni — admin group only (matches mahasiswa directory pattern)
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')
-                    ->group(function () {
-                    Route::get('/{id}/cv', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'generateCv'])
-                        ->name('cv')->where('id', '[0-9]+');
-                });
+
 
                 // Edit data alumni — admin only
                 Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
