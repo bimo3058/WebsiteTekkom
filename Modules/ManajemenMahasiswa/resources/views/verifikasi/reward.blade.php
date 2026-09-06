@@ -10,9 +10,9 @@
 
     /* ── Stat Cards (status klaim) ── */
     .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
-    .admin-stat-card { background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: all .18s; text-decoration: none !important; position: relative; overflow: hidden; }
-    .admin-stat-card:hover { border-color: rgba(11,38,110,0.18); box-shadow: 0 4px 14px rgba(0,0,0,.06); transform: translateY(-1px); }
-    .admin-stat-card.active { border-color: #0B266E; box-shadow: 0 0 0 2px rgba(11,38,110,.12); }
+    /* Sama seperti Verifikasi Prestasi: kartu hanya menampilkan angka, filternya
+       ada di dropdown status pada baris filter di bawahnya. */
+    .admin-stat-card { background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
     .admin-stat-card .stat-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .admin-stat-card .stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 1px; }
     .admin-stat-card .stat-lbl { font-size: .78rem; color: #666D80; font-weight: 500; }
@@ -129,10 +129,9 @@
 </div>
 
 
-<!-- Stat Cards (status klaim) -->
+<!-- Stat Cards (status klaim) — ringkasan angka saja, bukan tombol filter -->
 <div class="admin-stats">
-    <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index', array_merge(request()->only(['search','angkatan']), ['reward' => 'menunggu'])) }}"
-       class="admin-stat-card pending {{ $reward === 'menunggu' ? 'active' : '' }}">
+    <div class="admin-stat-card pending">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
@@ -140,9 +139,8 @@
             <div class="stat-num">{{ $rewardStats['menunggu'] }}</div>
             <div class="stat-lbl">Menunggu</div>
         </div>
-    </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index', array_merge(request()->only(['search','angkatan']), ['reward' => 'disetujui'])) }}"
-       class="admin-stat-card approved {{ $reward === 'disetujui' ? 'active' : '' }}">
+    </div>
+    <div class="admin-stat-card approved">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
@@ -150,9 +148,8 @@
             <div class="stat-num">{{ $rewardStats['disetujui'] }}</div>
             <div class="stat-lbl">Disetujui</div>
         </div>
-    </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index', array_merge(request()->only(['search','angkatan']), ['reward' => 'ditolak'])) }}"
-       class="admin-stat-card rejected {{ $reward === 'ditolak' ? 'active' : '' }}">
+    </div>
+    <div class="admin-stat-card rejected">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </div>
@@ -160,18 +157,24 @@
             <div class="stat-num">{{ $rewardStats['ditolak'] }}</div>
             <div class="stat-lbl">Ditolak</div>
         </div>
-    </a>
+    </div>
 </div>
 
 <!-- Filter Area -->
 <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}" id="filterForm">
-    <input type="hidden" name="reward" value="{{ $reward }}">
     <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
         <div class="search-wrapper w-100 me-0 me-md-2">
             <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
             <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari nama, NIM, prestasi, tingkat..." value="{{ request('search') }}">
         </div>
         <div class="d-flex gap-3">
+            <!-- Status Klaim — pengganti kartu statistik yang dulu bisa diklik -->
+            <select name="reward" class="form-select border-1 filter-select-custom" onchange="document.getElementById('filterForm').submit()">
+                <option value="semua" {{ $reward === 'semua' ? 'selected' : '' }}>Semua Status</option>
+                <option value="menunggu" {{ $reward === 'menunggu' ? 'selected' : '' }}>Menunggu</option>
+                <option value="disetujui" {{ $reward === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                <option value="ditolak" {{ $reward === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+            </select>
             <select name="angkatan" class="form-select border-1 filter-select-custom" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Angkatan</option>
                 @foreach($angkatanList as $a)

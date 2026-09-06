@@ -32,7 +32,6 @@ class Kegiatan extends Model
         'anggaran',
         'penanggung_jawab',
         'ketua_pelaksana_id',
-        'dosen_pendamping_id',
         'target_peserta',
         'status',
         // Kolom realisasi (Subbab 2 — disimpan terpisah dari rencana)
@@ -160,9 +159,13 @@ class Kegiatan extends Model
         return $this->belongsTo(\App\Models\Student::class, 'ketua_pelaksana_id');
     }
 
-    public function dosenPendamping(): BelongsTo
+    /**
+     * Many-to-many: Kegiatan dapat didampingi lebih dari satu dosen.
+     */
+    public function dosenPendampings(): BelongsToMany
     {
-        return $this->belongsTo(\App\Models\Lecturer::class, 'dosen_pendamping_id');
+        return $this->belongsToMany(\App\Models\Lecturer::class, 'mk_kegiatan_dosen_pendamping', 'kegiatan_id', 'lecturer_id')
+                    ->withTimestamps();
     }
 
     /**

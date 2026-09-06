@@ -30,7 +30,7 @@ class KegiatanService
             'kategoriKegiatan',
             'bidang',
             'ketuaPelaksana.user',
-            'dosenPendamping.user',
+            'dosenPendampings.user',
             'riwayatKegiatan.student',
         ])->findOrFail($id);
     }

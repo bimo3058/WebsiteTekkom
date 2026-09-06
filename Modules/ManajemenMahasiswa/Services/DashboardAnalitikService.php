@@ -280,7 +280,7 @@ class DashboardAnalitikService
                 'kegiatan_draft' => $kegiatanStatus[Kegiatan::STATUS_DRAFT] ?? 0,
                 'kegiatan_pelaksanaan' => $kegiatanStatus[Kegiatan::STATUS_DISETUJUI] ?? 0,
                 'kegiatan_selesai' => $kegiatanStatus[Kegiatan::STATUS_SELESAI] ?? 0,
-                'kegiatan_tanpa_dosen' => Kegiatan::whereNull('dosen_pendamping_id')->count(),
+                'kegiatan_tanpa_dosen' => Kegiatan::doesntHave('dosenPendampings')->count(),
                 'kegiatan_selesai_belum_realisasi' => Kegiatan::where('status', Kegiatan::STATUS_SELESAI)
                     ->where(function ($q) {
                         $q->whereNull('realisasi_peserta')
@@ -495,7 +495,7 @@ class DashboardAnalitikService
                                                 ->whereNull('realisasi_tanggal_mulai')
                                                 ->whereNull('catatan_pelaksanaan')
                                                 ->count(),
-                'tanpa_dosen_pendamping' => Kegiatan::whereNull('dosen_pendamping_id')->count(),
+                'tanpa_dosen_pendamping' => Kegiatan::doesntHave('dosenPendampings')->count(),
                 'target_peserta'         => $targetPeserta,
                 'realisasi_peserta'      => $realisasiPeserta,
                 'rate_peserta'           => $targetPeserta > 0 ? round($realisasiPeserta / $targetPeserta * 100) : 0,
@@ -503,7 +503,7 @@ class DashboardAnalitikService
                 'anggaran_realisasi'     => $anggaranRealisasi,
                 'rate_anggaran'          => $anggaranRencana > 0 ? round($anggaranRealisasi / $anggaranRencana * 100) : 0,
                 'pelaksanaan_mendatang'  => Kegiatan::pelaksanaan()
-                                                ->with(['bidangs', 'kategoris', 'ketuaPelaksana.user', 'dosenPendamping.user'])
+                                                ->with(['bidangs', 'kategoris', 'ketuaPelaksana.user', 'dosenPendampings.user'])
                                                 ->whereNotNull('tanggal_mulai')
                                                 ->whereDate('tanggal_mulai', '>=', now()->toDateString())
                                                 ->orderBy('tanggal_mulai')

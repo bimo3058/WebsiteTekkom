@@ -595,12 +595,14 @@
         </div>
         @endif
 
-        @if($kegiatan->dosenPendamping)
+        @if($kegiatan->dosenPendampings->isNotEmpty())
         <div class="meta-item">
             <div class="meta-item-label">Dosen Pendamping</div>
-            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $kegiatan->dosenPendamping->user->name ?? '-' }}
-                <span style="font-size: 11px; color: #666D80; font-weight: 400;">({{ $kegiatan->dosenPendamping->employee_number }})</span>
+            @foreach($kegiatan->dosenPendampings as $dosenItem)
+            <div class="meta-item-value" @if(!$loop->first) style="margin-top:4px;" @endif><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $dosenItem->user->name ?? '-' }}
+                <span style="font-size: 11px; color: #666D80; font-weight: 400;">({{ $dosenItem->employee_number }})</span>
             </div>
+            @endforeach
         </div>
         @endif
 

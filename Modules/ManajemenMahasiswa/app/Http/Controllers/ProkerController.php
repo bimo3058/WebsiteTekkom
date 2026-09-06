@@ -52,9 +52,14 @@ class ProkerController extends Controller
         }
 
 
-        // Search
+        // Search judul + deskripsi
+        // Dibungkus closure supaya orWhere tidak "membocorkan" filter bidang di atas.
         if ($request->filled('search')) {
-            $query->where('judul', 'like', '%' . $request->search . '%');
+            $term = '%' . $request->search . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('judul', 'like', $term)
+                  ->orWhere('deskripsi', 'like', $term);
+            });
         }
 
         $prokerList = $query->paginate(12);
@@ -74,7 +79,7 @@ class ProkerController extends Controller
     {
         $proker = Kegiatan::with([
             'bidangs', 'kategoris',
-            'ketuaPelaksana.user', 'dosenPendamping.user',
+            'ketuaPelaksana.user', 'dosenPendampings.user',
             'panitia.user', 'creator', 'disetujuiOleh',
         ])->findOrFail($id);
         // Catatan: TIDAK difilter status agar detail proker tetap bisa dibuka

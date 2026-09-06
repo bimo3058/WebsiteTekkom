@@ -749,27 +749,47 @@
                 </div>
             </div>
 
+            {{-- ── Dosen Pendamping (Multi-Select) ── --}}
+            @php
+                // Pertahankan pilihan bila form gagal validasi
+                $existingDosenIds = old('dosen_pendamping_ids', []);
+                $existingDosen    = $dosenList->whereIn('id', $existingDosenIds);
+            @endphp
             <div class="col-md-6">
-                <label class="form-label-custom">Dosen Pendamping <span style="color: #666D80; font-weight: 400;">(opsional)</span></label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="dosen_pendamping_id" id="dosenPendampingId" value="{{ old('dosen_pendamping_id') }}">
-                    <input type="text" class="form-control form-control-custom" id="dosenPendampingSearch"
-                           placeholder="Cari nama dosen..."
-                           autocomplete="off"
-                           onfocus="showDropdown('dosenPendampingDropdown')"
-                           oninput="filterOptions('dosenPendampingSearch', 'dosenPendampingDropdown')">
-                    <div class="search-select-dropdown" id="dosenPendampingDropdown">
+                <label class="form-label-custom">
+                    Dosen Pendamping <span style="color: #666D80; font-weight: 400;">(opsional)</span>
+                    <span class="panitia-count-badge" id="dosenCountBadge" style="display:none;">0 dipilih</span>
+                </label>
+                {{-- Memakai class .panitia-* agar tampilannya identik dengan multi-select Panitia --}}
+                <div class="panitia-select-wrapper" id="dosenSelectWrapper">
+                    <div class="panitia-chips-container" id="dosenChipsContainer" onclick="focusDosenSearch()">
+                        <input type="text" class="panitia-search-input" id="dosenSearchInput"
+                               placeholder="Cari dan tambah dosen pendamping..."
+                               autocomplete="off"
+                               oninput="filterDosenOptions(this.value)"
+                               onfocus="showDosenDropdown()">
+                    </div>
+                    <div class="panitia-dropdown" id="dosenDropdown">
                         @foreach($dosenList as $dosen)
-                            <div class="search-select-option"
-                                 onclick="selectOption('dosenPendampingId', '{{ $dosen->id }}', 'dosenPendampingSearch', '{{ $dosen->user->name ?? 'N/A' }}', 'dosenPendampingDropdown')"
-                                 data-name="{{ strtolower($dosen->user->name ?? '') }}"
-                                 data-nip="{{ $dosen->employee_number }}">
-                                {{ $dosen->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
+                            <div class="panitia-option"
+                                 data-id="{{ $dosen->id }}"
+                                 data-name="{{ $dosen->user->name ?? 'N/A' }}"
+                                 data-name-lower="{{ strtolower($dosen->user->name ?? '') }}"
+                                 data-nip="{{ $dosen->employee_number }}"
+                                 onclick="toggleDosen(this)">
+                                <div>
+                                    {{ $dosen->user->name ?? 'N/A' }}
+                                    <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
+                                </div>
+                                <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                             </div>
                         @endforeach
+                        <div class="panitia-empty" id="dosenEmpty" style="display:none;">Tidak ada dosen yang cocok</div>
                     </div>
+                    {{-- Hidden inputs di-generate JS --}}
+                    <div id="dosenHiddenInputs"></div>
                 </div>
+                <div class="checkbox-hint">Bisa lebih dari satu. Ketik nama atau NIP untuk mencari.</div>
             </div>
         </div>
 
@@ -1233,6 +1253,127 @@ document.addEventListener('click', function(e) {
     if (wrapper && !wrapper.contains(e.target)) {
         document.getElementById('panitiaDropdown').classList.remove('show');
     }
+});
+
+// ── Dosen Pendamping Multi-Select ──
+let selectedDosen = {}; // { id: name }
+
+// Pre-populate dari input sebelumnya (bila form gagal validasi)
+@foreach($existingDosen as $d)
+selectedDosen['{{ $d->id }}'] = '{{ addslashes($d->user->name ?? '') }}';
+@endforeach
+
+function focusDosenSearch() {
+    document.getElementById('dosenSearchInput').focus();
+}
+
+function showDosenDropdown() {
+    document.getElementById('dosenDropdown').classList.add('show');
+    filterDosenOptions(document.getElementById('dosenSearchInput').value);
+}
+
+function filterDosenOptions(query) {
+    const q = query.toLowerCase().trim();
+    const options = document.querySelectorAll('#dosenDropdown .panitia-option');
+    const empty = document.getElementById('dosenEmpty');
+    let visibleCount = 0;
+
+    options.forEach(opt => {
+        const name = opt.getAttribute('data-name-lower') || '';
+        const nip  = opt.getAttribute('data-nip') || '';
+        const match = !q || name.includes(q) || nip.includes(q);
+        opt.style.display = match ? 'flex' : 'none';
+        if (match) visibleCount++;
+    });
+
+    empty.style.display = visibleCount === 0 ? 'block' : 'none';
+    document.getElementById('dosenDropdown').classList.add('show');
+}
+
+function toggleDosen(optEl) {
+    const id   = optEl.getAttribute('data-id');
+    const name = optEl.getAttribute('data-name');
+
+    if (selectedDosen[id]) {
+        removeDosen(id);
+    } else {
+        selectedDosen[id] = name;
+        optEl.classList.add('selected');
+        renderDosenChips();
+        updateDosenHiddenInputs();
+    }
+
+    // Reset pencarian
+    document.getElementById('dosenSearchInput').value = '';
+    filterDosenOptions('');
+    document.getElementById('dosenSearchInput').focus();
+}
+
+function removeDosen(id) {
+    delete selectedDosen[id];
+    const opt = document.querySelector(`#dosenDropdown .panitia-option[data-id="${id}"]`);
+    if (opt) opt.classList.remove('selected');
+    renderDosenChips();
+    updateDosenHiddenInputs();
+}
+
+function renderDosenChips() {
+    const container   = document.getElementById('dosenChipsContainer');
+    const searchInput = document.getElementById('dosenSearchInput');
+
+    container.querySelectorAll('.panitia-chip').forEach(c => c.remove());
+
+    Object.entries(selectedDosen).forEach(([id, name]) => {
+        const chip = document.createElement('span');
+        chip.className = 'panitia-chip';
+        chip.innerHTML = `
+            ${name}
+            <button type="button" class="panitia-chip-remove" onclick="removeDosen('${id}')" title="Hapus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        `;
+        container.insertBefore(chip, searchInput);
+    });
+
+    const count = Object.keys(selectedDosen).length;
+    const badge = document.getElementById('dosenCountBadge');
+    if (count > 0) {
+        badge.textContent = count + ' dipilih';
+        badge.style.display = 'inline';
+        searchInput.placeholder = 'Tambah dosen lain...';
+    } else {
+        badge.style.display = 'none';
+        searchInput.placeholder = 'Cari dan tambah dosen pendamping...';
+    }
+}
+
+function updateDosenHiddenInputs() {
+    const container = document.getElementById('dosenHiddenInputs');
+    container.innerHTML = '';
+
+    Object.keys(selectedDosen).forEach(id => {
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = 'dosen_pendamping_ids[]';
+        input.value = id;
+        container.appendChild(input);
+    });
+}
+
+// Tutup dropdown dosen saat klik di luar
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('dosenSelectWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('dosenDropdown').classList.remove('show');
+    }
+});
+
+// Render chips dosen saat halaman dimuat
+document.addEventListener('DOMContentLoaded', function() {
+    Object.keys(selectedDosen).forEach(id => {
+        const opt = document.querySelector(`#dosenDropdown .panitia-option[data-id="${id}"]`);
+        if (opt) opt.classList.add('selected');
+    });
+    renderDosenChips();
+    updateDosenHiddenInputs();
 });
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──

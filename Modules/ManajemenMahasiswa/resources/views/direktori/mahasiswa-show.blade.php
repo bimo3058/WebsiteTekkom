@@ -326,14 +326,6 @@
             <div class="info-item-value">{{ $mhs->kontak }}</div>
         </div>
         @endif
-
-
-        @if($mhs->user && $mhs->user->last_login)
-        <div>
-            <div class="info-item-label">Terakhir Aktif <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value" style="font-size: 13px;">{{ $mhs->user->last_login->translatedFormat('d M Y, H:i') }}</div>
-        </div>
-        @endif
     </div>
 </div>
 

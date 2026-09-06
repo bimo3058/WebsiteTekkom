@@ -3,14 +3,15 @@
 <style>
     /* ── Stat Cards (Admin KPI) ── */
     .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+    /* Kartu ini murni penunjuk angka — penyaringan status dilakukan lewat dropdown
+       di toolbar tabel, sama seperti Direktori Mahasiswa. Karena itu tidak ada
+       cursor pointer maupun efek hover: kartu yang terlihat bisa diklik tapi diam
+       justru menyesatkan. */
     .admin-stat-card {
         background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
         padding: 16px 18px; display: flex; align-items: center; gap: 14px;
-        cursor: pointer; transition: all .18s; text-decoration: none !important;
         position: relative; overflow: hidden;
     }
-    .admin-stat-card:hover { border-color: rgba(11,38,110,0.18); box-shadow: 0 4px 14px rgba(0,0,0,.06); transform: translateY(-1px); }
-    .admin-stat-card.active { border-color: var(--c-primary); box-shadow: 0 0 0 2px rgba(11,38,110,.12); }
     .admin-stat-card .stat-icon {
         width: 42px; height: 42px; border-radius: 11px; display: flex;
         align-items: center; justify-content: center; flex-shrink: 0;
@@ -178,17 +179,9 @@
     @endif
 </div>
 
-@php
-    // Filter tingkat ikut dibawa saat berpindah kartu status — tanpa ini, klik
-    // "Disetujui" diam-diam menghapus filter yang sedang dipasang admin.
-    // Di tab riwayat parameternya sengaja tidak dibawa karena tidak berlaku.
-    $tingkatParam = ($tab === 'prestasi' && $tingkat !== 'semua') ? $tingkat : null;
-@endphp
-
-<!-- Admin Stat Cards -->
+<!-- Admin Stat Cards — ringkasan angka saja, bukan tombol filter -->
 <div class="admin-stats">
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'pending', 'search' => $search, 'angkatan' => $angkatan, 'tingkat' => $tingkatParam]) }}"
-       class="admin-stat-card pending {{ $status === 'pending' ? 'active' : '' }}">
+    <div class="admin-stat-card pending">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
@@ -196,9 +189,8 @@
             <div class="stat-num">{{ $adminStats['pending'] }}</div>
             <div class="stat-lbl">Menunggu Verifikasi</div>
         </div>
-    </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'approved', 'search' => $search, 'angkatan' => $angkatan, 'tingkat' => $tingkatParam]) }}"
-       class="admin-stat-card approved {{ $status === 'approved' ? 'active' : '' }}">
+    </div>
+    <div class="admin-stat-card approved">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
@@ -206,9 +198,8 @@
             <div class="stat-num">{{ $adminStats['approved'] }}</div>
             <div class="stat-lbl">Disetujui</div>
         </div>
-    </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'rejected', 'search' => $search, 'angkatan' => $angkatan, 'tingkat' => $tingkatParam]) }}"
-       class="admin-stat-card rejected {{ $status === 'rejected' ? 'active' : '' }}">
+    </div>
+    <div class="admin-stat-card rejected">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </div>
@@ -216,7 +207,7 @@
             <div class="stat-num">{{ $adminStats['rejected'] }}</div>
             <div class="stat-lbl">Ditolak</div>
         </div>
-    </a>
+    </div>
 </div>
 
 <!-- Main Table Card (Global Style) -->
@@ -241,7 +232,6 @@
         <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.index') }}" id="filterForm"
               style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
             <input type="hidden" name="tab" value="{{ $tab }}">
-            <input type="hidden" name="status" value="{{ $status }}">
 
             <!-- Search -->
             <div style="position:relative; width:min(280px, calc(100vw - 200px)); min-width:120px;">
@@ -256,6 +246,16 @@
                        onblur="this.style.borderColor='var(--c-border)'; this.style.boxShadow='none'">
             </div>
 
+
+            <!-- Status Filter — pengganti kartu statistik yang dulu bisa diklik -->
+            <select name="status"
+                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:#fff; cursor:pointer;"
+                    onchange="document.getElementById('filterForm').submit()">
+                <option value="semua">Semua Status</option>
+                <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Menunggu Verifikasi</option>
+                <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Disetujui</option>
+                <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+            </select>
 
             <!-- Angkatan Filter -->
             <select name="angkatan"

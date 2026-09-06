@@ -36,19 +36,23 @@ class VerifikasiController extends Controller
     }
 
     /**
-     * Pengawas mutu (read-only): GPM & Ketua Departemen.
+     * Pengawas (read-only): Ketua Departemen.
      * Boleh MELIHAT seluruh daftar verifikasi, tetapi TIDAK boleh menyetujui/menolak.
-     * Selaras dengan akses view-only mereka di Manajemen Kegiatan dan dashboard
-     * analitik (scope evaluasi mutu).
+     *
+     * GPM tidak termasuk. Penjaminan mutu bekerja pada angka agregat — itu sudah
+     * disediakan dashboard analitik scope evaluasi mutu — bukan pada berkas
+     * verifikasi milik mahasiswa per orang. Batas ini ditegakkan berlapis: route
+     * verifikasi menolak GPM, sidebar tidak menampilkan menunya, dan pintasan
+     * "Verifikasi →" pada dashboard analitik disembunyikan untuk scope GPM.
      */
     private function isPengawas(): bool
     {
-        return $this->hasRole('gpm', 'ketua_departemen');
+        return $this->hasRole('ketua_departemen');
     }
 
     /**
      * Boleh membuka halaman Klaim Reward Prestasi.
-     * Verifikator (kelola) + pengawas mutu GPM & Ketua Departemen (read-only).
+     * Verifikator (kelola) + Ketua Departemen (read-only).
      */
     private function canAccessReward(): bool
     {
@@ -61,8 +65,8 @@ class VerifikasiController extends Controller
         $roles = $user->roles->pluck('name')->toArray();
 
         if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)
-            || \in_array('gpm', $roles) || \in_array('ketua_departemen', $roles)) {
-            // GPM & Ketua Departemen melihat tabel monitoring read-only → gunakan shell admin
+            || \in_array('ketua_departemen', $roles)) {
+            // Ketua Departemen melihat tabel monitoring read-only → gunakan shell admin
             return 'manajemenmahasiswa::layouts.admin';
         }
 
@@ -232,9 +236,16 @@ class VerifikasiController extends Controller
     private function adminIndex(Request $request, bool $readOnly = false)
     {
         $tab    = $request->get('tab', 'prestasi');
-        $status = $request->get('status', 'semua');
         $search = $request->get('search');
         $angkatan = $request->get('angkatan');
+
+        // Filter status verifikasi — pilihannya dikunci ke isi dropdown. Nilai di
+        // luar daftar dianggap "semua" agar URL yang diubah manual tidak berujung
+        // tabel kosong tanpa penjelasan, sama seperti perlakuan filter tingkat.
+        $status = $request->get('status', 'semua');
+        if (!\in_array($status, ['pending', 'approved', 'rejected'], true)) {
+            $status = 'semua';
+        }
 
         // Filter tingkat — hanya berlaku pada tab Prestasi; riwayat kegiatan tidak
         // punya kolom tingkat. Nilai di luar daftar resmi dianggap "semua" supaya
@@ -351,19 +362,31 @@ class VerifikasiController extends Controller
 
     public function rewardIndex(Request $request)
     {
-        $reward   = $request->get('reward', 'menunggu');
         $search   = $request->get('search');
         $angkatan = $request->get('angkatan');
+
+        // Nilai di luar isi dropdown dikembalikan ke default 'menunggu' supaya
+        // dropdown selalu punya opsi terpilih dan tabelnya tidak kosong misterius.
+        $reward = $request->get('reward', 'menunggu');
+        if (!\in_array($reward, ['semua', 'menunggu', 'disetujui', 'ditolak'], true)) {
+            $reward = 'menunggu';
+        }
 
         $rewardStatusMap = [
             'menunggu'  => Prestasi::CLAIM_DIAJUKAN,
             'disetujui' => Prestasi::CLAIM_DISETUJUI,
             'ditolak'   => Prestasi::CLAIM_DITOLAK,
         ];
-        $claimStatus = $rewardStatusMap[$reward] ?? Prestasi::CLAIM_DIAJUKAN;
 
-        $rewardQuery = Prestasi::with(['kemahasiswaan.user', 'reviewedBy', 'buktiFiles'])
-            ->where('claim_status', $claimStatus);
+        $rewardQuery = Prestasi::with(['kemahasiswaan.user', 'reviewedBy', 'buktiFiles']);
+
+        if ($reward === 'semua') {
+            // "Semua" tetap dibatasi ketiga status klaim — prestasi yang rewardnya
+            // belum pernah diajukan bukan bagian dari antrean halaman ini.
+            $rewardQuery->whereIn('claim_status', array_values($rewardStatusMap));
+        } else {
+            $rewardQuery->where('claim_status', $rewardStatusMap[$reward] ?? Prestasi::CLAIM_DIAJUKAN);
+        }
 
         if ($search) {
             $this->applyPrestasiSearch($rewardQuery, $search);
