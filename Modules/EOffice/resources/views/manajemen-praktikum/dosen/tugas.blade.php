@@ -133,9 +133,9 @@
                 {{-- Card Header: Modul Info --}}
                 <div @click="modulOpen = !modulOpen" style="padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--c-border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
                     <div>
-                        <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">Modul {{ $modul->urutan }} {{ $modul->nama }}</h3>
+                        <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">{{ $modul->nama }}</h3>
                         <div style="font-size: 13px; color: #6B7280;">
-                            Asisten Praktikum: 
+                            Asisten: 
                             @if($item['asprak']->isNotEmpty())
                                 {{ $item['asprak']->join(', ') }}
                             @else
@@ -165,9 +165,15 @@
                             // Cari tugas berdasarkan jenis_tugas
                             $t = $tugasList->firstWhere('jenis_tugas', $type);
                             
-                            $dl    = $t && $t->deadline ? \Carbon\Carbon::parse($t->deadline) : null;
-                            $mulai = $t ? $t->created_at : null;
-                            $lewat = $dl && now()->gt($dl);
+                            $dlAC  = $t && $t->deadline ? \Carbon\Carbon::parse($t->deadline) : null;
+                            $dlACC = $t && $t->deadline_acc ? \Carbon\Carbon::parse($t->deadline_acc) : null;
+                            $lewat = $dlACC && now()->gt($dlACC);
+                            $oldFiles = [];
+                            if ($t && $t->file_path) {
+                                $oldFiles = json_decode($t->file_path, true) ?? [];
+                                if (!is_array($oldFiles))
+                                    $oldFiles = [$t->file_path];
+                            }
                         @endphp
                         
                         <div x-data="{ open: false }" style="border-bottom: 1px solid var(--c-border);">
@@ -187,10 +193,12 @@
                                 <div style="display: flex; align-items: center; gap: 16px;">
                                     @if($t)
                                     <div style="font-size: 12px; color: #666D80; display: flex; gap: 8px;">
-                                        @if($dl && $mulai)
-                                            <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Batas pengumpulan: {{ $mulai->format('d/m/Y, H:i') }} – {{ $dl->format('d/m/Y, H:i') }}</span>
-                                        @elseif($dl)
-                                            <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Batas pengumpulan: {{ $dl->format('d/m/Y, H:i') }}</span>
+                                        @if($dlAC && $dlACC)
+                                            <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline AC: {{ $dlAC->format('d/m/Y, H:i') }} | ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
+                                        @elseif($dlACC)
+                                            <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
+                                        @elseif($dlAC)
+                                            <span style="color:{{ $lewat ? '#A4ABB8' : '#353849' }};">Deadline AC: {{ $dlAC->format('d/m/Y, H:i') }}</span>
                                         @else
                                             <span style="color:#A4ABB8;">Tanpa batas waktu</span>
                                         @endif
@@ -213,17 +221,30 @@
                                         
                                         <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
                                             
-                                            {{-- Optional File (kalau ada) --}}
-                                            <div>
-                                                @if($t->file_path)
-                                                <a href="{{ Storage::url($t->file_path) }}" target="_blank" style="display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--c-border); border-radius: 8px; padding: 10px 16px; text-decoration: none; color: #111827; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
-                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                                                        <polyline points="13 2 13 9 20 9"></polyline>
-                                                    </svg>
-                                                    <span style="font-size: 13px; font-weight: 500;">Lampiran Soal</span>
-                                                </a>
-                                                @endif
+                                            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                                                @foreach($oldFiles as $idx => $f)
+                                                    @php 
+                                                        $pathStr = is_array($f) && isset($f['path']) ? $f['path'] : $f;
+                                                        $baseName = is_array($f) && isset($f['original_name']) ? $f['original_name'] : pathinfo($pathStr, PATHINFO_BASENAME);
+                                                    @endphp
+                                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice') }}"
+                                                        target="_blank" title="{{ $baseName }}"
+                                                        style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
+                                                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
+                                                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                                        <div style="flex: 1; display: flex; align-items: center; justify-content: center; background: #F9FAFB;">
+                                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+                                                                stroke="#D1D5DB" stroke-width="1.5" stroke-linecap="round"
+                                                                stroke-linejoin="round">
+                                                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                                                <polyline points="13 2 13 9 20 9"></polyline>
+                                                            </svg>
+                                                        </div>
+                                                        <div style="background: #293C79; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ $baseName }}">
+                                                            {{ $baseName }}
+                                                        </div>
+                                                    </a>
+                                                @endforeach
                                             </div>
 
                                             {{-- Button Lihat Pengumpulan --}}

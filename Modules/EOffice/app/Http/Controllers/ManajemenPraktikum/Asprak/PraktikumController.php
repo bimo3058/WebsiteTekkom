@@ -22,7 +22,7 @@ class PraktikumController extends Controller
             ->whereNull('deleted_at')
             ->whereHas('praktikum')
             ->get();
-            
+
         // Map them just to the Praktikum models but keep the relationship count
         $praktikums = $allAsprak->map(function ($asprak) {
             $p = $asprak->praktikum;
@@ -48,18 +48,21 @@ class PraktikumController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        
+
         $asprak = AsistenPraktikum::where('user_id', $user->id)
             ->where('praktikum_id', $id)
             ->where('role', 'asprak')
             ->whereNull('deleted_at')
             ->firstOrFail();
 
+        // Set session explicitly before redirect
         session(['manprak_asprak_praktikum_id' => $id]);
-        
-        // After setting context, immediately redirect to Pengumuman, 
-        // since the user wants the tabs to be pengumuman, modul, tugas, absensi, daftar praktikan
-        // and usually the first one is the default
-        return redirect()->route('eoffice.manprak.asprak.pengumuman.index');
+        session()->save(); // Force save before redirect
+
+        // Also pass praktikum_id as query param so middleware on next request
+        // is guaranteed to pick the correct praktikum, regardless of session state
+        return redirect()->route('eoffice.manprak.asprak.pengumuman.index', [
+            'praktikum_id' => $id,
+        ]);
     }
 }

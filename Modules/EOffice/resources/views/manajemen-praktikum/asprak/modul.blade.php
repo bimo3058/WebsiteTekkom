@@ -2,6 +2,19 @@
     $pageTitle = ($praktikum->nama ?? 'Praktikum') . ' / Modul';
 @endphp
 <x-eoffice::manajemen-praktikum.layout :pageTitle="$pageTitle">
+    <style>
+        .modul-accordion-content {
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+            transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
+        }
+        .modul-accordion-content.is-open {
+            max-height: 2500px;
+            opacity: 1;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+        }
+    </style>
     <div x-data="modulManager()">
 
         {{-- Flash Messages --}}
@@ -39,39 +52,49 @@
             <div style="display:flex; flex-direction:column; gap:24px;">
                 @forelse($moduls as $modul)
                     @php $isMine = $assignedModulIds->contains($modul->id); @endphp
-                    @if($isMine)
-                        <div
-                            style="border:1px solid #DFE1E7; border-radius:12px; background:#fff; padding:24px; position:relative;">
+                    <div x-data="{ modulOpen: false }"
+                        style="border: 1px solid var(--c-border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); background:#fff; overflow: hidden; @if(!$isMine) opacity:0.8; @endif">
 
-                            {{-- Header Modul --}}
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                                <div style="flex:1; min-width:0;">
-                                    <div style="font-size:16px; font-weight:700; color:#111827; margin:0 0 4px 0;">
-                                        {{ $modul->nama }}</div>
-                                    <div style="font-size:12px; color:#374151; font-weight:400; margin-bottom:4px;">
-                                        Asisten:
-                                        @forelse($modul->modulAsprak as $ma)
-                                            <span>{{ $ma->asprak?->user?->name ?? '—' }}</span>@if(!$loop->last), @endif
-                                        @empty
-                                            <span>—</span>
-                                        @endforelse
-                                    </div>
-                                    <div style="font-size:12px; color:#6B7280; font-weight:400;">
-                                        @php $firstMateri = $modul->materi->sortBy('created_at')->first(); @endphp
-                                        @if($firstMateri)
-                                            {{ \Carbon\Carbon::parse($firstMateri->created_at)->locale('id')->translatedFormat('d M Y, H:i') }}
-                                            @if($modul->updated_at && $modul->updated_at->diffInSeconds($firstMateri->created_at) > 5)
-                                                <span style="font-style:italic; color:#9CA3AF;">(Diedit {{ \Carbon\Carbon::parse($modul->updated_at)->locale('id')->translatedFormat('d M Y, H:i') }})</span>
-                                            @endif
+                        {{-- Header Modul --}}
+                        <div @click="modulOpen = !modulOpen" style="display:flex; justify-content:space-between; align-items:center; padding: 16px 24px; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
+                            <div style="flex:1; min-width:0; display:flex; align-items: center; justify-content: space-between;">
+                                <div>
+                                <div style="font-size:16px; font-weight:700; color:#111827; margin:0 0 4px 0;">
+                                    {{ $modul->nama }}
+                                </div>
+                                <div style="font-size:12px; color:#374151; font-weight:400; margin-bottom:4px;">
+                                    Asisten:
+                                    @forelse($modul->modulAsprak as $ma)
+                                        <span>{{ $ma->asprak?->user?->name ?? '—' }}</span>@if(!$loop->last), @endif
+                                    @empty
+                                        <span>—</span>
+                                    @endforelse
+                                </div>
+                                @php
+                                    $firstMateri = $modul->materi->sortBy('created_at')->first();
+                                    $sudahAdaInteraksi = $firstMateri || ($modul->updated_at->timestamp - $modul->created_at->timestamp > 3);
+                                    // Waktu dasar = Kapan file pertama kali ada (atau fallback ke updated_at jika cm ganti deskripsi)
+                                    $baseTime = $firstMateri ? $firstMateri->created_at : $modul->updated_at;
+                                @endphp
+
+                                @if($sudahAdaInteraksi)
+                                    <div style="font-size:12px; color:#6B7280; font-weight:400; margin-top:4px;">
+                                        {{ \Carbon\Carbon::parse($baseTime)->locale('id')->translatedFormat('d M Y, H:i') }}
+                                        @if($modul->updated_at->timestamp - $baseTime->timestamp > 3)
+                                            <span style="font-style:italic;">(Diedit
+                                                {{ \Carbon\Carbon::parse($modul->updated_at)->locale('id')->translatedFormat('d M Y, H:i') }})</span>
                                         @endif
                                     </div>
+                                @endif
                                 </div>
+                            </div>
 
+                            <div style="display: flex; align-items: center; gap: 8px;">
                                 @if($isMine)
                                     <button type="button" data-modul-id="{{ $modul->id }}" data-modul-nama="{{ $modul->nama }}"
                                         data-modul-deskripsi="{{ $modul->deskripsi ?? '' }}"
-                                        @click="openEditModal($el.dataset.modulId, $el.dataset.modulNama, $el.dataset.modulDeskripsi, {{ json_encode($modul->materi->map(function ($m) {
-                                    return ['id' => $m->id, 'name' => basename($m->file_path ?? 'File'), 'url' => app(\App\Services\SupabaseStorage::class)->publicUrl($m->file_path, 'eoffice')]; })) }})"
+                                        @click.stop="openEditModal($el.dataset.modulId, $el.dataset.modulNama, $el.dataset.modulDeskripsi, {{ json_encode($modul->materi->map(function ($m) {
+                                return ['id' => $m->id, 'name' => $m->judul ?? basename($m->file_path ?? 'File'), 'url' => app(\App\Services\SupabaseStorage::class)->publicUrl($m->file_path, 'eoffice')]; })) }})"
                                         title="Edit Modul"
                                         style="background:#EEF2FF; border:none; padding:10px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; flex-shrink:0; margin-left:12px; width:40px; height:40px;"
                                         onmouseover="this.style.background='#E0E7FF'" onmouseout="this.style.background='#EEF2FF'">
@@ -82,51 +105,56 @@
                                         </svg>
                                     </button>
                                 @endif
+                                <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; color: #666D80;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="modulOpen ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </div>
                             </div>
-
-                            {{-- Deskripsi --}}
-                            @if($modul->deskripsi)
-                                <div style="margin:20px 0 0 0; padding-top:20px; border-top:1px solid #DFE1E7;">
-                                    <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6;">
-                                        {{ $modul->deskripsi }}</p>
-                                </div>
-                            @else
-                                <div style="margin:20px 0 0 0; padding-top:20px; border-top:1px solid #DFE1E7;"></div>
-                            @endif
-
-                            {{-- Lampiran Modul (MateriModul) --}}
-                            @if($modul->materi->isNotEmpty())
-                                <div style="display:flex; gap:16px; flex-wrap:wrap; margin-top:20px;">
-                                    @foreach($modul->materi as $materi)
-                                        <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') : '#' }}"
-                                            target="_blank"
-                                            style="display:flex; flex-direction:column; width:180px; height:160px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
-                                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
-                                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-
-                                            {{-- Top Empty Area --}}
-                                            <div
-                                                style="flex:1; display:flex; align-items:center; justify-content:center; background:#FAFAFA;">
-                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB"
-                                                    stroke-width="1.5" stroke-linecap="round">
-                                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                                                    <polyline points="14 2 14 8 20 8" />
-                                                </svg>
-                                            </div>
-
-                                            {{-- Bottom Name Area --}}
-                                            <div style="background:#293C79; padding:12px 14px; display:flex; align-items:center;">
-                                                <span
-                                                    style="color:#FFF; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;">
-                                                    {{ $materi->judul ?? basename($materi->file_path ?? 'File') }}
-                                                </span>
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                </div>
-                            @endif
                         </div>
-                    @endif
+
+                        {{-- Expanded Content --}}
+                        <div class="modul-accordion-content" :class="{ 'is-open': modulOpen }">
+                            <div style="padding: 20px 24px 24px 24px; background: #fff; border-top: 1px solid var(--c-border);">
+                                @if($modul->materi->isEmpty())
+                                    <div style="font-size: 14px; color: #6B7280; font-style: italic;">Modul belum diunggah</div>
+                                @else
+                                    {{-- Deskripsi --}}
+                                    @if($modul->deskripsi)
+                                        <div style="font-size: 14px; color: #374151; margin-bottom: 20px; line-height: 1.5; text-align: left; margin-left: 0;">{!! nl2br(e(trim($modul->deskripsi))) !!}</div>
+                                    @endif
+
+                                    <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                                        @foreach($modul->materi as $materi)
+                                            <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') : '#' }}"
+                                                target="_blank"
+                                                style="display:flex; flex-direction:column; width:140px; height:140px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
+                                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
+                                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+
+                                                {{-- Top Empty Area --}}
+                                                <div style="flex:1; display:flex; align-items:center; justify-content:center; background:#FAFAFA;">
+                                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB"
+                                                        stroke-width="1.5" stroke-linecap="round">
+                                                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                                        <polyline points="14 2 14 8 20 8" />
+                                                    </svg>
+                                                </div>
+
+                                                {{-- Bottom Name Area --}}
+                                                <div style="background:#293C79; padding:12px 14px; display:flex; align-items:center;">
+                                                    <span style="color:#FFF; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;"
+                                                        title="{{ $materi->judul ?? basename($materi->file_path ?? 'File') }}">
+                                                        {{ $materi->judul ?? basename($materi->file_path ?? 'File') }}
+                                                    </span>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 @empty
                     <div
                         style="min-height:180px;display:flex;align-items:center;justify-content:center;border:1px dashed #DFE1E7;border-radius:12px;">
@@ -178,19 +206,19 @@
                     </div>
 
                     <div style="padding:24px;">
-                        <form :action="`/eoffice/manprak/asprak/modul/${editModal.id}`" method="POST"
-                            enctype="multipart/form-data" style="display:flex; flex-direction:column; gap:16px;"
-                            @submit="injectDeletedFiles($event)">
+                        <form id="formEditModul" action="#" method="POST" enctype="multipart/form-data"
+                            style="display:flex; flex-direction:column; gap:16px;"
+                            x-on:submit="$el.action = `/eoffice/manprak/asprak/modul/${editModal.id}`">
                             @csrf
                             @method('PUT')
+                            <input type="hidden" name="praktikum_id" :value="'{{ $asprak?->praktikum_id ?? '' }}'">
 
-                            {{-- Nama Modul (Dropdown, styled exactly like Create) --}}
                             <div>
                                 <label
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
                                     Nama Modul <span style="color:#DF1C41;">*</span>
                                 </label>
-                                <select name="id" required x-model="editModal.id" disabled
+                                <select name="nama_display" disabled
                                     style="width:100%; padding:10px 14px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; color:#111827; background:#F9FAFB; appearance:none; background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%236B7280%22 stroke-width=%222%22><polyline points=%226 9 12 15 18 9%22/></svg>'); background-repeat:no-repeat; background-position:right 12px center; background-size:16px; cursor:not-allowed;">
                                     @foreach($moduls as $modul)
                                         @if($assignedModulIds->contains($modul->id))
@@ -222,11 +250,11 @@
 
                                 <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
                                     <button type="button" @click="$refs.fileInputEdit.click()"
-                                        style="width:100%; padding:10px; border:1px dashed #D1D5DB; border-radius:8px; background:#F9FAFB; color:#293C79; font-size:13px; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:8px; transition:all 0.2s;"
-                                        onmouseover="this.style.background='#F3F4F6'; this.style.borderColor='#9CA3AF';"
-                                        onmouseout="this.style.background='#F9FAFB'; this.style.borderColor='#D1D5DB';">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round">
+                                        style="width: 100%; border: 1px dashed var(--c-border); border-radius: 8px; padding: 14px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 500; color: #293C79; cursor: pointer; transition: background 0.15s;"
+                                        onmouseover="this.style.background='#F6F8FA'"
+                                        onmouseout="this.style.background='#fff'">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
@@ -234,7 +262,7 @@
                                     </button>
                                     <div
                                         style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#9CA3AF;">
-                                        <span x-text="editFiles.length + ' / 3 file terpilih'"></span>
+                                        <span x-text="'Batas akumulasi maksimal lampiran adalah 3 file per tugas.'"></span>
                                         <span>Maks. 5MB per file</span>
                                     </div>
                                 </div>
@@ -247,22 +275,24 @@
                                 <div style="display:flex;flex-direction:column;gap:6px;">
                                     <template x-for="(file, index) in editFiles" :key="index">
                                         <div
-                                            style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:6px;">
-                                            <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B7280"
-                                                    stroke-width="2" stroke-linecap="round">
-                                                    <path
-                                                        d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                                            style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1px solid var(--c-border); border-radius: 6px; background: #F9FAFB; margin-bottom: 5px;">
+                                            <div
+                                                style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #111827;">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B7280"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
+                                                    </path>
+                                                    <polyline points="13 2 13 9 20 9"></polyline>
                                                 </svg>
                                                 <span x-text="file.name"
-                                                    style="font-size:12px;color:#374151;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:300px;"></span>
+                                                    style="max-width:240px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
                                             </div>
                                             <button type="button" @click="removeFile(index, 'edit')" title="Hapus"
-                                                style="color:#DC2626;background:none;border:none;cursor:pointer;">
+                                                style="color:#DF1C41; background:none; border:none; cursor:pointer; outline:none;">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
                                                 </svg>
                                             </button>
                                         </div>
@@ -278,23 +308,26 @@
                                             <template x-for="(file, index) in editModal.existingFiles" :key="index">
                                                 <div x-show="!file.deleted">
                                                     <div
-                                                        style="display:flex;flex-direction:row;align-items:center;padding:5px 12px;background:#FAFAFA;border:1px solid #E5E7EB;border-radius:6px;gap:8px;">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                            stroke="#6B7280" stroke-width="2" stroke-linecap="round"
-                                                            style="flex-shrink:0;">
-                                                            <path
-                                                                d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                                                        </svg>
-                                                        <a :href="file.url" target="_blank"
-                                                            style="font-size:12px;color:#293C79;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;"
-                                                            x-text="file.name"></a>
+                                                        style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border: 1px solid var(--c-border); border-radius: 6px; background: #F9FAFB; margin-bottom: 5px;">
+                                                        <div
+                                                            style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #111827;">
+                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                                stroke="#6B7280" stroke-width="2" stroke-linecap="round"
+                                                                stroke-linejoin="round">
+                                                                <path
+                                                                    d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z">
+                                                                </path>
+                                                                <polyline points="13 2 13 9 20 9"></polyline>
+                                                            </svg>
+                                                            <a :href="file.url" target="_blank"
+                                                                style="font-size:13px;color:#293C79;text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;"
+                                                                x-text="file.name"></a>
+                                                        </div>
                                                         <button type="button" @click="removeExistingFile(index)"
                                                             title="Hapus Berkas"
-                                                            style="color:#9CA3AF;background:none;border:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;padding:0;"
-                                                            onmouseover="this.style.color='#DC2626'"
-                                                            onmouseout="this.style.color='#9CA3AF'">
-                                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2.5"
+                                                            style="color:#DF1C41; background:none; border:none; cursor:pointer; outline:none;">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2"
                                                                 stroke-linecap="round">
                                                                 <line x1="18" y1="6" x2="6" y2="18" />
                                                                 <line x1="6" y1="6" x2="18" y2="18" />
@@ -305,6 +338,10 @@
                                             </template>
                                         </div>
                                     </div>
+                                </template>
+
+                                <template x-for="(file, index) in editModal.existingFiles" :key="'del-'+index">
+                                    <input type="hidden" name="deleted_files[]" :value="file.id" :disabled="!file.deleted">
                                 </template>
                             </div>
 
@@ -373,24 +410,6 @@
                         this.createFiles.splice(index, 1);
                     }
                     this.syncInput(type);
-                },
-
-                injectDeletedFiles(e) {
-                    const form = e.target;
-                    // Hapus input deleted_files lama jika ada
-                    form.querySelectorAll('input[data-deleted-file]').forEach(el => el.remove());
-                    // Inject hanya file yang ditandai deleted
-                    this.editModal.existingFiles.forEach(f => {
-                        if (f.deleted) {
-                            const inp = document.createElement('input');
-                            inp.type = 'hidden';
-                            inp.name = 'deleted_files[]';
-                            inp.value = f.id;
-                            inp.setAttribute('data-deleted-file', '1');
-                            form.appendChild(inp);
-                        }
-                    });
-                    // Biarkan form submit secara normal
                 },
 
                 syncInput(type) {

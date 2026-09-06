@@ -18,12 +18,12 @@ class NilaiController extends Controller
 
         if (!$praktikum) {
             return view('eoffice::manajemen-praktikum.koordinator.nilai', [
-                'praktikum'       => null,
+                'praktikum' => null,
                 'daftarPraktikan' => collect(),
-                'moduls'          => collect(),
-                'allModuls'       => collect(),
-                'modulFilter'     => null,
-                'nilaiJenisMap'   => [],
+                'moduls' => collect(),
+                'allModuls' => collect(),
+                'modulFilter' => null,
+                'nilaiJenisMap' => [],
             ]);
         }
 
@@ -58,7 +58,12 @@ class NilaiController extends Controller
         $allModuls = Modul::with(['asprak.user'])->where('praktikum_id', $praktikum->id)->orderBy('urutan')->get();
 
         return view('eoffice::manajemen-praktikum.koordinator.nilai', compact(
-            'praktikum', 'daftarPraktikan', 'moduls', 'allModuls', 'modulFilter', 'nilaiJenisMap'
+            'praktikum',
+            'daftarPraktikan',
+            'moduls',
+            'allModuls',
+            'modulFilter',
+            'nilaiJenisMap'
         ));
     }
 
@@ -84,11 +89,13 @@ class NilaiController extends Controller
     public function exportCsv(Request $request)
     {
         $praktikum = DashboardController::resolvePraktikum();
-        if (!$praktikum) abort(404);
+        if (!$praktikum)
+            abort(404);
 
         $modulFilter = $request->input('modul_id');
         $modulsQuery = Modul::with(['asprak.user'])->where('praktikum_id', $praktikum->id)->orderBy('urutan');
-        if ($modulFilter) $modulsQuery->where('id', $modulFilter);
+        if ($modulFilter)
+            $modulsQuery->where('id', $modulFilter);
         $moduls = $modulsQuery->get();
 
         $daftarPraktikan = DaftarPraktikan::where('praktikum_id', $praktikum->id)
@@ -106,23 +113,23 @@ class NilaiController extends Controller
         }
 
         $headers = [
-            "Content-type"        => "text/csv",
+            "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename=Rekap_Nilai_{$praktikum->kode}.csv",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0",
         ];
 
-        $callback = function() use($daftarPraktikan, $moduls, $nilaiJenisMap) {
+        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap) {
             $file = fopen('php://output', 'w');
 
-            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Praktikum', 'Laporan', 'Responsi', 'Keterangan']);
+            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Laporan', 'Responsi', 'Tugas Pengganti', 'Keterangan']);
 
             $no = 1;
             foreach ($daftarPraktikan as $dp) {
                 foreach ($moduls as $m) {
                     $absensi = $dp->absensi->firstWhere('modul_id', $m->id);
-                    $njMap   = $nilaiJenisMap[$m->id][$dp->id] ?? [];
+                    $njMap = $nilaiJenisMap[$m->id][$dp->id] ?? [];
                     $row = [
                         $no,
                         $dp->user?->name ?? '-',
@@ -132,9 +139,9 @@ class NilaiController extends Controller
                         $m->nama,
                         $absensi ? ucfirst($absensi->status) : '-',
                         $njMap['tugas_pendahuluan'] ?? '-',
-                        $njMap['praktikum'] ?? '-',
                         $njMap['laporan'] ?? '-',
                         $njMap['responsi'] ?? '-',
+                        $njMap['tugas_pengganti'] ?? '-',
                         $absensi?->keterangan ?? '-',
                     ];
                     fputcsv($file, $row);

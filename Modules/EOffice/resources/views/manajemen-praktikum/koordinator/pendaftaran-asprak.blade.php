@@ -1,4 +1,5 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Seleksi Asisten">
+<x-eoffice::manajemen-praktikum.layout
+    pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Seleksi Asisten">
 
     @if($praktikum)
         <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
@@ -185,70 +186,92 @@
                             </div>
                         </div>
 
-                        
+
                         <div class="mt-5">
-                            <label class="block text-[11px] font-semibold text-[#353849] mb-2">Jadwal <span class="text-[#808897] font-normal">(Pilih hari luang)</span></label>
+                            <label class="block text-[11px] font-semibold text-[#353849] mb-2">Jadwal <span
+                                    class="text-[#808897] font-normal">(Pilih hari luang)</span></label>
                             <div class="flex gap-6 flex-wrap">
-                                    <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                        <input type="radio" disabled checked class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                        <span class="text-[12px] text-[#666D80]">Senin</span>
-                                    </label>
-                                    <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                        <input type="radio" disabled class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                        <span class="text-[12px] text-[#666D80]">Selasa</span>
-                                    </label>
-                                    <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                        <input type="radio" disabled class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                        <span class="text-[12px] text-[#666D80]">Rabu</span>
-                                    </label>
-                                    <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                        <input type="radio" disabled class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                        <span class="text-[12px] text-[#666D80]">Kamis</span>
-                                    </label>
-                                    <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                        <input type="radio" disabled class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                        <span class="text-[12px] text-[#666D80]">Jumat</span>
-                                    </label>
-                                    <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                        <input type="radio" disabled class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                        <span class="text-[12px] text-[#666D80]">Sabtu</span>
-                                    </label>
-                                    <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                        <input type="radio" disabled class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                        <span class="text-[12px] text-[#666D80]">Minggu</span>
-                                    </label>
-                                </div>
+                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
+                                    <input type="radio" disabled checked
+                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
+                                    <span class="text-[12px] text-[#666D80]">Senin</span>
+                                </label>
+                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
+                                    <input type="radio" disabled
+                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
+                                    <span class="text-[12px] text-[#666D80]">Selasa</span>
+                                </label>
+                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
+                                    <input type="radio" disabled
+                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
+                                    <span class="text-[12px] text-[#666D80]">Rabu</span>
+                                </label>
+                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
+                                    <input type="radio" disabled
+                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
+                                    <span class="text-[12px] text-[#666D80]">Kamis</span>
+                                </label>
+                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
+                                    <input type="radio" disabled
+                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
+                                    <span class="text-[12px] text-[#666D80]">Jumat</span>
+                                </label>
+                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
+                                    <input type="radio" disabled
+                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
+                                    <span class="text-[12px] text-[#666D80]">Sabtu</span>
+                                </label>
+                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
+                                    <input type="radio" disabled
+                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
+                                    <span class="text-[12px] text-[#666D80]">Minggu</span>
+                                </label>
+                            </div>
                         </div>
                         <div class="mt-5 border border-[#DFE1E7] rounded-[10px] overflow-hidden" x-data="quizBuilder()">
                             <input type="hidden" name="konfigurasi_kuis" :value="JSON.stringify(questions)">
-                            
+
                             <div class="bg-[#F0F4FF] p-4 border-b border-[#DFE1E7] flex justify-between items-center">
                                 <div>
-                                    <h4 class="text-[13px] font-bold text-[#0B266E]">Modul Uji Tertulis & Tes Kelayakan</h4>
-                                    <p class="text-[11px] text-[#666D80] mt-0.5">Berikan kuesioner dinamis pada calon asisten</p>
+                                    <h4 class="text-[13px] font-bold text-[#0B266E]">Modul Uji Tertulis & Tes Kelayakan
+                                    </h4>
+                                    <p class="text-[11px] text-[#666D80] mt-0.5">Berikan kuesioner dinamis pada calon
+                                        asisten</p>
                                 </div>
-                                <button type="button" @click="showQuizModal = true" class="mp-btn primary sm font-bold" style="padding: 0 16px; height: 34px; box-shadow: 0 2px 4px rgba(11,38,110,0.1);">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                <button type="button" @click="showQuizModal = true" class="mp-btn primary sm font-bold"
+                                    style="padding: 0 16px; height: 34px; box-shadow: 0 2px 4px rgba(11,38,110,0.1);">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                        style="margin-right:6px;">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
                                     Rancang Formulir
                                 </button>
                             </div>
-                            
+
                             <!-- Live Preview Data -->
                             <div class="p-4 bg-white flex flex-col items-center justify-center min-h-[80px]">
                                 <template x-if="questions.length === 0">
-                                    <p class="text-[12px] text-[#A4ABB8] text-center w-full">Belum ada tes algoritma atau esai yang ditambahkan ke formulir ini.</p>
+                                    <p class="text-[12px] text-[#A4ABB8] text-center w-full">Belum ada tes algoritma
+                                        atau esai yang ditambahkan ke formulir ini.</p>
                                 </template>
                                 <template x-if="questions.length > 0">
                                     <div class="w-full">
                                         <div class="flex items-center gap-2 mb-2">
                                             <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
-                                            <span class="text-[12px] font-bold text-[#10B981]"><span x-text="questions.length"></span> Soal Valid Dikonfigurasi</span>
+                                            <span class="text-[12px] font-bold text-[#10B981]"><span
+                                                    x-text="questions.length"></span> Soal Valid Dikonfigurasi</span>
                                         </div>
                                         <div class="flex overflow-x-auto gap-2 pb-2">
                                             <template x-for="(q, idx) in questions" :key="q.id">
-                                                <div class="bg-[#F8FAFC] border border-[#DFE1E7] rounded px-3 py-2 flex-shrink-0 min-w-[200px] max-w-[250px]">
-                                                    <div class="text-[10px] font-bold text-[#0B266E] mb-1" x-text="q.tipe === 'pilihan_ganda' ? 'PILIHAN GANDA' : 'ESAI'"></div>
-                                                    <div class="text-[11px] text-[#353849] truncate" x-text="q.pertanyaan"></div>
+                                                <div
+                                                    class="bg-[#F8FAFC] border border-[#DFE1E7] rounded px-3 py-2 flex-shrink-0 min-w-[200px] max-w-[250px]">
+                                                    <div class="text-[10px] font-bold text-[#0B266E] mb-1"
+                                                        x-text="q.tipe === 'pilihan_ganda' ? 'PILIHAN GANDA' : 'ESAI'">
+                                                    </div>
+                                                    <div class="text-[11px] text-[#353849] truncate"
+                                                        x-text="q.pertanyaan"></div>
                                                 </div>
                                             </template>
                                         </div>
@@ -257,66 +280,129 @@
                             </div>
 
                             <!-- Modal -->
-                            <div x-show="showQuizModal" style="display:none;" x-transition.opacity class="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-                                <div class="absolute inset-0 bg-[#0D0D12] bg-opacity-60 backdrop-blur-sm" @click="showQuizModal = false"></div>
-                                
-                                <div class="bg-white rounded-[14px] shadow-2xl w-full max-w-3xl flex flex-col relative" style="max-height: 85vh;">
+                            <div x-show="showQuizModal" style="display:none;" x-transition.opacity
+                                class="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+                                <div class="absolute inset-0 bg-[#0D0D12] bg-opacity-60 backdrop-blur-sm"
+                                    @click="showQuizModal = false"></div>
+
+                                <div class="bg-white rounded-[14px] shadow-2xl w-full max-w-3xl flex flex-col relative"
+                                    style="max-height: 85vh;">
                                     <div class="flex items-center justify-between p-5 border-b border-[#DFE1E7]">
                                         <div>
                                             <h3 class="font-bold text-[#0D0D12] text-[18px]">Form Builder Studio</h3>
-                                            <p class="text-[12px] text-[#666D80] mt-0.5">Bangun lembar form ujian seleksi pendaftaran</p>
+                                            <p class="text-[12px] text-[#666D80] mt-0.5">Bangun lembar form ujian
+                                                seleksi pendaftaran</p>
                                         </div>
-                                        <button type="button" @click="showQuizModal = false" class="text-[#666D80] hover:text-[#DF1C41] p-2 bg-[#F6F8FA] hover:bg-[#FFF5F5] rounded-full transition-colors">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        <button type="button" @click="showQuizModal = false"
+                                            class="text-[#666D80] hover:text-[#DF1C41] p-2 bg-[#F6F8FA] hover:bg-[#FFF5F5] rounded-full transition-colors">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                                            </svg>
                                         </button>
                                     </div>
-                                    
+
                                     <div class="flex-1 overflow-y-auto p-6 bg-[#F8FAFC]">
-                                        
+
                                         <template x-for="(q, qIndex) in questions" :key="q.id">
-                                            <div class="bg-white border-2 border-[#DFE1E7] rounded-[12px] p-5 mb-5 relative hover:border-[#0B266E] transition-colors group">
-                                                <button type="button" @click="removeQuestion(qIndex)" class="absolute top-4 right-4 text-[#A4ABB8] hover:text-[#DF1C41] hover:bg-[#FFF5F5] p-2 rounded-md transition-colors" title="Hapus Blok">
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path></svg>
+                                            <div
+                                                class="bg-white border-2 border-[#DFE1E7] rounded-[12px] p-5 mb-5 relative hover:border-[#0B266E] transition-colors group">
+                                                <button type="button" @click="removeQuestion(qIndex)"
+                                                    class="absolute top-4 right-4 text-[#A4ABB8] hover:text-[#DF1C41] hover:bg-[#FFF5F5] p-2 rounded-md transition-colors"
+                                                    title="Hapus Blok">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path>
+                                                    </svg>
                                                 </button>
-                                                
+
                                                 <div class="flex items-center gap-2 mb-4">
-                                                    <span class="bg-[#E6F0FF] text-[#0B266E] text-[10px] font-extrabold tracking-wider px-2.5 py-1 rounded-full border border-[#BFD6FF]" x-text="q.tipe === 'pilihan_ganda' ? 'SOAL PILIHAN GANDA' : 'SOAL ESAI PENDEK/PANJANG'"></span>
+                                                    <span
+                                                        class="bg-[#E6F0FF] text-[#0B266E] text-[10px] font-extrabold tracking-wider px-2.5 py-1 rounded-full border border-[#BFD6FF]"
+                                                        x-text="q.tipe === 'pilihan_ganda' ? 'SOAL PILIHAN GANDA' : 'SOAL ESAI PENDEK/PANJANG'"></span>
                                                 </div>
-                                                
-                                                <label class="block text-[13px] font-bold text-[#353849] mb-1.5">Judul Pertanyaan / Syarat</label>
-                                                <textarea x-model="q.pertanyaan" class="mp-input w-full text-[14px] mb-4 p-3 bg-[#F9FAFB]" rows="2" placeholder="Cth: Mengapa kamu mendaftar asisten? Atau uji logika if-else..."></textarea>
-                                                
+
+                                                <label class="block text-[13px] font-bold text-[#353849] mb-1.5">Judul
+                                                    Pertanyaan / Syarat</label>
+                                                <textarea x-model="q.pertanyaan"
+                                                    class="mp-input w-full text-[14px] mb-4 p-3 bg-[#F9FAFB]" rows="2"
+                                                    placeholder="Cth: Mengapa kamu mendaftar asisten? Atau uji logika if-else..."></textarea>
+
                                                 <div class="w-1/3 mb-4">
-                                                    <label class="block text-[11px] font-semibold text-[#666D80] mb-1.5">Bobot Nilai (Poin jika terjawab benar/maksimal)</label>
+                                                    <label
+                                                        class="block text-[11px] font-semibold text-[#666D80] mb-1.5">Bobot
+                                                        Nilai (Poin jika terjawab benar/maksimal)</label>
                                                     <div class="relative">
-                                                        <input type="number" x-model="q.poin" class="mp-input w-full pl-8 font-bold text-[#0B266E]" min="1" max="100">
-                                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[#A4ABB8] font-bold">Pt.</span>
+                                                        <input type="number" x-model="q.poin"
+                                                            class="mp-input w-full pl-8 font-bold text-[#0B266E]"
+                                                            min="1" max="100">
+                                                        <span
+                                                            class="absolute left-3 top-1/2 -translate-y-1/2 text-[#A4ABB8] font-bold">Pt.</span>
                                                     </div>
                                                 </div>
 
                                                 <template x-if="q.tipe === 'pilihan_ganda'">
-                                                    <div class="mt-2 pl-4 py-2 border-l-4 border-[#0B266E] bg-[#FAFBFF] rounded-r-[8px]">
-                                                        <label class="block text-[11px] font-bold text-[#353849] mb-3 uppercase tracking-wider text-opacity-80">Konfigurasi Jawaban <span class="font-normal normal-case">(Pilih Radio Button Sebagai Kunci)</span></label>
+                                                    <div
+                                                        class="mt-2 pl-4 py-2 border-l-4 border-[#0B266E] bg-[#FAFBFF] rounded-r-[8px]">
+                                                        <label
+                                                            class="block text-[11px] font-bold text-[#353849] mb-3 uppercase tracking-wider text-opacity-80">Konfigurasi
+                                                            Jawaban <span class="font-normal normal-case">(Pilih Radio
+                                                                Button Sebagai Kunci)</span></label>
                                                         <template x-for="(opt, optIndex) in q.opsi" :key="optIndex">
                                                             <div class="flex items-center gap-3 mb-2 group/opt">
-                                                                <label class="flex items-center gap-2 cursor-pointer" title="Jadikan Kunci Jawaban Benar">
-                                                                    <input type="radio" :name="'kunci_' + q.id" :checked="opt.is_correct" @change="setCorrectOption(qIndex, optIndex)" class="w-5 h-5 accent-[#0B266E]">
+                                                                <label class="flex items-center gap-2 cursor-pointer"
+                                                                    title="Jadikan Kunci Jawaban Benar">
+                                                                    <input type="radio" :name="'kunci_' + q.id"
+                                                                        :checked="opt.is_correct"
+                                                                        @change="setCorrectOption(qIndex, optIndex)"
+                                                                        class="w-5 h-5 accent-[#0B266E]">
                                                                 </label>
-                                                                <input type="text" x-model="opt.text" class="mp-input w-full text-[13px]" :class="opt.is_correct ? 'border-[#0B266E] bg-white font-semibold' : 'bg-transparent'" :placeholder="'Opsi ' + (String.fromCharCode(65 + optIndex))">
-                                                                <button type="button" @click="removeOption(qIndex, optIndex)" class="text-[#DFE1E7] hover:text-[#DF1C41] p-1.5 rounded hover:bg-[#FFF5F5] transition-colors"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                                                                <input type="text" x-model="opt.text"
+                                                                    class="mp-input w-full text-[13px]"
+                                                                    :class="opt.is_correct ? 'border-[#0B266E] bg-white font-semibold' : 'bg-transparent'"
+                                                                    :placeholder="'Opsi ' + (String.fromCharCode(65 + optIndex))">
+                                                                <button type="button"
+                                                                    @click="removeOption(qIndex, optIndex)"
+                                                                    class="text-[#DFE1E7] hover:text-[#DF1C41] p-1.5 rounded hover:bg-[#FFF5F5] transition-colors"><svg
+                                                                        width="18" height="18" viewBox="0 0 24 24"
+                                                                        fill="none" stroke="currentColor"
+                                                                        stroke-width="2.5" stroke-linecap="round">
+                                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                                    </svg></button>
                                                             </div>
                                                         </template>
-                                                        <button type="button" @click="addOption(qIndex)" class="text-[#0B266E] text-[12px] font-bold mt-2 ml-8 flex items-center gap-1.5 hover:underline">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                                        <button type="button" @click="addOption(qIndex)"
+                                                            class="text-[#0B266E] text-[12px] font-bold mt-2 ml-8 flex items-center gap-1.5 hover:underline">
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                                stroke="currentColor" stroke-width="2.5">
+                                                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                            </svg>
                                                             Tambah Jawaban Lain
                                                         </button>
                                                     </div>
                                                 </template>
-                                                
+
                                                 <template x-if="q.tipe === 'esai'">
-                                                    <div class="mt-2 p-4 border border-dashed border-[#DFE1E7] bg-white rounded text-center opacity-60">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                                                        <span class="text-[11px] font-semibold text-[#666D80]">Area ini nantinya akan berupa TextInput besar bagi Pendaftar. Tipe soal ini membutuhkan review manual (Dosen menginput skor sendiri nantinya).</span>
+                                                    <div
+                                                        class="mt-2 p-4 border border-dashed border-[#DFE1E7] bg-white rounded text-center opacity-60">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                            stroke="#A4ABB8" stroke-width="2" stroke-linecap="round"
+                                                            stroke-linejoin="round" class="mx-auto mb-2">
+                                                            <path
+                                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z">
+                                                            </path>
+                                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                                            <polyline points="10 9 9 9 8 9"></polyline>
+                                                        </svg>
+                                                        <span class="text-[11px] font-semibold text-[#666D80]">Area ini
+                                                            nantinya akan berupa TextInput besar bagi Pendaftar. Tipe
+                                                            soal ini membutuhkan review manual (Dosen menginput skor
+                                                            sendiri nantinya).</span>
                                                     </div>
                                                 </template>
                                             </div>
@@ -324,19 +410,36 @@
 
                                         <!-- Add Block Buttons -->
                                         <div class="flex gap-4 justify-center mt-8 pb-4">
-                                            <button type="button" @click="addQuestion('pilihan_ganda')" class="mp-btn bg-white border border-[#DFE1E7] shadow-sm text-[#0B266E] hover:bg-[#F6F8FA] hover:border-[#0B266E] flex items-center gap-2" style="border-radius: 20px; padding: 0 20px;">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg>
+                                            <button type="button" @click="addQuestion('pilihan_ganda')"
+                                                class="mp-btn bg-white border border-[#DFE1E7] shadow-sm text-[#0B266E] hover:bg-[#F6F8FA] hover:border-[#0B266E] flex items-center gap-2"
+                                                style="border-radius: 20px; padding: 0 20px;">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <circle cx="12" cy="12" r="3"></circle>
+                                                </svg>
                                                 <span class="font-bold">Tambah Soal Pilgan</span>
                                             </button>
-                                            <button type="button" @click="addQuestion('esai')" class="mp-btn bg-white border border-[#DFE1E7] shadow-sm text-[#0B266E] hover:bg-[#F6F8FA] hover:border-[#0B266E] flex items-center gap-2" style="border-radius: 20px; padding: 0 20px;">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>
+                                            <button type="button" @click="addQuestion('esai')"
+                                                class="mp-btn bg-white border border-[#DFE1E7] shadow-sm text-[#0B266E] hover:bg-[#F6F8FA] hover:border-[#0B266E] flex items-center gap-2"
+                                                style="border-radius: 20px; padding: 0 20px;">
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                                    <line x1="17" y1="10" x2="3" y2="10"></line>
+                                                    <line x1="21" y1="6" x2="3" y2="6"></line>
+                                                    <line x1="21" y1="14" x2="3" y2="14"></line>
+                                                    <line x1="17" y1="18" x2="3" y2="18"></line>
+                                                </svg>
                                                 <span class="font-bold">Tambah Kuisioner Esai</span>
                                             </button>
                                         </div>
                                     </div>
-                                    
-                                    <div class="p-5 border-t border-[#DFE1E7] bg-white flex justify-end gap-3 rounded-b-[14px]">
-                                        <button type="button" @click="showQuizModal = false" class="mp-btn outline sm font-semibold" style="height:42px;">Tutup & Simpan Otomatis</button>
+
+                                    <div
+                                        class="p-5 border-t border-[#DFE1E7] bg-white flex justify-end gap-3 rounded-b-[14px]">
+                                        <button type="button" @click="showQuizModal = false"
+                                            class="mp-btn outline sm font-semibold" style="height:42px;">Tutup & Simpan
+                                            Otomatis</button>
                                     </div>
                                 </div>
                             </div>
@@ -375,12 +478,14 @@
             <form method="GET" style="display: flex; gap: 12px; align-items: center; width: 100%;">
                 <input type="hidden" name="praktikum_id" value="{{ request('praktikum_id', $praktikum?->id) }}">
                 <div class="relative">
-                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        placeholder="Cari nama mahasiswa..."
-                        class="mp-input w-full" style="height:36px; font-size:13px; width:250px; padding-left: 36px; padding-right: 12px;">
+                        placeholder="Cari nama mahasiswa..." class="mp-input w-full"
+                        style="height:36px; font-size:13px; width:250px; padding-left: 36px; padding-right: 12px;">
                 </div>
 
                 <x-eoffice::manajemen-praktikum.ui.select name="sort" :options="[
@@ -437,7 +542,8 @@
                             @php
                                 $emailStr_c = $p->user?->email ?? '';
                                 $nim_c = explode('@', $emailStr_c)[0];
-                                if (empty($nim_c)) $nim_c = '—';
+                                if (empty($nim_c))
+                                    $nim_c = '—';
                             @endphp
                             <td style="padding:12px 16px; font-size:13px; color:#4B5563;">
                                 {{ $nim_c }}
@@ -449,16 +555,20 @@
                             </td>
                             <td style="padding:12px 16px;">
                                 @if($p->transkrip_path)
-                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}" target="_blank" style="font-size:13px;font-weight:600;color:#0B266E;" class="hover:underline">Lihat Berkas</a>
+                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}"
+                                        target="_blank" style="font-size:13px;font-weight:600;color:#0B266E;"
+                                        class="hover:underline">Lihat Berkas</a>
                                 @else
-                                <span style="font-size:13px;color:#808897;">—</span>
+                                    <span style="font-size:13px;color:#808897;">—</span>
                                 @endif
                             </td>
                             <td style="padding:12px 16px;">
                                 @if($p->berkas_cerc_path)
-                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}" target="_blank" style="font-size:13px;font-weight:600;color:#0B266E;" class="hover:underline">Lihat Berkas</a>
+                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}"
+                                        target="_blank" style="font-size:13px;font-weight:600;color:#0B266E;"
+                                        class="hover:underline">Lihat Berkas</a>
                                 @else
-                                <span style="font-size:13px;color:#808897;">—</span>
+                                    <span style="font-size:13px;color:#808897;">—</span>
                                 @endif
                             </td>
                             <td style="padding:12px 16px;font-size:13px;color:#666D80;">
@@ -516,8 +626,11 @@
                     @empty
                         <tr>
                             <td colspan="9" style="padding:48px;text-align:center;">
-                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 12px;display:block;">
-                                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 11l-3.5 3.5-1.5-1.5" />
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8"
+                                    stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin:0 auto 12px;display:block;">
+                                    <path
+                                        d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 11l-3.5 3.5-1.5-1.5" />
                                 </svg>
                                 <div style="font-size:13px;color:#666D80;">Belum ada pendaftar asprak.</div>
                             </td>
@@ -642,11 +755,24 @@
 <style>
     /* Styling Flatpickr untuk mengikuti tema desain */
     .flatpickr-calendar {
+        width: 340px !important;
+        padding-right: 12px !important;
         box-shadow: 0 8px 24px rgba(11, 38, 110, 0.12) !important;
         border: 1px solid #DFE1E7 !important;
         border-radius: 12px !important;
         font-family: inherit !important;
-        padding: 8px !important;
+        padding-left: 8px !important;
+        padding-bottom: 8px !important;
+    }
+
+    .flatpickr-days {
+        width: 320px !important;
+    }
+
+    .dayContainer {
+        width: 320px !important;
+        min-width: 320px !important;
+        max-width: 320px !important;
     }
 
     .flatpickr-calendar.hasTime .flatpickr-time {
@@ -825,6 +951,9 @@
         border-radius: 8px !important;
         font-size: 13px !important;
         color: #353849 !important;
+        max-width: 42px !important;
+        height: 40px !important;
+        line-height: 40px !important;
     }
 
     .flatpickr-day.selected,
@@ -834,6 +963,11 @@
         border-color: #0B266E !important;
         color: #fff !important;
         font-weight: 600;
+    }
+
+    .flatpickr-day.prevMonthDay,
+    .flatpickr-day.nextMonthDay {
+        color: #C1C7D0 !important;
     }
 
     .flatpickr-day:hover,
@@ -948,49 +1082,49 @@
 </script>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('quizBuilder', () => ({
-        showQuizModal: false,
-        questions: [],
-        init() {
-            try {
-                // For live interaction preview
-                let existing = `{!! isset($periodeAktif) && $periodeAktif?->konfigurasi_kuis ? json_encode($periodeAktif->konfigurasi_kuis) : '[]' !!}`;
-                this.questions = JSON.parse(existing);
-            } catch (e) {
-                this.questions = [];
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('quizBuilder', () => ({
+            showQuizModal: false,
+            questions: [],
+            init() {
+                try {
+                    // For live interaction preview
+                    let existing = `{!! isset($periodeAktif) && $periodeAktif?->konfigurasi_kuis ? json_encode($periodeAktif->konfigurasi_kuis) : '[]' !!}`;
+                    this.questions = JSON.parse(existing);
+                } catch (e) {
+                    this.questions = [];
+                }
+            },
+            addQuestion(type) {
+                this.questions.push({
+                    id: Date.now(),
+                    tipe: type,
+                    pertanyaan: '',
+                    poin: 10,
+                    opsi: type === 'pilihan_ganda' ? [
+                        { text: 'Opsi Jawaban A', is_correct: true },
+                        { text: 'Opsi Jawaban B', is_correct: false }
+                    ] : []
+                });
+                setTimeout(() => {
+                    const modalBody = document.querySelector('.overflow-y-auto');
+                    if (modalBody) modalBody.scrollTop = modalBody.scrollHeight;
+                }, 50);
+            },
+            removeQuestion(index) {
+                if (confirm('Yakin ingin menghapus form soal ini?')) {
+                    this.questions.splice(index, 1);
+                }
+            },
+            addOption(qIndex) {
+                this.questions[qIndex].opsi.push({ text: '', is_correct: false });
+            },
+            removeOption(qIndex, optIndex) {
+                this.questions[qIndex].opsi.splice(optIndex, 1);
+            },
+            setCorrectOption(qIndex, optIndex) {
+                this.questions[qIndex].opsi.forEach((o, i) => o.is_correct = (i === optIndex));
             }
-        },
-        addQuestion(type) {
-            this.questions.push({
-                id: Date.now(),
-                tipe: type,
-                pertanyaan: '',
-                poin: 10,
-                opsi: type === 'pilihan_ganda' ? [
-                    {text: 'Opsi Jawaban A', is_correct: true}, 
-                    {text: 'Opsi Jawaban B', is_correct: false}
-                ] : []
-            });
-            setTimeout(() => {
-                const modalBody = document.querySelector('.overflow-y-auto');
-                if(modalBody) modalBody.scrollTop = modalBody.scrollHeight;
-            }, 50);
-        },
-        removeQuestion(index) {
-            if (confirm('Yakin ingin menghapus form soal ini?')) {
-                this.questions.splice(index, 1);
-            }
-        },
-        addOption(qIndex) {
-            this.questions[qIndex].opsi.push({text: '', is_correct: false});
-        },
-        removeOption(qIndex, optIndex) {
-            this.questions[qIndex].opsi.splice(optIndex, 1);
-        },
-        setCorrectOption(qIndex, optIndex) {
-            this.questions[qIndex].opsi.forEach((o, i) => o.is_correct = (i === optIndex));
-        }
-    }));
-});
+        }));
+    });
 </script>

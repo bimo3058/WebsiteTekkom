@@ -27,25 +27,25 @@ class NilaiController extends Controller
         $praktikum = $praktikums->firstWhere('id', $praktikumId);
         if (!$praktikum) {
             return view('eoffice::manajemen-praktikum.dosen.nilai', [
-                'praktikum'  => null,
+                'praktikum' => null,
                 'daftarPraktikan' => collect(),
-                'moduls'      => collect(),
-                'allModuls'   => collect(),
+                'moduls' => collect(),
+                'allModuls' => collect(),
                 'modulFilter' => null,
                 'praktikums' => $praktikums,
                 'nilaiJenisMap' => [],
             ]);
         }
-        
+
         $modulFilter = $request->input('modul_id');
         $modulsQuery = Modul::where('praktikum_id', $praktikum->id)
             ->with(['tugas', 'modulAsprak.asprak.user'])
             ->orderBy('urutan');
-            
+
         if ($modulFilter) {
             $modulsQuery->where('id', $modulFilter);
         }
-        
+
         $moduls = $modulsQuery->get();
 
         $daftarPraktikan = DaftarPraktikan::where('praktikum_id', $praktikum->id)
@@ -54,7 +54,7 @@ class NilaiController extends Controller
             ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
             ->orderBy('created_at')
             ->get();
-            
+
         // Ambil semua nilai_jenis_tugas untuk modul-modul yang tampil
         $modulIds = $moduls->pluck('id')->toArray();
         $nilaiJenisAll = NilaiJenisTugas::whereIn('modul_id', $modulIds)->get();
@@ -68,19 +68,27 @@ class NilaiController extends Controller
         $allModuls = Modul::where('praktikum_id', $praktikum->id)->orderBy('urutan')->get();
 
         return view('eoffice::manajemen-praktikum.dosen.nilai', compact(
-            'praktikum', 'daftarPraktikan', 'moduls', 'allModuls', 'modulFilter', 'praktikums', 'nilaiJenisMap'
+            'praktikum',
+            'daftarPraktikan',
+            'moduls',
+            'allModuls',
+            'modulFilter',
+            'praktikums',
+            'nilaiJenisMap'
         ));
     }
-    
+
     public function exportCsv(Request $request, string $praktikumId)
     {
         $user = auth()->user();
         $praktikum = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))->where('id', $praktikumId)->first();
-        if (!$praktikum) abort(404);
+        if (!$praktikum)
+            abort(404);
 
         $modulFilter = $request->input('modul_id');
         $modulsQuery = Modul::where('praktikum_id', $praktikum->id)->orderBy('urutan');
-        if ($modulFilter) $modulsQuery->where('id', $modulFilter);
+        if ($modulFilter)
+            $modulsQuery->where('id', $modulFilter);
         $moduls = $modulsQuery->get();
 
         $daftarPraktikan = DaftarPraktikan::where('praktikum_id', $praktikum->id)
@@ -98,23 +106,23 @@ class NilaiController extends Controller
         }
 
         $headers = [
-            "Content-type"        => "text/csv",
+            "Content-type" => "text/csv",
             "Content-Disposition" => "attachment; filename=Rekap_Nilai_{$praktikum->kode}.csv",
-            "Pragma"              => "no-cache",
-            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
-            "Expires"             => "0"
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
         ];
 
-        $callback = function() use($daftarPraktikan, $moduls, $nilaiJenisMap) {
+        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap) {
             $file = fopen('php://output', 'w');
-            
-            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Praktikum', 'Laporan', 'Responsi', 'Keterangan']);
+
+            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Laporan', 'Responsi', 'Tugas Pengganti', 'Keterangan']);
 
             $no = 1;
             foreach ($daftarPraktikan as $dp) {
                 foreach ($moduls as $m) {
                     $absensi = $dp->absensi->firstWhere('modul_id', $m->id);
-                    $njMap   = $nilaiJenisMap[$m->id][$dp->id] ?? [];
+                    $njMap = $nilaiJenisMap[$m->id][$dp->id] ?? [];
                     $row = [
                         $no,
                         $dp->user?->name ?? '-',
@@ -124,9 +132,9 @@ class NilaiController extends Controller
                         $m->nama,
                         $absensi ? ucfirst($absensi->status) : '-',
                         $njMap['tugas_pendahuluan'] ?? '-',
-                        $njMap['praktikum'] ?? '-',
                         $njMap['laporan'] ?? '-',
                         $njMap['responsi'] ?? '-',
+                        $njMap['tugas_pengganti'] ?? '-',
                         $absensi?->keterangan ?? '-',
                     ];
                     fputcsv($file, $row);
@@ -170,7 +178,7 @@ class NilaiController extends Controller
         Nilai::whereIn('daftar_praktikan_id', $daftarIds)
             ->update([
                 'disetujui_dosen' => true,
-                'dipublikasikan'  => true,
+                'dipublikasikan' => true,
             ]);
 
         return back()->with('success', 'Nilai berhasil disetujui dan dipublikasikan ke mahasiswa.');
@@ -197,7 +205,7 @@ class NilaiController extends Controller
         Nilai::whereIn('daftar_praktikan_id', $daftarIds)
             ->update([
                 'disetujui_dosen' => false,
-                'dipublikasikan'  => false,
+                'dipublikasikan' => false,
             ]);
 
         return back()->with('success', 'Publikasi nilai berhasil dibatalkan.');

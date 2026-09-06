@@ -113,24 +113,34 @@
                         {{-- Konten --}}
                         <div style="margin:10px 0 0 0;">
                             <h3
-                                style="font-size:14px; font-weight:700; color:#111827; margin:0 0 4px 0; line-height:1.4; padding:0;">
-                                {{ $p->judul }}</h3>
-                            <p style="font-size:12px; color:#374151; margin:0; padding:0; line-height:1.6;">{{ $p->konten }}</p>
+                                style="font-size:15px; font-weight:700; color:#111827; margin:0 0 4px 0; line-height:1.4; padding:0;">
+                                {{ $p->judul }}
+                            </h3>
+                            <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6;">{{ $p->konten }}</p>
                         </div>
 
                         {{-- Lampiran if any --}}
                         @if(!empty($p->lampiran))
                             <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 10px;">
                                 @foreach($p->lampiran as $lamp)
-                                    <a href="{{ Storage::url($lamp['path']) }}" target="_blank"
-                                        style="display:flex; align-items:center; gap:6px; padding:6px 12px; background:#F3F4F6; border:1px solid #E5E7EB; border-radius:8px; text-decoration:none; font-size:12px; color:#374151; transition:all 0.15s;"
-                                        onmouseover="this.style.background='#E5E7EB'" onmouseout="this.style.background='#F3F4F6'">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round">
-                                            <path
-                                                d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                                        </svg>
-                                        {{ $lamp['name'] ?? basename($lamp['path']) }}
+                                    @php $baseName = isset($lamp['name']) ? $lamp['name'] : pathinfo($lamp['path'], PATHINFO_BASENAME); @endphp
+                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($lamp['path'], 'eoffice') }}"
+                                        target="_blank" title="{{ $baseName }}"
+                                        style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
+                                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
+                                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                        <div
+                                            style="flex: 1; display: flex; align-items: center; justify-content: center; background: #F9FAFB;">
+                                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB"
+                                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                                <polyline points="13 2 13 9 20 9"></polyline>
+                                            </svg>
+                                        </div>
+                                        <div
+                                            style="background: #293C79; color: #fff; padding: 10px 12px; font-size: 13px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                            {{ $baseName }}
+                                        </div>
                                     </a>
                                 @endforeach
                             </div>

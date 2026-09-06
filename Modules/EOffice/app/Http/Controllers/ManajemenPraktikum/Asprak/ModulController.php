@@ -42,7 +42,7 @@ class ModulController extends Controller
         $praktikumList = $asprak ? collect([$praktikum])->filter() : collect();
 
         if ($asprak && $assignedModulIds->isEmpty()) {
-            return redirect()->route('eoffice.manprak.asprak.dashboard')->with('error', 'Akses ditolak: Anda belum di-assign ke modul manapun di praktikum ini.');
+            session()->now('warning', 'Informasi: Anda belum di-assign ke modul manapun di praktikum ini.');
         }
 
         return view('eoffice::manajemen-praktikum.asprak.modul', compact(
@@ -97,7 +97,7 @@ class ModulController extends Controller
     /**
      * Detail modul: info lengkap + materi, tugas, absensi, daftar praktikan.
      */
-    public function show(Request $request, int $id)
+    public function show(Request $request, $id)
     {
         $user = auth()->user();
         $asprak = $request->attributes->get('asprak')
@@ -140,7 +140,7 @@ class ModulController extends Controller
     /**
      * Update modul (hanya modul di praktikum asprak ini).
      */
-    public function update(Request $request, int $id)
+    public function update(Request $request, $id)
     {
         $request->validate([
             'nama' => 'required|string|max:255',
@@ -199,7 +199,7 @@ class ModulController extends Controller
                     \Modules\EOffice\Models\MateriModul::create([
                         'modul_id' => $modul->id,
                         'user_id' => $user->id,
-                        'judul' => count($files) > 1 ? 'Materi - ' . $file->getClientOriginalName() : 'Materi Modul',
+                        'judul' => $file->getClientOriginalName(),
                         'deskripsi' => $request->deskripsi,
                         'file_path' => $path,
                         'tipe_file' => $file->getClientMimeType(),
@@ -215,7 +215,7 @@ class ModulController extends Controller
     /**
      * Hapus modul (hanya modul di praktikum asprak ini).
      */
-    public function destroy(Request $request, int $id)
+    public function destroy(Request $request, $id)
     {
         $user = auth()->user();
         $asprak = $request->attributes->get('asprak')

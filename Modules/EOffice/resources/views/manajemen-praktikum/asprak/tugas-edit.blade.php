@@ -46,7 +46,7 @@
                 Jenis Tugas <span style="color:#DF1C41;">*</span>
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
-                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'praktikum' => 'Praktikum', 'laporan' => 'Laporan', 'responsi' => 'Responsi'] as $val => $label)
+                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'laporan' => 'Laporan', 'responsi' => 'Responsi', 'tugas_pengganti' => 'Tugas Pengganti'] as $val => $label)
                 @php $isChecked = old('jenis_tugas', $tugas->jenis_tugas) === $val; @endphp
                 <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ $isChecked ? '#6366F1' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ $isChecked ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
                        x-data

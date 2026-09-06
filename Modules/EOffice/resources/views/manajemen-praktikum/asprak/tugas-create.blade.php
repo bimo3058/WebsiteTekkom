@@ -36,7 +36,7 @@
             <select name="modul_id" required class="mp-input mp-select" style="min-height:44px;">
                 <option value="">Pilih modul</option>
                 @foreach($moduls as $m)
-                <option value="{{ $m->id }}" @selected(old('modul_id') == $m->id)>
+                <option value="{{ $m->id }}" @selected(old('modul_id', request('modul_id')) == $m->id)>
                     {{ $m->nama }} — {{ $m->praktikum?->nama }}
                 </option>
                 @endforeach
@@ -52,14 +52,14 @@
                 Jenis Tugas <span style="color:#DF1C41;">*</span>
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
-                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'praktikum' => 'Praktikum', 'laporan' => 'Laporan', 'responsi' => 'Responsi'] as $val => $label)
-                <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ old('jenis_tugas') === $val ? '#6366F1' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ old('jenis_tugas') === $val ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
+                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'laporan' => 'Laporan', 'responsi' => 'Responsi', 'tugas_pengganti' => 'Tugas Pengganti'] as $val => $label)
+                <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ old('jenis_tugas', request('jenis_tugas')) === $val ? '#6366F1' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ old('jenis_tugas', request('jenis_tugas')) === $val ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
                        x-data
                        :style="$refs.jenis_{{ $val }}.checked ? 'border-color:#6366F1;background:#F0F1FE;' : 'border-color:#DFE1E7;background:#FAFBFC;'">
                     <input type="radio" name="jenis_tugas" value="{{ $val }}"
                            id="jenis_{{ $val }}" x-ref="jenis_{{ $val }}"
                            @change="$el.closest('[x-data]').querySelectorAll('label').forEach(l=>l.style.cssText=''); $el.parentElement.style.borderColor='#6366F1'; $el.parentElement.style.background='#F0F1FE';"
-                           @if(old('jenis_tugas') === $val) checked @endif
+                           @if(old('jenis_tugas', request('jenis_tugas')) === $val) checked @endif
                            style="accent-color:#6366F1;width:16px;height:16px;cursor:pointer;">
                     <span style="font-size:13px;font-weight:600;color:#353849;">{{ $label }}</span>
                 </label>

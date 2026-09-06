@@ -1083,11 +1083,10 @@
                         $switcherActiveId = null;
                         $switcherContext = null;
 
-                        // 2. Context Asisten Praktikum (Asprak)
-                        // Asprak switcher moved to page header to match Koordinator
-                        // 3. Context Mahasiswa (Praktikan)
+                        // Context Mahasiswa (Praktikan)
                         if (str_contains($currentRoute, 'manprak.mahasiswa')) {
-                            if ($isMhs) {
+                            // Hide switcher on Mahasiswa dashboard
+                            if ($currentRoute !== 'eoffice.manprak.mahasiswa.dashboard' && $isMhs) {
                                 $switcherContext = 'mahasiswa';
                                 $dps = \Modules\EOffice\Models\DaftarPraktikan::with('praktikum')
                                     ->where('user_id', $user->id)

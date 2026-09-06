@@ -141,57 +141,57 @@
                 {{-- Module Accordions --}}
                 @forelse($allModuls as $modul)
                     <div x-data="{ 
-                                                                                                                                                                                                                    expanded: false,
-                                                                                                                                                                                                                    page: 1,
-                                                                                                                                                                                                                    perPage: 10,
-                                                                                                                                                                                                                    rows: [
-                                                                                                                                                                                                                        @foreach($daftarPraktikan as $idx => $dp)
-                                                                                                                                                                                                                            { id: {{ $idx }}, name: @js(strtolower($dp->user?->name ?? '')), nim: @js(strtolower($dp->user?->student?->student_number ?? $dp->user?->email ?? '')), kel: @js($dp->kelompok ?? ''), shf: @js($dp->shift ?? '') }{{ $loop->last ? '' : ',' }}
-                                                                                                                                                                                                                        @endforeach
-                                                                                                                                                                                                                    ],
-                                                                                                                                                                                                                    init() {
-                                                                                                                                                                                                                        this.$watch('globalSearch', () => { this.page = 1; });
-                                                                                                                                                                                                                        this.$watch('globalKelompok', () => { this.page = 1; });
-                                                                                                                                                                                                                        this.$watch('globalShift', () => { this.page = 1; });
-                                                                                                                                                                                                                        this.$watch('perPage', () => { this.page = 1; });
-                                                                                                                                                                                                                    },
-                                                                                                                                                                                                                    get visibleRows() {
-                                                                                                                                                                                                                        return this.rows.filter(r => 
-                                                                                                                                                                                                                            (globalSearch === '' || r.name.includes(globalSearch.toLowerCase()) || r.nim.includes(globalSearch.toLowerCase())) &&
-                                                                                                                                                                                                                            (globalKelompok === '' || globalKelompok === r.kel) &&
-                                                                                                                                                                                                                            (globalShift === '' || globalShift === r.shf)
-                                                                                                                                                                                                                        );
-                                                                                                                                                                                                                    },
-                                                                                                                                                                                                                    get paginatedRows() {
-                                                                                                                                                                                                                        let start = (this.page - 1) * this.perPage;
-                                                                                                                                                                                                                        return this.visibleRows.slice(start, start + parseInt(this.perPage));
-                                                                                                                                                                                                                    },
-                                                                                                                                                                                                                    get totalPages() {
-                                                                                                                                                                                                                        return Math.max(1, Math.ceil(this.visibleRows.length / this.perPage));
-                                                                                                                                                                                                                    },
-                                                                                                                                                                                                                    kelRowspan(id) {
-                                                                                                                                                                                                                        let pr = this.paginatedRows;
-                                                                                                                                                                                                                        let vId = pr.findIndex(r => r.id === id);
-                                                                                                                                                                                                                        if (vId === -1) return 0;
-                                                                                                                                                                                                                        if (vId > 0 && pr[vId - 1].kel === pr[vId].kel) return 0;
-                                                                                                                                                                                                                        let count = 1;
-                                                                                                                                                                                                                        for (let i = vId + 1; i < pr.length; i++) {
-                                                                                                                                                                                                                            if (pr[i].kel === pr[vId].kel) count++; else break;
-                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                        return count;
-                                                                                                                                                                                                                    },
-                                                                                                                                                                                                                    shfRowspan(id) {
-                                                                                                                                                                                                                        let pr = this.paginatedRows;
-                                                                                                                                                                                                                        let vId = pr.findIndex(r => r.id === id);
-                                                                                                                                                                                                                        if (vId === -1) return 0;
-                                                                                                                                                                                                                        if (vId > 0 && pr[vId - 1].shf === pr[vId].shf) return 0;
-                                                                                                                                                                                                                        let count = 1;
-                                                                                                                                                                                                                        for (let i = vId + 1; i < pr.length; i++) {
-                                                                                                                                                                                                                            if (pr[i].shf === pr[vId].shf) count++; else break;
-                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                        return count;
-                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                }"
+                                                                                                                                                                                                                            expanded: false,
+                                                                                                                                                                                                                            page: 1,
+                                                                                                                                                                                                                            perPage: 10,
+                                                                                                                                                                                                                            rows: [
+                                                                                                                                                                                                                                @foreach($daftarPraktikan as $idx => $dp)
+                                                                                                                                                                                                                                    { id: {{ $idx }}, name: @js(strtolower($dp->user?->name ?? '')), nim: @js(strtolower($dp->user?->student?->student_number ?? $dp->user?->email ?? '')), kel: @js($dp->kelompok ?? ''), shf: @js($dp->shift ?? '') }{{ $loop->last ? '' : ',' }}
+                                                                                                                                                                                                                                @endforeach
+                                                                                                                                                                                                                            ],
+                                                                                                                                                                                                                            init() {
+                                                                                                                                                                                                                                this.$watch('globalSearch', () => { this.page = 1; });
+                                                                                                                                                                                                                                this.$watch('globalKelompok', () => { this.page = 1; });
+                                                                                                                                                                                                                                this.$watch('globalShift', () => { this.page = 1; });
+                                                                                                                                                                                                                                this.$watch('perPage', () => { this.page = 1; });
+                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                            get visibleRows() {
+                                                                                                                                                                                                                                return this.rows.filter(r => 
+                                                                                                                                                                                                                                    (globalSearch === '' || r.name.includes(globalSearch.toLowerCase()) || r.nim.includes(globalSearch.toLowerCase())) &&
+                                                                                                                                                                                                                                    (globalKelompok === '' || globalKelompok === r.kel) &&
+                                                                                                                                                                                                                                    (globalShift === '' || globalShift === r.shf)
+                                                                                                                                                                                                                                );
+                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                            get paginatedRows() {
+                                                                                                                                                                                                                                let start = (this.page - 1) * this.perPage;
+                                                                                                                                                                                                                                return this.visibleRows.slice(start, start + parseInt(this.perPage));
+                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                            get totalPages() {
+                                                                                                                                                                                                                                return Math.max(1, Math.ceil(this.visibleRows.length / this.perPage));
+                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                            kelRowspan(id) {
+                                                                                                                                                                                                                                let pr = this.paginatedRows;
+                                                                                                                                                                                                                                let vId = pr.findIndex(r => r.id === id);
+                                                                                                                                                                                                                                if (vId === -1) return 0;
+                                                                                                                                                                                                                                if (vId > 0 && pr[vId - 1].kel === pr[vId].kel) return 0;
+                                                                                                                                                                                                                                let count = 1;
+                                                                                                                                                                                                                                for (let i = vId + 1; i < pr.length; i++) {
+                                                                                                                                                                                                                                    if (pr[i].kel === pr[vId].kel) count++; else break;
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                return count;
+                                                                                                                                                                                                                            },
+                                                                                                                                                                                                                            shfRowspan(id) {
+                                                                                                                                                                                                                                let pr = this.paginatedRows;
+                                                                                                                                                                                                                                let vId = pr.findIndex(r => r.id === id);
+                                                                                                                                                                                                                                if (vId === -1) return 0;
+                                                                                                                                                                                                                                if (vId > 0 && pr[vId - 1].shf === pr[vId].shf) return 0;
+                                                                                                                                                                                                                                let count = 1;
+                                                                                                                                                                                                                                for (let i = vId + 1; i < pr.length; i++) {
+                                                                                                                                                                                                                                    if (pr[i].shf === pr[vId].shf) count++; else break;
+                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                return count;
+                                                                                                                                                                                                                            }
+                                                                                                                                                                                                                        }"
                         style="border-bottom:1px solid #DFE1E7;">
                         <div style="padding:16px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
                             @click="expanded = !expanded" onmouseover="this.style.background='#F9FAFB'"
@@ -228,15 +228,15 @@
                                                 style="padding:12px 16px;width:100px;border-left:1px solid #DFE1E7;background:#EEF2FF;color:#4338CA;">
                                                 Tugas Pendahuluan</th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;background:#F0FDF4;color:#15803D;">
-                                                Praktikum
-                                            </th>
-                                            <th class="mp-th text-center"
                                                 style="padding:12px 16px;width:100px;background:#FEFCE8;color:#A16207;">Laporan
                                             </th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;border-right:1px solid #DFE1E7;background:#FFF7ED;color:#C2410C;">
+                                                style="padding:12px 16px;width:100px;background:#FFF7ED;color:#C2410C;">
                                                 Responsi</th>
+                                            <th class="mp-th text-center"
+                                                style="padding:12px 16px;width:100px;border-right:1px solid #DFE1E7;background:#F0FDF4;color:#15803D;">
+                                                Tugas Pengganti
+                                            </th>
                                             <th class="mp-th text-left" style="padding:12px 16px;">Keterangan</th>
                                         </tr>
                                     </thead>
@@ -296,11 +296,6 @@
                                                     style="padding:12px 16px;text-align:center;background:#EAF0FA;font-weight:700;color:#4338CA;font-size:13px;">
                                                     {{ isset($njMap['tugas_pendahuluan']) ? number_format($njMap['tugas_pendahuluan'], 1) : '—' }}
                                                 </td>
-                                                {{-- Praktikum --}}
-                                                <td
-                                                    style="padding:12px 16px;text-align:center;background:#F0FDF4;font-weight:700;color:#15803D;font-size:13px;">
-                                                    {{ isset($njMap['praktikum']) ? number_format($njMap['praktikum'], 1) : '—' }}
-                                                </td>
                                                 {{-- Laporan --}}
                                                 <td
                                                     style="padding:12px 16px;text-align:center;background:#FEF9C3;font-weight:700;color:#A16207;font-size:13px;">
@@ -310,6 +305,11 @@
                                                 <td
                                                     style="padding:12px 16px;text-align:center;background:#FFF7ED;font-weight:700;color:#C2410C;font-size:13px;">
                                                     {{ isset($njMap['responsi']) ? number_format($njMap['responsi'], 1) : '—' }}
+                                                </td>
+                                                {{-- Tugas Pengganti --}}
+                                                <td
+                                                    style="padding:12px 16px;text-align:center;background:#F0FDF4;font-weight:700;color:#15803D;font-size:13px;">
+                                                    {{ isset($njMap['tugas_pengganti']) ? number_format($njMap['tugas_pengganti'], 1) : '—' }}
                                                 </td>
                                                 {{-- Keterangan --}}
                                                 <td style="padding:12px 16px;font-size:12px;color:#666D80;">
