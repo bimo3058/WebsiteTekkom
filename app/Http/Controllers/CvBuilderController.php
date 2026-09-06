@@ -6,11 +6,14 @@ use Illuminate\Http\Request;
 use App\Models\CvProfile;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\Alumni;
-use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
-use Modules\ManajemenMahasiswa\Models\Kegiatan;
+use Modules\ManajemenMahasiswa\Services\KegiatanCvService;
 
 class CvBuilderController extends Controller
 {
+    public function __construct(private KegiatanCvService $kegiatanService)
+    {
+    }
+
     public function index()
     {
         return view('profile.cv.index');
@@ -19,28 +22,16 @@ class CvBuilderController extends Controller
     public function loadStep($step)
     {
         $user = auth()->user();
-        $cvProfile = CvProfile::firstOrCreate(
+
+        // Use firstOrNew to avoid creating a DB record on GET requests (CV-7/CV-9).
+        // The record is only persisted when saveStep() calls ->save().
+        $cvProfile = CvProfile::firstOrNew(
             ['user_id' => $user->id],
-            [
-                'tentang_diri' => '',
-                'pendidikan' => [],
-                'pengalaman_kerja' => [],
-                'kegiatan_organisasi' => [],
-                'proyek' => [],
-                'keahlian' => [],
-                'sertifikasi' => [],
-                'bahasa' => [],
-                'template' => 'modern'
-            ]
+            ['tentang_diri' => '', 'template' => 'modern']
         );
 
-        // Pastikan field JSON tidak null (untuk row lama sebelum migrasi)
-        if ($cvProfile->bahasa === null)
-            $cvProfile->bahasa = [];
-        if ($cvProfile->kegiatan_organisasi === null)
-            $cvProfile->kegiatan_organisasi = [];
-        if ($cvProfile->proyek === null)
-            $cvProfile->proyek = [];
+        // Model $attributes defaults (Task 1) guarantee JSON fields are never null,
+        // so no manual null-checking is needed here.
 
         $data = ['cv' => $cvProfile];
 
@@ -104,59 +95,8 @@ class CvBuilderController extends Controller
             $data['pendidikan_sync'] = $pendidikanSync;
 
         } elseif ($step == 3) {
-            // Pengalaman & Kegiatan
-            $kegiatanSync = [];
-
-            if ($user->student) {
-                $riwayat = RiwayatKegiatan::with('kegiatan')
-                    ->where('student_id', $user->student->id)
-                    ->where('verification_status', 'approved')
-                    ->get();
-                $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $user->student->id)->get();
-                $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $user->student->id))
-                    ->with(['panitia' => fn($q) => $q->where('students.id', $user->student->id)])
-                    ->get();
-
-                $existingKegiatanIds = $riwayat->pluck('kegiatan_id')->filter()->toArray();
-
-                foreach ($riwayat as $rw) {
-                    $kegiatanSync[] = [
-                        'nama' => $rw->nama_kegiatan,
-                        'peran' => $rw->peran_label,
-                        'tanggal' => $rw->tanggal_display,
-                        'is_sync' => true
-                    ];
-                }
-
-                foreach ($kegiatanAsKetua as $kg) {
-                    if (!in_array($kg->id, $existingKegiatanIds)) {
-                        $kegiatanSync[] = [
-                            'nama' => $kg->judul,
-                            'peran' => 'Ketua Pelaksana',
-                            'tanggal' => $kg->tanggal_mulai,
-                            'is_sync' => true
-                        ];
-                        $existingKegiatanIds[] = $kg->id;
-                    }
-                }
-
-                foreach ($kegiatanAsPanitia as $kg) {
-                    if (!in_array($kg->id, $existingKegiatanIds)) {
-                        $peran = 'Panitia';
-                        $panitiaCurrent = $kg->panitia->first();
-                        if ($panitiaCurrent && !empty($panitiaCurrent->pivot?->peran)) {
-                            $peran = ucfirst($panitiaCurrent->pivot->peran);
-                        }
-                        $kegiatanSync[] = [
-                            'nama' => $kg->judul,
-                            'peran' => $peran,
-                            'tanggal' => $kg->tanggal_mulai,
-                            'is_sync' => true
-                        ];
-                        $existingKegiatanIds[] = $kg->id;
-                    }
-                }
-            }
+            // Pengalaman & Kegiatan — delegated to KegiatanCvService (CV-2/CV-4)
+            $kegiatanSync = $this->kegiatanService->getMergedKegiatan($user)->toArray();
 
             $pengalamanSync = [];
             $alumni = Alumni::where('user_id', $user->id)->first();
@@ -268,40 +208,30 @@ class CvBuilderController extends Controller
 
     public function preview()
     {
-        $user = auth()->user();
-        $cvProfile = CvProfile::firstOrCreate(
-            ['user_id' => $user->id],
-            ['tentang_diri' => '', 'pendidikan' => [], 'pengalaman_kerja' => [], 'kegiatan_organisasi' => [], 'proyek' => [], 'keahlian' => [], 'sertifikasi' => [], 'bahasa' => [], 'template' => 'modern']
-        );
-        if ($cvProfile->bahasa === null)
-            $cvProfile->bahasa = [];
-        if ($cvProfile->kegiatan_organisasi === null)
-            $cvProfile->kegiatan_organisasi = [];
-        if ($cvProfile->proyek === null)
-            $cvProfile->proyek = [];
-        $data = $this->getAllCvData($user, $cvProfile);
-
-        return view('profile.cv.template-ats', $data);
+        return view('profile.cv.template-ats', $this->buildPreviewData());
     }
 
     public function generate()
     {
-        // For now, same as preview but intended to trigger print via JS
-        $user = auth()->user();
-        $cvProfile = CvProfile::firstOrCreate(
-            ['user_id' => $user->id],
-            ['tentang_diri' => '', 'pendidikan' => [], 'pengalaman_kerja' => [], 'kegiatan_organisasi' => [], 'proyek' => [], 'keahlian' => [], 'sertifikasi' => [], 'bahasa' => [], 'template' => 'modern']
-        );
-        if ($cvProfile->bahasa === null)
-            $cvProfile->bahasa = [];
-        if ($cvProfile->kegiatan_organisasi === null)
-            $cvProfile->kegiatan_organisasi = [];
-        if ($cvProfile->proyek === null)
-            $cvProfile->proyek = [];
-        $data = $this->getAllCvData($user, $cvProfile);
-        $data['is_print'] = true;
+        // Same as preview but triggers print via JS
+        return view('profile.cv.template-ats', $this->buildPreviewData(isPrint: true));
+    }
 
-        return view('profile.cv.template-ats', $data);
+    /**
+     * Shared preview/generate data builder (CV-5 DRY).
+     */
+    private function buildPreviewData(bool $isPrint = false): array
+    {
+        $user = auth()->user();
+        $cvProfile = CvProfile::firstOrNew(
+            ['user_id' => $user->id],
+            ['tentang_diri' => '', 'template' => 'modern']
+        );
+
+        $data = $this->getAllCvData($user, $cvProfile);
+        $data['is_print'] = $isPrint;
+
+        return $data;
     }
 
     public function getAllCvData($user, $cvProfile)
@@ -328,56 +258,19 @@ class CvBuilderController extends Controller
             'sertifikasi' => $cvProfile->sertifikasi ?? [],
         ];
 
-        // Populate sync data
+        // Populate sync data — kegiatan via centralised service (CV-2/CV-4)
         if ($user->student) {
             $data['user']['nim'] = $user->student->student_number;
             $data['user']['angkatan'] = $user->student->cohort_year;
 
-            $riwayat = RiwayatKegiatan::with('kegiatan')
-                ->where('student_id', $user->student->id)
-                ->where('verification_status', 'approved')
-                ->get();
-            $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $user->student->id)->get();
-            $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $user->student->id))
-                ->with(['panitia' => fn($q) => $q->where('students.id', $user->student->id)])
-                ->get();
-
-            $existingKegiatanIds = $riwayat->pluck('kegiatan_id')->filter()->toArray();
-
-            foreach ($riwayat as $rw) {
-                $data['kegiatan'][] = [
-                    'nama' => $rw->nama_kegiatan,
-                    'peran' => $rw->peran_label,
-                    'tanggal' => $rw->tanggal_display,
-                ];
-            }
-
-            foreach ($kegiatanAsKetua as $kg) {
-                if (!in_array($kg->id, $existingKegiatanIds)) {
-                    $data['kegiatan'][] = [
-                        'nama' => $kg->judul,
-                        'peran' => 'Ketua Pelaksana',
-                        'tanggal' => $kg->tanggal_mulai,
-                    ];
-                    $existingKegiatanIds[] = $kg->id;
-                }
-            }
-
-            foreach ($kegiatanAsPanitia as $kg) {
-                if (!in_array($kg->id, $existingKegiatanIds)) {
-                    $peran = 'Panitia';
-                    $panitiaCurrent = $kg->panitia->first();
-                    if ($panitiaCurrent && !empty($panitiaCurrent->pivot?->peran)) {
-                        $peran = ucfirst($panitiaCurrent->pivot->peran);
-                    }
-                    $data['kegiatan'][] = [
-                        'nama' => $kg->judul,
-                        'peran' => $peran,
-                        'tanggal' => $kg->tanggal_mulai,
-                    ];
-                    $existingKegiatanIds[] = $kg->id;
-                }
-            }
+            $data['kegiatan'] = $this->kegiatanService
+                ->getMergedKegiatan($user)
+                ->map(fn($item) => [
+                    'nama'    => $item['nama'],
+                    'peran'   => $item['peran'],
+                    'tanggal' => $item['tanggal'],
+                ])
+                ->toArray();
         }
 
         if ($user->hasRole('alumni')) {

@@ -164,8 +164,8 @@ Route::middleware('auth')->group(function () {
         ->name('profile.cv.')
         ->group(function () {
             Route::get('/', [\App\Http\Controllers\CvBuilderController::class, 'index'])->name('index');
-            Route::get('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'loadStep'])->name('step');
-            Route::post('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'saveStep'])->name('step.save');
+            Route::get('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'loadStep'])->name('step')->whereIn('step', ['1','2','3','4','5','6']);
+            Route::post('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'saveStep'])->name('step.save')->whereIn('step', ['1','2','3','4','5']);
             Route::get('/preview', [\App\Http\Controllers\CvBuilderController::class, 'preview'])->name('preview');
             Route::get('/generate', [\App\Http\Controllers\CvBuilderController::class, 'generate'])->name('generate');
         });
