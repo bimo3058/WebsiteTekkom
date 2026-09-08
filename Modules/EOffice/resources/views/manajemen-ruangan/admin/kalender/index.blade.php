@@ -352,7 +352,7 @@
                                                         :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
                                                                                                                                                                                                                                                 ? 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: #6EE7B7; border: 1px solid #059669; border-radius:6px; transform: scale(1.05); z-index: 10; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};' 
                                                                                                                                                                                                                                                 : 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: {{ $bgT }}; border:1px solid {{ $borderT }}; border-radius:6px; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};'"
-                                                        title="Booking Jalur Tol {{ $ruang->nama }} — pukul {{ $hStr }}">
+                                                        title="Booking Cepat {{ $ruang->nama }} pukul {{ $hStr }}">
                                                         <span
                                                             x-show="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}')"
                                                             style="display:none; font-size:12px; font-weight:700;">✓</span>
@@ -723,11 +723,11 @@
                                         Mode Tindakan</label>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label class="border rounded-lg p-3 cursor-pointer transition-colors"
-                                            :class="modeAction === 'internal' ? 'bg-primary-50 border-primary-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                            :class="modeAction === 'internal' ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
                                             <input type="radio" name="tipe_aksi" value="internal" x-model="modeAction"
                                                 class="hidden">
                                             <div class="font-bold text-sm"
-                                                :class="modeAction === 'internal' ? 'text-primary-500' : 'text-gray-700'">
+                                                :class="modeAction === 'internal' ? 'text-emerald-700' : 'text-gray-700'">
                                                 Jadwal Internal</div>
                                             <div class="text-[10px] text-gray-500 mt-1">Blokir Kuliah / Maintenance
                                             </div>
@@ -897,12 +897,8 @@
                             Batal
                         </button>
                         <button type="submit" form="expressBookingForm"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] border border-transparent rounded-lg shadow-sm hover:bg-[#071946] transition-colors focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2">
+                            class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] border border-transparent rounded-lg shadow-sm hover:bg-[#071946] transition-colors focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2">
                             Simpan
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
                         </button>
                     </div>
                 </div>
