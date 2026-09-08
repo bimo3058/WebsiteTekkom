@@ -17,7 +17,7 @@ class PersetujuanController extends Controller
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
 
-        $query = Peminjaman::with(['user.student', 'user.lecturer', 'ruangan'])
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
             ->where(function ($q) use ($date, $time) {
                 $q->where('status', 'menunggu')
                     ->orWhere(function ($q2) use ($date, $time) {
@@ -67,7 +67,7 @@ class PersetujuanController extends Controller
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
 
-        $query = Peminjaman::with(['user.student', 'user.lecturer', 'ruangan'])
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
             ->where('status', '!=', 'menunggu')
             ->where(function ($q) use ($date, $time) {
                 $q->where('status', '!=', 'disetujui')

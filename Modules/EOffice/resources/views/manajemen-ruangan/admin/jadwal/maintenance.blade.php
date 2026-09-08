@@ -203,12 +203,12 @@
             <div class="mp-table-wrap">
                 <table class="mp-table">
                     <thead>
-                        <tr>
-                            <th>TANGGAL</th>
-                            <th>WAKTU</th>
-                            <th>NAMA ACARA</th>
-                            <th>RUANGAN</th>
-                            <th style="width: 80px; text-align: center;">AKSI</th>
+                        <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Tanggal</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Nama Acara</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan</th>
+                            <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width: 80px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>

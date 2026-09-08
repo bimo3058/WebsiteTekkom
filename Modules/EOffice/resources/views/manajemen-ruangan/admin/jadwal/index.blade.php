@@ -526,14 +526,14 @@
                 <div class="mp-table-wrap">
                     <table class="mp-table">
                         <thead>
-                            <tr>
-                                <th>HARI</th>
-                                <th>WAKTU</th>
-                                <th>MATA KULIAH</th>
-                                <th style="text-align: center;">KELAS</th>
-                                <th>RUANGAN</th>
-                                <th>PERIODE</th>
-                                <th style="width: 80px; text-align: center;">AKSI</th>
+                            <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Hari</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Mata Kuliah</th>
+                                <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Kelas</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Periode</th>
+                                <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width: 80px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -548,12 +548,12 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div style="font-weight: 700; color: #0D0D12;">
+                                        <div style="color: #0D0D12;">
                                             {{ substr($j->jam_mulai, 0, 5) }} - {{ substr($j->jam_selesai, 0, 5) }}
                                         </div>
                                     </td>
                                     <td>
-                                        <div style="font-size: 13px; font-weight: 700; color:#0D0D12;">
+                                        <div style="font-size: 13px; color:#0D0D12;">
                                             {{ $j->mata_kuliah ?: '-' }}
                                         </div>
                                     </td>
@@ -564,10 +564,10 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div style="font-weight: 700; color: #0D0D12;">
+                                        <div style="color: #0D0D12;">
                                             {{ $j->ruangan->nama ?? 'Tidak Diketahui' }}
                                             <span
-                                                style="font-size: 12px; color: #666D80; margin-left: 4px; font-weight: 500;">(Lt.
+                                                style="font-size: 12px; color: #666D80; margin-left: 4px;">(Lt.
                                                 {{ $j->ruangan->lantai ?? '-' }})</span>
                                         </div>
                                     </td>

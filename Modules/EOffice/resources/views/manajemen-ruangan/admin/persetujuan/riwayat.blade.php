@@ -109,11 +109,11 @@
         <div class="mp-table-wrap mt-0 border-t-0">
             <table class="mp-table" style="table-layout: auto; width: 100%;">
                 <thead>
-                    <tr>
-                        <th>PENGAJU</th>
-                        <th>RUANGAN & KEGIATAN</th>
-                        <th>WAKTU</th>
-                        <th>STATUS</th>
+                    <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Pengaju</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan & Kegiatan</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -168,21 +168,18 @@
                             </td>
                             <td>
                                 @php
-                                    $style = '';
+                                    $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
                                     if (strtolower($pinjam->status) === 'disetujui')
-                                        $style = 'bg-emerald-100 text-emerald-800';
-                                    elseif (strtolower($pinjam->status) === 'ditolak')
-                                        $style = 'bg-red-100 text-red-800';
+                                        $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
+                                    elseif (strtolower($pinjam->status) === 'ditolak' || strtolower($pinjam->status) === 'dibatalkan')
+                                        $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                     elseif (strtolower($pinjam->status) === 'menunggu')
-                                        $style = 'bg-amber-100 text-amber-800';
+                                        $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
                                     elseif (strtolower($pinjam->status) === 'selesai')
-                                        $style = 'bg-purple-100 text-purple-800';
-                                    else
-                                        $style = 'bg-gray-100 text-gray-800';
+                                        $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
                                 @endphp
-                                <span
-                                    class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-full {{ $style }} text-[12px] font-medium tracking-wide">
-                                    {{ ucfirst($pinjam->status) }}
+                                <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
+                                    {{ $pinjam->status }}
                                 </span>
                             </td>
                         </tr>
