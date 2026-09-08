@@ -82,11 +82,11 @@
                                         @endif{{ $pinjam->nomor_telepon ?: '-' }}
                                     </div>
                                 </td>
-                                <td>
-                                    <div class="text-[13px] font-medium text-[#111827]">
+                                <td style="max-width: 260px;">
+                                    <div class="text-[13px] font-medium text-[#111827] truncate" title="{{ $pinjam->ruangan->nama ?? 'Dihapus' }}">
                                         {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
                                     </div>
-                                    <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
+                                    <div class="text-[11px] text-gray-500 truncate mt-0.5"
                                         title="{{ $pinjam->tujuan }}">{{ $pinjam->tujuan }}</div>
                                     @if($pinjam->berkas_pendukung)
                                         <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
