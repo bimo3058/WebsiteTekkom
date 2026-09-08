@@ -237,9 +237,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Rencana Proker (Subbab 1 Manajemen Kegiatan) ──────────────────
         // Akses: superadmin, admin_kemahasiswaan, dpm, gpm, ketua_departemen,
-        //        ketua_himpunan, ketua_bidang, ketua_unit
+        //        ketua_himpunan, ketua_bidang, ketua_unit, staff_himpunan
         Route::prefix('proker')->name('proker.')
-            ->middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen|ketua_himpunan|ketua_bidang|ketua_unit')
+            ->middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan')
             ->group(function () {
             Route::get('/', [ProkerController::class, 'index'])->name('index');
             Route::get('/{id}', [ProkerController::class, 'show'])->name('show')->where('id', '[0-9]+');
@@ -248,14 +248,26 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // langsung di browser — kembalikan 403 ramah, bukan halaman debug 405.
             Route::get('/{id}/ajukan', fn () => abort(403))->where('id', '[0-9]+');
 
-            // Pengurus: buat, edit, ajukan — GPM, Kadep & DPM hanya lihat (view-only).
-            // DPM = pembina himpunan: memantau saja, yang membuat & mengajukan = pengurus.
+            // Buat proker — hanya ketua & admin. staff_himpunan TIDAK boleh membuat,
+            // hanya melengkapi/mengedit proker yang sudah dibuat ketua.
             Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|admin|admin_kemahasiswaan|superadmin')
                 ->group(function () {
                 Route::get('/create', [ProkerController::class, 'create'])->name('create');
                 Route::post('/', [ProkerController::class, 'store'])->name('store');
+            });
+
+            // Edit proker — ketua, admin, dan staff_himpunan (pengurus himpunan
+            // melengkapi rencana yang dibuat ketua). GPM, Kadep & DPM view-only.
+            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|admin|admin_kemahasiswaan|superadmin')
+                ->group(function () {
                 Route::get('/{id}/edit', [ProkerController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
                 Route::put('/{id}', [ProkerController::class, 'update'])->name('update')->where('id', '[0-9]+');
+            });
+
+            // Ajukan ke tahap Pelaksanaan — kewenangan ketua saja, sinkron dengan
+            // whitelist di ProkerController::ajukan(). DPM = pembina himpunan: memantau saja.
+            Route::middleware('role:superadmin|ketua_himpunan|ketua_bidang|ketua_unit')
+                ->group(function () {
                 Route::patch('/{id}/ajukan', [ProkerController::class, 'ajukan'])->name('ajukan')->where('id', '[0-9]+');
             });
 

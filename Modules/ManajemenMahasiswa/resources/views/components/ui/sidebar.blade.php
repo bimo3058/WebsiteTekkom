@@ -352,8 +352,9 @@
         @php
             $kegiatanRoutes = ['manajemenmahasiswa.proker.*', 'manajemenmahasiswa.pelaksanaan.*', 'manajemenmahasiswa.kegiatan.*'];
             $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
-            $canViewProker = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit']);
-            $canViewPelaksanaan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
+            // Rencana Proker & Pelaksanaan kini punya daftar akses yang sama —
+            // satu variabel supaya keduanya tidak lepas sinkron dari route middleware.
+            $canViewKegiatanHimpunan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
         @endphp
         <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
@@ -368,13 +369,13 @@
                 </svg>
             </a>
             <div class="sidebar-dropdown-menu">
-                @if($canViewProker)
+                @if($canViewKegiatanHimpunan)
                     <a href="{{ route('manajemenmahasiswa.proker.index') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.proker.*') ? 'active' : '' }}">
                         <span class="nav-label">Rencana Proker</span>
                     </a>
                 @endif
-                @if($canViewPelaksanaan)
+                @if($canViewKegiatanHimpunan)
                     <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pelaksanaan.*') ? 'active' : '' }}">
                         <span class="nav-label">Pelaksanaan Kegiatan</span>

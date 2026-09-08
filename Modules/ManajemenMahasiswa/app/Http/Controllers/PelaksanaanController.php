@@ -176,12 +176,15 @@ class PelaksanaanController extends Controller
         $selectedKategoriIds = old('kategori_kegiatan_id', $proker->kategoris->pluck('id')->toArray());
         $selectedBidangIds   = old('bidang_id', $proker->bidangs->pluck('id')->toArray());
         $existingPanitiaIds  = old('panitia_ids', $existingPanitia->pluck('id')->toArray());
+        // Chip dosen pendamping di-pre-populate lewat JS dari koleksi ini
+        $existingDosenIds    = old('dosen_pendamping_ids', $proker->dosenPendampings->pluck('id')->toArray());
+        $existingDosen       = $dosenList->whereIn('id', $existingDosenIds);
 
         return view('manajemenmahasiswa::pelaksanaan.edit', compact(
             'proker', 'bidangList', 'kategoriList', 'tahunList',
             'mahasiswaList', 'dosenList',
             'existingFoto', 'existingDokumen',
-            'existingPanitia', 'existingPanitiaIds',
+            'existingPanitia', 'existingPanitiaIds', 'existingDosen',
             'selectedKategoriIds', 'selectedBidangIds',
             'isAdmin', 'isPengurus', 'canManage'
         ));
