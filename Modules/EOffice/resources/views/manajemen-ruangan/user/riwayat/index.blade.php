@@ -30,8 +30,13 @@
                             @foreach($riwayats as $riwayat)
                                 <tr class="mp-tr">
                                     <td>
-                                        <div class="text-[13px] font-medium text-[#111827]">
+                                        <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
                                             {{ $riwayat->ruangan->nama }}
+                                            @if($riwayat->created_by && $riwayat->created_by !== $riwayat->user_id)
+                                                <span
+                                                    class="bg-gray-100 text-gray-500 border border-gray-200 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap"
+                                                    title="Didaftarkan oleh Tata Usaha">Didaftarkan TU</span>
+                                            @endif
                                         </div>
                                         <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
                                             title="{{ $riwayat->tujuan }}">

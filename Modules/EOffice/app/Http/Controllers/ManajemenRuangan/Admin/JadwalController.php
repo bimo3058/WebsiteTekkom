@@ -475,4 +475,79 @@ class JadwalController extends Controller
         return redirect()->route('eoffice.peminjaman.admin.jadwal-akademik.index')
             ->with('success', count($insertBatch) . ' row jadwal kelas massal berhasil diimpor!');
     }
+
+    /**
+     * API untuk AJAX Cek Bentrok Realtime di UI
+     */
+    public function checkCollision(Request $request)
+    {
+        $ruanganId = $request->ruangan_id;
+        $tipe = $request->tipe_jadwal; // rutin atau spesifik
+        $kategori = $request->kategori;
+        $jamMulai = $request->jam_mulai;
+        $jamSelesai = $request->jam_selesai;
+        $excludeId = $request->exclude_id; // id jika sedang edit
+
+        if (!$ruanganId || !$jamMulai || !$jamSelesai) {
+            return response()->json(['conflict' => false]);
+        }
+
+        $query = MrJadwalInternal::where('ruangan_id', $ruanganId)
+            ->where(function ($q) use ($jamMulai, $jamSelesai) {
+                $q->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            });
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        if ($tipe === 'rutin' || $kategori === 'Jadwal Akademik (Kuliah)') {
+            if (!$request->hari)
+                return response()->json(['conflict' => false]);
+            $query->where('hari', $request->hari);
+            // Optionally check effective dates if needed, but strict logic prevents overlapping days entirely for safety
+        } else {
+            if (!$request->tanggal_spesifik)
+                return response()->json(['conflict' => false]);
+            $query->where('tanggal_spesifik', $request->tanggal_spesifik);
+        }
+
+        $conflict = $query->first();
+
+        if ($conflict) {
+            $nama = $conflict->kategori === 'Jadwal Akademik (Kuliah)' ? ($conflict->mata_kuliah . ' - ' . $conflict->kelas) : $conflict->keterangan;
+            $range = substr($conflict->jam_mulai, 0, 5) . " - " . substr($conflict->jam_selesai, 0, 5);
+            return response()->json([
+                'conflict' => true,
+                'message' => "Bentrok Jadwal Internal: {$nama} pada jam {$range}"
+            ]);
+        }
+
+        // Pengecekan overlap dengan daftar Booking Mahasiswa yang sudah di ACC
+        // Ini memastikan Jadwal Akademik juga tidak nabrak acara insidental (kalau mau ekstrim aman)
+        // Kita terapkan agar 100% konsisten.
+        $bookingConflictQuery = \Modules\EOffice\Models\Peminjaman::where('ruangan_id', $ruanganId)
+            ->where('status', 'disetujui')
+            ->where(function ($q) use ($jamMulai, $jamSelesai) {
+                $q->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+            });
+
+        if ($tipe === 'rutin' || $kategori === 'Jadwal Akademik (Kuliah)') {
+            // Karena rutin berulang, agak sulit mengecek spesifik, asumsikan bentrok jika hari sama.
+            // Atau untuk rutin biarkan lewat karena akan dicegah di frontend saat mahasiswa booking (Mahasiswa ngalah).
+        } else {
+            $bookingConflict = $bookingConflictQuery->where('tanggal_pinjam', $request->tanggal_spesifik)->first();
+            if ($bookingConflict) {
+                $range = substr($bookingConflict->jam_mulai, 0, 5) . " - " . substr($bookingConflict->jam_selesai, 0, 5);
+                return response()->json([
+                    'conflict' => true,
+                    'message' => "Tabrakan dengan Booking Mahasiswa: '{$bookingConflict->tujuan}' jam {$range}"
+                ]);
+            }
+        }
+
+        return response()->json(['conflict' => false]);
+    }
 }

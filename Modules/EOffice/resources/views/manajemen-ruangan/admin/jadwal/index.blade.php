@@ -1,8 +1,59 @@
 <x-eoffice::manajemen-ruangan.layout
     pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Event dan Maintenance' }}">
 
-    <div
-        x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}' }">
+    <div x-data="{ 
+        showModal: false, 
+        showImportModal: false, 
+        formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', 
+        kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}',
+        ruanganId: '',
+        currentDay: '1',
+        jamMulai: '',
+        jamSelesai: '',
+        conflictError: '',
+        isCheckingOut: false,
+        checkTimeout: null,
+        
+        triggerCheck() {
+            if(this.checkTimeout) clearTimeout(this.checkTimeout);
+            this.isCheckingOut = true;
+            this.checkTimeout = setTimeout(() => {
+                this.executeCheck();
+            }, 500);
+        },
+        
+        async executeCheck() {
+            if (!this.ruanganId || !this.jamMulai || !this.jamSelesai) {
+                this.isCheckingOut = false;
+                this.conflictError = '';
+                return;
+            }
+            
+            try {
+                let url = `{{ route('eoffice.peminjaman.admin.jadwal-internal.check-collision') }}?ruangan_id=${this.ruanganId}&tipe_jadwal=${this.formType}&kategori=${this.kategoriType}&hari=${this.currentDay}&jam_mulai=${this.jamMulai}&jam_selesai=${this.jamSelesai}`;
+                let res = await fetch(url);
+                let data = await res.json();
+                
+                if (data.conflict) {
+                    this.conflictError = data.message;
+                } else {
+                    this.conflictError = '';
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.isCheckingOut = false;
+            }
+        },
+
+        resetForm() {
+            this.ruanganId = '';
+            this.currentDay = '1';
+            this.jamMulai = '';
+            this.jamSelesai = '';
+            this.conflictError = '';
+        }
+    }">
         <div class="mp-page-header">
             <div>
                 @if($viewMode === 'akademik')
@@ -113,7 +164,7 @@
                                     <label
                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Pilih
                                         Ruangan</label>
-                                    <select name="ruangan_id" required class="mp-input text-[14px]">
+                                    <select name="ruangan_id" required class="mp-input text-[14px]" x-model="ruanganId" @change="triggerCheck()">
                                         <option value="" disabled selected>-- Pilih Ruangan Kelas --</option>
                                         @foreach($ruangans as $r)
                                             <option value="{{ $r->id }}">{{ $r->nama }} - Lt. {{ $r->lantai }}</option>
@@ -150,7 +201,7 @@
                                         <label
                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari
                                             Pertemuan</label>
-                                        <select name="hari" required class="mp-input text-[14px]">
+                                        <select name="hari" required class="mp-input text-[14px]" x-model="currentDay" @change="triggerCheck()">
                                             <option value="1">Senin</option>
                                             <option value="2">Selasa</option>
                                             <option value="3">Rabu</option>
@@ -164,12 +215,12 @@
                                         <div>
                                             <label
                                                 class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Mulai</label>
-                                            <input type="time" name="jam_mulai" required class="mp-input text-[14px]">
+                                            <input type="time" name="jam_mulai" required class="mp-input text-[14px]" x-model="jamMulai" @input="triggerCheck()">
                                         </div>
                                         <div>
                                             <label
                                                 class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Akhir</label>
-                                            <input type="time" name="jam_selesai" required class="mp-input text-[14px]">
+                                            <input type="time" name="jam_selesai" required class="mp-input text-[14px]" x-model="jamSelesai" @input="triggerCheck()">
                                         </div>
                                     </div>
                                 </div>
@@ -196,12 +247,18 @@
                                             class="mp-input text-[14px]">
                                     </div>
                                 </div>
+                                
+
+                                <div x-show="conflictError" x-transition class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
+                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span x-text="conflictError"></span>
+                                </div>
                             </div>
 
                             <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                <button type="button" @click="showModal = false"
+                                <button type="button" @click="showModal = false; resetForm()"
                                     class="mp-btn secondary md">Batal</button>
-                                <button type="submit" class="mp-btn primary md">Simpan Konfigurasi</button>
+                                <button type="submit" class="mp-btn primary md" :disabled="conflictError !== '' || isCheckingOut">Simpan Konfigurasi</button>
                             </div>
                         </form>
                     </div>
@@ -525,7 +582,59 @@
                                         </div>
                                     </td>
                                     <td style="text-align: center;"
-                                        x-data="{ showDropdown: false, showEditModal: false, formType: '{{ $j->tipe_jadwal }}', kategoriType: '{{ $j->kategori }}' }">
+                                        x-data="{ 
+                                            showDropdown: false, 
+                                            showEditModal: false, 
+                                            formType: '{{ $j->tipe_jadwal }}', 
+                                            kategoriType: '{{ $j->kategori }}',
+                                            ruanganId: '{{ $j->ruangan_id }}',
+                                            currentDay: '{{ $j->hari }}',
+                                            jamMulai: '{{ substr($j->jam_mulai, 0, 5) }}',
+                                            jamSelesai: '{{ substr($j->jam_selesai, 0, 5) }}',
+                                            conflictError: '',
+                                            isCheckingOut: false,
+                                            checkTimeout: null,
+                                            
+                                            triggerCheck() {
+                                                if(this.checkTimeout) clearTimeout(this.checkTimeout);
+                                                this.isCheckingOut = true;
+                                                this.checkTimeout = setTimeout(() => {
+                                                    this.executeCheck();
+                                                }, 500);
+                                            },
+                                            
+                                            async executeCheck() {
+                                                if (!this.ruanganId || !this.jamMulai || !this.jamSelesai) {
+                                                    this.isCheckingOut = false;
+                                                    this.conflictError = '';
+                                                    return;
+                                                }
+                                                
+                                                try {
+                                                    let url = `{{ route('eoffice.peminjaman.admin.jadwal-internal.check-collision') }}?ruangan_id=${this.ruanganId}&tipe_jadwal=${this.formType}&kategori=${this.kategoriType}&hari=${this.currentDay}&jam_mulai=${this.jamMulai}&jam_selesai=${this.jamSelesai}&exclude_id={{ $j->id }}`;
+                                                    let res = await fetch(url);
+                                                    let data = await res.json();
+                                                    
+                                                    if (data.conflict) {
+                                                        this.conflictError = data.message;
+                                                    } else {
+                                                        this.conflictError = '';
+                                                    }
+                                                } catch (e) {
+                                                    console.error(e);
+                                                } finally {
+                                                    this.isCheckingOut = false;
+                                                }
+                                            },
+                                            
+                                            resetEditForm() {
+                                                this.ruanganId = '{{ $j->ruangan_id }}';
+                                                this.currentDay = '{{ $j->hari }}';
+                                                this.jamMulai = '{{ substr($j->jam_mulai, 0, 5) }}';
+                                                this.jamSelesai = '{{ substr($j->jam_selesai, 0, 5) }}';
+                                                this.conflictError = '';
+                                            }
+                                        }">
                                         <div class="relative inline-flex justify-center w-full relative z-[1]">
                                             <button type="button" @click="showDropdown = !showDropdown"
                                                 @click.away="showDropdown = false"
@@ -590,7 +699,7 @@
                                                     x-transition:leave-start="opacity-100"
                                                     x-transition:leave-end="opacity-0"
                                                     class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-md"
-                                                    aria-hidden="true" @click="showEditModal = false"></div>
+                                                    aria-hidden="true" @click="showEditModal = false; resetEditForm()"></div>
                                                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen"
                                                     aria-hidden="true">&#8203;</span>
 
@@ -607,7 +716,7 @@
                                                         <h3 class="text-[18px] font-bold text-gray-900" id="modal-title">
                                                             Edit
                                                             Jadwal Internal</h3>
-                                                        <button type="button" @click="showEditModal = false"
+                                                        <button type="button" @click="showEditModal = false; resetEditForm()"
                                                             class="text-gray-400 hover:text-gray-500">
                                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
@@ -628,7 +737,7 @@
                                                                     class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Tipe
                                                                     Ruangan</label>
                                                                 <select name="ruangan_id" required
-                                                                    class="mp-input text-[14px]">
+                                                                    class="mp-input text-[14px]" x-model="ruanganId" @change="triggerCheck()">
                                                                     @foreach($ruangans as $r)
                                                                         <option value="{{ $r->id }}" {{ $r->id == $j->ruangan_id ? 'selected' : '' }}>{{ $r->nama }} - Lt.
                                                                             {{ $r->lantai }}
@@ -674,7 +783,7 @@
                                                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari
                                                                         Pertemuan</label>
                                                                     <select name="hari" required
-                                                                        class="mp-input text-[14px]">
+                                                                        class="mp-input text-[14px]" x-model="currentDay" @change="triggerCheck()">
                                                                         <option value="1" {{ $j->hari == 1 ? 'selected' : '' }}>Senin</option>
                                                                         <option value="2" {{ $j->hari == 2 ? 'selected' : '' }}>Selasa</option>
                                                                         <option value="3" {{ $j->hari == 3 ? 'selected' : '' }}>Rabu</option>
@@ -689,14 +798,14 @@
                                                                         <label
                                                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Mulai</label>
                                                                         <input type="time" name="jam_mulai"
-                                                                            value="{{ substr($j->jam_mulai, 0, 5) }}"
+                                                                            x-model="jamMulai" @input="triggerCheck()"
                                                                             required class="mp-input text-[14px]">
                                                                     </div>
                                                                     <div>
                                                                         <label
                                                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Akhir</label>
                                                                         <input type="time" name="jam_selesai"
-                                                                            value="{{ substr($j->jam_selesai, 0, 5) }}"
+                                                                            x-model="jamSelesai" @input="triggerCheck()"
                                                                             required class="mp-input text-[14px]">
                                                                     </div>
                                                                 </div>
@@ -726,13 +835,17 @@
                                                                         class="mp-input text-[14px]">
                                                                 </div>
                                                             </div>
+                                                            <div x-show="conflictError" x-transition class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
+                                                                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                                <span x-text="conflictError"></span>
+                                                            </div>
                                                         </div>
 
                                                         <div
                                                             class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                                            <button type="button" @click="showEditModal = false"
+                                                            <button type="button" @click="showEditModal = false; resetEditForm()"
                                                                 class="mp-btn secondary md">Batal</button>
-                                                            <button type="submit" class="mp-btn primary md">Simpan
+                                                            <button type="submit" class="mp-btn primary md" :disabled="conflictError !== '' || isCheckingOut">Simpan
                                                                 Perubahan</button>
                                                         </div>
                                                     </form>

@@ -53,8 +53,8 @@
                     <thead>
                         <tr>
                             <th>PENGAJU</th>
-                            <th>RUANGAN & TUJUAN</th>
-                            <th>WAKTU ACARA</th>
+                            <th>RUANGAN & KEGIATAN</th>
+                            <th>WAKTU</th>
                             <th>STATUS</th>
                             <th style="width: 120px; text-align: center;">AKSI</th>
                         </tr>
@@ -72,7 +72,13 @@
                                         @endif
                                     </div>
                                     <div class="text-[11px] text-gray-500 mt-0.5">
-                                        @if(!empty($pinjam->user->external_id))({{ $pinjam->user->external_id }})
+                                        @php
+                                            $identityNumber = null;
+                                            if ($pinjam->user) {
+                                                $identityNumber = $pinjam->user->student->student_number ?? $pinjam->user->lecturer->employee_number ?? $pinjam->user->external_id;
+                                            }
+                                        @endphp
+                                        @if($identityNumber)({{ $identityNumber }})
                                         @endif{{ $pinjam->nomor_telepon ?: '-' }}
                                     </div>
                                 </td>
@@ -116,6 +122,8 @@
                                             $style = 'bg-purple-100 text-purple-800';
                                         else
                                             $style = 'bg-gray-100 text-gray-800';
+
+                                        $berkasUrl = $pinjam->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) : '';
                                     @endphp
                                     <span
                                         class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-full {{ $style }} text-[12px] font-medium tracking-wide">
@@ -124,7 +132,7 @@
                                 </td>
                                 <td style="text-align: center;">
                                     <button
-                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}')"
+                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}', '{{ addslashes($pinjam->ruangan->nama ?? 'Ruangan Dihapus') }}', '{{ addslashes($pinjam->tujuan) }}', '{{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}', '{{ $berkasUrl }}')"
                                         class="h-8 px-4 rounded-md bg-white border border-gray-200 text-[#0B266E] text-[12px] font-bold hover:bg-gray-50 shadow-sm transition-colors">
                                         Kelola
                                     </button>
@@ -239,16 +247,51 @@
                         <input type="hidden" name="status" x-model="selectedAction">
 
                         <div class="px-6 py-6 flex-1 overflow-y-auto bg-slate-50/30">
-                            <p class="text-sm text-gray-600 mb-6">Tentukan penanganan pengajuan ruangan dari <span
+                            <p class="text-sm text-gray-600 mb-4">Tentukan penanganan pengajuan dari <span
                                     class="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded"
                                     x-text="selectedName"></span>.</p>
+
+                            <!-- Ringkasan Informasi -->
+                            <div class="mb-5 p-4 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
+                                <h4
+                                    class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
+                                    Informasi Pengajuan</h4>
+                                <div class="grid grid-cols-[80px_1fr] gap-x-2 gap-y-2 text-[13px]">
+                                    <div class="text-slate-500 font-medium">Ruangan</div>
+                                    <div class="text-slate-800 font-bold" x-text="selectedRuanganName"></div>
+
+                                    <div class="text-slate-500 font-medium">Waktu</div>
+                                    <div class="text-slate-800 font-bold">
+                                        <span x-text="selectedFormatTanggal"></span> <span
+                                            class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs ml-1 font-semibold border border-indigo-100"
+                                            x-text="selectedJamMulai + ' - ' + selectedJamSelesai + ' WIB'"></span>
+                                    </div>
+
+                                    <div class="text-slate-500 font-medium">Kegiatan</div>
+                                    <div class="text-slate-800 font-medium leading-snug" x-text="selectedKegiatan">
+                                    </div>
+
+                                    <div class="text-slate-500 font-medium pt-1">Berkas</div>
+                                    <div class="pt-1">
+                                        <template x-if="selectedBerkasUrl">
+                                            <a :href="selectedBerkasUrl" target="_blank"
+                                                class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors mt-0.5 inline-block">
+                                                Lihat Berkas
+                                            </a>
+                                        </template>
+                                        <template x-if="!selectedBerkasUrl">
+                                            <span class="text-gray-400 italic text-[12px]">Tidak dilampirkan</span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
 
                             <!-- Jika Status Menunggu -->
                             <div x-show="selectedStatus === 'menunggu'" class="grid grid-cols-2 gap-3 mb-5">
                                 <label class="cursor-pointer">
-                                    <input type="radio" x-model="selectedAction" value="disetujui" class="peer sr-only">
-                                    <div
-                                        class="rounded-xl border-2 border-gray-100 px-4 py-3.5 peer-checked:border-emerald-500 peer-checked:bg-emerald-50/50 hover:bg-gray-50 transition-all text-center text-gray-700 peer-checked:text-emerald-700 font-semibold text-sm flex items-center justify-center gap-2">
+                                    <input type="radio" x-model="selectedAction" value="disetujui" class="sr-only">
+                                    <div :class="selectedAction === 'disetujui' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
+                                        class="rounded-xl border-2 px-4 py-3.5 transition-all text-center font-semibold text-sm flex items-center justify-center gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7">
@@ -258,9 +301,9 @@
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
-                                    <input type="radio" x-model="selectedAction" value="ditolak" class="peer sr-only">
-                                    <div
-                                        class="rounded-xl border-2 border-gray-100 px-4 py-3.5 peer-checked:border-red-500 peer-checked:bg-red-50/50 hover:bg-gray-50 transition-all text-center text-gray-700 peer-checked:text-red-700 font-semibold text-sm flex items-center justify-center gap-2">
+                                    <input type="radio" x-model="selectedAction" value="ditolak" class="sr-only">
+                                    <div :class="selectedAction === 'ditolak' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
+                                        class="rounded-xl border-2 px-4 py-3.5 transition-all text-center font-semibold text-sm flex items-center justify-center gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -288,12 +331,12 @@
 
                                 <div class="grid grid-cols-2 gap-3">
                                     <label class="cursor-pointer block">
-                                        <input type="radio" x-model="selectedAction" value="ditolak"
-                                            class="peer sr-only">
-                                        <div
-                                            class="rounded-xl border-2 border-gray-100 px-3 py-2.5 peer-checked:border-red-500 peer-checked:bg-red-50/50 hover:bg-gray-50 transition-all text-center text-gray-700 peer-checked:text-red-700 font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
-                                            <svg class="w-4 h-4 text-red-600/70" fill="none" stroke="currentColor"
-                                                stroke-width="2" viewBox="0 0 24 24">
+                                        <input type="radio" x-model="selectedAction" value="ditolak" class="sr-only">
+                                        <div :class="selectedAction === 'ditolak' ? 'border-red-500 bg-red-50 text-red-700' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
+                                            class="rounded-xl border-2 px-3 py-2.5 transition-all text-center font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                                viewBox="0 0 24 24"
+                                                :class="selectedAction === 'ditolak' ? 'text-red-700' : 'text-red-600/70'">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z">
                                                 </path>
@@ -303,11 +346,12 @@
                                     </label>
 
                                     <label class="cursor-pointer block">
-                                        <input type="radio" x-model="selectedAction" value="edit" class="peer sr-only">
-                                        <div
-                                            class="rounded-xl border-2 border-gray-100 px-3 py-2.5 peer-checked:border-[#0B266E] peer-checked:bg-blue-50/50 hover:bg-gray-50 transition-all text-center text-gray-700 peer-checked:text-[#0B266E] font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
-                                            <svg class="w-4 h-4 text-[#0B266E]/70" fill="none" stroke="currentColor"
-                                                stroke-width="2" viewBox="0 0 24 24">
+                                        <input type="radio" x-model="selectedAction" value="edit" class="sr-only">
+                                        <div :class="selectedAction === 'edit' ? 'border-[#0B266E] bg-blue-50 text-[#0B266E]' : 'border-gray-100 hover:bg-gray-50 text-gray-700'"
+                                            class="rounded-xl border-2 px-3 py-2.5 transition-all text-center font-semibold text-[13px] flex flex-col items-center justify-center gap-1.5 h-full leading-tight">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
+                                                viewBox="0 0 24 24"
+                                                :class="selectedAction === 'edit' ? 'text-[#0B266E]' : 'text-[#0B266E]/70'">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                                 </path>
@@ -333,18 +377,24 @@
                                 </h4>
 
                                 <div class="grid grid-cols-1 gap-4">
-                                    <div>
-                                        <label
-                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Pindahkan
-                                            Ke Ruangan <span class="text-red-500">*</span></label>
-                                        <select name="override_ruangan_id" x-model="currentRoom"
-                                            class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
-                                            :required="selectedAction === 'edit'">
-                                            <option value="">Pilih Ruangan...</option>
-                                            @foreach($ruangans as $ruangan)
-                                                <option value="{{ $ruangan->id }}">{{ $ruangan->nama }}</option>
-                                            @endforeach
-                                        </select>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Pindahkan Ke Ruangan <span class="text-red-500">*</span></label>
+                                            <select name="override_ruangan_id" x-model="currentRoom"
+                                                class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
+                                                :required="selectedAction === 'edit'">
+                                                <option value="">Pilih Ruangan...</option>
+                                                @foreach($ruangans as $ruangan)
+                                                    <option value="{{ $ruangan->id }}">{{ $ruangan->nama }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Ubah Kegiatan <span class="text-red-500">*</span></label>
+                                            <input type="text" name="override_tujuan" x-model="currentTujuan"
+                                                class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
+                                                :required="selectedAction === 'edit'" placeholder="Misal: Rapat Internal">
+                                        </div>
                                     </div>
 
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -403,9 +453,9 @@
                         <div
                             class="px-6 py-4 border-t border-gray-100 bg-white flex-shrink-0 flex gap-3 z-10 w-full justify-end rounded-b-[16px]">
                             <button type="button" @click="closeModal()"
-                                class="py-2.5 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 flex-1 sm:flex-none transition-colors">Batalkan</button>
+                                class="cursor-pointer py-2.5 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 flex-1 sm:flex-none transition-colors">Batalkan</button>
                             <button type="submit"
-                                class="py-2.5 px-6 bg-[#0B266E] text-white rounded-xl font-medium text-sm hover:bg-[#071946] shadow-sm flex-1 sm:flex-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                class="cursor-pointer py-2.5 px-6 bg-[#0B266E] text-white rounded-xl font-medium text-sm hover:bg-[#071946] shadow-sm flex-1 sm:flex-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                 :disabled="!selectedAction || (selectedAction === 'edit' && (conflictError !== '' || isCheckingOut))">Simpan
                                 Perubahan</button>
                         </div>
@@ -425,10 +475,18 @@
                 selectedStatus: '',
                 selectedAction: '',
 
+                selectedRuanganName: '',
+                selectedKegiatan: '',
+                selectedFormatTanggal: '',
+                selectedJamMulai: '',
+                selectedJamSelesai: '',
+                selectedBerkasUrl: '',
+
                 currentRoom: '',
                 currentDate: '',
                 currentJamMulai: '',
                 currentJamSelesai: '',
+                currentTujuan: '',
 
                 conflictError: '',
                 isCheckingOut: false,
@@ -477,15 +535,24 @@
                     }
                 },
 
-                openAction(id, name, status, room, date, jamMulai, jamSelesai) {
+                openAction(id, name, status, ruanganId, tanggal, jamMulai, jamSelesai, ruanganName, kegiatan, formatTanggal, berkasUrl) {
                     this.selectedId = id;
                     this.selectedName = name;
                     this.selectedStatus = status;
+                    this.selectedAction = '';
 
-                    this.currentRoom = room;
-                    this.currentDate = date;
+                    this.selectedRuanganName = ruanganName;
+                    this.selectedKegiatan = kegiatan;
+                    this.selectedFormatTanggal = formatTanggal;
+                    this.selectedJamMulai = jamMulai;
+                    this.selectedJamSelesai = jamSelesai;
+                    this.selectedBerkasUrl = berkasUrl;
+
+                    this.currentRoom = ruanganId;
+                    this.currentDate = tanggal;
                     this.currentJamMulai = jamMulai;
                     this.currentJamSelesai = jamSelesai;
+                    this.currentTujuan = kegiatan;
                     this.conflictError = '';
 
                     if (status === 'disetujui') {
@@ -493,6 +560,7 @@
                     } else {
                         this.selectedAction = '';
                     }
+
                     this.modalTindakan = true;
                 },
 

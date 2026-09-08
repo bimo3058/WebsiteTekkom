@@ -72,7 +72,12 @@
                         @foreach($recentBookings as $booking)
                             <tr class="mp-tr">
                                 <td style="font-weight: 600; color: #111827;">
-                                    {{ $booking->ruangan->nama }}
+                                    <div class="flex items-center gap-2">
+                                        {{ $booking->ruangan->nama }}
+                                        @if($booking->created_by && $booking->created_by !== $booking->user_id)
+                                            <span class="bg-gray-100 text-gray-500 border border-gray-200 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap" title="Didaftarkan oleh Tata Usaha">Didaftarkan TU</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <div style="color: #111827; font-weight: 500;">

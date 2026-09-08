@@ -111,8 +111,8 @@
                 <thead>
                     <tr>
                         <th>PENGAJU</th>
-                        <th>RUANGAN & TUJUAN</th>
-                        <th>WAKTU ACARA</th>
+                        <th>RUANGAN & KEGIATAN</th>
+                        <th>WAKTU</th>
                         <th>STATUS</th>
                     </tr>
                 </thead>
@@ -129,7 +129,13 @@
                                     @endif
                                 </div>
                                 <div class="text-[11px] text-gray-500 mt-0.5">
-                                    @if(!empty($pinjam->user->external_id))({{ $pinjam->user->external_id }})
+                                    @php
+                                        $identityNumber = null;
+                                        if ($pinjam->user) {
+                                            $identityNumber = $pinjam->user->student->student_number ?? $pinjam->user->lecturer->employee_number ?? $pinjam->user->external_id;
+                                        }
+                                    @endphp
+                                    @if($identityNumber)({{ $identityNumber }})
                                     @endif{{ $pinjam->nomor_telepon ?: '-' }}
                                 </div>
                             </td>

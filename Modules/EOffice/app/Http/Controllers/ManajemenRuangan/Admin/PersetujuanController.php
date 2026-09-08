@@ -17,7 +17,7 @@ class PersetujuanController extends Controller
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
 
-        $query = Peminjaman::with(['user', 'ruangan'])
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'ruangan'])
             ->where(function ($q) use ($date, $time) {
                 $q->where('status', 'menunggu')
                     ->orWhere(function ($q2) use ($date, $time) {
@@ -35,7 +35,13 @@ class PersetujuanController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('user', function ($sq) use ($search) {
                     $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
+                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"])
+                        ->orWhereHas('student', function ($ssq) use ($search) {
+                            $ssq->whereRaw('LOWER(student_number) LIKE ?', ["%{$search}%"]);
+                        })
+                        ->orWhereHas('lecturer', function ($lsq) use ($search) {
+                            $lsq->whereRaw('LOWER(employee_number) LIKE ?', ["%{$search}%"]);
+                        });
                 })->orWhereHas('ruangan', function ($sq) use ($search) {
                     $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
                 });
@@ -61,7 +67,7 @@ class PersetujuanController extends Controller
         $date = $now->format('Y-m-d');
         $time = $now->format('H:i:s');
 
-        $query = Peminjaman::with(['user', 'ruangan'])
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'ruangan'])
             ->where('status', '!=', 'menunggu')
             ->where(function ($q) use ($date, $time) {
                 $q->where('status', '!=', 'disetujui')
@@ -180,6 +186,7 @@ class PersetujuanController extends Controller
             'override_tanggal_pinjam' => 'required|date',
             'override_jam_mulai' => 'required|date_format:H:i',
             'override_jam_selesai' => 'required|date_format:H:i|after:override_jam_mulai',
+            'override_tujuan' => 'required|string|max:255',
         ]);
 
         $peminjaman = Peminjaman::findOrFail($id);
@@ -240,6 +247,7 @@ class PersetujuanController extends Controller
             'tanggal_pinjam' => $request->override_tanggal_pinjam,
             'jam_mulai' => $request->override_jam_mulai,
             'jam_selesai' => $request->override_jam_selesai,
+            'tujuan' => $request->override_tujuan,
         ]);
 
         return redirect()->back()->with('success', 'Override sukses! Waktu dan Ruangan peminjaman tersebut berhasil diubah.');
