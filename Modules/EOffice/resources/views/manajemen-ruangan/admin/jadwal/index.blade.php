@@ -552,8 +552,9 @@
                                             {{ substr($j->jam_mulai, 0, 5) }} - {{ substr($j->jam_selesai, 0, 5) }}
                                         </div>
                                     </td>
-                                    <td>
-                                        <div style="font-size: 13px; color:#0D0D12;">
+                                    <td style="max-width: 200px;">
+                                        <div style="font-size: 13px; color:#0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                            title="{{ $j->mata_kuliah ?: '-' }}">
                                             {{ $j->mata_kuliah ?: '-' }}
                                         </div>
                                     </td>
@@ -563,12 +564,11 @@
                                             {{ $j->kelas ?: '-' }}
                                         </div>
                                     </td>
-                                    <td>
-                                        <div style="color: #0D0D12;">
+                                    <td style="max-width: 180px;">
+                                        <div style="color: #0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                            title="{{ $j->ruangan->nama ?? 'Tidak Diketahui' }} (Lt. {{ $j->ruangan->lantai ?? '-' }})">
                                             {{ $j->ruangan->nama ?? 'Tidak Diketahui' }}
-                                            <span
-                                                style="font-size: 12px; color: #666D80; margin-left: 4px;">(Lt.
-                                                {{ $j->ruangan->lantai ?? '-' }})</span>
+                                            <span style="font-size: 12px; color: #666D80; margin-left: 4px;">(Lt. {{ $j->ruangan->lantai ?? '-' }})</span>
                                         </div>
                                     </td>
                                     <td>
