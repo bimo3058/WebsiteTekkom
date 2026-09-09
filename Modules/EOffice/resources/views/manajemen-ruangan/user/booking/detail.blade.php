@@ -63,35 +63,14 @@
                                 @endif
                             </p>
                         </div>
-                        <span class="flex-shrink-0 bg-indigo-50 text-indigo-700 border border-indigo-200 text-sm font-bold px-3 py-1.5 rounded-full">
+                        <span class="flex-shrink-0 bg-white text-[#0B266E] border border-gray-200 text-sm font-bold px-3 py-1.5 rounded-full shadow-sm">
                             {{ $room->kapasitas }} orang
                         </span>
                     </div>
                 </div>
             </div>
 
-            {{-- Room Details Grid --}}
-            <div class="mp-card">
-                <div class="mp-card-header">
-                    <h2 class="font-bold text-gray-800 text-[15px]">Informasi Ruangan</h2>
-                </div>
-                <div class="mp-card-body p-5">
-                    <div class="grid grid-cols-3 divide-x divide-gray-100">
-                        <div class="pr-6 text-center">
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Gedung</p>
-                            <p class="text-[14px] font-bold text-gray-800">{{ $room->lokasi ?? 'Gedung Utama' }}</p>
-                        </div>
-                        <div class="px-6 text-center">
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Lantai</p>
-                            <p class="text-[14px] font-bold text-gray-800">{{ $room->lantai ?? '–' }}</p>
-                        </div>
-                        <div class="pl-6 text-center">
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Kapasitas</p>
-                            <p class="text-[14px] font-bold text-gray-800">{{ $room->kapasitas }} orang</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             {{-- Facilities --}}
             <div class="mp-card">
@@ -99,25 +78,11 @@
                     <h2 class="font-bold text-gray-800 text-[15px]">Fasilitas Tersedia</h2>
                 </div>
                 <div class="mp-card-body p-5">
-                    @php
-                        $facilityIcons = [
-                            'Proyektor' => ['color' => 'bg-purple-50 text-purple-700 border-purple-100'],
-                            'AC' => ['color' => 'bg-blue-50 text-blue-700 border-blue-100'],
-                            'Whiteboard' => ['color' => 'bg-gray-50 text-gray-700 border-gray-200'],
-                            'WiFi' => ['color' => 'bg-indigo-50 text-indigo-700 border-indigo-100'],
-                            'Sound System' => ['color' => 'bg-amber-50 text-amber-700 border-amber-100'],
-                            'CCTV' => ['color' => 'bg-red-50 text-red-700 border-red-100'],
-                            'Meja' => ['color' => 'bg-orange-50 text-orange-700 border-orange-100'],
-                            'Komputer' => ['color' => 'bg-emerald-50 text-emerald-700 border-emerald-100'],
-                        ];
-                    @endphp
-
                     @if (count($fasilitas) > 0)
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div class="flex flex-wrap gap-2.5">
                             @foreach ($fasilitas as $fas)
-                                @php $fInfo = $facilityIcons[$fas] ?? ['color' => 'bg-gray-50 text-gray-700 border-gray-200']; @endphp
-                                <div class="flex items-center gap-2.5 p-3 rounded-xl border {{ $fInfo['color'] }}">
-                                    <span class="text-[13px] font-semibold">{{ $fas }}</span>
+                                <div class="inline-flex items-center px-3 py-1.5 rounded-lg border bg-blue-50 text-blue-700 border-blue-100">
+                                    <span class="text-[12px] font-semibold">{{ $fas }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -133,17 +98,17 @@
         <div class="space-y-5">
 
             {{-- CTA Card --}}
-            <div class="mp-card bg-gradient-to-br from-[#0B266E] to-[#1a3c94] text-white overflow-hidden">
+            <div class="rounded-xl border border-[#0B266E] bg-gradient-to-br from-[#0B266E] to-[#1a3c94] text-white overflow-hidden shadow-md">
                 <div class="p-5">
                     <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-[15px] font-bold mb-1">Ingin memakai ruangan ini?</h3>
-                    <p class="text-[12px] text-indigo-200 mb-4 leading-relaxed">Cek kalender jadwal mingguan untuk slot kosong yang tersedia lalu ajukan booking langsung!</p>
+                    <h3 class="text-[15px] font-bold mb-1 text-white">Ingin memakai ruangan ini?</h3>
+                    <p class="text-[12px] text-blue-100 mb-4 leading-relaxed">Cek kalender jadwal mingguan untuk slot kosong yang tersedia lalu ajukan booking langsung!</p>
                     <a href="{{ $kalenderUrl }}"
-                        class="block w-full py-2.5 text-center text-[13px] font-bold bg-white text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
+                        class="block w-full py-2.5 text-center text-[13px] font-bold bg-white text-[#0B266E] rounded-lg hover:bg-blue-50 transition-colors shadow-sm">
                         Lihat Kalender & Booking
                     </a>
                 </div>
@@ -187,6 +152,7 @@
                             @endforeach
                         </div>
                     @else
+                        <div class="p-5">
                             <p class="text-[13px] font-bold text-gray-700 mb-0.5">Kosong</p>
                             <p class="text-[11px] text-gray-400">Tidak ada booking dalam 7 hari ke depan!</p>
                         </div>
