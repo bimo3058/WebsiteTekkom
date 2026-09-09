@@ -33,9 +33,9 @@
                     'type' => 'Peminjaman',
                     'telepon' => $b->nomor_telepon ?? '-',
                     'label' => strtoupper(substr($b->user->name ?? 'Mhs', 0, 15)),
-                    'bg' => $isMenunggu ? '#FEF9C3' : '#DBEAFE',
-                    'border' => $isMenunggu ? '#FBBF24' : '#60A5FA',
-                    'text' => $isMenunggu ? '#B45309' : '#1E40AF',
+                    'bg' => $isMenunggu ? '#FEF9C3' : '#EDE9FE',
+                    'border' => $isMenunggu ? '#FBBF24' : '#C4B5FD',
+                    'text' => $isMenunggu ? '#B45309' : '#5B21B6',
                     'cursor' => 'pointer'
                 ];
             }
@@ -50,9 +50,9 @@
                 $selesai += 1;
             }
 
-            $bg = $j->tipe_jadwal === 'rutin' ? '#EDE9FE' : '#FEE2E2';
-            $border = $j->tipe_jadwal === 'rutin' ? '#C4B5FD' : '#FCA5A5';
-            $text = $j->tipe_jadwal === 'rutin' ? '#5B21B6' : '#991B1B';
+            $bg = $j->tipe_jadwal === 'rutin' ? '#DBEAFE' : '#FEE2E2';
+            $border = $j->tipe_jadwal === 'rutin' ? '#60A5FA' : '#FCA5A5';
+            $text = $j->tipe_jadwal === 'rutin' ? '#1E40AF' : '#991B1B';
             $eventName = $j->mata_kuliah ? trim($j->mata_kuliah . ' ' . $j->kelas) : ($j->keterangan ?: $j->kategori);
             $payload = [
                 'id' => 'it_' . $j->id,
@@ -282,11 +282,11 @@
                                 </th>
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}"
-                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                                                                        {{ $day->isToday() ? 'background: #EBEDF6; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700;
+                                            {{ $day->isToday() ? 'background: #EFF6FF; color: #1D4ED8;' : 'background: #F8F9FB; color: #111827;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
-                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#5D6DA2' : '#6B7280' }}; margin-top:2px;">
+                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#3B82F6' : '#6B7280' }}; margin-top:2px;">
                                             {{ $day->format('d/m') }}
                                         </div>
                                     </th>

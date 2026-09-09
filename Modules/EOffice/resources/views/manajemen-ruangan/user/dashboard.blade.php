@@ -88,15 +88,22 @@
                                 </td>
                                 <td style="color: #4B5563;">{{ Str::limit($booking->tujuan, 30) }}</td>
                                 <td>
-                                    @if($booking->status == 'disetujui')
-                                        <span class="px-3.5 py-1 rounded-full text-[13px] font-medium bg-emerald-50 text-emerald-600 inline-flex items-center whitespace-nowrap">Disetujui</span>
-                                    @elseif($booking->status == 'menunggu')
-                                        <span class="px-3.5 py-1 rounded-full text-[13px] font-medium bg-amber-50 text-amber-600 inline-flex items-center whitespace-nowrap">Menunggu</span>
-                                    @elseif($booking->status == 'ditolak')
-                                        <span class="px-3.5 py-1 rounded-full text-[13px] font-medium bg-red-50 text-red-600 inline-flex items-center whitespace-nowrap">Ditolak</span>
-                                    @else
-                                        <span class="px-3.5 py-1 rounded-full text-[13px] font-medium bg-gray-100 text-gray-600 inline-flex items-center whitespace-nowrap">Dibatalkan</span>
-                                    @endif
+                                    @php
+                                        $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
+                                        if ($booking->status === 'disetujui')
+                                            $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
+                                        elseif ($booking->status === 'ditolak')
+                                            $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                        elseif ($booking->status === 'menunggu')
+                                            $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
+                                        elseif ($booking->status === 'selesai')
+                                            $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
+                                        elseif ($booking->status === 'dibatalkan')
+                                            $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                    @endphp
+                                    <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
+                                        {{ $booking->status }}
+                                    </span>
                                 </td>
                             </tr>
                         @endforeach

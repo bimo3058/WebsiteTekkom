@@ -610,9 +610,7 @@
             if (count($peminjamanItems) > 0)
                 $userGroups['Peminjaman'] = $peminjamanItems;
 
-            $userGroups['Akun'] = [
-                ['href' => '#', 'label' => 'Profil', 'match' => 'user.profil', 'icon' => $iUser],
-            ];
+
 
             $sections[] = [
                 'label' => 'Akses Mahasiswa',

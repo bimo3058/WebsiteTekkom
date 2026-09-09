@@ -72,20 +72,22 @@
                                     </td>
                                     <td>
                                         @php
-                                            $style = '';
+                                            $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
                                             if (strtolower($riwayat->status) === 'disetujui')
-                                                $style = 'bg-[#ECF9F7] text-[#267666]';
+                                                $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
                                             elseif (strtolower($riwayat->status) === 'ditolak')
-                                                $style = 'bg-[#FEF2F2] text-[#B91C1C]';
+                                                $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                             elseif (strtolower($riwayat->status) === 'menunggu')
-                                                $style = 'bg-[#FFF9ED] text-[#A77B2E]';
-                                            else
-                                                $style = 'bg-[#ECEFF3] text-[#0D0D12]';
+                                                $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
+                                            elseif (strtolower($riwayat->status) === 'selesai')
+                                                $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
+                                            elseif (strtolower($riwayat->status) === 'dibatalkan')
+                                                $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                                
+                                            $statusText = strtolower($riwayat->status) === 'disetujui' ? 'selesai' : $riwayat->status;
                                         @endphp
-                                        <span
-                                            class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-full {{ $style }} text-[12px] font-medium tracking-wide">
-                                            @if(strtolower($riwayat->status) === 'disetujui') Selesai @else
-                                            {{ ucfirst($riwayat->status) }} @endif
+                                        <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
+                                            {{ $statusText }}
                                         </span>
                                     </td>
                                     <td style="text-align: right;">
