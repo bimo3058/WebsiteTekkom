@@ -15,6 +15,22 @@ use Modules\ManajemenMahasiswa\Models\VerifikasiBukti;
 
 class VerifikasiController extends Controller
 {
+    /**
+     * Batas panjang teks pengajuan.
+     *
+     * Satu tempat, karena angka yang sama dipakai form mahasiswa, form admin di
+     * Direktori, dan validasi keduanya. Sebelumnya form mahasiswa dibatasi 50
+     * huruf sementara form admin 255 — nama lomba resmi yang ditolak di satu
+     * pintu jadi diterima di pintu lain.
+     */
+    public const MAKS_NAMA  = 150;
+    public const MAKS_PERAN = 60;
+
+    /** Jumlah baris per halaman pada daftar milik mahasiswa. */
+    private const PER_HALAMAN_MAHASISWA = 10;
+
+    private const PESAN_UNGGAH_GAGAL = 'Berkas bukti gagal diunggah, jadi pengajuan belum tersimpan. Periksa koneksi Anda lalu coba lagi — bila berkasnya besar, kecilkan dulu ukurannya.';
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -182,6 +198,28 @@ class VerifikasiController extends Controller
     // Digunakan agar pengurus (ketua_unit, dll) bisa langsung submit tanpa
     // harus didaftarkan manual oleh admin terlebih dahulu.
     // -------------------------------------------------------------------------
+
+    /**
+     * Mahasiswa yang belum terdaftar di Direktori tidak boleh diberi NIM darurat.
+     *
+     * Auto-provision di bawah memakai NIM palsu "PENGURUS-<id>" — masuk akal untuk
+     * pengurus/admin yang memang tidak punya baris kemahasiswaan, tetapi untuk
+     * mahasiswa NIM palsu itu ikut tampil di tabel verifikasi admin dan mengotori
+     * dropdown filter angkatan dengan tahun berjalan. Untuk mereka, pengajuan
+     * ditahan sampai datanya dimasukkan admin.
+     */
+    private function belumTerdaftarSebagaiMahasiswa(): bool
+    {
+        return $this->hasRole('mahasiswa')
+            && !Kemahasiswaan::where('user_id', Auth::id())->exists();
+    }
+
+    private function pesanBelumTerdaftar()
+    {
+        return redirect()
+            ->back()
+            ->with('error', 'Data mahasiswa Anda belum terdaftar di Direktori Mahasiswa, jadi pengajuan belum bisa dikirim. Hubungi admin kemahasiswaan untuk didaftarkan lebih dulu.');
+    }
 
     private function ensureStudentRecord(\App\Models\User $user): Student
     {
@@ -398,7 +436,7 @@ class VerifikasiController extends Controller
             });
         }
 
-        $rewardData = $rewardQuery->orderByDesc('claimed_at')->paginate(15);
+        $rewardData = $rewardQuery->orderByDesc('claimed_at')->paginate(15)->withQueryString();
 
         $pendingPrestasiReward = Prestasi::rewardDiajukan()->count();
 
@@ -445,32 +483,26 @@ class VerifikasiController extends Controller
         $student = Student::where('user_id', $user->id)->first();
         $mhs = Kemahasiswaan::where('user_id', $user->id)->first();
 
-        $riwayatData  = collect();
-        $prestasiData = collect();
-        $stats = ['pending' => 0, 'approved' => 0, 'rejected' => 0];
+        // Dipisah per tab & dihalamankan: daftar milik satu mahasiswa bisa
+        // panjang, dan sebelumnya seluruhnya dimuat sekaligus tanpa alat bantu.
+        // Paginator kosong dibuat lewat query yang pasti tidak cocok, supaya
+        // tampilan tetap punya objek paginator meski datanya belum ada.
+        $riwayatData = ($student
+                ? RiwayatKegiatan::with(['kegiatan', 'verifiedBy', 'buktiFiles'])
+                    ->where('student_id', $student->id)
+                    ->manualOnly()
+                : RiwayatKegiatan::whereRaw('1 = 0'))
+            ->orderByDesc('created_at')
+            ->paginate(self::PER_HALAMAN_MAHASISWA, ['*'], 'riwayat_page')
+            ->withQueryString();
 
-        if ($student) {
-            $riwayatData = RiwayatKegiatan::with(['kegiatan', 'verifiedBy', 'buktiFiles'])
-                ->where('student_id', $student->id)
-                ->manualOnly()
-                ->orderByDesc('created_at')
-                ->get();
-
-            $stats['pending']  += $riwayatData->where('verification_status', 'pending')->count();
-            $stats['approved'] += $riwayatData->where('verification_status', 'approved')->count();
-            $stats['rejected'] += $riwayatData->where('verification_status', 'rejected')->count();
-        }
-
-        if ($mhs) {
-            $prestasiData = Prestasi::with(['verifiedBy', 'reviewedBy', 'buktiFiles'])
-                ->where('kemahasiswaan_id', $mhs->id)
-                ->orderByDesc('created_at')
-                ->get();
-
-            $stats['pending']  += $prestasiData->where('verification_status', 'pending')->count();
-            $stats['approved'] += $prestasiData->where('verification_status', 'approved')->count();
-            $stats['rejected'] += $prestasiData->where('verification_status', 'rejected')->count();
-        }
+        $prestasiData = ($mhs
+                ? Prestasi::with(['verifiedBy', 'reviewedBy', 'buktiFiles'])
+                    ->where('kemahasiswaan_id', $mhs->id)
+                : Prestasi::whereRaw('1 = 0'))
+            ->orderByDesc('created_at')
+            ->paginate(self::PER_HALAMAN_MAHASISWA, ['*'], 'prestasi_page')
+            ->withQueryString();
 
         // Rincian dulu, angkanya diturunkan dari situ — supaya "2/2" yang dibaca
         // mahasiswa selalu sama isinya dengan daftar yang menjelaskannya.
@@ -480,16 +512,30 @@ class VerifikasiController extends Controller
 
         $kuota = array_map('count', $kuotaDipakai);
 
+        // Jatah yang sedang dipesan klaim yang masih menunggu. Ditampilkan
+        // terpisah dari yang sudah disetujui — keduanya beda arti bagi mahasiswa
+        // — tetapi dijumlahkan saat menentukan masih ada slot atau tidak.
+        $kuotaMenungguDipakai = $mhs
+            ? $this->rewardKuotaMenungguDaftar($mhs->id)
+            : [Prestasi::KUOTA_UMUM => [], Prestasi::KUOTA_INVENTION => []];
+
+        $kuotaMenunggu = array_map('count', $kuotaMenungguDipakai);
+
+        $kuotaTerpakai = [];
+        foreach (Prestasi::KUOTA_MAKS as $grup => $maks) {
+            $kuotaTerpakai[$grup] = ($kuota[$grup] ?? 0) + ($kuotaMenunggu[$grup] ?? 0);
+        }
+
         $isAlumni = $this->hasRole('alumni');
 
         return view('manajemenmahasiswa::verifikasi.mahasiswa', compact(
             'riwayatData',
             'prestasiData',
-            'stats',
-            'mhs',
-            'student',
             'kuota',
             'kuotaDipakai',
+            'kuotaMenunggu',
+            'kuotaMenungguDipakai',
+            'kuotaTerpakai',
             'tab',
             'isAlumni',
         ))->with('layout', $this->resolveLayout());
@@ -505,16 +551,39 @@ class VerifikasiController extends Controller
             return redirect()->back()->with('error', 'Role alumni tidak dapat mengajukan data baru.');
         }
 
+        if ($this->belumTerdaftarSebagaiMahasiswa()) {
+            return $this->pesanBelumTerdaftar();
+        }
+
         $request->validate([
-            'nama_kegiatan_manual' => 'required|string|max:50',
-            'peran_manual'         => 'required|string|max:50',
-            'tanggal_kegiatan'     => 'required|date',
+            'nama_kegiatan_manual' => 'required|string|max:' . self::MAKS_NAMA,
+            'peran_manual'         => 'required|string|max:' . self::MAKS_PERAN,
+            // Kegiatan yang belum terjadi tidak punya bukti — tanpa batas ini
+            // tahun kegiatan bisa terisi masa depan dan ikut terbawa ke statistik.
+            'tanggal_kegiatan'     => 'required|date|before_or_equal:today',
             'bukti_docs'           => 'required|array|size:1',
             'bukti_docs.*'         => 'file|mimes:pdf|max:10240',
-        ], [], ['bukti_docs' => 'bukti kegiatan']);
+        ], [
+            'tanggal_kegiatan.before_or_equal' => 'Tanggal kegiatan tidak boleh melewati hari ini.',
+        ], ['bukti_docs' => 'bukti kegiatan']);
 
         $user    = Auth::user();
         $student = $this->ensureStudentRecord($user);
+
+        if ($this->riwayatDuplikat($student->id, $request->nama_kegiatan_manual, $request->tanggal_kegiatan)) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Kegiatan dengan nama & tanggal yang sama sudah pernah Anda ajukan. Buka daftar di halaman ini untuk melihat statusnya.');
+        }
+
+        // Unggah dulu, simpan belakangan: pengajuan yang berkasnya gagal naik
+        // tidak boleh tertinggal di antrean admin tanpa bukti apa pun.
+        $berkas = $this->unggahBukti($request, VerifikasiBukti::TYPE_RIWAYAT);
+
+        if ($berkas === null) {
+            return redirect()->back()->withInput()->with('error', self::PESAN_UNGGAH_GAGAL);
+        }
 
         $riwayat = RiwayatKegiatan::create([
             'student_id'           => $student->id,
@@ -526,8 +595,7 @@ class VerifikasiController extends Controller
             'verification_status'  => 'pending',
         ]);
 
-        // Upload bukti files ke Supabase
-        $this->uploadBuktiFiles($request, 'riwayat', $riwayat->id);
+        $this->simpanBukti(VerifikasiBukti::TYPE_RIWAYAT, $riwayat->id, $berkas);
 
         return redirect()
             ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
@@ -544,13 +612,21 @@ class VerifikasiController extends Controller
             return redirect()->back()->with('error', 'Role alumni tidak dapat mengajukan data baru.');
         }
 
+        if ($this->belumTerdaftarSebagaiMahasiswa()) {
+            return $this->pesanBelumTerdaftar();
+        }
+
         $request->validate([
-            'nama_prestasi' => 'required|string|max:50',
+            'nama_prestasi' => 'required|string|max:' . self::MAKS_NAMA,
             'tingkat'       => 'required|in:' . implode(',', Prestasi::TINGKAT_LIST),
-            'tanggal'       => 'required|date',
+            // Prestasi yang belum diraih tidak punya sertifikat — lihat catatan
+            // yang sama pada tanggal kegiatan.
+            'tanggal'       => 'required|date|before_or_equal:today',
             'bukti_docs'    => 'required|array|size:1',
             'bukti_docs.*'  => 'file|mimes:pdf|max:10240',
-        ], [], ['bukti_docs' => 'bukti kegiatan']);
+        ], [
+            'tanggal.before_or_equal' => 'Tanggal prestasi tidak boleh melewati hari ini.',
+        ], ['bukti_docs' => 'bukti kegiatan']);
 
         $user = Auth::user();
 
@@ -565,6 +641,20 @@ class VerifikasiController extends Controller
             ]
         );
 
+        if ($this->prestasiDuplikat($mhs->id, $request->nama_prestasi, $request->tanggal)) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Prestasi dengan nama & tanggal yang sama sudah pernah Anda ajukan. Buka daftar di halaman ini untuk melihat statusnya.');
+        }
+
+        // Unggah dulu, simpan belakangan — lihat catatan pada storeRiwayat().
+        $berkas = $this->unggahBukti($request, VerifikasiBukti::TYPE_PRESTASI);
+
+        if ($berkas === null) {
+            return redirect()->back()->withInput()->with('error', self::PESAN_UNGGAH_GAGAL);
+        }
+
         $prestasi = Prestasi::create([
             'kemahasiswaan_id'    => $mhs->id,
             'nama_prestasi'       => $request->nama_prestasi,
@@ -575,12 +665,62 @@ class VerifikasiController extends Controller
             'claim_status'        => Prestasi::CLAIM_BELUM_AJUKAN,
         ]);
 
-        // Upload bukti files ke Supabase
-        $this->uploadBuktiFiles($request, 'prestasi', $prestasi->id);
+        $this->simpanBukti(VerifikasiBukti::TYPE_PRESTASI, $prestasi->id, $berkas);
 
         return redirect()
             ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
             ->with('success', 'Prestasi berhasil diajukan untuk verifikasi.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Tarik Pengajuan — pemilik menghapus pengajuannya sendiri selama pending
+    //
+    // Sebelum ini satu-satunya cara membetulkan salah ketik atau salah berkas
+    // adalah menunggu admin menolaknya lebih dulu.
+    // -------------------------------------------------------------------------
+
+    public function destroyRiwayat(int $id)
+    {
+        $riwayat = RiwayatKegiatan::with('student')->findOrFail($id);
+
+        if (!$this->ownsRiwayat($riwayat)) {
+            abort(403, 'Anda hanya dapat menarik pengajuan milik sendiri.');
+        }
+
+        if ($riwayat->verification_status !== RiwayatKegiatan::VERIF_PENDING) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+                ->with('error', 'Pengajuan yang sudah diverifikasi tidak dapat ditarik.');
+        }
+
+        $this->hapusBukti(VerifikasiBukti::TYPE_RIWAYAT, $riwayat->id);
+        $riwayat->delete();
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+            ->with('success', 'Pengajuan riwayat kegiatan berhasil ditarik. Anda bisa mengajukannya kembali.');
+    }
+
+    public function destroyPrestasi(int $id)
+    {
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
+
+        if (!$this->ownsPrestasi($prestasi)) {
+            abort(403, 'Anda hanya dapat menarik pengajuan milik sendiri.');
+        }
+
+        if ($prestasi->verification_status !== Prestasi::VERIF_PENDING) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Pengajuan yang sudah diverifikasi tidak dapat ditarik.');
+        }
+
+        $this->hapusBukti(VerifikasiBukti::TYPE_PRESTASI, $prestasi->id);
+        $prestasi->delete();
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+            ->with('success', 'Pengajuan prestasi berhasil ditarik. Anda bisa mengajukannya kembali.');
     }
 
     // -------------------------------------------------------------------------
@@ -736,6 +876,69 @@ class VerifikasiController extends Controller
     }
 
     // -------------------------------------------------------------------------
+    // Batalkan Verifikasi — kembalikan keputusan ke "menunggu"
+    //
+    // Persetujuan/penolakan sebelumnya bersifat final: satu klik keliru tidak
+    // punya jalan pulang, termasuk untuk pengajuan yang ternyata disetujui tanpa
+    // berkas bukti. Keputusan dikosongkan seluruhnya (verifikator, waktu, catatan)
+    // supaya barisnya kembali seperti belum pernah ditinjau.
+    // -------------------------------------------------------------------------
+
+    public function batalkanVerifikasiRiwayat(int $id)
+    {
+        $riwayat = RiwayatKegiatan::findOrFail($id);
+
+        if ($riwayat->verification_status === RiwayatKegiatan::VERIF_PENDING) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+                ->with('error', 'Pengajuan ini memang masih menunggu verifikasi.');
+        }
+
+        $riwayat->update([
+            'verification_status' => RiwayatKegiatan::VERIF_PENDING,
+            'verified_by'         => null,
+            'verified_at'         => null,
+            'verification_note'   => null,
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+            ->with('success', 'Verifikasi dibatalkan. Pengajuan kembali ke daftar menunggu.');
+    }
+
+    public function batalkanVerifikasiPrestasi(int $id)
+    {
+        $prestasi = Prestasi::findOrFail($id);
+
+        if ($prestasi->verification_status === Prestasi::VERIF_PENDING) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Pengajuan ini memang masih menunggu verifikasi.');
+        }
+
+        // Reward hanya boleh lahir dari prestasi yang sudah disetujui. Kalau
+        // rewardnya sudah berjalan, urutannya dibalik dulu dari halaman Klaim
+        // Reward — kalau tidak, akan ada klaim yang menggantung pada prestasi
+        // yang statusnya kembali menunggu.
+        if ($prestasi->reward_status !== Prestasi::CLAIM_BELUM_AJUKAN) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Prestasi ini sudah punya klaim reward. Batalkan klaim rewardnya lebih dulu di halaman Klaim Reward.');
+        }
+
+        $prestasi->update([
+            'verification_status' => Prestasi::VERIF_PENDING,
+            'verified_by'         => null,
+            'verified_at'         => null,
+            'verification_note'   => null,
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+            ->with('success', 'Verifikasi dibatalkan. Pengajuan kembali ke daftar menunggu.');
+    }
+
+    // -------------------------------------------------------------------------
     // Ajukan Reward — Mahasiswa pemilik mengajukan reward prestasinya
     // (Request Bu Bellia / B.2 — dasar SK FT 774/2025)
     // -------------------------------------------------------------------------
@@ -783,17 +986,27 @@ class VerifikasiController extends Controller
                 ->with('error', 'Kombinasi penyelenggara dan capaian tidak valid.');
         }
 
-        // Guard 3: kuota grup ini sudah penuh (SK 774 poin 4 & 5). Pasangan dari
-        // guard yang sama saat admin menyetujui — tanpa ini, pengajuan yang sudah
-        // pasti ditolak tetap masuk antrean dan mahasiswa menunggu tanpa hasil.
+        // Guard 3: kuota grup ini sudah penuh (SK 774 poin 4 & 5).
+        //
+        // Klaim yang masih menunggu ikut dihitung memakai jatah. Tanpa itu kuota
+        // hanya menahan di meja admin: mahasiswa yang punya 1 klaim disetujui
+        // masih membaca "1/2" dan bisa mengantrekan berapa pun klaim baru, yang
+        // semuanya pasti tertahan saat ditinjau satu per satu.
         $grup = Prestasi::tentukanKuotaGrup($penyelenggara, $isInvention);
         $maks = Prestasi::KUOTA_MAKS[$grup];
 
-        if (($this->rewardKuotaTerpakai($prestasi->kemahasiswaan_id)[$grup] ?? 0) >= $maks) {
+        $disetujui = $this->rewardKuotaTerpakai($prestasi->kemahasiswaan_id)[$grup] ?? 0;
+        $menunggu  = $this->rewardKuotaMenunggu($prestasi->kemahasiswaan_id)[$grup] ?? 0;
+
+        if (($disetujui + $menunggu) >= $maks) {
             $labelGrup = Prestasi::KUOTA_LABELS[$grup];
+            $alasan    = $menunggu > 0
+                ? "sudah terpakai atau sedang dipesan pengajuan yang menunggu ({$disetujui} disetujui + {$menunggu} menunggu dari maks {$maks}×)"
+                : "sudah penuh (maks {$maks}×)";
+
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
-                ->with('error', "Kuota reward {$labelGrup} Anda sudah penuh (maks {$maks}×). Buka \"Rincian kuota\" pada keterangan di atas tabel untuk melihat prestasi mana yang sudah memakainya.");
+                ->with('error', "Kuota reward {$labelGrup} Anda {$alasan}. Batalkan salah satu pengajuan yang masih menunggu, atau buka \"Rincian kuota\" pada keterangan di atas tabel untuk melihat prestasi mana yang memakainya.");
         }
 
         $jatah = Prestasi::hitungJatahReward($penyelenggara, $capaian, $isInvention);
@@ -879,6 +1092,10 @@ class VerifikasiController extends Controller
             'reward_penyelenggara' => null,
             'reward_capaian'       => null,
             'reward_is_invention'  => false,
+            // Cap aturan ikut dilepas: klaim yang sudah dibatalkan tidak boleh
+            // menyandang kelompok kuota & nomor SK milik pengajuan yang tak ada.
+            'reward_kuota_grup'    => null,
+            'reward_sk_ref'        => null,
             'reward_jml_mk_max'    => null,
             'reward_sks_max'       => null,
             'reward_mk_diajukan'   => null,
@@ -901,6 +1118,10 @@ class VerifikasiController extends Controller
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.reward.index')
                 ->with('error', 'Hanya pengajuan yang menunggu persetujuan yang dapat disetujui.');
+        }
+
+        if ($tolak = $this->tolakTinjauKlaimSendiri($prestasi)) {
+            return $tolak;
         }
 
         $request->validate([
@@ -946,12 +1167,16 @@ class VerifikasiController extends Controller
 
     public function tolakReward(Request $request, int $id)
     {
-        $prestasi = Prestasi::findOrFail($id);
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
 
         if (!$prestasi->isRewardDiajukan()) {
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.reward.index')
                 ->with('error', 'Hanya pengajuan yang menunggu persetujuan yang dapat ditolak.');
+        }
+
+        if ($tolak = $this->tolakTinjauKlaimSendiri($prestasi)) {
+            return $tolak;
         }
 
         $request->validate([
@@ -977,12 +1202,16 @@ class VerifikasiController extends Controller
 
     public function batalkanPersetujuanReward(Request $request, int $id)
     {
-        $prestasi = Prestasi::findOrFail($id);
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
 
         if (!$prestasi->isRewardDisetujui()) {
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.reward.index', ['reward' => 'disetujui'])
                 ->with('error', 'Hanya reward yang sudah disetujui yang dapat dibatalkan.');
+        }
+
+        if ($tolak = $this->tolakTinjauKlaimSendiri($prestasi)) {
+            return $tolak;
         }
 
         $request->validate([
@@ -991,6 +1220,9 @@ class VerifikasiController extends Controller
 
         $prestasi->update([
             'claim_status'       => Prestasi::CLAIM_DITOLAK,
+            // MK yang pernah ditetapkan ikut dilepas: klaim yang batal tidak boleh
+            // tetap memajang "MK disetujui" bersebelahan dengan lencana Ditolak.
+            'reward_mk_disetujui' => null,
             'reward_note'        => $request->reward_note,
             'reward_reviewed_by' => Auth::id(),
             'reward_reviewed_at' => now(),
@@ -1046,6 +1278,58 @@ class VerifikasiController extends Controller
     private function rewardKuotaTerpakai(int $kemahasiswaanId): array
     {
         return array_map('count', $this->rewardKuotaDipakai($kemahasiswaanId));
+    }
+
+    /**
+     * Klaim yang sedang menunggu persetujuan, per grup — jatah yang sudah dipesan.
+     *
+     * Belum memakan kuota secara resmi, tetapi sudah mengunci slotnya: menyetujui
+     * lebih banyak dari maks tidak mungkin, jadi pengajuan berikutnya ditahan di
+     * depan alih-alih menumpuk di antrean admin sebagai pekerjaan yang pasti
+     * berakhir ditolak.
+     */
+    private function rewardKuotaMenungguDaftar(int $kemahasiswaanId): array
+    {
+        $daftar = [Prestasi::KUOTA_UMUM => [], Prestasi::KUOTA_INVENTION => []];
+
+        $rows = Prestasi::rewardDiajukan()
+            ->where('kemahasiswaan_id', $kemahasiswaanId)
+            ->orderBy('claimed_at')
+            ->get(['id', 'nama_prestasi', 'claimed_at', 'reward_kuota_grup', 'reward_penyelenggara', 'reward_is_invention']);
+
+        foreach ($rows as $r) {
+            $daftar[$r->rewardKuotaGrup()][] = [
+                'id'      => $r->id,
+                'nama'    => $r->nama_prestasi,
+                'tanggal' => $r->claimed_at?->translatedFormat('d M Y'),
+            ];
+        }
+
+        return $daftar;
+    }
+
+    /** Sama seperti rewardKuotaTerpakai(): angkanya diturunkan dari daftarnya. */
+    private function rewardKuotaMenunggu(int $kemahasiswaanId): array
+    {
+        return array_map('count', $this->rewardKuotaMenungguDaftar($kemahasiswaanId));
+    }
+
+    /**
+     * Verifikator tidak boleh memutus klaim reward miliknya sendiri.
+     *
+     * Penjaga yang sama sudah ada pada verifikasi prestasi & riwayat; tanpa ini
+     * seorang admin yang prestasinya disetujui rekannya bisa menyetujui sendiri
+     * kenaikan nilai mata kuliahnya.
+     */
+    private function tolakTinjauKlaimSendiri(Prestasi $prestasi)
+    {
+        if (!$this->ownsPrestasi($prestasi)) {
+            return null;
+        }
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.reward.index')
+            ->with('error', 'Anda tidak dapat meninjau klaim reward yang Anda ajukan sendiri. Mintakan ke verifikator lain.');
     }
 
     // -------------------------------------------------------------------------
@@ -1110,47 +1394,103 @@ class VerifikasiController extends Controller
 
 
     // -------------------------------------------------------------------------
-    // Helper — Upload bukti files ke Supabase
+    // Helper — Berkas bukti
     // -------------------------------------------------------------------------
 
-    private function uploadBuktiFiles(Request $request, string $type, int $parentId): void
+    /**
+     * Unggah berkas bukti ke Supabase, sebelum baris pengajuan dibuat.
+     *
+     * Mengembalikan null bila ada satu saja berkas yang gagal naik; pemanggil
+     * wajib membatalkan pengajuannya. Perilaku lama menelan kegagalan diam-diam:
+     * pengajuan tetap tersimpan, mahasiswa tetap menerima notifikasi hijau, dan
+     * barisnya sampai ke antrean admin tanpa berkas apa pun — beberapa di
+     * antaranya bahkan sudah terlanjur disetujui tanpa bukti.
+     *
+     * Hanya melayani bukti_docs. Slot bukti_images lama ikut dihapus karena
+     * aturan validasinya sudah tidak ada, sehingga jalur itu menerima berkas
+     * jenis & ukuran apa pun.
+     *
+     * @return list<array{nama_file:string,path_file:string,tipe_file:string}>|null
+     */
+    private function unggahBukti(Request $request, string $type): ?array
+    {
+        $supabase = app(SupabaseStorage::class);
+        $berkas   = [];
+
+        foreach ((array) $request->file('bukti_docs', []) as $file) {
+            $path = $supabase->upload($file, 'mk_verifikasi/' . $type . '/docs');
+
+            if (!$path) {
+                // Bersihkan berkas yang sempat naik agar tidak jadi sampah di bucket
+                foreach ($berkas as $sudah) {
+                    $supabase->delete($sudah['path_file']);
+                }
+
+                return null;
+            }
+
+            $berkas[] = [
+                'nama_file' => $file->getClientOriginalName(),
+                'path_file' => $path,
+                'tipe_file' => VerifikasiBukti::TIPE_DOCUMENT,
+            ];
+        }
+
+        return $berkas;
+    }
+
+    /**
+     * @param list<array{nama_file:string,path_file:string,tipe_file:string}> $berkas
+     */
+    private function simpanBukti(string $type, int $parentId, array $berkas): void
+    {
+        foreach ($berkas as $b) {
+            VerifikasiBukti::create($b + [
+                'bukti_type' => $type,
+                'bukti_id'   => $parentId,
+            ]);
+        }
+    }
+
+    /** Hapus berkas bukti sebuah pengajuan, dari basis data maupun dari bucket. */
+    private function hapusBukti(string $type, int $parentId): void
     {
         $supabase = app(SupabaseStorage::class);
 
-        // Upload gambar
-        if ($request->hasFile('bukti_images')) {
-            foreach ($request->file('bukti_images') as $file) {
-                $folder = 'mk_verifikasi/' . $type . '/images';
-                $path = $supabase->upload($file, $folder);
+        $rows = VerifikasiBukti::where('bukti_type', $type)
+            ->where('bukti_id', $parentId)
+            ->get();
 
-                if ($path) {
-                    VerifikasiBukti::create([
-                        'bukti_type' => $type,
-                        'bukti_id'   => $parentId,
-                        'nama_file'  => $file->getClientOriginalName(),
-                        'path_file'  => $path,
-                        'tipe_file'  => VerifikasiBukti::TIPE_IMAGE,
-                    ]);
-                }
-            }
+        foreach ($rows as $row) {
+            $supabase->delete($row->path_file);
+            $row->delete();
         }
+    }
 
-        // Upload dokumen
-        if ($request->hasFile('bukti_docs')) {
-            foreach ($request->file('bukti_docs') as $file) {
-                $folder = 'mk_verifikasi/' . $type . '/docs';
-                $path = $supabase->upload($file, $folder);
+    // -------------------------------------------------------------------------
+    // Helper — Deteksi pengajuan kembar
+    //
+    // Nama + tanggal yang sama dari orang yang sama hampir selalu berarti kiriman
+    // ulang, bukan dua kegiatan berbeda. Yang sudah ditolak sengaja tidak
+    // dihitung: mengajukan ulang setelah ditolak memang alurnya.
+    // -------------------------------------------------------------------------
 
-                if ($path) {
-                    VerifikasiBukti::create([
-                        'bukti_type' => $type,
-                        'bukti_id'   => $parentId,
-                        'nama_file'  => $file->getClientOriginalName(),
-                        'path_file'  => $path,
-                        'tipe_file'  => VerifikasiBukti::TIPE_DOCUMENT,
-                    ]);
-                }
-            }
-        }
+    private function riwayatDuplikat(int $studentId, string $nama, string $tanggal): bool
+    {
+        return RiwayatKegiatan::where('student_id', $studentId)
+            ->manualOnly()
+            ->whereIn('verification_status', [RiwayatKegiatan::VERIF_PENDING, RiwayatKegiatan::VERIF_APPROVED])
+            ->whereRaw('lower(nama_kegiatan_manual) = ?', [mb_strtolower(trim($nama))])
+            ->whereDate('tanggal_kegiatan', $tanggal)
+            ->exists();
+    }
+
+    private function prestasiDuplikat(int $kemahasiswaanId, string $nama, string $tanggal): bool
+    {
+        return Prestasi::where('kemahasiswaan_id', $kemahasiswaanId)
+            ->whereIn('verification_status', [Prestasi::VERIF_PENDING, Prestasi::VERIF_APPROVED])
+            ->whereRaw('lower(nama_prestasi) = ?', [mb_strtolower(trim($nama))])
+            ->whereDate('tanggal', $tanggal)
+            ->exists();
     }
 }

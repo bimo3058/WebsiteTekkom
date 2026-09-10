@@ -638,9 +638,15 @@
     $existingDokumen = $kegiatan->repoMulmed->where('tipe_file', 'document');
     $selectedKategoriIds = old('kategori_kegiatan_id', $kegiatan->kategoris->pluck('id')->toArray());
     $selectedBidangIds = old('bidang_id', $kegiatan->bidangs->pluck('id')->toArray());
-    // Panitia yang sudah ada — untuk pre-populate chips
-    $existingPanitia = $kegiatan->panitia ?? collect();
-    $existingPanitiaIds = old('panitia_ids', $existingPanitia->pluck('id')->toArray());
+    // Panitia untuk pre-populate chips.
+    // Saat form dikembalikan karena validasi gagal, dipulihkan dari isian terakhir
+    // user (old()) dan BUKAN dari database — kalau tidak, panitia yang barusan
+    // ditambah/dihapus tapi belum tersimpan diam-diam kembali ke data lama.
+    $panitiaIdsLama   = old('panitia_ids');
+    $panitiaPeranLama = old('panitia_peran', []);
+    $existingPanitia  = $panitiaIdsLama !== null
+        ? $mahasiswaList->whereIn('id', $panitiaIdsLama)
+        : ($kegiatan->panitia ?? collect());
 @endphp
 
 <!-- Header -->
@@ -886,8 +892,18 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Anggaran (Rp)</label>
+                @php
+                    // Cast `decimal:2` membuat anggaran keluar sebagai "2000000.00"; ekor
+                    // desimalnya dibuang supaya kolom angka tidak menampilkan ".00".
+                    $anggaranValue = old('anggaran', $kegiatan->anggaran);
+                    if (is_string($anggaranValue) && str_contains($anggaranValue, '.')) {
+                        $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
+                    }
+                @endphp
+                {{-- step="any": step="1000" membuat browser diam-diam menolak angka yang
+                     bukan kelipatan seribu (mis. 750500) tanpa keterangan apa pun di form. --}}
                 <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ old('anggaran', $kegiatan->anggaran) }}" min="0" max="9999999999999" step="1000">
+                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any">
             </div>
         </div>
     </div>
@@ -1222,10 +1238,10 @@ function formatFileSize(bytes) {
 let selectedPanitia = {}; // { id: name }
 let initialRoles = {}; // { id: role }
 
-// Pre-populate dari data yang ada di database
+// Pre-populate dari isian terakhir user (old()), atau dari database bila form baru dibuka
 @foreach($existingPanitia as $pan)
 selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
-initialRoles['{{ $pan->id }}'] = '{{ addslashes($pan->pivot->peran ?? '') }}';
+initialRoles['{{ $pan->id }}'] = '{{ addslashes($panitiaPeranLama[$pan->id] ?? $pan->pivot->peran ?? '') }}';
 @endforeach
 
 function focusPanitiaSearch() {

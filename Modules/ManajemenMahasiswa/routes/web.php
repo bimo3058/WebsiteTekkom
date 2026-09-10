@@ -378,6 +378,15 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('show')->where('id', '[0-9]+');
                 });
 
+                // Unduh CV mahasiswa — pengelola & pembina (bukan sesama mahasiswa).
+                // Harus didaftarkan sebelum /{id}/edit tidak masalah karena segmen
+                // keduanya berbeda; /profil/cv sudah terdaftar lebih dulu di atas.
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen|dosen|dosen_koordinator|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit')
+                    ->group(function () {
+                    Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
+                        ->name('cv')->where('id', '[0-9]+');
+                });
+
                 // Edit biodata — admin only
                 Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
                     Route::get('/{id}/edit', [DirektoriMahasiswaController::class, 'edit'])
@@ -386,16 +395,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('update')->where('id', '[0-9]+');
                 });
 
-                // Riwayat kegiatan — pengurus + admin
-                Route::middleware('role:pengurus_himpunan|superadmin|admin|admin_kemahasiswaan')
-                    ->group(function () {
-                    Route::post('/{id}/riwayat', [DirektoriMahasiswaController::class, 'storeRiwayat'])
-                        ->name('riwayat.store')->where('id', '[0-9]+');
-                    Route::put('/riwayat/{riwayatId}', [DirektoriMahasiswaController::class, 'updateRiwayat'])
-                        ->name('riwayat.update')->where('riwayatId', '[0-9]+');
-                    Route::delete('/riwayat/{riwayatId}', [DirektoriMahasiswaController::class, 'destroyRiwayat'])
-                        ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
-                });
+                // Riwayat kegiatan manual DIHAPUS dari direktori.
+                // Alur resmi penambahan riwayat kegiatan sekarang ada di modul
+                // Verifikasi Data (mahasiswa mengajukan → pengurus/admin memverifikasi).
 
             });
 
@@ -468,6 +470,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
                 Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
 
+                // Tarik pengajuan sendiri selama masih menunggu — kepemilikan &
+                // status dicek di controller. Tanpa ini salah ketik hanya bisa
+                // dibetulkan dengan menunggu admin menolak lebih dulu.
+                Route::delete('/riwayat/{id}', [VerifikasiController::class, 'destroyRiwayat'])
+                    ->name('riwayat.destroy')->where('id', '[0-9]+');
+                Route::delete('/prestasi/{id}', [VerifikasiController::class, 'destroyPrestasi'])
+                    ->name('prestasi.destroy')->where('id', '[0-9]+');
+
                 // Pengajuan reward prestasi — dilakukan mahasiswa pemilik (Request Bu Bellia / B.2)
                 Route::patch('/prestasi/{id}/reward/ajukan', [VerifikasiController::class, 'ajukanReward'])
                     ->name('prestasi.reward.ajukan')->where('id', '[0-9]+');
@@ -495,6 +505,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('prestasi.approve')->where('id', '[0-9]+');
                 Route::patch('/prestasi/{id}/reject', [VerifikasiController::class, 'rejectPrestasi'])
                     ->name('prestasi.reject')->where('id', '[0-9]+');
+
+                // Kembalikan keputusan ke "menunggu". Persetujuan/penolakan
+                // sebelumnya final tanpa jalan pulang, sehingga satu klik keliru
+                // tidak bisa dibetulkan lewat aplikasi.
+                Route::patch('/riwayat/{id}/batal-verifikasi', [VerifikasiController::class, 'batalkanVerifikasiRiwayat'])
+                    ->name('riwayat.batal')->where('id', '[0-9]+');
+                Route::patch('/prestasi/{id}/batal-verifikasi', [VerifikasiController::class, 'batalkanVerifikasiPrestasi'])
+                    ->name('prestasi.batal')->where('id', '[0-9]+');
 
                 // Persetujuan reward prestasi — admin/departemen (Request Bu Bellia / B.2)
                 Route::patch('/prestasi/{id}/reward/setujui', [VerifikasiController::class, 'setujuiReward'])

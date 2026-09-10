@@ -275,8 +275,10 @@
                 @endforeach
             </tbody>
         </table>
+
+        {{-- Di dalam kartu, sama seperti tabel Verifikasi Prestasi & Kegiatan --}}
+        @include('manajemenmahasiswa::verifikasi.partials.pagination', ['paginator' => $rewardData])
     </div>
-    <div class="mt-3">{{ $rewardData->appends(request()->query())->links() }}</div>
 @else
     <div class="empty-state">
         <div class="empty-state-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="4" rx="1"></rect><path d="M12 8v13M5 12v9h14v-9"></path><path d="M12 8C12 8 11 3 8 3a2.5 2.5 0 0 0 0 5h4zM12 8s1-5 4-5a2.5 2.5 0 0 1 0 5h-4z"></path></svg></div>
@@ -480,6 +482,15 @@ function openTinjauReward(data) {
         document.getElementById('trNote').value = '';
         document.getElementById('charCount_tr').innerText = '0 / 300 huruf';
         document.getElementById('trError').style.display = 'none';
+
+        // Kuota penuh = guard server pasti menolak. Tombolnya dikunci di sini
+        // supaya admin tidak menekan tombol yang sudah pasti gagal; Tolak tetap
+        // hidup karena menolak justru cara mengosongkan antreannya.
+        const setujuiBtn = document.getElementById('trSetujuiBtn');
+        setujuiBtn.disabled = penuh;
+        setujuiBtn.title = penuh
+            ? 'Kuota reward mahasiswa ini sudah penuh, klaim tidak dapat disetujui.'
+            : '';
     } else {
         trRenderHasil(data);
     }

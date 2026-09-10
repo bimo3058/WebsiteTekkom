@@ -109,6 +109,8 @@
     .status-badge.cuti { background: #FFFBEB; color: #92400e; }
     .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
     .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
+    .status-badge.wafat { background: #ede9fe; color: #5b21b6; }
+    .status-badge.mangkir { background: #fff7ed; color: #9a3412; }
 
     .riwayat-table {
         width: 100%;
@@ -269,6 +271,8 @@
                         @case('cuti') Cuti @break
                         @case('drop_out') Drop Out @break
                         @case('pindah_studi') Pindah Studi @break
+                        @case('wafat') Wafat @break
+                        @case('mangkir') Mangkir @break
                         @default {{ ucfirst($mhs->status) }}
                     @endswitch
                 </span>
@@ -276,6 +280,13 @@
         </div>
     </div>
     <div style="position: absolute; top: 20px; right: 24px;" class="d-flex gap-2">
+        @if($canDownloadCv ?? false)
+            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.cv', $mhs->id) }}" target="_blank"
+               class="btn-outline-custom" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Download CV
+            </a>
+        @endif
         @if($isAdmin)
             <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="btn-outline-custom" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -343,6 +354,8 @@
                     @case('cuti') Cuti @break
                     @case('drop_out') Drop Out @break
                     @case('pindah_studi') Pindah Studi @break
+                    @case('wafat') Wafat @break
+                    @case('mangkir') Mangkir @break
                     @default {{ ucfirst($mhs->status) }}
                 @endswitch
             </span></div>
@@ -413,7 +426,7 @@
             <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: #eef2ff; color: #0B266E; margin-left: 4px;">{{ $kegiatanInternal->count() }}</span>
         </div>
     </div>
-    <p style="font-size: 12px; color: #666D80; margin: -8px 0 14px 0;">Kegiatan himpunan & prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia)</p>
+    <p style="font-size: 12px; color: #666D80; margin: -8px 0 14px 0;">Kegiatan himpunan &amp; prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia) — hanya kegiatan yang sudah berstatus <strong>Selesai</strong> yang dihitung</p>
 
     @if($kegiatanInternal->count() > 0)
         <div style="overflow-x: auto; border-radius: 10px; border: 1px solid #f3f4f6;">
@@ -467,7 +480,10 @@
             </table>
         </div>
     @else
-        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada kegiatan internal.</p>
+        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0; margin: 0;">
+            Belum ada kegiatan internal.<br>
+            <span style="font-size: 12px;">Kegiatan yang masih berjalan atau belum ditandai <strong>Selesai</strong> belum muncul di sini.</span>
+        </p>
     @endif
 </div>
 

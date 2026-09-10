@@ -129,6 +129,10 @@
         flex: 1; padding: 9px 0; border-radius: 10px; border: none;
         background: #16a34a; color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer;
     }
+    /* Dikelabukan saat langkahnya memang sudah tidak bisa diambil (mis. kuota
+       reward mahasiswa penuh), bukan dihilangkan — panel keputusan tetap utuh
+       bentuknya dan alasannya terbaca pada rambu kuota di atasnya. */
+    .tp-btn-setujui:disabled { background: #C1C7CF; cursor: not-allowed; }
 
     /* Tombol pengiriman formulir di dalam kerangka yang sama (mis. Ajukan
        Reward) — bentuknya menyamai tombol keputusan agar kedua modal terasa

@@ -56,6 +56,35 @@
         outline: none;
     }
 
+    /* ── Tombol Cari & Reset ── */
+    .btn-search, .btn-reset {
+        height: 38px;
+        padding: 0 18px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s;
+        text-decoration: none !important;
+    }
+    .btn-search {
+        border: none;
+        background: #0B266E;
+        color: #ffffff;
+    }
+    .btn-search:hover { background: #091958; color: #ffffff; }
+    .btn-reset {
+        border: 1px solid #DFE1E7;
+        background: #ffffff;
+        color: #666D80;
+        padding: 0 14px;
+    }
+    .btn-reset:hover { background: #FAFAFA; border-color: #C1C7CF; color: #374151; }
+
     /* ── Table ── */
     .mhs-table {
         width: 100%;
@@ -106,18 +135,6 @@
         height: 100%;
         object-fit: cover;
     }
-    .online-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-        position: absolute;
-        bottom: -1px;
-        right: -1px;
-    }
-    .online-dot.online { background: #22c55e; }
-    .online-dot.offline { background: #C1C7CF; }
-
     .status-badge {
         font-size: 11px;
         font-weight: 700;
@@ -175,6 +192,22 @@
     }
 
     /* ── Stat Cards ── */
+    /* Grid yang menyesuaikan jumlah kartu (7 buah) — menghindari baris terakhir
+       yang hanya berisi 2 kartu nyangkut di kiri seperti pada grid 5 kolom. */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+        gap: 12px;
+    }
+    .stat-note {
+        font-size: 11px;
+        color: #666D80;
+        font-weight: 500;
+        margin: 10px 0 0 2px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
     .stat-card {
         background: #ffffff;
         border: 1px solid #f3f4f6;
@@ -231,6 +264,20 @@
     </div>
 @endif
 
+@php
+    // Pesan gangguan bisa datang dari dua arah: dari halaman ini sendiri ($error)
+    // atau dari halaman detail yang melempar balik ke sini (session('error')).
+    $pesanGangguan = session('error') ?: ($error ?? null);
+@endphp
+@if($pesanGangguan)
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-2" role="alert"
+         style="border-radius: 10px; border: none; background: #fef2f2; color: #991b1b; font-weight: 500; font-size: 14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>{{ $pesanGangguan }}</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
@@ -242,7 +289,7 @@
 </div>
 
     <!-- Stat Cards -->
-<div class="row g-3 mb-4 row-cols-2 row-cols-md-5">
+<div class="stat-grid">
     <div class="col">
         <div class="stat-card p-3">
             <div class="stat-icon" style="background: #eef2ff;">
@@ -351,6 +398,11 @@
     </div>
 </div>
 
+<div class="stat-note mb-4">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+    <span>Angka pada kartu mengikuti filter <strong>Angkatan</strong> dan <strong>pencarian</strong>, tetapi sengaja tidak mengikuti filter <strong>Status</strong> — supaya rincian tiap status tetap terlihat. Alumni tidak dihitung di sini (lihat Direktori Alumni).</span>
+</div>
+
 <!-- Search & Filter -->
 <form method="GET" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" id="filterForm">
     <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
@@ -381,6 +433,21 @@
                 <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
                 <option value="mangkir" {{ request('status') == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
             </select>
+
+            {{-- Tombol Cari eksplisit: sebelumnya pencarian hanya jalan kalau user
+                 kebetulan menekan Enter, sementara dua dropdown di sebelahnya
+                 langsung jalan begitu dipilih. --}}
+            <button type="submit" class="btn-search">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Cari
+            </button>
+
+            @if($isFiltered ?? false)
+                <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="btn-reset" title="Hapus pencarian & filter">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    Reset
+                </a>
+            @endif
         </div>
     </div>
 </form>
@@ -405,16 +472,15 @@
                         <td style="color: #666D80; font-weight: 500;">{{ $mahasiswa->firstItem() + $index }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
-                                <div style="position: relative;">
-                                    <div class="mhs-avatar">
-                                        @if($mhs->user && $mhs->user->avatar_url)
-                                            <img src="{{ $mhs->user->avatar_url }}" alt="{{ $mhs->nama }}">
-                                        @else
-                                            {{ strtoupper(substr($mhs->nama, 0, 1)) }}
-                                        @endif
-                                    </div>
-                                    @if($mhs->user)
-                                        <div class="online-dot {{ $mhs->user->is_online ? 'online' : 'offline' }}"></div>
+                                {{-- Titik indikator online dihapus: nilainya hanya berubah saat
+                                     login & logout eksplisit, sehingga user yang menutup browser
+                                     tetap terlihat "online" selamanya. Menyusul penghapusan kolom
+                                     "Aktivitas"/"Terakhir Aktif" pada revisi sebelumnya. --}}
+                                <div class="mhs-avatar">
+                                    @if($mhs->user && $mhs->user->avatar_url)
+                                        <img src="{{ $mhs->user->avatar_url }}" alt="{{ $mhs->nama }}">
+                                    @else
+                                        {{ strtoupper(substr($mhs->nama, 0, 1)) }}
                                     @endif
                                 </div>
                                 <div>
@@ -567,8 +633,39 @@
                 <line x1="17" y1="11" x2="23" y2="11"></line>
             </svg>
         </div>
-        <h5>Belum ada data mahasiswa</h5>
-        <p style="font-size: 14px; color: #666D80;">Data mahasiswa yang terdaftar akan muncul di sini</p>
+        @if($pesanGangguan)
+            {{-- Tabel kosong karena gangguan, BUKAN karena datanya tidak ada.
+                 Keterangan lengkapnya sudah tampil sebagai peringatan merah di atas. --}}
+            <h5>Data belum bisa ditampilkan</h5>
+            <p style="font-size: 14px; color: #666D80;">
+                Silakan baca keterangan di bagian atas halaman. Data mahasiswa tidak terhapus.
+            </p>
+        @elseif($isFiltered ?? false)
+            @php
+                $kriteria = [];
+                if (request('search')) {
+                    $kriteria[] = 'pencarian "' . request('search') . '"';
+                }
+                if (request('angkatan') && request('angkatan') !== 'semua') {
+                    $kriteria[] = 'angkatan ' . request('angkatan');
+                }
+                if (request('status') && request('status') !== 'semua') {
+                    $kriteria[] = 'status ' . str_replace('_', ' ', request('status'));
+                }
+            @endphp
+            <h5>Tidak ada mahasiswa yang cocok</h5>
+            <p style="font-size: 14px; color: #666D80;">
+                Tidak ditemukan hasil untuk {{ implode(' + ', $kriteria) }}.<br>
+                Coba kata kunci lain, atau kosongkan filternya.
+            </p>
+            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="btn-reset mt-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                Reset pencarian &amp; filter
+            </a>
+        @else
+            <h5>Belum ada data mahasiswa</h5>
+            <p style="font-size: 14px; color: #666D80;">Data mahasiswa yang terdaftar akan muncul di sini</p>
+        @endif
     </div>
 @endif
 

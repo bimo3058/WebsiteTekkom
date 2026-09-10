@@ -283,9 +283,24 @@
                        value="{{ old('target_peserta', $proker->target_peserta) }}" min="1">
             </div>
             <div class="col-md-6">
+                @php
+                    // Cast `decimal:2` membuat anggaran keluar sebagai "2999000.00" dan itulah
+                    // yang tampil mentah di kolom angka. Ekor desimalnya dibuang supaya user
+                    // melihat 2999000, bukan 2999000.00.
+                    $anggaranValue = old('anggaran', $proker->anggaran);
+                    if (is_string($anggaranValue) && str_contains($anggaranValue, '.')) {
+                        $anggaranValue = rtrim(rtrim($anggaranValue, '0'), '.');
+                    }
+                @endphp
                 <label class="form-label-custom">Anggaran (Rp)</label>
+                {{--
+                    step="any", BUKAN step="1000". Dengan step="1000" browser diam-diam
+                    menolak angka yang bukan kelipatan seribu (mis. 750500): tombol Simpan
+                    seolah tidak berfungsi dan yang muncul cuma gelembung bawaan browser,
+                    tanpa satu pun keterangan di form bahwa anggaran harus kelipatan 1000.
+                --}}
                 <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ old('anggaran', $proker->anggaran) }}" min="0" max="9999999999999" step="1000">
+                       value="{{ $anggaranValue }}" min="0" max="9999999999999" step="any">
             </div>
         </div>
     </div>

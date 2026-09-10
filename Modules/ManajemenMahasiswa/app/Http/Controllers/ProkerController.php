@@ -4,6 +4,7 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Student;
 use App\Models\Lecturer;
@@ -217,7 +218,11 @@ class ProkerController extends Controller
             'bidangs', 'kategoris',
             'ketuaPelaksana.user', 'dosenPendampings.user',
             'panitia.user',
-        ])->where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
+        ])->findOrFail($id);
+
+        if ($tolak = $this->tolakBilaBukanDraft($proker)) {
+            return $tolak;
+        }
 
         $bidangList    = Bidang::orderBy('nama_bidang')->get();
         $kategoriList  = KategoriKegiatan::orderBy('nama_kategori')->get();
@@ -243,7 +248,11 @@ class ProkerController extends Controller
 
     public function update(Request $request, $id)
     {
-        $proker = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
+        $proker = Kegiatan::findOrFail($id);
+
+        if ($tolak = $this->tolakBilaBukanDraft($proker)) {
+            return $tolak;
+        }
 
         $validated = $this->validateProker($request);
 
@@ -346,19 +355,55 @@ class ProkerController extends Controller
     // Private Helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    private function validateProker(Request $request): array
+    /**
+     * Rencana proker hanya boleh diubah selama masih berstatus draft.
+     *
+     * Prokernya dicari by id dulu, statusnya baru diperiksa di sini — pola yang
+     * sama dengan destroy(). Kalau findOrFail langsung dibatasi STATUS_DRAFT
+     * (perilaku lama edit() & update()), proker yang keburu diajukan dari tab,
+     * perangkat, atau akun lain akan melempar ModelNotFoundException: user
+     * dibuang ke halaman error dengan seluruh isian form hilang dan tanpa
+     * penjelasan apa pun. Sekarang ia diarahkan ke detail proker + pesan.
+     *
+     * @return RedirectResponse|null null bila proker masih draft (boleh diubah)
+     */
+    private function tolakBilaBukanDraft(Kegiatan $proker): ?RedirectResponse
     {
-        $kategoriDipilih = $request->input('kategori_kegiatan_id', []);
-        $isOnlyProdi = false;
-
-        if (is_array($kategoriDipilih) && count($kategoriDipilih) > 0) {
-            $prodiId = KategoriKegiatan::where('nama_kategori', 'like', '%Prodi%')->value('id');
-            if (count($kategoriDipilih) === 1 && in_array($prodiId, $kategoriDipilih)) {
-                $isOnlyProdi = true;
-            }
+        if ($proker->status === Kegiatan::STATUS_DRAFT) {
+            return null;
         }
 
+        $lanjutanNya = $proker->status === Kegiatan::STATUS_SELESAI
+            ? 'Laporan & Arsip'
+            : 'Pelaksanaan Kegiatan';
+
+        return redirect()
+            ->route('manajemenmahasiswa.proker.show', $proker->id)
+            ->with('error', 'Rencana proker ini sudah diajukan, jadi tidak bisa lagi diubah dari halaman Rencana Proker. Perubahan datanya sekarang dilakukan di subbab ' . $lanjutanNya . '.');
+    }
+
+    private function validateProker(Request $request): array
+    {
+        // Aturannya dipusatkan di model supaya Rencana Proker & Pelaksanaan tidak
+        // bisa lepas sinkron. Definisi lama ("tepat 1 kategori DAN itu Prodi") juga
+        // berbeda dari form, yang menyembunyikan kolom Bidang begitu SEMUA kategori
+        // terpilih berkategori Prodi — beda itu bisa memunculkan error "bidang wajib"
+        // pada kolom yang sudah disembunyikan JS.
+        $kategoriDipilih = $request->input('kategori_kegiatan_id', []);
+        $isOnlyProdi = is_array($kategoriDipilih) && Kegiatan::hanyaKategoriProdi($kategoriDipilih);
+
         $bidangRule = $isOnlyProdi ? 'nullable|array' : 'required|array|min:1';
+
+        // Jam selesai hanya dibandingkan dengan jam mulai bila kegiatan berlangsung
+        // dalam SATU hari. Kegiatan lintas hari (mis. 15 Jan 15.00 → 16 Jan 09.00)
+        // memang wajar punya jam selesai yang lebih awal, jadi jangan diblokir.
+        $satuHari = !$request->filled('tanggal_selesai')
+            || $request->input('tanggal_selesai') === $request->input('tanggal_mulai');
+
+        $jamSelesaiRules = ['nullable', 'date_format:H:i,H:i:s'];
+        if ($satuHari && $request->filled('jam_mulai')) {
+            $jamSelesaiRules[] = 'after:jam_mulai';
+        }
 
         // Field perencanaan diduplikat dari Subbab 2 (Pelaksanaan) supaya rencana
         // bisa disusun lengkap sejak awal. Semuanya `nullable` saat menyimpan:
@@ -374,10 +419,16 @@ class ProkerController extends Controller
             'kategori_kegiatan_id.*' => 'integer|exists:mk_kategori_kegiatan,id',
             'bidang_id'              => $bidangRule,
             'bidang_id.*'            => 'integer|exists:mk_bidang,id',
-            'tanggal_mulai'          => 'nullable|date',
+            // Tanggal mulai tetap boleh kosong (draft), TAPI tidak boleh kosong bila
+            // tanggal selesai sudah diisi — kombinasi itu menghasilkan kegiatan
+            // "Belum ditentukan — 05 Januari 2026" sekaligus membuat kolom `tahun`
+            // ikut kosong, sehingga kegiatan hilang dari filter Tahun di Subbab 2 & 3.
+            'tanggal_mulai'          => 'nullable|date|required_with:tanggal_selesai',
             'tanggal_selesai'        => 'nullable|date|after_or_equal:tanggal_mulai',
-            'jam_mulai'              => 'nullable|string',
-            'jam_selesai'            => 'nullable|string',
+            // Kolom jam di database bertipe TIME: `string` bebas membuat isian ngawur
+            // lolos ke query dan memunculkan halaman error saat disimpan.
+            'jam_mulai'              => 'nullable|date_format:H:i,H:i:s',
+            'jam_selesai'            => $jamSelesaiRules,
             'lokasi'                 => 'nullable|string|max:255',
             'target_peserta'         => 'nullable|integer|min:1',
             'anggaran'               => 'nullable|numeric|min:0',
@@ -389,6 +440,17 @@ class ProkerController extends Controller
             'panitia_peran'          => 'nullable|array',
             'panitia_peran.*'        => 'nullable|string|max:255',
             'banner'                 => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+        ], [
+            // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom
+            // mentah ("The tanggal mulai field is required when..."), jadi aturan
+            // baru di atas diberi pesan sendiri supaya jelas di kotak error form.
+            'bidang_id.required'             => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.min'                  => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'tanggal_mulai.required_with'    => 'Tanggal mulai wajib diisi kalau tanggal selesai sudah ditentukan.',
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
+            'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
+            'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
+            'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
         ]);
     }
 

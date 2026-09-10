@@ -232,6 +232,19 @@
         </div>
 
         <div class="d-flex gap-3">
+            {{-- Filter kategori: badge kategori tampil di tiap kartu, jadi user wajar
+                 mencari cara menyaringnya. Sebelumnya daftar kategori dikirim ke
+                 halaman ini tapi tidak pernah dirender maupun dipakai menyaring. --}}
+            <select name="kategori" class="form-select border-1 filter-select-custom"
+                    style="min-width: 180px;" onchange="document.getElementById('filterForm').submit()">
+                <option value="semua">Semua Kategori</option>
+                @foreach($kategoriList as $kat)
+                    <option value="{{ $kat->id }}" {{ request('kategori') == $kat->id ? 'selected' : '' }}>
+                        {{ $kat->nama_kategori }}
+                    </option>
+                @endforeach
+            </select>
+
             <select name="tahun" class="form-select border-1 filter-select-custom"
                     style="min-width: 160px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Tahun</option>
@@ -240,9 +253,22 @@
                         {{ $t }}
                     </option>
                 @endforeach
+                {{-- Kegiatan tanpa tanggal sama sekali: tahunnya tidak diketahui, jadi
+                     tanpa opsi ini ia cuma muncul di "Semua Tahun" dan sulit ditemukan. --}}
+                @if($adaTanpaTahun)
+                    <option value="{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN }}"
+                        {{ request('tahun') === \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN ? 'selected' : '' }}>
+                        Belum ada tanggal
+                    </option>
+                @endif
             </select>
         </div>
     </div>
+
+    {{-- Bidang dipilih lewat chip <a href> di bawah, jadi nilainya harus ikut
+         dibawa form ini. Tanpa hidden input, mencari atau mengganti Kategori/Tahun
+         diam-diam mengembalikan filter bidang ke "Semua". --}}
+    <input type="hidden" name="bidang" value="{{ request('bidang') }}">
 
     <!-- Bidang Filter Chips -->
     <div class="filter-section">

@@ -222,12 +222,33 @@ function formatFileSize(bytes) {
 @endif
 
 // ── Panitia Multi-Select ──
+{{--
+    Saat form dikembalikan karena validasi gagal, panitia & jabatannya WAJIB
+    dipulihkan dari input terakhir user (old()), bukan dari database. Tanpa ini
+    satu error kecil di field lain — mis. Kategori belum dicentang — membuat
+    seluruh chip panitia beserta kolom jabatannya lenyap: di form Buat Proker
+    jadi kosong total (controller mengirim koleksi kosong), sedangkan di form
+    Edit diam-diam balik ke data lama sehingga perubahan panitia yang belum
+    tersimpan ikut hilang.
+
+    Dikerjakan di sini, bukan di controller, supaya Rencana Proker (create &
+    edit) dan Pelaksanaan Kegiatan (edit) yang berbagi partial ini ikut pulih.
+--}}
+@php
+    $panitiaIdsLama   = old('panitia_ids');
+    $panitiaPeranLama = old('panitia_peran', []);
+    // old() bernilai null hanya bila form dibuka normal (bukan hasil validasi gagal);
+    // array kosong tetap dihormati karena artinya user memang menghapus semua panitia.
+    $panitiaTerpilih  = $panitiaIdsLama !== null
+        ? $mahasiswaList->whereIn('id', $panitiaIdsLama)
+        : $existingPanitia;
+@endphp
 let selectedPanitia = {};
 let initialRoles = {};
 
-@foreach($existingPanitia as $pan)
+@foreach($panitiaTerpilih as $pan)
 selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
-initialRoles['{{ $pan->id }}'] = '{{ addslashes($pan->pivot->peran ?? '') }}';
+initialRoles['{{ $pan->id }}'] = '{{ addslashes($panitiaPeranLama[$pan->id] ?? $pan->pivot->peran ?? '') }}';
 @endforeach
 
 function focusPanitiaSearch() {

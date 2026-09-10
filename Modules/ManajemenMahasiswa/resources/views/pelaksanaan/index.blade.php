@@ -55,11 +55,20 @@
                    placeholder="Cari judul atau deskripsi kegiatan..." value="{{ request('search') }}">
         </div>
         <div class="d-flex gap-2">
-            <select name="tahun" class="filter-select-custom" style="min-width:130px;" onchange="document.getElementById('filterForm').submit()">
+            <select name="tahun" class="filter-select-custom" style="min-width:170px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Tahun</option>
                 @foreach($tahunList as $t)
                     <option value="{{ $t }}" {{ request('tahun')==$t?'selected':'' }}>{{ $t }}</option>
                 @endforeach
+                {{-- Sebagian kegiatan lama tidak punya tanggal sama sekali sehingga tahunnya
+                     tidak diketahui. Tanpa opsi ini kegiatan tersebut cuma muncul di "Semua
+                     Tahun" dan praktis tidak pernah ketemu — padahal justru perlu dilengkapi. --}}
+                @if($adaTanpaTahun)
+                    <option value="{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN }}"
+                        {{ request('tahun') === \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN ? 'selected' : '' }}>
+                        Belum ada tanggal
+                    </option>
+                @endif
             </select>
         </div>
     </div>

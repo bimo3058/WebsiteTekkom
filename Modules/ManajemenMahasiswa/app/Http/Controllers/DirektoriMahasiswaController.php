@@ -48,6 +48,22 @@ class DirektoriMahasiswaController extends Controller
      * @param  int           $maxAttempts
      * @return T
      */
+    /**
+     * Deteksi error koneksi Supabase/pgBouncer (bukan error data/validasi).
+     */
+    private function isConnectionError(\Throwable $e): bool
+    {
+        $msg  = $e->getMessage();
+        $code = (string) $e->getCode();
+
+        return in_array($code, ['08006', '08003', '57P01', '7'])
+            || str_contains($msg, 'server closed the connection')
+            || str_contains($msg, 'SSL negotiation')
+            || str_contains($msg, 'could not connect')
+            || str_contains($msg, 'connection unexpectedly')
+            || str_contains($msg, 'pooler.supabase.com');
+    }
+
     private function withRetry(callable $callback, int $maxAttempts = 3): mixed
     {
         $attempt = 0;
@@ -57,17 +73,7 @@ class DirektoriMahasiswaController extends Controller
             } catch (\Throwable $e) {
                 $attempt++;
 
-                $msg = $e->getMessage();
-                $code = (string) $e->getCode();
-
-                // Deteksi error koneksi Supabase/pgBouncer
-                $isConnectionError =
-                    in_array($code, ['08006', '08003', '57P01', '7'])
-                    || str_contains($msg, 'server closed the connection')
-                    || str_contains($msg, 'SSL negotiation')
-                    || str_contains($msg, 'could not connect')
-                    || str_contains($msg, 'connection unexpectedly')
-                    || str_contains($msg, 'pooler.supabase.com');
+                $isConnectionError = $this->isConnectionError($e);
 
                 if ($isConnectionError && $attempt < $maxAttempts) {
                     // Jeda sebelum retry: beri waktu pgBouncer memulihkan pool
@@ -103,17 +109,49 @@ class DirektoriMahasiswaController extends Controller
                 ->whereNotIn('user_id', $existingUserIds)
                 ->get();
 
+            if ($studentsNotSynced->isEmpty()) {
+                return;
+            }
+
+            // Mahasiswa yang sudah tercatat di mk_alumni jangan masuk direktori sebagai "aktif".
+            $alumniUserIds = Alumni::whereIn('user_id', $studentsNotSynced->pluck('user_id'))
+                ->pluck('user_id')
+                ->toArray();
+
             foreach ($studentsNotSynced as $student) {
                 if (!$student->user)
                     continue;
 
-                Kemahasiswaan::create([
-                    'user_id' => $student->user_id,
-                    'nama' => $student->user->name,
-                    'nim' => $student->student_number,
-                    'angkatan' => $student->cohort_year,
-                    'status' => 'aktif',
-                ]);
+                // Satu baris data yang bermasalah tidak boleh menghentikan sinkronisasi
+                // mahasiswa lain di belakangnya. Error koneksi tetap dilempar ke withRetry.
+                try {
+                    // firstOrCreate (bukan create) mencegah baris ganda bila dua request
+                    // membuka halaman ini bersamaan — kolom user_id belum punya unique index.
+                    Kemahasiswaan::firstOrCreate(
+                        ['user_id' => $student->user_id],
+                        [
+                            'nama'     => $student->user->name,
+                            'nim'      => $student->student_number,
+                            'angkatan' => $student->cohort_year,
+                            'status'   => \in_array($student->user_id, $alumniUserIds)
+                                ? Kemahasiswaan::STATUS_ALUMNI
+                                : Kemahasiswaan::STATUS_AKTIF,
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    if ($this->isConnectionError($e)) {
+                        throw $e;
+                    }
+
+                    \Illuminate\Support\Facades\Log::warning(
+                        'Sync SSO → mk_kemahasiswaan gagal untuk satu mahasiswa, dilewati.',
+                        [
+                            'user_id' => $student->user_id,
+                            'nim'     => $student->student_number,
+                            'error'   => $e->getMessage(),
+                        ]
+                    );
+                }
             }
         });
     }
@@ -276,12 +314,33 @@ class DirektoriMahasiswaController extends Controller
 
     public function index(Request $request)
     {
-        // Auto-sync data SSO → mk_kemahasiswaan (silent fail agar halaman tidak crash)
-        try {
-            $this->syncFromSSO();
-        } catch (\Throwable) {
-            // Sync gagal — lanjutkan, tampilkan data yang sudah ada
+        // Benar-benar ada kriteria yang mempersempit hasil? "Semua Angkatan" /
+        // "Semua Status" / kotak pencarian kosong tidak dihitung sebagai filter,
+        // supaya tombol Reset dan pesan "tidak ada hasil" tidak muncul sia-sia.
+        $isFiltered = $request->filled('search')
+            || ($request->filled('angkatan') && $request->angkatan !== 'semua')
+            || ($request->filled('status') && $request->status !== 'semua');
+
+        // Sedang menjelajah (submit form / pindah halaman), apa pun kriterianya.
+        $isBrowsing = $request->hasAny(['search', 'angkatan', 'status']) || $request->filled('page');
+
+        // Auto-sync data SSO → mk_kemahasiswaan (silent fail agar halaman tidak crash).
+        // Hanya dijalankan pada pemuatan halaman polos: menyisir seluruh data SSO setiap
+        // kali user mengganti filter atau pindah halaman membuat direktori terasa lambat.
+        $syncFailed = false;
+        if (!$isBrowsing) {
+            try {
+                $this->syncFromSSO();
+            } catch (\Throwable $e) {
+                // Sync gagal — lanjutkan, tampilkan data yang sudah ada
+                $syncFailed = true;
+                \Illuminate\Support\Facades\Log::warning('Sinkronisasi SSO direktori mahasiswa gagal', [
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
+
+        $dbError = false;
 
         try {
             $query = Kemahasiswaan::with(['user', 'user.student'])
@@ -322,7 +381,12 @@ class DirektoriMahasiswaController extends Controller
                     ->orderBy('nama', 'asc')
                     ->paginate(15);
 
+                // Daftar angkatan untuk dropdown filter.
+                // Alumni & angkatan kosong dikecualikan: tabel di halaman ini tidak
+                // menampilkan alumni, jadi opsi tersebut pasti berujung "hasil kosong".
                 $angkatanList = Kemahasiswaan::select('angkatan')
+                    ->whereNotNull('angkatan')
+                    ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI)
                     ->distinct()
                     ->orderBy('angkatan', 'desc')
                     ->pluck('angkatan');
@@ -336,8 +400,13 @@ class DirektoriMahasiswaController extends Controller
                 return [$mahasiswa, $angkatanList, $statusCounts];
             });
 
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
             // Koneksi DB benar-benar tidak stabil — tampilkan state kosong dengan pesan error
+            $dbError = true;
+            \Illuminate\Support\Facades\Log::error('Direktori mahasiswa gagal memuat data', [
+                'error' => $e->getMessage(),
+            ]);
+
             $mahasiswa = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
             $angkatanList = collect();
             $statusCounts = collect();
@@ -348,6 +417,17 @@ class DirektoriMahasiswaController extends Controller
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
 
+        // Pesan gangguan — dibedakan antara "database tidak bisa dibaca" dan
+        // "sinkronisasi SSO gagal" supaya tabel kosong tidak salah dibaca sebagai data hilang.
+        $error = null;
+        if ($dbError) {
+            $error = 'Koneksi database sedang tidak stabil sehingga data mahasiswa belum bisa ditampilkan. '
+                . 'Data Anda aman — silakan muat ulang halaman dalam beberapa saat.';
+        } elseif ($syncFailed) {
+            $error = 'Sinkronisasi data dari SSO UNDIP sedang bermasalah. '
+                . 'Daftar di bawah menampilkan data yang sudah tersimpan, mahasiswa terbaru mungkin belum muncul.';
+        }
+
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
             'angkatanList',
@@ -356,10 +436,9 @@ class DirektoriMahasiswaController extends Controller
             'isGpm',
             'isPengurus',
             'isMahasiswa',
-        ))->with('layout', $this->resolveLayout())
-            ->with('error', isset($mahasiswa) && $mahasiswa->isEmpty() && !$request->hasAny(['search', 'angkatan', 'status'])
-                ? 'Koneksi database sedang tidak stabil. Silakan muat ulang halaman.'
-                : null);
+            'isFiltered',
+            'error',
+        ))->with('layout', $this->resolveLayout());
     }
 
     // -------------------------------------------------------------------------
@@ -369,48 +448,58 @@ class DirektoriMahasiswaController extends Controller
     public function show(int $id)
     {
         try {
-            [$mhs, $semuaKegiatan, $cvProfile] = $this->withRetry(function () use ($id) {
-                $mhs = Kemahasiswaan::with([
-                    'user',
-                    'user.student',
-                    'prestasi' => function ($q) {
-                        $q->where('verification_status', 'approved');
-                    }
-                ])->findOrFail($id);
-
-                $semuaKegiatan = Kegiatan::orderBy('judul')->get();
-                $cvProfile = CvProfile::where('user_id', $mhs->user_id)->first();
-
-                return [$mhs, $semuaKegiatan, $cvProfile];
-            });
+            // find() (bukan findOrFail) agar "data tidak ada" bisa dibedakan dari
+            // "koneksi bermasalah" — dua situasi ini butuh respons yang berbeda.
+            $mhs = $this->withRetry(fn() => Kemahasiswaan::with([
+                'user',
+                'user.student',
+                'prestasi' => function ($q) {
+                    $q->where('verification_status', 'approved');
+                }
+            ])->find($id));
 
             // Ambil riwayat kegiatan: manual + otomatis dari ketua pelaksana
-            $riwayatKegiatan = $this->withRetry(fn() => $this->buildMergedRiwayat($mhs->user_id));
+            $riwayatKegiatan = $mhs
+                ? $this->withRetry(fn() => $this->buildMergedRiwayat($mhs->user_id))
+                : collect();
 
-            $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-            $isPengurus = $this->hasRole('pengurus_himpunan');
-            $isGpm      = $this->hasRole('gpm');
-            $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
-            // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
-            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Detail mahasiswa gagal dimuat', [
+                'id'    => $id,
+                'error' => $e->getMessage(),
+            ]);
 
-            return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
-                'mhs',
-                'riwayatKegiatan',
-                'semuaKegiatan',
-                'isAdmin',
-                'isPengurus',
-                'isGpm',
-                'isMahasiswa',
-                'isCanSeeIpk',
-                'cvProfile',
-            ))->with('layout', $this->resolveLayout());
-
-        } catch (\Throwable) {
             return redirect()
                 ->route('manajemenmahasiswa.direktori.mahasiswa.index')
-                ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi dalam beberapa saat.');
+                ->with('error', 'Koneksi database sedang tidak stabil sehingga profil mahasiswa belum bisa dibuka. Silakan coba lagi dalam beberapa saat.');
         }
+
+        // Profil yang dituju memang tidak ada (link lama / ID salah) → 404 yang jelas,
+        // bukan dilempar diam-diam ke halaman daftar tanpa penjelasan.
+        abort_if(!$mhs, 404, 'Data mahasiswa tidak ditemukan.');
+
+        $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isPengurus = $this->hasRole('pengurus_himpunan');
+        $isGpm      = $this->hasRole('gpm');
+        $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
+        // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
+        $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
+        // Role yang boleh mengunduh CV mahasiswa (sinkron dengan middleware route .cv)
+        $canDownloadCv = $this->hasRole(
+            'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen',
+            'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit'
+        );
+
+        return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
+            'mhs',
+            'riwayatKegiatan',
+            'isAdmin',
+            'isPengurus',
+            'isGpm',
+            'isMahasiswa',
+            'isCanSeeIpk',
+            'canDownloadCv',
+        ))->with('layout', $this->resolveLayout());
     }
 
     // -------------------------------------------------------------------------
@@ -431,25 +520,26 @@ class DirektoriMahasiswaController extends Controller
 
     public function update(Request $request, int $id)
     {
+        // Nama, NIM, dan Angkatan sengaja TIDAK divalidasi maupun disimpan di sini.
+        // Ketiganya milik SSO UNDIP dan hanya ditampilkan sebagai teks terkunci di form.
+        // Tanpa aturan ini, nilai kiriman apa pun (mis. hasil utak-atik inspect element)
+        // akan tetap tertulis ke database dan membuat data direktori beda dengan SSO.
         $request->validate([
-            'nama'        => 'required|string|max:255',
-            'nim'         => 'required|string|max:30',
-            'angkatan'    => 'required|integer|min:2000|max:2099',
             'status'      => 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST),
             'ipk'         => 'nullable|numeric|min:0|max:4',
             'tahun_lulus' => 'nullable|integer|min:2000|max:2099',
             'profesi'     => 'nullable|string|max:255',
             'kontak'      => 'nullable|string|max:15',
             'email_pribadi' => 'nullable|email|max:100',
+        ], [], [
+            'ipk'           => 'IPK',
+            'email_pribadi' => 'email pribadi',
         ]);
 
         $mhs = Kemahasiswaan::findOrFail($id);
         $oldStatus = $mhs->status;
 
         $mhs->update($request->only([
-            'nama',
-            'nim',
-            'angkatan',
             'status',
             'ipk',
             'tahun_lulus',
@@ -563,16 +653,53 @@ class DirektoriMahasiswaController extends Controller
     {
         $user = Auth::user();
 
-        $mhs = $this->withRetry(fn() => Kemahasiswaan::with([
+        $loadProfil = fn() => Kemahasiswaan::with([
             'prestasi' => function ($q) {
                 $q->where('verification_status', 'approved');
             },
             'user',
             'user.student'
-        ])->where('user_id', $user->id)->first());
+        ])->where('user_id', $user->id)->first();
+
+        $mhs = $this->withRetry($loadProfil);
+
+        // Belum punya baris di direktori — biasanya karena mahasiswa ini login lebih dulu
+        // sebelum ada admin yang membuka halaman daftar (sinkronisasi SSO berjalan di sana).
+        // Daftarkan dari data SSO miliknya sendiri supaya tidak perlu menunggu admin.
+        if (!$mhs) {
+            try {
+                $student = Student::where('user_id', $user->id)->first();
+
+                if ($student) {
+                    Kemahasiswaan::firstOrCreate(
+                        ['user_id' => $user->id],
+                        [
+                            'nama'     => $user->name,
+                            'nim'      => $student->student_number,
+                            'angkatan' => $student->cohort_year,
+                            'status'   => Alumni::where('user_id', $user->id)->exists()
+                                ? Kemahasiswaan::STATUS_ALUMNI
+                                : Kemahasiswaan::STATUS_AKTIF,
+                        ]
+                    );
+
+                    $mhs = $this->withRetry($loadProfil);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal mendaftarkan profil mahasiswa dari SSO', [
+                    'user_id' => $user->id,
+                    'error'   => $e->getMessage(),
+                ]);
+            }
+        }
 
         if (!$mhs) {
-            return back()->with('error', 'Data kemahasiswaan Anda belum terdaftar dalam sistem.');
+            // Tujuan tetap (dashboard modul), BUKAN back(). Dengan back(), "halaman
+            // sebelumnya" bisa menunjuk ke halaman ini sendiri saat di-refresh sehingga
+            // browser terjebak redirect berulang (ERR_TOO_MANY_REDIRECTS).
+            return redirect()
+                ->route('manajemenmahasiswa.dashboard')
+                ->with('error', 'Data kemahasiswaan Anda belum terdaftar dalam sistem. Silakan hubungi Admin Kemahasiswaan untuk didaftarkan.');
         }
 
         $riwayatKegiatan = $this->withRetry(fn() => $this->buildMergedRiwayat($user->id));
@@ -584,94 +711,14 @@ class DirektoriMahasiswaController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Store Riwayat — Tambah catatan riwayat kegiatan (Pengurus)
+    // Catatan: storeRiwayat / updateRiwayat / destroyRiwayat sudah dihapus.
+    //
+    // Penambahan riwayat kegiatan manual kini hanya lewat modul Verifikasi Data
+    // (mahasiswa mengajukan → diverifikasi pengurus/admin). Pintu tambah manual di
+    // direktori ini tidak pernah punya tombol di halaman, dan data yang masuk lewat
+    // sana berstatus "pending" sehingga tidak akan tampil di profil — jalur kedua yang
+    // tidak terverifikasi ini ditutup agar tidak menimbulkan data ganda.
     // -------------------------------------------------------------------------
-
-    public function storeRiwayat(Request $request, int $id)
-    {
-        $mode = $request->input('input_mode', 'dropdown');
-
-        if ($mode === 'manual') {
-            // Mode manual: ketik nama kegiatan & peran bebas
-            $request->validate([
-                'nama_kegiatan_manual' => 'required|string|max:255',
-                'peran_manual' => 'required|string|max:255',
-                'tanggal_kegiatan' => 'nullable|date',
-            ]);
-
-            $mhs = Kemahasiswaan::with('user.student')->findOrFail($id);
-            $studentId = $mhs->user->student->id ?? null;
-            abort_if(!$studentId, 404, 'Data student tidak ditemukan.');
-
-            RiwayatKegiatan::create([
-                'student_id' => $studentId,
-                'kegiatan_id' => null,
-                'peran' => null,
-                'nama_kegiatan_manual' => $request->nama_kegiatan_manual,
-                'peran_manual' => $request->peran_manual,
-                'tanggal_kegiatan' => $request->tanggal_kegiatan,
-            ]);
-        } else {
-            // Mode dropdown: pilih dari list kegiatan
-            $request->validate([
-                'kegiatan_id' => 'required|exists:mk_kegiatan,id',
-                'peran' => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
-            ]);
-
-            $mhs = Kemahasiswaan::with('user.student')->findOrFail($id);
-            $studentId = $mhs->user->student->id ?? null;
-            abort_if(!$studentId, 404, 'Data student tidak ditemukan.');
-
-            RiwayatKegiatan::create([
-                'student_id' => $studentId,
-                'kegiatan_id' => $request->kegiatan_id,
-                'peran' => $request->peran,
-            ]);
-        }
-
-        return redirect()
-            ->route('manajemenmahasiswa.direktori.mahasiswa.show', $id)
-            ->with('success', 'Riwayat kegiatan berhasil ditambahkan.');
-    }
-
-    // -------------------------------------------------------------------------
-    // Update Riwayat — Edit catatan riwayat kegiatan (Pengurus)
-    // -------------------------------------------------------------------------
-
-    public function updateRiwayat(Request $request, int $riwayatId)
-    {
-        $request->validate([
-            'kegiatan_id' => 'required|exists:mk_kegiatan,id',
-            'peran' => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
-        ]);
-
-        $riwayat = RiwayatKegiatan::findOrFail($riwayatId);
-        $riwayat->update($request->only(['kegiatan_id', 'peran']));
-
-        // Cari kemahasiswaan untuk redirect.
-        // student_id pada riwayat adalah students.id — resolve dulu ke user_id lewat relasi student.
-        $mhs = Kemahasiswaan::where('user_id', $riwayat->student?->user_id)->firstOrFail();
-
-        return redirect()
-            ->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id)
-            ->with('success', 'Riwayat kegiatan berhasil diperbarui.');
-    }
-
-    // -------------------------------------------------------------------------
-    // Delete Riwayat — Hapus catatan riwayat (Pengurus)
-    // -------------------------------------------------------------------------
-
-    public function destroyRiwayat(int $riwayatId)
-    {
-        $riwayat = RiwayatKegiatan::findOrFail($riwayatId);
-        // student_id pada riwayat adalah students.id — resolve dulu ke user_id lewat relasi student.
-        $mhs = Kemahasiswaan::where('user_id', $riwayat->student?->user_id)->firstOrFail();
-        $riwayat->delete();
-
-        return redirect()
-            ->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id)
-            ->with('success', 'Riwayat kegiatan berhasil dihapus.');
-    }
 
     // -------------------------------------------------------------------------
     // Generate CV — Halaman CV print-ready

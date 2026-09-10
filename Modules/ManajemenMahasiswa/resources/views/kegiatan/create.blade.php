@@ -848,8 +848,10 @@
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Anggaran (Rp)</label>
+                {{-- step="any": step="1000" membuat browser diam-diam menolak angka yang
+                     bukan kelipatan seribu (mis. 750500) tanpa keterangan apa pun di form. --}}
                 <input type="number" name="anggaran" class="form-control form-control-custom"
-                       placeholder="Contoh: 5000000" value="{{ old('anggaran') }}" min="0" max="9999999999999" step="1000">
+                       placeholder="Contoh: 5000000" value="{{ old('anggaran') }}" min="0" max="9999999999999" step="any">
             </div>
         </div>
     </div>
@@ -1121,7 +1123,25 @@ function formatFileSize(bytes) {
 });
 
 // ── Panitia Multi-Select ──
+{{--
+    Saat form dikembalikan karena validasi gagal, panitia & jabatannya dipulihkan
+    dari isian terakhir user (old()). Tanpa ini satu error kecil di field lain —
+    mis. Banner belum diunggah — membuat seluruh chip panitia beserta kolom
+    jabatannya lenyap dan harus dipilih ulang satu per satu, padahal Dosen
+    Pendamping di form yang sama sudah dipulihkan dengan benar.
+--}}
+@php
+    $panitiaIdsLama   = old('panitia_ids', []);
+    $panitiaPeranLama = old('panitia_peran', []);
+    $panitiaTerpilih  = $mahasiswaList->whereIn('id', $panitiaIdsLama);
+@endphp
 let selectedPanitia = {}; // { id: name }
+let initialRoles = {};    // { id: jabatan }
+
+@foreach($panitiaTerpilih as $pan)
+selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
+initialRoles['{{ $pan->id }}'] = '{{ addslashes($panitiaPeranLama[$pan->id] ?? '') }}';
+@endforeach
 
 function focusPanitiaSearch() {
     document.getElementById('panitiaSearchInput').focus();
@@ -1240,7 +1260,7 @@ function updatePanitiaHiddenInputs() {
         roleDiv.innerHTML = `
             <div style="flex: 1; font-size: 13px; font-weight: 600; color: #374151;">${name}</div>
             <div style="flex: 2;">
-                <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${existingRoles[id] || ''}">
+                <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${existingRoles[id] !== undefined ? existingRoles[id] : (initialRoles[id] || '')}">
             </div>
         `;
         rolesContainer.appendChild(roleDiv);
@@ -1459,6 +1479,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     handleKategoriChange();
+
+    // Tampilkan kembali chip panitia & kolom jabatan hasil pemulihan old().
+    Object.keys(selectedPanitia).forEach(id => {
+        const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
+        if (opt) opt.classList.add('selected');
+    });
+    renderPanitiaChips();
+    updatePanitiaHiddenInputs();
 });
 </script>
 

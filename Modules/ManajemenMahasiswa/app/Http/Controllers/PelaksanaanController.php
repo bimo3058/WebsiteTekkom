@@ -4,7 +4,9 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Services\SupabaseStorage;
@@ -16,6 +18,9 @@ use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
 class PelaksanaanController extends Controller
 {
+    /** Batas jumlah foto & dokumen yang boleh tersimpan pada satu kegiatan. */
+    private const MAKS_FILE = 10;
+
     public function __construct(
         private RepoMulmedService $repoMulmedService,
         private SupabaseStorage $supabase
@@ -28,17 +33,11 @@ class PelaksanaanController extends Controller
     public function index(Request $request)
     {
         $bidangList = Bidang::orderBy('nama_bidang')->get();
-        $tahunList = Kegiatan::select('tahun')
-            ->whereNotNull('tahun')
-            ->where('status', Kegiatan::STATUS_DISETUJUI)
-            ->distinct()
-            ->orderBy('tahun', 'desc')
-            ->pluck('tahun')
-            ->toArray();
-
-        if (empty($tahunList)) {
-            $tahunList = [date('Y')];
-        }
+        // Ikut menghitung kegiatan yang kolom `tahun`-nya belum terisi lewat
+        // tanggal mulainya — lihat Kegiatan::daftarTahun().
+        $tahunList = Kegiatan::daftarTahun(Kegiatan::STATUS_DISETUJUI);
+        // Opsi "Belum ada tanggal" hanya dirender bila memang ada isinya.
+        $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->tanpaTahun()->exists();
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -63,9 +62,14 @@ class PelaksanaanController extends Controller
             }
         }
 
-        // Filter tahun
+        // Filter tahun — pakai scope supaya kegiatan ber-`tahun` NULL tetap
+        // ketemu lewat tahun pada tanggal mulainya, bukan hilang dari daftar.
         if ($request->filled('tahun') && $request->tahun !== 'semua') {
-            $query->where('tahun', $request->tahun);
+            if ($request->tahun === Kegiatan::FILTER_TANPA_TAHUN) {
+                $query->tanpaTahun();
+            } else {
+                $query->filterTahun($request->tahun);
+            }
         }
 
         // Search judul + deskripsi
@@ -82,7 +86,7 @@ class PelaksanaanController extends Controller
 
 
         return view('manajemenmahasiswa::pelaksanaan.index', compact(
-            'pelaksanaanList', 'bidangList', 'tahunList',
+            'pelaksanaanList', 'bidangList', 'tahunList', 'adaTanpaTahun',
             'isAdmin', 'isPengurus', 'canManage'
         ));
     }
@@ -98,10 +102,16 @@ class PelaksanaanController extends Controller
             'ketuaPelaksana.user', 'dosenPendampings.user',
             'panitia.user', 'creator', 'disetujuiOleh',
             'repoMulmed',
-        ])->whereIn('status', [
+        ])->find($id);
+
+        // 'selesai' tetap boleh DILIHAT agar halaman detail masih bisa dibuka
+        // setelah diarsipkan — berbeda dari edit/update yang dibatasi 'disetujui'.
+        if ($tolak = $this->tolakBilaStatusTakSesuai($proker, [
             Kegiatan::STATUS_DISETUJUI,
-            Kegiatan::STATUS_SELESAI,   // tetap include agar halaman detail masih bisa dibuka setelah diarsipkan
-        ])->findOrFail($id);
+            Kegiatan::STATUS_SELESAI,
+        ])) {
+            return $tolak;
+        }
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -144,10 +154,13 @@ class PelaksanaanController extends Controller
             'ketuaPelaksana.user', 'dosenPendampings.user',
             'panitia.user', 'creator',
             'repoMulmed',
-        ])->whereIn('status', [
-            Kegiatan::STATUS_DISETUJUI,
-            Kegiatan::STATUS_SELESAI,
-        ])->findOrFail($id);
+        ])->find($id);
+
+        // Hanya tahap Pelaksanaan. Kegiatan yang sudah diarsipkan diubah dari
+        // subbab Arsip — lihat catatan wewenang di tolakBilaStatusTakSesuai().
+        if ($tolak = $this->tolakBilaStatusTakSesuai($proker, [Kegiatan::STATUS_DISETUJUI])) {
+            return $tolak;
+        }
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -196,10 +209,32 @@ class PelaksanaanController extends Controller
 
     public function update(Request $request, $id)
     {
-        $proker = Kegiatan::whereIn('status', [
-            Kegiatan::STATUS_DISETUJUI,
-            Kegiatan::STATUS_SELESAI,
-        ])->findOrFail($id);
+        $proker = Kegiatan::find($id);
+
+        // Sinkron dengan edit(): kegiatan yang sudah diarsipkan tidak boleh
+        // ditulis dari sini, termasuk oleh permintaan PUT langsung.
+        if ($tolak = $this->tolakBilaStatusTakSesuai($proker, [Kegiatan::STATUS_DISETUJUI])) {
+            return $tolak;
+        }
+
+        // Bidang wajib kecuali seluruh kategori yang dipilih berkategori Prodi —
+        // aturan yang sama persis dengan Rencana Proker. Sebelumnya di sini
+        // `bidang_id` selalu nullable, sehingga kegiatan "Kegiatan Himpunan" bisa
+        // disimpan tanpa bidang lalu tampil berlabel "Prodi" di kartu & detailnya,
+        // padahal aksi yang sama ditolak di Subbab 1.
+        $kategoriDipilih = $request->input('kategori_kegiatan_id', []);
+        $isOnlyProdi = is_array($kategoriDipilih) && Kegiatan::hanyaKategoriProdi($kategoriDipilih);
+        $bidangRule  = $isOnlyProdi ? 'nullable|array' : 'required|array|min:1';
+
+        // Jam selesai hanya dibandingkan dengan jam mulai bila kegiatan berlangsung
+        // dalam SATU hari — kegiatan lintas hari wajar berakhir di jam yang lebih awal.
+        $satuHari = !$request->filled('tanggal_selesai')
+            || $request->input('tanggal_selesai') === $request->input('tanggal_mulai');
+
+        $jamSelesaiRules = ['nullable', 'date_format:H:i,H:i:s'];
+        if ($satuHari && $request->filled('jam_mulai')) {
+            $jamSelesaiRules[] = 'after:jam_mulai';
+        }
 
         $validated = $request->validate([
             'judul'                     => 'required|string|max:255',
@@ -207,13 +242,15 @@ class PelaksanaanController extends Controller
             // selalu lolos validasi saat diedit di subbab Arsip (hindari "jebakan" validasi).
             'kategori_kegiatan_id'      => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*'    => 'integer|exists:mk_kategori_kegiatan,id',
-            'bidang_id'                 => 'nullable|array',
+            'bidang_id'                 => $bidangRule,
             'bidang_id.*'               => 'integer|exists:mk_bidang,id',
             'deskripsi'                 => 'required|string|min:20',
             'tanggal_mulai'             => 'required|date',
             'tanggal_selesai'           => 'nullable|date|after_or_equal:tanggal_mulai',
-            'jam_mulai'                 => 'nullable|string',
-            'jam_selesai'               => 'nullable|string',
+            // Kolom jam di database bertipe TIME: `string` bebas membuat isian ngawur
+            // lolos ke query dan memunculkan halaman error saat disimpan.
+            'jam_mulai'                 => 'nullable|date_format:H:i,H:i:s',
+            'jam_selesai'               => $jamSelesaiRules,
             'lokasi'                    => 'nullable|string|max:255',
             'target_peserta'            => 'nullable|integer|min:1',
             'anggaran'                  => 'nullable|numeric|min:0',
@@ -231,7 +268,19 @@ class PelaksanaanController extends Controller
             'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
             'hapus_file'                => 'nullable|array',
             'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
+        ], [
+            // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom mentah.
+            'bidang_id.required'             => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.min'                  => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'tanggal_mulai.required'         => 'Tanggal mulai wajib diisi. Kegiatan yang sudah masuk tahap pelaksanaan harus punya tanggal pasti supaya bisa muncul di filter Tahun dan diarsipkan.',
+            'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
+            'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
+            'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',
+            'jam_selesai.after'              => 'Jam selesai harus lebih lambat dari jam mulai. Kalau kegiatannya lintas hari, isi dulu tanggal selesainya.',
         ]);
+
+        // Batas 10 file berlaku untuk TOTAL yang tersimpan, bukan per sekali simpan.
+        $this->pastikanKuotaFile($request, $proker);
 
         // Update data utama
         $proker->update([
@@ -249,6 +298,9 @@ class PelaksanaanController extends Controller
             'target_peserta'     => $validated['target_peserta'] ?? null,
             'anggaran'           => $validated['anggaran'] ?? null,
             'ketua_pelaksana_id' => $validated['ketua_pelaksana_id'] ?? null,
+            // Penanda bahwa data pelaksanaan sudah pernah diperbarui — ini yang
+            // membuka tombol "Unggah ke Arsip" di halaman detail. Naik saat form
+            // Pelaksanaan disimpan; sekali true tidak diturunkan lagi.
             'is_pelaksanaan_updated' => true,
         ]);
 
@@ -344,7 +396,23 @@ class PelaksanaanController extends Controller
                 ->with('error', 'Anda tidak memiliki izin untuk mengunggah kegiatan ke arsip.');
         }
 
-        $proker = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->findOrFail($id);
+        // Dicari by id dulu, status diperiksa sesudahnya. Kalau findOrFail langsung
+        // dibatasi STATUS_DISETUJUI, permintaan publish kedua — klik ganda pada modal,
+        // atau tombol Back lalu klik lagi — melempar ModelNotFoundException dan user
+        // dibuang ke halaman error, padahal kegiatannya justru sudah berhasil masuk arsip.
+        $proker = Kegiatan::findOrFail($id);
+
+        if ($proker->status === Kegiatan::STATUS_SELESAI) {
+            return redirect()
+                ->route('manajemenmahasiswa.kegiatan.show', $proker->id)
+                ->with('success', 'Kegiatan ini sudah berada di Laporan & Arsip.');
+        }
+
+        if ($proker->status !== Kegiatan::STATUS_DISETUJUI) {
+            return redirect()
+                ->route('manajemenmahasiswa.pelaksanaan.index')
+                ->with('error', 'Hanya kegiatan yang berada di tahap Pelaksanaan yang bisa diunggah ke arsip.');
+        }
 
         if (!$proker->is_pelaksanaan_updated) {
             return redirect()
@@ -377,9 +445,19 @@ class PelaksanaanController extends Controller
     {
         // Hanya kegiatan berstatus 'disetujui' yang boleh dihapus dari Pelaksanaan.
         // Kegiatan yang sudah diarsipkan (selesai) harus dihapus dari subbab Arsip.
-        $proker = Kegiatan::with('repoMulmed')
-            ->where('status', Kegiatan::STATUS_DISETUJUI)
-            ->findOrFail($id);
+        //
+        // Statusnya diperiksa SETELAH pencarian by id — sama seperti publishToArsip():
+        // dengan findOrFail yang dibatasi status, klik Hapus kedua kali (mis. setelah
+        // tombol Back) berakhir di halaman error alih-alih pesan yang menjelaskan.
+        $proker = Kegiatan::with('repoMulmed')->findOrFail($id);
+
+        if ($proker->status !== Kegiatan::STATUS_DISETUJUI) {
+            return redirect()
+                ->route('manajemenmahasiswa.pelaksanaan.index')
+                ->with('error', $proker->status === Kegiatan::STATUS_SELESAI
+                    ? 'Kegiatan ini sudah diarsipkan, jadi penghapusannya dilakukan dari subbab Laporan & Arsip.'
+                    : 'Hanya kegiatan yang berada di tahap Pelaksanaan yang bisa dihapus dari halaman ini.');
+        }
 
         if ($proker->banner) {
             $this->supabase->delete($proker->banner);
@@ -405,6 +483,91 @@ class PelaksanaanController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     // Private Helpers
     // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Pastikan kegiatan memang berada di tahap yang ditangani halaman ini.
+     *
+     * Dua alasan:
+     *
+     * 1. Wewenang. Halaman Pelaksanaan boleh diakses staff_himpunan, sedangkan
+     *    Laporan & Arsip TIDAK. Selama edit()/update() masih menerima status
+     *    'selesai', staff_himpunan bisa membuka /pelaksanaan/{id}/edit untuk
+     *    kegiatan yang sudah diarsipkan dan mengubah judul, tanggal, anggaran,
+     *    bahkan menghapus foto & dokumen arsipnya — persis yang dilarang lewat
+     *    /kegiatan/{id}/edit. Karena itu edit & update dibatasi ke 'disetujui'
+     *    saja; kegiatan yang sudah diarsipkan diubah dari subbab Arsip.
+     *
+     * 2. Pesan, bukan halaman error. findOrFail yang dibatasi status melempar
+     *    ModelNotFoundException untuk id yang statusnya belum/sudah lewat tahap
+     *    ini, sehingga user yang mengetik URL atau menekan Back mendarat di
+     *    halaman error tanpa keterangan.
+     *
+     * @param array<int, string> $statusDiizinkan
+     * @return RedirectResponse|null null bila kegiatan boleh diproses di sini
+     */
+    private function tolakBilaStatusTakSesuai(?Kegiatan $proker, array $statusDiizinkan): ?RedirectResponse
+    {
+        if ($proker && in_array($proker->status, $statusDiizinkan, true)) {
+            return null;
+        }
+
+        if ($proker === null) {
+            return redirect()
+                ->route('manajemenmahasiswa.pelaksanaan.index')
+                ->with('error', 'Kegiatan yang Anda buka sudah tidak ada — kemungkinan sudah dihapus lebih dulu.');
+        }
+
+        return match ($proker->status) {
+            Kegiatan::STATUS_DRAFT => redirect()
+                ->route('manajemenmahasiswa.proker.show', $proker->id)
+                ->with('error', 'Kegiatan ini masih berada di tahap Rencana Proker, jadi belum bisa dikelola dari halaman Pelaksanaan.'),
+            Kegiatan::STATUS_SELESAI => redirect()
+                ->route('manajemenmahasiswa.kegiatan.show', $proker->id)
+                ->with('error', 'Kegiatan ini sudah diarsipkan. Perubahan datanya kini dilakukan dari subbab Laporan & Arsip.'),
+            default => redirect()
+                ->route('manajemenmahasiswa.pelaksanaan.index')
+                ->with('error', 'Kegiatan ini tidak berada di tahap Pelaksanaan.'),
+        };
+    }
+
+    /**
+     * Batas foto & dokumen berlaku untuk TOTAL file yang tersimpan pada kegiatan.
+     *
+     * Aturan `max:10` di validasi hanya membatasi satu kali unggah, sehingga user
+     * bisa mengunggah 10 foto → Simpan → buka Edit → unggah 10 lagi, berulang tanpa
+     * batas. Di sini sisa file lama (setelah dikurangi yang ditandai hapus pada
+     * form yang sama) dijumlahkan dengan file baru, dan diperiksa sebelum ada satu
+     * pun file yang benar-benar diunggah ke penyimpanan.
+     *
+     * @throws ValidationException
+     */
+    private function pastikanKuotaFile(Request $request, Kegiatan $proker): void
+    {
+        $akanDihapus = collect($request->input('hapus_file', []))->map(fn($fileId) => (int) $fileId);
+
+        $sisaFileLama = fn(string $tipe) => $proker->repoMulmed
+            ->where('tipe_file', $tipe)
+            ->reject(fn($file) => $akanDihapus->contains($file->id))
+            ->count();
+
+        $pesan = [];
+
+        $totalFoto = $sisaFileLama('image') + count($request->file('foto_kegiatan', []));
+        if ($totalFoto > self::MAKS_FILE) {
+            $pesan['foto_kegiatan'] = 'Total foto kegiatan maksimal ' . self::MAKS_FILE
+                . ", sedangkan unggahan ini membuatnya menjadi {$totalFoto}. Hapus dulu sebagian foto lama.";
+        }
+
+        $totalDokumen = $sisaFileLama('document') + count($request->file('dokumen_kegiatan', []));
+        if ($totalDokumen > self::MAKS_FILE) {
+            $pesan['dokumen_kegiatan'] = 'Total dokumen kegiatan maksimal ' . self::MAKS_FILE
+                . ", sedangkan unggahan ini membuatnya menjadi {$totalDokumen}. Hapus dulu sebagian dokumen lama.";
+        }
+
+        if ($pesan) {
+            throw ValidationException::withMessages($pesan);
+        }
+    }
 
     private function handleFileUploads(Request $request, Kegiatan $proker): void
     {

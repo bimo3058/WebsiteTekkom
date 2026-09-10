@@ -681,6 +681,14 @@
         </div>
     </div>
     @php
+        // Dipakai juga oleh modal pengajuan yang berada di luar blok per-tab,
+        // jadi didefinisikan di sini — bukan di dalam @if($tab === 'prestasi').
+        $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
+
+        // Batasnya diambil dari controller, satu angka untuk form & validasinya
+        $maksNama  = \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_NAMA;
+        $maksPeran = \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_PERAN;
+
         $canSubmit = auth()->user()->hasAnyRole([
             'mahasiswa',
             'pengurus_himpunan',
@@ -789,11 +797,21 @@
                                             'nama' => $b->nama_file,
                                             'is_image' => $b->isImage(),
                                         ])->values()->all(),
+                                        // Selama masih menunggu, pengajuan boleh ditarik lalu
+                                        // diajukan ulang — sebelumnya salah ketik hanya bisa
+                                        // dibetulkan setelah admin menolaknya lebih dulu.
+                                        'aksi' => (!$rwDiputus && $canSubmit) ? [
+                                            'label' => 'Tarik Pengajuan',
+                                            'gaya' => 'tolak',
+                                            'panggil' => 'openTarikConfirm',
+                                            'args' => ['tarikRiwayatForm' . $rw->id, $rw->nama_kegiatan_manual ?? 'kegiatan ini'],
+                                        ] : null,
                                     ];
                                 @endphp
                                 <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
-                                    <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">{{ $i + 1 }}
+                                    <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
+                                        {{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}
                                     </td>
                                     <td style="padding:14px 16px; min-width:200px;">
                                         <p
@@ -821,6 +839,18 @@
                                         </span>
                                     </td>
                                     <td style="padding:14px 16px; text-align:center;">
+                                        @if(!$rwDiputus && $canSubmit)
+                                            {{-- Satu form per baris, disembunyikan: tombolnya tinggal di
+                                            dalam modal Tinjau supaya baru bisa diambil setelah isinya
+                                            terbaca — pola yang sama dengan pembatalan klaim reward.
+                                            Diletakkan di dalam sel karena <form> yang menganggur di
+                                            antara baris tabel akan dilempar keluar tabel oleh parser
+                                            HTML, terpisah dari input CSRF-nya. --}}
+                                            <form method="POST" id="tarikRiwayatForm{{ $rw->id }}" style="display:none;"
+                                                action="{{ route('manajemenmahasiswa.verifikasi.riwayat.destroy', $rw->id) }}">
+                                                @csrf @method('DELETE')
+                                            </form>
+                                        @endif
                                         {{-- Satu pintu masuk seperti halaman admin: bukti, tanggal, dan
                                         catatan verifikasi semuanya dibuka dari sini. --}}
                                         <button type="button" class="btn-tinjau" onclick="openTinjau(@js($tinjauRiwayatPayload))">
@@ -837,6 +867,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                @include('manajemenmahasiswa::verifikasi.partials.pagination', ['paginator' => $riwayatData])
             @else
                 <div class="empty-state">
                     <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
@@ -890,23 +922,34 @@
                 // lolos, jadi tombol Ajukan Reward di kolom Aksi boleh dikelabukan.
                 // Kalau hanya salah satu yang penuh, grupnya baru ketahuan setelah
                 // mahasiswa memilih kategori — rambunya menyusul di dalam modal.
+                //
+                // Yang dihitung penuh adalah disetujui + yang masih menunggu: slot
+                // yang sudah dipesan pengajuan lain bukan slot yang tersisa.
                 $kuotaSemuaPenuh = true;
                 foreach ($P::KUOTA_MAKS as $grupCek => $maksCek) {
-                    if (($kuota[$grupCek] ?? 0) < $maksCek) {
+                    if (($kuotaTerpakai[$grupCek] ?? 0) < $maksCek) {
                         $kuotaSemuaPenuh = false;
                         break;
                     }
                 }
-                $kuotaAdaIsi = collect($kuotaDipakai ?? [])->flatten(1)->isNotEmpty();
+                // Rinciannya layak dibuka begitu ada yang memakai ATAU memesan slot
+                $kuotaAdaIsi = collect($kuotaDipakai ?? [])->flatten(1)->isNotEmpty()
+                    || collect($kuotaMenungguDipakai ?? [])->flatten(1)->isNotEmpty();
             @endphp
             <div style="padding:14px 16px; border-bottom:1px solid #e5e7eb;">
                 <div class="kuota-info" style="margin-bottom:10px;">
                     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         <span>Kuota reward Anda (SK FT 774):</span>
                         @foreach($P::KUOTA_MAKS as $grup => $maks)
-                            @php $pakai = $kuota[$grup] ?? 0; @endphp
-                            <span class="kuota-pill {{ $pakai >= $maks ? 'penuh' : '' }}">
-                                {{ $P::KUOTA_LABELS[$grup] }} {{ $pakai }}/{{ $maks }}{{ $pakai >= $maks ? ' — penuh' : '' }}
+                            @php
+                                $pakai   = $kuota[$grup] ?? 0;
+                                $tunggu  = $kuotaMenunggu[$grup] ?? 0;
+                                $terisi  = $kuotaTerpakai[$grup] ?? $pakai;
+                            @endphp
+                            {{-- Disetujui & menunggu ditulis terpisah: keduanya beda arti
+                                 bagi mahasiswa, tapi sama-sama mengunci slot. --}}
+                            <span class="kuota-pill {{ $terisi >= $maks ? 'penuh' : '' }}">
+                                {{ $P::KUOTA_LABELS[$grup] }} {{ $terisi }}/{{ $maks }}{{ $tunggu > 0 ? " ({$pakai} disetujui + {$tunggu} menunggu)" : '' }}{{ $terisi >= $maks ? ' — penuh' : '' }}
                             </span>
                         @endforeach
                     </div>
@@ -1044,13 +1087,24 @@
                                             : 'Pengajuan ini masih menunggu verifikasi admin.',
                                         'sections' => array_values(array_filter([$blokPengajuan, $blokReward])),
                                         'bukti' => $pBukti,
-                                        // Aksi mundur diletakkan di bawah datanya, bukan di baris tabel
-                                        'aksi' => $p->reward_status === $P::CLAIM_DIAJUKAN ? [
-                                            'label' => 'Batalkan Pengajuan Reward',
-                                            'gaya' => 'tolak',
-                                            'panggil' => 'openBatalConfirm',
-                                            'args' => ['batalRewardForm' . $p->id, $p->nama_prestasi],
-                                        ] : null,
+                                        // Aksi mundur diletakkan di bawah datanya, bukan di baris tabel.
+                                        // Keduanya tidak pernah bertabrakan: menarik pengajuan hanya
+                                        // selama menunggu, membatalkan reward hanya setelah disetujui.
+                                        'aksi' => match (true) {
+                                            $p->reward_status === $P::CLAIM_DIAJUKAN => [
+                                                'label' => 'Batalkan Pengajuan Reward',
+                                                'gaya' => 'tolak',
+                                                'panggil' => 'openBatalConfirm',
+                                                'args' => ['batalRewardForm' . $p->id, $p->nama_prestasi],
+                                            ],
+                                            !$pDiputus && $canSubmit => [
+                                                'label' => 'Tarik Pengajuan',
+                                                'gaya' => 'tolak',
+                                                'panggil' => 'openTarikConfirm',
+                                                'args' => ['tarikPrestasiForm' . $p->id, $p->nama_prestasi],
+                                            ],
+                                            default => null,
+                                        },
                                     ];
 
                                     // Payload modal Ajukan/Ajukan Ulang Reward — kerangkanya sama dengan
@@ -1076,7 +1130,8 @@
                                 @endphp
                                 <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
-                                    <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">{{ $i + 1 }}
+                                    <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
+                                        {{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}
                                     </td>
                                     <td style="padding:14px 16px; min-width:180px;">
                                         <p
@@ -1136,6 +1191,13 @@
                                         Tinjau — pintu masuk ke bukti, tanggal, catatan verifikasi, dan
                                         pembatalan reward — tetap berlabel dengan gaya yang sama persis
                                         seperti di tabel Riwayat Kegiatan dan halaman admin. --}}
+                                        @if(!$pDiputus && $canSubmit)
+                                            {{-- Lihat catatan pada form tarik di tabel Riwayat Kegiatan --}}
+                                            <form method="POST" id="tarikPrestasiForm{{ $p->id }}" style="display:none;"
+                                                action="{{ route('manajemenmahasiswa.verifikasi.prestasi.destroy', $p->id) }}">
+                                                @csrf @method('DELETE')
+                                            </form>
+                                        @endif
                                         <div class="aksi-rail">
                                             @if($rewardBisaDiajukan)
                                                 @if($kuotaSemuaPenuh)
@@ -1167,6 +1229,8 @@
                         </tbody>
                     </table>
                 </div>
+
+                @include('manajemenmahasiswa::verifikasi.partials.pagination', ['paginator' => $prestasiData])
             @else
                 <div class="empty-state">
                     <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
@@ -1221,14 +1285,40 @@
                         {{-- Kedua kelompok selalu tampil, termasuk yang belum terpakai:
                         kuota yang masih utuh adalah jawaban yang sama pentingnya. --}}
                         @foreach($P::KUOTA_MAKS as $grup => $maks)
-                            @php $daftar = $kuotaDipakai[$grup] ?? []; @endphp
+                            @php
+                                $daftar  = $kuotaDipakai[$grup] ?? [];
+                                $antre   = $kuotaMenungguDipakai[$grup] ?? [];
+                                $terisi  = count($daftar) + count($antre);
+                            @endphp
                             <div class="kuota-grup">
                                 <div class="kuota-grup-judul">
                                     <p class="tp-pane-heading">Kelompok {{ $P::KUOTA_LABELS[$grup] }}</p>
-                                    <span class="kuota-pill {{ count($daftar) >= $maks ? 'penuh' : '' }}">
-                                        {{ count($daftar) }}/{{ $maks }}{{ count($daftar) >= $maks ? ' — penuh' : '' }}
+                                    {{-- Angka yang sama dengan banner di atas tabel: yang
+                                         menunggu ikut memesan slot, jadi ikut dihitung. --}}
+                                    <span class="kuota-pill {{ $terisi >= $maks ? 'penuh' : '' }}">
+                                        {{ $terisi }}/{{ $maks }}{{ $terisi >= $maks ? ' — penuh' : '' }}
                                     </span>
                                 </div>
+
+                                @if(count($antre))
+                                    <div class="tinjau-info" style="margin-bottom:8px;">
+                                        <p style="font-size:11.5px; font-weight:700; color:#1e40af; margin:0 0 6px;">
+                                            Sedang menunggu persetujuan — memesan {{ count($antre) }} slot
+                                        </p>
+                                        @foreach($antre as $a)
+                                            <div class="kuota-dipakai-item">
+                                                <div class="kuota-dipakai-nama">{{ $a['nama'] }}</div>
+                                                @if($a['tanggal'])
+                                                    <div class="kuota-dipakai-ket">Diajukan {{ $a['tanggal'] }}</div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                        <p style="font-size:11px; color:var(--c-fg-muted); margin:8px 0 0;">
+                                            Batalkan salah satunya lewat tombol Tinjau pada barisnya bila Anda ingin
+                                            memakai jatah ini untuk prestasi lain.
+                                        </p>
+                                    </div>
+                                @endif
 
                                 @if(count($daftar))
                                     <div class="tinjau-info">
@@ -1250,7 +1340,7 @@
                                             </div>
                                         @endforeach
                                     </div>
-                                @else
+                                @elseif(!count($antre))
                                     <div class="tinjau-info" style="color:var(--c-fg-muted);">
                                         Belum terpakai — jatah kelompok ini masih utuh.
                                     </div>
@@ -1289,11 +1379,12 @@
                                 <label class="form-label-custom mb-0">Nama Kegiatan <span
                                         style="color: #dc2626;">*</span></label>
                                 <span class="text-muted" style="font-size: 11px;" id="charCount_nama_kegiatan_manual">0
-                                    / 50 huruf</span>
+                                    / {{ $maksNama }} huruf</span>
                             </div>
                             <input type="text" name="nama_kegiatan_manual" class="form-control form-control-custom"
-                                required maxlength="50" placeholder="Contoh: Lomba Debat Nasional 2026"
-                                oninput="document.getElementById('charCount_nama_kegiatan_manual').innerText = this.value.length + ' / 50 huruf'">
+                                required maxlength="{{ $maksNama }}" value="{{ old('nama_kegiatan_manual') }}"
+                                placeholder="Contoh: Lomba Debat Nasional 2026"
+                                oninput="document.getElementById('charCount_nama_kegiatan_manual').innerText = this.value.length + ' / {{ $maksNama }} huruf'">
                             <small class="text-muted" style="font-size: 11px;">Ketik nama kegiatan yang pernah Anda
                                 ikuti</small>
                         </div>
@@ -1301,18 +1392,21 @@
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label-custom mb-0">Peran <span
                                         style="color: #dc2626;">*</span></label>
-                                <span class="text-muted" style="font-size: 11px;" id="charCount_peran_manual">0 / 50
+                                <span class="text-muted" style="font-size: 11px;" id="charCount_peran_manual">0 / {{ $maksPeran }}
                                     huruf</span>
                             </div>
                             <input type="text" name="peran_manual" class="form-control form-control-custom" required
-                                maxlength="50" placeholder="Contoh: Peserta, Delegasi, Koordinator"
-                                oninput="document.getElementById('charCount_peran_manual').innerText = this.value.length + ' / 50 huruf'">
+                                maxlength="{{ $maksPeran }}" value="{{ old('peran_manual') }}"
+                                placeholder="Contoh: Peserta, Delegasi, Koordinator"
+                                oninput="document.getElementById('charCount_peran_manual').innerText = this.value.length + ' / {{ $maksPeran }} huruf'">
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">Tanggal Kegiatan <span
                                     style="color: #dc2626;">*</span></label>
+                            {{-- max hari ini: kegiatan yang belum terjadi belum punya bukti,
+                            dan tahunnya ikut terbawa ke statistik. Divalidasi ulang di server. --}}
                             <input type="date" name="tanggal_kegiatan" class="form-control form-control-custom"
-                                required>
+                                required max="{{ date('Y-m-d') }}" value="{{ old('tanggal_kegiatan') }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">
@@ -1358,28 +1452,28 @@
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="form-label-custom mb-0">Nama Prestasi <span
                                         style="color: #dc2626;">*</span></label>
-                                <span class="text-muted" style="font-size: 11px;" id="charCount_nama_prestasi">0 / 50
+                                <span class="text-muted" style="font-size: 11px;" id="charCount_nama_prestasi">0 / {{ $maksNama }}
                                     huruf</span>
                             </div>
                             <input type="text" name="nama_prestasi" class="form-control form-control-custom" required
-                                maxlength="50" placeholder="Contoh: Juara 1 Hackathon IT Del 2026"
-                                oninput="document.getElementById('charCount_nama_prestasi').innerText = this.value.length + ' / 50 huruf'">
+                                maxlength="{{ $maksNama }}" value="{{ old('nama_prestasi') }}"
+                                placeholder="Contoh: Juara 1 Hackathon IT Del 2026"
+                                oninput="document.getElementById('charCount_nama_prestasi').innerText = this.value.length + ' / {{ $maksNama }} huruf'">
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">Tingkat <span style="color: #dc2626;">*</span></label>
                             <select name="tingkat" class="form-select form-select-custom" required>
                                 <option value="">Pilih tingkat...</option>
-                                <option value="internasional">Internasional</option>
-                                <option value="nasional">Nasional</option>
-                                <option value="regional">Regional</option>
-                                <option value="universitas">Universitas</option>
-                                <option value="prodi">Prodi</option>
+                                @foreach($P::TINGKAT_LIST as $tk)
+                                    <option value="{{ $tk }}" {{ old('tingkat') === $tk ? 'selected' : '' }}>{{ ucfirst($tk) }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">Tanggal <span style="color: #dc2626;">*</span></label>
+                            {{-- Lihat catatan max pada tanggal kegiatan --}}
                             <input type="date" name="tanggal" class="form-control form-control-custom" required
-                                value="{{ date('Y-m-d') }}">
+                                max="{{ date('Y-m-d') }}" value="{{ old('tanggal', date('Y-m-d')) }}">
                         </div>
 
                         <div class="mb-3">
@@ -1520,7 +1614,8 @@
                                 Tinjau, jadi kedua modal terasa satu keluarga. --}}
                                 <div class="tp-aksi">
                                     <button type="button" class="tp-btn-netral" data-bs-dismiss="modal">Batal</button>
-                                    <button type="submit" id="arSubmitBtn" class="tp-btn-utama" disabled>
+                                    <button type="submit" id="arSubmitBtn" class="tp-btn-utama" disabled
+                                        data-submit-once>
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
                                             stroke-linejoin="round">
@@ -1582,7 +1677,12 @@
         <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
         <img id="lightboxImg" src="" alt="Preview">
     </div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {{-- Bootstrap tidak dimuat lagi di sini: layout sudah memuatnya di akhir body.
+    Dua salinan membuat modal di halaman ini dikendalikan dua instance Bootstrap
+    yang berbeda — penyebab klasik backdrop gelap yang tidak hilang & halaman
+    yang tidak bisa di-scroll setelah menutup modal. Skripnya dipindah ke stack
+    'scripts' supaya tetap berjalan setelah Bootstrap milik layout siap. --}}
+    @push('scripts')
     <script>
         // =========================================================================
         // File Preview Manager — handles image thumbnails + doc list with remove
@@ -1740,6 +1840,21 @@
                 ccModal.show();
             };
 
+            // Menarik pengajuan yang masih menunggu — datanya benar-benar dihapus
+            // beserta berkasnya, jadi konfirmasinya menyebut itu apa adanya.
+            window.openTarikConfirm = function (formId, nama) {
+                activeFormId = formId;
+                iconEl.style.background = '#FFFBEB';
+                iconEl.innerHTML = ICON_WARN;
+                titleEl.textContent = 'Tarik Pengajuan';
+                textEl.innerHTML = 'Tarik pengajuan <strong class="cc-nama"></strong> dari antrean verifikasi? Data & berkas buktinya dihapus, dan Anda perlu mengunggah ulang bila ingin mengajukannya lagi.';
+                const namaEl = textEl.querySelector('.cc-nama');
+                if (namaEl) namaEl.textContent = '"' + nama + '"';
+                btnEl.textContent = 'Ya, Tarik';
+                btnEl.style.background = '#dc2626';
+                ccModal.show();
+            };
+
             btnEl.addEventListener('click', function () {
                 if (!activeFormId) return;
                 const form = document.getElementById(activeFormId);
@@ -1796,8 +1911,9 @@
             const MK_SKS = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::mataKuliahFlat());
             const BASE_URL = @json(url('manajemen-mahasiswa/verifikasi'));
 
-            // Kuota milik mahasiswa ini — angkanya sama dengan yang dipakai guard server
-            const KUOTA_PAKAI = @json($kuota);
+            // Kuota milik mahasiswa ini — angkanya sama dengan yang dipakai guard
+            // server: disetujui + yang masih menunggu, karena keduanya mengunci slot.
+            const KUOTA_PAKAI = @json($kuotaTerpakai);
             const KUOTA_MAKS = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_MAKS);
             const KUOTA_LABEL = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_LABELS);
             const KUOTA_UMUM = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_UMUM);
@@ -2053,4 +2169,5 @@
             });
         });
     </script>
+    @endpush
 </x-dynamic-component>

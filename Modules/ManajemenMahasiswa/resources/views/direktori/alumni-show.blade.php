@@ -716,19 +716,25 @@
                     <div id="section-manual-alumni" style="display:none;">
                         <div class="mb-3">
                             <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Nama Kegiatan</label>
+                            {{-- Batasnya sama dengan form pengajuan mahasiswa (modul Verifikasi
+                                 Data), supaya nama yang ditolak di satu pintu tidak diterima
+                                 di pintu lain. --}}
                             <input type="text" name="nama_kegiatan_manual" class="form-control"
+                                   maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_NAMA }}"
                                    placeholder="Cth: Kompetisi Robotika Nasional 2024"
                                    style="border-radius:8px;font-size:14px;">
                         </div>
                         <div class="mb-3">
                             <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Peran</label>
                             <input type="text" name="peran_manual" class="form-control"
+                                   maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_PERAN }}"
                                    placeholder="Cth: Peserta, Juri, Koordinator"
                                    style="border-radius:8px;font-size:14px;">
                         </div>
                         <div class="mb-3">
                             <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Tanggal Kegiatan</label>
                             <input type="date" name="tanggal_kegiatan" class="form-control"
+                                   max="{{ date('Y-m-d') }}"
                                    style="border-radius:8px;font-size:14px;">
                         </div>
                     </div>

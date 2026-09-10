@@ -120,7 +120,8 @@
     <div class="form-title">Edit Biodata Mahasiswa</div>
     <div class="form-subtitle">Perbarui informasi biodata mahasiswa: {{ $mhs->nama }}</div>
 
-    <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.update', $mhs->id) }}">
+    <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.update', $mhs->id) }}"
+          id="formEditBiodata" data-status-awal="{{ $mhs->status }}">
         @csrf
         @method('PUT')
 
@@ -151,38 +152,57 @@
                     }
                 }
             @endphp
+            {{-- Nama, NIM, dan Angkatan dikunci dengan `disabled` (bukan sekadar `readonly`)
+                 agar benar-benar tidak ikut terkirim saat form disimpan. Sisi server juga
+                 sudah berhenti menerima ketiga field ini. --}}
             <!-- Nama -->
             <div class="col-12">
-                <label class="form-label-custom">Nama Lengkap <span class="sso-tag">SSO</span> <span style="color: #ef4444;">*</span></label>
-                <input type="text" name="nama" class="form-control form-control-custom"
-                       value="{{ old('nama', $mhs->nama) }}" required readonly style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
+                <label class="form-label-custom">Nama Lengkap <span class="sso-tag">SSO</span></label>
+                <input type="text" class="form-control form-control-custom"
+                       value="{{ $mhs->nama }}" disabled style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
             </div>
 
             <!-- NIM -->
             <div class="col-md-6">
-                <label class="form-label-custom">NIM <span class="sso-tag">SSO</span> <span style="color: #ef4444;">*</span></label>
-                <input type="text" name="nim" class="form-control form-control-custom"
-                       value="{{ old('nim', $mhs->nim) }}" required readonly style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
+                <label class="form-label-custom">NIM <span class="sso-tag">SSO</span></label>
+                <input type="text" class="form-control form-control-custom"
+                       value="{{ $mhs->nim }}" disabled style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
             </div>
 
             <!-- Angkatan -->
             <div class="col-md-6">
-                <label class="form-label-custom">Angkatan <span class="sso-tag">SSO</span> <span style="color: #ef4444;">*</span></label>
-                <input type="number" name="angkatan" class="form-control form-control-custom"
-                       value="{{ old('angkatan', $mhs->angkatan) }}" min="2000" max="2099" required readonly style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
+                <label class="form-label-custom">Angkatan <span class="sso-tag">SSO</span></label>
+                <input type="number" class="form-control form-control-custom"
+                       value="{{ $mhs->angkatan }}" disabled style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
+            </div>
+
+            <div class="col-12">
+                <small class="text-muted d-block" style="font-size: 11px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    Nama, NIM, dan Angkatan mengikuti data <strong>SSO UNDIP</strong> dan tidak dapat diubah dari sini.
+                </small>
             </div>
 
             <!-- Status -->
             <div class="col-md-6">
                 <label class="form-label-custom">Status <span style="color: #ef4444;">*</span></label>
-                <select name="status" class="form-select form-select-custom" required>
+                <select name="status" id="statusSelect" class="form-select form-select-custom" required>
                     <option value="aktif" {{ old('status', $mhs->status) == 'aktif' ? 'selected' : '' }}>Aktif</option>
                     <option value="cuti" {{ old('status', $mhs->status) == 'cuti' ? 'selected' : '' }}>Cuti</option>
+                    {{-- Opsi "Alumni" sebelumnya tidak ada. Akibatnya, saat admin membuka form
+                         ini untuk mahasiswa yang sudah berstatus alumni, dropdown otomatis
+                         jatuh ke opsi pertama (Aktif) dan sekali klik Simpan datanya terhapus
+                         dari Direktori Alumni tanpa disadari. --}}
+                    <option value="alumni" {{ old('status', $mhs->status) == 'alumni' ? 'selected' : '' }}>Alumni (Lulus)</option>
                     <option value="drop_out" {{ old('status', $mhs->status) == 'drop_out' ? 'selected' : '' }}>Drop Out</option>
                     <option value="pindah_studi" {{ old('status', $mhs->status) == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
                     <option value="wafat" {{ old('status', $mhs->status) == 'wafat' ? 'selected' : '' }}>Wafat</option>
                     <option value="mangkir" {{ old('status', $mhs->status) == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
                 </select>
+                <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-warning"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Memilih <strong>Alumni (Lulus)</strong> memindahkan mahasiswa ini ke <strong>Direktori Alumni</strong>.
+                </small>
             </div>
 
             <!-- IPK -->
@@ -271,6 +291,28 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Pengaman terakhir: memindahkan mahasiswa KELUAR dari status Alumni akan menghapus
+// datanya di Direktori Alumni, jadi minta konfirmasi eksplisit lebih dulu.
+document.getElementById('formEditBiodata')?.addEventListener('submit', function (e) {
+    const statusAwal = this.dataset.statusAwal;
+    const select     = this.querySelector('#statusSelect');
+
+    if (statusAwal !== 'alumni' || !select || select.value === 'alumni') {
+        return;
+    }
+
+    const labelBaru = select.options[select.selectedIndex].text;
+    const lanjut = window.confirm(
+        'Mahasiswa ini berstatus ALUMNI.\n\n' +
+        'Mengubah status menjadi "' + labelBaru + '" akan menghapus datanya dari Direktori Alumni.\n\n' +
+        'Lanjutkan menyimpan?'
+    );
+
+    if (!lanjut) {
+        e.preventDefault();
+    }
+});
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('mhsPhoneCode', (defaultDial) => {
         const countries = [

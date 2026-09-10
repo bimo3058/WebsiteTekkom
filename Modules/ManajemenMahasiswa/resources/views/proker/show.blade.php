@@ -4,13 +4,7 @@
 @include('manajemenmahasiswa::partials.kegiatan-detail._styles')
 
 <style>
-/* Khusus Rencana Proker: badge status, tombol ajukan & modal */
-.status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700}
-.status-draft{background:#f3f4f6;color:#666D80}
-.status-diajukan{background:#FFFBEB;color:#92400e}
-.status-disetujui{background:#eef2ff;color:#0B266E}
-.status-selesai{background:#ECFDF5;color:#059669}
-.status-ditolak{background:#fee2e2;color:#dc2626}
+/* Khusus Rencana Proker: tombol ajukan & modal */
 .btn-ajukan{background:linear-gradient(135deg,#0B266E,#0B266E);color:#fff;font-weight:600;padding:10px 24px;border-radius:10px;border:none;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
 .btn-ajukan:hover{background:linear-gradient(135deg,#091958,#091958);transform:translateY(-1px)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center}
@@ -47,9 +41,17 @@
         </div>
     </div>
 
-    <div class="d-flex flex-column align-items-end gap-2">
-        <span class="status-badge status-{{ $proker->status }}">{{ $proker->status_label }}</span>
-
+    {{--
+        Badge status sengaja TIDAK dirender di sini. Daftar Rencana Proker hanya
+        memuat proker berstatus draft, jadi badge-nya selalu bertuliskan "Draft"
+        — nol informasi, tapi tingginya (28px + jarak 8px) menjadikan blok kanan
+        dua tingkat dan mendorong baris tombol turun sampai menempel banner
+        (jaraknya terukur 0px). Tanpa badge, tombol naik sejajar judul dan banner
+        dapat jarak 34px. Untuk proker yang sudah diajukan/diarsipkan, statusnya
+        tetap terbaca dari hilangnya semua tombol di bawah ini plus kartu
+        "Proker Diajukan!" / "Kegiatan Selesai & Diarsipkan" di bagian bawah.
+    --}}
+    <div class="d-flex flex-column align-items-end">
         <div class="d-flex gap-2 flex-wrap align-items-start justify-content-end">
             @if($canEdit && $proker->status === 'draft')
                 <a href="{{ route('manajemenmahasiswa.proker.edit', $proker->id) }}"

@@ -312,6 +312,14 @@
             $canViewAll = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen', 'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
             $mahasiswaRoute = $canViewAll ? route('manajemenmahasiswa.direktori.mahasiswa.index') : route('manajemenmahasiswa.direktori.mahasiswa.profil');
             $alumniRoute = $canViewAll ? route('manajemenmahasiswa.direktori.alumni.index') : route('manajemenmahasiswa.direktori.alumni.profil');
+
+            // Halaman "Profil Saya" hanya milik pemegang role mahasiswa/alumni.
+            // Tanpa entri menu tersendiri, halaman ini tidak bisa dijangkau sama sekali:
+            // $canViewAll bernilai true juga untuk mahasiswa, sehingga menu "Mahasiswa"
+            // selalu mengarah ke daftar seluruh mahasiswa, bukan ke profil pribadi.
+            $punyaProfilSendiri = (bool) array_intersect($sidebarRoles, ['mahasiswa', 'alumni']);
+            $isProfilAktif = request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.profil')
+                || request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.profil.cv');
         @endphp
         <div class="sidebar-dropdown {{ $isDirektoriActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $isDirektoriActive ? 'active' : '' }}"
@@ -326,8 +334,14 @@
                 </svg>
             </a>
             <div class="sidebar-dropdown-menu">
+                @if($punyaProfilSendiri)
+                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.profil') }}"
+                        class="sub-item {{ $isProfilAktif ? 'active' : '' }}">
+                        <span class="nav-label">Profil Saya</span>
+                    </a>
+                @endif
                 <a href="{{ $mahasiswaRoute }}"
-                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') ? 'active' : '' }}">
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') && !$isProfilAktif ? 'active' : '' }}">
                     <span class="nav-label">Mahasiswa</span>
                 </a>
                 <a href="{{ $alumniRoute }}"
@@ -408,10 +422,13 @@
                 $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
                 $verifTab = request('tab', 'prestasi');
 
-                // Badge jumlah pending — hanya untuk verifier (admin/kemahasiswaan)
+                // Badge jumlah pending — untuk semua yang berwenang memutus.
+                // Daftarnya disalin dari middleware route approve/reject, bukan
+                // ditulis ulang: DPM sempat tertinggal di sini, sehingga ia boleh
+                // menyetujui/menolak tapi tidak pernah tahu ada antrean menunggu.
                 $verifPendingRiwayat = 0;
                 $verifPendingPrestasi = 0;
-                if (array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin'])) {
+                if (array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])) {
                     $verifPendingRiwayat = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count();
                     $verifPendingPrestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
                 }

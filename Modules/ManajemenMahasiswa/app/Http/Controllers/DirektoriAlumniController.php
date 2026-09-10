@@ -648,11 +648,24 @@ class DirektoriAlumniController extends Controller
 
         $mode = $request->input('input_mode', 'dropdown');
 
+        // Ditambah admin → langsung approved, sama seperti storePrestasi() di
+        // bawah. Tanpa ini status jatuh ke default "pending": datanya tidak
+        // pernah tampil di profil (profil hanya menampilkan yang disetujui),
+        // sekaligus nyangkut di antrean Verifikasi Kegiatan tanpa berkas bukti
+        // sebagai pengajuan yang tidak pernah dibuat alumninya.
+        $terverifikasi = [
+            'verification_status' => RiwayatKegiatan::VERIF_APPROVED,
+            'verified_by'         => auth()->id(),
+            'verified_at'         => now(),
+        ];
+
         if ($mode === 'manual') {
             $request->validate([
-                'nama_kegiatan_manual' => 'required|string|max:255',
-                'peran_manual'         => 'required|string|max:255',
-                'tanggal_kegiatan'     => 'nullable|date',
+                'nama_kegiatan_manual' => 'required|string|max:' . VerifikasiController::MAKS_NAMA,
+                'peran_manual'         => 'required|string|max:' . VerifikasiController::MAKS_PERAN,
+                'tanggal_kegiatan'     => 'nullable|date|before_or_equal:today',
+            ], [
+                'tanggal_kegiatan.before_or_equal' => 'Tanggal kegiatan tidak boleh melewati hari ini.',
             ]);
 
             RiwayatKegiatan::create([
@@ -662,7 +675,7 @@ class DirektoriAlumniController extends Controller
                 'nama_kegiatan_manual' => $request->nama_kegiatan_manual,
                 'peran_manual'         => $request->peran_manual,
                 'tanggal_kegiatan'     => $request->tanggal_kegiatan,
-            ]);
+            ] + $terverifikasi);
         } else {
             $request->validate([
                 'kegiatan_id' => 'required|exists:mk_kegiatan,id',
@@ -673,7 +686,7 @@ class DirektoriAlumniController extends Controller
                 'student_id'  => $student->id,
                 'kegiatan_id' => $request->kegiatan_id,
                 'peran'       => $request->peran,
-            ]);
+            ] + $terverifikasi);
         }
 
         return redirect()
@@ -729,9 +742,12 @@ class DirektoriAlumniController extends Controller
     public function storePrestasi(Request $request, int $id)
     {
         $request->validate([
-            'nama_prestasi' => 'required|string|max:255',
+            // Batas & aturan tanggalnya disamakan dengan form pengajuan mahasiswa
+            'nama_prestasi' => 'required|string|max:' . VerifikasiController::MAKS_NAMA,
             'tingkat'       => 'required|in:' . implode(',', \Modules\ManajemenMahasiswa\Models\Prestasi::TINGKAT_LIST),
-            'tanggal'       => 'nullable|date',
+            'tanggal'       => 'nullable|date|before_or_equal:today',
+        ], [
+            'tanggal.before_or_equal' => 'Tanggal prestasi tidak boleh melewati hari ini.',
         ]);
 
         $alumni = Alumni::findOrFail($id);
