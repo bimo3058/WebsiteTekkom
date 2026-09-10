@@ -127,6 +127,102 @@
             opacity: 0.45;
             cursor: not-allowed;
         }
+
+        /* ── 3-dot dropdown ── */
+        .dots-wrap { 
+            position: relative; 
+            display: inline-block;
+            line-height: 1;
+        }
+        .btn-dots {
+            display: inline-flex; 
+            align-items: center; 
+            justify-content: center;
+            width: 32px; 
+            height: 32px; 
+            border-radius: 8px;
+            border: 1px solid #e2e8f0; 
+            background: #fff;
+            font-size: 18px; 
+            cursor: pointer; 
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .btn-dots:hover { 
+            border-color: rgb(11, 38, 110); 
+            color: rgb(11, 38, 110); 
+            background: #f8fafc; 
+        }
+        .dots-menu {
+            display: none; 
+            position: absolute; 
+            right: 0; 
+            top: calc(100% + 5px);
+            background: #fff; 
+            border: 1px solid #e2e8f0;
+            border-radius: 12px; 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            min-width: 160px; 
+            z-index: 100; 
+            overflow: hidden;
+            padding: 4px;
+        }
+        .dots-menu.open { 
+            display: block; 
+            animation: menuFadeIn 0.2s ease-out;
+        }
+        @keyframes menuFadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .dots-menu button, .dots-menu a {
+            display: flex !important; 
+            align-items: center !important; 
+            justify-content: flex-start !important;
+            gap: 10px !important;
+            width: 100% !important; 
+            padding: 10px 12px !important;
+            background: none !important; 
+            border: none !important; 
+            border-radius: 8px !important;
+            font-size: 13px !important; 
+            font-weight: 500 !important; 
+            color: #334155 !important;
+            cursor: pointer !important; 
+            text-align: left !important;
+            text-decoration: none !important;
+            transition: all 0.15s !important;
+            margin: 0 !important;
+            line-height: 1.2 !important;
+        }
+        .dots-menu button:hover:not(:disabled), .dots-menu a:hover:not(:disabled) { 
+            background: #f1f5f9 !important; 
+            color: rgb(11, 38, 110) !important;
+        }
+        .dots-menu button:disabled, .dots-menu a:disabled {
+            color: #94a3b8 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
+        .dots-menu button:disabled svg, .dots-menu a:disabled svg, .dots-menu button:disabled i, .dots-menu a:disabled i {
+            opacity: 0.6;
+        }
+        .dots-menu i, .dots-menu svg {
+            font-size: 14px !important;
+            width: 18px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            margin: 0 !important;
+        }
+        .dots-menu .menu-delete:not(:disabled) { 
+            color: #ef4444 !important; 
+        }
+        .dots-menu .menu-delete:hover:not(:disabled) { 
+            background: #fef2f2 !important; 
+            color: #dc2626 !important;
+        }
     </style>
 
     <x-banksoal::notification.alerts />
@@ -229,126 +325,54 @@
         });
 
         (function() {
-            const uploadModal = document.getElementById('rpsUploadModal');
-            const editModal = document.getElementById('rpsEditModal');
-            const hasValidationErrors = uploadModal?.dataset.hasValidationErrors === '1';
+            // Klien-side pagination untuk Riwayat Pengajuan RPS
+            initClientSidePagination();
 
-            function parseJsonArray(value) {
-                if (!value) return [];
-                try {
-                    const parsed = JSON.parse(value);
-                    return Array.isArray(parsed) ? parsed : [];
-                } catch (error) {
-                    console.warn('Gagal parse data multiselect edit modal:', error);
-                    return [];
-                }
-            }
-
-            function initializeEditModalForm(contentDiv) {
-                const form = contentDiv?.querySelector('form[data-edit-mode="1"]');
-                if (!form || typeof RpsMultiselectHandler !== 'function') return;
-
-                const rpsMultiselect = new RpsMultiselectHandler({
-                    rootElement: form,
-                    routeSourceElement: form,
-                    isEditForm: true,
-                    rpsId: Number(form.dataset.rpsId || 0),
-                    selectedDosenIds: parseJsonArray(form.dataset.selectedDosenIds),
-                    selectedCplIds: parseJsonArray(form.dataset.selectedCplIds),
-                    selectedCpmkIds: parseJsonArray(form.dataset.selectedCpmkIds),
-                });
-
-                rpsMultiselect.init();
-
-                const mkSelect = form.querySelector('#mkSelect');
-                if (mkSelect && mkSelect.value) {
-                    mkSelect.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            }
-
-            function resetUploadModalForm() {
-                const form = uploadModal?.querySelector('form');
-                if (!form) return;
-
-                form.reset();
-
-                if (window.BanksoalRpsUploadForm?.reset) {
-                    window.BanksoalRpsUploadForm.reset();
-                }
-
-                const uploadText = form.querySelector('#uploadText');
-                const uploadSub = form.querySelector('#uploadSub');
-                const fileInput = form.querySelector('#fileInput');
-                if (fileInput) {
-                    fileInput.value = '';
-                }
-                if (uploadText) {
-                    uploadText.textContent = 'Klik untuk unggah atau seret file ke sini';
-                }
-                if (uploadSub) {
-                    uploadSub.textContent = 'PDF (Maks. 1MB)';
-                }
-            }
-
-            window.openRpsUploadModal = function() {
-                if (!uploadModal) return;
-                uploadModal.classList.remove('hidden');
-                uploadModal.classList.add('flex');
-                document.body.classList.add('overflow-hidden');
-            };
-
-            window.closeRpsUploadModal = function() {
-                if (!uploadModal) return;
-                uploadModal.classList.remove('flex');
-                uploadModal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-                resetUploadModalForm();
-            };
-
-            window.openRpsEditModal = function(rpsId) {
-                if (!editModal) return;
-                const editLink = document.querySelector(`a[href*="/rps/dosen/${rpsId}/edit"]`);
-                const editModalUrl = '{{ route("banksoal.rps.dosen.edit-modal", ":rpsId") }}'.replace(':rpsId', rpsId);
+            // Menu toggle logic
+            window.toggleMenu = function(id, event) {
+                event.stopPropagation();
+                const menus = document.querySelectorAll('.dots-menu');
+                const menu = document.getElementById(`menu-${id}`);
                 
-                // Load edit form via AJAX dari endpoint edit-modal
-                fetch(editModalUrl)
-                    .then(response => {
-                        if (!response.ok) throw new Error('Network response was not ok');
-                        return response.text();
-                    })
-                    .then(html => {
-                        const contentDiv = document.getElementById('editModalContent');
-                        if (contentDiv) {
-                            contentDiv.innerHTML = html;
-                            initializeEditModalForm(contentDiv);
-                            editModal.classList.remove('hidden');
-                            editModal.classList.add('flex');
-                            document.body.classList.add('overflow-hidden');
+                menus.forEach(m => {
+                    if (m.id !== `menu-${id}`) {
+                        m.classList.remove('open');
+                        m.style.top = '';
+                        m.style.bottom = '';
+                        m.style.left = '';
+                        m.style.right = '';
+                    }
+                });
+                
+                if (menu) {
+                    menu.classList.toggle('open');
+                    
+                    if (menu.classList.contains('open')) {
+                        const rect = menu.getBoundingClientRect();
+                        const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                        const viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
+                        
+                        if (rect.bottom > viewHeight) {
+                            menu.style.top = 'auto';
+                            menu.style.bottom = '100%';
+                            menu.style.marginBottom = '5px';
+                        } else {
+                            menu.style.top = '100%';
+                            menu.style.bottom = 'auto';
+                            menu.style.marginBottom = '0';
+                            menu.style.marginTop = '5px';
                         }
-                    })
-                    .catch(error => {
-                        console.error('Error loading edit form:', error);
-                        alert('Gagal memuat form edit. Silakan coba lagi.');
-                    });
-            };
-
-            window.closeRpsEditModal = function() {
-                if (!editModal) return;
-                editModal.classList.remove('flex');
-                editModal.classList.add('hidden');
-                document.body.classList.remove('overflow-hidden');
-                document.getElementById('editModalContent').innerHTML = '';
-            };
-
-            uploadModal?.addEventListener('click', function(event) {
-                if (event.target === uploadModal) {
-                    window.closeRpsUploadModal();
-                }
-            });
-
-            editModal?.addEventListener('click', function(event) {
-                if (event.target === editModal) {
-                    window.closeRpsEditModal();
+                        
+                        if (rect.left < 0) {
+                            menu.style.right = 'auto';
+                            menu.style.left = '0';
+                        }
+                    } else {
+                        menu.style.top = '';
+                        menu.style.bottom = '';
+                        menu.style.left = '';
+                        menu.style.right = '';
+                    }
                 }
             });
 

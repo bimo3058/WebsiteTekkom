@@ -52,3 +52,4 @@ _ds_tmp/
 .kiro/specs/ui-standardization/.config.kiro
 # Redis dump
 dump.rdb
+package-lock.json

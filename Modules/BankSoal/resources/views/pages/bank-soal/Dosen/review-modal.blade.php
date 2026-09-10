@@ -21,6 +21,7 @@
                 <input type="hidden" name="bobot_total" id="reviewBobotTotal" value="">
                 <input type="hidden" name="soal_json" id="reviewSoalJson" value="[]">
                 <input type="hidden" name="nama_ekstraksi" id="reviewNamaEkstraksi" value="">
+                <input type="hidden" name="require_blind_review" id="reviewRequireBlindReview" value="0">
                 
                 <div class="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 z-10">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -183,6 +184,7 @@
         document.getElementById('reviewMkNama').value = data.mataKuliah.nama;
         document.getElementById('reviewSoalJson').value = JSON.stringify(data.soals || []);
         document.getElementById('reviewNamaEkstraksi').value = `${data.mataKuliah.nama} - ${document.querySelector('select[name="agenda"]')?.value || 'Ekstraksi'}`;
+        document.getElementById('reviewRequireBlindReview').value = document.getElementById('requireBlindReview')?.checked ? '1' : '0';
         
         // Build Soal List
         const container = document.getElementById('soalListContainer');

@@ -13,6 +13,7 @@ use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsControl
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\TemplateRpsController;
 use Modules\BankSoal\Http\Controllers\BS\BankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\Dosen\ArsipSoalController;
+use Modules\BankSoal\Http\Controllers\BS\Dosen\BlindReviewController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\PeriodeRpsController;
@@ -137,6 +138,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/tarik-soal', [BankSoalController::class, 'ekstrak'])->name('ekstrak');
                 Route::post('/cetak-ujian', [BankSoalController::class, 'cetakUjian'])->name('cetak-ujian');
+                Route::post('/cetak-ujian-approved', [BankSoalController::class, 'cetakUjianApproved'])->name('cetak-ujian-approved');
+                Route::get('/blind-review', [BlindReviewController::class, 'index'])->name('blind-review.index');
+                Route::post('/blind-review/approve-all', [BlindReviewController::class, 'approveAll'])->name('blind-review.approve-all');
                 Route::get('/get-by-mk/{mk_id}', [BankSoalController::class, 'getAvailableSoals'])->name('get-available-soals');
                 Route::get('/export-csv', [BankSoalController::class, 'exportCsv'])->name('export-csv');
                 Route::post('/import-csv', [BankSoalController::class, 'importCsv'])->name('import-csv');
@@ -256,6 +260,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/arsip-soal', [ArsipSoalController::class, 'storeFromEkstraksi'])->name('arsip-soal.store');
+                Route::post('/blind-review/{item}/submit', [BlindReviewController::class, 'submit'])->name('blind-review.submit');
             });
         });
     });

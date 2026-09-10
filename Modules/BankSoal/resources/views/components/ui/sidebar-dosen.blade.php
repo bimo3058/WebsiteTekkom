@@ -59,14 +59,19 @@
             <span x-show="sidebarOpen" class="flex-1 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">Manajemen RPS</span>
         </a>
 
-        @php $isSoal = request()->routeIs('banksoal.soal.dosen.*'); @endphp
-        <a href="{{ route('banksoal.soal.dosen.index') }}" class="relative flex items-center gap-[9px] p-[7px_10px_7px_14px] rounded-lg text-[13px] mt-[1px] transition-colors {{ $isSoal ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}" :class="!sidebarOpen ? 'justify-center p-[7px_0]' : ''">
-            @if($isSoal)
-                <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></span>
-            @endif
-            <svg class="w-4 h-4 flex-shrink-0 {{ $isSoal ? 'text-[#0B266E]' : 'text-[#666D80]' }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconSoal }}"/></svg>
-            <span x-show="sidebarOpen" class="flex-1 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">Bank Soal</span>
-        </a>
+                    <!-- Bank Soal -->
+                    @php $isSoal = request()->routeIs('banksoal.soal.dosen.*'); @endphp
+                    <a href="{{ route('banksoal.soal.dosen.index') }}"
+                        class="group relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isSoal ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        @if($isSoal)
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
+                        @endif
+                        <svg class="w-5 h-5 flex-shrink-0 {{ $isSoal ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
+                             fill="{{ $isSoal ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293l-3.414-3.414A2 2 0 008.586 2H6a2 2 0 00-2 2v3z"/>
+                        </svg>
+                        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Bank Soal</span>
+                    </a>
 
         @php $isArsip = request()->routeIs('banksoal.arsip.dosen.*'); @endphp
         <a href="{{ route('banksoal.arsip.dosen.index') }}" class="relative flex items-center gap-[9px] p-[7px_10px_7px_14px] rounded-lg text-[13px] mt-[1px] transition-colors {{ $isArsip ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}" :class="!sidebarOpen ? 'justify-center p-[7px_0]' : ''">

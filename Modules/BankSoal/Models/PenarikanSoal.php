@@ -21,6 +21,11 @@ class PenarikanSoal extends Model
         'total_bobot' => 'decimal:2',
     ];
 
+    public function dosen()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'dosen_id');
+    }
+
     public function getSoalArray(): array
     {
         $soal = $this->soal_data;

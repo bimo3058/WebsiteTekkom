@@ -16,8 +16,10 @@
     <div class="space-y-6">
         @forelse($riwayatSoal as $index => $soal)
             @php
-                $isSesuai = $soal->status_review == 'Sesuai';
-                $isKurang = $soal->status_review == 'Kurang Sesuai';
+                $statusReview = strtolower(trim((string) ($soal->status_review ?? '')));
+                $isSesuai = $statusReview === 'sesuai';
+                $isKurang = $statusReview === 'kurang sesuai';
+                $isRevisi = in_array($statusReview, ['revisi', 'revisi total', 'revisi-total', 'ditolak'], true);
                 $colorClass = $isSesuai ? 'emerald' : ($isKurang ? 'amber' : 'rose');
                 $badgeBg = $isSesuai ? 'bg-emerald-600 text-white' : ($isKurang ? 'bg-amber-500 text-white' : 'bg-rose-600 text-white');
                 $iconStatus = $isSesuai ? 'fa-check-circle' : ($isKurang ? 'fa-exclamation-triangle' : 'fa-times-circle');
@@ -76,9 +78,9 @@
                 </div>
             </div>
 
-            <div id="editModal{{ $soal->id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+            <div id="editModal{{ $soal->id }}" class="fixed inset-0 z-50 hidden opacity-0 transition-opacity duration-200 ease-out" aria-hidden="true">
                 <div class="absolute inset-0 bg-slate-900/40" data-modal-overlay="editModal{{ $soal->id }}"></div>
-                <div class="relative mx-auto mt-16 w-full max-w-lg rounded-2xl bg-white shadow-xl">
+                <div class="modal-panel relative mx-auto mt-16 w-full max-w-lg rounded-2xl bg-white shadow-xl opacity-0 translate-y-4 scale-95 transition-all duration-200 ease-out">
                     <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.update', $soal->id) }}" method="POST">
                         @csrf
                         @method('PUT')
