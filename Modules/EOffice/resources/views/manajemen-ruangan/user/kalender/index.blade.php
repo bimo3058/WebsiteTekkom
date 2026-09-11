@@ -115,11 +115,11 @@
                 {{-- Mode Toggle --}}
                 <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
                         Mingguan
                     </a>
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-indigo-700 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
                         Bulanan
                     </a>
                 </div>
@@ -249,11 +249,11 @@
                                 </th>
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
-                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                                                                                                                        {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700;
+                                            {{ $day->isToday() ? 'background: #EFF6FF; color: #1D4ED8;' : 'background: #F8F9FB; color: #111827;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
-                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
+                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#3B82F6' : '#6B7280' }}; margin-top:2px;">
                                             {{ $day->format('d/m') }}
                                         </div>
                                     </th>
@@ -337,14 +337,14 @@
                                                     $cursor = 'not-allowed';
                                                     $href = null;
                                                 } elseif ($slotStatus === 'disetujui') {
-                                                    $bg = '#FEE2E2';
-                                                    $border = '#F87171';
+                                                    $bg = '#EDE9FE';
+                                                    $border = '#C4B5FD';
                                                     $label = strtoupper($cleanTujuan) ?: 'TERISI';
                                                     $cursor = 'not-allowed';
                                                     $href = null;
                                                 } elseif ($slotStatus === 'internal') {
-                                                    $bg = '#EDE9FE';
-                                                    $border = '#C4B5FD';
+                                                    $bg = '#DBEAFE';
+                                                    $border = '#60A5FA';
                                                     $label = strtoupper($cleanTujuan);
                                                     $cursor = 'not-allowed';
                                                     $href = null;
@@ -388,16 +388,15 @@
                                                         style="display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: {{ $bg }}; border:1px solid {{ $border }}; border-radius:5px; transition:all 0.15s;"
                                                         :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') ? 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: #6EE7B7; border: 1px solid #10B981; border-radius:5px; transform: scale(1.05); z-index: 10; transition:all 0.15s;' : 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: {{ $bg }}; border:1px solid {{ $border }}; border-radius:5px; transition:all 0.15s;'"
                                                         title="Booking {{ $ruang->nama }} — {{ $day->translatedFormat('D, d M') }} pukul {{ $hStr }}">
-                                                        ✓
                                                     </button>
                                                 @else
                                                     @php
                                                         if ($isPast)
                                                             $tColor = '#9CA3AF';
                                                         elseif ($slotStatus === 'disetujui')
-                                                            $tColor = '#B91C1C';
-                                                        elseif ($slotStatus === 'internal')
                                                             $tColor = '#5B21B6';
+                                                        elseif ($slotStatus === 'internal')
+                                                            $tColor = '#1E40AF';
                                                         elseif ($slotStatus === 'menunggu')
                                                             $tColor = '#B45309';
                                                         else

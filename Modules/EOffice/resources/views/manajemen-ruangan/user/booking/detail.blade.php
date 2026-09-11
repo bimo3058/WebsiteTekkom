@@ -2,7 +2,7 @@
 
     {{-- =================== BREADCRUMB =================== --}}
     <div class="flex items-center gap-2 text-[12px] text-gray-500 mb-4">
-        <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="hover:text-indigo-600 font-medium transition-colors">
+        <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="hover:text-[#0B266E] font-medium transition-colors">
             Katalog Ruangan
         </a>
         <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,37 +18,55 @@
 
             {{-- Photo Area / Actual Photo --}}
             <div class="mp-card overflow-hidden">
-                <div class="aspect-video w-full relative flex items-center justify-center bg-gradient-to-br from-indigo-100 via-indigo-50 to-blue-50">
+                <div class="aspect-video w-full relative bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 overflow-hidden group">
                     <style>
                         .gallery-slider::-webkit-scrollbar { display: none; }
                         .gallery-slider { -ms-overflow-style: none; scrollbar-width: none; }
                     </style>
                     @if($room->fotos->count() > 0)
-                        <div class="gallery-slider" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%;">
-                            @foreach($room->fotos as $foto)
-                                <div style="flex: 0 0 100%; width: 100%; height: 100%; position: relative; scroll-snap-align: start;">
-                                    <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover">
-                                    @if($room->fotos->count() > 1)
-                                        <div class="absolute top-3 left-3 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm">
-                                            {{ $loop->iteration }} / {{ $room->fotos->count() }}
-                                        </div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                        @if($room->fotos->count() > 1)
-                            <!-- Swipe hint -->
-                            <div class="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/20 to-transparent pointer-events-none flex items-center justify-end pr-2 text-white/60">
-                                <svg class="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        <div class="absolute inset-0" x-data="{
+                            atStart: true,
+                            atEnd: false,
+                            checkScroll() {
+                                const slider = this.$refs.slider;
+                                this.atStart = slider.scrollLeft <= 5;
+                                this.atEnd = Math.ceil(slider.scrollLeft + slider.clientWidth) >= slider.scrollWidth - 5;
+                            },
+                            scrollNext() { this.$refs.slider.scrollBy({left: this.$refs.slider.clientWidth, behavior: 'smooth'}) },
+                            scrollPrev() { this.$refs.slider.scrollBy({left: -this.$refs.slider.clientWidth, behavior: 'smooth'}) }
+                        }" x-init="$nextTick(() => checkScroll())">
+                            <div x-ref="slider" @scroll.passive="checkScroll" class="gallery-slider" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%;">
+                                @foreach($room->fotos as $foto)
+                                    <div style="flex: 0 0 100%; width: 100%; height: 100%; position: relative; scroll-snap-align: start;">
+                                        <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover">
+                                        @if($room->fotos->count() > 1)
+                                            <div class="absolute top-3 left-3 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm">
+                                                {{ $loop->iteration }} / {{ $room->fotos->count() }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
                             </div>
-                        @endif
+                            @if($room->fotos->count() > 1)
+                                <!-- Prev Button -->
+                                <button type="button" x-show="!atStart" @click="scrollPrev" x-transition.opacity style="display:none;"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors cursor-pointer border-0 bg-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-10">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" /></svg>
+                                </button>
+                                <!-- Next Button -->
+                                <button type="button" x-show="!atEnd" @click="scrollNext" x-transition.opacity style="display:none;"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors cursor-pointer border-0 bg-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-10">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            @endif
+                        </div>
                     @else
-                        <div class="text-center">
-                            <svg class="w-16 h-16 text-indigo-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <svg class="w-16 h-16 text-blue-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V9m4 8V5m4 12v-4" />
                             </svg>
-                            <p class="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Foto Ruangan Segera Hadir</p>
-                            <p class="text-[11px] text-indigo-300 mt-1">Foto akan ditambahkan oleh administrator</p>
+                            <p class="text-[14px] font-bold text-blue-400 uppercase tracking-wider">Foto Ruangan Segera Hadir</p>
+                            <p class="text-[12px] text-blue-300 mt-1 font-medium">Foto akan ditambahkan oleh administrator</p>
                         </div>
                     @endif
                 </div>
@@ -63,35 +81,14 @@
                                 @endif
                             </p>
                         </div>
-                        <span class="flex-shrink-0 bg-indigo-50 text-indigo-700 border border-indigo-200 text-sm font-bold px-3 py-1.5 rounded-full">
+                        <span class="flex-shrink-0 bg-white text-[#0B266E] border border-gray-200 text-sm font-bold px-3 py-1.5 rounded-full shadow-sm">
                             {{ $room->kapasitas }} orang
                         </span>
                     </div>
                 </div>
             </div>
 
-            {{-- Room Details Grid --}}
-            <div class="mp-card">
-                <div class="mp-card-header">
-                    <h2 class="font-bold text-gray-800 text-[15px]">Informasi Ruangan</h2>
-                </div>
-                <div class="mp-card-body p-5">
-                    <div class="grid grid-cols-3 divide-x divide-gray-100">
-                        <div class="pr-6 text-center">
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Gedung</p>
-                            <p class="text-[14px] font-bold text-gray-800">{{ $room->lokasi ?? 'Gedung Utama' }}</p>
-                        </div>
-                        <div class="px-6 text-center">
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Lantai</p>
-                            <p class="text-[14px] font-bold text-gray-800">{{ $room->lantai ?? '–' }}</p>
-                        </div>
-                        <div class="pl-6 text-center">
-                            <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">Kapasitas</p>
-                            <p class="text-[14px] font-bold text-gray-800">{{ $room->kapasitas }} orang</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+
 
             {{-- Facilities --}}
             <div class="mp-card">
@@ -99,25 +96,11 @@
                     <h2 class="font-bold text-gray-800 text-[15px]">Fasilitas Tersedia</h2>
                 </div>
                 <div class="mp-card-body p-5">
-                    @php
-                        $facilityIcons = [
-                            'Proyektor' => ['color' => 'bg-purple-50 text-purple-700 border-purple-100'],
-                            'AC' => ['color' => 'bg-blue-50 text-blue-700 border-blue-100'],
-                            'Whiteboard' => ['color' => 'bg-gray-50 text-gray-700 border-gray-200'],
-                            'WiFi' => ['color' => 'bg-indigo-50 text-indigo-700 border-indigo-100'],
-                            'Sound System' => ['color' => 'bg-amber-50 text-amber-700 border-amber-100'],
-                            'CCTV' => ['color' => 'bg-red-50 text-red-700 border-red-100'],
-                            'Meja' => ['color' => 'bg-orange-50 text-orange-700 border-orange-100'],
-                            'Komputer' => ['color' => 'bg-emerald-50 text-emerald-700 border-emerald-100'],
-                        ];
-                    @endphp
-
                     @if (count($fasilitas) > 0)
-                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                        <div class="flex flex-wrap gap-2.5">
                             @foreach ($fasilitas as $fas)
-                                @php $fInfo = $facilityIcons[$fas] ?? ['color' => 'bg-gray-50 text-gray-700 border-gray-200']; @endphp
-                                <div class="flex items-center gap-2.5 p-3 rounded-xl border {{ $fInfo['color'] }}">
-                                    <span class="text-[13px] font-semibold">{{ $fas }}</span>
+                                <div class="inline-flex items-center px-3 py-1.5 rounded-lg border bg-blue-50 text-blue-700 border-blue-100">
+                                    <span class="text-[12px] font-semibold">{{ $fas }}</span>
                                 </div>
                             @endforeach
                         </div>
@@ -133,17 +116,17 @@
         <div class="space-y-5">
 
             {{-- CTA Card --}}
-            <div class="mp-card bg-gradient-to-br from-[#0B266E] to-[#1a3c94] text-white overflow-hidden">
+            <div class="rounded-xl border border-[#0B266E] bg-gradient-to-br from-[#0B266E] to-[#1a3c94] text-white overflow-hidden shadow-md">
                 <div class="p-5">
                     <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-3">
                         <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <h3 class="text-[15px] font-bold mb-1">Ingin memakai ruangan ini?</h3>
-                    <p class="text-[12px] text-indigo-200 mb-4 leading-relaxed">Cek kalender jadwal mingguan untuk slot kosong yang tersedia lalu ajukan booking langsung!</p>
+                    <h3 class="text-[15px] font-bold mb-1 text-white">Ingin memakai ruangan ini?</h3>
+                    <p class="text-[12px] text-blue-100 mb-4 leading-relaxed">Cek kalender jadwal mingguan untuk slot kosong yang tersedia lalu ajukan booking langsung!</p>
                     <a href="{{ $kalenderUrl }}"
-                        class="block w-full py-2.5 text-center text-[13px] font-bold bg-white text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors shadow-sm">
+                        class="block w-full py-2.5 text-center text-[13px] font-bold bg-white text-[#0B266E] rounded-lg hover:bg-blue-50 transition-colors shadow-sm">
                         Lihat Kalender & Booking
                     </a>
                 </div>
@@ -187,6 +170,7 @@
                             @endforeach
                         </div>
                     @else
+                        <div class="p-5">
                             <p class="text-[13px] font-bold text-gray-700 mb-0.5">Kosong</p>
                             <p class="text-[11px] text-gray-400">Tidak ada booking dalam 7 hari ke depan!</p>
                         </div>
