@@ -22,7 +22,7 @@
         </div>
         <div class="flex-shrink-0">
             <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-[11px] rounded-xl transition-all shadow-sm hover:shadow-md w-full sm:w-auto">
-                Pinjam Ruang
+                Cari Ruangan
             </a>
         </div>
     </div>

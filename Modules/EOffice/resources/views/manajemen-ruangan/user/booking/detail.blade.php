@@ -2,7 +2,7 @@
 
     {{-- =================== BREADCRUMB =================== --}}
     <div class="flex items-center gap-2 text-[12px] text-gray-500 mb-4">
-        <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="hover:text-indigo-600 font-medium transition-colors">
+        <a href="{{ route('eoffice.peminjaman.user.booking') }}" class="hover:text-[#0B266E] font-medium transition-colors">
             Katalog Ruangan
         </a>
         <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,37 +18,55 @@
 
             {{-- Photo Area / Actual Photo --}}
             <div class="mp-card overflow-hidden">
-                <div class="aspect-video w-full relative flex items-center justify-center bg-gradient-to-br from-indigo-100 via-indigo-50 to-blue-50">
+                <div class="aspect-video w-full relative bg-gradient-to-br from-blue-50 via-blue-50 to-blue-100 overflow-hidden group">
                     <style>
                         .gallery-slider::-webkit-scrollbar { display: none; }
                         .gallery-slider { -ms-overflow-style: none; scrollbar-width: none; }
                     </style>
                     @if($room->fotos->count() > 0)
-                        <div class="gallery-slider" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%;">
-                            @foreach($room->fotos as $foto)
-                                <div style="flex: 0 0 100%; width: 100%; height: 100%; position: relative; scroll-snap-align: start;">
-                                    <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover">
-                                    @if($room->fotos->count() > 1)
-                                        <div class="absolute top-3 left-3 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm">
-                                            {{ $loop->iteration }} / {{ $room->fotos->count() }}
-                                        </div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                        @if($room->fotos->count() > 1)
-                            <!-- Swipe hint -->
-                            <div class="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-black/20 to-transparent pointer-events-none flex items-center justify-end pr-2 text-white/60">
-                                <svg class="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                        <div class="absolute inset-0" x-data="{
+                            atStart: true,
+                            atEnd: false,
+                            checkScroll() {
+                                const slider = this.$refs.slider;
+                                this.atStart = slider.scrollLeft <= 5;
+                                this.atEnd = Math.ceil(slider.scrollLeft + slider.clientWidth) >= slider.scrollWidth - 5;
+                            },
+                            scrollNext() { this.$refs.slider.scrollBy({left: this.$refs.slider.clientWidth, behavior: 'smooth'}) },
+                            scrollPrev() { this.$refs.slider.scrollBy({left: -this.$refs.slider.clientWidth, behavior: 'smooth'}) }
+                        }" x-init="$nextTick(() => checkScroll())">
+                            <div x-ref="slider" @scroll.passive="checkScroll" class="gallery-slider" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%;">
+                                @foreach($room->fotos as $foto)
+                                    <div style="flex: 0 0 100%; width: 100%; height: 100%; position: relative; scroll-snap-align: start;">
+                                        <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover">
+                                        @if($room->fotos->count() > 1)
+                                            <div class="absolute top-3 left-3 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm">
+                                                {{ $loop->iteration }} / {{ $room->fotos->count() }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endforeach
                             </div>
-                        @endif
+                            @if($room->fotos->count() > 1)
+                                <!-- Prev Button -->
+                                <button type="button" x-show="!atStart" @click="scrollPrev" x-transition.opacity style="display:none;"
+                                    class="absolute left-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors cursor-pointer border-0 bg-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-10">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" /></svg>
+                                </button>
+                                <!-- Next Button -->
+                                <button type="button" x-show="!atEnd" @click="scrollNext" x-transition.opacity style="display:none;"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-white transition-colors cursor-pointer border-0 bg-transparent drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-10">
+                                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" /></svg>
+                                </button>
+                            @endif
+                        </div>
                     @else
-                        <div class="text-center">
-                            <svg class="w-16 h-16 text-indigo-200 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <svg class="w-16 h-16 text-blue-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3v18h18M8 17V9m4 8V5m4 12v-4" />
                             </svg>
-                            <p class="text-sm font-semibold text-indigo-400 uppercase tracking-wider">Foto Ruangan Segera Hadir</p>
-                            <p class="text-[11px] text-indigo-300 mt-1">Foto akan ditambahkan oleh administrator</p>
+                            <p class="text-[14px] font-bold text-blue-400 uppercase tracking-wider">Foto Ruangan Segera Hadir</p>
+                            <p class="text-[12px] text-blue-300 mt-1 font-medium">Foto akan ditambahkan oleh administrator</p>
                         </div>
                     @endif
                 </div>

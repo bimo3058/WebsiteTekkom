@@ -13,13 +13,15 @@ class RuanganController extends Controller
     {
         $query = Ruangan::query();
 
-        if ($request->has('search')) {
+        if ($request->has('search') && $request->search) {
             $search = $request->search;
-            $query->where('nama', 'like', "%{$search}%")
-                ->orWhere('lokasi', 'like', "%{$search}%");
+            $query->where(function($q) use ($search) {
+                $q->whereRaw('LOWER(nama) LIKE ?', ['%' . mb_strtolower($search) . '%'])
+                  ->orWhereRaw('LOWER(lokasi) LIKE ?', ['%' . mb_strtolower($search) . '%']);
+            });
         }
 
-        $ruangans = $query->orderBy('nama')->paginate(15);
+        $ruangans = $query->orderBy('nama')->paginate($request->input('per_page', 10))->appends($request->query());
         return view('eoffice::manajemen-ruangan.admin.ruangan.index', compact('ruangans'));
     }
 

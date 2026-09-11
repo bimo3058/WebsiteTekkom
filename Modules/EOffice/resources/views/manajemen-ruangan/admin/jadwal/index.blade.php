@@ -635,48 +635,45 @@
                                                 this.conflictError = '';
                                             }
                                         }">
-                                        <div class="relative inline-flex justify-center w-full relative z-[1]">
-                                            <button type="button" @click="showDropdown = !showDropdown"
-                                                @click.away="showDropdown = false"
-                                                class="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-1.5 rounded-md transition-colors">
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        <div class="relative inline-block" x-data="{ showDropdown: false }">
+                                            <button type="button" @click="showDropdown = !showDropdown" @click.outside="showDropdown = false"
+                                                class="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
+                                                <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
+                                                    <circle cx="5" cy="12" r="2"></circle>
+                                                    <circle cx="12" cy="12" r="2"></circle>
+                                                    <circle cx="19" cy="12" r="2"></circle>
                                                 </svg>
                                             </button>
 
                                             <div x-show="showDropdown" style="display:none;"
                                                 x-transition:enter="transition ease-out duration-100"
-                                                x-transition:enter-start="transform opacity-0 scale-95"
-                                                x-transition:enter-end="transform opacity-100 scale-100"
-                                                x-transition:leave="transition ease-in duration-75"
-                                                x-transition:leave-start="transform opacity-100 scale-100"
-                                                x-transition:leave-end="transform opacity-0 scale-95"
-                                                class="origin-top-right absolute right-5 top-0 mt-8 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]">
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                class="absolute right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-[10px] shadow-[0_8px_24px_rgba(0,0,0,.1)] min-w-[160px] z-[40] overflow-hidden p-1.5">
                                                 
                                                 <button type="button"
                                                     @click="showEditModal = true; showDropdown = false"
-                                                    class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
-                                                    <svg class="w-[14px] h-[14px] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                        </path>
+                                                    class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-gray-600 hover:bg-gray-100 transition-colors border-0 bg-transparent cursor-pointer text-left">
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z"></path>
                                                     </svg>
                                                     Edit Jadwal
                                                 </button>
                                                 
+                                                <div class="h-[1px] bg-gray-100 my-1 mx-1.5"></div>
+                                                
                                                 <form
                                                     action="{{ route('eoffice.peminjaman.admin.jadwal-internal.destroy', $j->id) }}"
                                                     method="POST"
-                                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus blokir jadwal ini?');">
+                                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus blokir jadwal ini?');"
+                                                    style="margin:0;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                        class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
-                                                        <svg class="w-[14px] h-[14px] text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                            </path>
+                                                        class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border-0 bg-transparent cursor-pointer text-left">
+                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                                         </svg>
                                                         Hapus Jadwal
                                                     </button>
