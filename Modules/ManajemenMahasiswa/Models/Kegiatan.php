@@ -181,6 +181,17 @@ class Kegiatan extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * Many-to-many: pengurus yang ditunjuk pemilik untuk ikut mengelola kegiatan ini.
+     * `boleh_hapus` = true berarti "Edit & hapus". Aturannya di KegiatanPolicy.
+     */
+    public function pengelola(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\User::class, 'mk_kegiatan_pengelola', 'kegiatan_id', 'user_id')
+                    ->withPivot('boleh_hapus')
+                    ->withTimestamps();
+    }
+
     public function riwayatKegiatan(): HasMany
     {
         return $this->hasMany(RiwayatKegiatan::class, 'kegiatan_id');

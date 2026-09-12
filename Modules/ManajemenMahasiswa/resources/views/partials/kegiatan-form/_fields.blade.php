@@ -13,6 +13,10 @@
     $selectedKategoriIds, $selectedBidangIds, $existingPanitia, $existingPanitiaIds.
     Hanya saat $showDokumentasi: $existingFoto, $existingDokumen.
 
+    Bagian "Akses Kelola" (_akses_kelola.blade.php, di-include dari sini) butuh
+    $bolehAturAkses, $calonPengelola, $pengelolaTerpilih, $namaPembuat — semuanya
+    dari PengelolaKegiatanService::dataForm().
+
     _scripts.blade.php butuh $existingPanitia dan $existingDosen — keduanya
     disiapkan controller, karena @include punya scope sendiri (variabel yang
     dibuat di partial ini TIDAK terbawa ke partial script).
@@ -271,6 +275,9 @@
             <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
         </div>
     </div>
+
+    {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
+    @include('manajemenmahasiswa::partials.kegiatan-form._akses_kelola')
 
     <!-- Detail Tambahan -->
     <div class="form-card">

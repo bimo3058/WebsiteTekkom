@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Student;
@@ -16,6 +17,7 @@ use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
 class KegiatanController extends Controller
@@ -25,7 +27,8 @@ class KegiatanController extends Controller
 
     public function __construct(
         private RepoMulmedService $repoMulmedService,
-        private SupabaseStorage $supabase
+        private SupabaseStorage $supabase,
+        private PengelolaKegiatanService $pengelolaService
     ) {}
 
     /**
@@ -136,16 +139,21 @@ class KegiatanController extends Controller
             return $tolak;
         }
 
-        // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
+        // Tombol Edit/Hapus: role pengelola (sinkron dengan route edit/destroy) DAN
+        // memang pengelola kegiatan ini (KegiatanPolicy). GPM, Kadep & DPM view-only.
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
-        // GPM, Kadep & DPM view-only — tidak masuk daftar pengelola (hanya bisa lihat)
-        $isAdmin = $roles->intersect([
+        $roleKelola = $roles->intersect([
             'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
+        $canEdit   = $roleKelola && Gate::allows('update', $kegiatan);
+        $canDelete = $roleKelola && Gate::allows('delete', $kegiatan);
+        $pesanBukanPengelola = $roleKelola && !$canEdit
+            ? $this->pengelolaService->pesanTolak($kegiatan)
+            : null;
 
-        return view('manajemenmahasiswa::kegiatan.show', compact('kegiatan', 'isAdmin'));
+        return view('manajemenmahasiswa::kegiatan.show', compact('kegiatan', 'canEdit', 'canDelete', 'pesanBukanPengelola'));
     }
 
     /**
@@ -166,7 +174,7 @@ class KegiatanController extends Controller
             'kategoriList',
             'mahasiswaList',
             'dosenList',
-        ));
+        ) + $this->pengelolaService->dataForm(new Kegiatan()));
     }
 
     /**
@@ -251,6 +259,7 @@ class KegiatanController extends Controller
         $kegiatan->bidangs()->sync($bidangIds);
         $kegiatan->panitia()->sync($panitiaSyncData);
         $kegiatan->dosenPendampings()->sync($dosenPendampingIds);
+        $this->pengelolaService->sync($kegiatan, $request);
 
         // Handle foto uploads
         $this->handleFileUploads($request, $kegiatan);
@@ -271,6 +280,9 @@ class KegiatanController extends Controller
         if ($tolak = $this->tolakBilaBukanArsip($kegiatan)) {
             return $tolak;
         }
+        if ($tolak = $this->tolakBilaBukanPengelola($kegiatan)) {
+            return $tolak;
+        }
 
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
@@ -285,7 +297,7 @@ class KegiatanController extends Controller
             'kategoriList',
             'mahasiswaList',
             'dosenList',
-        ));
+        ) + $this->pengelolaService->dataForm($kegiatan));
     }
 
     /**
@@ -296,6 +308,9 @@ class KegiatanController extends Controller
         $kegiatan = Kegiatan::find($id);
 
         if ($tolak = $this->tolakBilaBukanArsip($kegiatan)) {
+            return $tolak;
+        }
+        if ($tolak = $this->tolakBilaBukanPengelola($kegiatan)) {
             return $tolak;
         }
 
@@ -397,6 +412,7 @@ class KegiatanController extends Controller
         $kegiatan->bidangs()->sync($bidangIds);
         $kegiatan->panitia()->sync($panitiaSyncData);
         $kegiatan->dosenPendampings()->sync($dosenPendampingIds);
+        $this->pengelolaService->sync($kegiatan, $request);
 
         // Handle new file uploads
         $this->handleFileUploads($request, $kegiatan);
@@ -414,6 +430,9 @@ class KegiatanController extends Controller
         $kegiatan = Kegiatan::with('repoMulmed')->find($id);
 
         if ($tolak = $this->tolakBilaBukanArsip($kegiatan)) {
+            return $tolak;
+        }
+        if ($tolak = $this->tolakBilaBukanPengelola($kegiatan, 'delete')) {
             return $tolak;
         }
 
@@ -459,6 +478,26 @@ class KegiatanController extends Controller
             ->with('error', $kegiatan === null
                 ? 'Kegiatan yang Anda buka sudah tidak ada — kemungkinan sudah dihapus lebih dulu.'
                 : 'Kegiatan ini belum diarsipkan, jadi belum tersedia di Laporan & Arsip.');
+    }
+
+    /**
+     * Role saja tidak cukup: kegiatan hanya boleh diubah/dihapus pemiliknya,
+     * pengelola yang ia tunjuk, atau override (lihat KegiatanPolicy). Uji T-1
+     * (10 Sep 2026) membuktikan ketua bidang mana pun sempat bisa mengubah dan
+     * menghapus arsip milik bidang lain lewat URL langsung.
+     *
+     * @param string $aksi 'update' atau 'delete'
+     * @return RedirectResponse|null null bila boleh
+     */
+    private function tolakBilaBukanPengelola(Kegiatan $kegiatan, string $aksi = 'update'): ?RedirectResponse
+    {
+        if (Gate::allows($aksi, $kegiatan)) {
+            return null;
+        }
+
+        return redirect()
+            ->route('manajemenmahasiswa.kegiatan.show', $kegiatan->id)
+            ->with('error', $this->pengelolaService->pesanTolak($kegiatan));
     }
 
     /**

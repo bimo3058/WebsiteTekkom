@@ -480,6 +480,16 @@
     </div>
 @endif
 
+{{-- Pesan gagal (mis. bukan pengelola kegiatan ini) — sebelumnya halaman ini hanya
+     menampilkan pesan sukses, jadi redirect dengan error jatuh diam-diam. --}}
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: #fee2e2; color: #dc2626; font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
 <!-- Header with back button -->
 <div class="d-flex justify-content-between align-items-start">
     <div class="detail-header">
@@ -491,8 +501,9 @@
             <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Informasi lengkap tentang kegiatan ini</p>
         </div>
     </div>
-    @if($isAdmin)
+    @if($canEdit || $canDelete)
         <div class="d-flex gap-2">
+            @if($canEdit)
             <a href="{{ route('manajemenmahasiswa.kegiatan.edit', $kegiatan->id) }}"
                class="btn d-flex align-items-center gap-2"
                style="background: #0B266E; color: #fff; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
@@ -502,6 +513,8 @@
                 </svg>
                 Edit
             </a>
+            @endif
+            @if($canDelete)
             <button type="button" class="btn d-flex align-items-center gap-2"
                     style="background: #fee2e2; color: #dc2626; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; border: none;"
                     onclick="document.getElementById('deleteModal').style.display='flex'">
@@ -511,7 +524,13 @@
                 </svg>
                 Hapus
             </button>
+            @endif
         </div>
+    @elseif($pesanBukanPengelola)
+        {{-- Role-nya boleh mengelola, tapi bukan pengelola kegiatan ini (KegiatanPolicy) --}}
+        <p class="mb-0 text-end" style="max-width:340px;font-size:.78rem;color:#666D80;font-weight:500;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{ $pesanBukanPengelola }}
+        </p>
     @endif
 </div>
 
@@ -864,7 +883,7 @@
 @endif
 
 <!-- Delete Confirmation Modal -->
-@if($isAdmin)
+@if($canDelete)
 <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div style="background: #fff; border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
