@@ -15,7 +15,21 @@
         <div class="mp-alert warning flex-shrink-0" style="margin-top:24px;">Anda belum memiliki praktikum aktif.</div>
     @else
 
-        <div x-data="{ globalSearch: '', globalKelompok: '', globalShift: '' }">
+        <div x-data="{ 
+                                                                        globalSearch: '', 
+                                                                        globalKelompok: '', 
+                                                                        globalShift: '',
+                                                                        bobot_tp: {{ $praktikum->bobot_tp ?? 10 }},
+                                                                        bobot_praktikum: {{ $praktikum->bobot_praktikum ?? 30 }},
+                                                                        bobot_laporan: {{ $praktikum->bobot_laporan ?? 30 }},
+                                                                        bobot_responsi: {{ $praktikum->bobot_responsi ?? 30 }},
+                                                                        get hasChanges() {
+                                                                            return parseInt(this.bobot_tp) !== {{ $praktikum->bobot_tp ?? 10 }} ||
+                                                                                   parseInt(this.bobot_praktikum) !== {{ $praktikum->bobot_praktikum ?? 30 }} ||
+                                                                                   parseInt(this.bobot_laporan) !== {{ $praktikum->bobot_laporan ?? 30 }} ||
+                                                                                   parseInt(this.bobot_responsi) !== {{ $praktikum->bobot_responsi ?? 30 }};
+                                                                        }
+                                                                    }">
 
             {{-- Outer card wraps filter row + all accordions --}}
             <div
@@ -68,17 +82,6 @@
                                         :style="globalKelompok === '' ? 'background:#EEF2FF; color:#0B266E;' : 'color:#353849;'">
                                         <span style="font-size:13px; margin-left:8px; flex:1;">Semua Kelompok</span>
                                     </div>
-                                    @php $kels = $daftarPraktikan->pluck('kelompok')->filter()->unique()->sort(); @endphp
-                                    @foreach($kels as $k)
-                                        <div x-show="String('{{ $k }}').toLowerCase().includes(searchK.toLowerCase())"
-                                            @click="globalKelompok = '{{ $k }}'; openK = false; searchK = ''"
-                                            class="hover:bg-gray-50 transition-colors"
-                                            style="padding:8px 12px; font-size:11px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
-                                            :style="globalKelompok === '{{ $k }}' ? 'background:#EEF2FF; color:#0B266E;' : 'color:#353849;'">
-                                            <span
-                                                style="font-size:13px; flex:1; min-width:0; margin-left:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $k }}</span>
-                                        </div>
-                                    @endforeach
                                 </div>
                             </div>
                         </div>
@@ -108,20 +111,24 @@
 
                                         <span style="font-size:13px; flex:1; margin-left:8px;">Semua Shift</span>
                                     </div>
-                                    @php $shfs = $daftarPraktikan->pluck('shift')->filter()->unique()->sort(); @endphp
-                                    @foreach($shfs as $s)
-                                        <div x-show="String('{{ $s }}').toLowerCase().includes(searchS.toLowerCase())"
-                                            @click="globalShift = '{{ $s }}'; openS = false; searchS = ''"
-                                            class="hover:bg-gray-50 transition-colors"
-                                            style="padding:8px 12px; font-size:11px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
-                                            :style="globalShift === '{{ $s }}' ? 'background:#EEF2FF; color:#0B266E;' : 'color:#353849;'">
-                                            <span
-                                                style="font-size:13px; margin-left:8px; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $s }}</span>
-                                        </div>
-                                    @endforeach
                                 </div>
                             </div>
                         </div>
+
+
+                        <form method="POST" action="{{ route('eoffice.manprak.koor.nilai.bobot.update', $praktikum->id) }}"
+                            id="bobotForm" style="display:none;">
+                            @csrf
+                            <input type="hidden" name="bobot_tp" :value="bobot_tp">
+                            <input type="hidden" name="bobot_praktikum" :value="bobot_praktikum">
+                            <input type="hidden" name="bobot_laporan" :value="bobot_laporan">
+                            <input type="hidden" name="bobot_responsi" :value="bobot_responsi">
+                        </form>
+
+                        <button type="button" @click="document.getElementById('bobotForm').submit()"
+                            :style="(hasChanges ? 'background:#0B266E; color:#fff; border: 1px solid #0B266E;' : 'background:#F4F6F8; color:#0B266E; border: 1px solid #DFE1E7;') + ' height: 36px; min-width: 100px; padding: 0 12px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;'">
+                            Simpan
+                        </button>
 
                         <a href="{{ route('eoffice.manprak.koor.nilai.export-csv') }}"
                             style="height: 36px; padding: 0 14px; background: #fff; border: 1px solid #DFE1E7; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; font-size: 13px; font-weight: 600; color: #353849; cursor: pointer;"
@@ -141,57 +148,57 @@
                 {{-- Module Accordions --}}
                 @forelse($allModuls as $modul)
                     <div x-data="{ 
-                                                                                                                                                                                                                            expanded: false,
-                                                                                                                                                                                                                            page: 1,
-                                                                                                                                                                                                                            perPage: 10,
-                                                                                                                                                                                                                            rows: [
-                                                                                                                                                                                                                                @foreach($daftarPraktikan as $idx => $dp)
-                                                                                                                                                                                                                                    { id: {{ $idx }}, name: @js(strtolower($dp->user?->name ?? '')), nim: @js(strtolower($dp->user?->student?->student_number ?? $dp->user?->email ?? '')), kel: @js($dp->kelompok ?? ''), shf: @js($dp->shift ?? '') }{{ $loop->last ? '' : ',' }}
-                                                                                                                                                                                                                                @endforeach
-                                                                                                                                                                                                                            ],
-                                                                                                                                                                                                                            init() {
-                                                                                                                                                                                                                                this.$watch('globalSearch', () => { this.page = 1; });
-                                                                                                                                                                                                                                this.$watch('globalKelompok', () => { this.page = 1; });
-                                                                                                                                                                                                                                this.$watch('globalShift', () => { this.page = 1; });
-                                                                                                                                                                                                                                this.$watch('perPage', () => { this.page = 1; });
-                                                                                                                                                                                                                            },
-                                                                                                                                                                                                                            get visibleRows() {
-                                                                                                                                                                                                                                return this.rows.filter(r => 
-                                                                                                                                                                                                                                    (globalSearch === '' || r.name.includes(globalSearch.toLowerCase()) || r.nim.includes(globalSearch.toLowerCase())) &&
-                                                                                                                                                                                                                                    (globalKelompok === '' || globalKelompok === r.kel) &&
-                                                                                                                                                                                                                                    (globalShift === '' || globalShift === r.shf)
-                                                                                                                                                                                                                                );
-                                                                                                                                                                                                                            },
-                                                                                                                                                                                                                            get paginatedRows() {
-                                                                                                                                                                                                                                let start = (this.page - 1) * this.perPage;
-                                                                                                                                                                                                                                return this.visibleRows.slice(start, start + parseInt(this.perPage));
-                                                                                                                                                                                                                            },
-                                                                                                                                                                                                                            get totalPages() {
-                                                                                                                                                                                                                                return Math.max(1, Math.ceil(this.visibleRows.length / this.perPage));
-                                                                                                                                                                                                                            },
-                                                                                                                                                                                                                            kelRowspan(id) {
-                                                                                                                                                                                                                                let pr = this.paginatedRows;
-                                                                                                                                                                                                                                let vId = pr.findIndex(r => r.id === id);
-                                                                                                                                                                                                                                if (vId === -1) return 0;
-                                                                                                                                                                                                                                if (vId > 0 && pr[vId - 1].kel === pr[vId].kel) return 0;
-                                                                                                                                                                                                                                let count = 1;
-                                                                                                                                                                                                                                for (let i = vId + 1; i < pr.length; i++) {
-                                                                                                                                                                                                                                    if (pr[i].kel === pr[vId].kel) count++; else break;
-                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                return count;
-                                                                                                                                                                                                                            },
-                                                                                                                                                                                                                            shfRowspan(id) {
-                                                                                                                                                                                                                                let pr = this.paginatedRows;
-                                                                                                                                                                                                                                let vId = pr.findIndex(r => r.id === id);
-                                                                                                                                                                                                                                if (vId === -1) return 0;
-                                                                                                                                                                                                                                if (vId > 0 && pr[vId - 1].shf === pr[vId].shf) return 0;
-                                                                                                                                                                                                                                let count = 1;
-                                                                                                                                                                                                                                for (let i = vId + 1; i < pr.length; i++) {
-                                                                                                                                                                                                                                    if (pr[i].shf === pr[vId].shf) count++; else break;
-                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                return count;
-                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                        }"
+                                                                                                                                                                                                                                                                                                                                                    expanded: false,
+                                                                                                                                                                                                                                                                                                                                                    page: 1,
+                                                                                                                                                                                                                                                                                                                                                    perPage: 10,
+                                                                                                                                                                                                                                                                                                                                                    rows: [
+                                                                                                                                                                                                                                                                                                                                                        @foreach($daftarPraktikan as $idx => $dp)
+                                                                                                                                                                                                                                                                                                                                                            { id: {{ $idx }}, name: @js(strtolower($dp->user?->name ?? '')), nim: @js(strtolower($dp->user?->student?->student_number ?? $dp->user?->email ?? '')), kel: @js($dp->kelompok ?? ''), shf: @js($dp->shift ?? '') }{{ $loop->last ? '' : ',' }}
+                                                                                                                                                                                                                                                                                                                                                        @endforeach
+                                                                                                                                                                                                                                                                                                                                                    ],
+                                                                                                                                                                                                                                                                                                                                                    init() {
+                                                                                                                                                                                                                                                                                                                                                        this.$watch('globalSearch', () => { this.page = 1; });
+                                                                                                                                                                                                                                                                                                                                                        this.$watch('globalKelompok', () => { this.page = 1; });
+                                                                                                                                                                                                                                                                                                                                                        this.$watch('globalShift', () => { this.page = 1; });
+                                                                                                                                                                                                                                                                                                                                                        this.$watch('perPage', () => { this.page = 1; });
+                                                                                                                                                                                                                                                                                                                                                    },
+                                                                                                                                                                                                                                                                                                                                                    get visibleRows() {
+                                                                                                                                                                                                                                                                                                                                                        return this.rows.filter(r => 
+                                                                                                                                                                                                                                                                                                                                                            (globalSearch === '' || r.name.includes(globalSearch.toLowerCase()) || r.nim.includes(globalSearch.toLowerCase())) &&
+                                                                                                                                                                                                                                                                                                                                                            (globalKelompok === '' || globalKelompok === r.kel) &&
+                                                                                                                                                                                                                                                                                                                                                            (globalShift === '' || globalShift === r.shf)
+                                                                                                                                                                                                                                                                                                                                                        );
+                                                                                                                                                                                                                                                                                                                                                    },
+                                                                                                                                                                                                                                                                                                                                                    get paginatedRows() {
+                                                                                                                                                                                                                                                                                                                                                        let start = (this.page - 1) * this.perPage;
+                                                                                                                                                                                                                                                                                                                                                        return this.visibleRows.slice(start, start + parseInt(this.perPage));
+                                                                                                                                                                                                                                                                                                                                                    },
+                                                                                                                                                                                                                                                                                                                                                    get totalPages() {
+                                                                                                                                                                                                                                                                                                                                                        return Math.max(1, Math.ceil(this.visibleRows.length / this.perPage));
+                                                                                                                                                                                                                                                                                                                                                    },
+                                                                                                                                                                                                                                                                                                                                                    kelRowspan(id) {
+                                                                                                                                                                                                                                                                                                                                                        let pr = this.paginatedRows;
+                                                                                                                                                                                                                                                                                                                                                        let vId = pr.findIndex(r => r.id === id);
+                                                                                                                                                                                                                                                                                                                                                        if (vId === -1) return 0;
+                                                                                                                                                                                                                                                                                                                                                        if (vId > 0 && pr[vId - 1].kel === pr[vId].kel) return 0;
+                                                                                                                                                                                                                                                                                                                                                        let count = 1;
+                                                                                                                                                                                                                                                                                                                                                        for (let i = vId + 1; i < pr.length; i++) {
+                                                                                                                                                                                                                                                                                                                                                            if (pr[i].kel === pr[vId].kel) count++; else break;
+                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                        return count;
+                                                                                                                                                                                                                                                                                                                                                    },
+                                                                                                                                                                                                                                                                                                                                                    shfRowspan(id) {
+                                                                                                                                                                                                                                                                                                                                                        let pr = this.paginatedRows;
+                                                                                                                                                                                                                                                                                                                                                        let vId = pr.findIndex(r => r.id === id);
+                                                                                                                                                                                                                                                                                                                                                        if (vId === -1) return 0;
+                                                                                                                                                                                                                                                                                                                                                        if (vId > 0 && pr[vId - 1].shf === pr[vId].shf) return 0;
+                                                                                                                                                                                                                                                                                                                                                        let count = 1;
+                                                                                                                                                                                                                                                                                                                                                        for (let i = vId + 1; i < pr.length; i++) {
+                                                                                                                                                                                                                                                                                                                                                            if (pr[i].shf === pr[vId].shf) count++; else break;
+                                                                                                                                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                                                                                                                                        return count;
+                                                                                                                                                                                                                                                                                                                                                    }
+                                                                                                                                                                                                                                                                                                                                                }"
                         style="border-bottom:1px solid #DFE1E7;">
                         <div style="padding:16px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
                             @click="expanded = !expanded" onmouseover="this.style.background='#F9FAFB'"
@@ -225,19 +232,49 @@
                                                 style="padding:12px 16px;width:100px;border-right:1px solid #DFE1E7;">SHIFT</th>
                                             <th class="mp-th text-center" style="padding:12px 16px;width:100px;">Kehadiran</th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;border-left:1px solid #DFE1E7;background:#EEF2FF;color:#4338CA;">
-                                                Tugas Pendahuluan</th>
-                                            <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;background:#FEFCE8;color:#A16207;">Laporan
+                                                style="padding:12px 16px;width:120px;border-left:1px solid #DFE1E7;background:#EEF2FF;color:#4338CA;font-weight:600;">
+                                                Tugas Pendahuluan
+                                                <div
+                                                    style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
+                                                    <input type="number" x-model="bobot_tp"
+                                                        style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#4338CA;">
+                                                    %
+                                                </div>
                                             </th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;background:#FFF7ED;color:#C2410C;">
-                                                Responsi</th>
-                                            <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:100px;border-right:1px solid #DFE1E7;background:#F0FDF4;color:#15803D;">
-                                                Tugas Pengganti
+                                                style="padding:12px 16px;width:120px;background:#F0FDF4;color:#15803D;font-weight:600;">
+                                                Praktikum
+                                                <div
+                                                    style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
+                                                    <input type="number" x-model="bobot_praktikum"
+                                                        style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#15803D;">
+                                                    %
+                                                </div>
                                             </th>
-                                            <th class="mp-th text-left" style="padding:12px 16px;">Keterangan</th>
+                                            <th class="mp-th text-center"
+                                                style="padding:12px 16px;width:120px;background:#FEFCE8;color:#A16207;font-weight:600;">
+                                                Laporan
+                                                <div
+                                                    style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
+                                                    <input type="number" x-model="bobot_laporan"
+                                                        style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#A16207;">
+                                                    %
+                                                </div>
+                                            </th>
+                                            <th class="mp-th text-center"
+                                                style="padding:12px 16px;width:120px;background:#FFF7ED;color:#C2410C;font-weight:600;">
+                                                Responsi
+                                                <div
+                                                    style="margin-top:4px; display:flex; align-items:center; justify-content:center; gap:4px; font-size:11px;">
+                                                    <input type="number" x-model="bobot_responsi"
+                                                        style="width:36px; height:23px; font-size:13px; text-align:center; border:1px solid #CBD5E1; border-radius:4px; padding:0; color:#C2410C;">
+                                                    %
+                                                </div>
+                                            </th>
+                                            <th class="mp-th text-left"
+                                                style="padding:12px 16px;border-left:1px solid #DFE1E7;">Keterangan</th>
+                                            <th class="mp-th text-center"
+                                                style="padding:12px 16px;border-left:1px solid #DFE1E7;">RATA-RATA</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -247,10 +284,11 @@
                                                 $statusAbsen = $absensi?->status;
                                                 $njMap = $nilaiJenisMap[$modul->id][$dp->id] ?? [];
                                             @endphp
-                                            <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;"
+                                            <tr class="mp-tr group" style="border-bottom:1px solid #DFE1E7;"
                                                 x-show="paginatedRows.some(r => r.id === {{ $idx }})">
-                                                <td style="padding:12px 16px; color:#666D80; font-size:13px;">{{ $idx + 1 }}</td>
-                                                <td style="padding:12px 16px;">
+                                                <td class="group-hover:bg-gray-50 transition-all"
+                                                    style="padding:12px 16px; color:#666D80; font-size:13px;">{{ $idx + 1 }}</td>
+                                                <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;">
                                                     <div style="display:flex;align-items:center;gap:10px;">
                                                         <div class="mp-av sky"
                                                             style="width:28px;height:28px;font-size:11px;flex-shrink:0;">
@@ -266,54 +304,81 @@
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td style="padding:12px 16px; color:#666D80; font-size:12px;font-weight:600;">
+                                                <td class="group-hover:bg-gray-50 transition-all"
+                                                    style="padding:12px 16px; color:#0D0D12; font-size:12px;font-weight:600;">
                                                     {{ $dp->user?->student?->student_number ?? $dp->user?->email ?? '-' }}
                                                 </td>
                                                 <td x-show="kelRowspan({{ $idx }}) > 0" :rowspan="kelRowspan({{ $idx }})"
+                                                    class="group-hover:bg-gray-50 transition-all"
                                                     style="padding:12px 16px;text-align:center;font-size:15px;font-weight:700;color:#0D0D12;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;vertical-align:middle;">
                                                     {{ $dp->kelompok ?? '—' }}
                                                 </td>
                                                 <td x-show="shfRowspan({{ $idx }}) > 0" :rowspan="shfRowspan({{ $idx }})"
+                                                    class="group-hover:bg-gray-50 transition-all"
                                                     style="padding:12px 16px;text-align:center;font-size:15px;font-weight:700;color:#0D0D12;border-right:1px solid #DFE1E7;vertical-align:middle;">
                                                     {{ $dp->shift ?? '—' }}
                                                 </td>
-                                                <td style="padding:12px 16px;text-align:center;">
+                                                <td class="group-hover:bg-gray-50 transition-all"
+                                                    style="padding:12px 16px;text-align:center;">
                                                     @if($statusAbsen === 'hadir')
                                                         <span class="mp-badge success sm"
                                                             style="background:#ECFDF5; color:#10B981;">Hadir</span>
+                                                    @elseif($statusAbsen === 'terlambat')
+                                                        <span class="mp-badge warning sm"
+                                                            style="background:#FFFBEB; color:#D97706;">Terlambat</span>
                                                     @elseif($statusAbsen === 'izin')
                                                         <span class="mp-badge sky sm"
                                                             style="background:#EFF6FF; color:#3B82F6;">Izin</span>
-                                                    @elseif($statusAbsen === 'tidak_hadir')
-                                                        <span class="mp-badge danger sm"
-                                                            style="background:#FEF2F2; color:#EF4444;">Alpha</span>
+                                                    @elseif($statusAbsen === 'alpa' || $statusAbsen === 'tidak_hadir')
+                                                        <span class="mp-badge error sm"
+                                                            style="background:#FEF2F2; color:#EF4444;">Alpa</span>
                                                     @else
                                                         <span style="color:#A4ABB8; font-size:12px;">—</span>
                                                     @endif
                                                 </td>
+                                                @php
+                                                    $valTP = isset($njMap['tugas_pendahuluan']) ? floatval($njMap['tugas_pendahuluan']) : 0;
+                                                    $valPrak = isset($njMap['tugas_pengganti']) ? floatval($njMap['tugas_pengganti']) : 0;
+                                                    $valLap = isset($njMap['laporan']) ? floatval($njMap['laporan']) : 0;
+                                                    $valResp = isset($njMap['responsi']) ? floatval($njMap['responsi']) : 0;
+                                                @endphp
                                                 {{-- Tugas Pendahuluan --}}
-                                                <td
-                                                    style="padding:12px 16px;text-align:center;background:#EAF0FA;font-weight:700;color:#4338CA;font-size:13px;">
-                                                    {{ isset($njMap['tugas_pendahuluan']) ? number_format($njMap['tugas_pendahuluan'], 1) : '—' }}
+                                                <td class="group-hover:brightness-95 transition-all"
+                                                    style="padding:12px 16px;text-align:center;background:#EAF0FA;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['tugas_pendahuluan']) ? number_format($njMap['tugas_pendahuluan'], 0) : '0' }}
+                                                </td>
+                                                {{-- Praktikum (Tugas Pengganti) --}}
+                                                <td class="group-hover:brightness-95 transition-all"
+                                                    style="padding:12px 16px;text-align:center;background:#F0FDF4;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['tugas_pengganti']) ? number_format($njMap['tugas_pengganti'], 0) : '0' }}
                                                 </td>
                                                 {{-- Laporan --}}
-                                                <td
-                                                    style="padding:12px 16px;text-align:center;background:#FEF9C3;font-weight:700;color:#A16207;font-size:13px;">
-                                                    {{ isset($njMap['laporan']) ? number_format($njMap['laporan'], 1) : '—' }}
+                                                <td class="group-hover:brightness-95 transition-all"
+                                                    style="padding:12px 16px;text-align:center;background:#FEF9C3;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['laporan']) ? number_format($njMap['laporan'], 0) : '0' }}
                                                 </td>
                                                 {{-- Responsi --}}
-                                                <td
-                                                    style="padding:12px 16px;text-align:center;background:#FFF7ED;font-weight:700;color:#C2410C;font-size:13px;">
-                                                    {{ isset($njMap['responsi']) ? number_format($njMap['responsi'], 1) : '—' }}
-                                                </td>
-                                                {{-- Tugas Pengganti --}}
-                                                <td
-                                                    style="padding:12px 16px;text-align:center;background:#F0FDF4;font-weight:700;color:#15803D;font-size:13px;">
-                                                    {{ isset($njMap['tugas_pengganti']) ? number_format($njMap['tugas_pengganti'], 1) : '—' }}
+                                                <td class="group-hover:brightness-95 transition-all"
+                                                    style="padding:12px 16px;text-align:center;background:#FFF7ED;color:#0D0D12;font-size:13px;">
+                                                    {{ isset($njMap['responsi']) ? number_format($njMap['responsi'], 0) : '0' }}
                                                 </td>
                                                 {{-- Keterangan --}}
-                                                <td style="padding:12px 16px;font-size:12px;color:#666D80;">
+                                                <td class="group-hover:bg-gray-50 transition-all"
+                                                    style="padding:12px 16px;font-size:12px;color:#666D80;border-left:1px solid #DFE1E7;">
                                                     {{ $absensi?->keterangan ?? '—' }}
+                                                </td>
+                                                {{-- RATA-RATA --}}
+                                                <td class="group-hover:bg-gray-50 transition-all"
+                                                    style="padding:12px 16px;text-align:center;color:#0D0D12;font-size:13px;font-weight:500;border-left:1px solid #DFE1E7;"
+                                                    x-data="{
+                                                                                                                                                                                                                                        get rataRata() {
+                                                                                                                                                                                                                                            let totalBobot = parseInt(bobot_tp || 0) + parseInt(bobot_praktikum || 0) + parseInt(bobot_laporan || 0) + parseInt(bobot_responsi || 0);
+                                                                                                                                                                                                                                            if (totalBobot === 0) return 0;
+                                                                                                                                                                                                                                            let sum = ({{$valTP}} * (bobot_tp || 0)) + ({{$valPrak}} * (bobot_praktikum || 0)) + ({{$valLap}} * (bobot_laporan || 0)) + ({{$valResp}} * (bobot_responsi || 0));
+                                                                                                                                                                                                                                            return (sum / totalBobot).toFixed(0);
+                                                                                                                                                                                                                                        }
+                                                                                                                                                                                                                                    }">
+                                                    <span x-text="rataRata"></span>
                                                 </td>
                                             </tr>
                                         @empty

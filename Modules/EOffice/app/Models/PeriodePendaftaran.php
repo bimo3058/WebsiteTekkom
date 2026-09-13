@@ -24,6 +24,8 @@ class PeriodePendaftaran extends Model
         'judul',
         'deskripsi',
         'nama_berkas_tambahan',
+        'jenis_berkas_tambahan',
+        'keterangan_berkas_tambahan',
         'konfigurasi_kuis',
         'dibuka_oleh',
     ];

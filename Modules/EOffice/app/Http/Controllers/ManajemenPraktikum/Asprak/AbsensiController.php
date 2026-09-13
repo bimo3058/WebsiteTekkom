@@ -241,4 +241,72 @@ class AbsensiController extends Controller
                 ->whereNull('deleted_at')
         )->where('modul_id', $modulId)->exists();
     }
+
+    public function exportCsv(Request $request)
+    {
+        $asprak = $request->attributes->get('asprak')
+            ?? AsistenPraktikum::where('user_id', auth()->id())
+                ->where('role', 'asprak')->whereNull('deleted_at')->first();
+
+        $moduls = $asprak
+            ? ModulAsprak::where('asprak_id', $asprak->id)->with(['modul.praktikum', 'modul.asprak.user'])->get()->pluck('modul')->filter()->values()
+            : collect();
+
+        $praktikum = $asprak ? $asprak->praktikum : null;
+        if (!$praktikum) abort(404);
+
+        $daftarPraktikan = DaftarPraktikan::where('praktikum_id', $praktikum->id)
+            ->with(['user', 'user.student', 'absensi'])
+            ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
+            ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
+            ->orderBy('created_at')
+            ->get();
+
+        $modulIds = $moduls->pluck('id')->toArray();
+        $nilaiJenisAll = NilaiJenisTugas::whereIn('modul_id', $modulIds)->get();
+        $nilaiJenisMap = [];
+        foreach ($nilaiJenisAll as $nj) {
+            $nilaiJenisMap[$nj->modul_id][$nj->daftar_praktikan_id][$nj->jenis_tugas] = $nj->nilai;
+        }
+
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=Rekap_Nilai_{$praktikum->kode}.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Laporan', 'Responsi', 'Tugas Pengganti', 'Keterangan']);
+
+            $no = 1;
+            foreach ($daftarPraktikan as $dp) {
+                foreach ($moduls as $m) {
+                    $absensi = $dp->absensi->firstWhere('modul_id', $m->id);
+                    $njMap = $nilaiJenisMap[$m->id][$dp->id] ?? [];
+                    $row = [
+                        $no,
+                        $dp->user?->name ?? '-',
+                        $dp->user?->student?->student_number ?? $dp->user?->email ?? '-',
+                        $dp->kelompok ?? '-',
+                        $dp->shift ?? '-',
+                        $m->nama,
+                        $absensi ? ucfirst($absensi->status) : '-',
+                        $njMap['tugas_pendahuluan'] ?? '-',
+                        $njMap['laporan'] ?? '-',
+                        $njMap['responsi'] ?? '-',
+                        $njMap['tugas_pengganti'] ?? '-',
+                        $absensi?->keterangan ?? '-',
+                    ];
+                    fputcsv($file, $row);
+                }
+                $no++;
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
 }

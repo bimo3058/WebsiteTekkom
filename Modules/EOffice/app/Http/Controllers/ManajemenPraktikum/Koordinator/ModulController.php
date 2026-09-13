@@ -42,10 +42,20 @@ class ModulController extends Controller
                 ->get()
             : collect();
 
+        $asistenPage = request('asisten_page', 1);
+        $asistenPerPage = request('asisten_per_page', 10);
+        
+        $asistenPaginated = $praktikum
+            ? AsistenPraktikum::where('praktikum_id', $praktikum->id)
+                ->where('role', 'asprak')
+                ->with(['user.student', 'modulAsprak.modul'])
+                ->paginate($asistenPerPage, ['*'], 'asisten_page', $asistenPage)->withQueryString()
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, $asistenPerPage);
+
         // Also define $modulList for the template
         $modulList = $moduls;
 
-        return view('eoffice::manajemen-praktikum.koordinator.modul', compact('praktikum', 'moduls', 'modulList', 'asistenList', 'distribusiList'));
+        return view('eoffice::manajemen-praktikum.koordinator.modul', compact('praktikum', 'moduls', 'modulList', 'asistenList', 'distribusiList', 'asistenPaginated'));
     }
 
     public function show(int $modulId)

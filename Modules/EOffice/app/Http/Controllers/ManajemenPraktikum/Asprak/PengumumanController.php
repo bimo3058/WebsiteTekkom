@@ -45,9 +45,10 @@ class PengumumanController extends Controller
             session(['manprak_asprak_praktikum_id' => $praktikumId]);
         }
 
-        // Pengumuman hanya untuk praktikum yang dipilih
+        // Pengumuman hanya untuk praktikum yang dipilih (hanya manual/non-sistem)
         $pengumumans = $praktikumId
             ? Pengumuman::where('praktikum_id', $praktikumId)
+                ->whereNull('tipe_sistem')
                 ->with('user')
                 ->orderByDesc('created_at')
                 ->get()
@@ -102,7 +103,7 @@ class PengumumanController extends Controller
             'user_id' => $user->id,
             'judul' => $request->judul,
             'konten' => $request->konten,
-            'is_published' => $request->boolean('is_published'),
+            'is_published' => true,
             'lampiran' => empty($lampiranPaths) ? null : $lampiranPaths,
         ]);
 

@@ -67,58 +67,40 @@
                 $initials = strtoupper(substr($nameParts[0] ?? 'S', 0, 1) . substr($nameParts[1] ?? $nameParts[0] ?? 'Y', 0, 1));
                 $avColors = ['sky', 'navy', 'green', 'yellow', 'violet'];
                 $avColor = $avColors[crc32($pg->user?->email ?? '') % count($avColors)];
-                $isSistem = $pg->tipe_sistem !== null;
             @endphp
-            <div class="mp-card flex-shrink-0"
-                onmouseover="this.style.borderColor='#B7C2DE';this.style.boxShadow='0 4px 14px rgba(11,38,110,.07)'"
-                onmouseout="this.style.borderColor='#DFE1E7';this.style.boxShadow=''">
-                <div style="padding:20px;">
+            <div style="border:1px solid #DFE1E7; background:#fff; border-radius:14px; padding:15px 24px; position:relative; box-shadow: 0 2px 4px rgba(0,0,0,0.02); transition:all 0.2s ease;"
+                onmouseover="this.style.boxShadow='0 4px 14px rgba(17,24,39,0.05)';"
+                onmouseout="this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
                     <div style="display:flex;align-items:flex-start;gap:14px;">
                         {{-- Avatar --}}
-                        <div class="mp-av {{ $isSistem ? 'navy' : $avColor }}" style="flex-shrink:0;margin-top:2px;">
-                            @if($isSistem)
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                                    stroke-linecap="round">
-                                    <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
-                                </svg>
-                            @else
-                                {{ $initials }}
-                            @endif
+                        <div class="mp-av {{ $avColor }}" style="flex-shrink:0;margin-top:2px;">
+                            {{ $initials }}
                         </div>
 
                         <div style="flex:1;min-width:0;">
-                            {{-- Judul + Badges --}}
-                            <div style="display:flex;align-items:flex-start;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
-                                <div style="font-size:14px;font-weight:700;color:#0D0D12;flex:1;min-width:0;">{{ $pg->judul }}
+                            {{-- Name + Timestamp --}}
+                            <div style="margin-bottom:10px;">
+                                <div style="font-weight:700; font-size:14px; color:#111827;">
+                                    {{ $pg->user?->name ?? '—' }}
                                 </div>
-                                @if($isSistem)
-                                    <span class="mp-badge sky sm">Sistem</span>
-                                @endif
-                                @if(!$pg->is_published)
-                                    <span class="mp-badge warning sm">Draft</span>
-                                @endif
-                            </div>
-
-                            {{-- Meta --}}
-                            <div style="font-size:11px;color:#808897;margin-bottom:10px;display:flex;gap:10px;flex-wrap:wrap;">
-                                <span>
-                                    Oleh: <strong
-                                        style="color:#666D80;">{{ $isSistem ? 'Sistem' : ($pg->user?->name ?? '—') }}</strong>
-                                </span>
-                                <span>
+                                <div style="font-size:12px; color:#6B7280;">
                                     {{ $pg->created_at?->format('d M Y, H:i') ?? '-' }}
                                     @if($pg->updated_at && $pg->updated_at->gt($pg->created_at))
-                                        <span style="font-style:italic; margin-left:4px; color:#A4ABB8;">(Diedit
+                                        <span style="font-style:italic; margin-left:4px;">(Diedit
                                             {{ $pg->updated_at->format('d M Y, H:i') }})</span>
                                     @endif
-                                </span>
-                                @if($pg->praktikum)
-                                    <span>Praktikum: <strong style="color:#666D80;">{{ $pg->praktikum->nama }}</strong></span>
-                                @endif
+                                </div>
                             </div>
 
-                            {{-- Konten --}}
-                            <div style="font-size:13px;color:#353849;line-height:1.65;white-space:pre-line;">{{ $pg->konten }}
+                            {{-- Judul + Konten --}}
+                            <div style="margin:10px 0 0 0;">
+                                <h3 style="font-size:15px; font-weight:700; color:#111827; margin:0 0 4px 0; line-height:1.4; padding:0;">
+                                    {{ $pg->judul }}
+                                    @if(!$pg->is_published)
+                                        <span class="mp-badge warning sm" style="font-size:11px;margin-left:6px;">Draft</span>
+                                    @endif
+                                </h3>
+                                <p style="font-size:13px; color:#374151; margin:0; padding:0; line-height:1.6; white-space:pre-line;">{{ $pg->konten }}</p>
                             </div>
 
                             {{-- File Attachments --}}
@@ -152,7 +134,6 @@
                             @endif
                         </div>
                     </div>
-                </div>
             </div>
         @empty
             <div class="mp-card flex-1 flex items-center justify-center" style="min-height:200px;">

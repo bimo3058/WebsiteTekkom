@@ -52,4 +52,62 @@ class PraktikumController extends Controller
         // Redirect langsung ke halaman Seleksi Asisten
         return redirect()->route('eoffice.manprak.koor.pendaftaran-asprak.index');
     }
+
+    /**
+     * Update cover image praktikum
+     */
+    public function updateCover(\Illuminate\Http\Request $request, $id)
+    {
+        $user = auth()->user();
+        
+        $praktikum = Praktikum::where('id', $id)
+            ->where('koor_id', $user->id)
+            ->firstOrFail();
+
+        $request->validate([
+            'cover' => 'required|image|mimes:jpeg,png,jpg|max:2048'
+        ]);
+
+        $file = $request->file('cover');
+        $supabase = app(\App\Services\SupabaseStorage::class);
+        
+        // Delete old cover if exists
+        if ($praktikum->cover_path) {
+            try {
+                $supabase->delete($praktikum->cover_path, 'eoffice');
+            } catch (\Exception $e) {
+                // ignore if not found
+            }
+        }
+
+        $path = $supabase->upload($file, 'praktikum/cover', 'eoffice');
+
+        $praktikum->update(['cover_path' => $path]);
+
+        return back()->with('success', 'Cover praktikum berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus cover image praktikum
+     */
+    public function deleteCover($id)
+    {
+        $user = auth()->user();
+
+        $praktikum = Praktikum::where('id', $id)
+            ->where('koor_id', $user->id)
+            ->firstOrFail();
+
+        if ($praktikum->cover_path) {
+            try {
+                $supabase = app(\App\Services\SupabaseStorage::class);
+                $supabase->delete($praktikum->cover_path, 'eoffice');
+            } catch (\Exception $e) {
+                // ignore if not found
+            }
+            $praktikum->update(['cover_path' => null]);
+        }
+
+        return back()->with('success', 'Gambar sampul berhasil dihapus.');
+    }
 }

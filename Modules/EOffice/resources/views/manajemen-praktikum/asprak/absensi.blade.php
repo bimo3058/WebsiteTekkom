@@ -156,101 +156,114 @@
                             <span x-text="isSaving ? 'Menyimpan...' : 'Simpan'"></span>
                         </button>
 
+                        <a href="{{ route('eoffice.manprak.asprak.absensi.export-csv') }}"
+                            style="height: 36px; padding: 0 14px; background: #fff; border: 1px solid #DFE1E7; border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; font-size: 13px; font-weight: 600; color: #353849; cursor: pointer;"
+                            onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#FFF'">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                                <polyline points="7 10 12 15 17 10" />
+                                <line x1="12" y1="15" x2="12" y2="3" />
+                            </svg>
+                            Download CSV
+                        </a>
+
                     </div>
                 </div>
 
                 {{-- Module Accordions --}}
                 @forelse($modulDiampu as $modul)
                     <div x-data="{ 
-                                                            expanded: false,
-                                                            page: 1,
-                                                            perPage: 10,
-                                                            modulId: {{ $modul->id }},
-                                                            rows: [],
-                                                            init() {
-                                                                let tempRows = [
-                                                                    @foreach($daftarPraktikan as $idx => $dp)
-                                                                        @php
-                                                                            $absensi = $dp->absensi->firstWhere('modul_id', $modul->id);
-                                                                            $statusAbsen = $absensi?->status ?? '';
-                                                                            if (!in_array($statusAbsen, ['hadir', 'terlambat', 'alpa'])) {
-                                                                                $statusAbsen = '';
-                                                                            }
-                                                                            $ket = addslashes($absensi?->keterangan ?? '');
-                                                                            $njMap = $nilaiJenisMap[$modul->id][$dp->id] ?? [];
-                                                                            $nameRaw = addslashes($dp->user?->name ?? '');
-                                                                            $nimRaw = addslashes($dp->user?->student?->student_number ?? $dp->user?->email ?? '');
-                                                                            $emailRaw = addslashes($dp->user?->email ?? '');
-                                                                            $avatarUrl = $dp->user?->avatar_url ?? '';
-                                                                            $initialsRaw = addslashes(strtoupper(substr($dp->user?->name ?? 'MM', 0, 2)));
-                                                                        @endphp
-                                                                        { 
-                                                                            id: {{$idx}}, 
-                                                                            dp_id: '{{$dp->id}}', 
-                                                                            name: String.raw`{!! $nameRaw !!}`, 
-                                                                            nim: String.raw`{!! $nimRaw !!}`, 
-                                                                            email: String.raw`{!! $emailRaw !!}`,
-                                                                            avatar: '{{ $avatarUrl }}',
-                                                                            avatar_initials: String.raw`{!! $initialsRaw !!}`,
-                                                                            kel: '{{$dp->kelompok ?? "-"}}', 
-                                                                            shf: '{{$dp->shift ?? "-"}}',
-                                                                            status: '{{ $statusAbsen }}',
-                                                                            keterangan: String.raw`{!! $ket !!}`,
-                                                                            tugas_pendahuluan: '{{ $njMap["tugas_pendahuluan"] ?? "" }}',
-                                                                            laporan: '{{ $njMap["laporan"] ?? "" }}',
-                                                                            responsi: '{{ $njMap["responsi"] ?? "" }}',
-                                                                            tugas_pengganti: '{{ $njMap["tugas_pengganti"] ?? "" }}'
-                                                                        }{{ $loop->last ? '' : ',' }}
-                                                                    @endforeach
-                                                                ];
-                                                                this.rows = tempRows;
-                                                                $watch('rows', (newVal) => {
-                                                                    if (!this.expanded) return; 
-                                                                });
-                                                                this.registerModul(this.modulId, () => this.rows);
+                                                                                                    expanded: false,
+                                                                                                    page: 1,
+                                                                                                    perPage: 10,
+                                                                                                    modulId: {{ $modul->id }},
+                                                                                                    rows: [],
+                                                                                                    init() {
+                                                                                                        let tempRows = [
+                                                                                                            @foreach($daftarPraktikan as $idx => $dp)
+                                                                                                                @php
+                                                                                                                    $absensi = $dp->absensi->firstWhere('modul_id', $modul->id);
+                                                                                                                    $statusAbsen = $absensi?->status ?? '';
+                                                                                                                    if (!in_array($statusAbsen, ['hadir', 'terlambat', 'alpa'])) {
+                                                                                                                        $statusAbsen = '';
+                                                                                                                    }
+                                                                                                                    $ket = addslashes($absensi?->keterangan ?? '');
+                                                                                                                    $njMap = $nilaiJenisMap[$modul->id][$dp->id] ?? [];
+                                                                                                                    $nameRaw = addslashes($dp->user?->name ?? '');
+                                                                                                                    $nimRaw = addslashes($dp->user?->student?->student_number ?? $dp->user?->email ?? '');
+                                                                                                                    $emailRaw = addslashes($dp->user?->email ?? '');
+                                                                                                                    $avatarUrl = $dp->user?->avatar_url ?? '';
+                                                                                                                    $initialsRaw = addslashes(strtoupper(substr($dp->user?->name ?? 'MM', 0, 2)));
+                                                                                                                @endphp
+                                                                                                                { 
+                                                                                                                    id: {{$idx}}, 
+                                                                                                                    dp_id: '{{$dp->id}}', 
+                                                                                                                    name: String.raw`{!! $nameRaw !!}`, 
+                                                                                                                    nim: String.raw`{!! $nimRaw !!}`, 
+                                                                                                                    email: String.raw`{!! $emailRaw !!}`,
+                                                                                                                    avatar: '{{ $avatarUrl }}',
+                                                                                                                    avatar_initials: String.raw`{!! $initialsRaw !!}`,
+                                                                                                                    kel: '{{$dp->kelompok ?? "-"}}', 
+                                                                                                                    shf: '{{$dp->shift ?? "-"}}',
+                                                                                                                    status: '{{ $statusAbsen }}',
+                                                                                                                    keterangan: String.raw`{!! $ket !!}`,
+                                                                                                                    tugas_pendahuluan: '{{ $njMap["tugas_pendahuluan"] ?? "" }}',
+                                                                                                                    laporan: '{{ $njMap["laporan"] ?? "" }}',
+                                                                                                                    responsi: '{{ $njMap["responsi"] ?? "" }}',
+                                                                                                                    tugas_pengganti: '{{ $njMap["tugas_pengganti"] ?? "" }}'
+                                                                                                                }{{ $loop->last ? '' : ',' }}
+                                                                                                            @endforeach
+                                                                                                        ];
+                                                                                                        this.rows = tempRows;
+                                                                                                        $watch('rows', (newVal) => {
+                                                                                                            if (!this.expanded) return; 
+                                                                                                        });
+                                                                                                        this.registerModul(this.modulId, () => this.rows);
 
-                                                                this.$watch('globalSearch', () => { this.page = 1; });
-                                                                this.$watch('globalKelompok', () => { this.page = 1; });
-                                                                this.$watch('globalShift', () => { this.page = 1; });
-                                                                this.$watch('perPage', () => { this.page = 1; });
-                                                            },
-                                                            get visibleRows() {
-                                                                return this.rows.filter(r => 
-                                                                    (globalSearch === '' || r.name.toLowerCase().includes(globalSearch.toLowerCase()) || r.nim.toLowerCase().includes(globalSearch.toLowerCase())) &&
-                                                                    (globalKelompok === '' || String(r.kel).toLowerCase().includes(globalKelompok.toLowerCase())) &&
-                                                                    (globalShift === '' || String(r.shf).toLowerCase().includes(globalShift.toLowerCase()))
-                                                                );
-                                                            },
-                                                            get paginatedRows() {
-                                                                let start = (this.page - 1) * this.perPage;
-                                                                return this.visibleRows.slice(start, start + parseInt(this.perPage));
-                                                            },
-                                                            get totalPages() {
-                                                                return Math.max(1, Math.ceil(this.visibleRows.length / this.perPage));
-                                                            },
-                                                            kelRowspan(id) {
-                                                                let pr = this.paginatedRows;
-                                                                let vId = pr.findIndex(r => r.id === id);
-                                                                if (vId === -1) return 0;
-                                                                if (vId > 0 && pr[vId - 1].kel === pr[vId].kel) return 0;
-                                                                let count = 1;
-                                                                for (let i = vId + 1; i < pr.length; i++) {
-                                                                    if (pr[i].kel === pr[vId].kel) count++; else break;
-                                                                }
-                                                                return count;
-                                                            },
-                                                            shfRowspan(id) {
-                                                                let pr = this.paginatedRows;
-                                                                let vId = pr.findIndex(r => r.id === id);
-                                                                if (vId === -1) return 0;
-                                                                if (vId > 0 && pr[vId - 1].shf === pr[vId].shf) return 0;
-                                                                let count = 1;
-                                                                for (let i = vId + 1; i < pr.length; i++) {
-                                                                    if (pr[i].shf === pr[vId].shf) count++; else break;
-                                                                }
-                                                                return count;
-                                                            }
-                                                        }" style="border-bottom:1px solid #DFE1E7;">
+                                                                                                        this.$watch('globalSearch', () => { this.page = 1; });
+                                                                                                        this.$watch('globalKelompok', () => { this.page = 1; });
+                                                                                                        this.$watch('globalShift', () => { this.page = 1; });
+                                                                                                        this.$watch('perPage', () => { this.page = 1; });
+                                                                                                    },
+                                                                                                    get visibleRows() {
+                                                                                                        return this.rows.filter(r => 
+                                                                                                            (globalSearch === '' || r.name.toLowerCase().includes(globalSearch.toLowerCase()) || r.nim.toLowerCase().includes(globalSearch.toLowerCase())) &&
+                                                                                                            (globalKelompok === '' || String(r.kel).toLowerCase().includes(globalKelompok.toLowerCase())) &&
+                                                                                                            (globalShift === '' || String(r.shf).toLowerCase().includes(globalShift.toLowerCase()))
+                                                                                                        );
+                                                                                                    },
+                                                                                                    get paginatedRows() {
+                                                                                                        let start = (this.page - 1) * this.perPage;
+                                                                                                        return this.visibleRows.slice(start, start + parseInt(this.perPage));
+                                                                                                    },
+                                                                                                    get totalPages() {
+                                                                                                        return Math.max(1, Math.ceil(this.visibleRows.length / this.perPage));
+                                                                                                    },
+                                                                                                    kelRowspan(id) {
+                                                                                                        let pr = this.paginatedRows;
+                                                                                                        let vId = pr.findIndex(r => r.id === id);
+                                                                                                        if (vId === -1) return 0;
+                                                                                                        if (vId > 0 && pr[vId - 1].kel === pr[vId].kel) return 0;
+                                                                                                        let count = 1;
+                                                                                                        for (let i = vId + 1; i < pr.length; i++) {
+                                                                                                            if (pr[i].kel === pr[vId].kel) count++; else break;
+                                                                                                        }
+                                                                                                        return count;
+                                                                                                    },
+                                                                                                    shfRowspan(id) {
+                                                                                                        let pr = this.paginatedRows;
+                                                                                                        let vId = pr.findIndex(r => r.id === id);
+                                                                                                        if (vId === -1) return 0;
+                                                                                                        if (vId > 0 && pr[vId - 1].shf === pr[vId].shf) return 0;
+                                                                                                        let count = 1;
+                                                                                                        for (let i = vId + 1; i < pr.length; i++) {
+                                                                                                            if (pr[i].shf === pr[vId].shf) count++; else break;
+                                                                                                        }
+                                                                                                        return count;
+                                                                                                    }
+                                                                                                }"
+                        style="border-bottom:1px solid #DFE1E7;">
                         <div style="padding:16px 20px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;"
                             @click="expanded = !expanded" onmouseover="this.style.background='#F9FAFB'"
                             onmouseout="this.style.background='transparent'">
@@ -283,19 +296,29 @@
                                                 style="padding:12px 16px;width:100px;border-right:1px solid #DFE1E7;">SHIFT</th>
                                             <th class="mp-th text-center" style="padding:12px 16px;width:240px;">Kehadiran</th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:95px;border-left:1px solid #DFE1E7;background:#EEF2FF;color:#4338CA;">
-                                                Tugas Pendahuluan</th>
-                                            <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:95px;background:#FEFCE8;color:#A16207;">Laporan
+                                                style="padding:12px 16px;width:95px;border-left:1px solid #DFE1E7;background:#EEF2FF;color:#4338CA;text-align: center;">
+                                                Tugas Pendahuluan<br><span
+                                                    style="font-size:11px;font-weight:600;">{{ $praktikum->bobot_tp ?? 10 }}%</span>
                                             </th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:95px;background:#FFF7ED;color:#C2410C;">
-                                                Responsi</th>
+                                                style="padding:12px 16px;width:95px;background:#F0FDF4;color:#15803D;text-align: center;">
+                                                Praktikum<br><span
+                                                    style="font-size:11px;font-weight:600;">{{ $praktikum->bobot_praktikum ?? 30 }}%</span>
+                                            </th>
                                             <th class="mp-th text-center"
-                                                style="padding:12px 16px;width:95px;border-right:1px solid #DFE1E7;background:#F0FDF4;color:#15803D;">
-                                                Tugas Pengganti
+                                                style="padding:12px 16px;width:95px;background:#FEFCE8;color:#A16207;text-align: center;">
+                                                Laporan<br><span
+                                                    style="font-size:11px;font-weight:600;">{{ $praktikum->bobot_laporan ?? 30 }}%</span>
+                                            </th>
+                                            <th class="mp-th text-center"
+                                                style="padding:12px 16px;width:95px;border-right:1px solid #DFE1E7;background:#FFF7ED;color:#C2410C;text-align: center;">
+                                                Responsi<br><span
+                                                    style="font-size:11px;font-weight:600;">{{ $praktikum->bobot_responsi ?? 30 }}%</span>
                                             </th>
                                             <th class="mp-th text-left" style="padding:12px 16px;">Keterangan</th>
+                                            <th class="mp-th text-center"
+                                                style="padding:12px 16px;width:80px;border-left:1px solid #DFE1E7;">Rata-rata
+                                            </th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -326,7 +349,7 @@
                                                     </div>
                                                 </td>
 
-                                                <td style="padding:12px 16px; font-size:13px; color:#353849; text-transform:uppercase;"
+                                                <td style="padding:12px 16px; font-size:12px; font-weight:600; color:#353849; text-transform:uppercase;"
                                                     x-text="r.nim"></td>
 
                                                 <td x-show="kelRowspan(r.id) > 0" :rowspan="kelRowspan(r.id)"
@@ -380,6 +403,12 @@
                                                         x-model="r.tugas_pendahuluan" @input="markDirty()"
                                                         style="width:70px; padding:6px 8px; border:1px solid #DFE1E7; border-radius:6px; font-size:13px; text-align:center; background:#fff;">
                                                 </td>
+                                                <td class="col-prak"
+                                                    style="padding:12px 16px; text-align:center; background:#F0FDF4; transition: background 0.2s;">
+                                                    <input type="number" min="0" max="100" step="0.01"
+                                                        x-model="r.tugas_pengganti" @input="markDirty()"
+                                                        style="width:70px; padding:6px 8px; border:1px solid #DFE1E7; border-radius:6px; font-size:13px; text-align:center; background:#fff;">
+                                                </td>
                                                 <td class="col-lap"
                                                     style="padding:12px 16px; text-align:center; background:#FEFCE8; transition: background 0.2s;">
                                                     <input type="number" min="0" max="100" step="0.01" x-model="r.laporan"
@@ -387,15 +416,9 @@
                                                         style="width:70px; padding:6px 8px; border:1px solid #DFE1E7; border-radius:6px; font-size:13px; text-align:center; background:#fff;">
                                                 </td>
                                                 <td class="col-resp"
-                                                    style="padding:12px 16px; text-align:center; background:#FFF7ED; transition: background 0.2s;">
+                                                    style="padding:12px 16px; border-right:1px solid #DFE1E7; text-align:center; background:#FFF7ED; transition: background 0.2s;">
                                                     <input type="number" min="0" max="100" step="0.01" x-model="r.responsi"
                                                         @input="markDirty()"
-                                                        style="width:70px; padding:6px 8px; border:1px solid #DFE1E7; border-radius:6px; font-size:13px; text-align:center; background:#fff;">
-                                                </td>
-                                                <td class="col-prak"
-                                                    style="padding:12px 16px; border-right:1px solid #DFE1E7; text-align:center; background:#F0FDF4; transition: background 0.2s;">
-                                                    <input type="number" min="0" max="100" step="0.01"
-                                                        x-model="r.tugas_pengganti" @input="markDirty()"
                                                         style="width:70px; padding:6px 8px; border:1px solid #DFE1E7; border-radius:6px; font-size:13px; text-align:center; background:#fff;">
                                                 </td>
 
@@ -403,6 +426,23 @@
                                                     <input type="text" x-model="r.keterangan" @input="markDirty()"
                                                         placeholder="Opsional..."
                                                         style="width:100px; padding:6px 8px; border:1px solid #DFE1E7; border-radius:6px; font-size:13px; background:#fff;">
+                                                </td>
+
+                                                <td class="group-hover:bg-gray-50 transition-all"
+                                                    style="padding:12px 16px;text-align:center;color:#0D0D12;font-size:13px;font-weight:600;border-left:1px solid #DFE1E7;"
+                                                    x-data="{
+                                                                                                get rataRata() {
+                                                                                                    let b_tp = {{ $praktikum->bobot_tp ?? 10 }};
+                                                                                                    let b_prak = {{ $praktikum->bobot_praktikum ?? 30 }};
+                                                                                                    let b_lap = {{ $praktikum->bobot_laporan ?? 30 }};
+                                                                                                    let b_resp = {{ $praktikum->bobot_responsi ?? 30 }};
+                                                                                                    let totalBobot = b_tp + b_prak + b_lap + b_resp;
+                                                                                                    if (totalBobot === 0) return 0;
+                                                                                                    let sum = (b_tp * (r.tugas_pendahuluan || 0)) + (b_prak * (r.tugas_pengganti || 0)) + (b_lap * (r.laporan || 0)) + (b_resp * (r.responsi || 0));
+                                                                                                    return (sum / totalBobot).toFixed(0);
+                                                                                                }
+                                                                                            }">
+                                                    <span x-text="rataRata"></span>
                                                 </td>
 
                                             </tr>

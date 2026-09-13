@@ -153,4 +153,31 @@ class NilaiController extends Controller
 
         return response()->stream($callback, 200, $headers);
     }
+
+    public function updateBobot(Request $request, $id)
+    {
+        $request->validate([
+            'bobot_tp' => 'required|integer|min:0|max:100',
+            'bobot_praktikum' => 'required|integer|min:0|max:100',
+            'bobot_laporan' => 'required|integer|min:0|max:100',
+            'bobot_responsi' => 'required|integer|min:0|max:100',
+        ]);
+
+        $praktikum = Praktikum::findOrFail($id);
+        
+        // Ensure total is 100
+        $total = $request->bobot_tp + $request->bobot_praktikum + $request->bobot_laporan + $request->bobot_responsi;
+        if ($total !== 100) {
+            return redirect()->back()->with('error', 'Total bobot harus 100%');
+        }
+
+        $praktikum->update([
+            'bobot_tp' => $request->bobot_tp,
+            'bobot_praktikum' => $request->bobot_praktikum,
+            'bobot_laporan' => $request->bobot_laporan,
+            'bobot_responsi' => $request->bobot_responsi,
+        ]);
+
+        return redirect()->back()->with('success', 'Bobot nilai berhasil diperbarui.');
+    }
 }

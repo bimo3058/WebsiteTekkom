@@ -1,54 +1,17 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Modul — Manajemen Praktikum">
 
-    <div class="mp-page-header">
-        <div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+    @if(!$terdaftarDi)
+        <div class="mp-page-header">
+            <div>
                 <h1 class="mp-page-title">Daftar Modul</h1>
-                <span class="mp-badge warning sm"><span class="dot"></span>Mahasiswa</span>
-            </div>
-            <p class="mp-page-sub">
-                {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
-                @if($terdaftarDi) · {{ $terdaftarDi->nama }} @endif
-            </p>
-        </div>
-        <div class="mp-page-actions">
-            <div style="text-align:right;">
-                <div style="font-size:11px;color:#666D80;margin-bottom:2px;">Total Modul</div>
-                <div style="font-size:22px;font-weight:700;color:#0D0D12;line-height:1;">{{ $modulList->count() }}</div>
             </div>
         </div>
-    </div>
-
-    {{-- Switcher praktikum jika ikut lebih dari 1 --}}
-    @if($daftarPraktikan->count() > 1)
-        <div style="display:flex;flex-wrap:wrap;gap:8px;" class="flex-shrink-0">
-            @foreach($daftarPraktikan as $dp)
-                <a href="{{ route('eoffice.manprak.mahasiswa.modul.index') }}?praktikum_id={{ $dp->praktikum_id }}"
-                    class="{{ $dp->praktikum_id === $terdaftarDi?->id ? 'mp-btn primary sm' : 'mp-btn secondary sm' }}"
-                    style="text-decoration:none;">
-                    {{ $dp->praktikum?->nama ?? 'Praktikum' }}
-                </a>
-            @endforeach
-        </div>
+        <div class="mp-alert warning flex-shrink-0">Anda belum terdaftar di praktikum manapun.</div>
+    @else
+        <x-eoffice::manajemen-praktikum.mhs-header :praktikum="$terdaftarDi" />
     @endif
 
-    @if(!$terdaftarDi)
-
-        <div class="mp-card flex-shrink-0">
-            <div style="padding:48px;text-align:center;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5"
-                    stroke-linecap="round" style="margin:0 auto 12px;display:block;">
-                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-                </svg>
-                <div style="font-size:13px;font-weight:500;color:#666D80;">Anda belum terdaftar di kelas praktikum manapun.
-                </div>
-                <a href="{{ route('eoffice.manprak.mahasiswa.dashboard') }}" class="mp-btn ghost sm"
-                    style="text-decoration:none;display:inline-block;margin-top:12px;">← Kembali ke Dashboard</a>
-            </div>
-        </div>
-
-    @elseif($modulList->isEmpty())
+    @if($modulList->isEmpty())
 
         <div class="mp-card flex-shrink-0">
             <div style="padding:48px;text-align:center;">
@@ -64,151 +27,117 @@
 
     @else
 
-        <div class="sec-head">
-            <span class="sec-bar"></span>
-            <span class="sec-title">Materi Praktikum</span>
-            <span class="sec-rule"></span>
-        </div>
+        {{-- Content: Modul --}}
+        <style>
+            .modul-accordion-content {
+                max-height: 0;
+                opacity: 0;
+                overflow: hidden;
+                transition: max-height 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.1s ease;
+            }
 
-        {{-- Daftar Modul --}}
-        <div style="display:flex;flex-direction:column;gap:12px;" class="flex-1">
+            .modul-accordion-content.is-open {
+                max-height: 600px;
+                opacity: 1;
+                transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
+            }
+        </style>
+        <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 4px;">
             @foreach($modulList as $modul)
-                @php
+                @php 
                     $asprakList = $modul->modulAsprak->map(fn($ma) => $ma->asprak?->user?->name)->filter()->values();
-                    $jumlahMateri = $modul->materi->count();
                 @endphp
-                <div class="mp-card flex-shrink-0">
-                    {{-- Modul header (toggle) --}}
-                    <button type="button" onclick="toggleModul({{ $modul->id }})"
-                        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 20px;text-align:left;cursor:pointer;border:none;background:transparent;">
-                        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
-                            <div class="mp-stat-icon navy"
-                                style="width:32px;height:32px;border-radius:8px;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                {{ $modul->urutan ?? $loop->iteration }}
+                <div x-data="{ open: false }"
+                    style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden;">
+
+                    {{-- Header (Clickable) --}}
+                    <div @click="open = !open"
+                        style="padding: 16px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: background 0.15s;"
+                        onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">{{ $modul->nama }}
+                            </h3>
+                            <div style="font-size: 13px; color: #6B7280;">
+                                Asisten:
+                                @if($asprakList->isNotEmpty())
+                                    {{ $asprakList->join(', ') }}
+                                @else
+                                    -
+                                @endif
                             </div>
-                            <div style="min-width:0;">
-                                <div
-                                    style="font-size:15px;font-weight:700;color:#0D0D12;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-                                    {{ $modul->nama }}</div>
-                                <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
-                                    <span style="font-size:11px;color:#666D80;">{{ $jumlahMateri }} materi</span>
-                                    @if($asprakList->isNotEmpty())
-                                        <span style="font-size:11px;color:#666D80;">Asisten: {{ $asprakList->join(', ') }}</span>
+
+                            @php
+                                $firstMateri = $modul->materi->sortBy('created_at')->first();
+                                $sudahAdaInteraksi = $firstMateri || ($modul->updated_at->timestamp - $modul->created_at->timestamp > 3);
+                                $baseTime = $firstMateri ? $firstMateri->created_at : $modul->updated_at;
+                            @endphp
+
+                            @if($sudahAdaInteraksi)
+                                <div style="font-size:12px; color:#6B7280; font-weight:400; margin-top:4px;">
+                                    {{ \Carbon\Carbon::parse($baseTime)->locale('id')->translatedFormat('d M Y, H:i') }}
+                                    @if($modul->updated_at->timestamp - $baseTime->timestamp > 3)
+                                        <span style="font-style:italic;">(Diedit
+                                            {{ \Carbon\Carbon::parse($modul->updated_at)->locale('id')->translatedFormat('d M Y, H:i') }})</span>
                                     @endif
                                 </div>
-                            </div>
-                        </div>
-                        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-                            @if($jumlahMateri > 0)
-                                <span class="mp-badge navy sm">{{ $jumlahMateri }} file</span>
                             @endif
-                            <svg id="chevron-{{ $modul->id }}" width="16" height="16"
-                                style="color:#666D80;transition:transform 0.2s;" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
                         </div>
-                    </button>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round"
+                            :style="open ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </div>
 
-                    {{-- Konten modul --}}
-                    <div id="modul-content-{{ $modul->id }}" style="display:none;border-top:1px solid #DFE1E7;">
-                        @if($modul->deskripsi)
-                            <div style="padding:12px 20px;font-size:12px;color:#666D80;border-bottom:1px solid #DFE1E7;">
-                                {{ $modul->deskripsi }}</div>
-                        @endif
-
-                        @if($jumlahMateri === 0)
-                            <div style="padding:48px;text-align:center;">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5"
-                                    stroke-linecap="round" style="margin:0 auto 12px;display:block;">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                    <polyline points="14 2 14 8 20 8" />
-                                </svg>
-                                <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada materi untuk modul ini.</div>
-                            </div>
-                        @else
-                            <table class="mp-table">
-                                <thead>
-                                    <tr style="background:#F9FAFB;">
-                                        <th>Materi</th>
-                                        <th>Deskripsi</th>
-                                        <th>Diunggah</th>
-                                        <th style="text-align:right;"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
+                    {{-- Expanded Content --}}
+                    <div class="modul-accordion-content" :class="{ 'is-open': open }">
+                        <div style="border-top: 1px solid var(--c-border); padding: 20px 24px 24px; background: #fff;">
+                            @if($modul->deskripsi)
+                                <div
+                                    style="font-size: 14px; color: #374151; line-height: 1.5; text-align: left; margin: 0 0 20px 0;">
+                                    {!! nl2br(e(trim($modul->deskripsi))) !!}
+                                </div>
+                            @endif
+                            
+                            @if($modul->materi->isEmpty())
+                                <div style="font-size: 14px; color: #6B7280; font-style: italic;">Modul belum diunggah</div>
+                            @else
+                                <div style="display:flex; gap:16px; flex-wrap:wrap;">
                                     @foreach($modul->materi as $materi)
-                                        @php
-                                            $iconColor = match (true) {
-                                                str_contains($materi->tipe_file ?? '', 'pdf') => '#DF1C41',
-                                                str_contains($materi->tipe_file ?? '', 'word') || str_contains($materi->tipe_file ?? '', 'document') => '#1565C0',
-                                                str_contains($materi->tipe_file ?? '', 'presentation') || str_contains($materi->tipe_file ?? '', 'powerpoint') => '#E64A19',
-                                                str_contains($materi->tipe_file ?? '', 'image') => '#0D6B55',
-                                                default => '#666D80',
-                                            };
-                                        @endphp
-                                        <tr class="mp-tr">
-                                            <td>
-                                                <div style="display:flex;align-items:center;gap:10px;">
-                                                    <div
-                                                        style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:{{ $iconColor }}18;">
-                                                        <svg width="16" height="16" fill="none" stroke="{{ $iconColor }}"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                        </svg>
-                                                    </div>
-                                                    <span
-                                                        style="font-size:13px;font-weight:600;color:#0D0D12;">{{ $materi->judul }}</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                @if($materi->deskripsi)
-                                                    <span style="font-size:11px;color:#666D80;">{{ $materi->deskripsi }}</span>
-                                                @else
-                                                    <span style="font-size:11px;color:#808897;">—</span>
-                                                @endif
-                                            </td>
-                                            <td>
+                                        <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') : '#' }}"
+                                            target="_blank"
+                                            style="display:flex; flex-direction:column; width:140px; height:140px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
+                                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
+                                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+
+                                            {{-- Top Icon Area --}}
+                                            <div
+                                                style="flex:1; display:flex; align-items:center; justify-content:center; background:#FAFAFA;">
+                                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB"
+                                                    stroke-width="1.5" stroke-linecap="round">
+                                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                                                    <polyline points="14 2 14 8 20 8" />
+                                                </svg>
+                                            </div>
+
+                                            {{-- Bottom Name Area --}}
+                                            <div style="background:#293C79; padding:10px 12px; display:flex; align-items:center;">
                                                 <span
-                                                    style="font-size:11px;color:#666D80;">{{ $materi->created_at?->diffForHumans() }}</span>
-                                            </td>
-                                            <td style="text-align:right;">
-                                                @if($materi->file_path)
-                                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') }}"
-                                                        target="_blank" class="mp-btn primary sm"
-                                                        style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-                                                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                                d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                            <circle cx="12" cy="12" r="3" />
-                                                        </svg>
-                                                        Lihat
-                                                    </a>
-                                                @else
-                                                    <span class="mp-badge neutral sm">Tidak ada file</span>
-                                                @endif
-                                            </td>
-                                        </tr>
+                                                    style="color:#FFF; font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;"
+                                                    title="{{ $materi->judul ?? basename($materi->file_path ?? 'File') }}">
+                                                    {{ $materi->judul ?? basename($materi->file_path ?? 'File') }}
+                                                </span>
+                                            </div>
+                                        </a>
                                     @endforeach
-                                </tbody>
-                            </table>
-                        @endif
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             @endforeach
         </div>
 
     @endif
-
-    <script>
-        function toggleModul(id) {
-            const content = document.getElementById('modul-content-' + id);
-            const chevron = document.getElementById('chevron-' + id);
-            const isHidden = content.style.display === 'none' || content.style.display === '';
-            content.style.display = isHidden ? 'block' : 'none';
-            chevron.style.transform = isHidden ? 'rotate(180deg)' : '';
-        }
-    </script>
 
 </x-eoffice::manajemen-praktikum.layout>

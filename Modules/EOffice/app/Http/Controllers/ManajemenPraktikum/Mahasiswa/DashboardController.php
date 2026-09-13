@@ -74,13 +74,18 @@ class DashboardController extends Controller
             return $t->deadline && \Carbon\Carbon::parse($t->deadline)->lt($now) && !$t->sudah_kumpul;
         })->sortByDesc('deadline')->values();
 
-        $pengumumanPraktikum = Pengumuman::with('praktikum')
+        $pengumumanPraktikum = Pengumuman::with(['praktikum', 'user'])
             ->whereIn('praktikum_id', $praktikumIds)
+            ->whereNull('tipe_sistem') // hanya pengumuman manual dari asisten/koordinator
             ->where('is_published', true)
             ->orderByDesc('created_at')
             ->get();
 
-        $pengumumanRekrutmen = Pengumuman::whereIn('tipe_sistem', ['buka', 'tutup'])
+        $pengumumanRekrutmen = Pengumuman::with('praktikum')
+            ->whereHas('praktikum', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->whereIn('tipe_sistem', ['buka', 'tutup'])
             ->where('is_published', true)
             ->orderByDesc('created_at')
             ->get();
@@ -95,11 +100,24 @@ class DashboardController extends Controller
         $defaultTahunAjaran = $currentSemester === 'Genap' ? $currentYear - 1 : $currentYear;
         $semesterLabel = "Semester {$currentSemester} {$defaultTahunAjaran}/" . ($defaultTahunAjaran + 1);
 
+        $perPage = $request->input('per_page', 5);
+        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $tugasGabungan = collect($tugasTerlambat)->merge($tugasMendatang);
+        $currentItems = $tugasGabungan->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $tugasPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentItems,
+            $tugasGabungan->count(),
+            $perPage,
+            $currentPage,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
         return view('eoffice::manajemen-praktikum.mahasiswa.dashboard', compact(
             'daftarPraktikan',
             'terdaftarDi',
             'tugasMendatang',
             'tugasTerlambat',
+            'tugasPaginator',
             'pengumumanPraktikum',
             'pengumumanRekrutmen',
             'statusAsprak',

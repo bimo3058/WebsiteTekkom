@@ -25,6 +25,166 @@
 
 
 <div class="grid grid-cols-1 gap-[14px]">
+    {{-- Tabel Daftar Asisten --}}
+    <div class="mp-card">
+        <div class="mp-card-header">
+            <span class="mp-card-title">Daftar Asisten</span>
+        </div>
+        <div class="overflow-x-auto flex-1">
+            <table class="mp-table">
+                <thead>
+                    <tr style="background:#F9FAFB;">
+                        <th class="mp-th text-center" style="padding:10px 16px; width:60px;">NO</th>
+                        <th class="mp-th text-left" style="padding:10px 16px;">NAMA MAHASISWA</th>
+                        <th class="mp-th text-left" style="padding:10px 16px;">NIM</th>
+                        <th class="mp-th text-left" style="padding:10px 16px;">JUMLAH MODUL DIAMPU</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @forelse($asistenPaginated as $index => $a)
+                    <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;">
+                        <td style="padding:12px 16px; text-align:center; font-weight:600; color:#666D80; font-size:12px;">
+                            {{ $asistenPaginated->firstItem() + $index }}
+                        </td>
+                        <td style="padding:12px 16px;">
+                            <div style="display:flex; align-items:center; gap:12px;">
+                                <div style="width:36px; height:36px; background:#FDE6B4; color:#C48911; font-weight:700; font-size:14px; display:flex; align-items:center; justify-content:center; border-radius:50%;">
+                                    {{ strtoupper(substr($a->user->name, 0, 2)) }}
+                                </div>
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="font-weight:600; color:#0D0D12; font-size:13px;">{{ $a->user->name }}</span>
+                                    <span style="font-size:12px; color:#666D80; line-height:1.2;">{{ $a->user->email ?? '-' }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding:12px 16px;">
+                            <div style="font-weight:600; color:#0D0D12; font-size:13px;">{{ $a->user->student?->student_number ?? '-' }}</div>
+                        </td>
+                        <td style="padding:12px 16px;">
+                            <div style="font-weight:600; color:#0D0D12; font-size:13px;">{{ $a->modulAsprak->count() }} modul</div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="4">
+                            <div style="padding:48px;text-align:center;">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                                <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada asisten praktikum.</div>
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Pagination Asisten --}}
+        @if(isset($asistenPaginated) && method_exists($asistenPaginated, 'hasPages') && ($asistenPaginated->hasPages() || $asistenPaginated->total() > 0))
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--c-border);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div x-data="{ open: false, selected: '{{ request('asisten_per_page', 10) }}', options: [5, 10, 20] }"
+                        class="relative" @click.away="open = false">
+                        <div class="flex items-center gap-2 cursor-pointer border rounded-[8px] px-3 py-1.5 transition-colors focus:outline-none"
+                            :class="open ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'"
+                            @click="open = !open">
+                            <span class="text-[12px] text-[#666D80]" :class="open ? 'text-[#0B266E]' : ''">Per halaman</span>
+                            <div class="flex items-center gap-1 font-semibold text-[12px]">
+                                <span x-text="selected"></span>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+                        </div>
+                        <div x-show="open" @click.away="open = false" style="display: none;"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute bottom-full left-0 mb-2 z-10 w-full min-w-[80px] bg-white border border-[#DFE1E7] rounded-[10px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] py-2 px-1.5 flex flex-col">
+                            <template x-for="option in options" :key="option">
+                                <a :href="'?asisten_per_page=' + option + '&' + decodeURIComponent(new URLSearchParams(Object.fromEntries(Object.entries(Object.fromEntries(new URLSearchParams(window.location.search))).filter(([k,v])=>k!=='asisten_per_page'))).toString())"
+                                    class="flex items-center justify-between px-3 py-2 rounded-[6px] cursor-pointer text-[12px] transition-colors mb-0.5 last:mb-0 no-underline"
+                                    :class="selected == option ? 'bg-[#F6F8FA] text-[#0B266E] font-medium' : 'text-[#353849] hover:bg-[#F6F8FA]'">
+                                    <span x-text="option"></span>
+                                    <svg x-show="selected == option" class="w-3.5 h-3.5 flex-shrink-0 text-[#0B266E] ml-2"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="20 6 9 17 4 12"></polyline>
+                                    </svg>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                    <div style="font-size:13px; color:var(--c-fg-sec);">Menampilkan {{ $asistenPaginated->firstItem() ?? 0 }}
+                        sampai {{ $asistenPaginated->lastItem() ?? 0 }} dari {{ $asistenPaginated->total() }} data</div>
+                </div>
+
+                <div style="display:flex; gap:4px;">
+                    @if ($asistenPaginated->onFirstPage())
+                        <span
+                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round">
+                                <polyline points="15 18 9 12 15 6" />
+                            </svg>
+                        </span>
+                    @else
+                        <a href="{{ $asistenPaginated->previousPageUrl() }}"
+                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round">
+                                <polyline points="15 18 9 12 15 6" />
+                            </svg>
+                        </a>
+                    @endif
+
+                    @php
+                        $currentA = $asistenPaginated->currentPage();
+                        $lastA = $asistenPaginated->lastPage();
+                        $startA = max(1, $currentA - 1);
+                        $endA = min($startA + 2, $lastA);
+                    @endphp
+
+                    @for ($i = $startA; $i <= $endA; $i++)
+                        @if ($i == $currentA)
+                            <span
+                                style="width:32px; height:32px; background:#0B266E; color:#fff; font-size:13px; font-weight:600; border-radius:6px; display:flex; align-items:center; justify-content:center;">
+                                {{ $i }}
+                            </span>
+                        @else
+                            <a href="{{ $asistenPaginated->url($i) }}"
+                                style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; color:var(--c-fg-sec); font-size:13px; font-weight:600; border-radius:6px; display:flex; align-items:center; justify-content:center; text-decoration:none; transition:all 0.2s;"
+                                onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
+                                {{ $i }}
+                            </a>
+                        @endif
+                    @endfor
+
+                    @if ($asistenPaginated->hasMorePages())
+                        <a href="{{ $asistenPaginated->nextPageUrl() }}"
+                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg); text-decoration:none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </a>
+                    @else
+                        <span
+                            style="width:32px; height:32px; border:1px solid var(--c-border); background:#FAFAFA; border-radius:6px; display:flex; align-items:center; justify-content:center; color:var(--c-border-strong);">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round">
+                                <polyline points="9 18 15 12 9 6" />
+                            </svg>
+                        </span>
+                    @endif
+                </div>
+            </div>
+        @endif
+    </div>
+
     <div class="mp-card">
         <div class="mp-card-header">
             <span class="mp-card-title">Daftar Modul</span>
@@ -48,7 +208,7 @@
                             {{ $m->urutan }}
                         </td>
                         <td style="padding:12px 16px;">
-                            <div style="font-weight:600; color:#0D0D12; font-size:13px;">{{ $m->nama }}</div>
+                            <div style="font-weight:600; color:#0D0D12; font-size:12px;">{{ $m->nama }}</div>
                         </td>
 
                         <td style="padding:12px 16px;font-size:12px;color:#666D80;">{{ $m->modulAsprak->pluck('asprak.user.name')->filter()->join(', ') ?: '-' }}</td>
@@ -278,7 +438,7 @@
             </div>
         @endif
     </div>
-    
+</div>
     <div class="grid grid-cols-2 gap-[14px] items-stretch">
         <div class="mp-card flex flex-col h-full" style="padding:20px;">
         <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Tambah Modul</div>
@@ -286,7 +446,7 @@
             @csrf
             <div>
                 <label class="block text-[12px] font-semibold text-[#353849] mb-1">Nama Modul <span class="text-red-500">*</span></label>
-                <input name="nama" x-model="namaModul" required class="mp-input w-full" placeholder="Misal: Pengenalan Jaringan">
+                <input name="nama" x-model="namaModul" required class="mp-input w-full" placeholder="Contoh: Modul 1 Pengenalan Jaringan">
             </div>
             
             <div>

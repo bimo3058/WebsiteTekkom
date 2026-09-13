@@ -26,28 +26,34 @@ class AsprakController extends Controller
 
         $search = $request->input('search');
 
+        $perPageAsisten = $request->input('per_page_asisten', 10);
+        $perPagePraktikan = $request->input('per_page_praktikan', 10);
+
         // Asisten & Koordinator
-        $aspraks = $praktikum
-            ? AsprakPraktikum::with(['user', 'modulAsprak.modul'])
-                ->where('praktikum_id', $praktikum->id)
-                ->whereNull('deleted_at')
-                ->orderBy('role', 'desc') // koordinator comes first if descending? 'koordinator' vs 'asprak' => k comes before a? No, k is > a. Wait, order by role desc: k comes first!
-                ->get()
+        $queryAsisten = AsprakPraktikum::with(['user', 'user.student', 'modulAsprak.modul'])
+            ->where('praktikum_id', $praktikum->id ?? null)
+            ->whereNull('deleted_at')
+            ->orderBy('role', 'desc');
+
+        $aspraks = $praktikum 
+            ? $queryAsisten->paginate($perPageAsisten, ['*'], 'page_asisten')->withQueryString() 
             : collect();
 
         // Praktikans
-        $query = DaftarPraktikan::with(['user', 'user.student'])
+        $queryPraktikan = DaftarPraktikan::with(['user', 'user.student'])
             ->where('praktikum_id', $praktikumId)
             ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
             ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
             ->orderBy('created_at');
 
         if ($search) {
-            $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%")
+            $queryPraktikan->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%"));
         }
 
-        $praktikans = $praktikum ? $query->paginate(20)->withQueryString() : collect();
+        $praktikans = $praktikum 
+            ? $queryPraktikan->paginate($perPagePraktikan, ['*'], 'page_praktikan')->withQueryString() 
+            : collect();
 
         $modulPraktikum = $praktikum
             ? $praktikum->modul()->orderBy('urutan')->get()

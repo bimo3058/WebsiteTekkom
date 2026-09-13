@@ -39,7 +39,7 @@ class NilaiController extends Controller
 
         $modulFilter = $request->input('modul_id');
         $modulsQuery = Modul::where('praktikum_id', $praktikum->id)
-            ->with(['tugas', 'modulAsprak.asprak.user'])
+            ->with(['tugas', 'modulAsprak.asprak.user', 'asprak.user'])
             ->orderBy('urutan');
 
         if ($modulFilter) {
@@ -65,7 +65,7 @@ class NilaiController extends Controller
             $nilaiJenisMap[$nj->modul_id][$nj->daftar_praktikan_id][$nj->jenis_tugas] = $nj->nilai;
         }
 
-        $allModuls = Modul::where('praktikum_id', $praktikum->id)->orderBy('urutan')->get();
+        $allModuls = Modul::with(['asprak.user'])->where('praktikum_id', $praktikum->id)->orderBy('urutan')->get();
 
         return view('eoffice::manajemen-praktikum.dosen.nilai', compact(
             'praktikum',

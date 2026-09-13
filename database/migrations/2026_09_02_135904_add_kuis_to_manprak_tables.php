@@ -10,16 +10,16 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('periode_pendaftarans', function (Blueprint $table) {
+        Schema::table('manprak_periode_pendaftaran', function (Blueprint $table) {
             $table->json('konfigurasi_kuis')->nullable()->after('nama_berkas_tambahan');
         });
 
-        Schema::table('pendaftaran_aspraks', function (Blueprint $table) {
+        Schema::table('pendaftaran_asprak', function (Blueprint $table) {
             $table->json('jawaban_kuis')->nullable()->after('berkas_cerc_path');
             $table->integer('skor_kuis')->nullable()->after('jawaban_kuis');
         });
 
-        Schema::table('pendaftaran_koordinators', function (Blueprint $table) {
+        Schema::table('pendaftaran_koordinator', function (Blueprint $table) {
             $table->json('jawaban_kuis')->nullable()->after('berkas_cerc_path');
             $table->integer('skor_kuis')->nullable()->after('jawaban_kuis');
         });
@@ -30,15 +30,15 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('periode_pendaftarans', function (Blueprint $table) {
+        Schema::table('manprak_periode_pendaftaran', function (Blueprint $table) {
             $table->dropColumn('konfigurasi_kuis');
         });
 
-        Schema::table('pendaftaran_aspraks', function (Blueprint $table) {
+        Schema::table('pendaftaran_asprak', function (Blueprint $table) {
             $table->dropColumn(['jawaban_kuis', 'skor_kuis']);
         });
 
-        Schema::table('pendaftaran_koordinators', function (Blueprint $table) {
+        Schema::table('pendaftaran_koordinator', function (Blueprint $table) {
             $table->dropColumn(['jawaban_kuis', 'skor_kuis']);
         });
     }

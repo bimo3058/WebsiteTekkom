@@ -111,56 +111,49 @@
 
                     <div x-data="{
                         berkasName: '{{ $periodeAktif->nama_berkas_tambahan ?? '' }}',
-                        isEditing: false,
-                        tempName: '',
-                        addBerkas() {
-                            if(this.tempName.trim() !== '') {
-                                this.berkasName = this.tempName.trim();
-                                this.isEditing = false;
-                                this.tempName = '';
-                            }
-                        },
+                        berkasType: '{{ $periodeAktif->jenis_berkas_tambahan ?? '' }}',
+                        berkasDesc: '{{ $periodeAktif->keterangan_berkas_tambahan ?? '' }}',
                         removeBerkas() {
                             this.berkasName = '';
-                            this.tempName = '';
+                            this.berkasType = '';
+                            this.berkasDesc = '';
                         }
-                    }">
+                    }" @save-berkas.window="
+                        if ($event.detail.name.trim() !== '' && $event.detail.type !== '') {
+                            berkasName = $event.detail.name.trim();
+                            berkasType = $event.detail.type;
+                            berkasDesc = $event.detail.desc.trim();
+                        } else {
+                            alert('Nama Berkas dan Jenis Berkas wajib diisi!');
+                        }
+                    ">
                         <input type="hidden" name="nama_berkas_tambahan" :value="berkasName">
+                        <input type="hidden" name="jenis_berkas_tambahan" :value="berkasType">
+                        <input type="hidden" name="keterangan_berkas_tambahan" :value="berkasDesc">
 
-                        <div class="flex gap-4">
+                        <div class="flex gap-4 mb-3">
                             <div class="flex-1">
-                                <label class="block text-[11px] font-semibold text-[#353849] mb-1">Keanggotaan
-                                    CERC</label>
-                                <input type="text" class="mp-input w-full text-[12px]" value="Upload File (.pdf)"
-                                    disabled style="background: #F9FAFB; color: #808897; border-style: dashed;">
+                                <label class="block text-[11px] font-semibold text-[#353849] mb-1">Keanggotaan CERC</label>
+                                <input type="text" class="mp-input w-full text-[12px]" value="Upload File (.pdf)" disabled
+                                    style="background: #F9FAFB; color: #808897; border-style: dashed;">
                             </div>
+
                             <div class="flex-1">
-                                {{-- If no berkas and not editing --}}
-                                <div x-show="!berkasName && !isEditing" class="h-full flex items-end pb-1.5">
+                                <div x-show="!berkasName">
+                                    <label
+                                        class="block text-[11px] font-semibold text-transparent mb-1 select-none">&nbsp;</label>
                                     <button type="button"
-                                        @click="isEditing = true; setTimeout(() => $refs.berkasInput.focus(), 50)"
-                                        class="text-[#0B266E] text-[12px] font-semibold flex items-center gap-1.5 hover:underline bg-[#F6F8FA] px-3 py-1.5 rounded-[8px] border border-dashed border-[#DFE1E7]">
+                                        @click="$dispatch('open-berkas-modal', { name: berkasName, type: berkasType, desc: berkasDesc })"
+                                        class="h-[38px] w-full text-[#0B266E] text-[12px] font-semibold flex justify-center items-center gap-1.5 hover:underline bg-[#F6F8FA] px-4 rounded-[8px] border border-dashed border-[#DFE1E7]">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                                             <line x1="12" y1="5" x2="12" y2="19" />
                                             <line x1="5" y1="12" x2="19" y2="12" />
                                         </svg>
-                                        Tambah Berkas Tambahan
+                                        Tambah Pengumpulan Berkas
                                     </button>
                                 </div>
 
-                                {{-- If editing --}}
-                                <div x-show="isEditing" style="display: none;" @click.away="isEditing = false">
-                                    <label class="block text-[11px] font-semibold text-[#353849] mb-1">Nama Berkas <span
-                                            class="text-red-500">*</span></label>
-                                    <div class="relative">
-                                        <input type="text" x-ref="berkasInput" x-model="tempName"
-                                            @keydown.enter.prevent="addBerkas()"
-                                            @keydown.escape.prevent="isEditing = false"
-                                            class="mp-input w-full text-[12px] border-[#0B266E] shadow-sm"
-                                            placeholder="Contoh: Portofolio">
-                                    </div>
-                                </div>
 
                                 {{-- If berkas exists --}}
                                 <div x-show="berkasName" style="display: none;" x-transition>
@@ -169,7 +162,7 @@
                                     </label>
                                     <div class="relative">
                                         <input type="text" class="mp-input w-full text-[12px]"
-                                            value="Upload File (.pdf)" disabled
+                                            :value="berkasType === 'pdf' ? 'Upload File (.pdf)' : 'Input Link'" disabled
                                             style="background: #F9FAFB; color: #808897; border-style: dashed; padding-right: 36px;">
                                         <button type="button" @click="removeBerkas()"
                                             class="absolute right-1 top-1/2 -translate-y-1/2 text-[#DF1C41] hover:bg-[#FFF5F5] p-1.5 rounded-[6px] transition-colors"
@@ -182,6 +175,9 @@
                                             </svg>
                                         </button>
                                     </div>
+                                    <template x-if="berkasDesc">
+                                        <p class="text-[11px] text-[#666D80] mt-1" x-text="berkasDesc"></p>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -189,10 +185,11 @@
 
                         <div class="mt-5">
                             <label class="block text-[11px] font-semibold text-[#353849] mb-2">Jadwal <span
-                                    class="text-[#808897] font-normal">(Pilih hari luang)</span></label>
+                                    class="text-red-500">*</span> <span class="text-[#808897] font-normal">(Pilih hari
+                                    luang)</span></label>
                             <div class="flex gap-6 flex-wrap">
                                 <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled checked
+                                    <input type="radio" disabled
                                         class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
                                     <span class="text-[12px] text-[#666D80]">Senin</span>
                                 </label>
@@ -228,222 +225,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="mt-5 border border-[#DFE1E7] rounded-[10px] overflow-hidden" x-data="quizBuilder()">
-                            <input type="hidden" name="konfigurasi_kuis" :value="JSON.stringify(questions)">
 
-                            <div class="bg-[#F0F4FF] p-4 border-b border-[#DFE1E7] flex justify-between items-center">
-                                <div>
-                                    <h4 class="text-[13px] font-bold text-[#0B266E]">Modul Uji Tertulis & Tes Kelayakan
-                                    </h4>
-                                    <p class="text-[11px] text-[#666D80] mt-0.5">Berikan kuesioner dinamis pada calon
-                                        asisten</p>
-                                </div>
-                                <button type="button" @click="showQuizModal = true" class="mp-btn primary sm font-bold"
-                                    style="padding: 0 16px; height: 34px; box-shadow: 0 2px 4px rgba(11,38,110,0.1);">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                                        style="margin-right:6px;">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                    </svg>
-                                    Rancang Formulir
-                                </button>
-                            </div>
-
-                            <!-- Live Preview Data -->
-                            <div class="p-4 bg-white flex flex-col items-center justify-center min-h-[80px]">
-                                <template x-if="questions.length === 0">
-                                    <p class="text-[12px] text-[#A4ABB8] text-center w-full">Belum ada tes algoritma
-                                        atau esai yang ditambahkan ke formulir ini.</p>
-                                </template>
-                                <template x-if="questions.length > 0">
-                                    <div class="w-full">
-                                        <div class="flex items-center gap-2 mb-2">
-                                            <span class="w-2 h-2 rounded-full bg-[#10B981]"></span>
-                                            <span class="text-[12px] font-bold text-[#10B981]"><span
-                                                    x-text="questions.length"></span> Soal Valid Dikonfigurasi</span>
-                                        </div>
-                                        <div class="flex overflow-x-auto gap-2 pb-2">
-                                            <template x-for="(q, idx) in questions" :key="q.id">
-                                                <div
-                                                    class="bg-[#F8FAFC] border border-[#DFE1E7] rounded px-3 py-2 flex-shrink-0 min-w-[200px] max-w-[250px]">
-                                                    <div class="text-[10px] font-bold text-[#0B266E] mb-1"
-                                                        x-text="q.tipe === 'pilihan_ganda' ? 'PILIHAN GANDA' : 'ESAI'">
-                                                    </div>
-                                                    <div class="text-[11px] text-[#353849] truncate"
-                                                        x-text="q.pertanyaan"></div>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-
-                            <!-- Modal -->
-                            <div x-show="showQuizModal" style="display:none;" x-transition.opacity
-                                class="fixed inset-0 z-[99999] flex items-center justify-center p-4">
-                                <div class="absolute inset-0 bg-[#0D0D12] bg-opacity-60 backdrop-blur-sm"
-                                    @click="showQuizModal = false"></div>
-
-                                <div class="bg-white rounded-[14px] shadow-2xl w-full max-w-3xl flex flex-col relative"
-                                    style="max-height: 85vh;">
-                                    <div class="flex items-center justify-between p-5 border-b border-[#DFE1E7]">
-                                        <div>
-                                            <h3 class="font-bold text-[#0D0D12] text-[18px]">Form Builder Studio</h3>
-                                            <p class="text-[12px] text-[#666D80] mt-0.5">Bangun lembar form ujian
-                                                seleksi pendaftaran</p>
-                                        </div>
-                                        <button type="button" @click="showQuizModal = false"
-                                            class="text-[#666D80] hover:text-[#DF1C41] p-2 bg-[#F6F8FA] hover:bg-[#FFF5F5] rounded-full transition-colors">
-                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    <div class="flex-1 overflow-y-auto p-6 bg-[#F8FAFC]">
-
-                                        <template x-for="(q, qIndex) in questions" :key="q.id">
-                                            <div
-                                                class="bg-white border-2 border-[#DFE1E7] rounded-[12px] p-5 mb-5 relative hover:border-[#0B266E] transition-colors group">
-                                                <button type="button" @click="removeQuestion(qIndex)"
-                                                    class="absolute top-4 right-4 text-[#A4ABB8] hover:text-[#DF1C41] hover:bg-[#FFF5F5] p-2 rounded-md transition-colors"
-                                                    title="Hapus Blok">
-                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                                        stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                                        <polyline points="3 6 5 6 21 6"></polyline>
-                                                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path>
-                                                    </svg>
-                                                </button>
-
-                                                <div class="flex items-center gap-2 mb-4">
-                                                    <span
-                                                        class="bg-[#E6F0FF] text-[#0B266E] text-[10px] font-extrabold tracking-wider px-2.5 py-1 rounded-full border border-[#BFD6FF]"
-                                                        x-text="q.tipe === 'pilihan_ganda' ? 'SOAL PILIHAN GANDA' : 'SOAL ESAI PENDEK/PANJANG'"></span>
-                                                </div>
-
-                                                <label class="block text-[13px] font-bold text-[#353849] mb-1.5">Judul
-                                                    Pertanyaan / Syarat</label>
-                                                <textarea x-model="q.pertanyaan"
-                                                    class="mp-input w-full text-[14px] mb-4 p-3 bg-[#F9FAFB]" rows="2"
-                                                    placeholder="Cth: Mengapa kamu mendaftar asisten? Atau uji logika if-else..."></textarea>
-
-                                                <div class="w-1/3 mb-4">
-                                                    <label
-                                                        class="block text-[11px] font-semibold text-[#666D80] mb-1.5">Bobot
-                                                        Nilai (Poin jika terjawab benar/maksimal)</label>
-                                                    <div class="relative">
-                                                        <input type="number" x-model="q.poin"
-                                                            class="mp-input w-full pl-8 font-bold text-[#0B266E]"
-                                                            min="1" max="100">
-                                                        <span
-                                                            class="absolute left-3 top-1/2 -translate-y-1/2 text-[#A4ABB8] font-bold">Pt.</span>
-                                                    </div>
-                                                </div>
-
-                                                <template x-if="q.tipe === 'pilihan_ganda'">
-                                                    <div
-                                                        class="mt-2 pl-4 py-2 border-l-4 border-[#0B266E] bg-[#FAFBFF] rounded-r-[8px]">
-                                                        <label
-                                                            class="block text-[11px] font-bold text-[#353849] mb-3 uppercase tracking-wider text-opacity-80">Konfigurasi
-                                                            Jawaban <span class="font-normal normal-case">(Pilih Radio
-                                                                Button Sebagai Kunci)</span></label>
-                                                        <template x-for="(opt, optIndex) in q.opsi" :key="optIndex">
-                                                            <div class="flex items-center gap-3 mb-2 group/opt">
-                                                                <label class="flex items-center gap-2 cursor-pointer"
-                                                                    title="Jadikan Kunci Jawaban Benar">
-                                                                    <input type="radio" :name="'kunci_' + q.id"
-                                                                        :checked="opt.is_correct"
-                                                                        @change="setCorrectOption(qIndex, optIndex)"
-                                                                        class="w-5 h-5 accent-[#0B266E]">
-                                                                </label>
-                                                                <input type="text" x-model="opt.text"
-                                                                    class="mp-input w-full text-[13px]"
-                                                                    :class="opt.is_correct ? 'border-[#0B266E] bg-white font-semibold' : 'bg-transparent'"
-                                                                    :placeholder="'Opsi ' + (String.fromCharCode(65 + optIndex))">
-                                                                <button type="button"
-                                                                    @click="removeOption(qIndex, optIndex)"
-                                                                    class="text-[#DFE1E7] hover:text-[#DF1C41] p-1.5 rounded hover:bg-[#FFF5F5] transition-colors"><svg
-                                                                        width="18" height="18" viewBox="0 0 24 24"
-                                                                        fill="none" stroke="currentColor"
-                                                                        stroke-width="2.5" stroke-linecap="round">
-                                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                                    </svg></button>
-                                                            </div>
-                                                        </template>
-                                                        <button type="button" @click="addOption(qIndex)"
-                                                            class="text-[#0B266E] text-[12px] font-bold mt-2 ml-8 flex items-center gap-1.5 hover:underline">
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                                stroke="currentColor" stroke-width="2.5">
-                                                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                                                            </svg>
-                                                            Tambah Jawaban Lain
-                                                        </button>
-                                                    </div>
-                                                </template>
-
-                                                <template x-if="q.tipe === 'esai'">
-                                                    <div
-                                                        class="mt-2 p-4 border border-dashed border-[#DFE1E7] bg-white rounded text-center opacity-60">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                                            stroke="#A4ABB8" stroke-width="2" stroke-linecap="round"
-                                                            stroke-linejoin="round" class="mx-auto mb-2">
-                                                            <path
-                                                                d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z">
-                                                            </path>
-                                                            <polyline points="14 2 14 8 20 8"></polyline>
-                                                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                                                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                                                            <polyline points="10 9 9 9 8 9"></polyline>
-                                                        </svg>
-                                                        <span class="text-[11px] font-semibold text-[#666D80]">Area ini
-                                                            nantinya akan berupa TextInput besar bagi Pendaftar. Tipe
-                                                            soal ini membutuhkan review manual (Dosen menginput skor
-                                                            sendiri nantinya).</span>
-                                                    </div>
-                                                </template>
-                                            </div>
-                                        </template>
-
-                                        <!-- Add Block Buttons -->
-                                        <div class="flex gap-4 justify-center mt-8 pb-4">
-                                            <button type="button" @click="addQuestion('pilihan_ganda')"
-                                                class="mp-btn bg-white border border-[#DFE1E7] shadow-sm text-[#0B266E] hover:bg-[#F6F8FA] hover:border-[#0B266E] flex items-center gap-2"
-                                                style="border-radius: 20px; padding: 0 20px;">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                                    <circle cx="12" cy="12" r="10"></circle>
-                                                    <circle cx="12" cy="12" r="3"></circle>
-                                                </svg>
-                                                <span class="font-bold">Tambah Soal Pilgan</span>
-                                            </button>
-                                            <button type="button" @click="addQuestion('esai')"
-                                                class="mp-btn bg-white border border-[#DFE1E7] shadow-sm text-[#0B266E] hover:bg-[#F6F8FA] hover:border-[#0B266E] flex items-center gap-2"
-                                                style="border-radius: 20px; padding: 0 20px;">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                                    <line x1="17" y1="10" x2="3" y2="10"></line>
-                                                    <line x1="21" y1="6" x2="3" y2="6"></line>
-                                                    <line x1="21" y1="14" x2="3" y2="14"></line>
-                                                    <line x1="17" y1="18" x2="3" y2="18"></line>
-                                                </svg>
-                                                <span class="font-bold">Tambah Kuisioner Esai</span>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        class="p-5 border-t border-[#DFE1E7] bg-white flex justify-end gap-3 rounded-b-[14px]">
-                                        <button type="button" @click="showQuizModal = false"
-                                            class="mp-btn outline sm font-semibold" style="height:42px;">Tutup & Simpan
-                                            Otomatis</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -518,6 +300,7 @@
                         <th class="mp-th text-left" style="padding:10px 16px;">NIM</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">IPK</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">TRANSKRIP NILAI</th>
+
                         <th class="mp-th text-left" style="padding:10px 16px;">KEANGGOTAAN CERC</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Jadwal</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Status</th>
@@ -562,13 +345,15 @@
                                     <span style="font-size:13px;color:#808897;">—</span>
                                 @endif
                             </td>
-                            <td style="padding:12px 16px;">
+
+                            <td style="padding:10px 16px;">
                                 @if($p->berkas_cerc_path)
                                     <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}"
-                                        target="_blank" style="font-size:13px;font-weight:600;color:#0B266E;"
+                                        target="_blank"
+                                        style="display:inline-flex; align-items:center; gap:6px; color:#0B266E; font-size:12px; font-weight:600; text-decoration:none;"
                                         class="hover:underline">Lihat Berkas</a>
                                 @else
-                                    <span style="font-size:13px;color:#808897;">—</span>
+                                    <span style="color:#808897; font-size:12px; font-style:italic;">Tidak ada</span>
                                 @endif
                             </td>
                             <td style="padding:12px 16px;font-size:13px;color:#666D80;">
@@ -577,8 +362,8 @@
                             <td style="padding:12px 16px;">
                                 @if($p->status_koor === 'disetujui')
                                     <div>
-                                        <span class="mp-badge success sm"><span class="dot"></span>Disetujui Koor</span>
-                                        <div style="font-size:13px;color:#666D80;margin-top:4px;">Menunggu Admin</div>
+                                        <span class="mp-badge success sm"><span class="dot"></span>Disetujui</span>
+                                        <div style="font-size:11px;color:#666D80;margin-top:4px;">Menunggu Admin</div>
                                     </div>
                                 @elseif($p->status_koor === 'ditolak' || $p->status === 'rejected')
                                     <span class="mp-badge error sm"><span class="dot"></span>Ditolak</span>
@@ -1119,12 +904,122 @@
             addOption(qIndex) {
                 this.questions[qIndex].opsi.push({ text: '', is_correct: false });
             },
+        },
             removeOption(qIndex, optIndex) {
-                this.questions[qIndex].opsi.splice(optIndex, 1);
-            },
+            this.questions[qIndex].opsi.splice(optIndex, 1);
+        },
             setCorrectOption(qIndex, optIndex) {
-                this.questions[qIndex].opsi.forEach((o, i) => o.is_correct = (i === optIndex));
-            }
+            this.questions[qIndex].opsi.forEach((o, i) => o.is_correct = (i === optIndex));
+        }
         }));
     });
 </script>
+
+<!-- Modal Tambah Berkas (Global) -->
+<div x-data="{
+    show: false,
+    tempName: '',
+    tempType: '',
+    tempDesc: '',
+    dropdownOpen: false,
+    options: [
+        { value: 'pdf', label: 'Berkas PDF (Maks. 5MB)' },
+        { value: 'link', label: 'Link Tautan' }
+    ],
+    get selectedLabel() {
+        let opt = this.options.find(o => o.value === this.tempType);
+        return opt ? opt.label : 'Pilih Jenis Berkas';
+    },
+    init() {
+        this.$watch('show', value => {
+            if (value) { $store.modal.open(); }
+            else { $store.modal.close(); }
+        });
+    }
+}" @open-berkas-modal.window="
+    tempName = $event.detail.name;
+    tempType = $event.detail.type || '';
+    tempDesc = $event.detail.desc;
+    show = true;
+    dropdownOpen = false;
+">
+    <template x-teleport="body">
+        <div x-show="show" style="display:none;" x-cloak
+            class="fixed inset-0 z-[999999] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 p-4">
+            <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
+                @click.away="show = false" x-show="show" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                <div class="px-6 py-4 border-b border-[#DFE1E7] flex-shrink-0">
+                    <div class="font-bold text-[16px] text-[#0D0D12]">Tambah Pengumpulan Berkas</div>
+                </div>
+                <div class="overflow-y-visible flex-1">
+                    <div class="p-6 flex flex-col gap-4">
+                        <div>
+                            <label class="block text-[12px] font-semibold text-[#353849] mb-1">Nama
+                                Berkas Pengumpulan <span class="text-red-500">*</span></label>
+                            <input type="text" x-model="tempName"
+                                class="mp-input w-full text-[13px] bg-white border-[#DFE1E7]"
+                                placeholder="Contoh: Portofolio">
+                        </div>
+
+                        <!-- Custom Dropdown for Jenis Berkas -->
+                        <div>
+                            <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jenis
+                                Berkas <span class="text-red-500">*</span></label>
+                            <div class="relative w-full">
+                                <button type="button" @click="dropdownOpen = !dropdownOpen"
+                                    @click.away="dropdownOpen = false"
+                                    class="mp-input w-full bg-white flex justify-between items-center text-left"
+                                    :class="dropdownOpen ? 'border-[#0B266E] ring-2 ring-[#0B266E]/10' : 'border-[#DFE1E7]'">
+                                    <span x-text="selectedLabel"
+                                        :class="tempType === '' ? 'text-[#808897]' : 'text-[#0D0D12]'"></span>
+                                    <svg class="transition-transform duration-200"
+                                        :class="dropdownOpen ? 'rotate-180' : ''" width="16" height="16"
+                                        viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2.5"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+
+                                <div x-show="dropdownOpen" x-transition.opacity.duration.200ms
+                                    class="absolute z-20 w-full mt-1.5 bg-white border border-[#DFE1E7] rounded-[12px] shadow-lg py-1.5"
+                                    style="display:none; top: 100%;">
+                                    <template x-for="option in options" :key="option.value">
+                                        <button type="button" @click="tempType = option.value; dropdownOpen = false"
+                                            class="w-full text-left px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-[#F8FAFC] flex justify-between items-center"
+                                            :class="tempType === option.value ? 'text-[#0B266E]' : 'text-[#353849]'">
+                                            <span x-text="option.label"></span>
+                                            <svg x-show="tempType === option.value" width="16" height="16"
+                                                viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2.5"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[12px] font-semibold text-[#353849] mb-1">Keterangan
+                                (Opsional)</label>
+                            <input type="text" x-model="tempDesc"
+                                class="mp-input w-full text-[13px] bg-white border-[#DFE1E7]"
+                                placeholder="Tambahkan petunjuk untuk asisten...">
+                        </div>
+
+                        <div class="flex gap-3 justify-end mt-4 pt-5 border-t border-[#DFE1E7]">
+                            <button type="button" @click="show = false" class="mp-btn secondary md px-5">Batal</button>
+                            <button type="button"
+                                @click="$dispatch('save-berkas', {name: tempName, type: tempType, desc: tempDesc}); show = false"
+                                class="mp-btn primary md px-5">Simpan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </template>
+</div>

@@ -818,12 +818,8 @@
                         ['href' => route('eoffice.manprak.mahasiswa.dashboard'), 'label' => 'Dashboard', 'match' => 'mahasiswa.dashboard', 'icon' => $iHome],
                     ],
                     'Aktivitas' => [
-
-                        ['href' => route('eoffice.manprak.mahasiswa.modul.index'), 'label' => 'Daftar Modul', 'match' => 'mahasiswa.modul', 'icon' => $iBook],
-                        ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'), 'label' => 'Pengumuman', 'match' => 'mahasiswa.pengumuman', 'icon' => $iBell],
-                        ['href' => route('eoffice.manprak.mahasiswa.tugas.index'), 'label' => 'Tugas', 'match' => 'mahasiswa.tugas', 'icon' => $iEdit],
-                        ['href' => route('eoffice.manprak.mahasiswa.nilai.index'), 'label' => 'Absensi & Nilai', 'match' => 'mahasiswa.nilai', 'icon' => $iCheck],
-                        ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Daftar Asisten/Koordinator', 'match' => 'daftar-asprak', 'icon' => $iUser],
+                        ['href' => route('eoffice.manprak.mahasiswa.praktikum.index'), 'label' => 'Praktikum', 'match' => ['mahasiswa.praktikum', 'mahasiswa.modul', 'mahasiswa.pengumuman', 'mahasiswa.tugas', 'mahasiswa.nilai', 'mahasiswa.daftar-praktikan'], 'icon' => $iBook],
+                        ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Pendaftaran', 'match' => 'daftar-asprak', 'icon' => $iUser],
                     ],
                 ],
             ];
@@ -834,8 +830,9 @@
         $notifCount = \Modules\EOffice\Models\Notifikasi::where('user_id', $user->id)->where('is_read', false)->count();
     @endphp
 
-    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: localStorage.getItem('mp_sb') !== '0' }"
-        x-init="$watch('sidebarOpen', v => localStorage.setItem('mp_sb', v ? '1' : '0'))">
+    <div class="flex h-screen overflow-hidden transition-all duration-300" x-data="{ sidebarOpen: localStorage.getItem('mp_sb') !== '0' }"
+        x-init="$watch('sidebarOpen', v => localStorage.setItem('mp_sb', v ? '1' : '0'))"
+        :class="$store.modal?.isOpen ? 'blur-[4px]' : ''">
 
         {{-- ═══════════════════════════════════════════════════════════════ --}}
         {{-- SIDEBAR --}}
@@ -1065,13 +1062,39 @@
                             style="color: #818898; font-size: 12px; font-weight: normal;">
                             SIPERKOM <span class="mx-[6px] text-[#D1D5DB]">/</span> MANAJEMEN PRAKTIKUM
                             @php
+                                // Untuk role mahasiswa yang sedang dalam konteks praktikum tertentu,
+                                // tampilkan nama praktikum dari request atau session
+                                $mhsPraktikumNama = null;
+                                $mhsNamaHalaman = null;
+                                if (str_contains($currentRoute, 'manprak.mahasiswa') && $currentRoute !== 'eoffice.manprak.mahasiswa.dashboard' && $currentRoute !== 'eoffice.manprak.mahasiswa.praktikum.index') {
+                                    $mhsPrakId = request('praktikum_id') ?? session('mhs_praktikum_id');
+                                    if ($mhsPrakId) {
+                                        $mhsPrak = \Modules\EOffice\Models\Praktikum::find($mhsPrakId);
+                                        $mhsPraktikumNama = $mhsPrak?->nama;
+                                    }
+                                    // Tentukan nama halaman berdasarkan route
+                                    if (str_contains($currentRoute, '.pengumuman')) $mhsNamaHalaman = 'Pengumuman';
+                                    elseif (str_contains($currentRoute, '.modul')) $mhsNamaHalaman = 'Modul';
+                                    elseif (str_contains($currentRoute, '.tugas')) $mhsNamaHalaman = 'Tugas';
+                                    elseif (str_contains($currentRoute, '.nilai')) $mhsNamaHalaman = 'Absensi & Nilai';
+                                    elseif (str_contains($currentRoute, '.daftar-praktikan')) $mhsNamaHalaman = 'Daftar Praktikan';
+                                    else $mhsNamaHalaman = $pageTitle;
+                                }
+
                                 $titleSegments = explode(' / ', $pageTitle ?? 'Dashboard');
                             @endphp
-                            @foreach($titleSegments as $segment)
+                            @if($mhsPraktikumNama && $mhsNamaHalaman)
                                 <span class="mx-[6px] text-[#D1D5DB]">/</span>
-                                <span class="{{ $loop->last ? 'text-[#0D0D12]' : '' }}"
-                                    style="{{ $loop->last ? 'font-weight: 600;' : '' }}">{{ $segment }}</span>
-                            @endforeach
+                                <span>{{ $mhsPraktikumNama }}</span>
+                                <span class="mx-[6px] text-[#D1D5DB]">/</span>
+                                <span style="font-weight: 600; color: #0D0D12;">{{ $mhsNamaHalaman }}</span>
+                            @else
+                                @foreach($titleSegments as $segment)
+                                    <span class="mx-[6px] text-[#D1D5DB]">/</span>
+                                    <span class="{{ $loop->last ? 'text-[#0D0D12]' : '' }}"
+                                        style="{{ $loop->last ? 'font-weight: 600;' : '' }}">{{ $segment }}</span>
+                                @endforeach
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -1083,18 +1106,7 @@
                         $switcherActiveId = null;
                         $switcherContext = null;
 
-                        // Context Mahasiswa (Praktikan)
-                        if (str_contains($currentRoute, 'manprak.mahasiswa')) {
-                            // Hide switcher on Mahasiswa dashboard
-                            if ($currentRoute !== 'eoffice.manprak.mahasiswa.dashboard' && $isMhs) {
-                                $switcherContext = 'mahasiswa';
-                                $dps = \Modules\EOffice\Models\DaftarPraktikan::with('praktikum')
-                                    ->where('user_id', $user->id)
-                                    ->get();
-                                $switcherPraktikumList = $dps->pluck('praktikum')->filter()->unique('id');
-                                $switcherActiveId = session('mhs_praktikum_id') ?? $switcherPraktikumList->first()?->id;
-                            }
-                        }
+                        // Context Mahasiswa: tidak tampilkan switcher (dihapus)
 
                         $switcherActivePraktikum = $switcherPraktikumList->firstWhere('id', $switcherActiveId) ?? $switcherPraktikumList->first();
                     @endphp
@@ -1210,7 +1222,7 @@
                                     @if($isAdmin) Super Admin
                                     @elseif($isDosen) Dosen
                                     @elseif($isKoor) Koordinator
-                                    @elseif($isAsprak) Asisten Praktikum
+                                    @elseif($isAsprak) Asisten
                                     @elseif($isMhs) Mahasiswa
                                     @else User
                                     @endif
@@ -1316,6 +1328,16 @@
             if (e.persisted) {
                 NProgress.done();
             }
+        });
+    </script>
+    @stack('scripts')
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.store('modal', {
+                isOpen: false,
+                open() { this.isOpen = true; },
+                close() { this.isOpen = false; }
+            });
         });
     </script>
 </body>

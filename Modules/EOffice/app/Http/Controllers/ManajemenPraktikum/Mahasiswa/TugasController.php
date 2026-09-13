@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\PengumpulanTugas;
 use Modules\EOffice\Models\Tugas;
+use Modules\EOffice\Models\Modul;
 
 class TugasController extends Controller
 {
@@ -47,25 +48,30 @@ class TugasController extends Controller
             ]);
         }
 
-        $tugasList = Tugas::whereHas('modul', fn($q) => $q->where('praktikum_id', $daftarPraktikan->praktikum_id))
-            ->where('is_published', true)
-            ->with(['modul'])
-            ->orderBy('deadline')
+        $modulList = Modul::with(['tugas' => function($q) {
+                $q->where('is_published', true)->orderBy('deadline');
+            }, 'modulAsprak.asprak.user'])
+            ->where('praktikum_id', $daftarPraktikan->praktikum_id)
+            ->orderBy('urutan')
             ->get()
-            ->map(function ($tugas) use ($daftarPraktikan) {
-                $pengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
-                    ->where('daftar_praktikan_id', $daftarPraktikan->id)
-                    ->with('riwayat')
-                    ->first();
-
-                $tugas->pengumpulan  = $pengumpulan;
-                $tugas->sudah_kumpul = !is_null($pengumpulan);
-                $tugas->status_tugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
-                return $tugas;
+            ->map(function ($modul) use ($daftarPraktikan) {
+                $tugasList = $modul->tugas->map(function ($tugas) use ($daftarPraktikan) {
+                    $pengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
+                        ->where('daftar_praktikan_id', $daftarPraktikan->id)
+                        ->with('riwayat')
+                        ->first();
+                    $tugas->pengumpulan = $pengumpulan;
+                    return $tugas;
+                });
+                return collect([
+                    'modul'         => $modul,
+                    'tugas'         => $tugasList,
+                    'asprak'        => $modul->modulAsprak->map(fn($ma) => $ma->asprak?->user?->name)->filter()->values(),
+                ]);
             });
 
         return view('eoffice::manajemen-praktikum.mahasiswa.tugas', compact(
-            'tugasList',
+            'modulList',
             'daftarPraktikan',
             'semuaPraktikan'
         ));

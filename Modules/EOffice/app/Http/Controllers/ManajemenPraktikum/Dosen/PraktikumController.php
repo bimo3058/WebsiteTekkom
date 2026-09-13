@@ -45,8 +45,9 @@ class PraktikumController extends Controller
             ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->firstOrFail();
 
-        // Load pengumumans for this praktikum
+        // Load pengumumans for this praktikum (hanya manual/non-sistem)
         $pengumumans = \Modules\EOffice\Models\Pengumuman::where('praktikum_id', $id)
+            ->whereNull('tipe_sistem')
             ->with(['user'])
             ->orderByDesc('created_at')
             ->paginate(10);

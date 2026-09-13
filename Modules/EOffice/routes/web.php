@@ -61,6 +61,8 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\ModulControlle
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\NilaiController as MhsNilaiController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PengumumanController as MhsPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\TugasController as MhsTugasController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PraktikumController as MhsPraktikumController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DaftarPraktikanController as MhsDaftarPraktikanController;
 
 Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
@@ -260,6 +262,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('praktikum.index');
                 Route::get('praktikum/{id}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PraktikumController::class, 'show'])
                     ->name('praktikum.show');
+                Route::post('praktikum/{id}/cover', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PraktikumController::class, 'updateCover'])
+                    ->name('praktikum.cover.update');
+                Route::delete('praktikum/{id}/cover', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PraktikumController::class, 'deleteCover'])
+                    ->name('praktikum.cover.destroy');
 
 
                 // Daftar Praktikan (lihat + export + import kelompok/shift)
@@ -337,6 +343,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.approve');
                 Route::get('nilai/export-csv', [KoorNilaiController::class, 'exportCsv'])
                     ->name('nilai.export-csv');
+                Route::post('nilai/bobot/{id}', [KoorNilaiController::class, 'updateBobot'])
+                    ->name('nilai.bobot.update');
             });
 
         // ── KOORDINATOR — Periode Pendaftaran ────────────────────────────────
@@ -371,6 +379,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Absensi & Nilai (CRUD)
                 Route::get('absensi', [AbsensiController::class, 'index'])
                     ->name('absensi.index');
+                Route::get('absensi/export-csv', [AbsensiController::class, 'exportCsv'])
+                    ->name('absensi.export-csv');
                 Route::get('absensi/{modulId}', [AbsensiController::class, 'show'])
                     ->name('absensi.show');
                 Route::post('absensi/{modulId}', [AbsensiController::class, 'store'])
@@ -447,10 +457,17 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/dashboard', [MhsManprakDashboard::class, 'index'])
                     ->name('dashboard');
 
+                // Praktikum (Card list)
+                Route::get('praktikum', [MhsPraktikumController::class, 'index'])
+                    ->name('praktikum.index');
 
                 // Pengumuman (lihat)
                 Route::get('pengumuman', [MhsPengumumanController::class, 'index'])
                     ->name('pengumuman.index');
+                
+                // Daftar Praktikan (Classmates)
+                Route::get('daftar-praktikan', [MhsDaftarPraktikanController::class, 'index'])
+                    ->name('daftar-praktikan.index');
 
                 // Tugas (lihat + kumpul + kirim ulang setelah revisi)
                 Route::get('tugas', [MhsTugasController::class, 'index'])

@@ -15,7 +15,7 @@
             <div>
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
                     <h1 style="font-size:22px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:-0.02em; line-height:1.2; margin:0;">Dashboard Koordinator</h1>
-                    <span class="mp-badge sm" style="background:#E0E7FF;color:#6366F1;"><span class="dot"></span>Koordinator</span>
+                    <span class="mp-badge sm" style="background:#E0E7FF;color:#293C79"><span class="dot"></span>Koordinator</span>
                 </div>
                 <p style="font-size:12px; color:var(--c-fg-muted, #666D80); margin:0;">
                     Halo, <span style="color:var(--c-fg, #0D0D12); font-weight:600;">{{ $firstName }}</span>

@@ -1,6 +1,12 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Absensi &amp; Nilai">
 
     {{-- Header --}}
+    <div x-data="{ 
+            bobot_tp: {{ $modul->praktikum?->bobot_tp ?? 10 }},
+            bobot_praktikum: {{ $modul->praktikum?->bobot_praktikum ?? 30 }},
+            bobot_laporan: {{ $modul->praktikum?->bobot_laporan ?? 30 }},
+            bobot_responsi: {{ $modul->praktikum?->bobot_responsi ?? 30 }}
+        }">
     <div class="mp-page-header">
         <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
@@ -215,15 +221,16 @@
                         <th class="mp-th text-center"
                             style="padding:10px 16px;width:60px;border-right:1px solid #DFE1E7;">Alpha</th>
                         <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#EAF0FA;">
-                            Pendahuluan</th>
+                            Tugas Pendahuluan</th>
+                        <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#F0FDF4;">
+                            Praktikum</th>
                         <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FEF9C3;">Laporan
                         </th>
                         <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FFF7ED;">Responsi
                         </th>
-                        <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#F0FDF4;">Tugas
-                            Pengganti</th>
                         <th class="mp-th text-left"
                             style="padding:10px 16px;min-width:180px;border-left:1px solid #DFE1E7;">Keterangan</th>
+                        <th class="mp-th text-center" style="padding:10px 16px;width:110px;border-left:1px solid #DFE1E7;">Rata-Rata</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -240,14 +247,24 @@
                         @endphp
 
                         {{-- Alpine scope to handle disabled states reactively and search filter --}}
-                        <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;"
-                            x-data="{ status: '{{ $status }}', name: '{{ addslashes(strtolower($p->user?->name ?? '')) }}', nim: '{{ addslashes(strtolower($p->user?->student?->student_number ?? $p->user?->email ?? '')) }}', kel: '{{ addslashes($p->kelompok ?? '') }}', shf: '{{ addslashes($p->shift ?? '') }}' }"
+                        <tr class="mp-tr group" style="border-bottom:1px solid #DFE1E7;"
+                            x-data="{ 
+                                status: '{{ $status }}', 
+                                name: '{{ addslashes(strtolower($p->user?->name ?? '')) }}', 
+                                nim: '{{ addslashes(strtolower($p->user?->student?->student_number ?? $p->user?->email ?? '')) }}', 
+                                kel: '{{ addslashes($p->kelompok ?? '') }}', 
+                                shf: '{{ addslashes($p->shift ?? '') }}',
+                                tp: '{{ $nilaiTP !== null ? number_format($nilaiTP, 0) : '' }}',
+                                prak: '{{ $nilaiPrak !== null ? number_format($nilaiPrak, 0) : '' }}',
+                                lap: '{{ $nilaiLap !== null ? number_format($nilaiLap, 0) : '' }}',
+                                resp: '{{ $nilaiResp !== null ? number_format($nilaiResp, 0) : '' }}'
+                            }"
                             x-show="(search === '' || name.includes(search.toLowerCase()) || nim.includes(search.toLowerCase())) && (kelompok === '' || kelompok === kel) && (shift === '' || shift === shf)">
-                            <td
+                            <td class="group-hover:brightness-95 transition-all"
                                 style="padding:12px 16px;font-size:12px;color:#A4ABB8;font-weight:600;position:sticky;left:0;background:#FFF;z-index:1;">
                                 {{ $idx + 1 }}
                             </td>
-                            <td
+                            <td class="group-hover:brightness-95 transition-all"
                                 style="padding:12px 16px;position:sticky;left:40px;background:#FFF;z-index:1;border-right:1px solid #DFE1E7;">
                                 <div style="display:flex;align-items:center;gap:10px;">
                                     <div class="mp-av yellow" style="flex-shrink:0;">
@@ -263,79 +280,89 @@
                             </td>
 
                             {{-- KELOMPOK COLUMN --}}
-                            <td
+                            <td class="group-hover:bg-gray-50 transition-all"
                                 style="padding:12px 16px;text-align:center;vertical-align:middle;border-right:1px solid #DFE1E7;font-size:15px;font-weight:700;color:#0D0D12;">
                                 @if($p->kelompok) {{ $p->kelompok }} @else <span
                                 style="font-size:11px;color:#A4ABB8;font-weight:normal;">—</span> @endif
                             </td>
 
                             {{-- SHIFT COLUMN --}}
-                            <td
+                            <td class="group-hover:bg-gray-50 transition-all"
                                 style="padding:12px 16px;text-align:center;vertical-align:middle;border-right:1px solid #DFE1E7;font-size:15px;font-weight:700;color:#0D0D12;">
                                 @if($p->shift) {{ $p->shift }} @else <span
                                 style="font-size:11px;color:#A4ABB8;font-weight:normal;">—</span> @endif
                             </td>
 
                             {{-- Kehadiran Radios --}}
-                            <td style="padding:12px 16px;text-align:center;vertical-align:middle;">
+                            <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;text-align:center;vertical-align:middle;">
                                 <input type="radio" name="absensi[{{ $p->id }}][status]" value="hadir" x-model="status"
                                     style="accent-color:#10B981;cursor:pointer;width:18px;height:18px;">
                             </td>
-                            <td style="padding:12px 16px;text-align:center;vertical-align:middle;">
+                            <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;text-align:center;vertical-align:middle;">
                                 <input type="radio" name="absensi[{{ $p->id }}][status]" value="izin" x-model="status"
                                     style="accent-color:#3B82F6;cursor:pointer;width:18px;height:18px;">
                             </td>
-                            <td
+                            <td class="group-hover:bg-gray-50 transition-all"
                                 style="padding:12px 16px;text-align:center;vertical-align:middle;border-right:1px solid #DFE1E7;">
                                 <input type="radio" name="absensi[{{ $p->id }}][status]" value="tidak_hadir"
                                     x-model="status" style="accent-color:#EF4444;cursor:pointer;width:18px;height:18px;">
                             </td>
 
                             {{-- Tugas Pendahuluan --}}
-                            <td style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
                                 :style="status === 'hadir' ? 'background:#EAF0FA;' : 'background:#F1F5F9;'">
                                 <input type="number" name="nilai[{{ $p->id }}][tugas_pendahuluan]"
-                                    value="{{ $nilaiTP !== null ? $nilaiTP : '' }}" min="0" max="100" step="0.5"
+                                    x-model="tp" min="0" max="100" step="1"
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
-                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;"
-                                    :style="status === 'hadir' ? 'color:#4338CA;border-color:#C7D2FE;background:#FFF;' : 'color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC;'">
+                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
+                                    :style="status === 'hadir' ? 'border-color:#C7D2FE;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
+                            </td>
+
+                            {{-- Praktikum (Tugas Pengganti) --}}
+                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                                :style="status === 'hadir' ? 'background:#F0FDF4;' : 'background:#F1F5F9;'">
+                                <input type="number" name="nilai[{{ $p->id }}][tugas_pengganti]"
+                                    x-model="prak" min="0" max="100" step="1"
+                                    x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
+                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
+                                    :style="status === 'hadir' ? 'border-color:#BBF7D0;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
                             </td>
 
                             {{-- Laporan --}}
-                            <td style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
                                 :style="status === 'hadir' ? 'background:#FEF9C3;' : 'background:#F1F5F9;'">
                                 <input type="number" name="nilai[{{ $p->id }}][laporan]"
-                                    value="{{ $nilaiLap !== null ? $nilaiLap : '' }}" min="0" max="100" step="0.5"
+                                    x-model="lap" min="0" max="100" step="1"
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
-                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;"
-                                    :style="status === 'hadir' ? 'color:#A16207;border-color:#FEF08A;background:#FFF;' : 'color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC;'">
+                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
+                                    :style="status === 'hadir' ? 'border-color:#FEF08A;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
                             </td>
 
                             {{-- Responsi --}}
-                            <td style="padding:8px 12px;text-align:center;vertical-align:middle;"
+                            <td class="group-hover:brightness-95 transition-all" style="padding:8px 12px;text-align:center;vertical-align:middle;"
                                 :style="status === 'hadir' ? 'background:#FFF7ED;' : 'background:#F1F5F9;'">
                                 <input type="number" name="nilai[{{ $p->id }}][responsi]"
-                                    value="{{ $nilaiResp !== null ? $nilaiResp : '' }}" min="0" max="100" step="0.5"
+                                    x-model="resp" min="0" max="100" step="1"
                                     x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
-                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;"
-                                    :style="status === 'hadir' ? 'color:#C2410C;border-color:#FED7AA;background:#FFF;' : 'color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC;'">
-                            </td>
-
-                            {{-- Tugas Pengganti --}}
-                            <td style="padding:8px 12px;text-align:center;vertical-align:middle;"
-                                :style="status === 'hadir' ? 'background:#F0FDF4;' : 'background:#F1F5F9;'">
-                                <input type="number" name="nilai[{{ $p->id }}][tugas_pengganti]"
-                                    value="{{ $nilaiPrak !== null ? $nilaiPrak : '' }}" min="0" max="100" step="0.5"
-                                    x-bind:disabled="status !== 'hadir'" :placeholder="status === 'hadir' ? '0–100' : '—'"
-                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;"
-                                    :style="status === 'hadir' ? 'color:#15803D;border-color:#BBF7D0;background:#FFF;' : 'color:#94A3B8;border-color:#E2E8F0;background:#F8FAFC;'">
+                                    class="mp-input" style="width:80px;text-align:center;font-size:13px;font-weight:600;color:#0D0D12;"
+                                    :style="status === 'hadir' ? 'border-color:#FED7AA;background:#FFF;' : 'border-color:#E2E8F0;background:#F8FAFC;'">
                             </td>
 
                             {{-- Keterangan --}}
-                            <td style="padding:12px 16px;vertical-align:middle;border-left:1px solid #DFE1E7;">
+                            <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;vertical-align:middle;border-left:1px solid #DFE1E7;">
                                 <input name="absensi[{{ $p->id }}][keterangan]" value="{{ $row?->keterangan }}"
                                     class="mp-input w-full" style="font-size:12px;padding:6px 8px;min-width:140px;"
                                     placeholder="Opsional (Sakit, dsb)">
+                            </td>
+                            
+                            {{-- RATA-RATA --}}
+                            <td class="group-hover:bg-gray-50 transition-all" style="padding:12px 16px;text-align:center;font-weight:700;color:#0D0D12;font-size:13px;border-left:1px solid #DFE1E7;">
+                                <span x-text="(() => {
+                                    let totalBobot = parseInt(bobot_tp || 0) + parseInt(bobot_praktikum || 0) + parseInt(bobot_laporan || 0) + parseInt(bobot_responsi || 0);
+                                    if (totalBobot === 0) return 0;
+                                    let sum = (parseInt(tp || 0) * (bobot_tp || 0)) + (parseInt(prak || 0) * (bobot_praktikum || 0)) + (parseInt(lap || 0) * (bobot_laporan || 0)) + (parseInt(resp || 0) * (bobot_responsi || 0));
+                                    return (sum / totalBobot).toFixed(0);
+                                })()"></span>
                             </td>
                         </tr>
                     @empty
@@ -357,4 +384,5 @@
         </div>
     </form>
 
+    </div>
 </x-eoffice::manajemen-praktikum.layout>

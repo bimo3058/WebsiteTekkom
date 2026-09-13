@@ -121,7 +121,7 @@ class DaftarAsprakController extends Controller
             'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
             'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',
-            'jadwal'       => 'nullable|array',
+            'jadwal'       => 'required|array|min:1',
         ]);
 
         $user = auth()->user();
