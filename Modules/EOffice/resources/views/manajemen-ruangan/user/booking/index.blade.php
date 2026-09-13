@@ -20,7 +20,7 @@
                         class="pl-9 pr-4 py-2 text-[13px] w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] transition-all">
                 </div>
                 <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue-50 text-blue-700 text-[13px] font-semibold border border-blue-200 hover:bg-blue-100 transition-colors whitespace-nowrap">
+                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold shadow-sm transition-colors whitespace-nowrap">
                     Lihat Kalender
                 </a>
             </div>
@@ -86,7 +86,7 @@
                             <div class="flex flex-wrap gap-1.5 mb-4">
                                 @foreach (array_slice($fasilitas, 0, 4) as $fas)
                                     <span
-                                        class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
+                                        class="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-blue-100 text-[#0B266E] border border-blue-200">
                                         {{ $fas }}
                                     </span>
                                 @endforeach

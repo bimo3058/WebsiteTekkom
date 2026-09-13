@@ -14,12 +14,18 @@
         $slotMap = [];
         foreach ($bookingsRaw as $b) {
             $mulai = (int) \Carbon\Carbon::parse($b->jam_mulai)->format('H');
-            $selesai = (int) \Carbon\Carbon::parse($b->jam_selesai)->format('H');
+            $selesaiCarbon = \Carbon\Carbon::parse($b->jam_selesai);
+            $selesai = (int) $selesaiCarbon->format('H');
+            if ($selesaiCarbon->format('i') > 0 || $selesaiCarbon->format('s') > 0) {
+                $selesai += 1;
+            }
             $tgl = is_string($b->tanggal_pinjam) ? $b->tanggal_pinjam : $b->tanggal_pinjam->format('Y-m-d');
             for ($h = $mulai; $h < $selesai; $h++) {
                 $slotMap[$tgl][$b->ruangan_id][$h] = [
+                    'id' => 'pm_' . $b->id,
                     'status' => $b->status,
-                    'tujuan' => $b->tujuan ?? ''
+                    'tujuan' => $b->tujuan ?? '',
+                    'pengguna' => $b->user->name ?? 'Mahasiswa'
                 ];
             }
         }
@@ -27,12 +33,17 @@
         // Parse and superimpose MrJadwalInternal events (Blocks entire slot)
         foreach ($internalSchedules as $j) {
             $mulai = (int) \Carbon\Carbon::parse($j->jam_mulai)->format('H');
-            $selesai = (int) \Carbon\Carbon::parse($j->jam_selesai)->format('H');
+            $selesaiCarbon = \Carbon\Carbon::parse($j->jam_selesai);
+            $selesai = (int) $selesaiCarbon->format('H');
+            if ($selesaiCarbon->format('i') > 0 || $selesaiCarbon->format('s') > 0) {
+                $selesai += 1;
+            }
 
             if ($j->tipe_jadwal === 'spesifik') {
                 $tgl = \Carbon\Carbon::parse($j->tanggal_spesifik)->format('Y-m-d');
                 for ($h = $mulai; $h < $selesai; $h++) {
                     $slotMap[$tgl][$j->ruangan_id][$h] = [
+                        'id' => 'it_' . $j->id,
                         'status' => 'internal',
                         'tujuan' => $j->keterangan ?? ''
                     ];
@@ -49,6 +60,7 @@
 
                         for ($h = $mulai; $h < $selesai; $h++) {
                             $slotMap[$tgl][$j->ruangan_id][$h] = [
+                                'id' => 'it_' . $j->id,
                                 'status' => 'internal',
                                 'tujuan' => $j->keterangan ?? ''
                             ];
@@ -115,11 +127,11 @@
                 {{-- Mode Toggle --}}
                 <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
                         Mingguan
                     </a>
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
                         Bulanan
                     </a>
                 </div>
@@ -139,7 +151,7 @@
                 <span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> Menunggu Persetujuan
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-sm bg-red-400 inline-block"></span> Terpakai / Penuh
+                <span class="w-3 h-3 rounded-sm bg-red-400 inline-block"></span> Terpakai
             </div>
         </div>
 
@@ -172,9 +184,11 @@
                         $rId = $ruang->id;
                         $hourStatuses = [];
                         foreach ($jamList as $hIndex => $jam) {
-                            $slotData = $slotMap[$dateStr][$rId][$jam] ?? ['status' => 'tersedia', 'tujuan' => ''];
+                            $slotData = $slotMap[$dateStr][$rId][$jam] ?? ['status' => 'tersedia', 'tujuan' => '', 'id' => null, 'pengguna' => ''];
                             $slotStatus = $slotData['status'];
                             $tujuan = $slotData['tujuan'];
+                            $pengguna = $slotData['pengguna'] ?? '';
+                            $id = $slotData['id'] ?? null;
 
                             $isPastDay = $day->isPast() && !$day->isToday();
                             $isPastHourToday = $day->isToday() && $jam <= (int) now()->format('H');
@@ -202,7 +216,7 @@
                             else
                                 $fKey = 'tersedia';
 
-                            $hourStatuses[$jam] = ['st' => $fKey, 'tujuan' => $tujuan];
+                            $hourStatuses[$jam] = ['st' => $fKey, 'tujuan' => $tujuan, 'id' => $id, 'pengguna' => $pengguna];
                         }
                         $skipCount = 0;
                         foreach ($jamList as $hIndex => $jam) {
@@ -213,14 +227,11 @@
                             }
                             $stObj = $hourStatuses[$jam];
                             $rowspan = 1;
-                            if ($stObj['st'] !== 'tersedia' && $stObj['st'] !== 'menunggu') {
+                            if ($stObj['st'] === 'penuh' || $stObj['st'] === 'internal' || $stObj['st'] === 'menunggu') {
                                 for ($k = $hIndex + 1; $k < count($jamList); $k++) {
                                     $nextStObj = $hourStatuses[$jamList[$k]];
-                                    // if it's an event (internal/penuh), we must match the identical event string
-                                    if ($nextStObj['st'] === $stObj['st']) {
-                                        if (($stObj['st'] === 'internal' || $stObj['st'] === 'penuh') && $nextStObj['tujuan'] !== $stObj['tujuan']) {
-                                            break;
-                                        }
+                                    // Combine if they are the exact same event
+                                    if ($nextStObj['st'] === $stObj['st'] && $nextStObj['id'] === $stObj['id']) {
                                         $rowspan++;
                                     } else {
                                         break;
@@ -249,11 +260,10 @@
                                 </th>
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
-                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700;
-                                            {{ $day->isToday() ? 'background: #EFF6FF; color: #1D4ED8;' : 'background: #F8F9FB; color: #111827;' }}">
+                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E;
+                                                            {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
-                                        <div
-                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#3B82F6' : '#6B7280' }}; margin-top:2px;">
+                                        <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">
                                             {{ $day->format('d/m') }}
                                         </div>
                                     </th>
@@ -295,9 +305,10 @@
                                             @endif
 
                                             @php
-                                                $slotData = $slotMap[$dateStr][$ruang->id][$jam] ?? ['status' => 'tersedia', 'tujuan' => ''];
+                                                $slotData = $slotMap[$dateStr][$ruang->id][$jam] ?? ['status' => 'tersedia', 'tujuan' => '', 'id' => null, 'pengguna' => ''];
                                                 $slotStatus = $slotData['status'];
                                                 $rawTujuan = $slotData['tujuan'];
+                                                $pengguna = $slotData['pengguna'] ?? '';
 
                                                 // Membersihkan text agar pas (hapus "digunakan untuk")
                                                 $cleanTujuan = trim(str_ireplace('digunakan untuk', '', $rawTujuan));
@@ -404,10 +415,10 @@
                                                     @endphp
                                                     <div
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
-                                                                                                                                                                                                                                                                                                                                                                                                   background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                                                                                                                                                                                                                                                   text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                                                                                                                                                                                                                                                   font-size:9px; font-weight:800; color:{{ $tColor }};
-                                                                                                                                                                                                                                                                                                                                                                                                   cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
+                                                                                                                                                                                                                                                                                                                                                                                                                                           background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                           text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                                                                                                                                                                                                                                                                                           font-size:9px; font-weight:800; color:{{ $tColor }};
+                                                                                                                                                                                                                                                                                                                                                                                                                                           cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -500,12 +511,12 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                                                                                                                                  background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                                                                                                  transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
-                                        style="font-size:13px; font-weight:700; color: {{ $isToday ? '#4338CA' : ($isClosed ? '#9CA3AF' : '#111827') }};">
+                                        style="font-size:13px; font-weight:700; color: {{ $isToday ? '#0B266E' : ($isClosed ? '#9CA3AF' : '#111827') }};">
                                         {{ $cell->format('d') }}
                                     </div>
                                     @if($isHoliday)
@@ -530,7 +541,7 @@
 
             <div class="mt-4 text-[12px] text-gray-500 font-medium">
                 💡 <strong>Tips:</strong> Klik tanggal manapun untuk beralih ke tampilan <span
-                    class="text-indigo-600 font-bold">Mingguan</span> di minggu tersebut secara detail.
+                    class="text-[#0B266E] font-bold">Mingguan</span> di minggu tersebut secara detail.
             </div>
         @endif
 

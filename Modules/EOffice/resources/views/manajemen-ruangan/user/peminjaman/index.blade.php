@@ -28,7 +28,7 @@
                         <table class="mp-table" style="table-layout: auto; width: 100%;">
                             <thead>
                                 <tr>
-                                    <th>RUANGAN & TUJUAN</th>
+                                    <th>RUANG & KEGIATAN</th>
                                     <th>JADWAL PEMAKAIAN</th>
                                     <th>LAMPIRAN</th>
                                     <th>STATUS</th>
@@ -39,22 +39,24 @@
                                 @foreach($peminjamans as $booking)
                                     <tr class="mp-tr">
                                         <td>
-                                            <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
-                                                {{ $booking->ruangan->nama }}
-                                                @if($booking->created_by && $booking->created_by !== $booking->user_id)
-                                                    <span
-                                                        class="bg-gray-100 text-gray-500 border border-gray-200 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap"
-                                                        title="Didaftarkan oleh Tata Usaha">Didaftarkan TU</span>
-                                                @endif
-                                            </div>
-                                            <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
-                                                title="{{ $booking->tujuan }}">
-                                                {{ $booking->tujuan }}
+                                            <div style="max-width: 220px;">
+                                                <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
+                                                    <span class="truncate" title="{{ $booking->ruangan->nama }}">{{ $booking->ruangan->nama }}</span>
+                                                    @if($booking->created_by && $booking->created_by !== $booking->user_id)
+                                                        <span
+                                                            class="bg-gray-100 text-gray-500 border border-gray-200 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap flex-shrink-0"
+                                                            title="Didaftarkan oleh Tata Usaha">Didaftarkan TU</span>
+                                                    @endif
+                                                </div>
+                                                <div class="text-[11px] text-gray-500 truncate mt-0.5"
+                                                    title="{{ $booking->tujuan }}">
+                                                    {{ $booking->tujuan }}
+                                                </div>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="text-[13px] font-medium text-[#111827]">
-                                                {{ \Carbon\Carbon::parse($booking->tanggal_pinjam)->translatedFormat('d F Y') }}
+                                                {{ \Carbon\Carbon::parse($booking->tanggal_pinjam)->translatedFormat('d M Y') }}
                                                 <span class="text-gray-400 mx-1">•</span>
                                                 {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
                                                 {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }} WIB

@@ -45,7 +45,7 @@
                                     </td>
                                     <td>
                                         <div class="text-[13px] font-medium text-[#111827]">
-                                            {{ \Carbon\Carbon::parse($riwayat->tanggal_pinjam)->translatedFormat('d F Y') }}
+                                            {{ \Carbon\Carbon::parse($riwayat->tanggal_pinjam)->translatedFormat('d M Y') }}
                                             <span class="text-gray-400 mx-1">•</span>
                                             {{ \Carbon\Carbon::parse($riwayat->jam_mulai)->format('H:i') }} -
                                             {{ \Carbon\Carbon::parse($riwayat->jam_selesai)->format('H:i') }} WIB
@@ -110,6 +110,65 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                {{-- Pagination (Arsip & Rekap Style) --}}
+                <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+                            <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per halaman</span>
+                            <select aria-label="Per halaman" onchange="window.location.href=this.value" class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                                <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                            </select>
+                        </div>
+                        <p class="text-xs font-medium text-slate-600">
+                            Menampilkan <span class="font-bold text-slate-800">{{ $riwayats->firstItem() ?? 0 }}</span>
+                            sampai <span class="font-bold text-slate-800">{{ $riwayats->lastItem() ?? 0 }}</span>
+                            dari <span class="font-bold text-slate-800">{{ $riwayats->total() }}</span> entri
+                        </p>
+                    </div>
+
+                    <div class="flex items-center gap-1.5">
+                        @if ($riwayats->onFirstPage())
+                            <button disabled class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                        @else
+                            <a href="{{ $riwayats->previousPageUrl() }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </a>
+                        @endif
+
+                        <div class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+                            @foreach ($riwayats->getUrlRange(max(1, $riwayats->currentPage() - 2), min($riwayats->lastPage(), $riwayats->currentPage() + 2)) as $page => $url)
+                                @if ($page == $riwayats->currentPage())
+                                    <span class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $url }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+
+                        @if ($riwayats->hasMorePages())
+                            <a href="{{ $riwayats->nextPageUrl() }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </a>
+                        @else
+                            <button disabled class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        @endif
+                    </div>
                 </div>
             @else
                 <div class="p-6">

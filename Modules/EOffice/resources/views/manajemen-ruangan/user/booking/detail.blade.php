@@ -99,7 +99,7 @@
                     @if (count($fasilitas) > 0)
                         <div class="flex flex-wrap gap-2.5">
                             @foreach ($fasilitas as $fas)
-                                <div class="inline-flex items-center px-3 py-1.5 rounded-lg border bg-blue-50 text-blue-700 border-blue-100">
+                                <div class="inline-flex items-center px-3 py-1.5 rounded-lg border bg-blue-100 text-[#0B266E] border-blue-200">
                                     <span class="text-[12px] font-semibold">{{ $fas }}</span>
                                 </div>
                             @endforeach
@@ -181,7 +181,7 @@
             {{-- Back to Catalog --}}
             <a href="{{ route('eoffice.peminjaman.user.booking') }}"
                 class="flex items-center justify-center gap-2 w-full py-2.5 text-[13px] font-semibold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors shadow-sm">
-                ← Kembali ke Katalog
+                Kembali ke Katalog
             </a>
         </div>
     </div>

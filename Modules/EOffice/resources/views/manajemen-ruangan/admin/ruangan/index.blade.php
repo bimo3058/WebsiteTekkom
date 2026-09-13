@@ -18,7 +18,8 @@
     </div>
 
     @if(session('success'))
-        <div class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-3 rounded-lg mb-4 mt-4 flex items-center gap-3">
+        <div
+            class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-4 py-3 rounded-lg mb-4 mt-4 flex items-center gap-3">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
             </svg>
@@ -27,7 +28,8 @@
     @endif
 
     <div class="bg-white border border-gray-200 rounded-[12px] mt-6" style="box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-        <div class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
+        <div
+            class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
             <h2 class="text-base font-bold text-gray-900 tracking-tight">Daftar Ruangan</h2>
 
             <form action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" method="GET"
@@ -51,12 +53,24 @@
             <table class="mp-table" style="table-layout: auto; width: 100%;">
                 <thead>
                     <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">NAMA RUANG</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">LOKASI / GEDUNG</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">KAPASITAS</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">FASILITAS UTAMA</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">STATUS</th>
-                        <th style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">AKSI</th>
+                        <th
+                            style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                            NAMA RUANG</th>
+                        <th
+                            style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                            GEDUNG</th>
+                        <th
+                            style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                            KAPASITAS</th>
+                        <th
+                            style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                            FASILITAS</th>
+                        <th
+                            style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                            STATUS</th>
+                        <th
+                            style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">
+                            AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -68,9 +82,12 @@
                             <td>{{ $r->kapasitas }} Orang</td>
                             <td>
                                 @if(is_array($r->fasilitas) && count($r->fasilitas) > 0)
-                                    <span
-                                        style="font-size: 12px; color: #666D80;">{{ implode(', ', array_slice($r->fasilitas, 0, 3)) }}
-                                        {{ count($r->fasilitas) > 3 ? '...' : '' }}</span>
+                                    @php $fstr = implode(', ', $r->fasilitas); @endphp
+                                    <div style="max-width: 140px;">
+                                        <div class="truncate" style="font-size: 12px; color: #666D80;" title="{{ $fstr }}">
+                                            {{ $fstr }}
+                                        </div>
+                                    </div>
                                 @else
                                     <span style="font-size: 12px; color: #A4ABB8;">-</span>
                                 @endif
@@ -93,13 +110,17 @@
                                         </svg>
                                     </button>
                                     <div x-show="open" x-transition:enter="transition ease-out duration-100"
-                                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                                        style="display: none;"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100" style="display: none;"
                                         class="absolute right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-[10px] shadow-[0_8px_24px_rgba(0,0,0,.1)] min-w-[160px] z-[40] overflow-hidden p-1.5">
                                         <a href="{{ route('eoffice.peminjaman.admin.ruangan.edit', $r->id) }}"
                                             class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-gray-600 hover:bg-gray-100 transition-colors no-underline">
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z"></path>
+                                            <svg width="14" height="14" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"
+                                                stroke-linejoin="round">
+                                                <path
+                                                    d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z">
+                                                </path>
                                             </svg>
                                             Edit Info
                                         </a>
@@ -112,9 +133,13 @@
                                             @method('DELETE')
                                             <button type="submit"
                                                 class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border-0 bg-transparent cursor-pointer text-left">
-                                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <svg width="14" height="14" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"
+                                                    stroke-linejoin="round">
                                                     <polyline points="3 6 5 6 21 6"></polyline>
-                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    <path
+                                                        d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                                    </path>
                                                 </svg>
                                                 Hapus Ruangan
                                             </button>
@@ -138,9 +163,11 @@
         </div>
 
         {{-- Pagination (Arsip & Rekap Style) --}}
-        <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+        <div
+            class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
             <div class="flex items-center gap-4">
-                <div class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+                <div
+                    class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
                     <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per
                         halaman</span>
                     <select aria-label="Per halaman" onchange="window.location.href=this.value"
@@ -175,12 +202,15 @@
                     </a>
                 @endif
 
-                <div class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+                <div
+                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
                     @foreach ($ruangans->getUrlRange(max(1, $ruangans->currentPage() - 2), min($ruangans->lastPage(), $ruangans->currentPage() + 2)) as $page => $url)
                         @if ($page == $ruangans->currentPage())
-                            <span class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                            <span
+                                class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
                         @else
-                            <a href="{{ $url }}" class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
+                            <a href="{{ $url }}"
+                                class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
                         @endif
                     @endforeach
                 </div>

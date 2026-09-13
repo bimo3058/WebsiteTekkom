@@ -21,7 +21,7 @@ class RuanganController extends Controller
             });
         }
 
-        $ruangans = $query->orderBy('nama')->paginate($request->input('per_page', 10))->appends($request->query());
+        $ruangans = $query->latest()->paginate($request->input('per_page', 10))->appends($request->query());
         return view('eoffice::manajemen-ruangan.admin.ruangan.index', compact('ruangans'));
     }
 

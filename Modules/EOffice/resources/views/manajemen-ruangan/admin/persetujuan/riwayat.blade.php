@@ -121,10 +121,29 @@
                         <tr class="mp-tr">
                             <td>
                                 <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
-                                    {{ $pinjam->user->name ?? 'User Tidak Diketahui' }}
+                                    @php
+                                        $fullName = $pinjam->user->name ?? 'User Tidak Diketahui';
+                                        $isDosen = $pinjam->user && $pinjam->user->hasRole('dosen');
+                                        $displayName = $fullName;
+                                        
+                                        if (!$isDosen) {
+                                            $nameParts = explode(' ', $fullName);
+                                            if (count($nameParts) > 2) {
+                                                $displayName = $nameParts[0] . ' ' . $nameParts[1];
+                                                for ($i = 2; $i < count($nameParts); $i++) {
+                                                    $displayName .= ' ' . strtoupper(substr($nameParts[$i], 0, 1)) . '.';
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    @if($isDosen)
+                                        <span class="truncate max-w-[140px]" title="{{ $fullName }}">{{ $fullName }}</span>
+                                    @else
+                                        <span title="{{ $fullName }}">{{ $displayName }}</span>
+                                    @endif
                                     @if($pinjam->created_by && $pinjam->created_by !== $pinjam->user_id)
                                         <span
-                                            class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider"
+                                            class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex-shrink-0"
                                             title="Didaftarkan oleh Sistem/Admin">By Admin</span>
                                     @endif
                                 </div>
@@ -140,23 +159,26 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="text-[13px] font-medium text-[#111827]">
-                                    {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
+                                <div style="max-width: 220px;">
+                                    <div class="text-[13px] font-medium text-[#111827] truncate" title="{{ $pinjam->ruangan->nama ?? 'Dihapus' }}">
+                                        {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
+                                    </div>
+                                    <div class="text-[11px] text-gray-500 truncate mt-0.5" title="{{ $pinjam->tujuan }}">
+                                        {{ $pinjam->tujuan }}
+                                    </div>
+                                    @if($pinjam->berkas_pendukung)
+                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1 text-[11px] font-medium text-[#0065ff] hover:text-[#0052cc] transition-colors mt-1">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                                </path>
+                                            </svg>
+                                            Lihat Berkas
+                                        </a>
+                                    @endif
                                 </div>
-                                <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
-                                    title="{{ $pinjam->tujuan }}">{{ $pinjam->tujuan }}</div>
-                                @if($pinjam->berkas_pendukung)
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
-                                        target="_blank"
-                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-[#0065ff] hover:text-[#0052cc] transition-colors mt-1">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
-                                            </path>
-                                        </svg>
-                                        Lihat Berkas
-                                    </a>
-                                @endif
                             </td>
                             <td>
                                 <div class="text-[13px] font-medium text-[#111827]">
