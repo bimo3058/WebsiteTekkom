@@ -200,16 +200,20 @@
                                                 </div>
 
                                                 <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-                                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pengumpulan->file_path, 'eoffice') }}"
-                                                        target="_blank"
-                                                        style="font-size:12px;font-weight:700;color:#0B266E;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                                            <polyline points="7 10 12 15 17 10" />
-                                                            <line x1="12" y1="15" x2="12" y2="3" />
-                                                        </svg>
-                                                        Unduh File Terbaru
-                                                    </a>
+                                                    <div style="display:flex;flex-direction:column;gap:6px;">
+                                                        @foreach($pengumpulan->files as $fileIdx => $pPath)
+                                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pPath, 'eoffice') }}"
+                                                                target="_blank"
+                                                                style="font-size:12px;font-weight:700;color:#0B266E;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                                    <polyline points="7 10 12 15 17 10" />
+                                                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                                                </svg>
+                                                                Unduh {{ basename($pPath) }}
+                                                            </a>
+                                                        @endforeach
+                                                    </div>
 
                                                     {{-- Dropdown Riwayat --}}
                                                     @if($pengumpulan->riwayat && $pengumpulan->riwayat->isNotEmpty())
@@ -222,7 +226,7 @@
                                                             </button>
                                                             <div x-show="openRiwayat" @click.away="openRiwayat = false" style="position:absolute;top:100%;right:0;background:#fff;border:1px solid #DFE1E7;border-radius:8px;padding:8px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);z-index:100;min-width:240px;display:flex;flex-direction:column;gap:6px;margin-top:4px;">
                                                                 @foreach($pengumpulan->riwayat as $index => $r)
-                                                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($r->file_path, 'eoffice') }}" target="_blank" style="font-size:11px;color:#353849;text-decoration:none;display:flex;flex-direction:column;padding:6px;border-radius:6px;transition:background .1s;text-align:left;" onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background=''">
+                                                                    <div style="font-size:11px;color:#353849;display:flex;flex-direction:column;padding:6px;border-radius:6px;transition:background .1s;text-align:left;border-bottom:1px solid #DFE1E7;" onmouseover="this.style.background='#F3F4F6'" onmouseout="this.style.background=''">
                                                                         <div style="display:flex;justify-content:space-between;align-items:center;">
                                                                             <span style="font-weight:700;color:#0B266E;">#{{ $pengumpulan->riwayat->count() - $index }} {{ $r->is_revision ? 'Revisi' : 'Pertama' }}</span>
                                                                             <span style="font-size:9px;color:#888;">{{ $r->created_at->format('H:i') }}</span>
@@ -231,7 +235,19 @@
                                                                             <span style="font-size:10px;color:#666D80;margin-top:2px;font-style:italic;" class="truncate">💬 {{ $r->catatan }}</span>
                                                                         @endif
                                                                         <span style="font-size:9px;color:#A4ABB8;margin-top:2px;">{{ $r->created_at->locale('id')->format('d M Y') }}</span>
-                                                                    </a>
+                                                                        <div style="display:flex;flex-direction:column;gap:4px;margin-top:4px;">
+                                                                            @foreach($r->files as $rPath)
+                                                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($rPath, 'eoffice') }}" target="_blank" style="text-decoration:none;color:#0B266E;font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px;">
+                                                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                                                                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                                                                        <polyline points="7 10 12 15 17 10" />
+                                                                                        <line x1="12" y1="15" x2="12" y2="3" />
+                                                                                    </svg>
+                                                                                    {{ basename($rPath) }}
+                                                                                </a>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
                                                                 @endforeach
                                                             </div>
                                                         </div>
@@ -265,11 +281,21 @@
                                         {{-- Action & Upload Form --}}
                                         @if(isset($daftarPraktikan) && $daftarPraktikan?->praktikum?->is_active)
                                             @if((!$sudahKumpul && !$lewatMutlak) || ($statusTugas === 'revisi' && !$lewatMutlak))
-                                                <button type="button" @click="showUpload = !showUpload" class="mp-btn primary sm" style="text-decoration: none; padding: 8px 16px; margin-bottom: 12px;">
-                                                    {{ $statusTugas === 'revisi' ? 'Kirim Ulang' : 'Upload Pengumpulan' }}
+                                                
+                                                <div style="border-top:1px solid #DFE1E7; margin:16px 0;"></div>
+                                                
+                                                <button type="button" @click="showUpload = !showUpload" 
+                                                    style="display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid #DFE1E7; background:#fff; color:#0B266E; padding:8px 20px; border-radius:99px; font-size:14px; font-weight:600; cursor:pointer; transition:background 0.2s, box-shadow 0.2s;"
+                                                    onmouseover="this.style.background='#F9FAFB'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.05)';"
+                                                    onmouseout="this.style.background='#fff'; this.style.boxShadow='none';">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                    </svg>
+                                                    Tambah
                                                 </button>
 
-                                                <div x-show="showUpload" x-transition class="pt-4" style="border-top:1px solid #DFE1E7;">
+                                                <div x-show="showUpload" x-transition class="pt-4 mt-3">
                                                     @if($statusTugas === 'revisi')
                                                         <div style="font-size:12px;font-weight:600;color:#D39C3D;margin-bottom:12px;">Kirim ulang file perbaikan:</div>
                                                         <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kirim-ulang', $t->id) }}" enctype="multipart/form-data">
@@ -281,8 +307,8 @@
                                                             <div class="flex flex-col gap-3">
                                                                 <div>
                                                                     <label class="block mb-1" style="font-size:12px;font-weight:600;color:#353849;">File Tugas <span style="color:#DF1C41;">*</span></label>
-                                                                    <input type="file" name="file" required class="mp-input w-full">
-                                                                    <div style="font-size:11px;color:#666D80;margin-top:4px;">Format: PDF, DOCX, ZIP, RAR (maks. 10MB)</div>
+                                                                    <input type="file" name="file[]" required multiple class="mp-input w-full" x-on:change="if($event.target.files.length > 3) { alert('Maksimal 3 file diperbolehkan.'); $event.target.value = ''; }">
+                                                                    <div style="font-size:11px;color:#666D80;margin-top:4px;">Format: Bebas (maks. 3 file, ukuran maks. 5MB per file)</div>
                                                                 </div>
                                                                 <div>
                                                                     <label class="block mb-1" style="font-size:12px;font-weight:600;color:#353849;">Catatan (opsional)</label>

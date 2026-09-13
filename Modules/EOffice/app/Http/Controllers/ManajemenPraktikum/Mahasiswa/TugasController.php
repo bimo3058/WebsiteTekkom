@@ -80,7 +80,8 @@ class TugasController extends Controller
     public function kumpul(Request $request, string $tugasId)
     {
         $request->validate([
-            'file'    => 'required|file|max:10240|mimes:pdf,docx,doc,zip,rar',
+            'file'    => 'required|array|max:3',
+            'file.*'  => 'required|file|max:5120',
             'catatan' => 'nullable|string|max:500',
         ]);
 
@@ -105,11 +106,15 @@ class TugasController extends Controller
             return back()->with('error', 'Tugas sudah dikumpulkan dan tidak dalam status revisi.');
         }
 
-        $path = $this->supabase->upload(
-            $request->file('file'),
-            'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
-            'eoffice'
-        );
+        $paths = [];
+        foreach ($request->file('file') as $f) {
+            $paths[] = $this->supabase->upload(
+                $f,
+                'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
+                'eoffice'
+            );
+        }
+        $path = json_encode($paths);
 
         $pengumpulan = PengumpulanTugas::updateOrCreate(
             [
@@ -139,7 +144,8 @@ class TugasController extends Controller
     public function kirimUlang(Request $request, string $tugasId)
     {
         $request->validate([
-            'file'    => 'required|file|max:10240|mimes:pdf,docx,doc,zip,rar',
+            'file'    => 'required|array|max:3',
+            'file.*'  => 'required|file|max:5120',
             'catatan' => 'nullable|string|max:500',
         ]);
 
