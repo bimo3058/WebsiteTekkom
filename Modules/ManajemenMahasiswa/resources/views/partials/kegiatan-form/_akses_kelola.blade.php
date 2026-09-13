@@ -20,8 +20,7 @@
     // Pengelola yang sudah tidak memegang role pengurus tidak ada di daftar calon,
     // jadi ikut terlepas saat form ini disimpan — route pun sudah menolaknya.
     $pengelolaAwal = $calonPengelola
-        ->filter(fn($calon) => array_key_exists($calon['id'], $pengelolaTerpilih))
-        ->map(fn($calon) => $calon + ['hapus' => $pengelolaTerpilih[$calon['id']] && $calon['bisa_hapus']])
+        ->filter(fn($calon) => in_array($calon['id'], $pengelolaTerpilih, true))
         ->values();
 @endphp
 <div class="form-card">
@@ -67,7 +66,7 @@
             <div class="panitia-empty" id="pengelolaEmpty" style="display:none;">Tidak ada pengurus yang cocok</div>
         </div>
     </div>
-    <div class="checkbox-hint">"Edit &amp; hapus" hanya bisa diberikan kepada Ketua Bidang/Unit; Staff Himpunan hanya bisa diberi hak edit.</div>
+    <div class="checkbox-hint">Haknya mengikuti jabatan: Ketua Bidang/Unit yang ditambahkan langsung bisa mengedit sekaligus menghapus, Staff Himpunan hanya bisa mengedit.</div>
 
     {{-- Baris hak per pengelola + hidden input, di-generate JS --}}
     <div id="pengelolaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
@@ -76,7 +75,7 @@
 <script>
 // ── Akses Kelola: pilih pengurus + hak masing-masing ──
 const pengelolaAwal = @json($pengelolaAwal);
-let pengelolaTerpilih = {}; // { id: {id, nama, role, bisa_hapus, hapus} }
+let pengelolaTerpilih = {}; // { id: {id, nama, role, bisa_hapus} }
 pengelolaAwal.forEach(p => { pengelolaTerpilih[p.id] = p; });
 
 function showPengelolaDropdown() {
@@ -109,7 +108,6 @@ function togglePengelola(opt) {
             nama: opt.dataset.name,
             role: opt.dataset.role,
             bisa_hapus: opt.dataset.bisaHapus === '1',
-            hapus: false,
         };
     }
     renderPengelola();
@@ -168,29 +166,20 @@ function renderPengelola() {
         idInput.name = 'pengelola_ids[]';
         idInput.value = p.id;
 
-        // pengelola_hapus[] hanya terkirim bila "Edit & hapus" dipilih (input disabled tidak ikut terkirim).
-        const hapusInput = document.createElement('input');
-        hapusInput.type = 'hidden';
-        hapusInput.name = 'pengelola_hapus[]';
-        hapusInput.value = p.id;
+        // Bukan pilihan, melainkan keterangan: hak hapus melekat pada jabatan.
+        // Yang menegakkannya KegiatanPolicy::delete, bukan kiriman form ini.
+        const hak = document.createElement('span');
+        hak.textContent = p.bisa_hapus ? 'Edit & hapus' : 'Boleh edit';
+        hak.title = p.bisa_hapus
+            ? 'Ketua Bidang/Unit yang ditambahkan otomatis bisa mengedit sekaligus menghapus kegiatan ini'
+            : 'Staff Himpunan hanya bisa mengedit, tidak bisa menghapus';
+        hak.style.cssText = 'flex: none; font-size: 11px; font-weight: 600; padding: 4px 10px;'
+            + 'border-radius: 999px; border: 1px solid; white-space: nowrap;'
+            + (p.bisa_hapus
+                ? 'background:#FEF2F2; color:#DC2626; border-color:#FECACA;'
+                : 'background:#F1F5F9; color:#475569; border-color:#E2E8F0;');
 
-        const hak = document.createElement('select');
-        hak.className = 'form-select form-select-sm';
-        hak.style.maxWidth = '180px';
-        hak.add(new Option('Boleh edit', 'edit'));
-        hak.add(new Option('Edit & hapus', 'hapus'));
-        if (!p.bisa_hapus) {
-            hak.options[1].disabled = true;
-            hak.title = 'Staff Himpunan hanya bisa diberi hak edit';
-        }
-        hak.value = p.hapus && p.bisa_hapus ? 'hapus' : 'edit';
-        hapusInput.disabled = hak.value !== 'hapus';
-        hak.addEventListener('change', () => {
-            p.hapus = hak.value === 'hapus';
-            hapusInput.disabled = !p.hapus;
-        });
-
-        row.append(nama, hak, idInput, hapusInput);
+        row.append(nama, hak, idInput);
         baris.appendChild(row);
     });
 

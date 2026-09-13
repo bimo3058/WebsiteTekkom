@@ -13,7 +13,7 @@ use Modules\ManajemenMahasiswa\Models\Kegiatan;
  * Lapis kedua di belakang `role:` middleware di routes/web.php: route menentukan
  * AKSI apa yang boleh dilakukan sebuah role, Policy ini menentukan KEGIATAN MANA.
  * Keduanya harus lolos, sehingga Policy tidak pernah memperluas hak sebuah role —
- * mis. staff_himpunan tetap tidak bisa menghapus walau tercatat `boleh_hapus`.
+ * mis. staff_himpunan tetap tidak bisa menghapus walau ia terdaftar pengelola.
  *
  * Semua pengecekan role memakai daftar putih hasAnyRole(), karena di modul ini
  * satu akun bisa memegang beberapa role sekaligus.
@@ -39,6 +39,17 @@ class KegiatanPolicy
     ];
 
     /**
+     * Pengelola dari role ini ikut boleh MENGHAPUS kegiatan yang ia kelola;
+     * pengelola lain (staff_himpunan) hanya boleh mengedit.
+     *
+     * Hak hapus melekat pada jabatan, bukan pilihan per orang: begitu seseorang
+     * ditambahkan di "Akses Kelola", role-nyalah yang menentukan sampai mana ia
+     * boleh bertindak. Dicek langsung ke role — bukan ke kolom pivot — supaya
+     * perubahan jabatan langsung berlaku tanpa perlu menyimpan ulang formnya.
+     */
+    public const PENGELOLA_BOLEH_HAPUS = ['ketua_bidang', 'ketua_unit'];
+
+    /**
      * Edit & simpan, termasuk Ajukan Proker dan Unggah ke Arsip (keduanya
      * mengubah status kegiatan).
      */
@@ -53,10 +64,8 @@ class KegiatanPolicy
     {
         return $user->hasAnyRole(self::PENGELOLA_SEMUA)
             || $this->pemilik($user, $kegiatan)
-            || $kegiatan->pengelola()
-                ->whereKey($user->getKey())
-                ->wherePivot('boleh_hapus', true)
-                ->exists();
+            || ($user->hasAnyRole(self::PENGELOLA_BOLEH_HAPUS)
+                && $kegiatan->pengelola()->whereKey($user->getKey())->exists());
     }
 
     /**

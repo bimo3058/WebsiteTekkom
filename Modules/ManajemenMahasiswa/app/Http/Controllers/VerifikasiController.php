@@ -29,6 +29,14 @@ class VerifikasiController extends Controller
     /** Jumlah baris per halaman pada daftar milik mahasiswa. */
     private const PER_HALAMAN_MAHASISWA = 10;
 
+    /**
+     * Umur tautan berkas bukti, dalam detik.
+     *
+     * Cukup panjang untuk membuka & membaca satu berkas, cukup pendek supaya
+     * tautan yang terlanjur tersalin ke luar tidak berumur panjang.
+     */
+    private const BUKTI_URL_TTL = 300;
+
     private const PESAN_UNGGAH_GAGAL = 'Berkas bukti gagal diunggah, jadi pengajuan belum tersimpan. Periksa koneksi Anda lalu coba lagi — bila berkasnya besar, kecilkan dulu ukurannya.';
 
     // -------------------------------------------------------------------------
@@ -73,6 +81,24 @@ class VerifikasiController extends Controller
     private function canAccessReward(): bool
     {
         return $this->isVerificator() || $this->isPengawas();
+    }
+
+    /**
+     * Boleh memutus klaim reward — menyetujui, menolak, atau membatalkan
+     * persetujuan konversi nilai mata kuliah.
+     *
+     * Sengaja lebih sempit dari isVerificator(). Yang diputus di sini bukan
+     * benar-tidaknya sebuah prestasi, melainkan kenaikan nilai mata kuliah
+     * (SK FT 774) — kewenangan admin kemahasiswaan. DPM & Ketua Departemen
+     * tetap boleh membuka daftar klaimnya untuk memantau, dan DPM tetap
+     * memverifikasi prestasi & riwayat kegiatan seperti biasa.
+     *
+     * Dipakai untuk menyembunyikan tombolnya; penjaga sebenarnya ada di
+     * middleware route, dengan daftar role yang sama persis.
+     */
+    private function canReviewReward(): bool
+    {
+        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
     }
 
     private function resolveLayout(): string
@@ -268,6 +294,70 @@ class VerifikasiController extends Controller
     }
 
     // -------------------------------------------------------------------------
+    // Buka Berkas Bukti — satu-satunya pintu menuju sertifikat mahasiswa
+    // -------------------------------------------------------------------------
+
+    /**
+     * Alihkan ke berkas bukti setelah aksesnya diperiksa.
+     *
+     * Sebelumnya berkas ditempel ke halaman memakai URL publik Supabase, yang
+     * tidak pernah menanyakan siapa yang membukanya: sekali tautannya tersalin
+     * keluar, sertifikat beserta nama & NIM di dalamnya terbuka untuk siapa pun
+     * tanpa akun, selamanya — dan tetap hidup meski akun penyalinnya sudah
+     * dicabut. Berhubung aturan pengajuan meminta seluruh bukti digabung dalam
+     * satu PDF, satu tautan bocor berarti satu berkas pribadi utuh.
+     *
+     * Sekarang tautan di halaman menunjuk ke sini. Aksesnya diperiksa dulu, lalu
+     * permintaannya dialihkan ke tautan bertanda tangan yang berumur pendek,
+     * sehingga tautan yang terlanjur tersebar mati dengan sendirinya.
+     */
+    public function bukti(int $id)
+    {
+        $bukti = VerifikasiBukti::findOrFail($id);
+
+        if (!$this->bolehLihatBukti($bukti)) {
+            abort(403, 'Anda hanya dapat membuka berkas bukti milik sendiri.');
+        }
+
+        $url = app(SupabaseStorage::class)->signedUrl($bukti->path_file, self::BUKTI_URL_TTL);
+
+        abort_if(
+            $url === null,
+            503,
+            'Berkas bukti sedang tidak dapat dibuka. Coba beberapa saat lagi.'
+        );
+
+        return redirect()->away($url);
+    }
+
+    /**
+     * Verifikator & pengawas boleh membuka bukti milik siapa pun — itu memang
+     * pekerjaan mereka. Selain keduanya hanya berkas milik sendiri.
+     *
+     * Berkas yang pengajuannya sudah tidak ada tidak bisa dibuka siapa pun:
+     * baris bukti yatim memang seharusnya ikut terhapus, tetapi selama masih
+     * ada yang tertinggal, tidak ada pemilik yang bisa dijadikan dasar izin.
+     */
+    private function bolehLihatBukti(VerifikasiBukti $bukti): bool
+    {
+        $bolehSemua = $this->isVerificator() || $this->isPengawas();
+
+        if ($bukti->bukti_type === VerifikasiBukti::TYPE_RIWAYAT) {
+            $induk = RiwayatKegiatan::with('student')->find($bukti->bukti_id);
+
+            return $induk !== null && ($bolehSemua || $this->ownsRiwayat($induk));
+        }
+
+        if ($bukti->bukti_type === VerifikasiBukti::TYPE_PRESTASI) {
+            $induk = Prestasi::with('kemahasiswaan')->find($bukti->bukti_id);
+
+            return $induk !== null && ($bolehSemua || $this->ownsPrestasi($induk));
+        }
+
+        return false;
+    }
+
+    // -------------------------------------------------------------------------
     // Admin View — Dashboard verifikasi semua data
     // -------------------------------------------------------------------------
 
@@ -456,8 +546,9 @@ class VerifikasiController extends Controller
             ->orderBy('angkatan', 'desc')
             ->pluck('angkatan');
 
-        // Pengawas mutu (GPM/Kadep) hanya melihat — sembunyikan tinjau/setujui/tolak/batalkan.
-        $canReview = $this->isVerificator();
+        // Hanya admin kemahasiswaan yang memutus konversi SKS — sembunyikan
+        // tinjau/setujui/tolak/batalkan dari DPM maupun Ketua Departemen.
+        $canReview = $this->canReviewReward();
 
         return view('manajemenmahasiswa::verifikasi.reward', compact(
             'rewardData',

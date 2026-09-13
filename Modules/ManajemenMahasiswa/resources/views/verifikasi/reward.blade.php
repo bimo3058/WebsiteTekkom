@@ -236,7 +236,7 @@
                             "reviewer"       => $p->reviewedBy->name ?? null,
                             "reviewed_at"    => $p->reward_reviewed_at ? $p->reward_reviewed_at->translatedFormat('d M Y') : null,
                             "bukti"          => $p->buktiFiles->map(fn ($b) => [
-                                "url"      => $b->public_url,
+                                "url"      => $b->url_akses,
                                 "nama"     => $b->nama_file,
                                 "is_image" => $b->isImage(),
                             ])->values()->all(),

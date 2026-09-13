@@ -351,7 +351,7 @@
                                     ])),
                                 ]],
                                 'bukti' => ($rw->buktiFiles ?? collect())->map(fn ($b) => [
-                                    'url'      => $b->public_url,
+                                    'url'      => $b->url_akses,
                                     'nama'     => $b->nama_file,
                                     'is_image' => $b->isImage(),
                                 ])->values()->all(),
@@ -528,7 +528,7 @@
                                     ])),
                                 ]],
                                 'bukti' => $p->buktiFiles->map(fn ($b) => [
-                                    'url'      => $b->public_url,
+                                    'url'      => $b->url_akses,
                                     'nama'     => $b->nama_file,
                                     'is_image' => $b->isImage(),
                                 ])->values()->all(),

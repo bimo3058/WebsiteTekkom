@@ -23,14 +23,15 @@ class PengelolaKegiatanService
      */
     private const ROLE_CALON = ['ketua_bidang', 'ketua_unit', 'staff_himpunan'];
 
-    /** Hanya role ini yang boleh diberi "Edit & hapus" — sinkron dengan route destroy. */
-    private const ROLE_BISA_HAPUS = ['ketua_bidang', 'ketua_unit'];
-
     /**
      * Pengurus yang bisa dipilih di bagian Akses Kelola.
      *
      * Akun yang sudah berakses penuh (KegiatanPolicy::PENGELOLA_SEMUA) tidak
      * ditawarkan — mencantumkannya tidak mengubah apa pun.
+     *
+     * `bisa_hapus` bukan pilihan, melainkan keterangan: Ketua Bidang/Unit yang
+     * ditambahkan otomatis boleh mengedit sekaligus menghapus, staff_himpunan
+     * hanya mengedit. Yang menegakkannya KegiatanPolicy::delete.
      *
      * @return Collection<int, array{id: int, nama: string, role: string, bisa_hapus: bool}>
      */
@@ -50,7 +51,7 @@ class PengelolaKegiatanService
                     $user->hasRole('ketua_unit')   => 'Ketua Unit',
                     default                        => 'Staff Himpunan',
                 },
-                'bisa_hapus' => $user->hasAnyRole(self::ROLE_BISA_HAPUS),
+                'bisa_hapus' => $user->hasAnyRole(KegiatanPolicy::PENGELOLA_BOLEH_HAPUS),
             ])
             ->values();
     }
@@ -58,7 +59,7 @@ class PengelolaKegiatanService
     /**
      * Variabel untuk partial kegiatan-form/_akses_kelola.blade.php.
      *
-     * @return array{bolehAturAkses: bool, calonPengelola: Collection, pengelolaTerpilih: array<int, bool>, namaPembuat: string}
+     * @return array{bolehAturAkses: bool, calonPengelola: Collection, pengelolaTerpilih: list<int>, namaPembuat: string}
      */
     public function dataForm(Kegiatan $kegiatan): array
     {
@@ -91,23 +92,19 @@ class PengelolaKegiatanService
     }
 
     /**
-     * Pengelola yang sedang terpilih: [user_id => boleh_hapus].
+     * Id pengurus yang sedang tercantum sebagai pengelola.
      *
      * Setelah validasi gagal, isian terakhir user (old()) yang dipakai, bukan DB —
      * pola yang sama dengan chip panitia di _scripts.blade.php. Penandanya
      * `akses_kelola_dikirim`, bukan `pengelola_ids`: kalau semua chip dihapus,
      * `pengelola_ids` tidak terkirim sama sekali dan chip lama akan muncul lagi.
      *
-     * @return array<int, bool>
+     * @return list<int>
      */
     public function terpilih(Kegiatan $kegiatan): array
     {
         if (old('akses_kelola_dikirim') !== null) {
-            $hapus = array_map('intval', (array) old('pengelola_hapus', []));
-
-            return collect((array) old('pengelola_ids', []))
-                ->mapWithKeys(fn($id) => [(int) $id => in_array((int) $id, $hapus, true)])
-                ->all();
+            return array_map('intval', (array) old('pengelola_ids', []));
         }
 
         if (!$kegiatan->exists) {
@@ -115,7 +112,7 @@ class PengelolaKegiatanService
         }
 
         return $kegiatan->pengelola
-            ->mapWithKeys(fn(User $user) => [(int) $user->id => (bool) $user->pivot->boleh_hapus])
+            ->map(fn(User $user) => (int) $user->id)
             ->all();
     }
 
@@ -134,7 +131,6 @@ class PengelolaKegiatanService
 
         $calon     = $this->calonPengelola()->keyBy('id');
         $pemilikId = $this->pemilikId($kegiatan);
-        $hapus     = array_map('intval', (array) $request->input('pengelola_hapus', []));
 
         $data = [];
         foreach ((array) $request->input('pengelola_ids', []) as $id) {
@@ -145,8 +141,9 @@ class PengelolaKegiatanService
                 continue;
             }
 
-            // "Edit & hapus" dipaksa false untuk staff — route destroy tidak memuatnya.
-            $data[$id] = ['boleh_hapus' => in_array($id, $hapus, true) && $calon[$id]['bisa_hapus']];
+            // Catatan saja, bukan penentu: hak hapus mengikuti role pengelola dan
+            // diputuskan ulang setiap kali di KegiatanPolicy::delete.
+            $data[$id] = ['boleh_hapus' => $calon[$id]['bisa_hapus']];
         }
 
         $kegiatan->pengelola()->sync($data);

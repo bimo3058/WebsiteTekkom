@@ -464,6 +464,19 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
                 ->get('/', [VerifikasiController::class, 'index'])->name('index');
 
+            // Berkas bukti — satu-satunya pintu menuju sertifikat mahasiswa.
+            //
+            // Sebelumnya berkas ditempel langsung memakai URL publik Supabase,
+            // yang tidak pernah menanyakan siapa yang membukanya: sekali
+            // tautannya tersalin keluar, sertifikat beserta nama & NIM di
+            // dalamnya terbuka untuk siapa pun tanpa akun, selamanya. Daftar
+            // rolenya disalin dari route index di atas — termasuk GPM yang
+            // tetap dikecualikan dengan alasan yang sama — dan kepemilikan
+            // berkasnya dicek lagi di controller.
+            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
+                ->get('/bukti/{id}', [VerifikasiController::class, 'bukti'])
+                ->name('bukti.show')->where('id', '[0-9]+');
+
             // Submit pengajuan — mahasiswa, semua pengurus himpunan, admin (alumni TIDAK diizinkan)
             Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan')
                 ->group(function () {
@@ -486,17 +499,17 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Halaman daftar klaim reward prestasi (Request Bu Bellia / B.2) —
-            // verifikator (admin group + DPM) + Ketua Departemen (read-only, tanpa
-            // tinjau/setujui/tolak — selaras Verifikasi Prestasi). GPM dikecualikan,
-            // alasannya sama dengan route index di atas.
+            // admin kemahasiswaan (kelola) + DPM & Ketua Departemen (read-only,
+            // tanpa tinjau/setujui/tolak: keputusan konversi SKS bukan kewenangan
+            // mereka — lihat grup route di bawah). GPM dikecualikan, alasannya
+            // sama dengan route index di atas.
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
                 ->get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
                 ->name('reward.index');
 
-            // Approve/Reject & kelola reward — verifikator (admin group + DPM)
+            // Verifikasi prestasi & riwayat kegiatan — verifikator (admin group + DPM)
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm')
                 ->group(function () {
-                // Dokumen aturan reward (SK FT 774 / aturan terbaru) — admin kelola
                 Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
                     ->name('riwayat.approve')->where('id', '[0-9]+');
                 Route::patch('/riwayat/{id}/reject', [VerifikasiController::class, 'rejectRiwayat'])
@@ -513,8 +526,17 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('riwayat.batal')->where('id', '[0-9]+');
                 Route::patch('/prestasi/{id}/batal-verifikasi', [VerifikasiController::class, 'batalkanVerifikasiPrestasi'])
                     ->name('prestasi.batal')->where('id', '[0-9]+');
+            });
 
-                // Persetujuan reward prestasi — admin/departemen (Request Bu Bellia / B.2)
+            // Keputusan reward prestasi — admin kemahasiswaan saja.
+            //
+            // Lebih sempit dari verifikasi di atas: yang diputus di sini bukan
+            // benar-tidaknya sebuah prestasi, melainkan konversi nilai mata
+            // kuliah (SK FT 774). DPM & Ketua Departemen tetap boleh membuka
+            // halaman Klaim Reward untuk memantau, tetapi tidak menyetujui,
+            // menolak, maupun membatalkan persetujuannya.
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
+                ->group(function () {
                 Route::patch('/prestasi/{id}/reward/setujui', [VerifikasiController::class, 'setujuiReward'])
                     ->name('prestasi.reward.setujui')->where('id', '[0-9]+');
                 Route::patch('/prestasi/{id}/reward/tolak', [VerifikasiController::class, 'tolakReward'])

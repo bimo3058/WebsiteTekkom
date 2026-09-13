@@ -183,7 +183,11 @@ class Kegiatan extends Model
 
     /**
      * Many-to-many: pengurus yang ditunjuk pemilik untuk ikut mengelola kegiatan ini.
-     * `boleh_hapus` = true berarti "Edit & hapus". Aturannya di KegiatanPolicy.
+     *
+     * Semua pengelola boleh mengedit; yang boleh ikut menghapus ditentukan role-nya
+     * (KegiatanPolicy::PENGELOLA_BOLEH_HAPUS), bukan pilihan per orang. Kolom
+     * `boleh_hapus` hanya mencatat hak yang berlaku saat daftar ini disimpan —
+     * penentunya tetap KegiatanPolicy::delete.
      */
     public function pengelola(): BelongsToMany
     {

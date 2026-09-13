@@ -793,7 +793,7 @@
                                             ]
                                         ],
                                         'bukti' => ($rw->buktiFiles ?? collect())->map(fn($b) => [
-                                            'url' => $b->public_url,
+                                            'url' => $b->url_akses,
                                             'nama' => $b->nama_file,
                                             'is_image' => $b->isImage(),
                                         ])->values()->all(),
@@ -1017,7 +1017,7 @@
                                     $pDiputus = $p->verification_status !== 'pending';
                                     $pDisetujui = $p->verification_status === 'approved';
                                     $pBukti = ($p->buktiFiles ?? collect())->map(fn($b) => [
-                                        'url' => $b->public_url,
+                                        'url' => $b->url_akses,
                                         'nama' => $b->nama_file,
                                         'is_image' => $b->isImage(),
                                     ])->values()->all();
