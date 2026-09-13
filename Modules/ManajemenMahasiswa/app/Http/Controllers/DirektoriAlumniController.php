@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\ManajemenMahasiswa\Models\Alumni;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
@@ -436,6 +437,9 @@ class DirektoriAlumniController extends Controller
             $canManageHistory = $this->canManageHistory();
             // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
             $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
+            // Role yang boleh mengunduh CV alumni — sumber kebenarannya CvProfilePolicy,
+            // sama dengan gerbang route dan Policy di generateCv().
+            $canDownloadCv = $this->hasRole(...\App\Policies\CvProfilePolicy::PENGELOLA_CV);
 
             return view('manajemenmahasiswa::direktori.alumni-show', compact(
                 'alumni',
@@ -446,6 +450,7 @@ class DirektoriAlumniController extends Controller
                 'canSeeHistory',
                 'canManageHistory',
                 'isCanSeeIpk',
+                'canDownloadCv',
             ))->with('layout', $this->resolveLayout());
 
         } catch (\Throwable) {
@@ -809,6 +814,17 @@ class DirektoriAlumniController extends Controller
             'sertifikasi' => [],
             'template' => 'modern'
         ]);
+
+        // Gerbang yang sama persis dengan CV mahasiswa — lihat CvProfilePolicy.
+        $this->authorize('view', $cvProfile);
+
+        if ((int) $user->id !== (int) Auth::id()) {
+            Log::info('Unduh CV alumni', [
+                'pengunduh_id'    => Auth::id(),
+                'pemilik_user_id' => $user->id,
+                'alumni_id'       => $id,
+            ]);
+        }
 
         $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
         $data['is_print'] = true;

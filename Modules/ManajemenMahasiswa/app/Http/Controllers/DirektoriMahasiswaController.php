@@ -8,6 +8,7 @@ use App\Models\CvProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
@@ -484,11 +485,10 @@ class DirektoriMahasiswaController extends Controller
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
         // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
         $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
-        // Role yang boleh mengunduh CV mahasiswa (sinkron dengan middleware route .cv)
-        $canDownloadCv = $this->hasRole(
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen',
-            'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit'
-        );
+        // Role yang boleh mengunduh CV mahasiswa. Daftarnya diambil dari
+        // CvProfilePolicy, bukan disalin ulang di sini — salinan manual itulah yang
+        // dulu membuat tombol di UI dan gerbang route bisa berbeda isinya.
+        $canDownloadCv = $this->hasRole(...\App\Policies\CvProfilePolicy::PENGELOLA_CV);
 
         return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
             'mhs',
@@ -745,6 +745,22 @@ class DirektoriMahasiswaController extends Controller
             'sertifikasi' => [],
             'template' => 'modern'
         ]);
+
+        // Lapis kedua di belakang middleware role: route menentukan role apa yang
+        // boleh memakai aksi ini, Policy menentukan CV milik siapa. Tanpa ini,
+        // siapa pun yang lolos gerbang role bisa mengenumerasi {id} 1..N dan
+        // mengunduh email pribadi, WhatsApp, serta domisili seluruh mahasiswa.
+        $this->authorize('view', $cvProfile);
+
+        // Modul ini belum punya fasilitas audit log, jadi jejaknya dicatat ke log
+        // aplikasi — mengunduh data pribadi orang lain tidak boleh tanpa bekas.
+        if ((int) $user->id !== (int) Auth::id()) {
+            Log::info('Unduh CV mahasiswa', [
+                'pengunduh_id'     => Auth::id(),
+                'pemilik_user_id'  => $user->id,
+                'kemahasiswaan_id' => $id,
+            ]);
+        }
 
         $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
         $data['is_print'] = true;

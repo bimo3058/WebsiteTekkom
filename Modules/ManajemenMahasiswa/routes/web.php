@@ -381,7 +381,12 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 // Unduh CV mahasiswa — pengelola & pembina (bukan sesama mahasiswa).
                 // Harus didaftarkan sebelum /{id}/edit tidak masalah karena segmen
                 // keduanya berbeda; /profil/cv sudah terdaftar lebih dulu di atas.
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen|dosen|dosen_koordinator|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit')
+                //
+                // Daftar role sengaja tidak ditulis ulang di sini: CvProfilePolicy
+                // adalah sumber kebenarannya, dipakai juga oleh Policy check di
+                // controller dan oleh flag $canDownloadCv di halaman show — supaya
+                // ketiganya mustahil berbeda seperti sebelumnya.
+                Route::middleware('role:' . implode('|', \App\Policies\CvProfilePolicy::PENGELOLA_CV))
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');
@@ -422,7 +427,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('show')->where('id', '[0-9]+');
                 });
 
-
+                // Unduh CV alumni — pengelola & pembina, gerbang yang sama persis
+                // dengan CV mahasiswa. Method generateCv() sudah lama ada tapi tidak
+                // punya route sama sekali (dead code); di sini baru dihidupkan.
+                Route::middleware('role:' . implode('|', \App\Policies\CvProfilePolicy::PENGELOLA_CV))
+                    ->group(function () {
+                    Route::get('/{id}/cv', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'generateCv'])
+                        ->name('cv')->where('id', '[0-9]+');
+                });
 
                 // Edit data alumni — admin only
                 Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
