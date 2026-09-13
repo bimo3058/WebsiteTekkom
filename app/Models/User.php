@@ -81,6 +81,27 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
+    protected function password(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                // Auth cache payloads omit credentials; load the hash only when needed.
+                if (! array_key_exists('password', $this->attributes)
+                    && $this->exists && $this->getKey() !== null) {
+                    $value = $this->newQuery()
+                        ->whereKey($this->getKey())
+                        ->toBase()
+                        ->value('password');
+
+                    $this->attributes['password'] = $value;
+                    $this->syncOriginalAttribute('password');
+                }
+
+                return $value;
+            },
+        );
+    }
+
     protected function avatarUrl(): Attribute
     {
         return Attribute::make(
