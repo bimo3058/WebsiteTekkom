@@ -185,7 +185,7 @@
                                                                                                                 @php
                                                                                                                     $absensi = $dp->absensi->firstWhere('modul_id', $modul->id);
                                                                                                                     $statusAbsen = $absensi?->status ?? '';
-                                                                                                                    if (!in_array($statusAbsen, ['hadir', 'terlambat', 'alpa'])) {
+                                                                                                                    if (!in_array($statusAbsen, ['hadir', 'terlambat', 'tidak_hadir', 'alpa'])) {
                                                                                                                         $statusAbsen = '';
                                                                                                                     }
                                                                                                                     $ket = addslashes($absensi?->keterangan ?? '');
@@ -369,7 +369,7 @@
                                                         <label
                                                             style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                                                             <input type="radio" value="hadir" x-model="r.status"
-                                                                @change="markDirty()"
+                                                                @click="r.status === 'hadir' ? (r.status = null, markDirty()) : markDirty()"
                                                                 :name="'status_' + modulId + '_' + r.dp_id"
                                                                 class="mp-custom-radio">
                                                             <span
@@ -378,7 +378,7 @@
                                                         <label
                                                             style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                                                             <input type="radio" value="terlambat" x-model="r.status"
-                                                                @change="markDirty()"
+                                                                @click="r.status === 'terlambat' ? (r.status = null, markDirty()) : markDirty()"
                                                                 :name="'status_' + modulId + '_' + r.dp_id"
                                                                 class="mp-custom-radio">
                                                             <span
@@ -386,8 +386,17 @@
                                                         </label>
                                                         <label
                                                             style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
+                                                            <input type="radio" value="tidak_hadir" x-model="r.status"
+                                                                @click="r.status === 'tidak_hadir' ? (r.status = null, markDirty()) : markDirty()"
+                                                                :name="'status_' + modulId + '_' + r.dp_id"
+                                                                class="mp-custom-radio">
+                                                            <span
+                                                                style="font-weight:500; font-size:13px; color:#353849;">Tidak Hadir</span>
+                                                        </label>
+                                                        <label
+                                                            style="display:inline-flex; align-items:center; gap:6px; cursor:pointer;">
                                                             <input type="radio" value="alpa" x-model="r.status"
-                                                                @change="markDirty()"
+                                                                @click="r.status === 'alpa' ? (r.status = null, markDirty()) : markDirty()"
                                                                 :name="'status_' + modulId + '_' + r.dp_id"
                                                                 class="mp-custom-radio">
                                                             <span
