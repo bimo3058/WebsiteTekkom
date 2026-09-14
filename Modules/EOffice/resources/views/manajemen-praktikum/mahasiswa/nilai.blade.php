@@ -330,7 +330,10 @@
                                                     @elseif($statusAbsen === 'izin')
                                                         <span class="mp-badge sky sm"
                                                             style="background:#EFF6FF; color:#3B82F6;">Izin</span>
-                                                    @elseif($statusAbsen === 'alpa' || $statusAbsen === 'tidak_hadir')
+                                                    @elseif($statusAbsen === 'tidak_hadir')
+                                                        <span class="mp-badge sky sm"
+                                                            style="background:#EFF6FF; color:#3B82F6;">Tidak Hadir</span>
+                                                    @elseif($statusAbsen === 'alpa')
                                                         <span class="mp-badge error sm"
                                                             style="background:#FEF2F2; color:#EF4444;">Alpa</span>
                                                     @else

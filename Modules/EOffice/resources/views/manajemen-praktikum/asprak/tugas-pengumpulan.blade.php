@@ -224,10 +224,7 @@
                                             <div style="font-size:13px;font-weight:600;color:#0D0D12;">
                                                 {!! $pr->user?->name ?? '&ndash;' !!}</div>
                                             <div style="font-size:11px;color:#666D80;">{{ $pr->user?->email }}</div>
-                                            @if($p && $p->catatan)
-                                                <div style="font-size:11px;color:#666D80;margin-top:2px;font-style:italic;"
-                                                    title="{{ $p->catatan }}">&#128172; Mhs: {{ Str::limit($p->catatan, 20) }}</div>
-                                            @endif
+                                            
                                         </div>
                                     </div>
                                 </td>
@@ -264,51 +261,27 @@
 
                                 {{-- Dokumen --}}
                                 <td style="padding:14px 16px;vertical-align:middle;">
-                                    @if($p && $firstSub && $firstSub->file_path)
+                                    @if($p && $firstSub && !empty($firstSub->files))
                                         <div style="display:flex;flex-direction:column;gap:4px;">
-                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($firstSub->file_path, 'eoffice') }}"
-                                                target="_blank"
-                                                style="font-size:12px;font-weight:600;color:#0B266E;text-decoration:none;"
-                                                title="{{ basename($firstSub->file_path) }}">
-                                                {{ Str::limit(basename($firstSub->file_path), 15) }}
-                                            </a>
-                                            @if($firstSub->catatan)
-                                                <div style="font-size:11px;color:#666D80;margin-top:2px;font-style:italic;"
-                                                    title="{{ $firstSub->catatan }}">&#128172; Mhs: {{ Str::limit($firstSub->catatan, 20) }}
-                                                </div>
-                                            @endif
-                                            @if($p->riwayat->isNotEmpty())
-                                                <div x-data="{ openRiwayat: false }" style="position:relative;">
-                                                    <button type="button" @click="openRiwayat = !openRiwayat"
-                                                        style="background:none;border:none;padding:0;font-size:10px;color:#6366F1;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:1px;">
-                                                        Riwayat ({{ $p->riwayat->count() }})
-                                                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="2.5">
-                                                            <path d="M6 9l6 6 6-6" />
-                                                        </svg>
-                                                    </button>
-                                                    <div x-show="openRiwayat" @click.away="openRiwayat = false"
-                                                        style="position:absolute;top:100%;left:0;background:#fff;border:1px solid #DFE1E7;border-radius:8px;padding:8px;box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);z-index:100;min-width:220px;display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-                                                        @foreach($p->riwayat as $index => $r)
-                                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($r->file_path, 'eoffice') }}"
-                                                                target="_blank"
-                                                                style="font-size:11px;color:#353849;text-decoration:none;display:flex;flex-direction:column;padding:6px;border-radius:6px;transition:background .1s;"
-                                                                onmouseover="this.style.background='#F3F4F6'"
-                                                                onmouseout="this.style.background=''">
-                                                                <div style="display:flex;justify-content:space-between;align-items:center;">
-                                                                    <span
-                                                                        style="font-weight:700;color:#0B266E;">#{{ $p->riwayat->count() - $index }}
-                                                                        {{ $r->is_revision ? 'Revisi' : 'Pertama' }}</span>
-                                                                    <span
-                                                                        style="font-size:9px;color:#888;">{{ $r->created_at->format('H:i') }}</span>
-                                                                </div>
-                                                                <span
-                                                                    style="font-size:9px;color:#A4ABB8;margin-top:2px;">{{ $r->created_at->locale('id')->format('d M Y') }}</span>
-                                                            </a>
-                                                        @endforeach
-                                                    </div>
-                                                </div>
-                                            @endif
+                                            @foreach($firstSub->files as $fPathObj)
+                                                @php 
+                                                    $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
+                                                    $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
+                                                @endphp
+                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                    target="_blank"
+                                                    style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
+                                                    onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'"
+                                                    title="{{ $fName }}">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px;">
+                                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                                        <polyline points="13 2 13 9 20 9"></polyline>
+                                                    </svg>
+                                                    <span style="font-size:11px; font-weight:500; color:#353849; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 120px;">{{ $fName }}</span>
+                                                </a>
+                                            @endforeach
+                                            
+                                            
                                         </div>
                                     @elseif($p && $p->file_path)
                                         <div style="display:flex;flex-direction:column;gap:4px;">
@@ -497,19 +470,26 @@
 
                                 {{-- Dokumen Revisi --}}
                                 <td style="padding:14px 16px;vertical-align:middle;">
-                                    @if($latestRevision && $latestRevision->file_path)
-                                        <div style="display:flex;flex-direction:column;gap:2px;">
-                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($latestRevision->file_path, 'eoffice') }}"
-                                                target="_blank"
-                                                style="font-size:12px;font-weight:600;color:#0F6E56;text-decoration:none;"
-                                                title="{{ basename($latestRevision->file_path) }}">
-                                                {{ Str::limit(basename($latestRevision->file_path), 15) }}
-                                            </a>
-                                            @if($latestRevision->catatan)
-                                                <div style="font-size:10px;color:#353849;font-style:italic;"
-                                                    title="{{ $latestRevision->catatan }}">&#128172; Mhs:
-                                                    {{ Str::limit($latestRevision->catatan, 25) }}</div>
-                                            @endif
+                                    @if($latestRevision && !empty($latestRevision->files))
+                                        <div style="display:flex;flex-direction:column;gap:4px;">
+                                            @foreach($latestRevision->files as $fPathObj)
+                                                @php 
+                                                    $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
+                                                    $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
+                                                @endphp
+                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                    target="_blank"
+                                                    style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
+                                                    onmouseover="this.style.borderColor='#0F6E56'" onmouseout="this.style.borderColor='#DFE1E7'"
+                                                    title="{{ $fName }}">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px;">
+                                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                                        <polyline points="13 2 13 9 20 9"></polyline>
+                                                    </svg>
+                                                    <span style="font-size:11px; font-weight:500; color:#353849; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 120px;">{{ $fName }}</span>
+                                                </a>
+                                            @endforeach
+                                            
                                         </div>
                                     @else
                                         <span style="font-size:12px;color:#999;">&ndash;</span>

@@ -60,7 +60,7 @@ class PengumpulanTugas extends Model
         }
         $decoded = json_decode($this->file_path, true);
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            return $decoded;
+            return array_values(array_filter($decoded));
         }
         return [$this->file_path];
     }

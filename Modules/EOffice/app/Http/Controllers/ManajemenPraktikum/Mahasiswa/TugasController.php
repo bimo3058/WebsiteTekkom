@@ -107,12 +107,21 @@ class TugasController extends Controller
         }
 
         $paths = [];
+        $failedCount = 0;
         foreach ($request->file('file') as $f) {
-            $paths[] = $this->supabase->upload(
+            $uploaded = $this->supabase->upload(
                 $f,
                 'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
                 'eoffice'
             );
+            if ($uploaded) {
+                $paths[] = [
+                    'path' => $uploaded,
+                    'original_name' => $f->getClientOriginalName()
+                ];
+            } else {
+                $failedCount++;
+            }
         }
         $path = json_encode($paths);
 
@@ -138,6 +147,9 @@ class TugasController extends Controller
             'is_revision' => false,
         ]);
 
+        if ($failedCount > 0) {
+            return back()->with('warning', 'Tugas dikumpulkan, namun ' . $failedCount . ' file gagal diunggah karena format tidak didukung.');
+        }
         return back()->with('success', 'Tugas berhasil dikumpulkan!');
     }
 
@@ -167,11 +179,24 @@ class TugasController extends Controller
             ->where('status_pengumpulan', PengumpulanTugas::STATUS_REVISI)
             ->firstOrFail();
             
-        $path  = $this->supabase->upload(
-            $request->file('file'),
-            'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
-            'eoffice'
-        );
+        $paths = [];
+        $failedCount = 0;
+        foreach ($request->file('file') as $f) {
+            $uploaded = $this->supabase->upload(
+                $f,
+                'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
+                'eoffice'
+            );
+            if ($uploaded) {
+                $paths[] = [
+                    'path' => $uploaded,
+                    'original_name' => $f->getClientOriginalName()
+                ];
+            } else {
+                $failedCount++;
+            }
+        }
+        $path = json_encode($paths);
 
         $pengumpulan->update([
             'file_path'          => $path,
@@ -189,5 +214,39 @@ class TugasController extends Controller
         ]);
 
         return back()->with('success', 'Tugas revisi berhasil dikirim ulang.');
+    }
+
+    public function hapus(Request $request, string $tugasId)
+    {
+        $user  = auth()->user();
+        $tugas = Tugas::with('modul')->findOrFail($tugasId);
+
+        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)
+            ->where('praktikum_id', $tugas->modul->praktikum_id)
+            ->firstOrFail();
+
+        $tenggatMutlak = $tugas->deadline_acc ?? $tugas->deadline;
+        if ($tenggatMutlak && now()->gt($tenggatMutlak)) {
+            return back()->with('error', 'Tidak dapat menghapus pengiriman setelah tenggat waktu.');
+        }
+
+        $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
+            ->where('daftar_praktikan_id', $daftarPraktikan->id)
+            ->first();
+
+        if (!$pengumpulan) {
+            return back()->with('error', 'Tidak ada pengiriman yang ditemukan.');
+        }
+
+        // Hanya bisa hapus jika belum di-ACC
+        if (in_array($pengumpulan->status_pengumpulan, [PengumpulanTugas::STATUS_ACC])) {
+            return back()->with('error', 'Pengiriman yang sudah di-ACC tidak dapat dihapus.');
+        }
+
+        // Hapus semua riwayat dan record utama
+        $pengumpulan->riwayat()->delete();
+        $pengumpulan->delete();
+
+        return back()->with('success', 'Pengiriman tugas berhasil dihapus.');
     }
 }

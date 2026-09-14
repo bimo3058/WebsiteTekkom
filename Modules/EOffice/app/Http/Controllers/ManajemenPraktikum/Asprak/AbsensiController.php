@@ -97,7 +97,7 @@ class AbsensiController extends Controller
     {
         $request->validate([
             'absensi' => 'required|array',
-            'absensi.*.status' => 'required|in:hadir,terlambat,alpa',
+            'absensi.*.status' => 'nullable|in:hadir,terlambat,alpa,tidak_hadir',
             'absensi.*.keterangan' => 'nullable|string|max:255',
             'tanggal' => 'required|date',
             'nilai' => 'nullable|array',
@@ -171,7 +171,7 @@ class AbsensiController extends Controller
     public function update(Request $request, int $absensiId)
     {
         $request->validate([
-            'status' => 'required|in:hadir,terlambat,alpa',
+            'status' => 'nullable|in:hadir,terlambat,alpa,tidak_hadir',
             'keterangan' => 'nullable|string|max:255',
         ]);
 

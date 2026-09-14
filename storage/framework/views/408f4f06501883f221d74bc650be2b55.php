@@ -1,18 +1,50 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Tugas Praktikum">
+<?php if (isset($component)) { $__componentOriginalc437526b4c56b06f9c16ab6722a84925 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalc437526b4c56b06f9c16ab6722a84925 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'eoffice::components.manajemen-praktikum.layout','data' => ['pageTitle' => 'Tugas Praktikum']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('eoffice::manajemen-praktikum.layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['pageTitle' => 'Tugas Praktikum']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
 
-    @if(!$daftarPraktikan)
+
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$daftarPraktikan): ?>
         <div class="mp-page-header">
             <div>
                 <h1 class="mp-page-title">Tugas Praktikum</h1>
             </div>
         </div>
         <div class="mp-alert warning flex-shrink-0">Anda belum terdaftar di praktikum manapun.</div>
-    @else
-        <x-eoffice::manajemen-praktikum.mhs-header :praktikum="$daftarPraktikan->praktikum" />
-    @endif
+    <?php else: ?>
+        <?php if (isset($component)) { $__componentOriginaledcee5fc9fded8c7a966e5daae82f7d1 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginaledcee5fc9fded8c7a966e5daae82f7d1 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'eoffice::components.manajemen-praktikum.mhs-header','data' => ['praktikum' => $daftarPraktikan->praktikum]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('eoffice::manajemen-praktikum.mhs-header'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['praktikum' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($daftarPraktikan->praktikum)]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginaledcee5fc9fded8c7a966e5daae82f7d1)): ?>
+<?php $attributes = $__attributesOriginaledcee5fc9fded8c7a966e5daae82f7d1; ?>
+<?php unset($__attributesOriginaledcee5fc9fded8c7a966e5daae82f7d1); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginaledcee5fc9fded8c7a966e5daae82f7d1)): ?>
+<?php $component = $__componentOriginaledcee5fc9fded8c7a966e5daae82f7d1; ?>
+<?php unset($__componentOriginaledcee5fc9fded8c7a966e5daae82f7d1); ?>
+<?php endif; ?>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
     
-    {{-- CSS untuk Accordion --}}
+    
     <style>
         .modul-accordion-content {
             max-height: 0;
@@ -39,25 +71,26 @@
     </style>
 
     <div style="display: flex; flex-direction: column; gap: 16px; padding-top: 4px;">
-        @forelse($modulList as $item)
-            @php 
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $modulList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+            <?php 
                 $modul = $item['modul']; 
                 $tugasList = $item['tugas'];
-            @endphp
+            ?>
             
             <div x-data="{ modulOpen: false }" style="background: #fff; border: 1px solid var(--c-border); border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); overflow: hidden;">
                 
-                {{-- Card Header: Modul Info --}}
+                
                 <div @click="modulOpen = !modulOpen" style="padding: 16px 24px; background: #fff; border-bottom: 1px solid var(--c-border); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
                     <div>
-                        <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;">{{ $modul->nama }}</h3>
+                        <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 4px 0;"><?php echo e($modul->nama); ?></h3>
                         <div style="font-size: 13px; color: #6B7280;">
                             Asisten: 
-                            @if($item['asprak']->isNotEmpty())
-                                {{ $item['asprak']->join(', ') }}
-                            @else
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($item['asprak']->isNotEmpty()): ?>
+                                <?php echo e($item['asprak']->join(', ')); ?>
+
+                            <?php else: ?>
                                 -
-                            @endif
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
                     </div>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="modulOpen ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
@@ -65,20 +98,20 @@
                     </svg>
                 </div>
 
-                {{-- List of Tugas as Accordions --}}
+                
                 <div class="modul-accordion-content" :class="{ 'is-open': modulOpen }">
                     <div style="display: flex; flex-direction: column;">
-                    @php
+                    <?php
                         $requiredTypes = [
                             'tugas_pendahuluan' => 'Tugas Pendahuluan',
                             'laporan'           => 'Laporan',
                             'responsi'          => 'Responsi',
                             'tugas_pengganti'   => 'Tugas Pengganti'
                         ];
-                    @endphp
+                    ?>
 
-                    @foreach($requiredTypes as $type => $label)
-                        @php
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $requiredTypes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $type => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                        <?php
                             $t = $tugasList->firstWhere('jenis_tugas', $type);
                             
                             $dlAC  = $t && $t->deadline ? \Carbon\Carbon::parse($t->deadline) : null;
@@ -106,73 +139,73 @@
                                 $oldFiles = json_decode($t->file_path, true) ?? [];
                                 if (!is_array($oldFiles)) $oldFiles = [$t->file_path];
                             }
-                        @endphp
+                        ?>
                         
                         <div x-data="{ open: false, showUpload: false }" style="border-bottom: 1px solid var(--c-border);">
                             
-                            {{-- Accordion Header --}}
+                            
                             <div @click="open = !open" style="padding: 14px 24px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #fff; transition: background 0.15s;" onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background='#fff'">
                                 <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                                    <div style="font-size: 14px; font-weight: 600; color: #0D0D12;">{{ $label }}</div>
-                                    @if($t)
-                                        @if($statusTugas === 'acc')
-                                            <span class="mp-badge success sm"><span class="dot"></span>ACC{{ $pengumpulan?->nilai ? ' — Nilai: ' . $pengumpulan->nilai : '' }}</span>
-                                        @elseif($statusTugas === 'revisi')
+                                    <div style="font-size: 14px; font-weight: 600; color: #0D0D12;"><?php echo e($label); ?></div>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($t): ?>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($statusTugas === 'acc'): ?>
+                                            <span class="mp-badge success sm"><span class="dot"></span>ACC<?php echo e($pengumpulan?->nilai ? ' — Nilai: ' . $pengumpulan->nilai : ''); ?></span>
+                                        <?php elseif($statusTugas === 'revisi'): ?>
                                             <span class="mp-badge error sm"><span class="dot"></span>Perlu Revisi</span>
-                                        @elseif($statusTugas === 'belum_dicek')
+                                        <?php elseif($statusTugas === 'belum_dicek'): ?>
                                             <span class="mp-badge warning sm"><span class="dot"></span>Menunggu Penilaian</span>
-                                        @elseif($lewatMutlak)
+                                        <?php elseif($lewatMutlak): ?>
                                             <span class="mp-badge error sm"><span class="dot"></span>Waktu Habis</span>
-                                        @elseif($lewat)
+                                        <?php elseif($lewat): ?>
                                             <span class="mp-badge warning sm"><span class="dot"></span>AC Terlewat</span>
-                                        @elseif($sisaAC !== null && $sisaAC <= 2)
+                                        <?php elseif($sisaAC !== null && $sisaAC <= 2): ?>
                                             <span class="mp-badge warning sm"><span class="dot"></span>Segera!</span>
-                                        @else
+                                        <?php else: ?>
                                             <span class="mp-badge neutral sm"><span class="dot"></span>Belum Dikumpul</span>
-                                        @endif
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                        @if($isLate)
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isLate): ?>
                                             <span class="mp-badge error sm" style="background:#FFF0F2;color:#DF1C41;border:1px solid #DF1C41;">Terlambat</span>
-                                        @endif
-                                    @endif
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 16px;">
-                                    @if($t)
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($t): ?>
                                     <div style="font-size: 12px; color: #666D80; display: flex; gap: 8px;">
-                                        @if($dlAC && $dlACC)
-                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">AC: {{ $dlAC->format('d/m/Y, H:i') }} | ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
-                                        @elseif($dlACC)
-                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">ACC: {{ $dlACC->format('d/m/Y, H:i') }}</span>
-                                        @elseif($dlAC)
-                                            <span style="color:{{ $lewatMutlak ? '#A4ABB8' : '#353849' }};">AC: {{ $dlAC->format('d/m/Y, H:i') }}</span>
-                                        @else
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($dlAC && $dlACC): ?>
+                                            <span style="color:<?php echo e($lewatMutlak ? '#A4ABB8' : '#353849'); ?>;">AC: <?php echo e($dlAC->format('d/m/Y, H:i')); ?> | ACC: <?php echo e($dlACC->format('d/m/Y, H:i')); ?></span>
+                                        <?php elseif($dlACC): ?>
+                                            <span style="color:<?php echo e($lewatMutlak ? '#A4ABB8' : '#353849'); ?>;">ACC: <?php echo e($dlACC->format('d/m/Y, H:i')); ?></span>
+                                        <?php elseif($dlAC): ?>
+                                            <span style="color:<?php echo e($lewatMutlak ? '#A4ABB8' : '#353849'); ?>;">AC: <?php echo e($dlAC->format('d/m/Y, H:i')); ?></span>
+                                        <?php else: ?>
                                             <span style="color:#A4ABB8;">Tanpa batas waktu</span>
-                                        @endif
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     </div>
-                                    @endif
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="open ? 'transform: rotate(180deg); transition: transform 0.2s;' : 'transform: rotate(0deg); transition: transform 0.2s;'">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>
                                 </div>
                             </div>
 
-                            {{-- Accordion Body --}}
+                            
                             <div class="tugas-accordion-content" :class="{ 'is-open': open }">
                                 <div style="border-top: 1px solid var(--c-border); padding: 16px 24px; background: #FAFBFC;">
                                     
-                                    @if($t)
-                                        @if($t->deskripsi)
-                                            <div style="font-size: 13px; color: #374151; margin-bottom: 16px; line-height: 1.5; white-space: pre-wrap;">{{ $t->deskripsi }}</div>
-                                        @endif
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($t): ?>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($t->deskripsi): ?>
+                                            <div style="font-size: 13px; color: #374151; margin-bottom: 16px; line-height: 1.5; white-space: pre-wrap;"><?php echo e($t->deskripsi); ?></div>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         
                                         <div style="display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px;">
-                                            @foreach($oldFiles as $idx => $f)
-                                                @php 
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $oldFiles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $idx => $f): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                                <?php 
                                                     $pathStr = is_array($f) && isset($f['path']) ? $f['path'] : $f;
                                                     $baseName = is_array($f) && isset($f['original_name']) ? $f['original_name'] : pathinfo($pathStr, PATHINFO_BASENAME);
-                                                @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice') }}"
-                                                    target="_blank" title="{{ $baseName }}"
+                                                ?>
+                                                <a href="<?php echo e(app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice')); ?>"
+                                                    target="_blank" title="<?php echo e($baseName); ?>"
                                                     style="display: flex; flex-direction: column; width: 120px; height: 120px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
                                                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"
                                                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
@@ -184,11 +217,12 @@
                                                             <polyline points="13 2 13 9 20 9"></polyline>
                                                         </svg>
                                                     </div>
-                                                    <div style="background: #293C79; color: #fff; padding: 8px 10px; font-size: 11px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="{{ $baseName }}">
-                                                        {{ $baseName }}
+                                                    <div style="background: #293C79; color: #fff; padding: 8px 10px; font-size: 11px; font-weight: 600; text-align: center; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;" title="<?php echo e($baseName); ?>">
+                                                        <?php echo e($baseName); ?>
+
                                                     </div>
                                                 </a>
-                                            @endforeach
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                         </div>
 
                                         <div style="border-top:1px solid #DFE1E7; margin:16px 0;"></div>                                        
@@ -237,21 +271,21 @@
                                         }">
                                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                                 <h3 style="font-size:14px; font-weight:700; color:#353849;">Pengumpulan Tugas</h3>
-                                                @if($sudahKumpul && $pengumpulan)
-                                                    <span style="font-size:12px; font-weight:500; color:#666D80;">Dikumpulkan pada: {{ \Carbon\Carbon::parse($pengumpulan->updated_at)->locale('id')->isoFormat('D MMMM YYYY, HH:mm') }} WIB</span>
-                                                @endif
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($sudahKumpul && $pengumpulan): ?>
+                                                    <span style="font-size:12px; font-weight:500; color:#666D80;">Dikumpulkan pada: <?php echo e(\Carbon\Carbon::parse($pengumpulan->updated_at)->locale('id')->isoFormat('D MMMM YYYY, HH:mm')); ?> WIB</span>
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                             </div>
 
-                                            {{-- File yang Dikumpulkan (view mode) --}}
-                                            @if($sudahKumpul && $pengumpulan?->file_path)
+                                            
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($sudahKumpul && $pengumpulan?->file_path): ?>
                                                 <div x-show="!isEditing" class="mb-4">
                                                     <div style="display:flex;flex-direction:column;gap:8px;">
-                                                        @foreach($pengumpulan->files as $fileIdx => $pPathObj)
-                                                            @php 
+                                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $pengumpulan->files; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $fileIdx => $pPathObj): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                                            <?php 
                                                                 $pPath = is_array($pPathObj) && isset($pPathObj['path']) ? $pPathObj['path'] : $pPathObj;
                                                                 $pName = is_array($pPathObj) && isset($pPathObj['original_name']) ? $pPathObj['original_name'] : pathinfo($pPath, PATHINFO_BASENAME);
-                                                            @endphp
-                                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pPath, 'eoffice') }}"
+                                                            ?>
+                                                            <a href="<?php echo e(app(\App\Services\SupabaseStorage::class)->publicUrl($pPath, 'eoffice')); ?>"
                                                                 target="_blank"
                                                                 style="display:flex; align-items:center; padding:10px 14px; border:1px solid #DFE1E7; border-radius:8px; background:#fff; text-decoration:none; transition:border-color 0.2s;"
                                                                 onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'">
@@ -259,45 +293,45 @@
                                                                     <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                                                                     <polyline points="13 2 13 9 20 9"></polyline>
                                                                 </svg>
-                                                                <span style="font-size:13px; font-weight:500; color:#0B266E; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $pName }}</span>
+                                                                <span style="font-size:13px; font-weight:500; color:#0B266E; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?php echo e($pName); ?></span>
                                                             </a>
-                                                        @endforeach
+                                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                                     </div>
                                                     
-                                                    @if(!$lewatMutlak && !in_array($statusTugas, ['acc']))
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$lewatMutlak && !in_array($statusTugas, ['acc'])): ?>
                                                         <div style="display:flex; justify-content:flex-end; margin-top:12px;">
                                                             <button type="button" @click="isEditing = true" class="mp-btn secondary" style="width:200px; padding: 8px 16px; font-size:13px; height:30px; border-radius:8px; text-align:center; justify-content:center; color:#DF1C41; border-color:#DF1C41;">
                                                                 Batalkan Pengiriman
                                                             </button>
                                                         </div>
-                                                    @endif
+                                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                                 </div>
 
-                                                {{-- Edit mode: existing files + new upload area --}}
-                                                @if(!$lewatMutlak && !in_array($statusTugas, ['acc']))
+                                                
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$lewatMutlak && !in_array($statusTugas, ['acc'])): ?>
                                                     <div x-show="isEditing" x-cloak class="mb-4">
-                                                        {{-- Existing files (greyed out) --}}
+                                                        
                                                         <div style="font-size:11px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">File yang sudah dikirim</div>
                                                         <div style="display:flex;flex-direction:column;gap:6px; margin-bottom:16px;">
-                                                            @foreach($pengumpulan->files as $pPathObj)
-                                                                @php 
+                                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $pengumpulan->files; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pPathObj): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                                                                <?php 
                                                                     $pPath = is_array($pPathObj) && isset($pPathObj['path']) ? $pPathObj['path'] : $pPathObj;
                                                                     $pName = is_array($pPathObj) && isset($pPathObj['original_name']) ? $pPathObj['original_name'] : pathinfo($pPath, PATHINFO_BASENAME);
-                                                                @endphp
+                                                                ?>
                                                                 <div style="display:flex; align-items:center; padding:9px 14px; border:1px solid #EEF0F5; border-radius:8px; background:#F9FAFB;">
                                                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px;">
                                                                         <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                                                                         <polyline points="13 2 13 9 20 9"></polyline>
                                                                     </svg>
-                                                                    <span style="font-size:12px; color:#808897; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $pName }}</span>
+                                                                    <span style="font-size:12px; color:#808897; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><?php echo e($pName); ?></span>
                                                                 </div>
-                                                            @endforeach
+                                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                                                         </div>
 
-                                                        {{-- New files upload --}}
+                                                        
                                                         <div style="font-size:11px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Unggah file pengganti</div>
-                                                        <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kumpul', $t->id) }}" enctype="multipart/form-data">
-                                                            @csrf
+                                                        <form method="POST" action="<?php echo e(route('eoffice.manprak.mahasiswa.tugas.kumpul', $t->id)); ?>" enctype="multipart/form-data">
+                                                            <?php echo csrf_field(); ?>
                                                             <input type="file" name="file[]" multiple x-ref="fileInput" style="display:none;" required>
                                                             <input type="file" multiple @change="addFiles" x-ref="addInput" style="display:none;">
                                                             
@@ -337,7 +371,7 @@
                                                                 </template>
                                                             </div>
 
-                                                            {{-- Action Buttons --}}
+                                                            
                                                             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px; flex-wrap:wrap;">
                                                                 <button type="button" @click="isEditing = false; files = []; $refs.addInput.value = '';" class="mp-btn secondary" style="border-radius:8px; font-size:13px; justify-content:center;">
                                                                     Batalkan Perubahan
@@ -348,19 +382,19 @@
                                                             </div>
                                                         </form>
                                                     </div>
-                                                @endif
-                                            @endif
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                            {{-- Catatan Revisi dari Asisten Praktikum --}}
-                                            @if($sudahKumpul && ($pengumpulan?->catatan_revisi || $pengumpulan?->file_revisi_asprak))
+                                            
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($sudahKumpul && ($pengumpulan?->catatan_revisi || $pengumpulan?->file_revisi_asprak)): ?>
                                                 <div class="mb-4 p-3 rounded-[8px]" style="background:#FADAE1;border:1px solid #DF1C41;" x-show="!isEditing">
                                                     <div style="font-size:11px;font-weight:700;color:#7C1028;margin-bottom:2px;">Catatan Revisi dari Asisten:</div>
-                                                    @if($pengumpulan->catatan_revisi)
-                                                        <div style="font-size:12px;color:#7C1028;margin-bottom:6px;">{{ $pengumpulan->catatan_revisi }}</div>
-                                                    @endif
-                                                    @if($pengumpulan->file_revisi_asprak)
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($pengumpulan->catatan_revisi): ?>
+                                                        <div style="font-size:12px;color:#7C1028;margin-bottom:6px;"><?php echo e($pengumpulan->catatan_revisi); ?></div>
+                                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($pengumpulan->file_revisi_asprak): ?>
                                                         <div style="margin-top:6px;">
-                                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pengumpulan->file_revisi_asprak, 'eoffice') }}" target="_blank" style="font-size:11px;font-weight:700;color:#95122B;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+                                                            <a href="<?php echo e(app(\App\Services\SupabaseStorage::class)->publicUrl($pengumpulan->file_revisi_asprak, 'eoffice')); ?>" target="_blank" style="font-size:11px;font-weight:700;color:#95122B;text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
                                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                                                                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                                                                     <polyline points="7 10 12 15 17 10" />
@@ -369,23 +403,23 @@
                                                                 Unduh File Lampiran Revisi
                                                             </a>
                                                         </div>
-                                                    @endif
+                                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                                 </div>
-                                            @endif
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
-                                            {{-- Upload form: hanya jika belum kumpul atau status revisi --}}
-                                            @if(isset($daftarPraktikan) && $daftarPraktikan?->praktikum?->is_active && !$lewatMutlak)
-                                                @if(!$sudahKumpul || $statusTugas === 'revisi')
+                                            
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(isset($daftarPraktikan) && $daftarPraktikan?->praktikum?->is_active && !$lewatMutlak): ?>
+                                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$sudahKumpul || $statusTugas === 'revisi'): ?>
                                                     <div>
-                                                        @if($statusTugas === 'revisi')
+                                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($statusTugas === 'revisi'): ?>
                                                             <div style="font-size:12px;font-weight:600;color:#D39C3D;margin-bottom:12px;">Kirim ulang file perbaikan:</div>
-                                                            <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kirim-ulang', $t->id) }}" enctype="multipart/form-data">
-                                                                @csrf
-                                                        @else
-                                                            <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kumpul', $t->id) }}" enctype="multipart/form-data">
-                                                                @csrf
-                                                        @endif
-                                                                    {{-- Action Buttons --}}
+                                                            <form method="POST" action="<?php echo e(route('eoffice.manprak.mahasiswa.tugas.kirim-ulang', $t->id)); ?>" enctype="multipart/form-data">
+                                                                <?php echo csrf_field(); ?>
+                                                        <?php else: ?>
+                                                            <form method="POST" action="<?php echo e(route('eoffice.manprak.mahasiswa.tugas.kumpul', $t->id)); ?>" enctype="multipart/form-data">
+                                                                <?php echo csrf_field(); ?>
+                                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                                                    
                                                                     <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px;">
                                                                         <template x-if="isEditing">
                                                                             <button type="button" @click="isEditing = false; files = []; $refs.fileInput.value = '';" class="mp-btn secondary" style="border-radius:8px; width:200px; text-align:center; font-size:13px; justify-content:center;">
@@ -393,35 +427,45 @@
                                                                             </button>
                                                                         </template>
                                                                         <button type="submit" class="mp-btn primary md" x-bind:disabled="files.length === 0" style="width:150px; border-radius:8px; text-align:center; font-size:13px; justify-content:center;">
-                                                                            <span x-text="isEditing ? 'Kumpulkan Kembali' : '{{ $statusTugas === 'revisi' ? 'Kirim Perbaikan' : 'Kumpulkan' }}'"></span>
+                                                                            <span x-text="isEditing ? 'Kumpulkan Kembali' : '<?php echo e($statusTugas === 'revisi' ? 'Kirim Perbaikan' : 'Kumpulkan'); ?>'"></span>
                                                                         </button>
                                                                     </div>
                                                                 </div>
                                                             </form>
                                                     </div>
-                                                @endif
-                                            @endif
+                                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         </div>
                                         
-                                    @else
-                                        <div style="font-size: 13px; color: #6B7280; font-style: italic;">{{ $label }} belum diunggah.</div>
-                                    @endif
+                                    <?php else: ?>
+                                        <div style="font-size: 13px; color: #6B7280; font-style: italic;"><?php echo e($label); ?> belum diunggah.</div>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
                                 </div>
                             </div>
 
                         </div>
-                    @endforeach
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
                     </div>
                 </div>
 
             </div>
-        @empty
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
             <div style="padding: 48px; text-align: center; border: 1px solid var(--c-border); border-radius: 8px; background: #fff;">
                 <div style="font-size: 14px; font-weight: 600; color: #111827;">Belum Ada Modul & Tugas</div>
                 <div style="font-size: 13px; color: #6B7280; margin-top: 4px;">Belum ada data yang dapat ditampilkan.</div>
             </div>
-        @endforelse
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
     </div>
 
-</x-eoffice::manajemen-praktikum.layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalc437526b4c56b06f9c16ab6722a84925)): ?>
+<?php $attributes = $__attributesOriginalc437526b4c56b06f9c16ab6722a84925; ?>
+<?php unset($__attributesOriginalc437526b4c56b06f9c16ab6722a84925); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalc437526b4c56b06f9c16ab6722a84925)): ?>
+<?php $component = $__componentOriginalc437526b4c56b06f9c16ab6722a84925; ?>
+<?php unset($__componentOriginalc437526b4c56b06f9c16ab6722a84925); ?>
+<?php endif; ?>
+<?php /**PATH C:\Users\User\manajemen_praktikum_\Modules/EOffice\resources/views/manajemen-praktikum/mahasiswa/tugas.blade.php ENDPATH**/ ?>
