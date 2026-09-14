@@ -20,7 +20,7 @@ class KelolRoleController extends Controller
             ->get();
 
         $praktikumId = $request->input('praktikum_id');
-        $praktikum   = $praktikumList->firstWhere('id', $praktikumId) ?? $praktikumList->first();
+        $praktikum = $praktikumList->firstWhere('id', $praktikumId) ?? $praktikumList->first();
         $praktikumId = $praktikum?->id;
 
         $anggota = $praktikumId
@@ -46,9 +46,9 @@ class KelolRoleController extends Controller
     public function assignRole(Request $request)
     {
         $request->validate([
-            'user_id'      => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,id',
             'praktikum_id' => 'required|exists:eo_praktikum,id',
-            'role'         => 'required|in:asprak,koor',
+            'role' => 'required|in:asprak,koor',
         ]);
 
         // Restore soft-deleted record atau buat baru
@@ -62,15 +62,15 @@ class KelolRoleController extends Controller
             $existing->restore();
         } else {
             AsprakPraktikum::create([
-                'user_id'      => $request->user_id,
+                'user_id' => $request->user_id,
                 'praktikum_id' => $request->praktikum_id,
-                'role'         => $request->role,
+                'role' => $request->role,
             ]);
         }
 
         // Sync role di tabel Spatie
         $roleName = $request->role === 'koor' ? 'koor_prak' : 'asprak';
-        $role     = Role::where('name', $roleName)->where('module', 'eoffice')->first();
+        $role = Role::where('name', $roleName)->where('module', 'eoffice')->first();
         if ($role) {
             User::find($request->user_id)?->roles()->syncWithoutDetaching([$role->id]);
         }
@@ -88,9 +88,9 @@ class KelolRoleController extends Controller
     public function revokeRole($id)
     {
         $record = AsprakPraktikum::with('user')->findOrFail($id);
-        $user   = $record->user;
-        $name   = $user?->name ?? 'User';
-        $role   = $record->role;
+        $user = $record->user;
+        $name = $user?->name ?? 'User';
+        $role = $record->role;
         $userId = $record->user_id;
 
         // 1. Soft delete record asprak_praktikum ini
@@ -143,12 +143,13 @@ class KelolRoleController extends Controller
         return back()->with('success', $message);
     }
 
+
     public function revokeAll(Request $request, $praktikumId)
     {
         $praktikum = Praktikum::findOrFail($praktikumId);
         $records = AsprakPraktikum::with('user')->where('praktikum_id', $praktikumId)->get();
 
-        foreach($records as $record) {
+        foreach ($records as $record) {
             $user = $record->user;
             $role = $record->role;
             $userId = $record->user_id;
@@ -199,9 +200,9 @@ class KelolRoleController extends Controller
     public function restoreRole($id)
     {
         $record = AsprakPraktikum::withTrashed()->with('user')->findOrFail($id);
-        $user   = $record->user;
-        $name   = $user?->name ?? 'User';
-        $role   = $record->role;
+        $user = $record->user;
+        $name = $user?->name ?? 'User';
+        $role = $record->role;
 
         // 1. Restore the soft-deleted record
         $record->restore();

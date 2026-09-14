@@ -57,7 +57,7 @@ foreach($options as $key => $opt) {
                 class="w-full h-[38px] pl-3 pr-3 text-left text-[13px] border focus:outline-none font-medium flex items-center justify-between transition-colors rounded-[8px]"
                 :class="open ? 'border-[#0B266E] bg-[#EEF1FA] text-[#0B266E]' : 'border-[#DFE1E7] bg-white text-[#353849] hover:bg-[#F6F8FA]'">
             <span x-text="selectedLabel" class="truncate pr-2" :class="!selected && !options.find(o => o.value == selected) ? 'text-[#94A3B8]' : ''"></span>
-            <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0" 
+            <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0 mr-2.5" 
                  :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}" 
                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>

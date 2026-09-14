@@ -96,11 +96,26 @@ class DashboardController extends Controller
                 ->count()
             : 0;
 
-        $pendingAsprak = $praktikum
-            ? PendaftaranAsprak::where('praktikum_id', $praktikum->id)
+        $pendaftarAsprakList = $praktikum
+            ? PendaftaranAsprak::with(['user.student', 'praktikum'])
+                ->where('praktikum_id', $praktikum->id)
                 ->where('status', 'pending')
-                ->count()
-            : 0;
+                ->latest()
+                ->get()
+            : collect();
+        $pendingAsprak = $pendaftarAsprakList->count();
+
+        $kelompokStats = collect();
+        $praktikanTanpaKelompok = 0;
+        if ($praktikum) {
+            $stats = DaftarPraktikan::where('praktikum_id', $praktikum->id)
+                ->select('kelompok', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+                ->groupBy('kelompok')
+                ->get();
+
+            $praktikanTanpaKelompok = $stats->firstWhere('kelompok', null)?->total ?? 0;
+            $kelompokStats = $stats->whereNotNull('kelompok')->pluck('total', 'kelompok');
+        }
 
         $currentYear = now()->year;
         $currentSemester = now()->month <= 6 ? 'Genap' : 'Ganjil';
@@ -119,7 +134,10 @@ class DashboardController extends Controller
             'pengumuman',
             'pendingPraktikanIrs',
             'pendingAsprak',
-            'semesterLabel'
+            'semesterLabel',
+            'pendaftarAsprakList',
+            'kelompokStats',
+            'praktikanTanpaKelompok'
         ));
     }
 
@@ -161,7 +179,7 @@ class DashboardController extends Controller
                 ->orWhere('email', 'like', "%{$search}%"));
         }
 
-        $praktikans = $query->paginate(20)->withQueryString();
+        $praktikans = $query->paginate($request->input('per_page', 10))->withQueryString();
 
         $praktikansSemua = DaftarPraktikan::with(['user', 'user.student'])
             ->where('praktikum_id', $praktikum?->id)
@@ -613,11 +631,16 @@ class DashboardController extends Controller
             ->where('koor_id', $user->id)
             ->firstOrFail();
 
-        DaftarPraktikan::where('praktikum_id', $praktikum->id)
+                DaftarPraktikan::where('praktikum_id', $praktikum->id)
             ->update([
                 'kelompok' => null,
                 'shift'    => null,
             ]);
+
+        $praktikum->update([
+            'jumlah_kelompok' => 0,
+            'jumlah_shift'    => 0,
+        ]);
 
         return back()->with('success', 'Seluruh data kelompok dan shift berhasil dikosongkan.');
     }

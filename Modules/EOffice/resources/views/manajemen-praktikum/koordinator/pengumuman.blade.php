@@ -1,14 +1,11 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pengumuman Praktikum">
+<x-eoffice::manajemen-praktikum.layout pageTitle="{{ $praktikum ? $praktikum->nama : 'Belum Ada Praktikum' }} / Pengumuman">
+    @if(isset($praktikum) && $praktikum)
+        <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
+    @endif
+
 
 {{-- Page Header --}}
 <div class="mp-page-header">
-    <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h1 class="mp-page-title">Pengumuman Praktikum</h1>
-            <span class="mp-badge" style="background:#D0D6E9;color:#5D6DA2;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#5D6DA2;"></span>Koordinator</span>
-        </div>
-        <p class="mp-page-sub">Buat dan kelola pengumuman untuk praktikan · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
-    </div>
     <div class="mp-page-actions">
         @if($praktikum->is_active)
         <button onclick="document.getElementById('modalCreate').classList.remove('hidden')" class="mp-btn primary md">

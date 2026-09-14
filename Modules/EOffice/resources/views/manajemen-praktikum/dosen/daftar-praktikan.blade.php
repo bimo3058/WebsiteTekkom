@@ -170,7 +170,7 @@
                             </div>
                         </div>
                     </td>
-                    <td style="padding:12px 16px;font-size:12px;font-family:monospace;font-weight:600;color:#353849;letter-spacing:.03em;">
+                    <td style="padding:12px 16px;font-size:12px;font-weight:600;color:#353849;">
                         {{ $p->user?->student?->student_number ?? '-' }}
                     </td>
 

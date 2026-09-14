@@ -18,9 +18,9 @@ class Tugas extends Model
      */
     const JENIS = [
         'tugas_pendahuluan' => 'Tugas Pendahuluan',
-        'praktikum'         => 'Praktikum',
-        'laporan'           => 'Laporan',
-        'responsi'          => 'Responsi',
+        'laporan' => 'Laporan',
+        'responsi' => 'Responsi',
+        'tugas_pengganti' => 'Tugas Pengganti',
     ];
 
     protected $fillable = [
@@ -35,7 +35,7 @@ class Tugas extends Model
     ];
 
     protected $casts = [
-        'deadline'     => 'datetime',
+        'deadline' => 'datetime',
         'deadline_acc' => 'datetime',
         'is_published' => 'boolean',
     ];

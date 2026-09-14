@@ -78,6 +78,7 @@
 @if($praktikumDipilih)
 
 @if($praktikumDipilih->is_active)
+@if($praktikumDipilih->is_active)
 {{-- ── BUKA PERIODE BARU ────────────────────────────────────────────────────── --}}
 <div class="sec-head" style="margin-top:24px;">
     <span class="sec-bar"></span>

@@ -1,15 +1,10 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Seleksi Praktikan — IRS">
+    @if(isset($praktikum) && $praktikum)
+        <x-eoffice::manajemen-praktikum.koor-header :praktikum="$praktikum" />
+    @endif
+
 
 {{-- Page Header --}}
-<div class="mp-page-header">
-    <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h1 class="mp-page-title">Verifikasi Pendaftaran Praktikan</h1>
-            <span class="mp-badge" style="background:#D0D6E9;color:#5D6DA2;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#5D6DA2;"></span>Koordinator</span>
-        </div>
-        <p class="mp-page-sub">Review Cetak IRS mahasiswa sebelum mereka dapat bergabung ke kelas · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
-    </div>
-</div>
 
 @if($periodeAktif)
 <div class="mp-alert success flex-shrink-0">
