@@ -54,18 +54,18 @@
         <form method="GET" class="flex gap-2 flex-wrap">
             @php
                 $praktikumOptions = [];
-                if(isset($praktikumList)) {
-                    foreach($praktikumList as $p) {
-                        $label = $p->nama;
-                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
-                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
-                    }
+                foreach($praktikumDenganPeriode as $p) {
+                    $matkulLabel = $p->matkul
+                        ? trim(($p->matkul->kode ? $p->matkul->kode . ' · ' : '') . $p->matkul->nama)
+                        : $p->nama;
+                    $label = $matkulLabel . " · {$p->semester} {$p->tahun_ajaran}";
+                    $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
                 }
             @endphp
             <x-eoffice::manajemen-praktikum.ui.select 
                 name="praktikum_id"
                 :options="$praktikumOptions"
-                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                :selected="(string)request('praktikum_id', $praktikumDenganPeriode->first()?->id)"
                 placeholder="Pilih Praktikum..."
                 onChange="$event.target.form.submit()"
                 minWidth="240px"
@@ -74,42 +74,18 @@
     </div>
 </div>
 
-@php $selectedPraktikumId = request('praktikum_id', $praktikumDenganPeriode->first()?->id); @endphp
-@php $selectedPraktikum = $praktikumDenganPeriode->firstWhere('id', $selectedPraktikumId); @endphp
-
 @if($selectedPraktikum)
 
 @php
     $pAsprak = $periodeAktif[$selectedPraktikum->id]['asprak'] ?? null;
     $pKoor   = $periodeAktif[$selectedPraktikum->id]['koor']   ?? null;
-    
-    $sudahTerdaftar = in_array($selectedPraktikum->id, $praktikumDiikuti);
-    
-    $existingAsprak = \Modules\EOffice\Models\PendaftaranAsprak::where('user_id', auth()->id())
-        ->where('praktikum_id', $selectedPraktikum->id)
-        ->orderByDesc('created_at')
-        ->first();
-    $existingKoor = \Modules\EOffice\Models\PendaftaranKoordinator::where('user_id', auth()->id())
-        ->where('praktikum_id', $selectedPraktikum->id)
-        ->orderByDesc('created_at')
-        ->first();
-        
-    $isAsprakDiPraktikumIni = \Modules\EOffice\Models\AsprakPraktikum::where('user_id', auth()->id())
-        ->where('praktikum_id', $selectedPraktikum->id)
-        ->where('role', 'asprak')
-        ->exists();
-
-    $isKoorDiPraktikumIni = \Modules\EOffice\Models\AsprakPraktikum::where('user_id', auth()->id())
-        ->where('praktikum_id', $selectedPraktikum->id)
-        ->where('role', 'koor')
-        ->exists();
 @endphp
 
 
 
 
 {{-- Dua kolom: Asisten Praktikum | Koordinator --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+<div class="mp-content-grid">
 
     {{-- ====== ASISTEN PRAKTIKUM ====== --}}
     <div>
@@ -190,7 +166,7 @@
                     <input type="file" name="berkas_cerc" accept=".pdf,.jpg,.jpeg,.png,.csv,.xlsx" class="mp-input" style="width:100%;">
                 </div>
 
-                <div>
+                <!-- <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:8px;">Jadwal Ketersediaan</label>
                     <div style="display:flex;flex-wrap:wrap;gap:12px;">
                         @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'] as $hari)
@@ -200,7 +176,7 @@
                         </label>
                         @endforeach
                     </div>
-                </div>
+                </div> -->
 
                 <button type="submit" class="mp-btn primary md" style="margin-top:6px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>

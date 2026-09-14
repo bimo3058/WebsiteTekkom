@@ -9,8 +9,6 @@ use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\Nilai;
 use Modules\EOffice\Models\PendaftaranAsprak;
 use Modules\EOffice\Models\Pengumuman;
-use Modules\EOffice\Models\PengumpulanTugas;
-use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Models\Tugas;
 
 class DashboardController extends Controller
@@ -57,15 +55,16 @@ class DashboardController extends Controller
 
             // Tugas belum dikumpul / mendatang
             $tugasMendatang = Tugas::whereHas('modul', fn($q) => $q->where('praktikum_id', $terdaftarDi->id))
+                ->with(['pengumpulan' => fn ($q) => $q
+                    ->where('daftar_praktikan_id', $dp->id)
+                    ->select('id', 'tugas_id', 'status_pengumpulan')])
                 ->where('is_published', true)
                 ->where('deadline', '>=', now())
                 ->orderBy('deadline')
                 ->limit(5)
                 ->get()
-                ->map(function ($t) use ($dp) {
-                    $pengumpulan = PengumpulanTugas::where('tugas_id', $t->id)
-                        ->where('daftar_praktikan_id', $dp->id)
-                        ->first();
+                ->map(function ($t) {
+                    $pengumpulan = $t->pengumpulan->first();
                     $t->sudah_kumpul = !is_null($pengumpulan);
                     $t->status_tugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
                     return $t;
@@ -87,9 +86,10 @@ class DashboardController extends Controller
                 ->get();
 
             // Statistik absensi
-            $absensiAll = Absensi::where('daftar_praktikan_id', $dp->id)->get();
-            $absensiStat['total'] = $absensiAll->count();
-            $absensiStat['hadir'] = $absensiAll->where('status', 'hadir')->count();
+            $absensi = Absensi::where('daftar_praktikan_id', $dp->id)
+                ->selectRaw('COUNT(*) as total, COUNT(CASE WHEN status = ? THEN 1 END) as hadir', ['hadir'])
+                ->toBase()->first();
+            $absensiStat = ['hadir' => (int) $absensi->hadir, 'total' => (int) $absensi->total];
         } else {
             // Jika belum terdaftar di mana pun, minimal ambil pengumuman sistem (global)
             $pengumuman = Pengumuman::whereIn('tipe_sistem', ['buka', 'tutup'])

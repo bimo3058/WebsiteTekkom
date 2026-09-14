@@ -43,6 +43,7 @@ AI_*.md
 .copilot/
 /Modules/BankSoal/Skills
 *.md
+!Modules/Capstone/PERFORMANCE.md
 *.sql
 
 _design_system_tmp/

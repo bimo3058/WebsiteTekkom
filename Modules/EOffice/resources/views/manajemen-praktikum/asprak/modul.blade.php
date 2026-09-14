@@ -134,7 +134,7 @@
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
             <div style="font-weight:700;font-size:15px;color:#0D0D12;">Edit Modul</div>
             <button onclick="document.getElementById('modal-edit').classList.add('hidden')"
-                    style="color:#666D80;font-size:18px;line-height:1;border:none;background:transparent;cursor:pointer;">✕</button>
+                    style="color:#666D80;font-size:18px;line-height:1;border:none;background:transparent;cursor:pointer;" aria-label="Tutup dialog edit modul" title="Tutup"><x-eoffice::manajemen-praktikum.ui.icon name="close" /></button>
         </div>
         <form id="form-edit" method="POST" style="display:flex;flex-direction:column;gap:12px;">
             @csrf @method('PUT')

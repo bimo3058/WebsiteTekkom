@@ -91,7 +91,8 @@
         </style>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
-    </head>
+        <x-mobile-navigation-assets />
+</head>
 
     @php
         $hasSidebar = request()->is('superadmin*')
@@ -111,7 +112,8 @@
             @endisset
 
             <x-ui.loader />
-        </body>
+            <x-mobile-navigation />
+</body>
     @else
         <body class="font-sans antialiased">
             <div class="min-h-screen" style="background:#F6F8FA;">
@@ -135,6 +137,7 @@
             </div>
 
             <x-ui.loader />
-        </body>
+            <x-mobile-navigation />
+</body>
     @endif
 </html>

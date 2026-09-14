@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class Praktikum extends Model
@@ -51,16 +52,17 @@ class Praktikum extends Model
     {
         try {
             if (!Auth::id()) return;
-            EoAuditLog::create([
+            // A savepoint keeps a failed audit from invalidating an enclosing approval transaction.
+            DB::transaction(fn () => EoAuditLog::create([
                 'user_id'    => Auth::id(),
                 'action'     => $action,
-                'model'      => 'Praktikum',
-                'model_id'   => $this->getKey(),
-                'old_values' => $old,
-                'new_values' => $new,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
+                'subject_type' => 'Praktikum',
+                // The audit subject_id column is numeric; retain the UUID in the payload.
+                'description' => 'Perubahan praktikum '.$this->getKey(),
+                'old_data' => $old,
+                'new_data' => array_merge($new ?? [], ['id' => $this->getKey()]),
+                'created_at' => now(),
+            ]));
         } catch (\Throwable) {}
     }
 

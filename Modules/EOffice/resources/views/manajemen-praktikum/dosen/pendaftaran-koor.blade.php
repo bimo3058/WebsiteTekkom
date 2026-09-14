@@ -10,7 +10,7 @@
 
 {{-- Info Alert --}}
 <div class="mp-alert info flex-shrink-0">
-    <strong>Alur:</strong> Anda mereview data mahasiswa (IPK, motivasi) → Setujui/Tolak → Jika disetujui, masuk ke antrian Admin untuk final approval.
+    <strong>Alur:</strong> Anda mereview data mahasiswa (IPK, motivasi) <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /> Setujui/Tolak <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /> Jika disetujui, masuk ke antrian Admin untuk final approval.
 </div>
 
 {{-- Section: Filter --}}
@@ -135,7 +135,9 @@
                         @endif
                     </td>
                     <td style="padding:12px 16px;text-align:center;">
-                        @if($p->status_dosen === 'disetujui')
+                        @if($p->status === 'approved')
+                        <span class="mp-badge success sm"><span class="dot"></span>Disetujui Admin</span>
+                        @elseif($p->status_dosen === 'disetujui')
                         <div>
                             <span class="mp-badge success sm"><span class="dot"></span>Disetujui</span>
                             <div style="font-size:10px;color:#666D80;margin-top:2px;">Menunggu Admin</div>
@@ -147,7 +149,7 @@
                         @endif
                     </td>
                     <td style="padding:12px 16px;">
-                        @if($p->status_dosen === 'menunggu')
+                        @if($p->status === 'pending' && $p->status_dosen === 'menunggu')
                         <div class="flex gap-2" x-data="{ catatan: '' }">
                             <form method="POST" action="{{ route('eoffice.manprak.dosen.pendaftaran-koor.approve', $p->id) }}">
                                 @csrf

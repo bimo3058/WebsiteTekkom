@@ -29,8 +29,10 @@ class TitleController extends Controller
         }
 
         if ($role === 'mahasiswa') {
-            // Students see only LECTURER titles (exclude student-proposed titles)
+            $periodId = $request->integer('period_id') ?: \Modules\Capstone\Models\PeriodRegistration::where('user_id', CapstoneActor::student($user)->id)->value('period_id');
+            // Student ideas come from the period-scoped Bursa Ide endpoint.
             return Title::where('status', 'open')
+                ->when($periodId, fn($q)=>$q->where(fn($q)=>$q->where('period_id',$periodId)->orWhereNull('period_id')))
                 ->where('quota', '>', 0)
                 ->where(function ($query) {
                     $query->where('title_source', 'LECTURER')

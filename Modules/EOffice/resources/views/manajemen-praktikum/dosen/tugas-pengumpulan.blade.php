@@ -11,7 +11,7 @@
     </div>
     <div class="mp-page-actions">
         <a href="{{ route('eoffice.manprak.dosen.tugas.index') }}" class="mp-btn secondary md" style="text-decoration:none;">
-            ← Kembali ke Daftar Tugas
+            <x-eoffice::manajemen-praktikum.ui.icon name="arrow-left" /> Kembali ke Daftar Tugas
         </a>
     </div>
 </div>
@@ -21,7 +21,7 @@
     <div class="mp-card-header">
         <span class="mp-card-title">Informasi Tugas</span>
     </div>
-    <div style="padding:16px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+    <div class="mp-content-grid" style="padding:16px 20px;">
         <div>
             <div style="font-size:11px;font-weight:600;color:#808897;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Judul</div>
             <div style="font-size:13px;font-weight:600;color:#0D0D12;">{{ $tugas->judul }}</div>

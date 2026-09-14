@@ -143,7 +143,7 @@
                                 <span style="font-size:9px;color:#888;">{{ $r->created_at->format('H:i') }}</span>
                             </div>
                             @if($r->catatan)
-                            <span style="font-size:10px;color:#666D80;margin-top:2px;font-style:italic;" class="truncate">💬 {{ $r->catatan }}</span>
+                            <span style="font-size:10px;color:#666D80;margin-top:2px;font-style:italic;" class="truncate"><x-eoffice::manajemen-praktikum.ui.icon name="message" /> {{ $r->catatan }}</span>
                             @endif
                             <span style="font-size:9px;color:#A4ABB8;margin-top:2px;">{{ $r->created_at->locale('id')->format('d M Y') }}</span>
                         </a>

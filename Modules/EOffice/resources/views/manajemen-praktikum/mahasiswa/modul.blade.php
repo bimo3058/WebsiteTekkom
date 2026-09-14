@@ -42,7 +42,7 @@
         </svg>
         <div style="font-size:13px;font-weight:500;color:#666D80;">Anda belum terdaftar di kelas praktikum manapun.</div>
         <a href="{{ route('eoffice.manprak.mahasiswa.dashboard') }}"
-           class="mp-btn ghost sm" style="text-decoration:none;display:inline-block;margin-top:12px;">← Kembali ke Dashboard</a>
+           class="mp-btn ghost sm" style="text-decoration:none;display:inline-block;margin-top:12px;"><x-eoffice::manajemen-praktikum.ui.icon name="arrow-left" /> Kembali ke Dashboard</a>
     </div>
 </div>
 

@@ -106,7 +106,7 @@ class DashboardController extends Controller
         $now = now();
         $periodeBuka = PeriodePendaftaran::with('praktikum')
             ->where('is_aktif', true)
-            ->whereIn('jenis', ['koor', 'asprak'])
+            ->whereIn('jenis', ['koor', 'asprak', 'praktikan'])
             ->where(function($q) use ($now) {
                 $q->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', $now);
             })

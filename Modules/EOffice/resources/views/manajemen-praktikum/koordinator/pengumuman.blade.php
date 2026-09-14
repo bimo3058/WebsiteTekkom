@@ -71,7 +71,7 @@
         <div class="flex items-center justify-between px-6 py-4 border-b border-[#DFE1E7]">
             <div class="font-bold text-[16px] text-[#0D0D12]">Buat Pengumuman Baru</div>
             <button onclick="document.getElementById('modalCreate').classList.add('hidden')"
-                    class="text-[#666D80] text-xl bg-transparent border-none cursor-pointer hover:text-[#0D0D12]">×</button>
+                    class="text-[#666D80] text-xl bg-transparent border-none cursor-pointer hover:text-[#0D0D12]" aria-label="Tutup dialog pengumuman" title="Tutup"><x-eoffice::manajemen-praktikum.ui.icon name="close" /></button>
         </div>
         <form method="POST" action="{{ route('eoffice.manprak.koor.pengumuman.store') }}" class="p-6">
             @csrf

@@ -2,14 +2,28 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build"
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "build:legacy": "vite build",
+    "test:ui": "node --test tests/calendar.test.mjs tests/document-configuration.test.mjs tests/period-wizard.test.mjs tests/assessment-bank.test.mjs tests/mahasiswa-workspace.test.mjs tests/request-activity.test.mjs",
+    "test:calendar": "node --test tests/calendar.test.mjs",
+    "verify:reference": "node scripts/inventory.mjs",
+    "migration:status": "node scripts/status.mjs"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "dependencies": {
+    "alpinejs": "3.15.12"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "tailwindcss": "4.3.3",
+    "esbuild": "0.27.3",
     "axios": "^1.1.2",
     "laravel-vite-plugin": "^0.7.5",
     "sass": "^1.69.5",
-    "postcss": "^8.3.7",
+    "postcss": "8.5.26",
     "vite": "^4.0.0"
   }
 }

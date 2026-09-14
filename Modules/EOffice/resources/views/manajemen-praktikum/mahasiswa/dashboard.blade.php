@@ -17,78 +17,25 @@
 
         {{-- ── BELUM TERDAFTAR STATE ─────────────────────────────────────────── --}}
 
-        {{-- Hero Banner --}}
-        <div
-            style="background:linear-gradient(135deg,#0E1E54 0%,#0B266E 60%,#4C619A 100%);border-radius:16px;padding:24px 28px;flex-shrink:0;position:relative;overflow:hidden;">
-            {{-- Decorative circles --}}
-            <div
-                style="position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:999px;background:radial-gradient(circle,rgba(255,255,255,.07),transparent 70%);pointer-events:none;">
-            </div>
-            <div
-                style="position:absolute;right:60px;bottom:-30px;width:120px;height:120px;border-radius:999px;background:radial-gradient(circle,rgba(255,255,255,.04),transparent 70%);pointer-events:none;">
-            </div>
-
-            <div style="position:relative;z-index:1;">
-                <div
-                    style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">
-                    Manajemen Praktikum · SIPERKOM</div>
-                <h2
-                    style="font-family:'Inter Tight',sans-serif;font-size:24px;font-weight:700;color:#fff;margin:0 0 8px;line-height:1.2;">
-                    Halo, {{ $firstName }}! 👋</h2>
-                <p style="font-size:13.5px;color:rgba(255,255,255,.78);margin:0 0 20px;line-height:1.5;max-width:480px;">
-                    Belum terdaftar di kelas praktikum. Ikuti langkah di bawah untuk bergabung ke kelas praktikum {{ $semesterLabel }}.
-                </p>
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <span style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:600;background:rgba(255,255,255,0.1);color:#fff;">
-                        Mohon tunggu Admin mendaftarkan Anda ke kelas praktikum.
-                    </span>
-                </div>
+        <div class="mp-page-header">
+            <div>
+                <div class="mp-heading-row"><h1 class="mp-page-title">Dashboard Mahasiswa</h1><span class="mp-badge primary sm">Mahasiswa</span></div>
+                <p class="mp-page-sub">Selamat datang, {{ $firstName }} &middot; {{ $semesterLabel }}</p>
             </div>
         </div>
-
-        {{-- Stepper pendaftaran --}}
-        <div style="background:#F9FAFB;border:1px solid #DFE1E7;border-radius:16px;padding:18px 24px;flex-shrink:0;">
-            <div
-                style="font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;margin-bottom:16px;">
-                Langkah Bergabung ke Kelas Praktikum</div>
-            <div style="display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:flex-start;gap:0;">
-                {{-- Step 1: Unggah IRS --}}
-                <div style="text-align:center;">
-                    <div
-                        style="width:36px;height:36px;border-radius:999px;background:#0B266E;color:#fff;display:flex;align-items:center;justify-content:center;font:700 13px/1 'Inter Tight',sans-serif;margin:0 auto 8px;">
-                        1</div>
-                    <div style="font-size:13px;font-weight:600;color:#0D0D12;">Unggah IRS</div>
-                    <div style="font-size:11px;color:#666D80;margin-top:2px;">Daftarkan dirimu saat periode dibuka</div>
-                </div>
-                <div style="height:2px;background:#DFE1E7;margin-top:18px;width:100%;min-width:20px;"></div>
-                {{-- Step 2: Tunggu Verifikasi --}}
-                <div style="text-align:center;">
-                    <div
-                        style="width:36px;height:36px;border-radius:999px;background:#ECEFF3;color:#666D80;display:flex;align-items:center;justify-content:center;font:700 13px/1 'Inter Tight',sans-serif;margin:0 auto 8px;">
-                        2</div>
-                    <div style="font-size:13px;font-weight:600;color:#0D0D12;">Tunggu Verifikasi</div>
-                    <div style="font-size:11px;color:#666D80;margin-top:2px;">Koordinator memverifikasi IRS kamu</div>
-                </div>
-                <div style="height:2px;background:#DFE1E7;margin-top:18px;width:100%;min-width:20px;"></div>
-                {{-- Step 3: Masukkan Kode --}}
-                <div style="text-align:center;">
-                    <div
-                        style="width:36px;height:36px;border-radius:999px;background:#ECEFF3;color:#666D80;display:flex;align-items:center;justify-content:center;font:700 13px/1 'Inter Tight',sans-serif;margin:0 auto 8px;">
-                        3</div>
-                    <div style="font-size:13px;font-weight:600;color:#0D0D12;">Masukkan Kode</div>
-                    <div style="font-size:11px;color:#666D80;margin-top:2px;">Kode dari Koordinator / Dashboard</div>
-                </div>
-                <div style="height:2px;background:#DFE1E7;margin-top:18px;width:100%;min-width:20px;"></div>
-                {{-- Step 4: Bergabung --}}
-                <div style="text-align:center;">
-                    <div
-                        style="width:36px;height:36px;border-radius:999px;background:#ECEFF3;color:#666D80;display:flex;align-items:center;justify-content:center;font:700 13px/1 'Inter Tight',sans-serif;margin:0 auto 8px;">
-                        4</div>
-                    <div style="font-size:13px;font-weight:600;color:#0D0D12;">Mulai Praktikum</div>
-                    <div style="font-size:11px;color:#666D80;margin-top:2px;">Akses modul, absensi &amp; tugas</div>
-                </div>
+        <section class="mp-card mp-enrollment-guide" aria-labelledby="mp-enrollment-title">
+            <div class="mp-enrollment-intro">
+                <span class="mp-stat-icon navy" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg></span>
+                <div><h2 id="mp-enrollment-title">Belum bergabung ke kelas praktikum</h2><p>Mohon tunggu Admin mendaftarkan Anda ke kelas praktikum. Hubungi Admin atau Koordinator jika memerlukan bantuan.</p></div>
             </div>
-        </div>
+            <h3>Langkah bergabung ke kelas</h3>
+            <ol class="mp-enrollment-steps">
+                <li><span class="mp-step-number"><x-eoffice::manajemen-praktikum.ui.icon name="upload" /></span><div><strong>Unggah IRS</strong><p>Daftar saat periode dibuka.</p></div></li>
+                <li><span class="mp-step-number"><x-eoffice::manajemen-praktikum.ui.icon name="file-check" /></span><div><strong>Tunggu verifikasi</strong><p>Koordinator memeriksa IRS.</p></div></li>
+                <li><span class="mp-step-number"><x-eoffice::manajemen-praktikum.ui.icon name="key" /></span><div><strong>Masukkan kode</strong><p>Gunakan kode dari Koordinator.</p></div></li>
+                <li><span class="mp-step-number"><x-eoffice::manajemen-praktikum.ui.icon name="book" /></span><div><strong>Mulai praktikum</strong><p>Akses modul, absensi, dan tugas.</p></div></li>
+            </ol>
+        </section>
 
         {{-- IRS Disetujui — siap gabung --}}
 
@@ -121,17 +68,7 @@
         </div>
         @endif
 
-        {{-- Empty state if nothing to show --}}
-        @if(!isset($daftarPraktikan) || $daftarPraktikan->isEmpty())
-            <div class="mp-card flex-shrink-0" style="padding:40px;text-align:center;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5"
-                    stroke-linecap="round" style="margin:0 auto 12px;display:block;">
-                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
-                </svg>
-                <div style="font-size:13px;font-weight:500;color:#666D80;">Anda belum terdaftar di kelas praktikum manapun.</div>
-                <div style="font-size:12px;color:#808897;margin-top:4px;">Silakan hubungi Admin atau Koordinator untuk informasi lebih lanjut.</div>
-            </div>
-        @endif
+
 
     @else
 
@@ -141,8 +78,8 @@
         <div class="mp-page-header">
             <div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                    <h1 class="mp-page-title">Halo, {{ $firstName }}!</h1>
-                    <span class="mp-badge warning sm"><span class="dot"></span>Mahasiswa</span>
+                    <h1 class="mp-page-title">Dashboard Mahasiswa</h1>
+                    <span class="mp-badge primary sm">Mahasiswa</span>
                 </div>
                 <p class="mp-page-sub">Selamat datang, {{ $firstName }} ·
             {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel }}
@@ -215,7 +152,7 @@
 
         {{-- Info Praktikum Aktif + Progress Kehadiran --}}
         @if(isset($terdaftarDi) && $terdaftarDi)
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-shrink:0;">
+            <div class="mp-content-grid">
 
                 {{-- Info Praktikum --}}
                 <div class="mp-card" style="padding:20px;">
@@ -311,7 +248,7 @@
                     @endif
                     <div class="right">
                         <a href="{{ route('eoffice.manprak.mahasiswa.tugas.index') }}" class="mp-btn secondary sm"
-                            style="text-decoration:none;">Lihat Semua →</a>
+                            style="text-decoration:none;">Lihat Semua <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /></a>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1">
@@ -358,7 +295,7 @@
                     <span class="mp-card-title">Nilai Praktikum</span>
                     <div class="right">
                         <a href="{{ route('eoffice.manprak.mahasiswa.nilai.index') }}" class="mp-btn secondary sm"
-                            style="text-decoration:none;">Detail →</a>
+                            style="text-decoration:none;">Detail <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /></a>
                     </div>
                 </div>
                 <div class="overflow-y-auto flex-1">

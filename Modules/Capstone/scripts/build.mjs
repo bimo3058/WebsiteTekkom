@@ -1,0 +1,15 @@
+import path from 'node:path';
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
+const root = path.resolve(import.meta.dirname, '../../..');
+const moduleRoot = path.join(root, 'Modules/Capstone');
+const require = createRequire(path.join(moduleRoot, 'package.json'));
+const postcss = require('postcss');
+const tailwind = require('@tailwindcss/postcss');
+const esbuild = require('esbuild');
+const cssFile = path.join(moduleRoot, 'resources/assets/css/app.css');
+fs.mkdirSync(path.join(moduleRoot, 'public/build'), { recursive: true });
+const css = await postcss([tailwind({base:root,optimize:true})]).process(fs.readFileSync(cssFile,'utf8'), {from:cssFile});
+fs.writeFileSync(path.join(moduleRoot,'public/build/app.css'),css.css);
+await esbuild.build({entryPoints:[path.join(moduleRoot,'resources/assets/js/app.js')],bundle:true,minify:true,format:'iife',outfile:path.join(moduleRoot,'public/build/app.js'),target:['es2020']});
+console.log('Capstone Blade assets built in Modules/Capstone/public/build');

@@ -15,6 +15,7 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <x-mobile-navigation-assets />
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased" x-data="{ sidebarOpen: false }" x-cloak>
 <div class="flex h-screen w-full overflow-hidden">
@@ -24,7 +25,7 @@
         x-transition.opacity @click="sidebarOpen = false"></div>
 
     <!-- Sidebar -->
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
+    <aside data-mobile-sidebar :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
         class="fixed inset-y-0 left-0 z-30 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <div class="h-20 flex items-center px-8 border-b border-slate-100 shrink-0">
             <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold mr-4 shadow-md shadow-indigo-200 flex-shrink-0">
@@ -124,5 +125,6 @@
         </div>
     </div>
 </div>
+    <x-mobile-navigation />
 </body>
 </html>

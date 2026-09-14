@@ -143,7 +143,7 @@
                 <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada praktikum yang diampu.</div>
             </div>
         @else
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:18px;">
+            <div class="mp-content-grid" style="padding:18px;">
                 @foreach($praktikums as $p)
                     <div style="border:1px solid #DFE1E7;border-radius:14px;padding:18px;transition:border-color .15s,box-shadow .15s;"
                         onmouseover="this.style.borderColor='#B7C2DE';this.style.boxShadow='0 4px 14px rgba(11,38,110,.07)'"

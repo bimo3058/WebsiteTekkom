@@ -155,11 +155,11 @@
                     {{-- Kehadiran --}}
                     <td style="padding:14px 16px;">
                         @if($statusAbsen === 'hadir')
-                            <span class="mp-badge success sm" style="background:#ECFDF5;color:#10B981;">✓ Hadir</span>
+                            <span class="mp-badge success sm" style="background:#ECFDF5;color:#10B981;"><x-eoffice::manajemen-praktikum.ui.icon name="check" /> Hadir</span>
                         @elseif($statusAbsen === 'izin')
                             <span class="mp-badge sky sm" style="background:#EFF6FF;color:#3B82F6;">Izin</span>
                         @elseif($statusAbsen === 'tidak_hadir')
-                            <span class="mp-badge danger sm" style="background:#FEF2F2;color:#EF4444;">✗ Alpha</span>
+                            <span class="mp-badge danger sm" style="background:#FEF2F2;color:#EF4444;"><x-eoffice::manajemen-praktikum.ui.icon name="close" /> Alpha</span>
                         @else
                             <span style="color:#A4ABB8;font-size:12px;">—</span>
                         @endif

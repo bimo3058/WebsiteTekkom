@@ -490,6 +490,7 @@
             color: #6B39F4;
         }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 
 <body class="h-full overflow-hidden bg-[#F6F8FA] text-[#0D0D12] antialiased"
@@ -626,7 +627,7 @@
         x-init="$watch('sidebarOpen', v => localStorage.setItem('mr_sb', v ? '1' : '0'))">
 
         {{-- SIDEBAR --}}
-        <aside
+        <aside data-mobile-sidebar
             class="flex flex-col flex-shrink-0 bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
             :class="sidebarOpen ? 'w-[272px]' : 'w-[64px]'">
 
@@ -811,6 +812,7 @@
             </div>
         </div>
     </div>
+    <x-mobile-navigation />
 </body>
 
 </html>

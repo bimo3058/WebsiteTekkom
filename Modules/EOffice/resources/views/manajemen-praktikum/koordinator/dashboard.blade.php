@@ -124,7 +124,7 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#956321" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
             <span style="font-size:11px;color:#956321;font-weight:500;">{{ $asprakBelumModul }} asisten praktikum belum mendapat modul</span>
             <a href="{{ route('eoffice.manprak.koor.bagi-modul.index') }}"
-               style="font-size:11px;font-weight:700;color:#0B266E;text-decoration:none;margin-left:4px;" class="hover:underline">Bagi Modul →</a>
+               style="font-size:11px;font-weight:700;color:#0B266E;text-decoration:none;margin-left:4px;" class="hover:underline">Bagi Modul <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /></a>
         </div>
         @else
         <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">

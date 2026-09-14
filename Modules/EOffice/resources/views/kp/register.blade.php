@@ -9,6 +9,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body class="bg-slate-50 min-h-screen">
     
@@ -99,5 +100,6 @@
         </div>
     </div>
 
+    <x-mobile-navigation />
 </body>
 </html>

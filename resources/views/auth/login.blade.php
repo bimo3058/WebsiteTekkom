@@ -348,7 +348,7 @@
 
     {{-- Footer --}}
     <div class="sk-footer">
-        <span>© {{ date('Y') }} Departemen Teknik Komunikasi &bull; Universitas Diponegoro</span>
+        <span>© {{ date('Y') }} Departemen Teknik Komputer &bull; Universitas Diponegoro</span>
         <div class="sk-footer-links">
             <a href="#">Privacy</a>
             <a href="#">Terms</a>

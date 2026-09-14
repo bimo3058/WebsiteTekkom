@@ -1,0 +1,509 @@
+{
+  "total": 83,
+  "counts": {
+    "pending": 48,
+    "implemented": 31,
+    "session-redirect": 2,
+    "page-redirect": 2
+  },
+  "pages": [
+    {
+      "route": "/admin/analytics/progress",
+      "source": "frontend/src/app/admin/analytics/progress/page.tsx",
+      "view": "resources/views/pages/admin/analytics/progress.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/assessment-bank/new",
+      "source": "frontend/src/app/admin/assessment-bank/new/page.tsx",
+      "view": "resources/views/pages/admin/assessment-bank/new.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/assessment-bank",
+      "source": "frontend/src/app/admin/assessment-bank/page.tsx",
+      "view": "resources/views/pages/admin/assessment-bank.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/assessment-bank/[id]/edit",
+      "source": "frontend/src/app/admin/assessment-bank/[id]/edit/page.tsx",
+      "view": "resources/views/pages/admin/assessment-bank/_id_/edit.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/assessments",
+      "source": "frontend/src/app/admin/assessments/page.tsx",
+      "view": "resources/views/pages/admin/assessments.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/audit-logs",
+      "source": "frontend/src/app/admin/audit-logs/page.tsx",
+      "view": "resources/views/pages/admin/audit-logs.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/dashboard",
+      "source": "frontend/src/app/admin/dashboard/page.tsx",
+      "view": "resources/views/pages/admin/dashboard.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/document-requirements",
+      "source": "frontend/src/app/admin/document-requirements/page.tsx",
+      "view": "resources/views/pages/admin/document-requirements.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/document-requirements/[phase]",
+      "source": "frontend/src/app/admin/document-requirements/[phase]/page.tsx",
+      "view": "resources/views/pages/admin/document-requirements/_phase_.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/document-types",
+      "source": "frontend/src/app/admin/document-types/page.tsx",
+      "view": "resources/views/pages/admin/document-types.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/document-uploads",
+      "source": "frontend/src/app/admin/document-uploads/page.tsx",
+      "view": "resources/views/pages/admin/document-uploads.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/evaluation-setup/grade-configuration",
+      "source": "frontend/src/app/admin/evaluation-setup/grade-configuration/page.tsx",
+      "view": "resources/views/pages/admin/evaluation-setup/grade-configuration.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/evaluation-summary/[scheduleId]",
+      "source": "frontend/src/app/admin/evaluation-summary/[scheduleId]/page.tsx",
+      "view": "resources/views/pages/admin/evaluation-summary/_scheduleId_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/expo",
+      "source": "frontend/src/app/admin/expo/page.tsx",
+      "view": "resources/views/pages/admin/expo.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/finalization",
+      "source": "frontend/src/app/admin/finalization/page.tsx",
+      "view": "resources/views/pages/admin/finalization.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/groups",
+      "source": "frontend/src/app/admin/groups/page.tsx",
+      "view": "resources/views/pages/admin/groups.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/groups/[id]",
+      "source": "frontend/src/app/admin/groups/[id]/page.tsx",
+      "view": "resources/views/pages/admin/groups/_id_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/locations",
+      "source": "frontend/src/app/admin/locations/page.tsx",
+      "view": "resources/views/pages/admin/locations.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/peer-review",
+      "source": "frontend/src/app/admin/peer-review/page.tsx",
+      "view": "resources/views/pages/admin/peer-review.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/peer-review/[id]/edit",
+      "source": "frontend/src/app/admin/peer-review/[id]/edit/page.tsx",
+      "view": "resources/views/pages/admin/peer-review/_id_/edit.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/peer-review-dashboard",
+      "source": "frontend/src/app/admin/peer-review-dashboard/page.tsx",
+      "view": "resources/views/pages/admin/peer-review-dashboard.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/period-assessment-config",
+      "source": "frontend/src/app/admin/period-assessment-config/page.tsx",
+      "view": "resources/views/pages/admin/period-assessment-config.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/period-assessment-config/[id]/edit",
+      "source": "frontend/src/app/admin/period-assessment-config/[id]/edit/page.tsx",
+      "view": "resources/views/pages/admin/period-assessment-config/_id_/edit.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/periods/new",
+      "source": "frontend/src/app/admin/periods/new/page.tsx",
+      "view": "resources/views/pages/admin/periods/new.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/periods",
+      "source": "frontend/src/app/admin/periods/page.tsx",
+      "view": "resources/views/pages/admin/periods.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/periods/[id]/edit",
+      "source": "frontend/src/app/admin/periods/[id]/edit/page.tsx",
+      "view": "resources/views/pages/admin/periods/_id_/edit.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/reports/assessments",
+      "source": "frontend/src/app/admin/reports/assessments/page.tsx",
+      "view": "resources/views/pages/admin/reports/assessments.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/evaluator/[evaluatorId]",
+      "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/evaluator/[evaluatorId]/page.tsx",
+      "view": "resources/views/pages/admin/reports/assessments/student/_studentId_/evaluation/_evaluationType_/evaluator/_evaluatorId_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]",
+      "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/page.tsx",
+      "view": "resources/views/pages/admin/reports/assessments/student/_studentId_/evaluation/_evaluationType_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/assessments/student/[studentId]",
+      "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/page.tsx",
+      "view": "resources/views/pages/admin/reports/assessments/student/_studentId_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/final-grades",
+      "source": "frontend/src/app/admin/reports/final-grades/page.tsx",
+      "view": "resources/views/pages/admin/reports/final-grades.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/grade-consistency",
+      "source": "frontend/src/app/admin/reports/grade-consistency/page.tsx",
+      "view": "resources/views/pages/admin/reports/grade-consistency.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/groups",
+      "source": "frontend/src/app/admin/reports/groups/page.tsx",
+      "view": "resources/views/pages/admin/reports/groups.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports",
+      "source": "frontend/src/app/admin/reports/page.tsx",
+      "view": "resources/views/pages/admin/reports.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/pdc1",
+      "source": "frontend/src/app/admin/reports/pdc1/page.tsx",
+      "view": "resources/views/pages/admin/reports/pdc1.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/pdc2",
+      "source": "frontend/src/app/admin/reports/pdc2/page.tsx",
+      "view": "resources/views/pages/admin/reports/pdc2.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/peer-reviews",
+      "source": "frontend/src/app/admin/reports/peer-reviews/page.tsx",
+      "view": "resources/views/pages/admin/reports/peer-reviews.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/reports/ta",
+      "source": "frontend/src/app/admin/reports/ta/page.tsx",
+      "view": "resources/views/pages/admin/reports/ta.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/schedule",
+      "source": "frontend/src/app/admin/schedule/page.tsx",
+      "view": "resources/views/pages/admin/schedule.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/sempro",
+      "source": "frontend/src/app/admin/sempro/page.tsx",
+      "view": "resources/views/pages/admin/sempro.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/settings",
+      "source": "frontend/src/app/admin/settings/page.tsx",
+      "view": "resources/views/pages/admin/settings.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/ta-defense",
+      "source": "frontend/src/app/admin/ta-defense/page.tsx",
+      "view": "resources/views/pages/admin/ta-defense.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/admin/titles",
+      "source": "frontend/src/app/admin/titles/page.tsx",
+      "view": "resources/views/pages/admin/titles.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/users/new",
+      "source": "frontend/src/app/admin/users/new/page.tsx",
+      "view": "resources/views/pages/admin/users/new.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/users",
+      "source": "frontend/src/app/admin/users/page.tsx",
+      "view": "resources/views/pages/admin/users.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/users/[id]/edit",
+      "source": "frontend/src/app/admin/users/[id]/edit/page.tsx",
+      "view": "resources/views/pages/admin/users/_id_/edit.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/admin/users/[id]",
+      "source": "frontend/src/app/admin/users/[id]/page.tsx",
+      "view": "resources/views/pages/admin/users/_id_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/auth/exchange",
+      "source": "frontend/src/app/auth/exchange/page.tsx",
+      "view": "resources/views/pages/auth/exchange.blade.php",
+      "status": "session-redirect"
+    },
+    {
+      "route": "/dosen/bids",
+      "source": "frontend/src/app/dosen/bids/page.tsx",
+      "view": "resources/views/pages/dosen/bids.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/bimbingan",
+      "source": "frontend/src/app/dosen/bimbingan/page.tsx",
+      "view": "resources/views/pages/dosen/bimbingan.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/dashboard",
+      "source": "frontend/src/app/dosen/dashboard/page.tsx",
+      "view": "resources/views/pages/dosen/dashboard.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/dosen/evaluation",
+      "source": "frontend/src/app/dosen/evaluation/page.tsx",
+      "view": "resources/views/pages/dosen/evaluation.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/evaluation/[id]",
+      "source": "frontend/src/app/dosen/evaluation/[id]/page.tsx",
+      "view": "resources/views/pages/dosen/evaluation/_id_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/requests",
+      "source": "frontend/src/app/dosen/requests/page.tsx",
+      "view": "resources/views/pages/dosen/requests.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/schedule",
+      "source": "frontend/src/app/dosen/schedule/page.tsx",
+      "view": "resources/views/pages/dosen/schedule.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/dosen/supervised-groups",
+      "source": "frontend/src/app/dosen/supervised-groups/page.tsx",
+      "view": "resources/views/pages/dosen/supervised-groups.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/supervisor-evaluation",
+      "source": "frontend/src/app/dosen/supervisor-evaluation/page.tsx",
+      "view": "resources/views/pages/dosen/supervisor-evaluation.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/supervisor-evaluation/[groupId]",
+      "source": "frontend/src/app/dosen/supervisor-evaluation/[groupId]/page.tsx",
+      "view": "resources/views/pages/dosen/supervisor-evaluation/_groupId_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/ta-evaluation/[id]",
+      "source": "frontend/src/app/dosen/ta-evaluation/[id]/page.tsx",
+      "view": "resources/views/pages/dosen/ta-evaluation/_id_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/ta-review",
+      "source": "frontend/src/app/dosen/ta-review/page.tsx",
+      "view": "resources/views/pages/dosen/ta-review.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/title-approvals",
+      "source": "frontend/src/app/dosen/title-approvals/page.tsx",
+      "view": "resources/views/pages/dosen/title-approvals.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/titles",
+      "source": "frontend/src/app/dosen/titles/page.tsx",
+      "view": "resources/views/pages/dosen/titles.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/dosen/titles/[id]",
+      "source": "frontend/src/app/dosen/titles/[id]/page.tsx",
+      "view": "resources/views/pages/dosen/titles/_id_.blade.php",
+      "status": "pending"
+    },
+    {
+      "route": "/login",
+      "source": "frontend/src/app/login/page.tsx",
+      "view": "resources/views/pages/login.blade.php",
+      "status": "session-redirect"
+    },
+    {
+      "route": "/mahasiswa/bidding",
+      "source": "frontend/src/app/mahasiswa/bidding/page.tsx",
+      "view": "resources/views/pages/mahasiswa/bidding.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/dashboard",
+      "source": "frontend/src/app/mahasiswa/dashboard/page.tsx",
+      "view": "resources/views/pages/mahasiswa/dashboard.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/documents",
+      "source": "frontend/src/app/mahasiswa/documents/page.tsx",
+      "view": "resources/views/pages/mahasiswa/documents.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/expo",
+      "source": "frontend/src/app/mahasiswa/expo/page.tsx",
+      "view": "resources/views/pages/mahasiswa/expo.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/expo/[expoId]",
+      "source": "frontend/src/app/mahasiswa/expo/[expoId]/page.tsx",
+      "view": "resources/views/pages/mahasiswa/expo/_expoId_.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/grades",
+      "source": "frontend/src/app/mahasiswa/grades/page.tsx",
+      "view": "resources/views/pages/mahasiswa/grades.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/group",
+      "source": "frontend/src/app/mahasiswa/group/page.tsx",
+      "view": "resources/views/pages/mahasiswa/group.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/peer-review",
+      "source": "frontend/src/app/mahasiswa/peer-review/page.tsx",
+      "view": "resources/views/pages/mahasiswa/peer-review.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/propose-title",
+      "source": "frontend/src/app/mahasiswa/propose-title/page.tsx",
+      "view": "resources/views/pages/mahasiswa/propose-title.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/registration",
+      "source": "frontend/src/app/mahasiswa/registration/page.tsx",
+      "view": "resources/views/pages/mahasiswa/registration.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/schedule",
+      "source": "frontend/src/app/mahasiswa/schedule/page.tsx",
+      "view": "resources/views/pages/mahasiswa/schedule.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/ta-defense",
+      "source": "frontend/src/app/mahasiswa/ta-defense/page.tsx",
+      "view": "resources/views/pages/mahasiswa/ta-defense.blade.php",
+      "status": "page-redirect"
+    },
+    {
+      "route": "/mahasiswa/ta-submission",
+      "source": "frontend/src/app/mahasiswa/ta-submission/page.tsx",
+      "view": "resources/views/pages/mahasiswa/ta-submission.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/titles",
+      "source": "frontend/src/app/mahasiswa/titles/page.tsx",
+      "view": "resources/views/pages/mahasiswa/titles.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/mahasiswa/titles/[id]",
+      "source": "frontend/src/app/mahasiswa/titles/[id]/page.tsx",
+      "view": "resources/views/pages/mahasiswa/titles/_id_.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/notifications",
+      "source": "frontend/src/app/notifications/page.tsx",
+      "view": "resources/views/pages/notifications.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/",
+      "source": "frontend/src/app/page.tsx",
+      "view": "resources/views/pages/home.blade.php",
+      "status": "page-redirect"
+    },
+    {
+      "route": "/profile",
+      "source": "frontend/src/app/profile/page.tsx",
+      "view": "resources/views/pages/profile.blade.php",
+      "status": "implemented"
+    },
+    {
+      "route": "/unauthorized",
+      "source": "frontend/src/app/unauthorized/page.tsx",
+      "view": "resources/views/pages/unauthorized.blade.php",
+      "status": "pending"
+    }
+  ]
+}

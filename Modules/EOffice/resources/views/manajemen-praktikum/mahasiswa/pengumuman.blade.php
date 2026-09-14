@@ -223,7 +223,7 @@
                                                 <path
                                                     d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M12 18v-6M9 15h6" />
                                             </svg>
-                                            Daftar Sekarang →
+                                            Daftar Sekarang <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" />
                                         </a>
                                     </div>
                                 @endif

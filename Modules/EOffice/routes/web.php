@@ -16,6 +16,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DosenController as
 
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranAsprakController as AdminPendaftaranAsprakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranKoorController as AdminPendaftaranKoorController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PeriodePraktikanController as AdminPeriodePraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolRoleController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\MatkulPraktikumController;
@@ -40,6 +41,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\DashboardCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\ModulController as KoorModulController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\NilaiController as KoorNilaiController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranAsprakController as KoorPendaftaranAsprakController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranPraktikanController as KoorPendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PengumumanController as KoorPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PeriodePendaftaranController as KoorPeriodePendaftaranController;
 
@@ -57,6 +59,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DaftarAsprakCo
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DashboardController as MhsManprakDashboard;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\ModulController as MhsModulController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\NilaiController as MhsNilaiController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PengumumanController as MhsPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\TugasController as MhsTugasController;
 
@@ -81,6 +84,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 Route::get('/dashboard', [AdminManprakDashboard::class, 'index'])
                     ->name('dashboard');
+                Route::get('pendaftaran-praktikan', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'index'])->name('pendaftaran-praktikan.index');
+                Route::get('pendaftaran/{type}/{id}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'show'])->whereIn('type', ['koor', 'asprak', 'praktikan'])->whereNumber('id')->name('pendaftaran.show');
+                Route::get('pendaftaran/{type}/{id}/dokumen/{document}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'document'])->whereIn('type', ['koor', 'asprak', 'praktikan'])->whereNumber('id')->name('pendaftaran.document');
 
                 Route::get('praktikum/{id}/detail', [PraktikumDetailController::class, 'show'])  // ← TAMBAH INI DULU
                     ->name('praktikum.detail');
@@ -126,6 +132,16 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pendaftaran-koor.approve');
                 Route::post('pendaftaran-koor/{id}/reject', [AdminPendaftaranKoorController::class, 'reject'])
                     ->name('pendaftaran-koor.reject');
+
+                // Periode pendaftaran praktikan
+                Route::get('periode-praktikan', [AdminPeriodePraktikanController::class, 'index'])
+                    ->name('periode-praktikan.index');
+                Route::post('periode-praktikan', [AdminPeriodePraktikanController::class, 'store'])
+                    ->name('periode-praktikan.store');
+                Route::post('periode-praktikan/{id}/tutup', [AdminPeriodePraktikanController::class, 'tutup'])
+                    ->name('periode-praktikan.tutup');
+                Route::delete('periode-praktikan/{id}', [AdminPeriodePraktikanController::class, 'destroy'])
+                    ->name('periode-praktikan.destroy');
 
 
                 // Mata Kuliah Praktikum (CRUD)
@@ -280,6 +296,16 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pendaftaran-asprak.reject');
                 Route::delete('pendaftaran-asprak/{id}', [KoorPendaftaranAsprakController::class, 'destroy'])
                     ->name('pendaftaran-asprak.destroy');
+
+                // Pendaftaran praktikan (verifikasi IRS)
+                Route::get('pendaftaran-praktikan', [KoorPendaftaranPraktikanController::class, 'index'])
+                    ->name('pendaftaran-praktikan.index');
+                Route::post('pendaftaran-praktikan/{id}/approve', [KoorPendaftaranPraktikanController::class, 'approve'])
+                    ->name('pendaftaran-praktikan.approve');
+                Route::post('pendaftaran-praktikan/{id}/reject', [KoorPendaftaranPraktikanController::class, 'reject'])
+                    ->name('pendaftaran-praktikan.reject');
+                Route::post('pendaftaran-praktikan/{id}/reject-irs-default', [KoorPendaftaranPraktikanController::class, 'rejectIrsDefault'])
+                    ->name('pendaftaran-praktikan.reject-irs-default');
 
 
                 Route::get('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'index'])
@@ -437,6 +463,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('daftar-asprak.store');
                 Route::post('daftar-koor', [DaftarAsprakController::class, 'daftarKoor'])
                     ->name('daftar-koor.store');
+
+                // Pendaftaran sebagai praktikan
+                Route::get('pendaftaran-praktikan', [PendaftaranPraktikanController::class, 'index'])
+                    ->name('pendaftaran-praktikan.index');
+                Route::post('pendaftaran-praktikan', [PendaftaranPraktikanController::class, 'store'])
+                    ->name('pendaftaran-praktikan.store');
 
 
             });

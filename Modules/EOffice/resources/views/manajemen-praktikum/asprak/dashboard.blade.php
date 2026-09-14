@@ -165,7 +165,7 @@
             <span class="mp-badge warning sm"><span class="dot"></span>{{ $tugasPendingNilai }} belum dinilai</span>
             @endif
             <div class="right">
-                <a href="{{ route('eoffice.manprak.asprak.tugas.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua →</a>
+                <a href="{{ route('eoffice.manprak.asprak.tugas.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /></a>
             </div>
         </div>
         <div class="overflow-y-auto flex-1">

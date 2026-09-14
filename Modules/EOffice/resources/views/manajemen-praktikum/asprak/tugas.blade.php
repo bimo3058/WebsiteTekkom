@@ -56,12 +56,12 @@
             </div>
 
             <div style="font-size:13px;color:#666D80;margin-bottom:10px;">
-                📚 Modul: <span style="font-weight:600;color:#353849;">{{ $tugas->modul?->nama ?? '—' }}</span>
+                <x-eoffice::manajemen-praktikum.ui.icon name="book" /> Modul: <span style="font-weight:600;color:#353849;">{{ $tugas->modul?->nama ?? '—' }}</span>
                 @if($dl)
-                <br>⏰ Deadline AC: <span style="font-weight:600;color:{{ $lewat ? '#999' : '#353849' }};">{{ $dl->locale('id')->format('d M Y, H:i') }}</span>
+                <br><x-eoffice::manajemen-praktikum.ui.icon name="clock" /> Deadline AC: <span style="font-weight:600;color:{{ $lewat ? '#999' : '#353849' }};">{{ $dl->locale('id')->format('d M Y, H:i') }}</span>
                 @endif
                 @if($tugas->deadline_acc)
-                <br>⏰ Deadline ACC: <span style="font-weight:600;color:{{ now()->gt($tugas->deadline_acc) ? '#DF1C41' : '#353849' }};">{{ \Carbon\Carbon::parse($tugas->deadline_acc)->locale('id')->format('d M Y, H:i') }}</span>
+                <br><x-eoffice::manajemen-praktikum.ui.icon name="clock" /> Deadline ACC: <span style="font-weight:600;color:{{ now()->gt($tugas->deadline_acc) ? '#DF1C41' : '#353849' }};">{{ \Carbon\Carbon::parse($tugas->deadline_acc)->locale('id')->format('d M Y, H:i') }}</span>
                 @endif
             </div>
 
@@ -246,7 +246,7 @@
                                             <div style="font-size:13px;font-weight:600;color:#0D0D12;">{{ $pr->user?->name ?? '—' }}</div>
                                             <div style="font-size:11px;color:#666D80;">{{ $pr->user?->email }}</div>
                                             @if($peng && $peng->catatan)
-                                            <div style="font-size:11px;color:#666D80;margin-top:2px;font-style:italic;" title="{{ $peng->catatan }}">💬 Mhs: {{ Str::limit($peng->catatan, 20) }}</div>
+                                            <div style="font-size:11px;color:#666D80;margin-top:2px;font-style:italic;" title="{{ $peng->catatan }}"><x-eoffice::manajemen-praktikum.ui.icon name="message" /> Mhs: {{ Str::limit($peng->catatan, 20) }}</div>
                                             @endif
                                         </div>
                                     </div>
@@ -287,7 +287,7 @@
                                             {{ Str::limit(basename($firstSub->file_path), 15) }}
                                         </a>
                                         @if($firstSub->catatan)
-                                        <div style="font-size:11px;color:#666D80;margin-top:2px;font-style:italic;" title="{{ $firstSub->catatan }}">💬 Mhs: {{ Str::limit($firstSub->catatan, 20) }}</div>
+                                        <div style="font-size:11px;color:#666D80;margin-top:2px;font-style:italic;" title="{{ $firstSub->catatan }}"><x-eoffice::manajemen-praktikum.ui.icon name="message" /> Mhs: {{ Str::limit($firstSub->catatan, 20) }}</div>
                                         @endif
                                         @if($peng->riwayat->isNotEmpty())
                                         <div x-data="{ openRiwayat: false }" style="position:relative;">
@@ -418,11 +418,11 @@
                                         <div style="padding:6px 8px;background:#FEF2F2;border:1px solid #FEE2E2;border-radius:6px;font-size:11px;width:100%;box-sizing:border-box;">
                                             @if($peng->file_revisi_asprak)
                                             <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($peng->file_revisi_asprak, 'eoffice') }}" target="_blank" style="font-weight:600;color:#95122B;text-decoration:none;display:block;word-break:break-all;" title="{{ basename($peng->file_revisi_asprak) }}">
-                                                📄 {{ Str::limit(basename($peng->file_revisi_asprak), 12) }}
+                                                <x-eoffice::manajemen-praktikum.ui.icon name="file" /> {{ Str::limit(basename($peng->file_revisi_asprak), 12) }}
                                             </a>
                                             @endif
                                             @if($peng->catatan_revisi)
-                                            <div style="color:#7C1028;font-style:italic;margin-top:2px;word-break:break-word;" title="{{ $peng->catatan_revisi }}">💬: {{ Str::limit($peng->catatan_revisi, 25) }}</div>
+                                            <div style="color:#7C1028;font-style:italic;margin-top:2px;word-break:break-word;" title="{{ $peng->catatan_revisi }}"><x-eoffice::manajemen-praktikum.ui.icon name="message" />: {{ Str::limit($peng->catatan_revisi, 25) }}</div>
                                             @endif
                                         </div>
                                         @endif
@@ -438,7 +438,7 @@
                                             {{ Str::limit(basename($latestRevision->file_path), 15) }}
                                         </a>
                                         @if($latestRevision->catatan)
-                                        <div style="font-size:10px;color:#353849;font-style:italic;" title="{{ $latestRevision->catatan }}">💬 Mhs: {{ Str::limit($latestRevision->catatan, 25) }}</div>
+                                        <div style="font-size:10px;color:#353849;font-style:italic;" title="{{ $latestRevision->catatan }}"><x-eoffice::manajemen-praktikum.ui.icon name="message" /> Mhs: {{ Str::limit($latestRevision->catatan, 25) }}</div>
                                         @endif
                                     </div>
                                     @else

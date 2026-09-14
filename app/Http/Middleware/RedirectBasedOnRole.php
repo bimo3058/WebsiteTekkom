@@ -13,6 +13,8 @@ class RedirectBasedOnRole
         'pulse*',
         'profile*',
         'logout',
+        'logout-and-switch',
+        'auth/microsoft/*',
         'sso/password',
         'sso/verify',
         'livewire*',

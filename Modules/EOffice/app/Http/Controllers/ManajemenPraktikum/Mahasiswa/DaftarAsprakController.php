@@ -6,7 +6,6 @@ use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsprakPraktikum;
-use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\PendaftaranAsprak;
 use Modules\EOffice\Models\PendaftaranKoordinator;
 use Modules\EOffice\Models\PeriodePendaftaran;
@@ -27,37 +26,22 @@ class DaftarAsprakController extends Controller
             ->first();
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
-        // Ambil semua praktikum aktif yang punya setidaknya satu periode terbuka
-        // (asprak ATAU koor) — inilah yang relevan untuk halaman pendaftaran
+        // Muat periode sekaligus agar jumlah query tidak bertambah per praktikum.
         $praktikumDenganPeriode = Praktikum::where('status', 'aktif')
-            ->whereHas('periodeAktif') // scope via relasi — lihat bawah
-            ->with(['dosens', 'matkul'])
+            ->whereHas('periodeAktif')
+            ->with(['matkul', 'periodeAktif' => fn ($q) => $q->latest('created_at')])
             ->get();
-
-        // Fallback manual jika relasi belum ada: query langsung
-        if ($praktikumDenganPeriode->isEmpty()) {
-            $praktikumIdsDenganPeriode = PeriodePendaftaran::where('is_aktif', true)
-                ->where(fn($q) => $q->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', now()))
-                ->where(fn($q) => $q->whereNull('ditutup_pada')->orWhere('ditutup_pada', '>', now()))
-                ->pluck('praktikum_id')
-                ->unique();
-
-            $praktikumDenganPeriode = Praktikum::whereIn('id', $praktikumIdsDenganPeriode)
-                ->where('status', 'aktif')
-                ->with(['dosens', 'matkul'])
-                ->get();
-        }
 
         // Cek periode aktif per praktikum (asprak & koor)
         $periodeAktif = [];
         foreach ($praktikumDenganPeriode as $p) {
             $periodeAktif[$p->id] = [
-                'asprak' => $this->getPeriodeAktif($p->id, 'asprak'),
-                'koor'   => $this->getPeriodeAktif($p->id, 'koor'),
+                'asprak' => $p->periodeAktif->firstWhere('jenis', 'asprak'),
+                'koor'   => $p->periodeAktif->firstWhere('jenis', 'koor'),
             ];
         }
 
@@ -65,47 +49,38 @@ class DaftarAsprakController extends Controller
         $sudahJadiAsprak = $user->hasRole('asprak');
         $sudahJadiKoor   = $user->hasRole('koor_prak');
 
-        // Status pendaftaran terakhir user
-        $statusPendaftaranAsprak = PendaftaranAsprak::with('praktikum')
-            ->where('user_id', $user->id)
-            ->orderByDesc('created_at')
-            ->first();
+        $selectedPraktikumId = $request->input('praktikum_id', $praktikumDenganPeriode->first()?->id);
+        $selectedPraktikum = $praktikumDenganPeriode->firstWhere('id', $selectedPraktikumId);
+        $existingAsprak = null;
+        $existingKoor = null;
+        $rolesPraktikum = collect();
 
-        $statusPendaftaranKoor = PendaftaranKoordinator::with('praktikum')
-            ->where('user_id', $user->id)
-            ->orderByDesc('created_at')
-            ->first();
+        if ($selectedPraktikum) {
+            $existingAsprak = PendaftaranAsprak::where('user_id', $user->id)
+                ->where('praktikum_id', $selectedPraktikum->id)
+                ->latest('created_at')->first();
+            $existingKoor = PendaftaranKoordinator::where('user_id', $user->id)
+                ->where('praktikum_id', $selectedPraktikum->id)
+                ->latest('created_at')->first();
+            $rolesPraktikum = AsprakPraktikum::where('user_id', $user->id)
+                ->where('praktikum_id', $selectedPraktikum->id)
+                ->pluck('role');
+        }
 
-        // Praktikum yang sudah diikuti user (untuk info tambahan)
-        $praktikumDiikuti = DaftarPraktikan::where('user_id', $user->id)
-            ->pluck('praktikum_id')
-            ->toArray();
-
-        // Daftar asprak & koor yang sudah lolos (info publik)
-        $praktikumIds = $praktikumDenganPeriode->pluck('id');
-
-        $asprakLolos = AsprakPraktikum::with(['user', 'praktikum'])
-            ->whereIn('praktikum_id', $praktikumIds)
-            ->where('role', 'asprak')
-            ->whereNull('deleted_at')
-            ->get();
-
-        $koorLolos = AsprakPraktikum::with(['user', 'praktikum'])
-            ->whereIn('praktikum_id', $praktikumIds)
-            ->where('role', 'koor')
-            ->whereNull('deleted_at')
-            ->get();
+        $isAsprakDiPraktikumIni = $rolesPraktikum->contains('asprak');
+        $isKoorDiPraktikumIni = $rolesPraktikum->contains('koor');
 
         return view('eoffice::manajemen-praktikum.mahasiswa.daftar-asprak', compact(
             'praktikumDenganPeriode',
             'periodeAktif',
             'sudahJadiAsprak',
             'sudahJadiKoor',
-            'statusPendaftaranAsprak',
-            'statusPendaftaranKoor',
-            'praktikumDiikuti',
-            'asprakLolos',
-            'koorLolos'
+            'selectedPraktikumId',
+            'selectedPraktikum',
+            'existingAsprak',
+            'existingKoor',
+            'isAsprakDiPraktikumIni',
+            'isKoorDiPraktikumIni'
         ));
     }
 
