@@ -610,9 +610,7 @@
             if (count($peminjamanItems) > 0)
                 $userGroups['Peminjaman'] = $peminjamanItems;
 
-            $userGroups['Akun'] = [
-                ['href' => '#', 'label' => 'Profil', 'match' => 'user.profil', 'icon' => $iUser],
-            ];
+
 
             $sections[] = [
                 'label' => 'Akses Mahasiswa',
@@ -629,35 +627,31 @@
 
         {{-- SIDEBAR --}}
         <aside
-            class="flex flex-col flex-shrink-0 bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
-            :class="sidebarOpen ? 'w-[272px]' : 'w-[64px]'">
+            class="flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
+            :class="sidebarOpen ? '' : '!w-[64px]'">
 
-            <div class="relative px-[10px] pt-[18px] pb-[10px]">
-                <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-[10px]">
-                    <div class="flex items-center justify-center w-[34px] h-[34px] flex-shrink-0">
-                        <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP"
-                            class="w-full h-full object-contain drop-shadow-sm">
-                    </div>
-                    <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200"
-                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
-                        <div class="font-bold text-[13px] text-[#0D0D12] leading-[1.2] whitespace-nowrap">SIPERKOM</div>
-                        <div
-                            class="text-[9px] font-semibold text-[#10B981] uppercase tracking-[.04em] whitespace-nowrap">
-                            Man. Ruangan</div>
-                    </div>
+            <div class="relative px-[14px] h-[60px] flex items-center border-b border-[#DFE1E7] flex-shrink-0 transition-all duration-200" :class="sidebarOpen ? 'gap-[8px]' : 'justify-center'">
+                <div class="flex items-center justify-center w-[32px] h-[32px] flex-shrink-0">
+                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" class="w-full h-full object-contain drop-shadow-sm">
                 </div>
+                <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen" x-transition.opacity.duration.200ms>
+                    <div class="font-bold text-[14px] text-[#0D0D12] leading-[1.2] whitespace-nowrap tracking-[-0.01em]">SIPERKOM</div>
+                    <div class="text-[9px] font-medium text-[#808897] whitespace-nowrap mt-[2px]">Manajemen Ruangan</div>
+                </div>
+                
+                {{-- Floating collapse button --}}
                 <button @click="sidebarOpen = !sidebarOpen"
-                    class="absolute right-[-12px] top-[34px] flex items-center justify-center w-6 h-6 rounded-full bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.08)] cursor-pointer z-30 hover:bg-[#F6F8FA]">
+                    class="absolute right-[-14px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[28px] h-[28px] rounded-[7px] bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.05)] cursor-pointer z-30 text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors" title="Toggle Sidebar">
                     <svg class="transition-transform duration-[240ms]" :class="sidebarOpen ? '' : 'rotate-180'"
-                        width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="#666D80" stroke-width="2.2"
-                        stroke-linecap="round">
-                        <path d="M7 1L3 5L7 9" />
+                        width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6" />
                     </svg>
                 </button>
             </div>
 
             <nav
-                class="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-1 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                class="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-1 flex flex-col [scrollbar-width:thin] [scrollbar-color:#DFE1E7_transparent] [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#DFE1E7] [&::-webkit-scrollbar-thumb]:rounded-full">
                 @foreach($sections as $section)
                     @php
                         $sectionColor = $section['color'];
@@ -666,25 +660,23 @@
                     <div class="mb-[2px]">
                         <div>
                             @foreach($section['groups'] as $groupLabel => $items)
-                                <div class="text-[10px] font-semibold text-[#A4ABB8] uppercase tracking-[.06em] px-[10px] pt-[6px] pb-[2px] whitespace-nowrap overflow-hidden transition-opacity duration-200"
+                                <div class="text-[11px] font-semibold text-[#64748b] uppercase tracking-[.05em] px-[14px] pt-[16px] pb-[6px] whitespace-nowrap overflow-hidden transition-opacity duration-200"
                                     :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">{{ $groupLabel }}</div>
 
                                 @foreach($items as $item)
                                     @php $active = str_contains($currentRoute, $item['match']); @endphp
                                     <a href="{{ $item['href'] }}"
-                                        class="group relative flex items-center gap-[10px] px-[12px] py-[9px] rounded-lg mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap {{ $active ? 'bg-[#F1F5F9] text-[#0B266E] font-bold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}"
-                                        :class="sidebarOpen ? '' : 'justify-center'">
+                                        class="group relative flex items-center gap-[9px] pl-[14px] pr-[10px] py-[7px] rounded-[8px] mb-[2px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap {{ $active ? 'bg-[#EEF2FF] text-[#0B266E] font-semibold' : 'text-[#475569] font-medium hover:bg-[#F8FAFC]' }}"
+                                        :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
                                         @if($active)
-                                            <div class="absolute left-0 top-[15%] bottom-[15%] w-[4px] bg-[#0B266E] rounded-r-sm"></div>
+                                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></div>
                                         @endif
-                                        <svg class="w-[18px] h-[18px] flex-shrink-0 transition-colors {{ $active ? 'text-[#0B266E]' : 'text-[#808897]' }}"
+                                        <svg class="w-[16px] h-[16px] flex-shrink-0 transition-colors {{ $active ? 'text-[#0B266E]' : 'text-[#94A3B8]' }}"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <path d="{{ $item['icon'] }}" />
                                         </svg>
-                                        <span
-                                            class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200"
-                                            :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">{{ $item['label'] }}</span>
+                                        <span class="text-[13px] flex-1 overflow-hidden text-ellipsis" x-show="sidebarOpen">{{ $item['label'] }}</span>
                                     </a>
                                 @endforeach
                             @endforeach
@@ -697,26 +689,23 @@
 
                 <div class="h-px bg-[#F0F1F4] mx-[14px] my-[6px]"></div>
                 <a href="{{ route('eoffice.dashboard') }}"
-                    class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg no-underline transition-colors hover:bg-[#F6F8FA] text-[#666D80]"
-                    :class="sidebarOpen ? '' : 'justify-center'">
-                    <svg class="w-[14px] h-[14px] flex-shrink-0 text-[#A4ABB8]" viewBox="0 0 24 24" fill="none"
+                    class="group relative flex items-center gap-[9px] pl-[14px] pr-[10px] py-[7px] rounded-[8px] no-underline transition-colors hover:bg-[#F8FAFC] text-[#475569]"
+                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
+                    <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#94A3B8]" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                         <path d="{{ $iBack }}" />
                     </svg>
-                    <span class="text-[12px] font-medium flex-1 transition-[opacity,width] duration-200"
-                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Kembali ke EOffice Utama</span>
+                    <span class="text-[12px] font-medium flex-1" x-show="sidebarOpen">Kembali ke EOffice Utama</span>
                 </a>
             </nav>
 
-            <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0">
-                <div
-                    class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg overflow-hidden transition-colors hover:bg-[#F6F8FA]">
+            <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0" :class="sidebarOpen ? '' : '!px-[10px]'">
+                <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg overflow-hidden transition-colors hover:bg-[#F6F8FA]"
+                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
                     <div class="flex items-center justify-center w-[30px] h-[30px] rounded-full flex-shrink-0 text-white text-[11px] font-bold"
                         style="background:linear-gradient(135deg,#1F2937,#111827);">{{ $initials }}</div>
-                    <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200"
-                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
-                        <div
-                            class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">
+                    <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen">
+                        <div class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">
                             {{ $name }}
                         </div>
                         <div class="text-[10px] text-[#666D80] whitespace-nowrap overflow-hidden text-ellipsis">

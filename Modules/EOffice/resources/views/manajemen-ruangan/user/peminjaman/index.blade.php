@@ -28,7 +28,7 @@
                         <table class="mp-table" style="table-layout: auto; width: 100%;">
                             <thead>
                                 <tr>
-                                    <th>RUANGAN & TUJUAN</th>
+                                    <th>RUANG & KEGIATAN</th>
                                     <th>JADWAL PEMAKAIAN</th>
                                     <th>LAMPIRAN</th>
                                     <th>STATUS</th>
@@ -39,17 +39,24 @@
                                 @foreach($peminjamans as $booking)
                                     <tr class="mp-tr">
                                         <td>
-                                            <div class="text-[13px] font-medium text-[#111827]">
-                                                {{ $booking->ruangan->nama }}
-                                            </div>
-                                            <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
-                                                title="{{ $booking->tujuan }}">
-                                                {{ $booking->tujuan }}
+                                            <div style="max-width: 220px;">
+                                                <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
+                                                    <span class="truncate" title="{{ $booking->ruangan->nama }}">{{ $booking->ruangan->nama }}</span>
+                                                    @if($booking->created_by && $booking->created_by !== $booking->user_id)
+                                                        <span
+                                                            class="bg-gray-100 text-gray-500 border border-gray-200 text-[9px] px-1.5 py-0.5 rounded font-bold tracking-wider whitespace-nowrap flex-shrink-0"
+                                                            title="Didaftarkan oleh Tata Usaha">Didaftarkan TU</span>
+                                                    @endif
+                                                </div>
+                                                <div class="text-[11px] text-gray-500 truncate mt-0.5"
+                                                    title="{{ $booking->tujuan }}">
+                                                    {{ $booking->tujuan }}
+                                                </div>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="text-[13px] font-medium text-[#111827]">
-                                                {{ \Carbon\Carbon::parse($booking->tanggal_pinjam)->translatedFormat('d F Y') }}
+                                                {{ \Carbon\Carbon::parse($booking->tanggal_pinjam)->translatedFormat('d M Y') }}
                                                 <span class="text-gray-400 mx-1">•</span>
                                                 {{ \Carbon\Carbon::parse($booking->jam_mulai)->format('H:i') }} -
                                                 {{ \Carbon\Carbon::parse($booking->jam_selesai)->format('H:i') }} WIB
@@ -73,19 +80,20 @@
                                         </td>
                                         <td>
                                             @php
-                                                $style = '';
+                                                $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
                                                 if (strtolower($booking->status) === 'disetujui')
-                                                    $style = 'bg-[#E8F8F2] text-[#166534]';
+                                                    $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
                                                 elseif (strtolower($booking->status) === 'ditolak')
-                                                    $style = 'bg-[#FDF2F2] text-[#991B1B]';
+                                                    $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                                 elseif (strtolower($booking->status) === 'menunggu')
-                                                    $style = 'bg-[#FFF9ED] text-[#A77B2E]';
-                                                else
-                                                    $style = 'bg-[#F1F5F9] text-[#1E293B]';
+                                                    $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
+                                                elseif (strtolower($booking->status) === 'selesai')
+                                                    $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
+                                                elseif (strtolower($booking->status) === 'dibatalkan')
+                                                    $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
                                             @endphp
-                                            <span
-                                                class="inline-flex items-center justify-center px-[12px] py-[4px] rounded-full {{ $style }} text-[12px] font-medium tracking-wide">
-                                                {{ ucfirst($booking->status) }}
+                                            <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
+                                                {{ $booking->status }}
                                             </span>
                                         </td>
                                         <td style="text-align: right;">

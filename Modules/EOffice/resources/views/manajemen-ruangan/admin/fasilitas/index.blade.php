@@ -1,28 +1,6 @@
 <x-eoffice::manajemen-ruangan.layout pageTitle="Manajemen Fasilitas">
 
-    <div class="mp-page-header mb-6">
-        <div>
-            <h1 class="mp-page-title">Master Fasilitas</h1>
-            <p class="mp-page-sub">Kelola data fasilitas yang nantinya akan digunakan sebagai katalog pelengkap daftar
-                ruangan fisik.</p>
-        </div>
-    </div>
-
-    @if($errors->any())
-        <div class="bg-red-50 text-red-700 border border-red-200 px-4 py-3 rounded-[10px] mb-6 flex items-center gap-3">
-            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                </path>
-            </svg>
-            <div class="text-[13px] font-medium">
-                @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
-                @endforeach
-            </div>
-        </div>
-    @endif
-
-    <div class="bg-white border border-gray-200 rounded-[12px]" style="box-shadow: 0 1px 3px rgba(0,0,0,0.03);" x-data="{ 
+    <div x-data="{ 
             showAddModal: false,
             selectedItems: [],
             get allSelected() {
@@ -53,11 +31,46 @@
             }
         }">
 
-        <div
-            class="px-5 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 bg-white rounded-t-[12px]">
+        <div class="mp-page-header mb-6">
+            <div>
+                <h1 class="mp-page-title">Master Fasilitas</h1>
+                <p class="mp-page-sub">Kelola data fasilitas yang nantinya akan digunakan sebagai katalog pelengkap daftar
+                    ruangan fisik.</p>
+            </div>
+            <div class="mp-page-actions">
+                <button type="button" @click="showAddModal = true; setTimeout(() => $refs.nama_fasilitas.focus(), 100)"
+                    class="mp-btn primary md">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Tambah Fasilitas
+                </button>
+            </div>
+        </div>
 
-            <div class="flex flex-wrap items-center gap-4">
-                <h2 class="text-[15px] font-bold text-gray-900 tracking-tight">Daftar Fasilitas</h2>
+        @if($errors->any())
+            <div class="bg-red-50 text-red-700 border border-red-200 px-4 py-3 rounded-[10px] mb-6 flex items-center gap-3">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" class="flex-shrink-0">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
+                </svg>
+                <div class="text-[13px] font-medium">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        <div class="bg-white border border-gray-200 rounded-[12px]" style="box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+
+            <div
+                class="px-5 py-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-200 bg-white rounded-t-[12px]">
+
+                <div class="flex flex-wrap items-center gap-4">
+                    <h2 class="text-[15px] font-bold text-gray-900 tracking-tight">Daftar Fasilitas</h2>
 
                 {{-- Bulk Delete Button --}}
                 <div x-show="selectedItems.length > 0" x-transition.opacity style="display: none;"
@@ -94,15 +107,6 @@
                         class="w-full h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400"
                         placeholder="Cari fasilitas...">
                 </form>
-
-                {{-- Quick Add Button --}}
-                <button type="button" @click="showAddModal = true; setTimeout(() => $refs.nama_fasilitas.focus(), 100)"
-                    class="h-[38px] px-4 bg-[#0B266E] text-white rounded-lg flex items-center gap-2 text-[13px] font-medium hover:bg-[#07194A] transition-colors w-full md:w-auto justify-center cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah Fasilitas
-                </button>
             </div>
         </div>
 

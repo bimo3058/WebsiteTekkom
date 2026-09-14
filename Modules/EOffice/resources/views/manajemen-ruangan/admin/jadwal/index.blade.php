@@ -1,8 +1,59 @@
 <x-eoffice::manajemen-ruangan.layout
     pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Event dan Maintenance' }}">
 
-    <div
-        x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}' }">
+    <div x-data="{ 
+        showModal: false, 
+        showImportModal: false, 
+        formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', 
+        kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}',
+        ruanganId: '',
+        currentDay: '1',
+        jamMulai: '',
+        jamSelesai: '',
+        conflictError: '',
+        isCheckingOut: false,
+        checkTimeout: null,
+        
+        triggerCheck() {
+            if(this.checkTimeout) clearTimeout(this.checkTimeout);
+            this.isCheckingOut = true;
+            this.checkTimeout = setTimeout(() => {
+                this.executeCheck();
+            }, 500);
+        },
+        
+        async executeCheck() {
+            if (!this.ruanganId || !this.jamMulai || !this.jamSelesai) {
+                this.isCheckingOut = false;
+                this.conflictError = '';
+                return;
+            }
+            
+            try {
+                let url = `{{ route('eoffice.peminjaman.admin.jadwal-internal.check-collision') }}?ruangan_id=${this.ruanganId}&tipe_jadwal=${this.formType}&kategori=${this.kategoriType}&hari=${this.currentDay}&jam_mulai=${this.jamMulai}&jam_selesai=${this.jamSelesai}`;
+                let res = await fetch(url);
+                let data = await res.json();
+                
+                if (data.conflict) {
+                    this.conflictError = data.message;
+                } else {
+                    this.conflictError = '';
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.isCheckingOut = false;
+            }
+        },
+
+        resetForm() {
+            this.ruanganId = '';
+            this.currentDay = '1';
+            this.jamMulai = '';
+            this.jamSelesai = '';
+            this.conflictError = '';
+        }
+    }">
         <div class="mp-page-header">
             <div>
                 @if($viewMode === 'akademik')
@@ -113,7 +164,7 @@
                                     <label
                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Pilih
                                         Ruangan</label>
-                                    <select name="ruangan_id" required class="mp-input text-[14px]">
+                                    <select name="ruangan_id" required class="mp-input text-[14px]" x-model="ruanganId" @change="triggerCheck()">
                                         <option value="" disabled selected>-- Pilih Ruangan Kelas --</option>
                                         @foreach($ruangans as $r)
                                             <option value="{{ $r->id }}">{{ $r->nama }} - Lt. {{ $r->lantai }}</option>
@@ -150,7 +201,7 @@
                                         <label
                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari
                                             Pertemuan</label>
-                                        <select name="hari" required class="mp-input text-[14px]">
+                                        <select name="hari" required class="mp-input text-[14px]" x-model="currentDay" @change="triggerCheck()">
                                             <option value="1">Senin</option>
                                             <option value="2">Selasa</option>
                                             <option value="3">Rabu</option>
@@ -164,12 +215,12 @@
                                         <div>
                                             <label
                                                 class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Mulai</label>
-                                            <input type="time" name="jam_mulai" required class="mp-input text-[14px]">
+                                            <input type="time" name="jam_mulai" required class="mp-input text-[14px]" x-model="jamMulai" @input="triggerCheck()">
                                         </div>
                                         <div>
                                             <label
                                                 class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Akhir</label>
-                                            <input type="time" name="jam_selesai" required class="mp-input text-[14px]">
+                                            <input type="time" name="jam_selesai" required class="mp-input text-[14px]" x-model="jamSelesai" @input="triggerCheck()">
                                         </div>
                                     </div>
                                 </div>
@@ -196,12 +247,18 @@
                                             class="mp-input text-[14px]">
                                     </div>
                                 </div>
+                                
+
+                                <div x-show="conflictError" x-transition class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
+                                    <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <span x-text="conflictError"></span>
+                                </div>
                             </div>
 
                             <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                <button type="button" @click="showModal = false"
+                                <button type="button" @click="showModal = false; resetForm()"
                                     class="mp-btn secondary md">Batal</button>
-                                <button type="submit" class="mp-btn primary md">Simpan Konfigurasi</button>
+                                <button type="submit" class="mp-btn primary md" :disabled="conflictError !== '' || isCheckingOut">Simpan Konfigurasi</button>
                             </div>
                         </form>
                     </div>
@@ -469,14 +526,14 @@
                 <div class="mp-table-wrap">
                     <table class="mp-table">
                         <thead>
-                            <tr>
-                                <th>HARI</th>
-                                <th>WAKTU</th>
-                                <th>MATA KULIAH</th>
-                                <th style="text-align: center;">KELAS</th>
-                                <th>RUANGAN</th>
-                                <th>PERIODE</th>
-                                <th style="width: 80px; text-align: center;">AKSI</th>
+                            <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Hari</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Mata Kuliah</th>
+                                <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Kelas</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan</th>
+                                <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Periode</th>
+                                <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width: 80px;">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -491,12 +548,13 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div style="font-weight: 700; color: #0D0D12;">
+                                        <div style="color: #0D0D12;">
                                             {{ substr($j->jam_mulai, 0, 5) }} - {{ substr($j->jam_selesai, 0, 5) }}
                                         </div>
                                     </td>
-                                    <td>
-                                        <div style="font-size: 13px; font-weight: 700; color:#0D0D12;">
+                                    <td style="max-width: 200px;">
+                                        <div style="font-size: 13px; color:#0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                            title="{{ $j->mata_kuliah ?: '-' }}">
                                             {{ $j->mata_kuliah ?: '-' }}
                                         </div>
                                     </td>
@@ -506,12 +564,11 @@
                                             {{ $j->kelas ?: '-' }}
                                         </div>
                                     </td>
-                                    <td>
-                                        <div style="font-weight: 700; color: #0D0D12;">
+                                    <td style="max-width: 180px;">
+                                        <div style="color: #0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                            title="{{ $j->ruangan->nama ?? 'Tidak Diketahui' }} (Lt. {{ $j->ruangan->lantai ?? '-' }})">
                                             {{ $j->ruangan->nama ?? 'Tidak Diketahui' }}
-                                            <span
-                                                style="font-size: 12px; color: #666D80; margin-left: 4px; font-weight: 500;">(Lt.
-                                                {{ $j->ruangan->lantai ?? '-' }})</span>
+                                            <span style="font-size: 12px; color: #666D80; margin-left: 4px;">(Lt. {{ $j->ruangan->lantai ?? '-' }})</span>
                                         </div>
                                     </td>
                                     <td>
@@ -525,49 +582,98 @@
                                         </div>
                                     </td>
                                     <td style="text-align: center;"
-                                        x-data="{ showDropdown: false, showEditModal: false, formType: '{{ $j->tipe_jadwal }}', kategoriType: '{{ $j->kategori }}' }">
-                                        <div class="relative inline-flex justify-center w-full relative z-[1]">
-                                            <button type="button" @click="showDropdown = !showDropdown"
-                                                @click.away="showDropdown = false"
-                                                class="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-1.5 rounded-md transition-colors">
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                        x-data="{ 
+                                            showDropdown: false, 
+                                            showEditModal: false, 
+                                            formType: '{{ $j->tipe_jadwal }}', 
+                                            kategoriType: '{{ $j->kategori }}',
+                                            ruanganId: '{{ $j->ruangan_id }}',
+                                            currentDay: '{{ $j->hari }}',
+                                            jamMulai: '{{ substr($j->jam_mulai, 0, 5) }}',
+                                            jamSelesai: '{{ substr($j->jam_selesai, 0, 5) }}',
+                                            conflictError: '',
+                                            isCheckingOut: false,
+                                            checkTimeout: null,
+                                            
+                                            triggerCheck() {
+                                                if(this.checkTimeout) clearTimeout(this.checkTimeout);
+                                                this.isCheckingOut = true;
+                                                this.checkTimeout = setTimeout(() => {
+                                                    this.executeCheck();
+                                                }, 500);
+                                            },
+                                            
+                                            async executeCheck() {
+                                                if (!this.ruanganId || !this.jamMulai || !this.jamSelesai) {
+                                                    this.isCheckingOut = false;
+                                                    this.conflictError = '';
+                                                    return;
+                                                }
+                                                
+                                                try {
+                                                    let url = `{{ route('eoffice.peminjaman.admin.jadwal-internal.check-collision') }}?ruangan_id=${this.ruanganId}&tipe_jadwal=${this.formType}&kategori=${this.kategoriType}&hari=${this.currentDay}&jam_mulai=${this.jamMulai}&jam_selesai=${this.jamSelesai}&exclude_id={{ $j->id }}`;
+                                                    let res = await fetch(url);
+                                                    let data = await res.json();
+                                                    
+                                                    if (data.conflict) {
+                                                        this.conflictError = data.message;
+                                                    } else {
+                                                        this.conflictError = '';
+                                                    }
+                                                } catch (e) {
+                                                    console.error(e);
+                                                } finally {
+                                                    this.isCheckingOut = false;
+                                                }
+                                            },
+                                            
+                                            resetEditForm() {
+                                                this.ruanganId = '{{ $j->ruangan_id }}';
+                                                this.currentDay = '{{ $j->hari }}';
+                                                this.jamMulai = '{{ substr($j->jam_mulai, 0, 5) }}';
+                                                this.jamSelesai = '{{ substr($j->jam_selesai, 0, 5) }}';
+                                                this.conflictError = '';
+                                            }
+                                        }">
+                                        <div class="relative inline-block" x-data="{ showDropdown: false }">
+                                            <button type="button" @click="showDropdown = !showDropdown" @click.outside="showDropdown = false"
+                                                class="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
+                                                <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
+                                                    <circle cx="5" cy="12" r="2"></circle>
+                                                    <circle cx="12" cy="12" r="2"></circle>
+                                                    <circle cx="19" cy="12" r="2"></circle>
                                                 </svg>
                                             </button>
 
                                             <div x-show="showDropdown" style="display:none;"
                                                 x-transition:enter="transition ease-out duration-100"
-                                                x-transition:enter-start="transform opacity-0 scale-95"
-                                                x-transition:enter-end="transform opacity-100 scale-100"
-                                                x-transition:leave="transition ease-in duration-75"
-                                                x-transition:leave-start="transform opacity-100 scale-100"
-                                                x-transition:leave-end="transform opacity-0 scale-95"
-                                                class="origin-top-right absolute right-5 top-0 mt-8 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]">
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                class="absolute right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-[10px] shadow-[0_8px_24px_rgba(0,0,0,.1)] min-w-[160px] z-[40] overflow-hidden p-1.5">
                                                 
                                                 <button type="button"
                                                     @click="showEditModal = true; showDropdown = false"
-                                                    class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
-                                                    <svg class="w-[14px] h-[14px] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                                                        </path>
+                                                    class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-gray-600 hover:bg-gray-100 transition-colors border-0 bg-transparent cursor-pointer text-left">
+                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z"></path>
                                                     </svg>
                                                     Edit Jadwal
                                                 </button>
                                                 
+                                                <div class="h-[1px] bg-gray-100 my-1 mx-1.5"></div>
+                                                
                                                 <form
                                                     action="{{ route('eoffice.peminjaman.admin.jadwal-internal.destroy', $j->id) }}"
                                                     method="POST"
-                                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus blokir jadwal ini?');">
+                                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus blokir jadwal ini?');"
+                                                    style="margin:0;">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit"
-                                                        class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
-                                                        <svg class="w-[14px] h-[14px] text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                            </path>
+                                                        class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border-0 bg-transparent cursor-pointer text-left">
+                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                                                         </svg>
                                                         Hapus Jadwal
                                                     </button>
@@ -590,7 +696,7 @@
                                                     x-transition:leave-start="opacity-100"
                                                     x-transition:leave-end="opacity-0"
                                                     class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-md"
-                                                    aria-hidden="true" @click="showEditModal = false"></div>
+                                                    aria-hidden="true" @click="showEditModal = false; resetEditForm()"></div>
                                                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen"
                                                     aria-hidden="true">&#8203;</span>
 
@@ -607,7 +713,7 @@
                                                         <h3 class="text-[18px] font-bold text-gray-900" id="modal-title">
                                                             Edit
                                                             Jadwal Internal</h3>
-                                                        <button type="button" @click="showEditModal = false"
+                                                        <button type="button" @click="showEditModal = false; resetEditForm()"
                                                             class="text-gray-400 hover:text-gray-500">
                                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                                 viewBox="0 0 24 24">
@@ -628,7 +734,7 @@
                                                                     class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Tipe
                                                                     Ruangan</label>
                                                                 <select name="ruangan_id" required
-                                                                    class="mp-input text-[14px]">
+                                                                    class="mp-input text-[14px]" x-model="ruanganId" @change="triggerCheck()">
                                                                     @foreach($ruangans as $r)
                                                                         <option value="{{ $r->id }}" {{ $r->id == $j->ruangan_id ? 'selected' : '' }}>{{ $r->nama }} - Lt.
                                                                             {{ $r->lantai }}
@@ -674,7 +780,7 @@
                                                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari
                                                                         Pertemuan</label>
                                                                     <select name="hari" required
-                                                                        class="mp-input text-[14px]">
+                                                                        class="mp-input text-[14px]" x-model="currentDay" @change="triggerCheck()">
                                                                         <option value="1" {{ $j->hari == 1 ? 'selected' : '' }}>Senin</option>
                                                                         <option value="2" {{ $j->hari == 2 ? 'selected' : '' }}>Selasa</option>
                                                                         <option value="3" {{ $j->hari == 3 ? 'selected' : '' }}>Rabu</option>
@@ -689,14 +795,14 @@
                                                                         <label
                                                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Mulai</label>
                                                                         <input type="time" name="jam_mulai"
-                                                                            value="{{ substr($j->jam_mulai, 0, 5) }}"
+                                                                            x-model="jamMulai" @input="triggerCheck()"
                                                                             required class="mp-input text-[14px]">
                                                                     </div>
                                                                     <div>
                                                                         <label
                                                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Akhir</label>
                                                                         <input type="time" name="jam_selesai"
-                                                                            value="{{ substr($j->jam_selesai, 0, 5) }}"
+                                                                            x-model="jamSelesai" @input="triggerCheck()"
                                                                             required class="mp-input text-[14px]">
                                                                     </div>
                                                                 </div>
@@ -726,13 +832,17 @@
                                                                         class="mp-input text-[14px]">
                                                                 </div>
                                                             </div>
+                                                            <div x-show="conflictError" x-transition class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
+                                                                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                                <span x-text="conflictError"></span>
+                                                            </div>
                                                         </div>
 
                                                         <div
                                                             class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
-                                                            <button type="button" @click="showEditModal = false"
+                                                            <button type="button" @click="showEditModal = false; resetEditForm()"
                                                                 class="mp-btn secondary md">Batal</button>
-                                                            <button type="submit" class="mp-btn primary md">Simpan
+                                                            <button type="submit" class="mp-btn primary md" :disabled="conflictError !== '' || isCheckingOut">Simpan
                                                                 Perubahan</button>
                                                         </div>
                                                     </form>

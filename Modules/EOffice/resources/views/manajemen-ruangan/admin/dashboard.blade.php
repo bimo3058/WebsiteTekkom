@@ -70,12 +70,12 @@
             <div class="mp-table-wrap">
                 <table class="mp-table">
                     <thead>
-                        <tr>
-                            <th>PEMINJAM</th>
-                            <th>RUANGAN</th>
-                            <th>TUJUAN</th>
-                            <th>WAKTU PEMAKAIAN</th>
-                            <th>STATUS</th>
+                        <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; text-transform:uppercase;">Peminjam</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; text-transform:uppercase;">Ruangan</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; text-transform:uppercase;">Kegiatan</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; text-transform:uppercase;">Waktu</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; text-transform:uppercase;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -84,8 +84,11 @@
                                 <td style="font-weight: 600;">
                                     {{ $act->user->name ?? 'Pegawai / Mahasiswa' }}
                                 </td>
-                                <td>{{ $act->ruangan->nama ?? '-' }}</td>
-                                <td style="max-width: 200px;" class="truncate" title="{{ $act->tujuan }}">{{ $act->tujuan }}
+                                <td style="max-width: 260px;" class="truncate" title="{{ $act->ruangan->nama ?? '-' }}">
+                                    {{ $act->ruangan->nama ?? '-' }}
+                                </td>
+                                <td style="max-width: 260px;" class="truncate" title="{{ $act->tujuan }}">
+                                    {{ $act->tujuan }}
                                 </td>
                                 <td>
                                     @php 

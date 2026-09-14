@@ -23,6 +23,16 @@
 
             $isMenunggu = $b->status === 'menunggu';
 
+            $namaPengguna = explode(' ', trim($b->user->name ?? 'Mhs'))[0];
+            $cleanTujuan = trim(str_ireplace('digunakan untuk', '', $b->tujuan ?? ''));
+            $cleanTujuan = str_ireplace(' - Kelas ', '-', $cleanTujuan);
+            $cleanTujuan = str_ireplace(' (Kelas ', '-', $cleanTujuan);
+            $cleanTujuan = str_replace(')', '', $cleanTujuan);
+            $words = explode(' ', $cleanTujuan);
+            if (count($words) > 3) {
+                $cleanTujuan = implode(' ', array_slice($words, 0, 3)) . '..';
+            }
+
             for ($h = $mulai; $h < $selesai; $h++) {
                 $slotMap[$tgl][$b->ruangan_id][$h] = [
                     'id' => 'pm_' . $b->id,
@@ -32,10 +42,10 @@
                     'waktu' => substr($b->jam_mulai, 0, 5) . ' - ' . substr($b->jam_selesai, 0, 5),
                     'type' => 'Peminjaman',
                     'telepon' => $b->nomor_telepon ?? '-',
-                    'label' => strtoupper(substr($b->user->name ?? 'Mhs', 0, 15)),
-                    'bg' => $isMenunggu ? '#FEF9C3' : '#DBEAFE',
-                    'border' => $isMenunggu ? '#FBBF24' : '#60A5FA',
-                    'text' => $isMenunggu ? '#B45309' : '#1E40AF',
+                    'label' => $isMenunggu ? 'Menunggu' : strtoupper(substr($b->user->name ?? 'Mhs', 0, 15)),
+                    'bg' => $isMenunggu ? '#FEF9C3' : '#EDE9FE',
+                    'border' => $isMenunggu ? '#FBBF24' : '#C4B5FD',
+                    'text' => $isMenunggu ? '#B45309' : '#5B21B6',
                     'cursor' => 'pointer'
                 ];
             }
@@ -50,9 +60,9 @@
                 $selesai += 1;
             }
 
-            $bg = $j->tipe_jadwal === 'rutin' ? '#EDE9FE' : '#FEE2E2';
-            $border = $j->tipe_jadwal === 'rutin' ? '#C4B5FD' : '#FCA5A5';
-            $text = $j->tipe_jadwal === 'rutin' ? '#5B21B6' : '#991B1B';
+            $bg = $j->tipe_jadwal === 'rutin' ? '#DBEAFE' : '#FEE2E2';
+            $border = $j->tipe_jadwal === 'rutin' ? '#60A5FA' : '#FCA5A5';
+            $text = $j->tipe_jadwal === 'rutin' ? '#1E40AF' : '#991B1B';
             $eventName = $j->mata_kuliah ? trim($j->mata_kuliah . ' ' . $j->kelas) : ($j->keterangan ?: $j->kategori);
             $payload = [
                 'id' => 'it_' . $j->id,
@@ -150,11 +160,11 @@
                 {{-- Mode Toggle --}}
                 <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
                         Mingguan
                     </a>
                     <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-primary-500 shadow-sm' : 'text-gray-500 hover:text-gray-700' }}">
+                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
                         Bulanan
                     </a>
                 </div>
@@ -174,7 +184,7 @@
                 <span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> Menunggu Persetujuan
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-sm bg-red-400 inline-block"></span> Terpakai / Penuh
+                <span class="w-3 h-3 rounded-sm bg-red-400 inline-block"></span> Terpakai
             </div>
         </div>
 
@@ -282,11 +292,10 @@
                                 </th>
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}"
-                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                                                                {{ $day->isToday() ? 'background: #EBEDF6; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E;
+                                                            {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
-                                        <div
-                                            style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#5D6DA2' : '#6B7280' }}; margin-top:2px;">
+                                        <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">
                                             {{ $day->format('d/m') }}
                                         </div>
                                     </th>
@@ -350,29 +359,26 @@
                                                         @mouseout="!isDragging && ($el.style.background = '{{ $bgT }}'); !isDragging && ($el.style.transform = 'scale(1)')"
                                                         class="select-none"
                                                         :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
-                                                                                                                                                                                                                            ? 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: #6EE7B7; border: 1px solid #059669; border-radius:6px; transform: scale(1.05); z-index: 10; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};' 
-                                                                                                                                                                                                                            : 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: {{ $bgT }}; border:1px solid {{ $borderT }}; border-radius:6px; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};'"
-                                                        title="Booking Jalur Tol {{ $ruang->nama }} — pukul {{ $hStr }}">
-                                                        <span
-                                                            x-show="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}')"
-                                                            style="display:none; font-size:12px; font-weight:700;">✓</span>
+                                                                                                                                                                                                                                                                                        ? 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: #6EE7B7; border: 1px solid #059669; border-radius:6px; transform: scale(1.05); z-index: 10; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};' 
+                                                                                                                                                                                                                                                                                        : 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: {{ $bgT }}; border:1px solid {{ $borderT }}; border-radius:6px; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};'"
+                                                        title="Booking Cepat {{ $ruang->nama }} pukul {{ $hStr }}">
                                                     </button>
                                                 @elseif($st === 'event')
                                                     <div @click.stop="window.dispatchEvent(new CustomEvent('open-event-modal', {
-                                                                                                                                                                                                                                                                    detail: {
-                                                                                                                                                                                                                                                                        title: '{{ addslashes($label) }}',
-                                                                                                                                                                                                                                                                        pengguna: '{{ addslashes($payload["pengguna"] ?? "") }}',
-                                                                                                                                                                                                                                                                        ruangan: '{{ addslashes($ruang->nama) }}',
-                                                                                                                                                                                                                                                                        tujuan: '{{ addslashes($payload["tujuan"] ?? "") }}',
-                                                                                                                                                                                                                                                                        waktu: '{{ addslashes($payload["waktu"] ?? "") }}',
-                                                                                                                                                                                                                                                                        type: '{{ addslashes($payload["type"] ?? "") }}',
-                                                                                                                                                                                                                                                                        telepon: '{{ addslashes($payload["telepon"] ?? "-") }}'
-                                                                                                                                                                                                                                                                    }
-                                                                                                                                                                                                                                                                }))"
+                                                                                                                                                                                                                                                                                                                                detail: {
+                                                                                                                                                                                                                                                                                                                                    title: '{{ addslashes($label) }}',
+                                                                                                                                                                                                                                                                                                                                    pengguna: '{{ addslashes($payload["pengguna"] ?? "") }}',
+                                                                                                                                                                                                                                                                                                                                    ruangan: '{{ addslashes($ruang->nama) }}',
+                                                                                                                                                                                                                                                                                                                                    tujuan: '{{ addslashes($payload["tujuan"] ?? "") }}',
+                                                                                                                                                                                                                                                                                                                                    waktu: '{{ addslashes($payload["waktu"] ?? "") }}',
+                                                                                                                                                                                                                                                                                                                                    type: '{{ addslashes($payload["type"] ?? "") }}',
+                                                                                                                                                                                                                                                                                                                                    telepon: '{{ addslashes($payload["telepon"] ?? "-") }}'
+                                                                                                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                                                                                                            }))"
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; padding:0 4px; overflow:hidden;
-                                                                                                                                                                                                                                                                       background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:6px;
-                                                                                                                                                                                                                                                                       font-size:10px; font-weight:700; color:{{ $text }};
-                                                                                                                                                                                                                                                                       cursor:pointer; opacity: {{ $payload['opacity'] ?? '1' }}; transition: transform 0.1s;"
+                                                                                                                                                                                                                                                                                                                                   background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:6px;
+                                                                                                                                                                                                                                                                                                                                   font-size:10px; font-weight:700; color:{{ $text }};
+                                                                                                                                                                                                                                                                                                                                   cursor:pointer; opacity: {{ $payload['opacity'] ?? '1' }}; transition: transform 0.1s;"
                                                         onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.1)'"
                                                         onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                                         {{ $label }}
@@ -469,12 +475,12 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                  background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #5D6DA2' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                  transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                                                                      background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                                      transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
-                                        style="font-size:13px; font-weight:700; color: {{ $isToday ? '#4338CA' : ($isClosed ? '#9CA3AF' : '#111827') }};">
+                                        style="font-size:13px; font-weight:700; color: {{ $isToday ? '#0B266E' : ($isClosed ? '#9CA3AF' : '#111827') }};">
                                         {{ $cell->format('d') }}
                                     </div>
                                     @if($isHoliday)
@@ -499,7 +505,7 @@
 
             <div class="mt-4 text-[12px] text-gray-500 font-medium">
                 💡 <strong>Tips:</strong> Klik tanggal manapun untuk beralih ke tampilan <span
-                    class="text-primary-500 font-bold">Mingguan</span> di minggu tersebut secara detail.
+                    class="text-[#0B266E] font-bold">Mingguan</span> di minggu tersebut secara detail.
             </div>
         @endif
 
@@ -723,11 +729,11 @@
                                         Mode Tindakan</label>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label class="border rounded-lg p-3 cursor-pointer transition-colors"
-                                            :class="modeAction === 'internal' ? 'bg-primary-50 border-primary-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                            :class="modeAction === 'internal' ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
                                             <input type="radio" name="tipe_aksi" value="internal" x-model="modeAction"
                                                 class="hidden">
                                             <div class="font-bold text-sm"
-                                                :class="modeAction === 'internal' ? 'text-primary-500' : 'text-gray-700'">
+                                                :class="modeAction === 'internal' ? 'text-emerald-700' : 'text-gray-700'">
                                                 Jadwal Internal</div>
                                             <div class="text-[10px] text-gray-500 mt-1">Blokir Kuliah / Maintenance
                                             </div>
@@ -891,19 +897,14 @@
                         </form>
                     </div>
 
-                    {{-- Footer / Actions --}}
                     <div class="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
                         <button type="button" @click="show = false"
                             class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200">
                             Batal
                         </button>
                         <button type="submit" form="expressBookingForm"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-primary-500 border border-transparent rounded-lg shadow-sm hover:bg-primary-500 transition-colors focus:ring-2 focus:ring-primary-500 focus:ring-offset-2">
+                            class="inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] border border-transparent rounded-lg shadow-sm hover:bg-[#071946] transition-colors focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2">
                             Simpan
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
                         </button>
                     </div>
                 </div>
