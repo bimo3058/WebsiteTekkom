@@ -1,0 +1,10 @@
+const fs = require('fs');
+let content = fs.readFileSync('Modules/EOffice/resources/views/manajemen-praktikum/asprak/tugas-pengumpulan.blade.php', 'utf8');
+content = content.replace(/<span style="font-size:11px;color:#A4ABB8;font-weight:normal;">.*?<\/span>/g, '<span style="font-size:11px;color:#A4ABB8;font-weight:normal;">&ndash;</span>');
+content = content.replace(/<span style="font-size:12px;color:#999;">.*?<\/span>/g, '<span style="font-size:12px;color:#999;">&ndash;</span>');
+content = content.replace(/\{\{\s*\\\->user\?->name \?\? '.*?'\s*\}\}/g, '{!! \->user?->name ?? \'&ndash;\' !!}');
+content = content.replace(/\{\{\s*\\\->user\?->student\?->student_number \?\? '.*?'\s*\}\}/g, '{!! \->user?->student?->student_number ?? \'&ndash;\' !!}');
+content = content.replace(/\{\{\s*\\\ \?: '.*?'\s*\}\}/g, '{!! \ ?: \'&ndash;\' !!}');
+content = content.replace(/\?\? Mhs:/g, '?? Mhs:');
+fs.writeFileSync('Modules/EOffice/resources/views/manajemen-praktikum/asprak/tugas-pengumpulan.blade.php', content, 'utf8');
+console.log('done');

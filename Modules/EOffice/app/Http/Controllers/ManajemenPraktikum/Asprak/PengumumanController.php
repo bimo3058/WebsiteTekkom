@@ -28,14 +28,27 @@ class PengumumanController extends Controller
 
         $praktikumList = $asprakList->map(fn($a) => $a->praktikum)->filter();
 
-        // Praktikum yang dipilih (default ke yang pertama)
-        $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
-        $asprak      = $asprakList->firstWhere('praktikum_id', $praktikumId);
-        $praktikum   = $praktikumList->firstWhere('id', $praktikumId);
+        // Ambil asprak yang sudah di-resolve oleh middleware (paling akurat)
+        $asprakFromMiddleware = $request->attributes->get('asprak');
 
-        // Pengumuman hanya untuk praktikum yang dipilih
+        // Praktikum yang dipilih: prioritaskan middleware → query param → session → pertama
+        $praktikumId = $asprakFromMiddleware?->praktikum_id
+            ?? $request->input('praktikum_id')
+            ?? session('manprak_asprak_praktikum_id')
+            ?? $praktikumList->first()?->id;
+
+        $asprak = $asprakList->firstWhere('praktikum_id', $praktikumId);
+        $praktikum = $praktikumList->firstWhere('id', $praktikumId);
+
+        // Update session agar halaman lain ikut context yang sama
+        if ($praktikumId) {
+            session(['manprak_asprak_praktikum_id' => $praktikumId]);
+        }
+
+        // Pengumuman hanya untuk praktikum yang dipilih (hanya manual/non-sistem)
         $pengumumans = $praktikumId
             ? Pengumuman::where('praktikum_id', $praktikumId)
+                ->whereNull('tipe_sistem')
                 ->with('user')
                 ->orderByDesc('created_at')
                 ->get()
@@ -53,14 +66,14 @@ class PengumumanController extends Controller
     {
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
-            'judul'        => 'required|string|max:255',
-            'konten'       => 'required|string',
+            'judul' => 'required|string|max:255',
+            'konten' => 'required|string',
             'is_published' => 'boolean',
-            'lampiran'     => 'nullable|array|max:3',
-            'lampiran.*'   => 'file|max:5120',
+            'lampiran' => 'nullable|array|max:3',
+            'lampiran.*' => 'file|mimes:pdf|max:5120',
         ]);
 
-        $user   = auth()->user();
+        $user = auth()->user();
         $asprak = AsistenPraktikum::where('user_id', $user->id)
             ->where('role', 'asprak')
             ->where('praktikum_id', $request->praktikum_id)
@@ -87,11 +100,11 @@ class PengumumanController extends Controller
 
         Pengumuman::create([
             'praktikum_id' => $request->praktikum_id,
-            'user_id'      => $user->id,
-            'judul'        => $request->judul,
-            'konten'       => $request->konten,
-            'is_published' => $request->boolean('is_published'),
-            'lampiran'     => empty($lampiranPaths) ? null : $lampiranPaths,
+            'user_id' => $user->id,
+            'judul' => $request->judul,
+            'konten' => $request->konten,
+            'is_published' => true,
+            'lampiran' => empty($lampiranPaths) ? null : $lampiranPaths,
         ]);
 
         return redirect()->route('eoffice.manprak.asprak.pengumuman.index', [
@@ -99,9 +112,47 @@ class PengumumanController extends Controller
         ])->with('success', 'Pengumuman berhasil diunggah.');
     }
 
+    public function update(Request $request, int $id)
+    {
+        $request->validate([
+            'judul' => 'required|string|max:255',
+            'konten' => 'required|string',
+            'lampiran' => 'nullable|array|max:3',
+            'lampiran.*' => 'file|mimes:pdf|max:5120',
+        ]);
+
+        $user = auth()->user();
+        $pengumuman = Pengumuman::findOrFail($id);
+
+        if ($pengumuman->user_id !== $user->id) {
+            return back()->with('error', 'Anda hanya bisa mengedit pengumuman milik sendiri.');
+        }
+
+        $lampiranPaths = $pengumuman->lampiran ?? [];
+        if ($request->hasFile('lampiran')) {
+            $storage = app(SupabaseStorage::class);
+            foreach ($request->file('lampiran') as $file) {
+                $path = $storage->upload($file, 'pengumuman', 'eoffice');
+                if ($path) {
+                    $lampiranPaths[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                    ];
+                }
+            }
+        }
+
+        $pengumuman->update([
+            'judul' => $request->judul,
+            'konten' => $request->konten,
+            'lampiran' => empty($lampiranPaths) ? null : $lampiranPaths,
+        ]);
+
+        return back()->with('success', 'Pengumuman berhasil diperbarui.');
+    }
     public function destroy(int $id)
     {
-        $user       = auth()->user();
+        $user = auth()->user();
         $pengumuman = Pengumuman::findOrFail($id);
 
         if ($pengumuman->user_id !== $user->id && !$user->hasAnyRole(['koor_prak', 'admin_eoffice', 'superadmin'])) {
@@ -116,3 +167,5 @@ class PengumumanController extends Controller
         ])->with('success', 'Pengumuman berhasil dihapus.');
     }
 }
+
+

@@ -80,7 +80,7 @@
                                             <td class="px-5 py-4 whitespace-nowrap">
                                                 <div class="flex items-center gap-3">
                                                     <div
-                                                        class="h-8 w-8 rounded bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                                                        class="h-8 w-8 rounded bg-primary-100 flex items-center justify-center text-primary-500 font-bold text-xs">
                                                         {{ strtoupper(substr($sem->nama_mahasiswa ?? 'M', 0, 2)) }}
                                                     </div>
                                                     <div>
@@ -119,7 +119,7 @@
                                                 @else
                                                     <button
                                                         @click="openDrawer({{ $sem->kp_id }}, '{{ $sem->nama_mahasiswa }}', '{{ $sem->nim }}', null)"
-                                                        class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-semibold transition-colors">
+                                                        class="inline-flex items-center px-3 py-1.5 bg-primary-50 text-primary-500 hover:bg-primary-100 border border-primary-200 rounded-lg text-xs font-semibold transition-colors">
                                                         Beri Nilai
                                                     </button>
                                                 @endif
@@ -213,7 +213,7 @@
                                     <p class="text-sm text-slate-500 mt-1">Beri atau ubah nilai seminar mahasiswa.</p>
                                 </div>
                                 <button type="button" @click="closeDrawer()"
-                                    class="rounded-lg bg-white p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 shadow-sm border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    class="rounded-lg bg-white p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 shadow-sm border border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-primary-500">
                                     <span class="sr-only">Tutup</span>
                                     <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2"
                                         stroke="currentColor">
@@ -226,7 +226,7 @@
                             <div class="flex-1 px-6 py-6 space-y-6">
                                 <!-- Info Mahasiswa -->
                                 <div class="flex items-center gap-4">
-                                    <div class="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg border-2 border-white shadow-sm flex-shrink-0"
+                                    <div class="h-12 w-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-500 font-bold text-lg border-2 border-white shadow-sm flex-shrink-0"
                                         x-text="selectedStudentName.charAt(0).toUpperCase()">
                                     </div>
                                     <div>
@@ -237,15 +237,15 @@
                                     </div>
                                 </div>
 
-                                <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
-                                    <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none"
+                                <div class="bg-primary-50 border border-primary-200 rounded-xl p-4 flex items-start gap-3">
+                                    <svg class="w-5 h-5 text-primary-500 flex-shrink-0 mt-0.5" fill="none"
                                         stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                     <div>
-                                        <p class="text-sm font-semibold text-blue-800">Nilai Dosen Pembimbing</p>
-                                        <p class="text-xs text-blue-600 mt-1">Bagian ini hanya untuk <strong>Nilai
+                                        <p class="text-sm font-semibold text-primary-500">Nilai Dosen Pembimbing</p>
+                                        <p class="text-xs text-primary-500 mt-1">Bagian ini hanya untuk <strong>Nilai
                                                 Seminar Pembimbing</strong>. Nilai Lapangan diisi oleh Koordinator KP.
                                         </p>
                                     </div>
@@ -263,7 +263,7 @@
                                         <input type="number" id="nilai_seminar_pembimbing"
                                             name="nilai_seminar_pembimbing" min="0" max="100" step="0.01"
                                             x-model="selectedNilai" placeholder="Contoh: 85"
-                                            class="w-full px-4 py-3 text-2xl font-bold text-slate-900 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:font-normal placeholder:text-base"
+                                            class="w-full px-4 py-3 text-2xl font-bold text-slate-900 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all placeholder:text-slate-300 placeholder:font-normal placeholder:text-base"
                                             required>
                                     </div>
 
@@ -273,7 +273,7 @@
                                             Batal
                                         </button>
                                         <button type="submit"
-                                            class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
+                                            class="flex-1 px-6 py-3 bg-primary-500 hover:bg-primary-500 text-white font-bold rounded-xl shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M5 13l4 4L19 7" />

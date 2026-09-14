@@ -28,4 +28,16 @@ class RiwayatPengumpulan extends Model
     {
         return $this->belongsTo(PengumpulanTugas::class, 'pengumpulan_tugas_id');
     }
+
+    public function getFilesAttribute()
+    {
+        if (empty($this->file_path)) {
+            return [];
+        }
+        $decoded = json_decode($this->file_path, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return array_values(array_filter($decoded));
+        }
+        return [$this->file_path];
+    }
 }

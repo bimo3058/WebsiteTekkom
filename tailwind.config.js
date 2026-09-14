@@ -66,9 +66,11 @@ export default {
                     foreground: "hsl(var(--card-foreground))",
                 },
 
-                // ── Extra palette dari design system Figma ────────
+                // 🎨 Extra palette dari design system Figma 🎨🎨🎨🎨
                 sky: {
-                    50: "#D1F0F9",
+                    0: "#EFFBFF",
+                    25: "#D1F0F9",
+                    50: "#7EDCF1",
                     100: "#33CFFF",
                     200: "#106A97",
                     300: "#0C4D6E",

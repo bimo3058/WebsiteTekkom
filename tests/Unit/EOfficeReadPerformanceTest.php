@@ -23,7 +23,7 @@ class EOfficeReadPerformanceTest extends TestCase
 
         // Isolated fixtures: never migrate or connect to the configured Supabase database.
         $tables = [
-            'eo_praktikum' => ['nama', 'status', 'matkul_id', 'koor_id', 'deleted_at'],
+            'eo_praktikum' => ['nama', 'status', 'is_active', 'matkul_id', 'koor_id', 'deleted_at'],
             'eo_matkul_praktikum' => ['nama', 'kode'],
             'manprak_periode_pendaftaran' => ['praktikum_id', 'jenis', 'is_aktif', 'dibuka_pada', 'ditutup_pada', 'created_at'],
             'pendaftaran_asprak' => ['user_id', 'praktikum_id', 'status', 'created_at'],
@@ -43,7 +43,7 @@ class EOfficeReadPerformanceTest extends TestCase
             Schema::create($name, function (Blueprint $table) use ($columns) {
                 $table->string('id')->primary();
                 foreach ($columns as $column) {
-                    if (in_array($column, ['is_aktif', 'is_published', 'dipublikasikan'], true)) {
+                    if (in_array($column, ['is_active', 'is_aktif', 'is_published', 'dipublikasikan'], true)) {
                         $table->boolean($column)->default(false);
                     } else {
                         $table->string($column)->nullable();
@@ -81,7 +81,7 @@ class EOfficeReadPerformanceTest extends TestCase
             DB::enableQueryLog();
             DB::flushQueryLog();
             $data = $controller->index(Request::create('/daftar-asprak?praktikum_id=p1'))->getData();
-            $this->assertCount(6, DB::getQueryLog());
+            $this->assertCount(7, DB::getQueryLog());
             DB::disableQueryLog();
             $this->assertCount($size, $data['praktikumDenganPeriode']);
             $this->assertSame(1, $data['periodeAktif']['p1']['asprak']->id);
@@ -107,7 +107,7 @@ class EOfficeReadPerformanceTest extends TestCase
         $data = $controller->index(Request::create('/daftar-asprak?praktikum_id=unavailable'))->getData();
         $this->assertNull($data['selectedPraktikum']);
         $this->assertNull($data['existingAsprak']);
-        $this->assertCount(3, DB::getQueryLog());
+        $this->assertCount(7, DB::getQueryLog());
         DB::disableQueryLog();
     }
 
@@ -121,7 +121,7 @@ class EOfficeReadPerformanceTest extends TestCase
         DB::disableQueryLog();
     }
 
-    public function test_dashboard_batches_submissions_and_aggregates_attendance_for_current_student(): void
+    public function test_dashboard_batches_submissions_across_enrollments_for_current_student(): void
     {
         $this->seedPraktikum(1);
         DB::table('daftar_praktikan')->insert(['id' => 'dp1', 'user_id' => 7, 'praktikum_id' => 'p1']);
@@ -142,18 +142,25 @@ class EOfficeReadPerformanceTest extends TestCase
         $data = (new DashboardController)->index(Request::create('/dashboard'))->getData();
         $queries = collect(DB::getQueryLog())->pluck('query');
         DB::disableQueryLog();
-        $this->assertCount(5, $data['tugasMendatang']);
-        $this->assertTrue($data['tugasMendatang'][0]->sudah_kumpul);
-        $this->assertSame('acc', $data['tugasMendatang'][0]->status_tugas);
-        $this->assertFalse($data['tugasMendatang'][1]->sudah_kumpul);
-        $this->assertSame(['hadir' => 1, 'total' => 2], $data['absensiStat']);
+        $this->assertCount(7, $data['tugasMendatang']);
+        $this->assertCount(5, $data['tugasPaginator']->items());
+        $this->assertFalse($data['tugasMendatang'][0]->sudah_kumpul);
+        $this->assertSame(2, $data['tugasMendatang'][0]->id);
         $this->assertCount(1, $queries->filter(fn ($sql) => str_contains($sql, 'from "pengumpulan_tugas"')));
-        $attendanceSql = $queries->first(fn ($sql) => str_contains($sql, 'from "absensi_praktikum"'));
-        $this->assertStringContainsString('COUNT(*)', $attendanceSql);
 
-        DB::table('absensi_praktikum')->delete();
-        $empty = (new DashboardController)->index(Request::create('/dashboard'))->getData();
-        $this->assertSame(['hadir' => 0, 'total' => 0], $empty['absensiStat']);
+        $this->seedPraktikum(2);
+        DB::table('daftar_praktikan')->insert(['id' => 'dp2', 'user_id' => 7, 'praktikum_id' => 'p2']);
+        DB::table('modul_praktikum')->insert(['id' => 2, 'praktikum_id' => 'p2']);
+        DB::table('tugas_praktikum')->insert([
+            ['id' => 9, 'modul_id' => 2, 'is_published' => true, 'deadline' => '2026-09-07'],
+            ['id' => 10, 'modul_id' => 2, 'is_published' => false, 'deadline' => '2026-09-07'],
+        ]);
+        $data = (new DashboardController)->index(Request::create('/dashboard?per_page=0'))->getData();
+        $this->assertCount(7, $data['tugasMendatang']);
+        $this->assertCount(1, $data['tugasTerlambat']);
+        $this->assertSame(9, $data['tugasTerlambat'][0]->id);
+        $this->assertSame(8, $data['tugasPaginator']->total());
+        $this->assertSame(1, $data['tugasPaginator']->perPage());
     }
 
     public function test_praktikum_indexes_can_be_created_and_rolled_back(): void

@@ -70,103 +70,76 @@
         ];
     }
 
-    if ($isDosen) {
-        $sections[] = [
-            'label' => 'Dosen',
-            'color' => '#0B266E',
-            'bg'    => 'rgba(11,38,110,0.08)',
-            'match' => 'manprak.dosen',
-            'groups' => [
-                'Utama' => [
-                    ['href' => route('eoffice.manprak.dosen.dashboard'),                             'label' => 'Dashboard',        'match' => 'dosen.dashboard',        'icon' => $iHome],
+        if ($isDosen) {
+            $sections[] = [
+                'label' => 'Dosen',
+                'color' => '#0B266E',
+                'bg' => 'rgba(11,38,110,0.08)',
+                'match' => 'manprak.dosen',
+                'groups' => [
+                    'Utama' => [
+                        ['href' => route('eoffice.manprak.dosen.dashboard'), 'label' => 'Dashboard', 'match' => 'dosen.dashboard', 'icon' => $iHome],
+                    ],
+                    'Kelola' => [
+                        ['href' => route('eoffice.manprak.dosen.praktikum.index'), 'label' => 'Praktikum', 'match' => ['dosen.praktikum', 'dosen.modul', 'dosen.tugas', 'dosen.nilai', 'dosen.asprak', 'dosen.pengumuman', 'dosen.pendaftaran-koor'], 'icon' => $iBook],
+                    ],
                 ],
-                'Pendaftaran' => [
-                    ['href' => route('eoffice.manprak.dosen.periode-pendaftaran.index'),             'label' => 'Buka Periode Koordinator','match' => 'dosen.periode-pendaftaran', 'icon' => $iCal],
-                    ['href' => route('eoffice.manprak.dosen.pendaftaran-koor.index'),                'label' => 'Seleksi Koordinator',     'match' => 'dosen.pendaftaran-koor', 'icon' => $iCheck],
-                ],
-                'Kelola' => [
-                    ['href' => route('eoffice.manprak.dosen.asprak.index'),                          'label' => 'Asisten Praktikum','match' => 'dosen.asprak',           'icon' => $iUser],
-                    ['href' => route('eoffice.manprak.dosen.daftar-praktikan.index'),                'label' => 'Daftar Praktikan', 'match' => 'dosen.daftar-praktikan', 'icon' => $iList],
-                ],
-                'Konten' => [
-                    ['href' => route('eoffice.manprak.dosen.pengumuman.index'),                      'label' => 'Pengumuman',       'match' => 'dosen.pengumuman',       'icon' => $iBell],
-                    ['href' => route('eoffice.manprak.dosen.modul.index', ['praktikumId' => 0]),    'label' => 'Daftar Modul',     'match' => 'dosen.modul',            'icon' => $iBook],
-                    ['href' => route('eoffice.manprak.dosen.tugas.index'),                           'label' => 'Daftar Tugas',     'match' => 'dosen.tugas',            'icon' => $iList],
-                    ['href' => route('eoffice.manprak.dosen.nilai.index', ['praktikumId' => 0]),    'label' => 'Absensi & Nilai',  'match' => 'dosen.nilai',            'icon' => $iCheck],
-                ],
-            ],
-        ];
-    }
+            ];
+        }
 
-    if ($isKoor) {
-        $sections[] = [
-            'label' => 'Koordinator',
-            'color' => '#6366F1',
-            'bg'    => 'rgba(99,102,241,0.08)',
-            'match' => 'manprak.koor',
-            'groups' => [
-                'Utama' => [
-                    ['href' => route('eoffice.manprak.koor.dashboard'),                'label' => 'Dashboard',        'match' => 'koor.dashboard',             'icon' => $iHome],
+        if ($isKoor) {
+            $sections[] = [
+                'label' => 'Koordinator',
+                'color' => '#0284C7',
+                'bg' => 'rgba(2,132,199,0.08)',
+                'match' => 'manprak.koor',
+                'groups' => [
+                    'Utama' => [
+                        ['href' => route('eoffice.manprak.koor.dashboard'), 'label' => 'Dashboard', 'match' => 'koor.dashboard', 'icon' => $iHome],
+                    ],
+                    'Kelola' => [
+                        ['href' => route('eoffice.manprak.koor.pendaftaran-praktikan.index'), 'label' => 'Pendaftaran Praktikan', 'match' => 'koor.pendaftaran-praktikan', 'icon' => $iClipboard],
+                        ['href' => route('eoffice.manprak.koor.praktikum.index'), 'label' => 'Praktikum', 'match' => ['koor.praktikum', 'koordinator.periode-pendaftaran', 'koor.pendaftaran-asprak', 'koor.modul', 'bagi-modul', 'koor.praktikan', 'koor.nilai'], 'icon' => $iBook],
+                    ],
                 ],
-                'Pendaftaran' => [
-                    ['href' => route('eoffice.manprak.koordinator.periode-pendaftaran.index'), 'label' => 'Buka Periode Asisten Praktikum','match' => 'koordinator.periode-pendaftaran', 'icon' => $iCal],
-                    ['href' => route('eoffice.manprak.koor.pendaftaran-asprak.index'), 'label' => 'Seleksi Asisten Praktikum',   'match' => 'koor.pendaftaran-asprak',    'icon' => $iCheck],
-                    ['href' => route('eoffice.manprak.koor.pendaftaran-praktikan.index'), 'label' => 'Verifikasi Praktikan',       'match' => 'koor.pendaftaran-praktikan', 'icon' => $iClipboard],
+            ];
+        }
 
+        if ($isAsprak) {
+            $sections[] = [
+                'label' => 'Asisten',
+                'color' => '#0891B2',
+                'bg' => 'rgba(8,145,178,0.10)',
+                'match' => 'manprak.asprak',
+                'groups' => [
+                    'Utama' => [
+                        ['href' => route('eoffice.manprak.asprak.dashboard'), 'label' => 'Dashboard', 'match' => 'asprak.dashboard', 'icon' => $iHome],
+                    ],
+                    'Kelola' => [
+                        ['href' => route('eoffice.manprak.asprak.praktikum.index'), 'label' => 'Praktikum', 'match' => ['asprak.praktikum', 'asprak.daftar-praktikan', 'asprak.absensi', 'asprak.tugas', 'asprak.materi', 'asprak.pengumuman'], 'icon' => $iBook],
+                    ],
                 ],
-                'Kelola' => [
-                    ['href' => route('eoffice.manprak.koor.modul.index'),              'label' => 'Kelola Modul',     'match' => 'koor.modul',                 'icon' => $iBook],
-                    ['href' => route('eoffice.manprak.koor.bagi-modul.index'),         'label' => 'Bagi Modul',       'match' => 'bagi-modul',                 'icon' => $iGear],
-                    ['href' => route('eoffice.manprak.koor.praktikan.index'),          'label' => 'Data Praktikan',   'match' => 'koor.praktikan',             'icon' => $iUser],
-                    ['href' => route('eoffice.manprak.koor.nilai.index'),              'label' => 'Absensi & Nilai',  'match' => 'koor.nilai',                 'icon' => $iCheck],
-                ],
-            ],
-        ];
-    }
+            ];
+        }
 
-    if ($isAsprak) {
-        $sections[] = [
-            'label' => 'Asisten Praktikum',
-            'color' => '#40C4AA',
-            'bg'    => 'rgba(64,196,170,0.10)',
-            'match' => 'manprak.asprak',
-            'groups' => [
-                'Utama' => [
-                    ['href' => route('eoffice.manprak.asprak.dashboard'),                'label' => 'Dashboard',        'match' => 'asprak.dashboard',        'icon' => $iHome],
-                    ['href' => route('eoffice.manprak.asprak.daftar-praktikan.index'),   'label' => 'Daftar Praktikan', 'match' => 'asprak.daftar-praktikan', 'icon' => $iUser],
+        if ($isMhs) {
+            $sections[] = [
+                'label' => 'Mahasiswa',
+                'color' => '#64748B',
+                'bg' => 'rgba(100,116,139,0.10)',
+                'match' => 'manprak.mahasiswa',
+                'groups' => [
+                    'Utama' => [
+                        ['href' => route('eoffice.manprak.mahasiswa.dashboard'), 'label' => 'Dashboard', 'match' => 'mahasiswa.dashboard', 'icon' => $iHome],
+                    ],
+                    'Aktivitas' => [
+                        ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Pendaftaran Praktikan', 'match' => 'mahasiswa.pendaftaran-praktikan', 'icon' => $iClipboard],
+                        ['href' => route('eoffice.manprak.mahasiswa.praktikum.index'), 'label' => 'Praktikum', 'match' => ['mahasiswa.praktikum', 'mahasiswa.modul', 'mahasiswa.pengumuman', 'mahasiswa.tugas', 'mahasiswa.nilai', 'mahasiswa.daftar-praktikan'], 'icon' => $iBook],
+                        ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Pendaftaran', 'match' => 'daftar-asprak', 'icon' => $iUser],
+                    ],
                 ],
-                'Aktivitas' => [
-                    ['href' => route('eoffice.manprak.asprak.absensi.index'),      'label' => 'Absensi & Nilai', 'match' => 'asprak.absensi',     'icon' => $iCheck],
-                    ['href' => route('eoffice.manprak.asprak.tugas.index'),        'label' => 'Tugas',       'match' => 'asprak.tugas',       'icon' => $iEdit],
-                    ['href' => route('eoffice.manprak.asprak.materi.index'),       'label' => 'Materi',      'match' => 'asprak.materi',      'icon' => $iBook],
-                    ['href' => route('eoffice.manprak.asprak.pengumuman.index'),   'label' => 'Pengumuman',  'match' => 'asprak.pengumuman',  'icon' => $iBell],
-                ],
-            ],
-        ];
-    }
-
-    if ($isMhs) {
-        $sections[] = [
-            'label' => 'Mahasiswa',
-            'color' => '#D39C3D',
-            'bg'    => 'rgba(211,156,61,0.10)',
-            'match' => 'manprak.mahasiswa',
-            'groups' => [
-                'Utama' => [
-                    ['href' => route('eoffice.manprak.mahasiswa.dashboard'),            'label' => 'Dashboard',         'match' => 'mahasiswa.dashboard',  'icon' => $iHome],
-                ],
-                'Aktivitas' => [
-
-                    ['href' => route('eoffice.manprak.mahasiswa.modul.index'),          'label' => 'Daftar Modul',      'match' => 'mahasiswa.modul',      'icon' => $iBook],
-                    ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',        'match' => 'mahasiswa.pengumuman', 'icon' => $iBell],
-                    ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',             'match' => 'mahasiswa.tugas',      'icon' => $iEdit],
-                    ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Absensi & Nilai',   'match' => 'mahasiswa.nilai',      'icon' => $iCheck],
-                    ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Daftar Praktikan', 'match' => 'mahasiswa.pendaftaran-praktikan', 'icon' => $iClipboard],
-                    ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Daftar Asisten/Koordinator','match' => 'daftar-asprak',        'icon' => $iUser],
-                ],
-            ],
-        ];
-    }
+            ];
+        }
 
     $multiRole    = count($sections) > 1;
     $manprakActive= str_contains($currentRoute, 'manprak');
@@ -279,5 +252,11 @@
     });
 </script>
     <x-mobile-navigation />
+@stack('scripts')
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.store('modal', { isOpen: false, open() { this.isOpen = true; }, close() { this.isOpen = false; } });
+});
+</script>
 </body>
 </html>

@@ -21,13 +21,20 @@ class PeriodePendaftaran extends Model
         'dibuka_pada',
         'ditutup_pada',
         'is_aktif',
+        'judul',
+        'deskripsi',
+        'nama_berkas_tambahan',
+        'jenis_berkas_tambahan',
+        'keterangan_berkas_tambahan',
+        'konfigurasi_kuis',
         'dibuka_oleh',
     ];
 
     protected $casts = [
-        'dibuka_pada'  => 'datetime',
+        'dibuka_pada' => 'datetime',
         'ditutup_pada' => 'datetime',
-        'is_aktif'     => 'boolean',
+        'is_aktif' => 'boolean',
+        'konfigurasi_kuis' => 'array',
     ];
 
     public function praktikum()
@@ -42,10 +49,13 @@ class PeriodePendaftaran extends Model
 
     public function isSedangBuka(): bool
     {
-        if (!$this->is_aktif) return false;
+        if (!$this->is_aktif)
+            return false;
         $now = now();
-        if ($this->dibuka_pada && $now->lt($this->dibuka_pada)) return false;
-        if ($this->ditutup_pada && $now->gt($this->ditutup_pada)) return false;
+        if ($this->dibuka_pada && $now->lt($this->dibuka_pada))
+            return false;
+        if ($this->ditutup_pada && $now->gt($this->ditutup_pada))
+            return false;
         return true;
     }
 }

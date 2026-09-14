@@ -33,7 +33,7 @@ class DaftarAsprakController extends Controller
         // Muat periode sekaligus agar jumlah query tidak bertambah per praktikum.
         $praktikumDenganPeriode = Praktikum::where('status', 'aktif')
             ->whereHas('periodeAktif')
-            ->with(['matkul', 'periodeAktif' => fn ($q) => $q->latest('created_at')])
+            ->with(['matkul', 'dosens', 'periodeAktif' => fn ($q) => $q->latest('created_at')])
             ->get();
 
         // Cek periode aktif per praktikum (asprak & koor)
@@ -51,21 +51,21 @@ class DaftarAsprakController extends Controller
 
         $selectedPraktikumId = $request->input('praktikum_id', $praktikumDenganPeriode->first()?->id);
         $selectedPraktikum = $praktikumDenganPeriode->firstWhere('id', $selectedPraktikumId);
-        $existingAsprak = null;
-        $existingKoor = null;
-        $rolesPraktikum = collect();
-
-        if ($selectedPraktikum) {
-            $existingAsprak = PendaftaranAsprak::where('user_id', $user->id)
-                ->where('praktikum_id', $selectedPraktikum->id)
-                ->latest('created_at')->first();
-            $existingKoor = PendaftaranKoordinator::where('user_id', $user->id)
-                ->where('praktikum_id', $selectedPraktikum->id)
-                ->latest('created_at')->first();
-            $rolesPraktikum = AsprakPraktikum::where('user_id', $user->id)
-                ->where('praktikum_id', $selectedPraktikum->id)
-                ->pluck('role');
+        $praktikumIds = $praktikumDenganPeriode->modelKeys();
+        $pendaftaranAsprakByPraktikum = collect();
+        $pendaftaranKoorByPraktikum = collect();
+        $rolesByPraktikum = collect();
+        if ($praktikumIds) {
+            $pendaftaranAsprakByPraktikum = PendaftaranAsprak::where('user_id', $user->id)
+                ->whereIn('praktikum_id', $praktikumIds)->latest('created_at')->get()->unique('praktikum_id')->keyBy('praktikum_id');
+            $pendaftaranKoorByPraktikum = PendaftaranKoordinator::where('user_id', $user->id)
+                ->whereIn('praktikum_id', $praktikumIds)->latest('created_at')->get()->unique('praktikum_id')->keyBy('praktikum_id');
+            $rolesByPraktikum = AsprakPraktikum::where('user_id', $user->id)
+                ->whereIn('praktikum_id', $praktikumIds)->get()->groupBy('praktikum_id');
         }
+        $existingAsprak = $pendaftaranAsprakByPraktikum->get($selectedPraktikum?->id);
+        $existingKoor = $pendaftaranKoorByPraktikum->get($selectedPraktikum?->id);
+        $rolesPraktikum = $rolesByPraktikum->get($selectedPraktikum?->id, collect())->pluck('role');
 
         $isAsprakDiPraktikumIni = $rolesPraktikum->contains('asprak');
         $isKoorDiPraktikumIni = $rolesPraktikum->contains('koor');
@@ -73,6 +73,9 @@ class DaftarAsprakController extends Controller
         return view('eoffice::manajemen-praktikum.mahasiswa.daftar-asprak', compact(
             'praktikumDenganPeriode',
             'periodeAktif',
+            'pendaftaranAsprakByPraktikum',
+            'pendaftaranKoorByPraktikum',
+            'rolesByPraktikum',
             'sudahJadiAsprak',
             'sudahJadiKoor',
             'selectedPraktikumId',
@@ -96,7 +99,7 @@ class DaftarAsprakController extends Controller
             'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
             'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',
-            'jadwal'       => 'nullable|array',
+            'jadwal'       => 'required|array|min:1',
         ]);
 
         $user = auth()->user();
@@ -149,9 +152,9 @@ class DaftarAsprakController extends Controller
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'ipk'          => 'required|numeric|min:0|max:4',
-            'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
             'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',
+            'berkas_tambahan' => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png',
         ]);
 
         $user = auth()->user();
@@ -178,14 +181,18 @@ class DaftarAsprakController extends Controller
         $berkasCercPath = $request->hasFile('berkas_cerc')
             ? $this->supabase->upload($request->file('berkas_cerc'), 'koor-cerc/' . $user->id, 'eoffice')
             : null;
+            
+        $berkasTambahanPath = $request->hasFile('berkas_tambahan')
+            ? $this->supabase->upload($request->file('berkas_tambahan'), 'koor-tambahan/' . $user->id, 'eoffice')
+            : null;
 
         PendaftaranKoordinator::create([
             'user_id'        => $user->id,
             'praktikum_id'   => $request->praktikum_id,
             'ipk'            => $request->ipk,
-            'motivasi'       => $request->motivasi,
             'transkrip_path' => $transkripPath,
             'berkas_cerc_path' => $berkasCercPath,
+            'berkas_tambahan_path' => $berkasTambahanPath,
             'status'         => 'pending',
         ]);
 

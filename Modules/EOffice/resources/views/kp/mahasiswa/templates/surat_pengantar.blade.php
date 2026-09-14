@@ -183,7 +183,7 @@
             margin: 20px auto; 
             padding: 10px 20px; 
             font-size: 16px; 
-            background: #4f46e5; 
+            background: #2A3A7C; 
             color: white; 
             border: none; 
             border-radius: 5px; 

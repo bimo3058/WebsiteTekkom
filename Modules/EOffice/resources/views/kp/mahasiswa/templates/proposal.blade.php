@@ -21,7 +21,7 @@
             .no-print { display: none !important; }
         }
         @page { size: A4; margin: 25mm; }
-        .btn-print { display: block; margin: 20px auto; padding: 10px 20px; font-size: 16px; background: #4f46e5; color: white; border: none; border-radius: 5px; cursor: pointer; text-align: center; max-width: 200px; text-decoration: none; font-family: sans-serif; }
+        .btn-print { display: block; margin: 20px auto; padding: 10px 20px; font-size: 16px; background: #2A3A7C; color: white; border: none; border-radius: 5px; cursor: pointer; text-align: center; max-width: 200px; text-decoration: none; font-family: sans-serif; }
     </style>
 </head>
 <body style="background: #f3f4f6; padding: 20px 0;">

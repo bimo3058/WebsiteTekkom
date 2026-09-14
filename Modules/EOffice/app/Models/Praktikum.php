@@ -22,12 +22,17 @@ class Praktikum extends Model
         'kode',
         'matkul_id',
         'deskripsi',
+        'cover_path',
         'koor_id',
         'tahun_ajaran',
         'semester',
         'status',
         'jumlah_kelompok',
         'jumlah_shift',
+        'bobot_tp',
+        'bobot_praktikum',
+        'bobot_laporan',
+        'bobot_responsi',
         'is_active',
     ];
 

@@ -31,7 +31,7 @@
                         <div class="mp-nav-group">
                             <div class="mp-nav-label" x-show="sidebarOpen">{{ $groupLabel }}</div>
                             @foreach($items as $item)
-                                @php $active = $sectionActive && str_contains($currentRoute, $item['match']); @endphp
+                                @php $active = $sectionActive && \Illuminate\Support\Str::contains($currentRoute, $item['match']); @endphp
                                 <a href="{{ $item['href'] }}" class="mp-nav-link {{ $active ? 'is-active' : '' }}"
                                    title="{{ $item['label'] }}" aria-label="{{ $item['label'] }} — {{ $section['label'] }}"
                                    @if($active) aria-current="page" @endif

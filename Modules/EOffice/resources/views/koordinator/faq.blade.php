@@ -75,10 +75,10 @@
         <!-- Custom Tabs -->
         <div class="flex items-center space-x-1 bg-slate-200/50 p-1 rounded-xl w-fit mb-8 border border-slate-200">
             <button @click="activeTab = 'dokumen'"
-                :class="activeTab === 'dokumen' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                :class="activeTab === 'dokumen' ? 'bg-white text-primary-500 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
                 class="px-6 py-2 rounded-lg text-sm transition-all focus:outline-none">Timeline KP</button>
             <button @click="activeTab = 'faq'"
-                :class="activeTab === 'faq' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                :class="activeTab === 'faq' ? 'bg-white text-primary-500 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
                 class="px-6 py-2 rounded-lg text-sm transition-all focus:outline-none">Manajemen FAQ</button>
         </div>
 
@@ -101,14 +101,14 @@
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-1.5">Nama Dokumen</label>
                                 <input type="text" name="judul" required
-                                    class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-slate-50 hover:bg-white transition-all outline-none"
+                                    class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 border bg-slate-50 hover:bg-white transition-all outline-none"
                                     placeholder="Contoh: Buku Panduan KP 2026">
                             </div>
                             <div>
                                 <label class="block text-sm font-bold text-slate-700 mb-1.5">Versi Dokumen <span
                                         class="text-slate-400 font-normal">(Opsional)</span></label>
                                 <input type="text" name="version"
-                                    class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-slate-50 hover:bg-white transition-all outline-none"
+                                    class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 border bg-slate-50 hover:bg-white transition-all outline-none"
                                     placeholder="Contoh: v1.0">
                             </div>
                         </div>
@@ -124,14 +124,14 @@
                                     accept=".pdf,.doc,.docx" required>
                                 <div class="space-y-2 text-center" x-show="!fileName">
                                     <div
-                                        class="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                        class="w-12 h-12 bg-primary-50 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
                                         </svg>
                                     </div>
                                     <div class="flex text-sm text-slate-600 justify-center"><span
-                                            class="cursor-pointer rounded-md font-semibold text-indigo-600 hover:text-indigo-500">Upload
+                                            class="cursor-pointer rounded-md font-semibold text-primary-500 hover:text-primary-500">Upload
                                             file</span>
                                         <p class="pl-1">or drag and drop</p>
                                     </div>
@@ -156,7 +156,7 @@
                             </div>
                             <div class="mt-4 flex justify-end">
                                 <button type="submit"
-                                    class="inline-flex items-center justify-center px-6 py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors w-full md:w-auto">
+                                    class="inline-flex items-center justify-center px-6 py-2.5 bg-primary-500 text-white font-bold text-sm rounded-xl hover:bg-primary-500 shadow-sm shadow-primary-200 transition-colors w-full md:w-auto">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
@@ -175,7 +175,7 @@
                     <h2 class="text-lg font-bold text-slate-900">History Upload Dokumen</h2>
                     <div class="relative w-64 hidden sm:block">
                         <input type="text" placeholder="Cari dokumen..."
-                            class="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors">
+                            class="w-full pl-10 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors">
                         <svg class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -216,7 +216,7 @@
                                             </div>
                                             <div>
                                                 <p
-                                                    class="text-sm font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+                                                    class="text-sm font-bold text-slate-900 group-hover:text-primary-500 transition-colors">
                                                     {{ $doc->judul }}</p>
                                                 <div class="flex items-center text-xs text-slate-500 mt-0.5 space-x-2">
                                                     <span>{{ $doc->file_name }}</span>
@@ -246,7 +246,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <div class="flex items-center justify-end gap-2">
                                             <button title="Preview PDF"
-                                                class="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100">
+                                                class="p-2 text-primary-500 hover:bg-primary-50 rounded-lg transition-colors border border-transparent hover:border-primary-100">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                         d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -293,7 +293,7 @@
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-slate-900">Daftar Pertanyaan (FAQ)</h2>
                 <button @click="faqModalOpen = true"
-                    class="inline-flex items-center justify-center px-4 py-2.5 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 shadow-sm transition-colors">
+                    class="inline-flex items-center justify-center px-4 py-2.5 bg-primary-500 text-white font-bold text-sm rounded-xl hover:bg-primary-500 shadow-sm transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -309,7 +309,7 @@
                             @click="expanded = !expanded">
                             <div class="flex-1 pr-4">
                                 <h3 class="text-[15px] font-bold text-slate-900 leading-snug"
-                                    :class="expanded ? 'text-indigo-700' : ''">{{ $faq->pertanyaan }}</h3>
+                                    :class="expanded ? 'text-primary-500' : ''">{{ $faq->pertanyaan }}</h3>
                                 <p class="text-xs text-slate-400 mt-1.5 font-medium flex items-center">
                                     <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -321,7 +321,7 @@
                             <div class="flex items-center gap-3 shrink-0">
                                 <div class="flex gap-1" @click.stop>
                                     <button
-                                        class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors">
+                                        class="p-2 text-slate-400 hover:text-primary-500 hover:bg-primary-50 rounded-lg transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -336,7 +336,7 @@
                                     </button>
                                 </div>
                                 <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 transition-transform duration-300"
-                                    :class="expanded ? 'rotate-180 bg-indigo-100 text-indigo-600' : ''">
+                                    :class="expanded ? 'rotate-180 bg-primary-100 text-primary-500' : ''">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7" />
@@ -346,15 +346,15 @@
                         </div>
                         <div x-show="expanded" x-collapse>
                             <div
-                                class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 text-sm text-slate-600 leading-relaxed border-l-4 border-l-indigo-500">
+                                class="px-6 py-5 bg-slate-50/50 border-t border-slate-100 text-sm text-slate-600 leading-relaxed border-l-4 border-l-primary-500">
                                 {{ $faq->jawaban }}</div>
                         </div>
                     </div>
                 @empty
                     <div
                         class="bg-white rounded-2xl border border-slate-200 border-dashed p-12 text-center flex flex-col items-center justify-center">
-                        <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                     d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
@@ -408,7 +408,7 @@
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Pertanyaan <span
                                             class="text-red-500">*</span></label>
                                     <input type="text" name="pertanyaan" required
-                                        class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none"
+                                        class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 border bg-white hover:border-slate-300 transition-all outline-none"
                                         placeholder="Masukkan pertanyaan...">
                                 </div>
                                 <div x-data="{ content: '' }">
@@ -419,7 +419,7 @@
                                             x-text="content.length + '/500'"></span>
                                     </div>
                                     <textarea name="jawaban" x-model="content" required rows="5" maxlength="500"
-                                        class="block w-full rounded-xl border-slate-200 py-3 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none resize-y"
+                                        class="block w-full rounded-xl border-slate-200 py-3 px-4 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 border bg-white hover:border-slate-300 transition-all outline-none resize-y"
                                         placeholder="Masukkan jawaban secara lengkap..."></textarea>
                                 </div>
                             </div>
@@ -428,7 +428,7 @@
                                 <button type="button" @click="faqModalOpen = false"
                                     class="w-full sm:w-auto px-5 py-2.5 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm">Batal</button>
                                 <button type="submit"
-                                    class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 flex items-center justify-center">
+                                    class="w-full sm:w-auto px-5 py-2.5 bg-primary-500 text-white text-sm font-bold rounded-xl hover:bg-primary-500 transition-colors shadow-sm shadow-primary-200 flex items-center justify-center">
                                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M5 13l4 4L19 7" />

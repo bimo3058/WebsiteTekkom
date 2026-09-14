@@ -29,10 +29,10 @@ class PengumumanController extends Controller
         $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
         $praktikum = $praktikumList->firstWhere('id', $praktikumId);
 
-        // Query pengumuman hanya untuk praktikum yang dipilih
+        // Query pengumuman hanya untuk praktikum yang dipilih (hanya manual/non-sistem)
         $pengumumans = $praktikumId
             ? Pengumuman::where('praktikum_id', $praktikumId)
-                ->where('is_published', true)
+                ->whereNull('tipe_sistem')
                 ->with(['user', 'praktikum'])
                 ->orderByDesc('created_at')
                 ->paginate(10)
