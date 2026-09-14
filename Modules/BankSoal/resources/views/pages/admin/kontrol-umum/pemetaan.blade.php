@@ -6,8 +6,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: rgb(11, 38, 110);
@@ -458,22 +456,7 @@
             .filter-group select { flex: 1; }
         }
 
-        /* ── Table loading spinner ── */
-        .tbl-loading {
-            display: none; align-items: center; justify-content: center;
-            gap: 10px; padding: 40px 20px;
-            color: var(--slate-600); font-size: 13px;
-        }
-        .tbl-loading.show { display: flex; }
-        .tbl-spinner {
-            width: 22px; height: 22px;
-            border: 3px solid var(--slate-200);
-            border-top-color: rgb(11, 38, 110);
-            border-radius: 50%;
-            animation: tbl-spin 0.7s linear infinite;
-            flex-shrink: 0;
-        }
-        @keyframes tbl-spin { to { transform: rotate(360deg); } }
+
     </style>
     @endpush
 
@@ -516,7 +499,7 @@
             </div>
         </div>
 
-        <div class="tbl-loading" id="mkCplSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div id="mkCplSpinner"></div>
         <div class="table-wrapper" id="mkCplWrapper">
             <table>
                 <thead>
@@ -573,7 +556,7 @@
             </div>
         </div>
 
-        <div class="tbl-loading" id="dosenMkSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div id="dosenMkSpinner"></div>
         <div class="table-wrapper" id="dosenMkWrapper">
             <table>
                 <thead>
@@ -658,8 +641,6 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const PAGE_SIZE = 5;
         const TABLE_STATE_STORAGE_KEY = 'banksoal.admin.kontrol-umum.pemetaan.state';
@@ -901,7 +882,7 @@
         async function loadList(key, keepPage = false) {
             const spinnerId = { cpmkCpl: 'cpmkCplSpinner', mkCpl: 'mkCplSpinner', dosenMk: 'dosenMkSpinner' }[key];
             const wrapperId = { cpmkCpl: 'cpmkCplWrapper', mkCpl: 'mkCplWrapper', dosenMk: 'dosenMkWrapper' }[key];
-            if (spinnerId) { document.getElementById(spinnerId).classList.add('show'); }
+            if (spinnerId && window.Spinner) { window.Spinner.showTable(spinnerId); }
             if (wrapperId) { document.getElementById(wrapperId).style.opacity = '0.4'; }
             try {
                 const response = await fetch(mappingConfig[key].listApi, {
@@ -917,7 +898,7 @@
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data pemetaan'));
             } finally {
-                if (spinnerId) { document.getElementById(spinnerId).classList.remove('show'); }
+                if (spinnerId && window.Spinner) { window.Spinner.hideTable(spinnerId); }
                 if (wrapperId) { document.getElementById(wrapperId).style.opacity = '1'; }
             }
         }

@@ -8,7 +8,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         .pm-page{--pm:rgb(11,38,110);--pm-hover:rgb(8,28,82);--pm-light:rgba(11,38,110,.08);--s50:#f8fafc;--s100:#f1f5f9;--s200:#e2e8f0;--s300:#cbd5e1;--s400:#94a3b8;--s500:#64748b;--s700:#334155;--s800:#1e293b}
         .pm-page *{box-sizing:border-box}
@@ -133,7 +132,6 @@
     </div>{{-- end .pm-page --}}
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
     const CSRF='{{ csrf_token() }}',BASE='{{ url("/bank-soal/admin/api") }}',BACK='{{ route("banksoal.admin.kontrol-umum.pemetaan") }}';
     const LS=8,RS=10;

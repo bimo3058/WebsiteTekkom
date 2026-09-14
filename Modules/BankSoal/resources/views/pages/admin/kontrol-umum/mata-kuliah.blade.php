@@ -6,7 +6,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: rgb(11, 38, 110);
@@ -383,21 +382,6 @@
         .dots-menu .menu-delete:not(:disabled) { color: var(--danger-red); }
         .dots-menu .menu-delete:hover:not(:disabled) { background: #fef2f2; }
 
-        /* ── Table loading ── */
-        .tbl-loading {
-            display: none; align-items: center; justify-content: center;
-            gap: 10px; padding: 48px 20px; color: var(--slate-400);
-            font-size: 14px;
-        }
-        .tbl-loading.show { display: flex; }
-        .tbl-spinner {
-            width: 24px; height: 24px;
-            border: 3px solid var(--slate-200);
-            border-top-color: var(--primary-blue);
-            border-radius: 50%;
-            animation: tbl-spin 0.7s linear infinite; flex-shrink: 0;
-        }
-        @keyframes tbl-spin { to { transform: rotate(360deg); } }
 
         .empty-state {
             text-align: center;
@@ -729,10 +713,7 @@
     </div>
 
     <div class="table-section">
-        <div class="tbl-loading" id="tblLoading">
-            <div class="tbl-spinner"></div>
-            Memuat data...
-        </div>
+        <div id="tblLoading"></div>
         <div class="table-wrapper" id="tblWrapper" style="display:none;">
             <table>
                 <thead>
@@ -797,7 +778,7 @@
     </div>
 
     <div class="table-section">
-        <div class="tbl-loading" id="cplLoading"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div id="cplLoading"></div>
         <div class="table-wrapper" id="cplTableWrapper" style="display:none;">
             <table>
                 <thead>
@@ -826,7 +807,6 @@
     <!-- Modals removed as we now use standalone pages -->
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const API_URL = '{{ url("/bank-soal/admin/api/mata-kuliah") }}';
         const EDIT_MK_URL = '{{ url("/bank-soal/admin/kontrol-umum/mata-kuliah") }}';
@@ -989,7 +969,7 @@
         });
 
         async function loadAllMataKuliah(keepPage = false) {
-            document.getElementById('tblLoading').classList.add('show');
+            if (window.Spinner) window.Spinner.showTable('tblLoading');
             document.getElementById('tblWrapper').style.display = 'none';
             document.getElementById('emptyState').style.display = 'none';
             try {
@@ -1010,7 +990,7 @@
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data mata kuliah'));
             } finally {
-                document.getElementById('tblLoading').classList.remove('show');
+                if (window.Spinner) window.Spinner.hideTable('tblLoading');
                 document.getElementById('tblWrapper').style.display = 'block';
             }
         }
@@ -1425,7 +1405,7 @@
         let searchTimeoutCpl;
 
         async function loadAllCpl(keepPage = false) {
-            document.getElementById('cplLoading').classList.add('show');
+            if (window.Spinner) window.Spinner.showTable('cplLoading');
             document.getElementById('cplTableWrapper').style.display = 'none';
             document.getElementById('cplEmptyState').style.display = 'none';
             try {
@@ -1443,7 +1423,7 @@
                 console.error('loadAllCpl Error:', error);
                 showError('Gagal memuat data CPL: ' + error.message);
             } finally {
-                document.getElementById('cplLoading').classList.remove('show');
+                if (window.Spinner) window.Spinner.hideTable('cplLoading');
                 document.getElementById('cplTableWrapper').style.display = 'block';
             }
         }

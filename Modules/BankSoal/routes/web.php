@@ -28,7 +28,7 @@ use Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController;
 use Modules\BankSoal\Http\Middleware\GpmSessionCheck;
 use Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController;
 
-Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
+Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal')->group(function () {
 
     // -------------------------------------------------------------------------
     // PERMISSION: VIEW (Dashboard & List)

@@ -219,8 +219,11 @@ class DashboardController extends Controller
                 'sub_status'   => $tipe,
             ];
 
-            $prioritasRps = $rpsDiajukan->map(fn($r) => $mapRps($r, 'diajukan'))
-                ->merge($rpsRevisi->map(fn($r) => $mapRps($r, 'revisi')))
+            $prioritasRps = collect($rpsDiajukan->items())
+                ->map(fn($r) => $mapRps($r, 'diajukan'))
+                ->merge(
+                    collect($rpsRevisi->items())->map(fn($r) => $mapRps($r, 'revisi'))
+                )
                 ->take(5);
 
             // Stat counts untuk card

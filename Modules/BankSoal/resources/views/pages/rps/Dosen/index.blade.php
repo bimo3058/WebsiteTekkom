@@ -311,70 +311,60 @@
     <script>
         window.toggleMenu = function(id, event) {
             event.stopPropagation();
-            document.querySelectorAll('.dots-menu').forEach(m => {
-                if (m.id !== 'menu-' + id) {
+            const menus = document.querySelectorAll('.dots-menu');
+            const menu = document.getElementById(`menu-${id}`);
+            
+            menus.forEach(m => {
+                if (m.id !== `menu-${id}`) {
                     m.classList.remove('open');
+                    m.style.top = '';
+                    m.style.bottom = '';
+                    m.style.left = '';
+                    m.style.right = '';
                 }
             });
-            const menu = document.getElementById('menu-' + id);
-            if (menu) menu.classList.toggle('open');
+            
+            if (menu) {
+                menu.classList.toggle('open');
+                
+                if (menu.classList.contains('open')) {
+                    const rect = menu.getBoundingClientRect();
+                    const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                    
+                    if (rect.bottom > viewHeight) {
+                        menu.style.top = 'auto';
+                        menu.style.bottom = '100%';
+                        menu.style.marginBottom = '5px';
+                    } else {
+                        menu.style.top = '100%';
+                        menu.style.bottom = 'auto';
+                        menu.style.marginBottom = '0';
+                        menu.style.marginTop = '5px';
+                    }
+                    
+                    if (rect.left < 0) {
+                        menu.style.right = 'auto';
+                        menu.style.left = '0';
+                    }
+                } else {
+                    menu.style.top = '';
+                    menu.style.bottom = '';
+                    menu.style.left = '';
+                    menu.style.right = '';
+                }
+            }
         };
 
         document.addEventListener('click', function() {
             document.querySelectorAll('.dots-menu').forEach(m => m.classList.remove('open'));
         });
 
-        (function() {
-            // Klien-side pagination untuk Riwayat Pengajuan RPS
-            initClientSidePagination();
+        document.addEventListener('DOMContentLoaded', function() {
+            const uploadModal = document.getElementById('rpsUploadModal');
+            const editModal = document.getElementById('rpsEditModal');
+            const hasValidationErrors = document.getElementById('rpsUploadModal')?.dataset?.hasValidationErrors === '1';
 
-            // Menu toggle logic
-            window.toggleMenu = function(id, event) {
-                event.stopPropagation();
-                const menus = document.querySelectorAll('.dots-menu');
-                const menu = document.getElementById(`menu-${id}`);
-                
-                menus.forEach(m => {
-                    if (m.id !== `menu-${id}`) {
-                        m.classList.remove('open');
-                        m.style.top = '';
-                        m.style.bottom = '';
-                        m.style.left = '';
-                        m.style.right = '';
-                    }
-                });
-                
-                if (menu) {
-                    menu.classList.toggle('open');
-                    
-                    if (menu.classList.contains('open')) {
-                        const rect = menu.getBoundingClientRect();
-                        const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-                        const viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
-                        
-                        if (rect.bottom > viewHeight) {
-                            menu.style.top = 'auto';
-                            menu.style.bottom = '100%';
-                            menu.style.marginBottom = '5px';
-                        } else {
-                            menu.style.top = '100%';
-                            menu.style.bottom = 'auto';
-                            menu.style.marginBottom = '0';
-                            menu.style.marginTop = '5px';
-                        }
-                        
-                        if (rect.left < 0) {
-                            menu.style.right = 'auto';
-                            menu.style.left = '0';
-                        }
-                    } else {
-                        menu.style.top = '';
-                        menu.style.bottom = '';
-                        menu.style.left = '';
-                        menu.style.right = '';
-                    }
-                }
-            });
+            initClientSidePagination();
 
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
@@ -391,7 +381,6 @@
                 window.openRpsUploadModal();
             }
 
-            // Event listener untuk tombol Edit RPS
             document.addEventListener('click', function(event) {
                 const editBtn = event.target.closest('.edit-rps-btn');
                 if (editBtn) {
@@ -401,10 +390,7 @@
                     }
                 }
             });
-
-            // Klien-side pagination untuk Riwayat Pengajuan RPS
-            initClientSidePagination();
-        })();
+        });
 
         function initClientSidePagination() {
             const itemsPerPage = 5;
@@ -450,19 +436,13 @@
                 }).sort((a, b) => {
                     const mkCompare = normalize(a.dataset.mk).localeCompare(normalize(b.dataset.mk), 'id');
                     if (mkCompare !== 0) return mkCompare;
-
                     return normalize(b.dataset.year).localeCompare(normalize(a.dataset.year), 'id');
                 });
             }
 
             function updateEmptyState(totalItems) {
                 if (!emptyState) return;
-
-                if (totalItems === 0) {
-                    emptyState.style.display = 'block';
-                } else {
-                    emptyState.style.display = 'none';
-                }
+                emptyState.style.display = totalItems === 0 ? 'block' : 'none';
             }
 
             function showPage(page) {
@@ -473,12 +453,8 @@
                 const end = start + itemsPerPage;
                 const pageRows = filteredRows.slice(start, end);
 
-                realRows.forEach((row, index) => {
-                    if (pageRows.includes(row)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
+                realRows.forEach((row) => {
+                    row.style.display = pageRows.includes(row) ? '' : 'none';
                 });
 
                 updateEmptyState(totalItems);
@@ -490,31 +466,20 @@
                 const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
 
                 if (totalItems === 0 || totalPages <= 1) {
-                    if (pagination) {
-                        pagination.style.display = 'none';
-                    }
-                    if (paginationList) {
-                        paginationList.innerHTML = '';
-                    }
+                    if (pagination) pagination.style.display = 'none';
+                    if (paginationList) paginationList.innerHTML = '';
                     return;
                 }
 
                 const buttons = [];
                 buttons.push(`<button type="button" class="pagination-btn" onclick="window.rpsTablePageChanger(${Math.max(1, currentPage - 1)})" ${currentPage === 1 ? 'disabled' : ''}>&lsaquo;</button>`);
-
                 for (let page = 1; page <= totalPages; page++) {
                     buttons.push(`<button type="button" class="pagination-btn ${page === currentPage ? 'active' : ''}" onclick="window.rpsTablePageChanger(${page})">${page}</button>`);
                 }
-
                 buttons.push(`<button type="button" class="pagination-btn" onclick="window.rpsTablePageChanger(${Math.min(totalPages, currentPage + 1)})" ${currentPage === totalPages ? 'disabled' : ''}>&rsaquo;</button>`);
 
-                if (paginationList) {
-                    paginationList.innerHTML = buttons.join('');
-                }
-
-                if (pagination) {
-                    pagination.style.display = 'flex';
-                }
+                if (paginationList) paginationList.innerHTML = buttons.join('');
+                if (pagination) pagination.style.display = 'flex';
             }
 
             window.handleRiwayatSearch = function() {
@@ -530,11 +495,8 @@
 
             function syncStatusOptions() {
                 if (!statusSelect) return;
-
                 const currentValue = statusSelect.value;
-                const statuses = [...new Set(realRows.map((row) => String(row.dataset.status || '').trim()).filter(Boolean))]
-                    .sort((a, b) => a.localeCompare(b, 'id'));
-
+                const statuses = [...new Set(realRows.map((row) => String(row.dataset.status || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
                 statusSelect.innerHTML = '<option value="">Semua</option>';
                 statuses.forEach((status) => {
                     const option = document.createElement('option');
@@ -542,18 +504,14 @@
                     option.textContent = status.charAt(0).toUpperCase() + status.slice(1);
                     statusSelect.appendChild(option);
                 });
-
                 statusSelect.value = statuses.includes(currentValue) ? currentValue : '';
                 selectedStatus = statusSelect.value;
             }
 
             function syncMkOptions() {
                 if (!mkSelect) return;
-
                 const currentValue = mkSelect.value;
-                const mks = [...new Set(realRows.map((row) => String(row.dataset.mk || '').trim()).filter(Boolean))]
-                    .sort((a, b) => a.localeCompare(b, 'id'));
-
+                const mks = [...new Set(realRows.map((row) => String(row.dataset.mk || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
                 mkSelect.innerHTML = '<option value="">Semua</option>';
                 mks.forEach((mk) => {
                     const option = document.createElement('option');
@@ -561,7 +519,6 @@
                     option.textContent = mk;
                     mkSelect.appendChild(option);
                 });
-
                 mkSelect.value = mks.includes(currentValue) ? currentValue : '';
                 selectedMk = mkSelect.value;
             }

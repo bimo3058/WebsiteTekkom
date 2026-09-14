@@ -26,21 +26,7 @@
     .pagination-btn.active { background: rgb(11,38,110); border-color: rgb(11,38,110); color: #fff; }
     .pagination-ellipsis { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; font-size: 12px; color: #94a3b8; }
 
-    /* Table loading spinner */
-    .tbl-loading {
-        align-items: center; justify-content: center;
-        gap: 10px; padding: 40px 20px;
-        color: #475569; font-size: 13px;
-    }
-    .tbl-spinner {
-        width: 32px; height: 32px;
-        border: 3px solid #e2e8f0;
-        border-top-color: rgb(11, 38, 110);
-        border-radius: 50%;
-        animation: tbl-spin 0.7s linear infinite;
-        flex-shrink: 0;
-    }
-    @keyframes tbl-spin { to { transform: rotate(360deg); } }
+
 </style>
 
 <x-banksoal::ui.page-header title="Manajemen Bank Soal" subtitle="Kelola dan organisir repositori pertanyaan Anda">
@@ -720,8 +706,7 @@
         }, 10);
 
         listDiv.classList.add('hidden');
-        loadDiv.classList.remove('hidden');
-        loadDiv.classList.add('flex');
+        if (window.Spinner) window.Spinner.showTable('lihatSoalLoading');
 
         fetch(`/bank-soal/soal/dosen/get-by-mk/${mk_id}`, {
             method: 'GET',
@@ -732,8 +717,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            loadDiv.classList.remove('flex');
-            loadDiv.classList.add('hidden');
+            if (window.Spinner) window.Spinner.hideTable('lihatSoalLoading');
             listDiv.classList.remove('hidden');
             listDiv.innerHTML = '';
 
@@ -783,8 +767,7 @@
             }
         })
         .catch(error => {
-            loadDiv.classList.add('hidden');
-            loadDiv.classList.remove('flex');
+            if (window.Spinner) window.Spinner.hideTable('lihatSoalLoading');
             listDiv.classList.remove('hidden');
             listDiv.innerHTML = `<div class="text-center py-12 text-red-500 bg-white border border-slate-200 shadow-sm rounded-xl mx-5 mb-5"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p class="text-sm font-medium">Gagal memuat soal.</p></div>`;
         });
@@ -886,10 +869,7 @@
 
         <!-- Body -->
         <div class="flex-1 overflow-y-auto bg-slate-50/50">
-            <div id="lihatSoalLoading" class="hidden flex-col items-center justify-center py-16 tbl-loading">
-                <div class="tbl-spinner mb-4"></div>
-                <p class="text-sm font-medium text-slate-500">Memuat rincian soal...</p>
-            </div>
+            <div id="lihatSoalLoading" style="display:none;"></div>
             <div id="lihatSoalList" class="flex flex-col">
                 <!-- Items go here -->
             </div>

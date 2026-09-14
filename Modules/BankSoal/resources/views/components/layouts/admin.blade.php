@@ -5,11 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Admin Portal') }}</title>
+    <title>SIBASO: Sistem Informasi Bank Soal</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
+
+    <!-- Tom Select CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <link href="{{ asset('modules/banksoal/css/tom-select-custom.css') }}" rel="stylesheet">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -72,24 +79,14 @@
     <!-- Global Component untuk Toast Message -->
     <x-banksoal::global-toast />
 
-    <!-- Global Loader Overlay (Style 1 for non-interruptible POST/mutation queries) -->
-    <div class="pm-loader" id="loaderOverlay" style="position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:999999;">
-        <div class="pm-spinner" style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:rgb(11,38,110);border-radius:50%;animation:pm-spin .7s linear infinite;"></div>
-    </div>
-    <style>
-        .pm-loader.show { display: flex !important; }
-        @keyframes pm-spin { to { transform: rotate(360deg); } }
-    </style>
-    <script>
-        window.showLoader = function() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) overlay.classList.add('show');
-        };
-        window.hideLoader = function() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) overlay.classList.remove('show');
-        };
-    </script>
+    <!-- Global Loader Overlay (Initialized by Spinner.js) -->
+    <script src="{{ asset('modules/banksoal/js/Banksoal/shared/Spinner.js') }}"></script>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
+
+    <!-- Tom Select JS -->
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
     @livewireScripts
     @stack('scripts')
