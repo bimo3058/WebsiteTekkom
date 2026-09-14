@@ -10,7 +10,7 @@
     <style>
         * { font-family: 'Inter Tight', sans-serif; }
         :root {
-            --primary-50:#eef2ff;--primary-100:#e0e7ff;--primary-500:#4f46e5;
+            --primary-50:#EBEDF6;--primary-100:#D0D6E9;--primary-500:#2A3A7C;
             --grey-50:#f9fafb;--grey-100:#f3f4f6;--grey-200:#e5e7eb;
             --grey-400:#9ca3af;--grey-500:#6b7280;--grey-600:#4b5563;
             --grey-700:#374151;--grey-800:#1f2937;--grey-900:#030712;
@@ -58,16 +58,16 @@
                         <!-- Tab Headers (Navbar Surat) -->
                         <div class="border-b border-grey-200 bg-grey-50 px-4 flex flex-wrap gap-2">
                             <button type="button" @click="activeSuratTab = 'pengantar'" 
-                                    :class="activeSuratTab === 'pengantar' ? 'border-indigo-500 text-indigo-600 font-semibold' : 'border-transparent text-grey-500 hover:text-grey-700'"
+                                    :class="activeSuratTab === 'pengantar' ? 'border-primary-500 text-primary-500 font-semibold' : 'border-transparent text-grey-500 hover:text-grey-700'"
                                     class="py-3 px-4 border-b-2 font-medium text-sm transition-all focus:outline-none">
                                 Surat Pengantar Departemen
                             </button>
                             <button type="button" @click="activeSuratTab = 'template_lain'" 
-                                    :class="activeSuratTab === 'template_lain' ? 'border-indigo-500 text-indigo-600 font-semibold' : 'border-transparent text-grey-500 hover:text-grey-700'"
+                                    :class="activeSuratTab === 'template_lain' ? 'border-primary-500 text-primary-500 font-semibold' : 'border-transparent text-grey-500 hover:text-grey-700'"
                                     class="py-3 px-4 border-b-2 font-medium text-sm transition-all flex items-center gap-1.5 focus:outline-none">
                                 Template Lainnya 
                                 @if($templatesKeperluan->count() > 0)
-                                    <span class="bg-indigo-100 text-indigo-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                                    <span class="bg-primary-100 text-primary-500 text-[10px] px-1.5 py-0.5 rounded-full font-bold">
                                         {{ $templatesKeperluan->count() }}
                                     </span>
                                 @endif
@@ -100,16 +100,16 @@
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                         <div>
                                             <label class="block text-sm font-semibold text-grey-700 mb-1.5">Nama Instansi / Perusahaan <span class="text-red-500">*</span></label>
-                                            <input type="text" name="instansi" x-model="suratForm.instansi" required class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-grey-50" placeholder="Contoh: PT. ABC Indonesia" style="border-color:var(--grey-200);">
+                                            <input type="text" name="instansi" x-model="suratForm.instansi" required class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-grey-50" placeholder="Contoh: PT. ABC Indonesia" style="border-color:var(--grey-200);">
                                         </div>
                                         <div>
                                             <label class="block text-sm font-semibold text-grey-700 mb-1.5">Alamat Lengkap Instansi <span class="text-red-500">*</span></label>
-                                            <input type="text" name="alamat" x-model="suratForm.alamat" required class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-grey-50" placeholder="Contoh: Jl. Sudirman No. 12, Jakarta" style="border-color:var(--grey-200);">
+                                            <input type="text" name="alamat" x-model="suratForm.alamat" required class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-grey-50" placeholder="Contoh: Jl. Sudirman No. 12, Jakarta" style="border-color:var(--grey-200);">
                                         </div>
                                     </div>
                                     <div class="mb-6">
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">Durasi &amp; Waktu Pelaksanaan <span class="text-red-500">*</span></label>
-                                        <input type="text" name="durasi" x-model="suratForm.durasi" required class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-grey-50" placeholder="Contoh: 1 Juni 2026 s.d 31 Agustus 2026" style="border-color:var(--grey-200);">
+                                        <input type="text" name="durasi" x-model="suratForm.durasi" required class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-grey-50" placeholder="Contoh: 1 Juni 2026 s.d 31 Agustus 2026" style="border-color:var(--grey-200);">
                                     </div>
 
                                     <!-- Group Members / Anggota -->
@@ -134,23 +134,23 @@
                                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         <div>
                                                             <label class="block text-xs font-semibold text-grey-600 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
-                                                            <input type="text" x-model="mhs.nama" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white" placeholder="Nama Lengkap Mahasiswa" style="border-color:var(--grey-200);">
+                                                            <input type="text" x-model="mhs.nama" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-white" placeholder="Nama Lengkap Mahasiswa" style="border-color:var(--grey-200);">
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs font-semibold text-grey-600 mb-1">NIM <span class="text-red-500">*</span></label>
-                                                            <input type="text" x-model="mhs.nim" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white" placeholder="NIM" style="border-color:var(--grey-200);">
+                                                            <input type="text" x-model="mhs.nim" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-white" placeholder="NIM" style="border-color:var(--grey-200);">
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs font-semibold text-grey-600 mb-1">Semester <span class="text-red-500">*</span></label>
-                                                            <input type="text" x-model="mhs.semester" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white" placeholder="Contoh: 4 (Empat)" style="border-color:var(--grey-200);">
+                                                            <input type="text" x-model="mhs.semester" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-white" placeholder="Contoh: 4 (Empat)" style="border-color:var(--grey-200);">
                                                         </div>
                                                         <div>
                                                             <label class="block text-xs font-semibold text-grey-600 mb-1">No. HP / Telepon <span class="text-red-500">*</span></label>
-                                                            <input type="text" x-model="mhs.no_hp" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white" placeholder="No. HP" style="border-color:var(--grey-200);">
+                                                            <input type="text" x-model="mhs.no_hp" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-white" placeholder="No. HP" style="border-color:var(--grey-200);">
                                                         </div>
                                                         <div class="md:col-span-2">
                                                             <label class="block text-xs font-semibold text-grey-600 mb-1">Alamat Domisili <span class="text-red-500">*</span></label>
-                                                            <input type="text" x-model="mhs.alamat" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white" placeholder="Alamat lengkap mahasiswa" style="border-color:var(--grey-200);">
+                                                            <input type="text" x-model="mhs.alamat" required class="w-full rounded-lg px-3 py-2 text-xs border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-white" placeholder="Alamat lengkap mahasiswa" style="border-color:var(--grey-200);">
                                                         </div>
                                                     </div>
                                                 </div>
@@ -164,7 +164,7 @@
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                             Unduh PDF
                                         </button>
-                                        <button type="submit" @click="suratForm.format = 'word'" class="sikape-btn-primary bg-blue-600 hover:bg-blue-700">
+                                        <button type="submit" @click="suratForm.format = 'word'" class="sikape-btn-primary bg-primary-500 hover:bg-primary-500">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                             Unduh Word
                                         </button>
@@ -183,7 +183,7 @@
                                                     <p class="text-xs text-grey-500 leading-relaxed">{{ $template->konten }}</p>
                                                 </div>
                                                 @if($template->lampiran)
-                                                    <a href="{{ url('storage/' . $template->lampiran) }}" target="_blank" download class="sikape-btn-primary bg-indigo-600 hover:bg-indigo-700 text-xs py-2 px-4 flex-shrink-0">
+                                                    <a href="{{ url('storage/' . $template->lampiran) }}" target="_blank" download class="sikape-btn-primary bg-primary-500 hover:bg-primary-500 text-xs py-2 px-4 flex-shrink-0">
                                                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                                         Unduh
                                                     </a>

@@ -3,8 +3,8 @@
 namespace Modules\Capstone\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\User;
-use App\Models\Group;
+use App\Models\Lecturer;
+use App\Models\Student;
 
 class Evaluation extends Model
 {
@@ -13,7 +13,7 @@ class Evaluation extends Model
 
     public function evaluator()
     {
-        return $this->belongsTo(User::class, 'evaluator_id');
+        return $this->belongsTo(Lecturer::class, 'evaluator_id');
     }
 
     public function group()
@@ -23,6 +23,6 @@ class Evaluation extends Model
 
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 }

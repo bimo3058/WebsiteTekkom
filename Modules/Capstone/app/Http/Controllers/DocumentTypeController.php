@@ -27,6 +27,11 @@ class DocumentTypeController extends Controller
         return response()->json($type, 201);
     }
 
+    public function show($id)
+    {
+        return response()->json(DocumentType::findOrFail($id));
+    }
+
     public function update(Request $request, $id)
     {
         $type = DocumentType::findOrFail($id);

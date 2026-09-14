@@ -39,8 +39,9 @@ class CbtEngineController extends Controller
 
         $token = strtoupper($request->token);
 
-        // Cari JadwalUjian yang aktif dan berisi mahasiswa ini sebagai pendaftar yang approved
+        // Cari JadwalUjian yang aktif dengan token cocok dan berisi mahasiswa ini sebagai pendaftar yang approved
         $jadwal = JadwalUjian::where('status', 'aktif')
+            ->where('token', $token)
             ->whereHas('pendaftars', function ($q) {
                 $q->where('mahasiswa_id', auth()->id())
                   ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
@@ -50,10 +51,6 @@ class CbtEngineController extends Controller
 
         if (! $jadwal) {
             return back()->with('error', 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian yang aktif.');
-        }
-
-        if ($jadwal->token !== $token) {
-            return back()->with('error', 'Token yang Anda masukkan salah.');
         }
 
         if (! now()->isSameDay($jadwal->tanggal_ujian)) {
@@ -95,8 +92,9 @@ class CbtEngineController extends Controller
 
         $token = strtoupper($request->token);
 
-        // Cari JadwalUjian yang aktif dan berisi mahasiswa ini sebagai pendaftar yang approved
+        // Cari JadwalUjian yang aktif dengan token cocok dan berisi mahasiswa ini sebagai pendaftar yang approved
         $jadwal = JadwalUjian::where('status', 'aktif')
+            ->where('token', $token)
             ->whereHas('pendaftars', function ($q) {
                 $q->where('mahasiswa_id', auth()->id())
                   ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
@@ -106,10 +104,6 @@ class CbtEngineController extends Controller
 
         if (! $jadwal) {
             return response()->json(['valid' => false, 'message' => 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian yang aktif.']);
-        }
-
-        if ($jadwal->token !== $token) {
-            return response()->json(['valid' => false, 'message' => 'Token yang Anda masukkan salah.']);
         }
 
         if (! now()->isSameDay($jadwal->tanggal_ujian)) {

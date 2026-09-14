@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect } from "react";
+import { redirectToWebsiteLogin } from "@/lib/sso";
 
 export default function LoginPage() {
-    useEffect(() => {
-        window.location.href = process.env.NEXT_PUBLIC_WEBTEKKOM_URL || "/";
-    }, []);
+  useEffect(() => {
+    redirectToWebsiteLogin();
+  }, []);
 
-    return <p>Mengalihkan ke login...</p>;
+  return (
+    <main className="flex min-h-screen items-center justify-center">
+      <p className="text-sm text-muted-foreground">Mengalihkan ke SSO WebsiteTekkom…</p>
+    </main>
+  );
 }

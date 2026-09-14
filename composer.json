@@ -66,6 +66,12 @@
             "@php artisan config:clear --ansi",
             "@php artisan test"
         ],
+        "optimize:production": [
+            "@php artisan optimize --ansi"
+        ],
+        "optimize:clear": [
+            "@php artisan optimize:clear --ansi"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"

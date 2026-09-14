@@ -2,6 +2,8 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Student;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class TaSubmission extends Model
@@ -51,7 +53,7 @@ class TaSubmission extends Model
 
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     public function group()

@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 
 class PeerReview extends Model
@@ -27,12 +28,12 @@ class PeerReview extends Model
 
     public function reviewer()
     {
-        return $this->belongsTo(User::class, 'reviewer_id');
+        return $this->belongsTo(Student::class, 'reviewer_id');
     }
 
     public function reviewee()
     {
-        return $this->belongsTo(User::class, 'reviewee_id');
+        return $this->belongsTo(Student::class, 'reviewee_id');
     }
 
     public function indicator()

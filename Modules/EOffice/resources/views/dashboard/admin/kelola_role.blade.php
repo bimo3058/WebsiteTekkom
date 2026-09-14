@@ -27,7 +27,7 @@
     <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
         class="fixed inset-y-0 left-0 z-30 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
         <div class="h-20 flex items-center px-8 border-b border-slate-100 shrink-0">
-            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold mr-4 shadow-md shadow-indigo-200 flex-shrink-0">
+            <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center text-white font-bold mr-4 shadow-md shadow-primary-200 flex-shrink-0">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
                 </svg>
@@ -44,7 +44,7 @@
             </div>
 
             <a href="{{ route('eoffice.admin.template_proposal') }}"
-                class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-primary-500 hover:bg-primary-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
@@ -53,15 +53,15 @@
 
             <!-- Active Menu: Kelola Role -->
             <a href="{{ route('eoffice.admin.kelola_role') }}"
-                class="flex items-center px-4 py-3 mb-1 text-sm font-semibold text-indigo-700 bg-white shadow-sm border border-indigo-100 rounded-xl relative">
-                <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                class="flex items-center px-4 py-3 mb-1 text-sm font-semibold text-primary-500 bg-white shadow-sm border border-primary-100 rounded-xl relative">
+                <svg class="w-5 h-5 mr-3 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
                 </svg>
                 Kelola Role
             </a>
 
             <a href="{{ route('eoffice.admin.validasi_timeline') }}"
-                class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-primary-500 hover:bg-primary-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -71,7 +71,7 @@
 
         <div class="p-4 border-t border-slate-100 shrink-0">
             <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">{{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}</div>
+                <div class="w-9 h-9 rounded-full bg-primary-100 flex items-center justify-center text-primary-500 font-bold text-sm shadow-sm border border-primary-200">{{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}</div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name ?? 'Admin SIKAPE' }}</p>
                     <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? 'admin@sikape.undip.ac.id' }}</p>
@@ -92,11 +92,11 @@
                 <nav class="hidden sm:flex items-center space-x-2 text-sm text-slate-500 font-medium">
                     <span class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">Sistem</span>
                     <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                    <span class="text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md">Kelola Role & Permission</span>
+                    <span class="text-primary-500 font-semibold bg-primary-50 px-2.5 py-1 rounded-md">Kelola Role & Permission</span>
                 </nav>
             </div>
             <div class="flex items-center gap-3">
-                <button class="px-4 py-2 bg-indigo-600 text-white font-bold text-sm rounded-xl hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors flex items-center gap-2">
+                <button class="px-4 py-2 bg-primary-500 text-white font-bold text-sm rounded-xl hover:bg-primary-500 shadow-sm shadow-primary-200 transition-colors flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
                     Undang Pengguna
                 </button>
@@ -135,11 +135,11 @@
                     <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4 items-center justify-between">
                         <div class="relative w-full sm:max-w-xs">
                             <input type="text" x-model="searchQuery" placeholder="Cari nama atau email..." 
-                                   class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm">
+                                   class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 transition-all shadow-sm">
                             <svg class="absolute left-3.5 top-3 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                         </div>
                         <div class="flex gap-2 w-full sm:w-auto">
-                            <select x-model="filterRole" class="flex-1 sm:flex-none bg-white border border-slate-200 rounded-lg text-sm font-medium px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-slate-600 shadow-sm">
+                            <select x-model="filterRole" class="flex-1 sm:flex-none bg-white border border-slate-200 rounded-lg text-sm font-medium px-4 py-2.5 focus:outline-none focus:border-primary-500 text-slate-600 shadow-sm">
                                 <option value="all">Semua Role</option>
                                 <option value="Mahasiswa">Mahasiswa</option>
                                 <option value="Dosen">Dosen</option>
@@ -168,7 +168,7 @@
                                                     <span x-text="user.name.charAt(0)"></span>
                                                 </div>
                                                 <div>
-                                                    <p class="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors" x-text="user.name"></p>
+                                                    <p class="font-bold text-slate-900 group-hover:text-primary-500 transition-colors" x-text="user.name"></p>
                                                     <p class="text-xs text-slate-500 font-medium" x-text="user.email"></p>
                                                 </div>
                                             </div>
@@ -194,7 +194,7 @@
                                             </div>
                                         </td>
                                         <td class="px-6 py-4 text-right">
-                                            <button @click="openAssignModal(user)" class="inline-flex items-center px-3 py-1.5 bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 text-xs font-bold rounded-lg transition-all shadow-sm">
+                                            <button @click="openAssignModal(user)" class="inline-flex items-center px-3 py-1.5 bg-white border border-slate-200 hover:border-primary-300 hover:bg-primary-50 text-slate-600 hover:text-primary-500 text-xs font-bold rounded-lg transition-all shadow-sm">
                                                 <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                                                 Kelola
                                             </button>
@@ -238,14 +238,14 @@
                     <template x-if="editingUser">
                         <div>
                             <!-- User Info Header -->
-                            <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                            <div class="flex items-center gap-4 mb-8 p-4 rounded-2xl bg-primary-50/50 border border-primary-100">
                                 <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shrink-0 text-white shadow-sm"
                                      :class="getAvatarStyle(editingUser.name)">
                                     <span x-text="editingUser.name.charAt(0)"></span>
                                 </div>
                                 <div>
                                     <p class="font-bold text-slate-900 text-base" x-text="editingUser.name"></p>
-                                    <p class="text-sm text-indigo-600 font-medium" x-text="editingUser.email"></p>
+                                    <p class="text-sm text-primary-500 font-medium" x-text="editingUser.email"></p>
                                 </div>
                             </div>
                             
@@ -255,10 +255,10 @@
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <template x-for="roleDef in availableRoles" :key="roleDef.name">
                                         <label class="relative flex items-start p-4 cursor-pointer rounded-xl border transition-all duration-200"
-                                               :class="tempRoles.includes(roleDef.name) ? 'bg-indigo-50/50 border-indigo-600 shadow-sm ring-1 ring-indigo-600' : 'bg-white border-slate-200 hover:border-indigo-300'">
+                                               :class="tempRoles.includes(roleDef.name) ? 'bg-primary-50/50 border-primary-500 shadow-sm ring-1 ring-primary-500' : 'bg-white border-slate-200 hover:border-primary-300'">
                                             <div class="flex items-center h-5">
                                                 <input type="checkbox" :value="roleDef.name" x-model="tempRoles" 
-                                                       class="w-4 h-4 text-indigo-600 bg-white border-slate-300 rounded focus:ring-indigo-500 focus:ring-2">
+                                                       class="w-4 h-4 text-primary-500 bg-white border-slate-300 rounded focus:ring-primary-500 focus:ring-2">
                                             </div>
                                             <div class="ml-3 flex flex-col">
                                                 <span class="text-sm font-bold text-slate-900" x-text="roleDef.name"></span>
@@ -276,8 +276,8 @@
                                     <template x-for="permDef in availablePermissions" :key="permDef">
                                         <label class="flex items-center cursor-pointer group">
                                             <input type="checkbox" :value="permDef" x-model="tempPermissions" 
-                                                   class="w-4 h-4 text-indigo-600 bg-white border-slate-300 rounded focus:ring-indigo-500 focus:ring-2">
-                                            <span class="ml-3 text-sm font-medium text-slate-700 group-hover:text-indigo-600 transition-colors" x-text="permDef"></span>
+                                                   class="w-4 h-4 text-primary-500 bg-white border-slate-300 rounded focus:ring-primary-500 focus:ring-2">
+                                            <span class="ml-3 text-sm font-medium text-slate-700 group-hover:text-primary-500 transition-colors" x-text="permDef"></span>
                                         </label>
                                     </template>
                                 </div>
@@ -288,7 +288,7 @@
                 
                 <div class="px-8 py-5 bg-white border-t border-slate-100 flex gap-3 justify-end rounded-b-3xl shrink-0">
                     <button @click="assignModalOpen = false" class="px-5 py-2.5 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors">Batal</button>
-                    <button @click="saveRoleAssignment()" class="px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors flex items-center gap-2">
+                    <button @click="saveRoleAssignment()" class="px-5 py-2.5 bg-primary-500 text-white text-sm font-bold rounded-xl hover:bg-primary-500 shadow-sm shadow-primary-200 transition-colors flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
                         Simpan Perubahan
                     </button>
@@ -385,18 +385,18 @@
             
             getAvatarStyle(name) {
                 const char = name.charAt(0).toUpperCase();
-                if(['A','B','C','D','E'].includes(char)) return 'bg-blue-500 text-white';
+                if(['A','B','C','D','E'].includes(char)) return 'bg-primary-500 text-white';
                 if(['F','G','H','I','J'].includes(char)) return 'bg-emerald-500 text-white';
                 if(['K','L','M','N','O'].includes(char)) return 'bg-amber-500 text-white';
-                if(['P','Q','R','S','T'].includes(char)) return 'bg-indigo-500 text-white';
-                return 'bg-purple-500 text-white';
+                if(['P','Q','R','S','T'].includes(char)) return 'bg-primary-500 text-white';
+                return 'bg-primary-500 text-white';
             },
             
             getRoleColor(role) {
                 switch(role) {
-                    case 'Koordinator': return 'bg-purple-50 text-purple-600 border-purple-200';
+                    case 'Koordinator': return 'bg-primary-50 text-primary-500 border-primary-200';
                     case 'Admin': return 'bg-red-50 text-red-600 border-red-200';
-                    case 'Dosen': return 'bg-indigo-50 text-indigo-600 border-indigo-200';
+                    case 'Dosen': return 'bg-primary-50 text-primary-500 border-primary-200';
                     case 'Mahasiswa': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
                     default: return 'bg-slate-100 text-slate-500 border-slate-200';
                 }

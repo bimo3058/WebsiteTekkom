@@ -2,12 +2,13 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\AuditLog;
-use App\Models\Bid;
-use App\Models\Group;
-use App\Models\Supervision;
-use App\Models\Title;
-use App\Models\User;
+use App\Models\Lecturer;
+use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\Bid;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\Supervision;
+use Modules\Capstone\Models\Title;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -197,11 +198,13 @@ class FinalizationService
      */
     public function getSupervisorLoad(int $periodId, int $maxLoad): array
     {
-        $lecturers = User::where('role', 'dosen')->get();
+        $lecturers = Lecturer::whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))->get();
 
         $loadData = [];
         foreach ($lecturers as $lecturer) {
-            $currentLoad = $lecturer->supervisionLoadInPeriod($periodId);
+            $currentLoad = Supervision::where('supervisor_id', $lecturer->id)
+                ->whereHas('group', fn ($query) => $query->where('period_id', $periodId))
+                ->count();
             $loadData[] = [
                 'lecturer' => $lecturer,
                 'current_load' => $currentLoad,
@@ -221,7 +224,7 @@ class FinalizationService
     {
         return DB::transaction(function () use ($periodId, $adminId) {
             // Lock the period row to prevent concurrent finalization
-            $period = \App\Models\Period::lockForUpdate()->findOrFail($periodId);
+            $period = Period::lockForUpdate()->findOrFail($periodId);
 
             // Fetch all ACCEPT bids for this period, grouped by title, ordered by priority
             $acceptBids = Bid::where('lecturer_recommendation', 'ACCEPT')
@@ -326,4 +329,3 @@ class FinalizationService
         });
     }
 }
-

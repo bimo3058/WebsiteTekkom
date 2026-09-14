@@ -1,43 +1,46 @@
 <?php
-namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+namespace Modules\Capstone\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use App\Models\Lecturer;
+use App\Models\Student;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
-use App\Models\Student;
-use App\Models\Lecturer;
-use Modules\Capstone\Models\Period;
-use Modules\Capstone\Models\Title;
+use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\Document;
+use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\Title;
 
 class DashboardController extends Controller
 {
     public function admin()
     {
         return response()->json([
-            'total_users'     => User::count(),
-            'total_students'  => Student::count(),
+            'total_users' => User::count(),
+            'total_students' => Student::count(),
             'total_lecturers' => Lecturer::count(),
-            'active_periods'  => Period::where('is_active', true)->get(),
+            'active_periods' => Period::where('is_active', true)->get(),
         ]);
     }
 
-    public function dosen()
+    public function dosen(Request $request)
     {
-        $user     = Auth::user();
+        $user = Auth::user();
         $lecturer = $user->lecturer;
 
-        if (!$lecturer) {
+        if (! $lecturer) {
             return response()->json(['message' => 'Data dosen tidak ditemukan.'], 403);
         }
 
-        $titles = Title::where('lecturer_id', $lecturer->id)->get();
+        $totalTitles = Title::where('lecturer_id', $lecturer->id)->count();
 
-        $activeGroups = Group::whereIn('title_id', $titles->pluck('id'))
-            ->where('status', 'APPROVED')
+        $periodId = $request->input('period_id');
+        $activeGroups = Group::supervisedBy($lecturer->id)
+            ->whereNotIn('status', ['FORMING', 'CLOSED', 'DISSOLVED', 'REJECTED'])
+            ->when($periodId && $periodId !== 'all', fn ($query) => $query->where('period_id', $periodId))
             ->count();
 
         $pendingProposals = Title::where('proposed_supervisor_id', $lecturer->id)
@@ -46,45 +49,48 @@ class DashboardController extends Controller
             ->count();
 
         return response()->json([
-            'total_titles'     => $titles->count(),
-            'active_groups'    => $activeGroups,
+            'total_titles' => $totalTitles,
+            'active_groups' => $activeGroups,
             'pending_bimbingan' => 0,
             'pending_proposals' => $pendingProposals,
+            'available_periods' => Period::orderByDesc('created_at')->get(['id', 'name', 'is_active']),
+            'selected_period_id' => $periodId ?: 'all',
         ]);
     }
 
     public function mahasiswa()
     {
-        $user    = Auth::user();
+        $user = Auth::user();
         $student = $user->student;
 
-        if (!$student) {
+        if (! $student) {
             return response()->json(['message' => 'Data mahasiswa tidak ditemukan.'], 403);
         }
 
         $groupMember = GroupMember::with(['group.title', 'group.period'])
             ->where('student_id', $student->id)
-            ->whereHas('group', fn($q) => $q->where('status', '!=', 'REJECTED'))
+            ->whereHas('group', fn ($q) => $q->where('status', '!=', 'REJECTED'))
             ->first();
 
         $group = $groupMember?->group;
 
-        $documents = $group
-            ? Document::where('group_id', $group->id)->get()
-            : collect([]);
-
         $phases = ['PDC1', 'SEMPRO', 'PDC2', 'TA', 'SIDANG', 'EXPO'];
-        $steps  = [];
-        foreach ($phases as $phase) {
-            $steps[$phase] = $documents
-                ->where('phase', $phase)
+        $approvedPhases = $group
+            ? Document::where('group_id', $group->id)
                 ->where('status', 'APPROVED')
-                ->isNotEmpty();
+                ->whereIn('phase', $phases)
+                ->distinct()
+                ->pluck('phase')
+            : collect();
+
+        $steps = [];
+        foreach ($phases as $phase) {
+            $steps[$phase] = $approvedPhases->contains($phase);
         }
 
         $isGraduated = $group
             && $group->status === 'APPROVED'
-            && collect($steps)->every(fn($v) => $v === true);
+            && collect($steps)->every(fn ($v) => $v === true);
 
         $pendingProposal = null;
         if ($group) {
@@ -97,13 +103,13 @@ class DashboardController extends Controller
         }
 
         return response()->json([
-            'has_group'        => (bool) $group,
-            'group_status'     => $group?->status,
-            'title'            => $group?->title?->title,
-            'group_period'     => $group?->period,
-            'active_periods'   => Period::where('is_active', true)->get(),
-            'steps'            => $steps,
-            'is_graduated'     => $isGraduated,
+            'has_group' => (bool) $group,
+            'group_status' => $group?->status,
+            'title' => $group?->title?->title,
+            'group_period' => $group?->period,
+            'active_periods' => Period::where('is_active', true)->get(),
+            'steps' => $steps,
+            'is_graduated' => $isGraduated,
             'pending_proposal' => $pendingProposal,
         ]);
     }

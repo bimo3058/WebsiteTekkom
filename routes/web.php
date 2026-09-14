@@ -127,7 +127,7 @@ Route::middleware('auth')->group(function () {
         // Hapus user (soft-delete)
         Route::delete('/users/bulk-destroy', [SuperAdminController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::delete('/users/{user}', [SuperAdminController::class, 'destroyUser'])
-            ->name('users.destroy');
+            ->name('users.destroy-direct');
         Route::delete('/users/{user}/destroy', [SuperAdminController::class, 'destroyUser'])->name('users.destroy');
 
         Route::get('/modules', [SuperAdminController::class, 'modules'])

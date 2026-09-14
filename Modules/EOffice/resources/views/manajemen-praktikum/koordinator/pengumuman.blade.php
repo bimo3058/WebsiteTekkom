@@ -6,10 +6,6 @@
 
 {{-- Page Header --}}
 <div class="mp-page-header">
-    <div>
-        
-        
-    </div>
     <div class="mp-page-actions">
         @if($praktikum->is_active)
         <button onclick="document.getElementById('modalCreate').classList.remove('hidden')" class="mp-btn primary md">

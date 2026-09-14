@@ -241,10 +241,10 @@
             <aside class="w-1/5 pr-10 py-8 overflow-hidden">
                 <div class="bg-white border border-slate-200 h-full flex flex-col shadow-sm rounded-2xl overflow-hidden">
                     <div class="p-5 border-b border-slate-200 bg-white">
-                        <h2 class="text-sm font-black uppercase tracking-tight text-slate-800">Navigasi Soal (<span x-text="soals.length"></span>)</h2>
-                        <div class="flex flex-wrap gap-x-4 gap-y-2 mt-3">
+                        <h2 class="text-sm font-black uppercase tracking-tight text-slate-800">Navigasi Soal</h2>
+                        <div class="flex flex-nowrap gap-x-4 mt-3">
                             <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500"><div class="w-4 h-4 bg-primary border-none rounded-[3px]"></div> Terjawab</div>
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500"><div class="w-4 h-4 bg-yellow-400 border-none rounded-[3px]"></div> Ragu</div>
+                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500"><div class="w-4 h-4 bg-yellow-400 border-none rounded-[3px]"></div> Ragu-Ragu</div>
                             <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500"><div class="w-4 h-4 bg-white border border-slate-300 rounded-[3px]"></div> Kosong</div>
                         </div>
                     </div>

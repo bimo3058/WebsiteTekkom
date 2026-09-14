@@ -7,8 +7,11 @@ use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarEvaluation;
 use Modules\Capstone\Models\SeminarSchedule;
-use App\Services\GroupStateMachine;
-use App\Services\SchedulingService;
+use App\Models\Lecturer;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Services\SchedulingService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class SemproController extends Controller
@@ -43,13 +46,13 @@ class SemproController extends Controller
     public function schedule(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => 'required|exists:capstone_groups,id',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         $group = Group::findOrFail($request->group_id);
@@ -104,8 +107,8 @@ class SemproController extends Controller
         ]);
 
         // Send notifications to group members and examiners
-        $notificationService = app(\App\Services\NotificationService::class);
-        $studentIds = $group->members()->pluck('student_id')->toArray();
+        $notificationService = app(NotificationService::class);
+        $studentIds = $group->members()->with('student')->get()->pluck('student.user_id')->filter()->all();
         $notificationService->sendToMany(
             $studentIds,
             'SCHEDULE_APPROVED', // Using existing type for scheduled
@@ -115,7 +118,7 @@ class SemproController extends Controller
             $schedule->id
         );
         $notificationService->sendToMany(
-            [$schedule->examiner_1_id, $schedule->examiner_2_id],
+            Lecturer::whereIn('id', [$schedule->examiner_1_id, $schedule->examiner_2_id])->pluck('user_id')->all(),
             'SCHEDULE_APPROVED',
             'You are assigned as an examiner',
             "You have been assigned as an examiner for a SEMPRO on {$schedule->date} at {$schedule->start_time}.",
@@ -141,10 +144,11 @@ class SemproController extends Controller
         ]);
 
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         // Find the examiner's evaluation row
         $evaluation = SeminarEvaluation::where('schedule_id', $scheduleId)
-            ->where('examiner_id', $user->id)
+            ->where('examiner_id', $lecturerId)
             ->first();
 
         if (!$evaluation) {
@@ -182,8 +186,8 @@ class SemproController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         $schedule = SeminarSchedule::where('id', $id)
@@ -235,8 +239,8 @@ class SemproController extends Controller
         ]);
 
         // Send notifications to group members and examiners
-        $notificationService = app(\App\Services\NotificationService::class);
-        $studentIds = $group->members()->pluck('student_id')->toArray();
+        $notificationService = app(NotificationService::class);
+        $studentIds = $group->members()->with('student')->get()->pluck('student.user_id')->filter()->all();
         $notificationService->sendToMany(
             $studentIds,
             'SCHEDULE_APPROVED',
@@ -246,7 +250,7 @@ class SemproController extends Controller
             $schedule->id
         );
         $notificationService->sendToMany(
-            [$schedule->examiner_1_id, $schedule->examiner_2_id],
+            Lecturer::whereIn('id', [$schedule->examiner_1_id, $schedule->examiner_2_id])->pluck('user_id')->all(),
             'SCHEDULE_APPROVED',
             'You are assigned as an examiner',
             "You have been assigned as an examiner for a SEMPRO on {$schedule->date} at {$schedule->start_time}.",
@@ -280,10 +284,10 @@ class SemproController extends Controller
         ]);
 
         // Notify students
-        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService = app(NotificationService::class);
         $group = Group::find($schedule->group_id);
         if ($group) {
-            $studentIds = $group->members()->pluck('student_id')->toArray();
+            $studentIds = $group->members()->with('student')->get()->pluck('student.user_id')->filter()->all();
             $notificationService->sendToMany(
                 $studentIds,
                 'SCHEDULE_REJECTED',

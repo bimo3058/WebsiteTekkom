@@ -2,7 +2,7 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\Group;
+use Modules\Capstone\Models\Group;
 use InvalidArgumentException;
 
 class GroupStateMachine

@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Modules\Capstone\Models\PeerReview;
 use Modules\Capstone\Models\PeerReviewIndicator;
 use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\Supervision;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class PeerReviewController extends Controller
@@ -16,7 +19,8 @@ class PeerReviewController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $member = GroupMember::where('student_id', $user->id)->first();
+        $studentId = CapstoneActor::student($user)->id;
+        $member = GroupMember::where('student_id', $studentId)->first();
 
         if (!$member) {
             return response()->json(['message' => 'You are not in any group'], 404);
@@ -31,17 +35,17 @@ class PeerReviewController extends Controller
 
         // Get existing peer reviews by this user
         $existingReviews = PeerReview::where('group_id', $group->id)
-            ->where('reviewer_id', $user->id)
+            ->where('reviewer_id', $studentId)
             ->get();
 
         // Get other members (exclude self)
         $otherMembers = $group->members()
-            ->where('student_id', '!=', $user->id)
+            ->where('student_id', '!=', $studentId)
             ->with('student')
             ->get();
 
         // Check if locked
-        $stateMachine = new \App\Services\GroupStateMachine();
+        $stateMachine = app(GroupStateMachine::class);
         $isLocked = !$stateMachine->isAtLeast($group, 'EXPO_REGISTERED');
 
         return response()->json([
@@ -59,7 +63,7 @@ class PeerReviewController extends Controller
     public function status(Request $request)
     {
         $user = $request->user();
-        $member = GroupMember::where('student_id', $user->id)->with('group')->first();
+        $member = GroupMember::where('student_id', CapstoneActor::student($user)->id)->with('group')->first();
 
         if (!$member || !$member->group) {
             return response()->json(['active' => false]);
@@ -77,16 +81,17 @@ class PeerReviewController extends Controller
     {
         $request->validate([
             'reviews' => 'required|array|min:1',
-            'reviews.*.reviewee_id' => 'required|exists:users,id',
-            'reviews.*.indicator_id' => 'required|exists:peer_review_indicators,id',
+            'reviews.*.reviewee_id' => 'required|exists:students,id',
+            'reviews.*.indicator_id' => 'required|exists:capstone_peer_review_indicators,id',
             'reviews.*.score' => 'required|numeric|min:0|max:100',
             'reviews.*.comment' => 'nullable|string',
         ]);
 
         $user = $request->user();
-        $member = GroupMember::with('group')->where('student_id', $user->id)->firstOrFail();
+        $studentId = CapstoneActor::student($user)->id;
+        $member = GroupMember::with('group')->where('student_id', $studentId)->firstOrFail();
 
-        $stateMachine = new \App\Services\GroupStateMachine();
+        $stateMachine = app(GroupStateMachine::class);
         if (!$stateMachine->isAtLeast($member->group, 'EXPO_REGISTERED')) {
             return response()->json(['message' => 'Peer review is locked until your group reaches the Expo stage.'], 403);
         }
@@ -94,10 +99,19 @@ class PeerReviewController extends Controller
         $saved = [];
 
         foreach ($request->reviews as $review) {
+            $isGroupMember = GroupMember::where('group_id', $member->group_id)
+                ->where('student_id', $review['reviewee_id'])
+                ->where('student_id', '!=', $studentId)
+                ->exists();
+
+            if (! $isGroupMember) {
+                return response()->json(['message' => 'Reviewee bukan anggota kelompok Anda.'], 422);
+            }
+
             $saved[] = PeerReview::updateOrCreate(
                 [
                     'group_id' => $member->group_id,
-                    'reviewer_id' => $user->id,
+                    'reviewer_id' => $studentId,
                     'reviewee_id' => $review['reviewee_id'],
                     'indicator_id' => $review['indicator_id'],
                 ],
@@ -117,8 +131,15 @@ class PeerReviewController extends Controller
     public function groupReviews(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => 'required|exists:capstone_groups,id',
         ]);
+
+        $lecturerId = CapstoneActor::lecturer($request->user())->id;
+        abort_unless(
+            Supervision::where('group_id', $request->group_id)->where('supervisor_id', $lecturerId)->exists(),
+            403,
+            'Anda bukan dosen pembimbing kelompok ini.'
+        );
 
         $reviews = PeerReview::with(['reviewer', 'reviewee', 'indicator'])
             ->where('group_id', $request->group_id)
@@ -151,7 +172,7 @@ class PeerReviewController extends Controller
     public function indicators(Request $request)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
         ]);
 
         return response()->json(
@@ -167,7 +188,7 @@ class PeerReviewController extends Controller
     public function storeIndicator(Request $request)
     {
         $data = $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'weight' => 'required|numeric|min:0|max:100',

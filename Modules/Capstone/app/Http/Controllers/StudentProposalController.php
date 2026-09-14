@@ -8,8 +8,11 @@ use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\Notification;
+use Modules\Capstone\Models\Bid;
+use App\Models\Lecturer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Support\CapstoneActor;
 
 class StudentProposalController extends Controller
 {
@@ -18,10 +21,11 @@ class StudentProposalController extends Controller
      */
     public function lecturers()
     {
-        $lecturers = \App\Models\Lecturer::with('user')
-            ->select('id', 'name', 'email')
-            ->orderBy('name')
-            ->get();
+        $lecturers = Lecturer::with('user')
+            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+            ->get()
+            ->sortBy('name')
+            ->values();
 
         return response()->json(['data' => $lecturers]);
     }
@@ -38,13 +42,13 @@ class StudentProposalController extends Controller
             'scope' => 'required|string',
             'specializations' => 'sometimes|array',
             'specializations.*' => 'string|in:Software,Embedded,Network,Multimedia,AI,Blockchain',
-            'proposed_supervisor_id' => 'required|exists:users,id',
+            'proposed_supervisor_id' => 'required|exists:lecturers,id',
         ]);
 
         $user = $request->user();
 
         // Find user's active group
-        $membership = GroupMember::where('student_id', $user->id)
+        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->whereHas('group', function ($q) {
                 $q->where('status', '!=', 'REJECTED');
             })
@@ -87,7 +91,7 @@ class StudentProposalController extends Controller
         }
 
         // Combined limit: bids + student proposals <= 3
-        $bidCount = \App\Models\Bid::where('group_id', $group->id)->count();
+        $bidCount = Bid::where('group_id', $group->id)->count();
         $proposalCount = Title::where('proposed_by_group_id', $group->id)
             ->where('title_source', 'STUDENT')
             ->whereIn('supervisor_approval_status', ['PENDING', 'APPROVED'])
@@ -104,8 +108,8 @@ class StudentProposalController extends Controller
         }
 
         // Verify supervisor is a valid lecturer
-        $supervisor = \App\Models\User::where('id', $validated['proposed_supervisor_id'])
-            ->where('role', 'dosen')
+        $supervisor = Lecturer::whereKey($validated['proposed_supervisor_id'])
+            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
             ->first();
 
         if (!$supervisor) {
@@ -133,7 +137,7 @@ class StudentProposalController extends Controller
 
             // Notify the supervisor
             Notification::create([
-                'user_id' => $validated['proposed_supervisor_id'],
+                'user_id' => $supervisor->user_id,
                 'type' => 'PROPOSAL_SUBMITTED',
                 'title' => 'New Title Proposal',
                 'message' => "New title proposal from group #{$group->id}: \"{$validated['title']}\"",
@@ -160,7 +164,7 @@ class StudentProposalController extends Controller
     {
         $user = $request->user();
 
-        $membership = GroupMember::where('student_id', $user->id)
+        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->whereHas('group', function ($q) {
                 $q->where('status', '!=', 'REJECTED');
             })
@@ -185,17 +189,17 @@ class StudentProposalController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'title_id' => 'required|exists:titles,id',
+            'title_id' => 'required|exists:capstone_titles,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'problem_statement' => 'required|string',
             'scope' => 'required|string',
-            'proposed_supervisor_id' => 'sometimes|exists:users,id',
+            'proposed_supervisor_id' => 'sometimes|exists:lecturers,id',
         ]);
 
         $user = $request->user();
 
-        $membership = GroupMember::where('student_id', $user->id)
+        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->whereHas('group', function ($q) {
                 $q->where('status', '!=', 'REJECTED');
             })
@@ -226,6 +230,9 @@ class StudentProposalController extends Controller
         DB::beginTransaction();
         try {
             $supervisorId = $validated['proposed_supervisor_id'] ?? $title->proposed_supervisor_id;
+            $supervisor = Lecturer::whereKey($supervisorId)
+                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+                ->firstOrFail();
 
             $title->update([
                 'title' => $validated['title'],
@@ -243,7 +250,7 @@ class StudentProposalController extends Controller
 
             // Notify supervisor
             Notification::create([
-                'user_id' => $supervisorId,
+                'user_id' => $supervisor->user_id,
                 'type' => 'PROPOSAL_RESUBMITTED',
                 'title' => 'Resubmitted Title Proposal',
                 'message' => "Resubmitted title proposal from group #{$group->id}: \"{$validated['title']}\"",

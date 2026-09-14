@@ -5,6 +5,9 @@ use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\AssessmentScore;
 use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class AssessmentScoreController extends Controller
@@ -16,12 +19,13 @@ class AssessmentScoreController extends Controller
     public function index(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => 'required|exists:capstone_groups,id',
             'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
         ]);
 
-        $user = $request->user();
-        $group = \App\Models\Group::with('members.student', 'period')->findOrFail($request->group_id);
+        $lecturerId = CapstoneActor::lecturer($request->user())->id;
+        $group = Group::with('members.student', 'period')->findOrFail($request->group_id);
+        $this->authorizeEvaluator($group, $lecturerId);
 
         // Get components for this period + type
         $components = AssessmentComponent::where('period_id', $group->period_id)
@@ -30,7 +34,7 @@ class AssessmentScoreController extends Controller
             ->get();
 
         // Get existing scores by this evaluator for this group
-        $existingScores = AssessmentScore::where('evaluator_id', $user->id)
+        $existingScores = AssessmentScore::where('evaluator_id', $lecturerId)
             ->where('group_id', $group->id)
             ->where('evaluation_type', $request->type)
             ->get()
@@ -51,23 +55,44 @@ class AssessmentScoreController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => 'required|exists:capstone_groups,id',
             'evaluation_type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
             'scores' => 'required|array|min:1',
-            'scores.*.component_id' => 'required|exists:assessment_components,id',
-            'scores.*.student_id' => 'nullable|exists:users,id',
+            'scores.*.component_id' => 'required|exists:capstone_assessment_components,id',
+            'scores.*.student_id' => 'nullable|exists:students,id',
             'scores.*.score' => 'required|numeric|min:0|max:100',
             'scores.*.notes' => 'nullable|string',
         ]);
 
-        $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($request->user())->id;
+        $group = Group::findOrFail($request->group_id);
+        $this->authorizeEvaluator($group, $lecturerId);
         $saved = [];
 
         foreach ($request->scores as $scoreData) {
+            if (($scoreData['student_id'] ?? null) !== null) {
+                abort_unless(
+                    GroupMember::where('group_id', $group->id)
+                        ->where('student_id', $scoreData['student_id'])
+                        ->exists(),
+                    422,
+                    'Mahasiswa bukan anggota kelompok yang dinilai.'
+                );
+            }
+
+            abort_unless(
+                AssessmentComponent::whereKey($scoreData['component_id'])
+                    ->where('period_id', $group->period_id)
+                    ->where('type', $request->evaluation_type)
+                    ->exists(),
+                422,
+                'Komponen penilaian tidak sesuai periode atau jenis evaluasi.'
+            );
+
             $saved[] = AssessmentScore::updateOrCreate(
                 [
                     'component_id' => $scoreData['component_id'],
-                    'evaluator_id' => $user->id,
+                    'evaluator_id' => $lecturerId,
                     'student_id' => $scoreData['student_id'] ?? null,
                 ],
                 [
@@ -88,7 +113,7 @@ class AssessmentScoreController extends Controller
     public function summary(Request $request)
     {
         $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
             'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN',
         ]);
 
@@ -118,5 +143,21 @@ class AssessmentScoreController extends Controller
         });
 
         return response()->json($grouped);
+    }
+
+    private function authorizeEvaluator(Group $group, int $lecturerId): void
+    {
+        $allowed = $group->supervisions()->where('supervisor_id', $lecturerId)->exists()
+            || $group->seminarSchedules()
+                ->where(fn ($query) => $query
+                    ->where('examiner_1_id', $lecturerId)
+                    ->orWhere('examiner_2_id', $lecturerId))
+                ->exists()
+            || $group->taDefenseSchedules()
+                ->whereHas('examiners', fn ($query) => $query->where('examiner_id', $lecturerId))
+                ->exists()
+            || $group->title?->lecturer_id === $lecturerId;
+
+        abort_unless($allowed, 403, 'Anda tidak ditugaskan untuk menilai kelompok ini.');
     }
 }

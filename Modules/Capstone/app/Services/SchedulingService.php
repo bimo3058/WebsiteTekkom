@@ -2,15 +2,16 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\Group;
-use App\Models\GroupMember;
-use App\Models\SeminarEvaluation;
-use App\Models\SeminarSchedule;
-use App\Models\TaDefenseEvaluation;
-use App\Models\TaDefenseExaminer;
-use App\Models\TaDefenseSchedule;
-use App\Models\TaSubmission;
-use App\Models\AuditLog;
+use App\Models\Lecturer;
+use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\SeminarEvaluation;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\TaDefenseEvaluation;
+use Modules\Capstone\Models\TaDefenseExaminer;
+use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Models\TaSubmission;
 use Illuminate\Support\Facades\DB;
 
 class SchedulingService
@@ -49,8 +50,10 @@ class SchedulingService
 
         // All must be dosen
         foreach ($examinerIds as $examinerId) {
-            $user = \App\Models\User::find($examinerId);
-            if (!$user || $user->role !== 'dosen') {
+            $lecturer = Lecturer::whereKey($examinerId)
+                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+                ->first();
+            if (! $lecturer) {
                 return "Examiner ID {$examinerId} must be a dosen.";
             }
         }

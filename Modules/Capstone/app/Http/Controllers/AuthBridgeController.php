@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
+use Modules\Capstone\Support\CapstoneActor;
 
 class AuthBridgeController extends Controller
 {
@@ -17,7 +18,7 @@ class AuthBridgeController extends Controller
         ]);
 
         // Rate limit per IP â€” cegah brute force
-        $key = 'capstone-auth-exchange:' . $request->ip();
+        $key = 'capstone-auth-exchange:'.$request->ip();
         if (RateLimiter::tooManyAttempts($key, 10)) {
             return response()->json(['message' => 'Too many attempts.'], 429);
         }
@@ -26,48 +27,108 @@ class AuthBridgeController extends Controller
         // pull = ambil + hapus (atomic) â†’ mencegah replay attack
         $payload = Cache::pull("capstone:ott:{$request->ott}");
 
-        if (!$payload) {
+        if (! $payload) {
             return response()->json(['message' => 'Token kadaluarsa atau invalid.'], 401);
+        }
+
+        if (($payload['ip'] ?? null) !== $request->ip()
+            || ! hash_equals(
+                (string) ($payload['user_agent'] ?? ''),
+                hash('sha256', (string) $request->userAgent())
+            )) {
+            return response()->json(['message' => 'Token tidak cocok dengan sesi browser.'], 401);
         }
 
         $user = User::with(['student', 'lecturer', 'roles'])->findOrFail($payload['user_id']);
 
-        $primaryRole = $this->resolvePrimaryRole($user);
-        if (!$primaryRole) {
+        $primaryRole = CapstoneActor::role($user);
+        if (! $primaryRole) {
             return response()->json(['message' => 'User tidak punya role Capstone.'], 403);
         }
 
-        // Generate Sanctum token (TTL 8 jam)
-        $token = $user->createToken('capstone-fe', ['*'], now()->addHours(8));
+        if (! $user->can('capstone.view')) {
+            return response()->json(['message' => 'User tidak memiliki akses ke modul Capstone.'], 403);
+        }
+
+        if ($primaryRole === 'mahasiswa') {
+            if (! $user->student) {
+                $user->tokens()->where('name', 'capstone-fe')->delete();
+
+                return response()->json([
+                    'message' => 'Data mahasiswa belum terdaftar di SICATA.',
+                    'code' => 'SICATA_STUDENT_NOT_REGISTERED',
+                    'redirect_url' => route('dashboard'),
+                ], 403);
+            }
+        } elseif ($primaryRole === 'dosen') {
+            CapstoneActor::lecturer($user);
+        }
+
+        $user->tokens()->where('name', 'capstone-fe')->delete();
+        $token = $user->createToken(
+            'capstone-fe',
+            ['capstone:access'],
+            now()->addHours((int) config('capstone.token_ttl_hours', 8))
+        );
+
+        return response()->json(['data' => [
+            'access_token' => $token->plainTextToken,
+            'token_type' => 'Bearer',
+            'expires_at' => $token->accessToken->expires_at,
+            'user' => CapstoneActor::payload($user, $primaryRole),
+            'logout' => [
+                'url' => route('capstone.logout'),
+                'csrf_token' => $payload['csrf_token'] ?? null,
+            ],
+        ]]);
+    }
+
+    public function me(Request $request)
+    {
+        $user = $request->user()->loadMissing(['student', 'lecturer', 'roles']);
 
         return response()->json([
-            'access_token' => $token->plainTextToken,
-            'token_type'   => 'Bearer',
-            'expires_at'   => $token->accessToken->expires_at,
-            'user'         => [
-                'id'          => $user->id,
-                'name'        => $user->name,
-                'email'       => $user->email,
-                'role'        => $primaryRole,
-                'lecturer_id' => $user->lecturer?->id,
-                'student_id'  => $user->student?->id,
-            ],
+            'data' => CapstoneActor::payload(
+                $user,
+                $request->header('X-Capstone-Role')
+            ),
         ]);
+    }
+
+    public function setActiveRole(Request $request)
+    {
+        $validated = $request->validate([
+            'role' => ['required', 'string', 'in:admin,dosen,mahasiswa'],
+        ]);
+
+        $user = $request->user()->loadMissing(['student', 'lecturer', 'roles']);
+        $role = CapstoneActor::role($user, $validated['role']);
+
+        if ($role !== $validated['role']) {
+            return response()->json(['message' => 'Role tidak dimiliki pengguna.'], 403);
+        }
+
+        if ($role === 'mahasiswa') {
+            if (! $user->student) {
+                $user->tokens()->where('name', 'capstone-fe')->delete();
+
+                return response()->json([
+                    'message' => 'Data mahasiswa belum terdaftar di SICATA.',
+                    'code' => 'SICATA_STUDENT_NOT_REGISTERED',
+                    'redirect_url' => route('dashboard'),
+                ], 403);
+            }
+        } elseif ($role === 'dosen') {
+            CapstoneActor::lecturer($user);
+        }
+
+        return response()->json(['data' => CapstoneActor::payload($user, $role)]);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-        return response()->json(['message' => 'Logged out.']);
-    }
+        $request->user()->currentAccessToken()?->delete();
 
-    private function resolvePrimaryRole(User $user): ?string
-    {
-        if ($user->hasRole('superadmin') || $user->hasRole('admin_capstone')) {
-            return 'admin';
-        }
-        if ($user->hasRole('dosen')) return 'dosen';
-        if ($user->hasRole('mahasiswa')) return 'mahasiswa';
-        return null;
+        return response()->json(['message' => 'Logged out.']);
     }
 }

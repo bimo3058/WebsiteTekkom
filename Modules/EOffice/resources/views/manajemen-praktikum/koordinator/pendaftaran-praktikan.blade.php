@@ -6,7 +6,6 @@
 
 {{-- Page Header --}}
 
-
 @if($periodeAktif)
 <div class="mp-alert success flex-shrink-0">
     <strong>Pendaftaran Praktikan Sedang Buka:</strong> {{ $periodeAktif->nama }}

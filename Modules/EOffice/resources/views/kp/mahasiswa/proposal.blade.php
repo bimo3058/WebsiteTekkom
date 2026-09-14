@@ -10,7 +10,7 @@
     <style>
         * { font-family: 'Inter Tight', sans-serif; }
         :root {
-            --primary-50:#eef2ff;--primary-100:#e0e7ff;--primary-500:#4f46e5;
+            --primary-50:#EBEDF6;--primary-100:#D0D6E9;--primary-500:#2A3A7C;
             --grey-50:#f9fafb;--grey-100:#f3f4f6;--grey-200:#e5e7eb;
             --grey-400:#9ca3af;--grey-500:#6b7280;--grey-600:#4b5563;
             --grey-700:#374151;--grey-800:#1f2937;--grey-900:#030712;
@@ -204,7 +204,7 @@
                         {{-- ===== STEP 1: Identitas & Data Instansi ===== --}}
                         <div x-show="proposalStep === 1" class="p-6 md:p-8">
                             <h2 class="text-base font-bold text-grey-800 border-b border-grey-100 pb-3 mb-6 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">1</span>
+                                <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center text-xs font-bold">1</span>
                                 Identitas Mahasiswa & Data Instansi
                             </h2>
 
@@ -213,7 +213,7 @@
                                 <div>
                                     <label class="block text-sm font-semibold text-grey-700 mb-1.5">Judul / Topik Proposal <span class="text-red-500">*</span></label>
                                     <input type="text" x-model="proposalForm.judul" required
-                                        class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                        class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                         placeholder="Contoh: Rencana Kerja Praktik di PT. ABC Indonesia — Divisi IT"
                                         style="border-color:var(--grey-200); background:#fdfdff;">
                                 </div>
@@ -223,7 +223,7 @@
                                     <div>
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">NIM <span class="text-red-500">*</span></label>
                                         <input type="text" x-model="proposalForm.nim" required
-                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             placeholder="Nomor Induk Mahasiswa"
                                             style="border-color:var(--grey-200); background:#fdfdff;">
                                     </div>
@@ -231,7 +231,7 @@
                                     <div>
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">Semester <span class="text-red-500">*</span></label>
                                         <input type="text" x-model="proposalForm.semester" required
-                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             placeholder="Contoh: 6 (Enam)"
                                             style="border-color:var(--grey-200); background:#fdfdff;">
                                     </div>
@@ -239,7 +239,7 @@
                                     <div>
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">Nama Instansi / Perusahaan <span class="text-red-500">*</span></label>
                                         <input type="text" x-model="proposalForm.instansi" required
-                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             placeholder="Contoh: PT. ABC Indonesia"
                                             style="border-color:var(--grey-200); background:#fdfdff;">
                                     </div>
@@ -247,7 +247,7 @@
                                     <div>
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">Bidang / Divisi yang Dituju</label>
                                         <input type="text" x-model="proposalForm.bidang"
-                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             placeholder="Contoh: Divisi Teknologi Informasi"
                                             style="border-color:var(--grey-200); background:#fdfdff;">
                                     </div>
@@ -255,7 +255,7 @@
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">Alamat Lengkap Instansi <span class="text-red-500">*</span></label>
                                         <input type="text" x-model="proposalForm.alamat_instansi" required
-                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             placeholder="Jl. Sudirman No. 10, Jakarta Pusat, DKI Jakarta"
                                             style="border-color:var(--grey-200); background:#fdfdff;">
                                     </div>
@@ -263,14 +263,14 @@
                                     <div>
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">Rencana Tanggal Mulai <span class="text-red-500">*</span></label>
                                         <input type="date" x-model="proposalForm.tgl_mulai" required
-                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             style="border-color:var(--grey-200); background:#fdfdff;">
                                     </div>
                                     {{-- Tanggal Selesai --}}
                                     <div>
                                         <label class="block text-sm font-semibold text-grey-700 mb-1.5">Rencana Tanggal Selesai <span class="text-red-500">*</span></label>
                                         <input type="date" x-model="proposalForm.tgl_selesai" required
-                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                                            class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500"
                                             style="border-color:var(--grey-200); background:#fdfdff;">
                                     </div>
                                 </div>
@@ -280,7 +280,7 @@
                         {{-- ===== STEP 2: Isi Proposal ===== --}}
                         <div x-show="proposalStep === 2" class="p-6 md:p-8" style="display:none;">
                             <h2 class="text-base font-bold text-grey-800 border-b border-grey-100 pb-3 mb-6 flex items-center gap-2">
-                                <span class="w-6 h-6 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xs font-bold">2</span>
+                                <span class="w-6 h-6 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center text-xs font-bold">2</span>
                                 Isi Dokumen Proposal
                             </h2>
                             <p class="text-xs text-grey-500 mb-6 leading-relaxed bg-amber-50 border border-amber-100 rounded-lg px-4 py-3">
@@ -293,7 +293,7 @@
                                     <label class="block text-sm font-semibold text-grey-700 mb-1">Latar Belakang <span class="text-red-500">*</span></label>
                                     <p class="text-xs text-grey-400 mb-2">Jelaskan alasan dan motivasi memilih instansi/perusahaan tersebut untuk kegiatan KP.</p>
                                     <textarea x-model="proposalForm.latar_belakang" rows="5" required
-                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-y leading-relaxed"
+                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-y leading-relaxed"
                                         placeholder="Tuliskan latar belakang pemilihan instansi, relevansi dengan bidang studi, dan gambaran umum perusahaan..."
                                         style="border-color:var(--grey-200); background:#fdfdff;"></textarea>
                                 </div>
@@ -303,7 +303,7 @@
                                     <label class="block text-sm font-semibold text-grey-700 mb-1">Tujuan KP <span class="text-red-500">*</span></label>
                                     <p class="text-xs text-grey-400 mb-2">Apa yang ingin dicapai dari pelaksanaan Kerja Praktik ini?</p>
                                     <textarea x-model="proposalForm.tujuan" rows="4" required
-                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-y leading-relaxed"
+                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-y leading-relaxed"
                                         placeholder="1. Mendapatkan pengalaman kerja nyata di bidang...
 2. Memahami proses bisnis di industri...
 3. Menerapkan ilmu yang dipelajari di kampus..."
@@ -315,7 +315,7 @@
                                     <label class="block text-sm font-semibold text-grey-700 mb-1">Manfaat KP</label>
                                     <p class="text-xs text-grey-400 mb-2">Manfaat yang diharapkan bagi mahasiswa, instansi, dan institusi pendidikan.</p>
                                     <textarea x-model="proposalForm.manfaat" rows="4"
-                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-y leading-relaxed"
+                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-y leading-relaxed"
                                         placeholder="Bagi Mahasiswa: ...
 Bagi Instansi: ...
 Bagi Departemen: ..."
@@ -327,7 +327,7 @@ Bagi Departemen: ..."
                                     <label class="block text-sm font-semibold text-grey-700 mb-1">Rencana Kegiatan / Jadwal</label>
                                     <p class="text-xs text-grey-400 mb-2">Uraikan kegiatan atau jadwal yang direncanakan selama masa KP.</p>
                                     <textarea x-model="proposalForm.kegiatan" rows="5"
-                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-y leading-relaxed"
+                                        class="w-full rounded-lg px-4 py-3 text-sm border focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-y leading-relaxed"
                                         placeholder="Minggu 1-2 : Orientasi dan pengenalan lingkungan kerja
 Minggu 3-6 : Pelaksanaan tugas di divisi ...
 Minggu 7-8 : Penyusunan laporan akhir KP"
@@ -382,7 +382,7 @@ Minggu 7-8 : Penyusunan laporan akhir KP"
                                     <input type="hidden" name="instansi" :value="proposalForm.instansi">
                                     <input type="hidden" name="content" :value="buildProposalContent()">
                                     <button type="submit"
-                                        class="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all">
+                                        class="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-white bg-primary-500 hover:bg-primary-500 shadow-sm transition-all">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                         Generate & Unduh Word
                                     </button>
@@ -400,7 +400,7 @@ Minggu 7-8 : Penyusunan laporan akhir KP"
 
                             {{-- Lanjut --}}
                             <template x-if="proposalStep < 3">
-                                <button @click="lanjutProposalStep()" class="sikape-btn-primary bg-indigo-600 hover:bg-indigo-700 px-6">
+                                <button @click="lanjutProposalStep()" class="sikape-btn-primary bg-primary-500 hover:bg-primary-500 px-6">
                                     <span x-text="proposalStep === 2 ? 'Simpan & Lanjut' : 'Lanjut'"></span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 </button>

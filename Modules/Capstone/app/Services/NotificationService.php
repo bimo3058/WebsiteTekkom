@@ -2,7 +2,7 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\Notification;
+use Modules\Capstone\Models\Notification;
 
 class NotificationService
 {

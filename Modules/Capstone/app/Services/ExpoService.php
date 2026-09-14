@@ -2,11 +2,12 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\ExpoEvent;
-use App\Models\ExpoRegistration;
-use App\Models\Group;
-use App\Models\SeminarSchedule;
-use App\Models\AuditLog;
+use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\ExpoEvent;
+use Modules\Capstone\Models\ExpoRegistration;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\TaSubmission;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
@@ -57,7 +58,7 @@ class ExpoService
             }
 
             // Guard: Must have at least one TA Draft submitted
-            $taDraftsCount = \App\Models\TaSubmission::where('group_id', $group->id)->count();
+            $taDraftsCount = TaSubmission::where('group_id', $group->id)->count();
             if ($taDraftsCount < 1) {
                 throw new InvalidArgumentException(
                     "Group is not eligible for expo registration. At least 1 member must have submitted a TA draft."
@@ -76,7 +77,7 @@ class ExpoService
             SeminarSchedule::create([
                 'group_id' => $group->id,
                 'type' => 'EXPO',
-                'scheduled_date' => $event->date,
+                'date' => $event->date,
                 'start_time' => $event->start_time,
                 'end_time' => $event->end_time,
                 'room' => $event->room,

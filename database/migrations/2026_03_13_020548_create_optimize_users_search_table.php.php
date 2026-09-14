@@ -12,6 +12,15 @@ return new class extends Migration
 
     public function up(): void
     {
+        if (DB::getDriverName() !== 'pgsql') {
+            Schema::table('user_roles', function (Blueprint $table) {
+                $table->index(['role_id', 'user_id'], 'idx_user_roles_role_user');
+                $table->index(['user_id', 'role_id'], 'idx_user_roles_user_role');
+            });
+
+            return;
+        }
+
         // 1. Aktifkan pg_trgm extension
         DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
 
@@ -56,6 +65,15 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'pgsql') {
+            Schema::table('user_roles', function (Blueprint $table) {
+                $table->dropIndex('idx_user_roles_role_user');
+                $table->dropIndex('idx_user_roles_user_role');
+            });
+
+            return;
+        }
+
         DB::statement('DROP INDEX CONCURRENTLY IF EXISTS idx_users_name_trgm');
         DB::statement('DROP INDEX CONCURRENTLY IF EXISTS idx_users_email_trgm');
         DB::statement('DROP INDEX CONCURRENTLY IF EXISTS idx_users_active_created');

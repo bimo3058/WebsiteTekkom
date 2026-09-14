@@ -4,7 +4,9 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\ExpoEvent;
-use App\Services\ExpoService;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Services\ExpoService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class ExpoEventController extends Controller
@@ -35,7 +37,7 @@ class ExpoEventController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -108,7 +110,7 @@ class ExpoEventController extends Controller
     public function studentEvents(Request $request)
     {
         $user = $request->user();
-        $group = \App\Models\GroupMember::where('student_id', $user->id)
+        $group = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->first()?->group;
 
         if (!$group) {
@@ -137,7 +139,7 @@ class ExpoEventController extends Controller
     public function register(Request $request, ExpoEvent $expoEvent)
     {
         $user = $request->user();
-        $groupMember = \App\Models\GroupMember::where('student_id', $user->id)->first();
+        $groupMember = GroupMember::where('student_id', CapstoneActor::student($user)->id)->first();
 
         if (!$groupMember) {
             return response()->json(['message' => 'You are not in a group.'], 400);

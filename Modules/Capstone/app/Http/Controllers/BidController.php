@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
-use App\Models\User;
-use App\Services\BiddingService;
+use App\Models\Lecturer;
+use Modules\Capstone\Models\Title;
+use Modules\Capstone\Services\BiddingService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,7 +28,7 @@ class BidController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $membership = GroupMember::where('student_id', $user->id)->first();
+        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)->first();
 
         if (!$membership) {
             return response()->json(['data' => []]);
@@ -46,15 +48,15 @@ class BidController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title_id' => 'required|exists:titles,id',
+            'title_id' => 'required|exists:capstone_titles,id',
             'priority' => 'required|integer|min:1',
-            'proposed_supervisor_1_id' => 'required|exists:users,id',
-            'proposed_supervisor_2_id' => 'nullable|exists:users,id|different:proposed_supervisor_1_id',
+            'proposed_supervisor_1_id' => 'required|exists:lecturers,id',
+            'proposed_supervisor_2_id' => 'nullable|exists:lecturers,id|different:proposed_supervisor_1_id',
         ]);
 
         $user = $request->user();
 
-        $membership = GroupMember::where('student_id', $user->id)
+        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->first();
 
         if (!$membership || !$membership->is_leader) {
@@ -62,13 +64,17 @@ class BidController extends Controller
         }
 
         // Validate supervisors are dosen
-        $sup1 = User::find($request->proposed_supervisor_1_id);
-        if (!$sup1 || $sup1->role !== 'dosen') {
+        $sup1 = Lecturer::whereKey($request->proposed_supervisor_1_id)
+            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+            ->first();
+        if (! $sup1) {
             return response()->json(['message' => 'Proposed supervisor 1 must be a dosen.'], 400);
         }
         if ($request->proposed_supervisor_2_id) {
-            $sup2 = User::find($request->proposed_supervisor_2_id);
-            if (!$sup2 || $sup2->role !== 'dosen') {
+            $sup2 = Lecturer::whereKey($request->proposed_supervisor_2_id)
+                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+                ->first();
+            if (! $sup2) {
                 return response()->json(['message' => 'Proposed supervisor 2 must be a dosen.'], 400);
             }
         }
@@ -91,7 +97,7 @@ class BidController extends Controller
 
         // Combined limit: bids + student proposals <= 3
         $bidCount = Bid::where('group_id', $group->id)->count();
-        $proposalCount = \App\Models\Title::where('proposed_by_group_id', $group->id)
+        $proposalCount = Title::where('proposed_by_group_id', $group->id)
             ->where('title_source', 'STUDENT')
             ->whereIn('supervisor_approval_status', ['PENDING', 'APPROVED'])
             ->count();
@@ -130,7 +136,7 @@ class BidController extends Controller
     {
         $user = $request->user();
 
-        $membership = GroupMember::where('student_id', $user->id)
+        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->first();
 
         if (!$membership || !$membership->is_leader) {
@@ -157,10 +163,11 @@ class BidController extends Controller
     public function lecturerBids(Request $request)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $bids = Bid::with(['group.members.student', 'title', 'proposedSupervisor1', 'proposedSupervisor2'])
-            ->whereHas('title', function ($q) use ($user) {
-                $q->where('lecturer_id', $user->id);
+            ->whereHas('title', function ($q) use ($lecturerId) {
+                $q->where('lecturer_id', $lecturerId);
             })
             ->orderBy('title_id')
             ->orderBy('priority')
@@ -179,11 +186,12 @@ class BidController extends Controller
         ]);
 
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $bid = Bid::with('title')->findOrFail($id);
 
         // Verify lecturer owns the title
-        if ($bid->title->lecturer_id !== $user->id) {
+        if ($bid->title->lecturer_id !== $lecturerId) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

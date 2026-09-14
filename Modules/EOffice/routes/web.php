@@ -565,6 +565,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/dokumen/template/{type}', [MahasiswaKpController::class, 'downloadTemplate'])->name('dokumen.template');
             Route::post('/dokumen/export-a2', [MahasiswaKpController::class, 'exportA2'])->name('dokumen.export_a2');
             Route::post('/dokumen/generate-a2', [MahasiswaKpController::class, 'generateA2'])->name('dokumen.generate_a2');
+            Route::post('/dokumen/lanjut-pasca-kp', [MahasiswaKpController::class, 'lanjutPascaKp'])->name('dokumen.lanjut_pasca_kp');
+            Route::post('/dokumen/submit-validasi', [MahasiswaKpController::class, 'submitBatchValidasi'])->name('dokumen.submit_validasi');
             Route::get('/seminar', [MahasiswaKpController::class, 'seminar'])->name('seminar');
             Route::post('/seminar', [MahasiswaKpController::class, 'storeSeminar'])->name('seminar.store');
         });
@@ -572,16 +574,20 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         Route::prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
             Route::get('/bimbingan', [DosenController::class, 'bimbingan'])->name('bimbingan.index');
-            Route::get('/bimbingan/{id}', [DosenController::class, 'show'])->name('bimbingan.show');
+            // Unified Workspace Routes (Bimbingan Detail)
+            Route::get('/bimbingan/{id}', [DosenController::class, 'showBimbinganDetail'])->name('bimbingan.detail');
+
+            // Re-routed Form A2 / Document Approvals inside Workspace
             Route::post('/bimbingan/{id}/approve-pra-kp', [DosenController::class, 'approvePraKp'])->name('bimbingan.approve_pra_kp');
             Route::post('/bimbingan/{id}/dokumen/{dokumenId}/approve', [DosenController::class, 'approveDokumen'])->name('bimbingan.dokumen.approve');
             Route::post('/bimbingan/{id}/dokumen/{dokumenId}/reject', [DosenController::class, 'rejectDokumen'])->name('bimbingan.dokumen.reject');
-            Route::get('/bimbingan/{id}/penilaian', [DosenController::class, 'showPenilaian'])->name('bimbingan.penilaian');
-            Route::post('/bimbingan/{id}/penilaian', [DosenController::class, 'storePenilaian'])->name('bimbingan.penilaian.store');
-            Route::get('/validasi-berkas', [DosenController::class, 'validasiBerkas'])->name('validasi_berkas');
-            Route::get('/penilaian-seminar', [DosenController::class, 'penilaianSeminar'])->name('penilaian_seminar');
-            Route::post('/penilaian-seminar/{id}/approve', [DosenController::class, 'approveSeminar'])->name('penilaian_seminar.approve');
-            Route::post('/penilaian-seminar/{id}/reject', [DosenController::class, 'rejectSeminar'])->name('penilaian_seminar.reject');
+
+            // Re-routed Penilaian Rubrik Dosen inside Workspace
+            Route::post('/bimbingan/{id}/penilaian-rubrik', [DosenController::class, 'storePenilaian'])->name('bimbingan.penilaian.store');
+
+            // Seminar Scheduling Approval inside Workspace
+            Route::post('/bimbingan/{id}/penilaian-seminar/approve', [DosenController::class, 'approveSeminar'])->name('penilaian_seminar.approve');
+            Route::post('/bimbingan/{id}/penilaian-seminar/reject', [DosenController::class, 'rejectSeminar'])->name('penilaian_seminar.reject');
         });
 
         Route::prefix('koordinator')->name('koordinator.')->group(function () {
@@ -608,14 +614,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::delete('/faq/{id}', [KoordinatorController::class, 'destroyFaq'])->name('faq.destroy');
             Route::get('/upload-berkas', [KoordinatorController::class, 'uploadBerkas'])->name('upload_berkas');
             Route::post('/upload-berkas/template-a2', [KoordinatorController::class, 'storeTemplateA2'])->name('upload_berkas.template_a2');
-            Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
-            Route::post('/validasi-berkas/{id}/approve', [KoordinatorController::class, 'approveDokumen'])->name('validasi_berkas.approve');
-            Route::post('/validasi-berkas/{id}/reject', [KoordinatorController::class, 'rejectDokumen'])->name('validasi_berkas.reject');
-            Route::get('/kelola-role', [KoordinatorController::class, 'kelolaRole'])->name('kelola_role');
-            Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
-            Route::post('/nilai-lapangan/{id}/update', [KoordinatorController::class, 'updateNilaiLapangan'])->name('nilai_lapangan.update');
 
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
+            Route::get('/data-mahasiswa/{id}/detail', [KoordinatorController::class, 'detailMahasiswa'])->name('data_mahasiswa.show');
+            Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/approve', [KoordinatorController::class, 'approveDokumen'])->name('data_mahasiswa.dokumen.approve');
+            Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/reject', [KoordinatorController::class, 'rejectDokumen'])->name('data_mahasiswa.dokumen.reject');
+            Route::post('/data-mahasiswa/{kp_id}/dokumen/{dokumen_id}/reset', [KoordinatorController::class, 'resetDokumen'])->name('data_mahasiswa.dokumen.reset');
             Route::get('/data-mahasiswa/export', [KoordinatorController::class, 'exportDataMahasiswa'])->name('data_mahasiswa.export');
             Route::put('/data-mahasiswa/{id}', [KoordinatorController::class, 'updateDataMahasiswa'])->name('data_mahasiswa.update');
             Route::get('/periode', [KoordinatorController::class, 'periode'])->name('periode');
@@ -625,14 +629,83 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::put('/periode/{id}', [KoordinatorController::class, 'updatePeriode'])->name('periode.update');
             Route::delete('/periode/{id}', [KoordinatorController::class, 'destroyPeriode'])->name('periode.destroy');
 
+            Route::resource('master-rubrik', \Modules\EOffice\Http\Controllers\Koordinator\MasterRubrikController::class);
+
             Route::delete('/pendaftar/{id}', [KoordinatorController::class, 'resetPendaftar'])->name('pendaftar.destroy');
         });
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    // MANAJEMEN PEMINJAMAN
+    // MANAJEMEN PEMINJAMAN / RUANGAN
     // ════════════════════════════════════════════════════════════════════════
-    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Controller Imports
+    // ── Admin ────────────────────────────────────────────────────────────
+
+    $MRAdminRuanganController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\RuanganController::class;
+    $MRAdminPengaturanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PengaturanController::class;
+
+    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminRuanganController, $MRAdminPengaturanController) {
+        Route::get('/dashboard', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\DashboardController::class, 'index'])->name('dashboard');
+
+        // ── ADMIN ────────────────────────────────────────────────────────────
+        Route::middleware(['role:superadmin|admin_eoffice'])
+            ->prefix('admin')->name('admin.')
+            ->group(function () use ($MRAdminRuanganController, $MRAdminPengaturanController) {
+
+                Route::resource('ruangan', $MRAdminRuanganController);
+                Route::delete('ruangan/foto/{id}', [$MRAdminRuanganController, 'destroyFoto'])->name('ruangan.foto.destroy');
+                Route::post('fasilitas/bulk-destroy', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\FasilitasController::class, 'bulkDestroy'])->name('fasilitas.bulkDestroy');
+                Route::resource('fasilitas', \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\FasilitasController::class)->only(['index', 'store', 'destroy']);
+
+                // Persetujuan Peminjaman & Riwayat...
+                Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');
+                Route::get('/riwayat-peminjaman', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'riwayat'])->name('riwayat.index');
+                Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
+                Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
+                Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');
+
+                // Jadwal Akademik (Filter dari tabel Internal)
+                Route::get('jadwal-akademik', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'index'])->name('jadwal-akademik.index');
+                Route::delete('jadwal-akademik/reset', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'resetAkademik'])->name('jadwal-akademik.reset');
+                // Jadwal Internal Administrator (Rutin/Spesifik/Maintenance)
+                Route::resource('jadwal-internal', \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class)->except(['show', 'edit']);
+                Route::get('jadwal-internal/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'checkCollision'])->name('jadwal-internal.check-collision');
+                Route::get('jadwal-akademik-download/template', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'downloadTemplateCSV'])->name('jadwal-akademik.template');
+                Route::post('jadwal-akademik-import/preview', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'importPreview'])->name('jadwal-akademik.import-preview');
+                Route::post('jadwal-akademik-import/execute', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'executeImport'])->name('jadwal-akademik.import-execute');
+
+                Route::get('kalender-global', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'index'])->name('kalender-global.index');
+                Route::post('kalender-global/express', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'expressBooking'])->name('kalender-global.express');
+                Route::get('kalender-global/search-users', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'searchUsers'])->name('kalender-global.search-users');
+
+
+                // Settings
+                Route::get('/pengaturan', [$MRAdminPengaturanController, 'index'])->name('pengaturan.index');
+                Route::post('/pengaturan/operasional', [$MRAdminPengaturanController, 'updateOperasional'])->name('pengaturan.operasional');
+                Route::post('/pengaturan/libur', [$MRAdminPengaturanController, 'addTanggalLibur'])->name('pengaturan.libur');
+                Route::delete('/pengaturan/libur/{id}', [$MRAdminPengaturanController, 'destroyTanggalLibur'])->name('pengaturan.libur.destroy');
+
+                // Hak Akses Menu
+                Route::get('/hak-akses', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\HakAksesController::class, 'index'])->name('hak-akses.index');
+                Route::post('/hak-akses', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\HakAksesController::class, 'update'])->name('hak-akses.update');
+            });
+        // ── USER / MAHASISWA ──────────────────────────────────────────────────
+        $MRUserPeminjamanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\User\UserPeminjamanController::class;
+
+        Route::middleware(['auth'])
+            ->prefix('user')->name('user.')
+            ->group(function () use ($MRUserPeminjamanController) {
+                // Booking Kalender & Catalog
+                Route::get('/booking', [$MRUserPeminjamanController, 'booking'])->name('booking');
+                Route::get('/booking/ruangan/{id}', [$MRUserPeminjamanController, 'showRuangan'])->name('booking.ruangan.show');
+                Route::post('/booking/store', [$MRUserPeminjamanController, 'storeBooking'])->name('booking.store');
+                Route::get('/kalender', [$MRUserPeminjamanController, 'kalender'])->name('kalender');
+
+                // Transaksi
+                Route::get('/saya', [$MRUserPeminjamanController, 'saya'])->name('saya');
+                Route::post('/saya/batal/{id}', [$MRUserPeminjamanController, 'batalkanBooking'])->name('saya.batal');
+                Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
+            });
+
     });
 });
