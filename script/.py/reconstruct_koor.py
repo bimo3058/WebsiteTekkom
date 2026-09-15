@@ -1,6 +1,6 @@
 import sys
 
-with open('fix_cards.py', 'r', encoding='utf-8') as f:
+with open('script/fix_cards.py', 'r', encoding='utf-8') as f:
     text = f.read()
 
 part = text.split('new_section = """')[1]

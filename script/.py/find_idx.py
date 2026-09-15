@@ -1,4 +1,4 @@
-﻿with open("temp.txt", "r", encoding="utf-16") as f:
+﻿with open("script/data/temp.txt", "r", encoding="utf-16") as f:
     text = f.read()
 
 print("Index of Main Modal start:", text.find('<div x-show="showMainModal"'))

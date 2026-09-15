@@ -1,7 +1,7 @@
 ﻿import os
 
 filepath_modul = r'c:\Users\User\manajemen_praktikum_\Modules\EOffice\resources\views\manajemen-praktikum\koordinator\modul.blade.php'
-filepath_extracted = r'c:\Users\User\manajemen_praktikum_\extracted_bagi_modul.txt'
+filepath_extracted = 'script/data/extracted_bagi_modul.txt'
 
 with open(filepath_modul, 'r', encoding='utf-8') as f:
     modul_text = f.read()

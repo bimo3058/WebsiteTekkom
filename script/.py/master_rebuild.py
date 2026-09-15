@@ -4,13 +4,13 @@ import re
 with open('Modules/EOffice/resources/views/manajemen-praktikum/dosen/pendaftaran-koor.blade.php', 'r', encoding='utf-8') as f:
     orig = f.read()
 
-with open('extracted_table.txt', 'r', encoding='utf-8') as f:
+with open('script/data/extracted_table.txt', 'r', encoding='utf-8') as f:
     table_content = f.read()
 
-with open('extracted_form.txt', 'r', encoding='utf-8') as f:
+with open('script/data/extracted_form.txt', 'r', encoding='utf-8') as f:
     form_content = f.read()
 
-with open('extracted_scripts.txt', 'r', encoding='utf-8') as f:
+with open('script/data/extracted_scripts.txt', 'r', encoding='utf-8') as f:
     scripts_content = f.read()
 
 # 1. Update Simpan button with SVG inside Tunjuk Langsung

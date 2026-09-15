@@ -1,5 +1,5 @@
 <?php
-$dir = new RecursiveDirectoryIterator(__DIR__ . '/Modules/EOffice/resources/views/manajemen-praktikum');
+$dir = new RecursiveDirectoryIterator(dirname(__DIR__) . '/Modules/EOffice/resources/views/manajemen-praktikum');
 $ite = new RecursiveIteratorIterator($dir);
 $files = new RegexIterator($ite, '/^.+\.blade\.php$/i', RecursiveRegexIterator::GET_MATCH);
 

@@ -1,6 +1,6 @@
 <?php
-require __DIR__.'/vendor/autoload.php';
-$app = require_once __DIR__.'/bootstrap/app.php';
+require dirname(__DIR__).'/vendor/autoload.php';
+$app = require_once dirname(__DIR__).'/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 
 $a = \Modules\EOffice\Models\PendaftaranAsprak::where('status', 'pending')->where('status_koor', 'disetujui')->first();

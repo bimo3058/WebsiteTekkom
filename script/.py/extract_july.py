@@ -2,7 +2,7 @@ import json
 import re
 
 transcript_path = r'c:\Users\User\.gemini\antigravity-ide\brain\376b94f4-fd09-4d1f-bfd1-713c58b44a41\.system_generated\logs\transcript_full.jsonl'
-output_path = r'c:\Users\User\manajemen_praktikum_\recovered_pendaftaran_koor.blade.php'
+output_path = 'script/recovered_pendaftaran_koor.blade.php'
 
 found_planner = False
 content_captured = []

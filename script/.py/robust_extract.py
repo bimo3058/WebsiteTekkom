@@ -1,7 +1,7 @@
 import json
 
 transcript_path = r'c:\Users\User\.gemini\antigravity-ide\brain\376b94f4-fd09-4d1f-bfd1-713c58b44a41\.system_generated\logs\transcript_full.jsonl'
-output_path = r'c:\Users\User\manajemen_praktikum_\extracted_view.txt'
+output_path = 'script/data/extracted_view.txt'
 
 with open(transcript_path, 'r', encoding='utf-8') as f:
     lines = f.readlines()
