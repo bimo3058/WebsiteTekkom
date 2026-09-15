@@ -15,6 +15,7 @@ foreach ($directory as $file) {
     if (!$file->isFile() || !str_ends_with($file->getFilename(),'.blade.php') || !str_contains(file_get_contents($file->getPathname()),'@extends')) continue;
     $relative=str_replace('\\','/',substr($file->getPathname(),strlen(__DIR__.'/../resources/views/pages/')));
     $pagePath='/'.str_replace('.blade.php','',$relative);
+    if (in_array('--dosen', $argv) && !str_starts_with($pagePath, '/dosen/')) continue;
     $role=str_starts_with($pagePath,'/dosen')?'dosen':(str_starts_with($pagePath,'/mahasiswa')?'mahasiswa':'admin');
     if (in_array('--verbose', $argv)) fwrite(STDERR, $relative.PHP_EOL);
     try {
