@@ -1,4 +1,4 @@
-﻿with open("temp.txt", "r", encoding="utf-16") as f:
+﻿with open("script/data/temp.txt", "r", encoding="utf-16") as f:
     text = f.read()
 
 start = text.find('<div x-show="showMainModal"')
