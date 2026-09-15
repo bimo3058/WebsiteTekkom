@@ -1,1 +1,0 @@
-<x-capstone::feature-link href="/mahasiswa/group">Open</x-capstone::feature-link>

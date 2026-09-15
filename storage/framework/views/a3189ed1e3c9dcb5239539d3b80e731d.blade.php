@@ -1,1 +1,0 @@
-<x-capstone::button href="/mahasiswa/propose-title" ::href="targetUrl" @click="navigate()">Open</x-capstone::button>

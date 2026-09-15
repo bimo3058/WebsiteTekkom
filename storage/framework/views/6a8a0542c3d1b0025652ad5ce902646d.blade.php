@@ -1,1 +1,0 @@
-<x-capstone::feature-link href="/mahasiswa/bidding">Open</x-capstone::feature-link>

@@ -1,1 +1,0 @@
-<x-capstone::button href="/mahasiswa/propose-title">Open</x-capstone::button>

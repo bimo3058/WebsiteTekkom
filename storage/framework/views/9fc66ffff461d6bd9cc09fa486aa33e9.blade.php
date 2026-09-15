@@ -1,1 +1,0 @@
-<x-capstone::button href="/admin/users">Users</x-capstone::button>

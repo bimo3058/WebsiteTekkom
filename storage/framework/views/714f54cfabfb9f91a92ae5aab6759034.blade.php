@@ -1,1 +1,0 @@
-<x-mobile-navigation /><x-mobile-navigation />
