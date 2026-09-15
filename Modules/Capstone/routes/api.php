@@ -85,6 +85,9 @@ Route::prefix('capstone')->group(function () {
 
         // â”€â”€ Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         Route::middleware(['capstone.role:admin'])->prefix('admin')->group(function () {
+            Route::get('/analytics/group-progress', [\Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController::class, 'progress'])->middleware('permission:capstone.groups.view');
+            Route::get('/peer-review-dashboard/groups', [\Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController::class, 'peerReviews'])->middleware('permission:capstone.groups.view');
+            Route::post('/peer-review-dashboard/send-reminder/{group}', [\Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController::class, 'remind'])->middleware(['permission:capstone.groups.manage', 'throttle:10,1']);
             Route::get('/period-wizard/options', [\Modules\Capstone\Http\Controllers\BladePeriodController::class, 'options']);
             Route::get('/period-wizard/{period}', [\Modules\Capstone\Http\Controllers\BladePeriodController::class, 'show']);
             Route::post('/period-wizard', [\Modules\Capstone\Http\Controllers\BladePeriodController::class, 'store']);
@@ -130,6 +133,8 @@ Route::prefix('capstone')->group(function () {
             Route::post('/sempro/schedule', [SemproController::class, 'schedule']);
             Route::put('/sempro/schedules/{id}/approve', [SemproController::class, 'approve']);
             Route::put('/sempro/schedules/{id}/reject', [SemproController::class, 'reject']);
+            Route::put('/sempro/schedules/{id}', [SemproController::class, 'update']);
+            Route::put('/sempro/schedules/{id}/cancel', [SemproController::class, 'cancel']);
 
             // Expo (legacy)
             Route::get('/expo/schedules', [ExpoController::class, 'index']);

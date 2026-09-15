@@ -1,0 +1,501 @@
+<?php if (isset($component)) { $__componentOriginal511d4862ff04963c3c16115c05a86a9d = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal511d4862ff04963c3c16115c05a86a9d = $attributes; } ?>
+<?php $component = Illuminate\View\DynamicComponent::resolve(['component' => $layout] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('dynamic-component'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\DynamicComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+
+<?php $__env->startPush('styles'); ?>
+<style>
+    /* Override main-wrapper for transparent bg like dashboard */
+    .main-wrapper {
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    /* ── Page Header ── */
+    .page-header-alumni {
+        background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
+        border-radius: 16px;
+        padding: 28px 32px;
+        margin-bottom: 20px;
+        color: #fff;
+        position: relative;
+        overflow: hidden;
+    }
+    .page-header-alumni::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+    }
+    .page-header-alumni h3 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0 0 4px;
+        letter-spacing: -0.01em;
+    }
+    .page-header-alumni p {
+        font-size: 14px;
+        color: rgba(255,255,255,0.8);
+        margin: 0;
+    }
+
+    /* ── Stat Cards ── */
+    .stat-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 20px;
+    }
+    @media (max-width: 992px) { .stat-strip { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 576px) { .stat-strip { grid-template-columns: 1fr; } }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 18px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid #DFE1E7;
+        transition: box-shadow 0.2s;
+    }
+    .stat-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .stat-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0D0D12;
+        line-height: 1;
+    }
+    .stat-label {
+        font-size: 12px;
+        color: #666D80;
+        font-weight: 500;
+        margin-top: 2px;
+    }
+
+    /* ── Filter Bar ── */
+    .filter-bar {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #DFE1E7;
+        padding: 16px 20px;
+        margin-bottom: 16px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .search-wrapper {
+        position: relative;
+        flex: 1;
+        min-width: 200px;
+    }
+    .search-icon {
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666D80;
+    }
+    .search-input {
+        background-color: #ffffff;
+        border: 1px solid #DFE1E7;
+        border-radius: 8px;
+        height: 40px;
+        padding-left: 36px;
+        font-size: 13px;
+        font-weight: 500;
+        width: 100%;
+        color: #374151;
+    }
+    .search-input:focus {
+        background-color: #ffffff;
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11,38,110,0.1);
+        outline: none;
+    }
+    .filter-select {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid #DFE1E7;
+        background: #fff;
+        color: #374151;
+        font-size: 13px;
+        font-weight: 600;
+        outline: none;
+        transition: all 0.2s;
+        height: 40px;
+        min-width: 150px;
+    }
+    .filter-select:focus {
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+    }
+
+    /* ── Table ── */
+    .table-card {
+        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #DFE1E7;
+        overflow: hidden;
+    }
+    .alumni-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    .alumni-table thead th {
+        background: #FAFAFA;
+        padding: 12px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        color: #666D80;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 2px solid #DFE1E7;
+        white-space: nowrap;
+    }
+    .alumni-table tbody tr {
+        transition: background 0.15s;
+    }
+    .alumni-table tbody tr:hover {
+        background: #FAFAFA;
+    }
+    .alumni-table tbody td {
+        padding: 13px 16px;
+        font-size: 13.5px;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+        vertical-align: middle;
+    }
+    .alumni-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #eef2ff, #dbe4f5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #0B266E;
+        font-size: 13px;
+        flex-shrink: 0;
+        overflow: hidden;
+        border: 2px solid #eef2ff;
+    }
+    .alumni-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .status-badge {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        display: inline-block;
+        white-space: nowrap;
+    }
+    .status-badge.bekerja { background: #ECFDF5; color: #059669; }
+    .status-badge.wirausaha { background: #FFFBEB; color: #92400e; }
+    .status-badge.studi_lanjut { background: #dbeafe; color: #1e40af; }
+    .status-badge.belum_bekerja { background: #fef2f2; color: #991b1b; }
+    .status-badge.belum_terdata { background: #f3f4f6; color: #353849; }
+
+    .btn-action {
+        padding: 5px 12px;
+        border-radius: 7px;
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        text-decoration: none !important;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+    .btn-action-view { background: #eef2ff; color: #0B266E; }
+    .btn-action-view:hover { background: #eef2ff; color: #091958; }
+    .btn-action-edit { background: #FFFBEB; color: #92400e; }
+    .btn-action-edit:hover { background: #fde68a; color: #78350f; }
+
+    /* ── Empty State ── */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+    .empty-state-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+    }
+    .empty-state h5 {
+        color: #374151;
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+    .empty-state p {
+        color: #666D80;
+        font-size: 14px;
+        margin: 0;
+    }
+
+    /* ── Pagination ── */
+    .pagination-wrapper {
+        padding: 16px 20px;
+        border-top: 1px solid #f3f4f6;
+        display: flex;
+        justify-content: center;
+    }
+</style>
+<?php $__env->stopPush(); ?>
+
+<!-- Flash Messages -->
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        <?php echo e(session('success')); ?>
+
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+<!-- Page Header -->
+<div class="page-header-alumni">
+    <h3>Direktori Alumni</h3>
+    <p>Daftar dan profil karir seluruh lulusan program studi.</p>
+</div>
+
+<!-- Stat Cards -->
+<div class="stat-strip">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #eef2ff;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-value"><?php echo e($totalAlumni); ?></div>
+            <div class="stat-label">Total Alumni</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #ECFDF5;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-value"><?php echo e($bekerja + $wirausaha); ?></div>
+            <div class="stat-label">Bekerja / Wirausaha</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #dbeafe;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-value"><?php echo e($studiLanjut); ?></div>
+            <div class="stat-label">Studi Lanjut</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: #FFFBEB;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+        </div>
+        <div>
+            <div class="stat-value"><?php echo e($belumTerdata); ?></div>
+            <div class="stat-label">Belum Terdata</div>
+        </div>
+    </div>
+</div>
+
+<!-- Search & Filter -->
+<form method="GET" action="<?php echo e(route('manajemenmahasiswa.direktori.alumni.index')); ?>" id="filterForm">
+    <div class="filter-bar">
+        <div class="search-wrapper">
+            <span class="search-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </span>
+            <input type="text" name="search" class="form-control search-input"
+                   placeholder="Cari nama, NIM, atau instansi alumni..." value="<?php echo e(request('search')); ?>">
+        </div>
+        <select name="angkatan" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+            <option value="semua">Semua Angkatan</option>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $angkatanList; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $ank): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <option value="<?php echo e($ank); ?>" <?php echo e(request('angkatan') == $ank ? 'selected' : ''); ?>>Angkatan <?php echo e($ank); ?></option>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+        </select>
+        <select name="status_karir" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+            <option value="semua">Semua Status</option>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $statusKarirOptions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <option value="<?php echo e($val); ?>" <?php echo e(request('status_karir') == $val ? 'selected' : ''); ?>><?php echo e($label); ?></option>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+        </select>
+        <select name="bidang_industri" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+            <option value="semua">Semua Industri</option>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $bidangIndustriOptions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $val => $label): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                <option value="<?php echo e($val); ?>" <?php echo e(request('bidang_industri') == $val ? 'selected' : ''); ?>><?php echo e($label); ?></option>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+        </select>
+    </div>
+</form>
+
+<!-- Alumni Table -->
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($alumni->count() > 0): ?>
+    <div class="table-card">
+        <table class="alumni-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">#</th>
+                    <th>Alumni</th>
+                    <th>NIM</th>
+                    <th>Tahun Lulus</th>
+                    <th>Karir / Instansi</th>
+                    <th>Status</th>
+                    <th style="width: 140px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $alumni; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $alm): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                    <tr>
+                        <td style="color: #666D80; font-weight: 500;"><?php echo e($alumni->firstItem() + $index); ?></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="alumni-avatar">
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($alm->user && $alm->user->avatar_url): ?>
+                                        <img src="<?php echo e($alm->user->avatar_url); ?>" alt="<?php echo e($alm->user->name); ?>">
+                                    <?php else: ?>
+                                        <?php echo e(strtoupper(substr($alm->user->name ?? 'A', 0, 1))); ?>
+
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; color: #0D0D12; font-size: 13.5px;"><?php echo e($alm->user->name ?? 'Tanpa Nama'); ?></div>
+                                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($alm->user && $alm->user->email): ?>
+                                        <div style="font-size: 11.5px; color: #666D80;"><?php echo e($alm->user->email); ?></div>
+                                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-weight: 600; font-family: monospace; color: #0B266E; font-size: 13px;"><?php echo e($alm->nim); ?></td>
+                        <td>
+                            <span style="font-weight: 600;"><?php echo e($alm->tahun_lulus); ?></span>
+                            <div style="font-size: 11px; color: #666D80;">Angk. <?php echo e($alm->angkatan); ?></div>
+                        </td>
+                        <td>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($alm->perusahaan): ?>
+                                <div style="font-weight: 600; color: #374151; font-size: 13px;"><?php echo e(Str::limit($alm->perusahaan, 28)); ?></div>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($alm->jabatan): ?>
+                                    <div style="font-size: 11.5px; color: #666D80;"><?php echo e(Str::limit($alm->jabatan, 28)); ?></div>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php else: ?>
+                                <span style="color: #C1C7CF; font-style: italic; font-size: 13px;">—</span>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </td>
+                        <td>
+                            <span class="status-badge <?php echo e($alm->status_karir ?? 'belum_terdata'); ?>">
+                                <?php echo e($alm->status_karir_label); ?>
+
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="<?php echo e(route('manajemenmahasiswa.direktori.alumni.show', $alm->id)); ?>"
+                                   class="btn-action btn-action-view">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    Detail
+                                </a>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isAdmin): ?>
+                                    <a href="<?php echo e(route('manajemenmahasiswa.direktori.alumni.edit', $alm->id)); ?>"
+                                       class="btn-action btn-action-edit">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                        Edit
+                                    </a>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+                        </td>
+                    </tr>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($alumni->hasPages()): ?>
+            <div class="pagination-wrapper">
+                <?php echo e($alumni->withQueryString()->links()); ?>
+
+            </div>
+        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+    </div>
+<?php else: ?>
+    <div class="table-card">
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="17" y1="11" x2="23" y2="11"></line>
+                </svg>
+            </div>
+            <h5>Belum ada data alumni</h5>
+            <p>Data alumni yang sesuai filter tidak ditemukan.</p>
+        </div>
+    </div>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal511d4862ff04963c3c16115c05a86a9d)): ?>
+<?php $attributes = $__attributesOriginal511d4862ff04963c3c16115c05a86a9d; ?>
+<?php unset($__attributesOriginal511d4862ff04963c3c16115c05a86a9d); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal511d4862ff04963c3c16115c05a86a9d)): ?>
+<?php $component = $__componentOriginal511d4862ff04963c3c16115c05a86a9d; ?>
+<?php unset($__componentOriginal511d4862ff04963c3c16115c05a86a9d); ?>
+<?php endif; ?>
+<?php /**PATH C:\WebsiteTekkom - Copy\Modules\ManajemenMahasiswa\resources\views\direktori\alumni-index.blade.php ENDPATH**/ ?>

@@ -1,8 +1,8 @@
 {
   "total": 83,
   "counts": {
-    "pending": 48,
-    "implemented": 31,
+    "implemented": 57,
+    "pending": 22,
     "session-redirect": 2,
     "page-redirect": 2
   },
@@ -11,7 +11,7 @@
       "route": "/admin/analytics/progress",
       "source": "frontend/src/app/admin/analytics/progress/page.tsx",
       "view": "resources/views/pages/admin/analytics/progress.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/assessment-bank/new",
@@ -71,43 +71,43 @@
       "route": "/admin/document-uploads",
       "source": "frontend/src/app/admin/document-uploads/page.tsx",
       "view": "resources/views/pages/admin/document-uploads.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/evaluation-setup/grade-configuration",
       "source": "frontend/src/app/admin/evaluation-setup/grade-configuration/page.tsx",
       "view": "resources/views/pages/admin/evaluation-setup/grade-configuration.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/evaluation-summary/[scheduleId]",
       "source": "frontend/src/app/admin/evaluation-summary/[scheduleId]/page.tsx",
       "view": "resources/views/pages/admin/evaluation-summary/_scheduleId_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/expo",
       "source": "frontend/src/app/admin/expo/page.tsx",
       "view": "resources/views/pages/admin/expo.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/finalization",
       "source": "frontend/src/app/admin/finalization/page.tsx",
       "view": "resources/views/pages/admin/finalization.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/groups",
       "source": "frontend/src/app/admin/groups/page.tsx",
       "view": "resources/views/pages/admin/groups.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/groups/[id]",
       "source": "frontend/src/app/admin/groups/[id]/page.tsx",
       "view": "resources/views/pages/admin/groups/_id_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/locations",
@@ -119,31 +119,31 @@
       "route": "/admin/peer-review",
       "source": "frontend/src/app/admin/peer-review/page.tsx",
       "view": "resources/views/pages/admin/peer-review.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/peer-review/[id]/edit",
       "source": "frontend/src/app/admin/peer-review/[id]/edit/page.tsx",
       "view": "resources/views/pages/admin/peer-review/_id_/edit.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/peer-review-dashboard",
       "source": "frontend/src/app/admin/peer-review-dashboard/page.tsx",
       "view": "resources/views/pages/admin/peer-review-dashboard.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/period-assessment-config",
       "source": "frontend/src/app/admin/period-assessment-config/page.tsx",
       "view": "resources/views/pages/admin/period-assessment-config.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/period-assessment-config/[id]/edit",
       "source": "frontend/src/app/admin/period-assessment-config/[id]/edit/page.tsx",
       "view": "resources/views/pages/admin/period-assessment-config/_id_/edit.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/periods/new",
@@ -167,73 +167,73 @@
       "route": "/admin/reports/assessments",
       "source": "frontend/src/app/admin/reports/assessments/page.tsx",
       "view": "resources/views/pages/admin/reports/assessments.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/evaluator/[evaluatorId]",
       "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/evaluator/[evaluatorId]/page.tsx",
       "view": "resources/views/pages/admin/reports/assessments/student/_studentId_/evaluation/_evaluationType_/evaluator/_evaluatorId_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]",
       "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/page.tsx",
       "view": "resources/views/pages/admin/reports/assessments/student/_studentId_/evaluation/_evaluationType_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/assessments/student/[studentId]",
       "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/page.tsx",
       "view": "resources/views/pages/admin/reports/assessments/student/_studentId_.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/final-grades",
       "source": "frontend/src/app/admin/reports/final-grades/page.tsx",
       "view": "resources/views/pages/admin/reports/final-grades.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/grade-consistency",
       "source": "frontend/src/app/admin/reports/grade-consistency/page.tsx",
       "view": "resources/views/pages/admin/reports/grade-consistency.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/groups",
       "source": "frontend/src/app/admin/reports/groups/page.tsx",
       "view": "resources/views/pages/admin/reports/groups.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports",
       "source": "frontend/src/app/admin/reports/page.tsx",
       "view": "resources/views/pages/admin/reports.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/pdc1",
       "source": "frontend/src/app/admin/reports/pdc1/page.tsx",
       "view": "resources/views/pages/admin/reports/pdc1.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/pdc2",
       "source": "frontend/src/app/admin/reports/pdc2/page.tsx",
       "view": "resources/views/pages/admin/reports/pdc2.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/peer-reviews",
       "source": "frontend/src/app/admin/reports/peer-reviews/page.tsx",
       "view": "resources/views/pages/admin/reports/peer-reviews.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/reports/ta",
       "source": "frontend/src/app/admin/reports/ta/page.tsx",
       "view": "resources/views/pages/admin/reports/ta.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/schedule",
@@ -245,7 +245,7 @@
       "route": "/admin/sempro",
       "source": "frontend/src/app/admin/sempro/page.tsx",
       "view": "resources/views/pages/admin/sempro.blade.php",
-      "status": "pending"
+      "status": "implemented"
     },
     {
       "route": "/admin/settings",

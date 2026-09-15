@@ -1,3 +1,7 @@
+import {assessmentConfig,gradeConfig} from './pages/admin/configuration.js';
+import {adminGroups,expoAdmin,semproAdmin,finalizationAdmin} from './pages/admin/management.js';
+import {progressAdmin,peerDashboard,documentUploads} from './pages/admin/monitoring.js';
+import {reportsAdmin} from './pages/admin/reports.js';
 import {studentGroup} from './pages/mahasiswa/group.js';
 import {studentMarketplace} from './pages/mahasiswa/marketplace.js';
 import {studentTitleDetail} from './pages/mahasiswa/title-detail.js';
@@ -19,6 +23,7 @@ import {registerPeriodWizard} from './pages/period-wizard.js';
 import {registerAssessmentBank} from './pages/assessment-bank.js';
 
 export function registerPages(Alpine) {
+    for(const [name,factory] of Object.entries({adminAssessmentConfig:assessmentConfig,adminGradeConfig:gradeConfig,adminGroups,adminExpo:expoAdmin,adminSempro:semproAdmin,adminFinalization:finalizationAdmin,adminProgress:progressAdmin,adminPeerDashboard:peerDashboard,adminDocumentUploads:documentUploads,adminReports:reportsAdmin}))Alpine.data(name,factory);
     Alpine.data('studentGroup', studentGroup);
     Alpine.data('studentMarketplace', studentMarketplace);
     Alpine.data('studentTitleDetail', studentTitleDetail);

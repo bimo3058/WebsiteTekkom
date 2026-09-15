@@ -1,0 +1,631 @@
+<?php if (isset($component)) { $__componentOriginal95cb0509b50d1cf2ddf4aa1e75407aa4 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal95cb0509b50d1cf2ddf4aa1e75407aa4 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'eoffice::components.layouts.koordinator','data' => ['title' => 'Approval Berkas']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('eoffice::layouts.koordinator'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['title' => 'Approval Berkas']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+
+    <?php $__env->startSection('breadcrumbs'); ?>
+        <span class="text-slate-800 font-semibold">Approval Berkas</span>
+    <?php $__env->stopSection(); ?>
+
+    <?php $__env->startPush('styles'); ?>
+        <style>
+            [x-cloak] {
+                display: none !important;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 4px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #cbd5e1;
+                border-radius: 4px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #94a3b8;
+            }
+        </style>
+    <?php $__env->stopPush(); ?>
+
+    <div x-data="approvalApp()" x-cloak class="-m-6 lg:-m-8 flex flex-col h-full">
+
+        <!-- Toast Notification -->
+        <div x-show="toast.show" x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="opacity-0 translate-y-[-20px] scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-200 transform"
+            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+            class="fixed top-20 right-6 lg:right-10 z-50 bg-white border shadow-[0_8px_30px_rgb(0,0,0,0.08)] rounded-2xl flex items-start gap-4 px-5 py-4 min-w-[320px]"
+            :class="toast.type === 'success' ? 'border-emerald-100' : 'border-red-100'">
+            <div class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5"
+                :class="toast.type === 'success' ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'">
+                <svg x-show="toast.type === 'success'" class="w-5 h-5 text-emerald-600" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <svg x-show="toast.type === 'error'" class="w-5 h-5 text-red-600" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+            <div class="flex-1">
+                <p class="text-sm font-bold text-slate-900 mb-0.5" x-text="toast.title"></p>
+                <p class="text-[13px] text-slate-500 leading-relaxed" x-text="toast.message"></p>
+            </div>
+            <button type="button" @click="toast.show = false"
+                class="flex-shrink-0 text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1 rounded-md transition-colors mt-0.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- 2 Panels Layout -->
+        <div class="flex-1 flex overflow-hidden">
+
+            <!-- Left Panel: Student List -->
+            <div class="w-full lg:w-[400px] xl:w-[450px] bg-white border-r border-slate-200 flex flex-col shrink-0 transition-transform duration-300 z-10"
+                :class="{'hidden lg:flex': selectedStudent !== null}">
+
+                <div class="p-6 border-b border-slate-100 shrink-0 bg-slate-50/50">
+                    <h2 class="text-xl font-extrabold text-slate-900 tracking-tight mb-1">Approval Berkas</h2>
+                    <p class="text-xs text-slate-500 mb-5">Verifikasi dokumen mahasiswa KP</p>
+
+                    <div class="relative mb-4">
+                        <input type="text" x-model="searchQuery" placeholder="Cari nama atau NIM..."
+                            class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm">
+                        <svg class="absolute left-3.5 top-3 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <select x-model="filterStatus"
+                            class="flex-1 bg-white border border-slate-200 rounded-lg text-xs font-medium px-3 py-2 focus:outline-none focus:border-indigo-500 text-slate-600 shadow-sm">
+                            <option value="all">Semua Status</option>
+                            <option value="Menunggu Review">Menunggu Review</option>
+                            <option value="Revisi">Revisi</option>
+                            <option value="Disetujui">Disetujui</option>
+                        </select>
+                        <select x-model="filterTahap"
+                            class="flex-1 bg-white border border-slate-200 rounded-lg text-xs font-medium px-3 py-2 focus:outline-none focus:border-indigo-500 text-slate-600 shadow-sm">
+                            <option value="all">Semua Tahapan</option>
+                            <option value="Pra KP">Pra KP</option>
+                            <option value="Saat KP">Saat KP</option>
+                            <option value="Pasca KP">Pasca KP</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2 bg-slate-50/30">
+                    <template x-for="mhs in filteredMahasiswas" :key="mhs.id">
+                        <button @click="selectStudent(mhs)"
+                            class="w-full text-left p-4 rounded-2xl border transition-all duration-200 relative group overflow-hidden"
+                            :class="selectedStudent && selectedStudent.id === mhs.id ? 'bg-indigo-50/50 border-indigo-200 shadow-sm' : 'bg-white border-slate-200 hover:border-indigo-200 hover:shadow-md hover:shadow-indigo-100/50'">
+                            <div class="flex justify-between items-start mb-2">
+                                <div>
+                                    <h3 class="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors"
+                                        x-text="mhs.nama"></h3>
+                                    <p class="text-xs text-slate-500 font-medium mt-0.5" x-text="mhs.nim"></p>
+                                </div>
+                                <span
+                                    class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide rounded-md border"
+                                    :class="getStatusColor(mhs.status_keseluruhan)"
+                                    x-text="mhs.status_keseluruhan"></span>
+                            </div>
+                            <div class="flex items-center gap-4 mt-3">
+                                <div class="flex items-center text-[11px] text-slate-500 font-medium">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                    </svg>
+                                    <span x-text="mhs.tahap_aktif"></span>
+                                </div>
+                                <div class="flex items-center text-[11px] text-slate-500 font-medium">
+                                    <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span x-text="mhs.jumlah_dokumen + ' File'"></span>
+                                </div>
+                            </div>
+                        </button>
+                    </template>
+
+                    <div x-show="filteredMahasiswas.length === 0" class="py-12 px-4 text-center">
+                        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                        </div>
+                        <p class="text-sm font-bold text-slate-900">Tidak ada data</p>
+                        <p class="text-xs text-slate-500 mt-1">Coba ubah kata kunci pencarian atau filter.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel: Document Details -->
+            <div class="flex-1 bg-slate-50/50 flex flex-col overflow-hidden relative"
+                :class="{'hidden lg:flex': selectedStudent === null}">
+
+                <!-- Empty State -->
+                <div x-show="selectedStudent === null"
+                    class="absolute inset-0 flex flex-col items-center justify-center text-center p-8 z-10 bg-white">
+                    <div
+                        class="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mb-6 border-8 border-indigo-50/50">
+                        <svg class="w-10 h-10 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-extrabold text-slate-900 tracking-tight mb-2">Pilih Mahasiswa</h3>
+                    <p class="text-sm text-slate-500 max-w-sm leading-relaxed">Pilih mahasiswa dari daftar di sebelah
+                        kiri untuk melihat dan memverifikasi dokumen.</p>
+                </div>
+
+                <!-- Content State -->
+                <template x-if="selectedStudent !== null">
+                    <div class="flex flex-col h-full overflow-hidden">
+
+                        <!-- Mobile back button -->
+                        <div class="lg:hidden p-4 border-b border-slate-200 bg-white flex items-center shrink-0">
+                            <button @click="selectedStudent = null"
+                                class="flex items-center text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors">
+                                <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 19l-7-7 7-7" />
+                                </svg>
+                                Kembali ke Daftar
+                            </button>
+                        </div>
+
+                        <!-- Header Detail Mahasiswa -->
+                        <div class="bg-white p-6 lg:p-10 border-b border-slate-200 shrink-0">
+                            <div class="max-w-4xl mx-auto">
+                                <div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                                    <div class="flex gap-5 items-start">
+                                        <div
+                                            class="w-16 h-16 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-2xl shrink-0 shadow-sm">
+                                            <span x-text="selectedStudent.nama.charAt(0)"></span>
+                                        </div>
+                                        <div>
+                                            <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight"
+                                                x-text="selectedStudent.nama"></h2>
+                                            <p class="text-sm font-medium text-slate-500 mt-1 flex items-center gap-2">
+                                                <span x-text="selectedStudent.nim"></span>
+                                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                <span x-text="selectedStudent.prodi"></span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="bg-slate-50 rounded-xl p-4 border border-slate-100 w-full md:w-64 shrink-0">
+                                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                                            Status Dokumen</p>
+                                        <div class="flex items-center justify-between">
+                                            <span class="text-sm font-bold text-slate-800"
+                                                x-text="selectedStudent.status_keseluruhan"></span>
+                                            <span class="w-2.5 h-2.5 rounded-full"
+                                                :class="getStatusDotColor(selectedStudent.status_keseluruhan)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
+                                    <div class="flex items-start gap-3">
+                                        <div class="mt-0.5 p-1.5 bg-slate-100 rounded-lg text-slate-500"><svg
+                                                class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5" />
+                                            </svg></div>
+                                        <div>
+                                            <p class="text-[11px] font-bold text-slate-400 uppercase">Tempat KP</p>
+                                            <p class="text-sm font-semibold text-slate-800 mt-0.5"
+                                                x-text="selectedStudent.tempat_kp"></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-start gap-3">
+                                        <div class="mt-0.5 p-1.5 bg-slate-100 rounded-lg text-slate-500"><svg
+                                                class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                            </svg></div>
+                                        <div>
+                                            <p class="text-[11px] font-bold text-slate-400 uppercase">Dosen Pembimbing
+                                            </p>
+                                            <p class="text-sm font-semibold text-slate-800 mt-0.5"
+                                                x-text="selectedStudent.dosen_pembimbing || 'Belum diplot'"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabs Tahapan -->
+                        <div class="px-6 lg:px-10 pt-6 bg-slate-50 shrink-0 border-b border-slate-200">
+                            <div class="max-w-4xl mx-auto flex gap-6">
+                                <button @click="activeTab = 'pra_kp'"
+                                    class="pb-3 text-sm font-bold transition-all relative border-b-2"
+                                    :class="activeTab === 'pra_kp' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
+                                    Pra KP <span
+                                        class="ml-1.5 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-[10px]"
+                                        x-text="selectedStudent.dokumen.pra_kp.length"></span>
+                                </button>
+                                <button @click="activeTab = 'saat_kp'"
+                                    class="pb-3 text-sm font-bold transition-all relative border-b-2"
+                                    :class="activeTab === 'saat_kp' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
+                                    Saat KP <span
+                                        class="ml-1.5 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-[10px]"
+                                        x-text="selectedStudent.dokumen.saat_kp.length"></span>
+                                </button>
+                                <button @click="activeTab = 'pasca_kp'"
+                                    class="pb-3 text-sm font-bold transition-all relative border-b-2"
+                                    :class="activeTab === 'pasca_kp' ? 'text-indigo-600 border-indigo-600' : 'text-slate-500 border-transparent hover:text-slate-800 hover:border-slate-300'">
+                                    Pasca KP <span
+                                        class="ml-1.5 bg-slate-100 text-slate-600 py-0.5 px-2 rounded-full text-[10px]"
+                                        x-text="selectedStudent.dokumen.pasca_kp.length"></span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Documents List -->
+                        <div class="flex-1 overflow-y-auto p-6 lg:p-10">
+                            <div class="max-w-4xl mx-auto space-y-4">
+
+                                <template x-for="doc in currentDocuments" :key="doc.id">
+                                    <div
+                                        class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 transition-all hover:shadow-md hover:border-indigo-100">
+                                        <div
+                                            class="flex flex-col sm:flex-row gap-5 items-start sm:items-center justify-between">
+                                            <div class="flex items-start gap-4 flex-1 min-w-0">
+                                                <div
+                                                    class="w-12 h-12 rounded-xl bg-red-50 text-red-500 flex items-center justify-center border border-red-100 shrink-0">
+                                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fill-rule="evenodd"
+                                                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                                                            clip-rule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <h4 class="text-sm font-bold text-slate-900 truncate"
+                                                        x-text="doc.jenis"></h4>
+                                                    <p class="text-xs text-slate-500 mt-1 truncate"
+                                                        x-text="doc.nama_file"></p>
+                                                    <div class="flex flex-wrap items-center gap-2 mt-2">
+                                                        <span class="text-[10px] font-medium text-slate-400"
+                                                            x-text="'Diunggah: ' + doc.tanggal"></span>
+                                                        <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                        <span
+                                                            class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded border"
+                                                            :class="getDocStatusColor(doc.status)"
+                                                            x-text="doc.status"></span>
+                                                        <span x-show="!doc.file_url"
+                                                            class="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 border border-orange-200 text-[10px] font-bold rounded">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                                            </svg>
+                                                            File tidak tersedia
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div
+                                                class="flex items-center gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
+                                                <template x-if="doc.file_url">
+                                                    <a :href="doc.file_url" target="_blank"
+                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl border flex items-center gap-1.5 justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100 cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        <span>Lihat</span>
+                                                    </a>
+                                                </template>
+                                                <template x-if="!doc.file_url">
+                                                    <button disabled
+                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl border flex items-center gap-1.5 justify-center bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        <span>Kosong</span>
+                                                    </button>
+                                                </template>
+                                                <template x-if="doc.status === 'pending'">
+                                                    <div class="flex gap-2 flex-1 sm:flex-none">
+                                                        <button @click="processApproval(doc.id, 'approved')"
+                                                            class="flex-1 sm:flex-none p-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-colors border border-emerald-100"
+                                                            title="Setujui">
+                                                            <svg class="w-4 h-4 mx-auto" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </button>
+                                                        <button @click="openRejectModal(doc)"
+                                                            class="flex-1 sm:flex-none p-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl transition-colors border border-red-100"
+                                                            title="Tolak / Revisi">
+                                                            <svg class="w-4 h-4 mx-auto" fill="none"
+                                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div x-show="doc.status === 'rejected' && doc.catatan"
+                                            class="mt-4 p-3 bg-red-50/50 border border-red-100 rounded-xl flex gap-3 items-start">
+                                            <svg class="w-4 h-4 text-red-500 mt-0.5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            <div>
+                                                <p class="text-xs font-bold text-red-800">Catatan Revisi:</p>
+                                                <p class="text-xs text-red-600 mt-0.5 leading-relaxed"
+                                                    x-text="doc.catatan"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div x-show="currentDocuments.length === 0"
+                                    class="py-16 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
+                                    <div
+                                        class="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 shadow-sm">
+                                        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-base font-bold text-slate-900 mb-1">Belum Ada Dokumen</h3>
+                                    <p class="text-sm text-slate-500">Mahasiswa belum mengunggah dokumen untuk tahapan
+                                        ini.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <!-- Modal Reject / Catatan Revisi -->
+        <div x-show="rejectModalOpen" class="relative z-50" style="display: none;">
+            <div x-show="rejectModalOpen" x-transition.opacity class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm">
+            </div>
+            <div class="fixed inset-0 z-10 w-screen overflow-y-auto flex items-center justify-center p-4">
+                <div x-show="rejectModalOpen" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                    x-transition:enter-end="opacity-100 scale-100 translate-y-0" @click.away="rejectModalOpen = false"
+                    class="relative w-full max-w-lg rounded-2xl bg-white shadow-xl overflow-hidden border border-slate-100">
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                        <h3 class="text-lg font-bold text-slate-900">Tolak / Minta Revisi</h3>
+                        <button @click="rejectModalOpen = false"
+                            class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="p-6 space-y-5">
+                        <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div
+                                class="w-9 h-9 bg-red-100 text-red-500 rounded-lg flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <p class="text-sm font-semibold text-slate-900 truncate"
+                                x-text="rejectDoc ? rejectDoc.nama_file : ''"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-700 mb-2">Pilih Tindakan</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label
+                                    class="flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                                    :class="rejectAction === 'revision' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                    <input type="radio" x-model="rejectAction" value="revision"
+                                        class="mt-0.5 accent-amber-500">
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800">Minta Revisi</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">Dokumen perlu diperbaiki</p>
+                                    </div>
+                                </label>
+                                <label
+                                    class="flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                                    :class="rejectAction === 'rejected' ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                    <input type="radio" x-model="rejectAction" value="rejected"
+                                        class="mt-0.5 accent-red-500">
+                                    <div>
+                                        <p class="text-sm font-bold text-slate-800">Tolak Dokumen</p>
+                                        <p class="text-xs text-slate-500 mt-0.5">Harus diupload ulang</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1.5">Catatan <span
+                                    class="text-red-500">*</span></label>
+                            <textarea x-model="rejectReason" rows="3"
+                                placeholder="Tuliskan alasan atau bagian yang perlu diperbaiki..."
+                                class="w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border outline-none resize-y"></textarea>
+                        </div>
+                    </div>
+                    <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
+                        <button @click="rejectModalOpen = false"
+                            class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50">Batal</button>
+                        <button @click="submitReject()" :disabled="isLoading"
+                            :class="rejectAction === 'rejected' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'"
+                            class="px-5 py-2 text-white text-sm font-bold rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-60">
+                            <svg x-show="isLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                    stroke-width="4" />
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                            </svg>
+                            <span x-text="rejectAction === 'rejected' ? 'Tolak Dokumen' : 'Kirim ke Revisi'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <?php $__env->startPush('scripts'); ?>
+        <script>
+            function approvalApp() {
+                return {
+                    sidebarOpen: true,
+                    searchQuery: '',
+                    filterStatus: 'all',
+                    filterTahap: 'all',
+                    activeTab: 'pra_kp',
+                    mahasiswas: <?php echo json_encode($mahasiswas, 15, 512) ?>,
+                    selectedStudent: null,
+                    isLoading: false,
+                    rejectModalOpen: false,
+                    rejectDoc: null,
+                    rejectReason: '',
+                    rejectAction: 'revision',
+                    toast: { show: false, type: 'success', title: '', message: '' },
+
+                    get filteredMahasiswas() {
+                        return this.mahasiswas.filter(m => {
+                            const matchSearch = m.nama.toLowerCase().includes(this.searchQuery.toLowerCase()) || m.nim.includes(this.searchQuery);
+                            const matchStatus = this.filterStatus === 'all' || m.status_keseluruhan === this.filterStatus;
+                            const matchTahap = this.filterTahap === 'all' || m.tahap_aktif === this.filterTahap;
+                            return matchSearch && matchStatus && matchTahap;
+                        });
+                    },
+
+                    get currentDocuments() {
+                        if (!this.selectedStudent) return [];
+                        return this.selectedStudent.dokumen[this.activeTab] || [];
+                    },
+
+                    selectStudent(mhs) {
+                        this.selectedStudent = mhs;
+                        if (mhs.tahap_aktif === 'Pra KP') this.activeTab = 'pra_kp';
+                        if (mhs.tahap_aktif === 'Saat KP') this.activeTab = 'saat_kp';
+                        if (mhs.tahap_aktif === 'Pasca KP') this.activeTab = 'pasca_kp';
+                    },
+
+                    getStatusColor(status) {
+                        switch (status) {
+                            case 'Menunggu Review': return 'bg-amber-50 text-amber-600 border-amber-200';
+                            case 'Disetujui': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                            case 'Revisi': return 'bg-red-50 text-red-600 border-red-200';
+                            default: return 'bg-slate-100 text-slate-500 border-slate-200';
+                        }
+                    },
+
+                    getStatusDotColor(status) {
+                        switch (status) {
+                            case 'Menunggu Review': return 'bg-amber-400';
+                            case 'Disetujui': return 'bg-emerald-500';
+                            case 'Revisi': return 'bg-red-500';
+                            default: return 'bg-slate-300';
+                        }
+                    },
+
+                    getDocStatusColor(status) {
+                        switch (status) {
+                            case 'pending': return 'bg-slate-100 text-slate-500 border-slate-200';
+                            case 'approved': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                            case 'rejected': return 'bg-red-50 text-red-600 border-red-200';
+                            case 'revision': return 'bg-amber-50 text-amber-600 border-amber-200';
+                            default: return 'bg-slate-100 text-slate-500 border-slate-200';
+                        }
+                    },
+
+                    openRejectModal(doc) { this.rejectDoc = doc; this.rejectReason = ''; this.rejectAction = 'revision'; this.rejectModalOpen = true; },
+
+                    processApproval(docId, status) {
+                        if (this.isLoading) return;
+                        this.isLoading = true;
+                        fetch(`/eoffice/kp/koordinator/validasi-berkas/${docId}/approve`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Accept': 'application/json' } })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const phase = this.activeTab;
+                                    const idx = this.selectedStudent.dokumen[phase].findIndex(d => d.id === docId);
+                                    if (idx !== -1) { this.selectedStudent.dokumen[phase][idx] = { ...this.selectedStudent.dokumen[phase][idx], status: 'approved', catatan: '' }; this.selectedStudent = { ...this.selectedStudent }; }
+                                    this.showToast('success', 'Dokumen Disetujui ✓', data.message);
+                                } else { this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.'); }
+                            })
+                            .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
+                            .finally(() => { this.isLoading = false; });
+                    },
+
+                    submitReject() {
+                        if (!this.rejectReason.trim()) { this.showToast('error', 'Error', 'Catatan wajib diisi.'); return; }
+                        if (this.isLoading) return;
+                        this.isLoading = true;
+                        const endpoint = this.rejectAction === 'rejected' ? `/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/reject` : `/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/revise`;
+                        fetch(endpoint, { method: 'POST', headers: { 'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>', 'Content-Type': 'application/json', 'Accept': 'application/json' }, body: JSON.stringify({ revision_note: this.rejectReason }) })
+                            .then(res => res.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const newStatus = this.rejectAction;
+                                    const phase = this.activeTab;
+                                    const idx = this.selectedStudent.dokumen[phase].findIndex(d => d.id === this.rejectDoc.id);
+                                    if (idx !== -1) { this.selectedStudent.dokumen[phase][idx] = { ...this.selectedStudent.dokumen[phase][idx], status: newStatus, catatan: this.rejectReason }; this.selectedStudent = { ...this.selectedStudent }; }
+                                    this.showToast('success', newStatus === 'rejected' ? 'Dokumen Ditolak' : 'Revisi Dikirim', data.message);
+                                    this.rejectModalOpen = false;
+                                } else { this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.'); }
+                            })
+                            .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
+                            .finally(() => { this.isLoading = false; });
+                    },
+
+                    showToast(type, title, message) { this.toast.type = type; this.toast.title = title; this.toast.message = message; this.toast.show = true; setTimeout(() => { this.toast.show = false; }, 4000); }
+                }
+            }
+        </script>
+    <?php $__env->stopPush(); ?>
+
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal95cb0509b50d1cf2ddf4aa1e75407aa4)): ?>
+<?php $attributes = $__attributesOriginal95cb0509b50d1cf2ddf4aa1e75407aa4; ?>
+<?php unset($__attributesOriginal95cb0509b50d1cf2ddf4aa1e75407aa4); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal95cb0509b50d1cf2ddf4aa1e75407aa4)): ?>
+<?php $component = $__componentOriginal95cb0509b50d1cf2ddf4aa1e75407aa4; ?>
+<?php unset($__componentOriginal95cb0509b50d1cf2ddf4aa1e75407aa4); ?>
+<?php endif; ?><?php /**PATH C:\WebsiteTekkom - Copy\Modules\EOffice\resources\views\koordinator\validasi_berkas.blade.php ENDPATH**/ ?>

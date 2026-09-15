@@ -64,7 +64,11 @@ class DocumentController extends Controller
         $phases = [];
         $semproScheduled = SeminarSchedule::where('group_id', $groupMember->group_id)->where('type', 'SEMPRO')
             ->whereNotIn('status', ['CANCELLED', 'REJECTED', 'PENDING', 'PENDING_APPROVAL'])->exists();
-        $groupReason = BladeFeatureAccess::reason('/mahasiswa/documents', ['registered'=>true, 'group_status'=>$groupMember->group->status]);
+        $groupReason = BladeFeatureAccess::reason('/mahasiswa/documents', [
+            'registered' => true,
+            'group_status' => $groupMember->group->status,
+            'pdc1_started' => BladeFeatureAccess::hasStartedPdc1($groupMember->group),
+        ]);
 
         foreach (self::PHASES as $phase) {
             $phaseDocs = $documents->where('phase', $phase);

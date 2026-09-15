@@ -5,7 +5,16 @@ export function registerDocuments(Alpine){
         loading:true,error:'',workflow:{},documents:[],search:'',sortKey:'created_at',sortDirection:-1,page:1,pageSize:10,
         uploadPhase:null,uploadType:null,file:null,saving:false,errors:{},date,
         labels:{PDC1:'PDC 1',SEMPRO:'Seminar Proposal',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'TA Draft',EXPO:'Expo',SIDANG:'Sidang TA',TA_INDIVIDUAL_READY:'Ready for TA Individual'},
-        async init(){await this.load();},
+        async init(){
+            await this.load();
+            const params=new URLSearchParams(window.location.search);
+            const phase=(this.workflow.phases || []).find(p=>p.phase===params.get('phase'));
+            const doc=(phase?.documents || []).find(d=>d.type===params.get('type'));
+            if(doc){
+                if(params.has('document'))this.search=doc.type==='GENERAL' ? this.label(phase.phase) : doc.type;
+                else if(phase.can_upload && doc.can_upload)this.openUpload(phase,doc);
+            }
+        },
         async load(){this.loading=true;this.error='';try{
             const result=await Promise.all([api('/mahasiswa/workflow'),api('/mahasiswa/documents')]);
             this.workflow=unwrap(result[0]);this.documents=rows(result[1]);

@@ -1,0 +1,1 @@
+<x-capstone::feature-link href="/admin/users">Users</x-capstone::feature-link>

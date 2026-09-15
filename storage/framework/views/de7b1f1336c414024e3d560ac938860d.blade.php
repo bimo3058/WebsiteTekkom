@@ -1,0 +1,1 @@
+<x-capstone::feature-link href="/mahasiswa/bidding" ::href="targetUrl" @click="navigate()">Open</x-capstone::feature-link>

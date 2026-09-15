@@ -1,0 +1,1 @@
+<x-ui.user-avatar :user="$user" />

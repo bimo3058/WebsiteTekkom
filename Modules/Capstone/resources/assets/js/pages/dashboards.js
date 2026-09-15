@@ -4,7 +4,21 @@ export function registerDashboards(Alpine) {
     Alpine.data('capstoneDashboard',()=>({
         loading:true,error:'',data:{},groups:[],periods:[],selectedPeriod:'all',pending:0,group:null,workflow:{},schedules:[],date,url,
         get progress(){const phases=this.workflow?.phases || [];return phases.length ? Math.round(phases.filter(p=>p.status==='completed').length/phases.length*100) : 0;},
-        get pendingDocs(){return (this.workflow?.phases || []).filter(p=>p.status!=='locked').flatMap(p=>(p.documents || []).filter(d=>d.status==='missing' || d.status==='REJECTED').map(d=>({...d,phaseLabel:p.label || p.phase}))).slice(0,6);},
+        get dashboardDocuments(){
+            const phases=this.workflow?.phases || [];
+            if(!phases.length)return [];
+            const reference=[['C100','PDC1','PDC 1'],['C200','PDC1','PDC 1'],['C300','PDC1','PDC 1'],['PPT Presentasi','SEMPRO','SEMPRO'],['C400','PDC2','PDC 2'],['C500','PDC2','PDC 2']];
+            return reference.map(([name,phase,phaseLabel])=>{
+                const workflowPhase=phases.find(p=>p.phase===phase);
+                const doc=(workflowPhase?.documents || []).find(d=>String(d.type).trim().toUpperCase()===name.toUpperCase());
+                return {...doc,name,type:doc?.type || name,phase,phaseLabel,status:doc?.status || 'missing',
+                    can_upload:workflowPhase?.can_upload === true && doc?.can_upload === true,
+                    locked_reason:doc?.locked_reason || workflowPhase?.locked_reason || (!doc ? 'Dokumen belum dikonfigurasi untuk periode ini' : null)};
+            });
+        },
+        documentStatus(status){return {missing:'Belum Upload',SUBMITTED:'Terkirim',APPROVED:'Disetujui',REJECTED:'Perlu Revisi',DRAFT:'Draft'}[status] || status;},
+        documentStatusClass(status){return {missing:'border-red-200 bg-red-50 text-red-600',SUBMITTED:'border-blue-200 bg-blue-50 text-blue-600',APPROVED:'border-emerald-200 bg-emerald-50 text-emerald-700',REJECTED:'border-amber-200 bg-amber-50 text-amber-700'}[status] || 'border-slate-200 bg-slate-50 text-slate-600';},
+        documentHref(doc){return url('/mahasiswa/documents')+'?phase='+encodeURIComponent(doc.phase)+'&type='+encodeURIComponent(doc.type)+(doc.latest_document?.id ? '&document='+encodeURIComponent(doc.latest_document.id) : '');},
         async init(){await this.load();},
         async load(){this.loading=true;this.error='';try{
             const role=context.role;

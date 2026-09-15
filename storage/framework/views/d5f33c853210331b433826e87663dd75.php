@@ -1,0 +1,2 @@
+
+<?php echo $__env->make('capstone::pages.mahasiswa.peer-review.index', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\WebsiteTekkom - Copy\Modules\Capstone\resources\views\pages\mahasiswa\peer-review.blade.php ENDPATH**/ ?>

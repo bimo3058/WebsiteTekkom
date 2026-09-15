@@ -1,0 +1,29 @@
+<?php $__env->startSection('title','Reports'); ?>
+<?php $__env->startSection('content'); ?>
+<div x-data="adminReports('summary')" class="space-y-6"><div class="flex flex-wrap items-center justify-between gap-4"><h1 class="text-3xl font-bold">Reports</h1><?php if (isset($component)) { $__componentOriginalb35a908784863ee4a31335a0ede028f1 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginalb35a908784863ee4a31335a0ede028f1 = $attributes; } ?>
+<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'capstone::components.button','data' => ['href' => '/admin/reports','variant' => 'outline']] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('capstone::button'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\Illuminate\View\AnonymousComponent::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['href' => '/admin/reports','variant' => 'outline']); ?>
+<?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::processComponentKey($component); ?>
+Reports <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginalb35a908784863ee4a31335a0ede028f1)): ?>
+<?php $attributes = $__attributesOriginalb35a908784863ee4a31335a0ede028f1; ?>
+<?php unset($__attributesOriginalb35a908784863ee4a31335a0ede028f1); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginalb35a908784863ee4a31335a0ede028f1)): ?>
+<?php $component = $__componentOriginalb35a908784863ee4a31335a0ede028f1; ?>
+<?php unset($__componentOriginalb35a908784863ee4a31335a0ede028f1); ?>
+<?php endif; ?></div>
+<?php echo $__env->make('capstone::pages.admin.shared.toolbar', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('capstone::partials.loading', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<div x-show="!loading && !error && periodId" x-cloak class="grid gap-5 md:grid-cols-2 lg:grid-cols-3"><a :href="link('/admin/reports/pdc1')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">PDC 1</h2><p class="my-4 text-3xl font-bold" x-text="value(summary,'assessments.pdc1_students')"></p><p class="text-sm text-muted-foreground" x-text="'Rata-rata: '+value(summary,'assessments.pdc1_average')"></p><p class="mt-4 text-sm text-primary">Buka laporan</p></a><a :href="link('/admin/reports/pdc2')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">PDC 2</h2><p class="my-4 text-3xl font-bold" x-text="value(summary,'assessments.pdc2_students')"></p><p class="text-sm text-muted-foreground" x-text="'Rata-rata: '+value(summary,'assessments.pdc2_average')"></p><p class="mt-4 text-sm text-primary">Buka laporan</p></a><a :href="link('/admin/reports/ta')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">Tugas Akhir</h2><p class="my-4 text-3xl font-bold" x-text="value(summary,'assessments.ta_students')"></p><p class="text-sm text-muted-foreground" x-text="'Rata-rata: '+value(summary,'assessments.ta_average')"></p><p class="mt-4 text-sm text-primary">Buka laporan</p></a><a :href="link('/admin/reports/assessments')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">Penilaian Mahasiswa</h2><p class="my-4 text-3xl font-bold" x-text="value(summary,'assessments.total_students')"></p><p class="text-sm text-muted-foreground" x-text="'Rata-rata: '+value(summary,'assessments.average_score')"></p><p class="mt-4 text-sm text-primary">Buka laporan</p></a><a :href="link('/admin/reports/peer-reviews')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">Peer Reviews</h2><p class="my-4 text-3xl font-bold" x-text="value(summary,'peer_reviews.total_reviews')"></p><p class="text-sm text-muted-foreground" x-text="'Rata-rata: '+value(summary,'peer_reviews.average_score')"></p><p class="mt-4 text-sm text-primary">Buka laporan</p></a><a :href="link('/admin/reports/final-grades')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">Nilai Akhir</h2><p class="my-4 text-3xl font-bold" x-text="value(summary,'final_grades.total_students')"></p><p class="text-sm text-muted-foreground" x-text="'Rata-rata: '+value(summary,'final_grades.pdc1_average')"></p><p class="mt-4 text-sm text-primary">Buka laporan</p></a><a :href="link('/admin/reports/groups')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">Kelompok</h2><p class="my-4 text-3xl font-bold" x-text="value(summary,'groups.total_groups')"></p><p class="mt-4 text-sm text-primary">Buka laporan</p></a><a :href="link('/admin/reports/grade-consistency')" class="rounded-xl border bg-card p-6 shadow-sm hover:border-primary"><h2 class="text-lg font-semibold">Konsistensi Nilai</h2><p class="mt-4 text-sm text-primary">Buka laporan</p></a></div></div>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('capstone::layouts.app', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\WebsiteTekkom - Copy\Modules\Capstone\tests/../resources/views/pages\admin\reports.blade.php ENDPATH**/ ?>

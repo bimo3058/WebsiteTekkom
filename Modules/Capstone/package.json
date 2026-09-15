@@ -5,7 +5,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
     "build:legacy": "vite build",
-    "test:ui": "node --test tests/calendar.test.mjs tests/document-configuration.test.mjs tests/period-wizard.test.mjs tests/assessment-bank.test.mjs tests/mahasiswa-workspace.test.mjs tests/request-activity.test.mjs",
+    "test:ui": "node --test tests/calendar.test.mjs tests/document-configuration.test.mjs tests/period-wizard.test.mjs tests/assessment-bank.test.mjs tests/mahasiswa-workspace.test.mjs tests/request-activity.test.mjs tests/dashboard-documents.test.mjs tests/admin-workspace.test.mjs",
     "test:calendar": "node --test tests/calendar.test.mjs",
     "verify:reference": "node scripts/inventory.mjs",
     "migration:status": "node scripts/status.mjs"

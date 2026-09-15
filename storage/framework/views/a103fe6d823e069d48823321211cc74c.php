@@ -1,0 +1,2 @@
+
+<?php echo $__env->make('capstone::pages.admin.configuration.edit', ['peer'=>false], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\WebsiteTekkom - Copy\Modules\Capstone\tests/../resources/views/pages\admin\period-assessment-config\_id_\edit.blade.php ENDPATH**/ ?>

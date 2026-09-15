@@ -27,6 +27,7 @@ class BladeCalendarAccessTest extends TestCase
             'database/migrations/2026_02_15_114539_create_lecturers_tables.php',
             'Modules/Capstone/database/migrations/2026_05_05_000001_create_capstone_periods_table.php',
             'Modules/Capstone/database/migrations/2026_05_05_000002_create_capstone_groups_table.php',
+            'Modules/Capstone/database/migrations/2026_05_05_000011_create_capstone_documents_table.php',
             'Modules/Capstone/database/migrations/2026_05_05_000013_create_capstone_seminar_schedules_table.php',
         ] as $file) (require base_path($file))->up();
         Schema::table('capstone_groups', fn(Blueprint $t)=>$t->unsignedBigInteger('title_id')->nullable());
@@ -65,6 +66,132 @@ class BladeCalendarAccessTest extends TestCase
         }
         $this->assertSame(0, PeriodRegistration::count());
         $this->assertSame(0, GroupMember::count());
+    }
+
+    public function test_admin_monitoring_uses_student_profiles_and_only_reminds_incomplete_members(): void
+    {
+        Schema::create('capstone_student_peer_review_status', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id');$t->boolean('has_completed_peer_review')->default(false);$t->string('ta_status');});
+        $student=$this->actor('mahasiswa');$other=$this->actor('mahasiswa');
+        $group=$this->group($student,null,'EXPO_REGISTERED');
+        GroupMember::create(['group_id'=>$group->id,'student_id'=>$other->student->id]);
+        DB::table('capstone_student_peer_review_status')->insert(['group_id'=>$group->id,'student_id'=>$student->student->id,'has_completed_peer_review'=>true,'ta_status'=>'TA_ACTIVE']);
+        $controller=new \Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
+        $data=$controller->peerReviews(Request::create('/','GET',['period_id'=>$group->period_id]))->getData(true)['data'];
+        $this->assertCount(1,$data);$this->assertSame(50,$data[0]['completion_percentage']);
+        $this->assertSame(1,$data[0]['completed_count']);$this->assertSame($student->name,$data[0]['members'][0]['student_name']);
+        $notifications=\Mockery::mock(\Modules\Capstone\Services\NotificationService::class);
+        $notifications->shouldReceive('sendToMany')->once()->with([$other->id], 'PEER_REVIEW_REMINDER', 'Pengingat Peer Review', 'Lengkapi peer review kelompok Anda.', 'Group', $group->id);
+        $this->assertSame(1,$controller->remind($group,$notifications)->getData(true)['count']);
+        $group->update(['status'=>'FORMING']);
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $controller->remind($group,$notifications);
+    }
+
+    public function test_progress_endpoint_filters_period_and_uses_persisted_documents(): void
+    {
+        Schema::create('capstone_phase_document_requirements', function(Blueprint $t){$t->id();$t->unsignedBigInteger('period_id');$t->string('phase');$t->string('name');$t->boolean('is_required')->default(true);});
+        $group=$this->group();$this->group();
+        DB::table('capstone_documents')->insert(['group_id'=>$group->id,'phase'=>'PDC1','file_path'=>'test.pdf']);
+        $service=\Mockery::mock(\Modules\Capstone\Services\GroupService::class);
+        $service->shouldReceive('transformGroupForProgress')->once()->withArgs(fn($found,$docs,$requirements)=>$found->id===$group->id && $docs->count()===1 && $requirements->isEmpty())->andReturn(['id'=>$group->id,'progress_percentage'=>10]);
+        $controller=new \Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
+        $data=$controller->progress(Request::create('/','GET',['period_id'=>$group->period_id]),$service)->getData(true)['data'];
+        $this->assertSame([['id'=>$group->id,'progress_percentage'=>10]],$data);
+    }
+
+    public function test_admin_can_reschedule_pending_evaluations_but_cannot_change_submitted_evaluations(): void
+    {
+        foreach (['2026_05_05_000014_create_capstone_seminar_evaluations_table.php', '2026_05_05_000029_create_capstone_audit_logs_table.php'] as $file) {
+            (require __DIR__.'/../database/migrations/'.$file)->up();
+        }
+        $admin=$this->actor('admin');
+        $first=$this->actor('dosen')->lecturer->id;
+        $second=$this->actor('dosen')->lecturer->id;
+        $replacement=$this->actor('dosen')->lecturer->id;
+        $group=$this->group();
+        $schedule=\Modules\Capstone\Models\SeminarSchedule::create(['group_id'=>$group->id,'type'=>'SEMPRO','date'=>'2026-10-01','start_time'=>'09:00','end_time'=>'10:00','room'=>'A','examiner_1_id'=>$first,'examiner_2_id'=>$second,'status'=>'SCHEDULED']);
+        foreach ([$first,$second] as $examiner) $schedule->evaluations()->create(['examiner_id'=>$examiner,'status'=>'PENDING']);
+        $service=\Mockery::mock(\Modules\Capstone\Services\SchedulingService::class);
+        $service->shouldReceive('validateExaminerConstraints')->once()->withArgs(fn($found,$ids)=>$found->id===$group->id && $ids===[$first,$replacement])->andReturn(null);
+        $service->shouldReceive('validateScheduleConflicts')->once()->with([$first,$replacement],'2026-10-02','09:00','10:00','B',$schedule->id)->andReturn([]);
+        $controller=new \Modules\Capstone\Http\Controllers\SemproController(app(\Modules\Capstone\Services\GroupStateMachine::class),$service);
+        $payload=['date'=>'2026-10-02','start_time'=>'09:00','end_time'=>'10:00','room'=>'B','examiner_1_id'=>$first,'examiner_2_id'=>$replacement];
+        $request=$this->requestFor($admin,'/','PUT',$payload);
+        $this->assertSame(200,$controller->update($request,$schedule->id)->getStatusCode());
+        $this->assertSame('B',$schedule->fresh()->room);
+        $this->assertEqualsCanonicalizing([$first,$replacement],$schedule->evaluations()->pluck('examiner_id')->all());
+        $schedule->evaluations()->where('examiner_id',$first)->update(['status'=>'SUBMITTED','score'=>85]);
+        foreach (['update','cancel'] as $method) {
+            try {$controller->$method($request,$schedule->id);$this->fail('Submitted evaluations must block '.$method);}
+            catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {$this->assertSame(422,$e->getStatusCode());}
+        }
+        $this->assertSame('SCHEDULED',$schedule->fresh()->status);
+        $this->assertEquals(85,$schedule->evaluations()->where('examiner_id',$first)->value('score'));
+        $schedule->evaluations()->update(['status'=>'PENDING','score'=>null]);
+        $this->assertSame(200,$controller->cancel($request,$schedule->id)->getStatusCode());
+        $this->assertSame('CANCELLED',$schedule->fresh()->status);
+        $this->assertSame(2,$schedule->evaluations()->count());
+        $this->assertSame(['SEMPRO_UPDATED','SEMPRO_CANCELLED'],\Modules\Capstone\Models\AuditLog::pluck('action')->all());
+    }
+
+    public function test_report_evaluator_uses_lecturer_profile_even_before_scores_exist(): void
+    {
+        $this->actor('admin');
+        $student=$this->actor('mahasiswa');
+        [$group,,$component]=$this->expoFixture($student);
+        Schema::table('capstone_expo_scores',fn(Blueprint $t)=>$t->unsignedBigInteger('component_id')->nullable());
+        $lecturer=$this->actor('dosen');
+        $group->update(['supervisor_1_id'=>$lecturer->lecturer->id]);
+        $this->assertNotEquals($lecturer->id,$lecturer->lecturer->id);
+        $controller=new \Modules\Capstone\Http\Controllers\ReportDetailController;
+        $request=Request::create('/','GET',['period_id'=>$group->period_id]);
+        $read=fn()=>$controller->evaluatorDetail($request,$student->student->id,'EXPO',$lecturer->lecturer->id)->getData(true)['data'];
+        $result=$read();
+        $this->assertSame($lecturer->name,$result['evaluator']['name']);
+        $this->assertSame('NOT_STARTED',$result['evaluator']['status']);
+        DB::table('capstone_expo_scores')->insert(['group_id'=>$group->id,'student_id'=>$student->student->id,'evaluator_id'=>$lecturer->lecturer->id,'period_component_id'=>$component,'score'=>85]);
+        $result=$read();
+        $this->assertSame($lecturer->name,$result['evaluator']['name']);
+        $this->assertEquals(85,$result['evaluator']['score']);
+        $this->assertSame('COMPLETE',$result['evaluator']['status']);
+    }
+
+    public function test_peer_report_summary_and_name_sort_use_capstone_tables_and_user_names(): void
+    {
+        Schema::table('capstone_groups',fn(Blueprint $t)=>$t->string('code')->nullable());
+        Schema::create('capstone_peer_reviews',function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('reviewer_id');$t->unsignedBigInteger('reviewee_id');$t->decimal('score',5,2);$t->timestamps();});
+        $this->actor('admin');$first=$this->actor('mahasiswa');$second=$this->actor('mahasiswa');
+        $first->update(['name'=>'Zeta']);$second->update(['name'=>'Alpha']);
+        $group=$this->group($first);$other=$this->group();
+        foreach ([[$group->id,$first->student->id,$second->student->id,80],[$group->id,$second->student->id,$first->student->id,60],[$other->id,$first->student->id,$second->student->id,100]] as [$groupId,$reviewer,$reviewee,$score]) {
+            \Modules\Capstone\Models\PeerReview::create(['group_id'=>$groupId,'reviewer_id'=>$reviewer,'reviewee_id'=>$reviewee,'score'=>$score]);
+        }
+        $summary=(new \ReflectionMethod(\Modules\Capstone\Http\Controllers\ReportSummaryController::class,'getPeerReviewSummary'))->invoke(new \Modules\Capstone\Http\Controllers\ReportSummaryController,$group->period_id);
+        $this->assertSame(2,$summary['total_reviews']);$this->assertEquals(70,$summary['average_score']);
+        $this->assertCount(1,$summary['top_groups']);
+        $controller=new \Modules\Capstone\Http\Controllers\ReportDetailController;
+        foreach (['reviewer','reviewee'] as $sort) {
+            $query=\Modules\Capstone\Models\PeerReview::where('group_id',$group->id);
+            (new \ReflectionMethod($controller,'applyPeerReviewSorting'))->invoke($controller,$query,$sort,'asc');
+            $this->assertSame($second->student->id,$query->first()->getAttribute($sort.'_id'));
+        }
+    }
+
+    public function test_schedule_summary_can_select_the_source_when_schedule_ids_overlap(): void
+    {
+        Schema::table('capstone_groups',fn(Blueprint $t)=>$t->string('code')->nullable());
+        $seminarGroup=$this->group();$taGroup=$this->group();
+        $seminar=\Modules\Capstone\Models\SeminarSchedule::create(['group_id'=>$seminarGroup->id,'type'=>'SEMPRO','date'=>'2026-10-01','start_time'=>'09:00','end_time'=>'10:00','room'=>'Seminar','status'=>'SCHEDULED']);
+        $ta=\Modules\Capstone\Models\TaDefenseSchedule::create(['group_id'=>$taGroup->id,'date'=>'2026-10-01','start_time'=>'11:00','end_time'=>'12:00','room'=>'TA','status'=>'SCHEDULED']);
+        $this->assertSame($seminar->id,$ta->id);
+        $controller=new \Modules\Capstone\Http\Controllers\SupervisorEvaluationController;
+        foreach (['seminar'=>$seminarGroup->id,'ta'=>$taGroup->id] as $source=>$groupId) {
+            $request=Request::create('/','GET',['schedule_source'=>$source]);
+            $response=$controller->adminScheduleSummary($request,$seminar->id)->getData(true)['data'];
+            $this->assertSame($groupId,$response['group']['id']);
+            $this->assertSame([],$response['summary']);
+        }
+        $this->assertSame(404,$controller->adminScheduleSummary(Request::create('/','GET',['schedule_source'=>'ta']),999)->getStatusCode());
     }
 
     public function test_admin_links_and_combined_sidebar_remain_enabled_for_pending_views(): void
@@ -562,9 +689,9 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertNotNull(BladeFeatureAccess::reason('/mahasiswa/peer-review',$state));
         $state['group_status']='EXPO_REGISTERED';
         $this->assertNull(BladeFeatureAccess::reason('/mahasiswa/peer-review',$state));
-        // This omission in the original parent menu is intentionally preserved.
+        // Later phases must not lose access to earlier coursework.
         $state['group_status']='TA_IN_PROGRESS';
-        $this->assertNotNull(BladeFeatureAccess::reason('/mahasiswa/peer-review',$state));
+        $this->assertNull(BladeFeatureAccess::reason('/mahasiswa/peer-review',$state));
     }
 
     public function test_direct_page_is_denied_until_group_enters_the_required_phase(): void
@@ -577,6 +704,58 @@ class BladeCalendarAccessTest extends TestCase
         $group->update(['status'=>'PDC1_ACTIVE']);
         $response=$middleware->handle($this->requestFor($user,'/capstone/mahasiswa/schedule'),fn()=>response('allowed'),'mahasiswa');
         $this->assertSame('allowed',$response->getContent());
+    }
+
+    public function test_existing_pdc1_work_unlocks_legacy_group_menus_and_session_endpoints(): void
+    {
+        $user = $this->actor('mahasiswa');
+        $group = $this->group($user, null, 'TITLE_APPROVED');
+        $this->assertFalse(BladeFeatureAccess::snapshot($user)['pdc1_started']);
+        DB::table('capstone_documents')->insert([
+            'group_id' => $group->id, 'student_id' => $user->student->id,
+            'phase' => 'PDC1', 'document_type' => 'C100', 'status' => 'SUBMITTED', 'file_path' => 'test.pdf',
+        ]);
+        $state = BladeFeatureAccess::snapshot($user);
+        $this->assertTrue($state['pdc1_started']);
+        Schema::create('capstone_phase_document_requirements', function(Blueprint $t){$t->id();$t->unsignedBigInteger('period_id');$t->string('phase');$t->string('name');$t->boolean('is_required')->default(true);});
+        $this->actingAs($user);
+        $documents = new \Modules\Capstone\Http\Controllers\DocumentController(app(\Modules\Capstone\Services\GroupStateMachine::class), \Mockery::mock(\Modules\Capstone\Services\DocumentStorageService::class));
+        $workflow = $documents->workflow($this->requestFor($user, '/'))->getData(true);
+        $this->assertTrue(collect($workflow['phases'])->firstWhere('phase', 'PDC1')['can_upload']);
+        $this->assertFalse(collect($workflow['phases'])->firstWhere('phase', 'SEMPRO')['can_upload']);
+        foreach (['documents', 'schedule', 'grades'] as $feature) {
+            $response = (new BladeAccessMiddleware)->handle($this->requestFor($user, '/capstone/mahasiswa/'.$feature), fn()=>response('allowed'), 'mahasiswa');
+            $this->assertSame('allowed', $response->getContent());
+        }
+        foreach (['documents', 'my-grades'] as $endpoint) {
+            $response = (new BladeSessionFeatureMiddleware)->handle($this->requestFor($user, '/capstone/session/capstone/mahasiswa/'.$endpoint), fn()=>response('allowed'));
+            $this->assertSame('allowed', $response->getContent());
+        }
+        $html = view('capstone::layouts.sidebar', ['actor'=>['roles'=>['mahasiswa']], 'activeRole'=>'mahasiswa', 'pagePath'=>'/mahasiswa/dashboard', 'featureAccess'=>$state])->render();
+        foreach (['Progress &amp; Docs', 'Schedules', 'Evaluations'] as $title) {
+            $this->assertMatchesRegularExpression('/<button[^>]*aria-disabled="false"[^>]*title="'.preg_quote($title, '/').'"/', $html);
+        }
+        $this->assertNotNull(BladeFeatureAccess::reason('/mahasiswa/expo', $state));
+        $this->assertNotNull(BladeFeatureAccess::reason('/mahasiswa/peer-review', $state));
+        $this->assertSame('TITLE_APPROVED', $group->fresh()->status);
+        $group->update(['status'=>'DISSOLVED']);
+        $this->assertFalse(BladeFeatureAccess::snapshot($user)['pdc1_started']);
+    }
+
+    public function test_documents_from_another_group_do_not_unlock_student_access(): void
+    {
+        $user = $this->actor('mahasiswa');
+        $this->group($user, null, 'TITLE_APPROVED');
+        $other = $this->group();
+        DB::table('capstone_documents')->insert(['group_id'=>$other->id, 'phase'=>'PDC1', 'file_path'=>'test.pdf']);
+        $state = BladeFeatureAccess::snapshot($user);
+        $this->assertFalse($state['pdc1_started']);
+        $this->assertNotNull(BladeFeatureAccess::reason('/mahasiswa/documents', $state));
+        foreach (['TA_IN_PROGRESS', 'PDC2_COMPLETED'] as $status) {
+            foreach (['documents', 'schedule', 'grades'] as $feature) {
+                $this->assertNull(BladeFeatureAccess::reason('/mahasiswa/'.$feature, ['registered'=>true, 'group_status'=>$status]));
+            }
+        }
     }
 
     public function test_forged_role_does_not_open_admin_pages(): void
@@ -692,17 +871,16 @@ class BladeCalendarAccessTest extends TestCase
     public function test_document_upload_checks_all_requirements_and_sempro_schedule_before_storage(): void
     {
         Schema::create('capstone_phase_document_requirements', function(Blueprint $t){$t->id();$t->unsignedBigInteger('period_id');$t->string('phase');$t->string('name');$t->boolean('is_required')->default(true);});
-        Schema::create('capstone_documents', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id');$t->string('phase');$t->string('document_type');$t->string('status');$t->string('file_path')->default('test.pdf');$t->integer('version')->default(1);$t->timestamps();});
         $student=$this->actor('mahasiswa');$this->actingAs($student);$group=$this->group($student);
         foreach(['A','B'] as $name)DB::table('capstone_phase_document_requirements')->insert(['period_id'=>$group->period_id,'phase'=>'PDC1','name'=>$name]);
-        $first=DB::table('capstone_documents')->insertGetId(['group_id'=>$group->id,'student_id'=>$student->student->id,'phase'=>'PDC1','document_type'=>'A','status'=>'APPROVED']);
+        $first=DB::table('capstone_documents')->insertGetId(['group_id'=>$group->id,'student_id'=>$student->student->id,'phase'=>'PDC1','document_type'=>'A','status'=>'APPROVED','file_path'=>'test.pdf']);
         $storage=\Mockery::mock(\Modules\Capstone\Services\DocumentStorageService::class);
         $storage->shouldNotReceive('store');$storage->shouldNotReceive('delete');
         $controller=new \Modules\Capstone\Http\Controllers\DocumentController(app(\Modules\Capstone\Services\GroupStateMachine::class),$storage);
         $request=$this->requestFor($student,'/','POST',['phase'=>'SEMPRO','document_type'=>'GENERAL']);
         $request->files->set('file',\Illuminate\Http\UploadedFile::fake()->create('test.pdf',1,'application/pdf'));
         $this->assertSame(403,$controller->store($request)->getStatusCode());
-        DB::table('capstone_documents')->insert(['group_id'=>$group->id,'student_id'=>$student->student->id,'phase'=>'PDC1','document_type'=>'B','status'=>'APPROVED']);
+        DB::table('capstone_documents')->insert(['group_id'=>$group->id,'student_id'=>$student->student->id,'phase'=>'PDC1','document_type'=>'B','status'=>'APPROVED','file_path'=>'test.pdf']);
         $response=$controller->store($request);
         $this->assertSame(403,$response->getStatusCode());
         $this->assertStringContainsString('SEMPRO belum dijadwalkan',$response->getData(true)['message']);
@@ -803,7 +981,7 @@ class BladeCalendarAccessTest extends TestCase
     private function individualTaFixture(): array
     {
         $this->peerReviewSchema();
-        foreach (['2026_05_05_000011_create_capstone_documents_table.php','2026_05_05_000012_create_capstone_phase_document_requirements_table.php','2026_05_05_000015_create_capstone_ta_submissions_table.php','2026_05_05_000028_create_capstone_notifications_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
+        foreach (['2026_05_05_000012_create_capstone_phase_document_requirements_table.php','2026_05_05_000015_create_capstone_ta_submissions_table.php','2026_05_05_000028_create_capstone_notifications_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
         Schema::table('capstone_ta_submissions',fn(Blueprint $t)=>$t->unsignedBigInteger('period_id')->nullable());
         Schema::create('capstone_period_assessment_components', function(Blueprint $t){$t->id();$t->unsignedBigInteger('period_id');$t->string('type');});
         foreach(['nil_dosen'=>'nilai_dosen','milestone'=>'milestone','expo'=>'expo'] as $suffix) Schema::create('capstone_'.$suffix.'_scores', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id')->nullable();$t->unsignedBigInteger('period_component_id');$t->unsignedBigInteger('evaluator_id');$t->decimal('score',5,2);});

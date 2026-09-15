@@ -1,0 +1,102 @@
+<?php
+    $flashSuccess = Session::get('success');
+    $flashError = Session::get('error');
+    $validationErrors = $errors->all();
+?>
+
+<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($flashSuccess || $flashError || count($validationErrors)): ?>
+    <div
+        id="banksoal-flash-snackbar-data"
+        data-success='<?php echo json_encode($flashSuccess, 15, 512) ?>'
+        data-error='<?php echo json_encode($flashError, 15, 512) ?>'
+        data-validation-errors='<?php echo json_encode($validationErrors, 15, 512) ?>'
+        hidden
+    ></div>
+
+    <script>
+        (function () {
+            let hasShownFlashSnackbar = false;
+
+            function escapeHtml(text) {
+                return String(text)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function safeJsonParse(value, fallback) {
+                try {
+                    return JSON.parse(value);
+                } catch (e) {
+                    return fallback;
+                }
+            }
+
+            function showFlashSnackbar() {
+                if (hasShownFlashSnackbar) return true;
+
+                if (typeof Snackbar === 'undefined' || typeof Snackbar.show !== 'function') {
+                    return false;
+                }
+
+                // Jika layout sudah memiliki global-toast (Alpine), biarkan dia yang memproses session flash ini.
+                // Hal ini mencegah duplikasi notifikasi sukses/error di halaman.
+                if (document.querySelector('[x-data="toastManager()"]')) {
+                    hasShownFlashSnackbar = true;
+                    return true;
+                }
+
+                const flashData = document.getElementById('banksoal-flash-snackbar-data');
+                if (!flashData) return true;
+
+                const flashSuccess = safeJsonParse(flashData.dataset.success || 'null', null);
+                const flashError = safeJsonParse(flashData.dataset.error || 'null', null);
+                const validationErrors = safeJsonParse(flashData.dataset.validationErrors || '[]', []);
+
+                if (flashSuccess) {
+                    Snackbar.show(escapeHtml(flashSuccess), 'success', 4000);
+                }
+
+                if (flashError) {
+                    Snackbar.show(escapeHtml(flashError), 'error', 5000);
+                }
+
+                if (validationErrors && validationErrors.length) {
+                    const list = validationErrors
+                        .map((err) => `<li>${escapeHtml(err)}</li>`)
+                        .join('');
+                    Snackbar.show(`Validasi gagal:<ul>${list}</ul>`, 'error', 5000);
+                }
+
+                hasShownFlashSnackbar = true;
+                return true;
+            }
+
+            function showFlashSnackbarWithRetry(maxRetry = 30, intervalMs = 100) {
+                let attempt = 0;
+                const tryShow = () => {
+                    const shown = showFlashSnackbar();
+                    if (shown) return;
+
+                    attempt += 1;
+                    if (attempt < maxRetry) {
+                        window.setTimeout(tryShow, intervalMs);
+                    }
+                };
+
+                tryShow();
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () {
+                    showFlashSnackbarWithRetry();
+                });
+            } else {
+                showFlashSnackbarWithRetry();
+            }
+        })();
+    </script>
+<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+<?php /**PATH C:\WebsiteTekkom - Copy\Modules\BankSoal\resources\views\components\notification\alerts.blade.php ENDPATH**/ ?>

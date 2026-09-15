@@ -1,0 +1,1 @@
+<x-capstone::button href="/mahasiswa/group">Open</x-capstone::button>

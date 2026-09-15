@@ -1,0 +1,2 @@
+
+<?php echo $__env->make('capstone::pages.mahasiswa.expo-detail.index', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\WebsiteTekkom - Copy\Modules\Capstone\resources\views\pages\mahasiswa\expo\_expoId_.blade.php ENDPATH**/ ?>
