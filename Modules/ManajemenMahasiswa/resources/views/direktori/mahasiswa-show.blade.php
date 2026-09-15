@@ -280,14 +280,20 @@
         </div>
     </div>
     <div style="position: absolute; top: 20px; right: 24px;" class="d-flex gap-2">
-        @if($canDownloadCv ?? false)
-            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.cv', $mhs->id) }}" target="_blank"
+        {{-- Pemilik profil memakai route /profil/cv yang tanpa {id} — CV-nya sendiri tidak
+             perlu (dan tidak boleh) lewat gerbang pengelola yang menerima id bebas. --}}
+        @if(($canDownloadCv ?? false) || ($isSelf ?? false))
+            <a href="{{ ($canDownloadCv ?? false)
+                    ? route('manajemenmahasiswa.direktori.mahasiswa.cv', $mhs->id)
+                    : route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') }}" target="_blank"
                class="btn-outline-custom" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 Download CV
             </a>
         @endif
-        @if($isAdmin)
+        {{-- Admin boleh mengedit siapa pun; mahasiswa hanya barisnya sendiri. Dua-duanya
+             membuka form yang sama, bedanya field Status tidak dirender untuk pemilik. --}}
+        @if($isAdmin || ($isSelf ?? false))
             <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="btn-outline-custom" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 Edit

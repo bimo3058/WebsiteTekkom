@@ -5,7 +5,9 @@ namespace Modules\ManajemenMahasiswa\Providers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
+use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Policies\KegiatanPolicy;
+use Modules\ManajemenMahasiswa\Policies\KemahasiswaanPolicy;
 use Modules\ManajemenMahasiswa\Services\AlumniService;
 use Modules\ManajemenMahasiswa\Services\DashboardAnalitikService;
 use Modules\ManajemenMahasiswa\Services\ForumService;
@@ -39,6 +41,11 @@ class ManajemenServiceProvider extends ServiceProvider
         // Manajemen Kegiatan. Model modul tidak ikut auto-discovery policy Laravel
         // (bukan App\Models), jadi didaftarkan eksplisit seperti di BankSoal.
         Gate::policy(Kegiatan::class, KegiatanPolicy::class);
+
+        // "Biodata direktori milik siapa yang boleh diubah" — penjaga agar gerbang
+        // edit yang kini terbuka untuk role mahasiswa/alumni hanya berlaku atas
+        // baris miliknya sendiri.
+        Gate::policy(Kemahasiswaan::class, KemahasiswaanPolicy::class);
 
         $this->loadMigrationsFrom(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'database' . DIRECTORY_SEPARATOR . 'migrations');
         $this->loadRoutesFrom(__DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'routes' . DIRECTORY_SEPARATOR . 'api.php');

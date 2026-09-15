@@ -54,6 +54,16 @@
         min-height: 140px;
         resize: vertical;
     }
+    /* Kolom angka (Peserta & Anggaran) tanpa tombol panah naik/turun bawaan browser. */
+    input[type="number"].form-control-custom {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    input[type="number"].form-control-custom::-webkit-outer-spin-button,
+    input[type="number"].form-control-custom::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
 
     /* ── Searchable Select ── */
     .search-select-wrapper {

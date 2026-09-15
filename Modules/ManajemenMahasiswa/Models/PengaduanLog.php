@@ -33,6 +33,7 @@ class PengaduanLog extends Model
     public const ACTION_DITUTUP_MAHASISWA = 'ditutup_mahasiswa';
     public const ACTION_DITUTUP_ADMIN    = 'ditutup_admin';
     public const ACTION_DITUTUP_OTOMATIS = 'ditutup_otomatis';
+    public const ACTION_DIHAPUS          = 'dihapus';
 
     public function pengaduan(): BelongsTo
     {

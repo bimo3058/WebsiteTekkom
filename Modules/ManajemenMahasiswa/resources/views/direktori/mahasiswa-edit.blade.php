@@ -117,8 +117,14 @@
 @endif
 
 <div class="form-card">
-    <div class="form-title">Edit Biodata Mahasiswa</div>
-    <div class="form-subtitle">Perbarui informasi biodata mahasiswa: {{ $mhs->nama }}</div>
+    <div class="form-title">{{ ($isAdmin ?? false) ? 'Edit Biodata Mahasiswa' : 'Edit Data Saya' }}</div>
+    <div class="form-subtitle">
+        @if($isAdmin ?? false)
+            Perbarui informasi biodata mahasiswa: {{ $mhs->nama }}
+        @else
+            Perbarui data diri Anda pada direktori mahasiswa.
+        @endif
+    </div>
 
     <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.update', $mhs->id) }}"
           id="formEditBiodata" data-status-awal="{{ $mhs->status }}">
@@ -183,6 +189,11 @@
                 </small>
             </div>
 
+            {{-- Status hanya milik pengelola: aktif/cuti/DO/alumni adalah keputusan
+                 akademik, bukan data yang ditetapkan sendiri oleh mahasiswa. Blok ini
+                 benar-benar tidak dirender (bukan disembunyikan dengan CSS), dan sisi
+                 server juga tidak menerima field `status` dari pemilik. --}}
+            @if($isAdmin ?? false)
             <!-- Status -->
             <div class="col-md-6">
                 <label class="form-label-custom">Status <span style="color: #ef4444;">*</span></label>
@@ -204,6 +215,7 @@
                     Memilih <strong>Alumni (Lulus)</strong> memindahkan mahasiswa ini ke <strong>Direktori Alumni</strong>.
                 </small>
             </div>
+            @endif
 
             <!-- IPK -->
             <div class="col-md-6">

@@ -21,10 +21,15 @@ Route::middleware(['module.active:manajemen_mahasiswa'])
     ->name('manajemenmahasiswa.')
     ->group(function () {
         // ── Layanan Pengaduan (Publik / Magic Link) ──────────────────────
+        // Route ini sengaja tanpa 'auth' (magic link dibuka tanpa login), jadi
+        // throttle adalah satu-satunya rem terhadap brute force token & spam.
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            Route::post('/track/{token}/confirm', [AnonPengaduanController::class, 'confirm'])->name('anon.confirm');
-            Route::post('/track/{token}/store', [AnonPengaduanController::class, 'store'])->name('anon.store');
-            Route::get('/track/{token}', [AnonPengaduanController::class, 'track'])->name('track');
+            Route::post('/track/{token}/confirm', [AnonPengaduanController::class, 'confirm'])
+                ->middleware('throttle:20,1')->name('anon.confirm');
+            Route::post('/track/{token}/store', [AnonPengaduanController::class, 'store'])
+                ->middleware('throttle:5,1')->name('anon.store');
+            Route::get('/track/{token}', [AnonPengaduanController::class, 'track'])
+                ->middleware('throttle:30,1')->name('track');
         });
     });
 
@@ -142,16 +147,21 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            // Jalur Anonim / Konfidensial (Pembuatan Magic Link)
-            Route::get('/anon/generate', [AnonPengaduanController::class, 'generate'])->name('anon.generate');
-
             // Mahasiswa membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
             Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan')->group(function () {
                 Route::get('/jalur', [PengaduanController::class, 'jalur'])->name('jalur');
                 Route::get('/create', [PengaduanController::class, 'create'])->name('create');
-                Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
-                Route::post('/', [PengaduanController::class, 'store'])->name('store');
+                Route::post('/confirm', [PengaduanController::class, 'confirm'])
+                    ->middleware('throttle:20,1')->name('confirm');
+                Route::post('/', [PengaduanController::class, 'store'])
+                    ->middleware('throttle:5,1')->name('store');
+
+                // Jalur Konfidensial (pembuatan Magic Link).
+                // POST, bukan GET: method ini menulis ke database, dan sebagai GET
+                // setiap refresh/prefetch membuat satu baris draft baru.
+                Route::post('/anon/generate', [AnonPengaduanController::class, 'generate'])
+                    ->middleware('throttle:10,1')->name('anon.generate');
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
@@ -362,6 +372,11 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
 
                 // Profil sendiri (role mahasiswa dan alumni)
+                //
+                // /profil tidak lagi punya halaman sendiri: isinya sama persis dengan
+                // halaman detail, jadi sekarang ia hanya mendaftarkan pemiliknya dari
+                // SSO bila perlu lalu melempar ke /{id}. Route-nya dipertahankan supaya
+                // tautan & bookmark lama tidak mati.
                 Route::middleware('role:mahasiswa|alumni')->group(function () {
                     Route::get('/profil', [DirektoriMahasiswaController::class, 'profil'])
                         ->name('profil');
@@ -392,8 +407,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('cv')->where('id', '[0-9]+');
                 });
 
-                // Edit biodata — admin only
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
+                // Edit biodata — admin (semua mahasiswa) + mahasiswa/alumni (dirinya sendiri).
+                //
+                // Gerbang role di sini sengaja longgar; yang menentukan BARIS MILIK SIAPA
+                // adalah KemahasiswaanPolicy::update() yang dipanggil di edit() dan
+                // update(). Tanpa Policy itu, setiap mahasiswa yang lolos gerbang ini bisa
+                // mengetik /{id}/edit milik orang lain. Kolom Status juga hanya ditulis
+                // untuk pengelola — lihat update() di controller.
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|mahasiswa|alumni')->group(function () {
                     Route::get('/{id}/edit', [DirektoriMahasiswaController::class, 'edit'])
                         ->name('edit')->where('id', '[0-9]+');
                     Route::put('/{id}', [DirektoriMahasiswaController::class, 'update'])

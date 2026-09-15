@@ -43,7 +43,11 @@ class PengaduanService
             'status'        => Pengaduan::STATUS_BARU,
         ]);
 
-        $this->logAction($pengaduan, $userId, PengaduanLog::ACTION_DIBUAT);
+        // Tiket konfidensial TIDAK boleh menyimpan identitas pelapor pada log.
+        // actor_user_id memang nullable ("null = sistem/otomatis") justru untuk ini:
+        // tanpa null, panel "Riwayat Tiket" akan menulis "Oleh: <nama pelapor>"
+        // kepada staf — membocorkan identitas yang dijanjikan terlindungi.
+        $this->logAction($pengaduan, $isAnonim ? null : $userId, PengaduanLog::ACTION_DIBUAT);
 
         return $pengaduan;
     }

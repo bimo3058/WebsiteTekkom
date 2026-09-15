@@ -313,13 +313,9 @@
             $mahasiswaRoute = $canViewAll ? route('manajemenmahasiswa.direktori.mahasiswa.index') : route('manajemenmahasiswa.direktori.mahasiswa.profil');
             $alumniRoute = $canViewAll ? route('manajemenmahasiswa.direktori.alumni.index') : route('manajemenmahasiswa.direktori.alumni.profil');
 
-            // Halaman "Profil Saya" hanya milik pemegang role mahasiswa/alumni.
-            // Tanpa entri menu tersendiri, halaman ini tidak bisa dijangkau sama sekali:
-            // $canViewAll bernilai true juga untuk mahasiswa, sehingga menu "Mahasiswa"
-            // selalu mengarah ke daftar seluruh mahasiswa, bukan ke profil pribadi.
-            $punyaProfilSendiri = (bool) array_intersect($sidebarRoles, ['mahasiswa', 'alumni']);
-            $isProfilAktif = request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.profil')
-                || request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.profil.cv');
+            // Tidak ada lagi subbab "Profil Saya": halaman itu isinya sama persis dengan
+            // halaman detail mahasiswa. Sekarang mahasiswa mencari namanya di daftar,
+            // lalu tombol Download CV & Edit muncul sendiri di halaman detail miliknya.
         @endphp
         <div class="sidebar-dropdown {{ $isDirektoriActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $isDirektoriActive ? 'active' : '' }}"
@@ -334,14 +330,8 @@
                 </svg>
             </a>
             <div class="sidebar-dropdown-menu">
-                @if($punyaProfilSendiri)
-                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.profil') }}"
-                        class="sub-item {{ $isProfilAktif ? 'active' : '' }}">
-                        <span class="nav-label">Profil Saya</span>
-                    </a>
-                @endif
                 <a href="{{ $mahasiswaRoute }}"
-                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') && !$isProfilAktif ? 'active' : '' }}">
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') ? 'active' : '' }}">
                     <span class="nav-label">Mahasiswa</span>
                 </a>
                 <a href="{{ $alumniRoute }}"
