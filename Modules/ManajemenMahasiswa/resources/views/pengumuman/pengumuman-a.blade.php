@@ -2,250 +2,239 @@
 
     @push('styles')
     <style>
+        /* Token desain global SITKOM — disamakan dengan dashboard Super Admin
+           (resources/views/components/sidebar.blade.php). Layout modul ini tidak
+           mendefinisikan token tersebut, jadi harus dideklarasikan ulang di sini. */
+        :root {
+            --c-primary: #0B266E;
+            --c-primary-hover: #091958;
+            --c-primary-subtle: rgba(11, 38, 110, 0.08);
+            --c-primary-border: #5C78B8;
+            --c-bg: #F6F8FA;
+            --c-fg: #0D0D12;
+            --c-fg-sec: #353849;
+            --c-fg-muted: #666D80;
+            --c-fg-placeholder: #808897;
+            --c-border: #DFE1E7;
+            --c-border-strong: #C1C7CF;
+            --c-success: #287F6E;
+            --c-success-subtle: #DDF2EE;
+            --c-error: #DF1C41;
+            --c-error-subtle: #FADAE1;
+            --c-warning: #956321;
+            --c-warning-subtle: #F9ECCB;
+            --c-sky: #0C4D6E;
+            --c-sky-subtle: #D1F0F9;
+            --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
+        }
+
         .main-wrapper { background:transparent !important; box-shadow:none !important; padding:0 !important; }
 
-        /* ── Page Header ─────────────────────────────── */
-        .pg-header { margin-bottom: 28px; }
-        .pg-header h4 {
-            font-size: 1.6rem; font-weight: 800; color: #0D0D12;
-            margin-bottom: 4px; letter-spacing: -.02em;
+        /* ── Shell kotak: mengikuti dashboard Super Admin ───────────── */
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
+        .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); overflow: hidden; width: 100%; box-sizing: border-box; }
+        .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
+        .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb { background: var(--c-border-strong, #C1C7CF); border-radius: 10px; }
+        @media (max-width: 767px) {
+            .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
+            .dash-wrap { height: auto !important; min-height: 0 !important; padding: 0; }
+            .dash-box { flex: none !important; min-height: 0 !important; overflow: visible !important; border-radius: 10px; }
+            .dash-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+            .dash-box-body { overflow-y: visible !important; flex: none !important; padding: 14px; }
         }
-        .pg-header p { font-size: .9rem; color: #808897; margin: 0; }
 
-        /* ── Toolbar ─────────────────────────────────── */
-        .pg-toolbar {
-            display: flex; gap: 12px; align-items: center;
-            margin-bottom: 28px; flex-wrap: wrap;
-        }
-        .pg-search-wrap { flex: 1; min-width: 200px; position: relative; }
-        .pg-search-wrap svg {
-            position: absolute; left: 14px; top: 50%;
-            transform: translateY(-50%); color: #9ca3af; pointer-events: none;
-        }
+        /* ── Section label ──────────────────────────────────────────── */
+        .pg-section-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+        .pg-section-header::before { content:''; display:inline-block; width:3px; height:14px; border-radius:2px; background:var(--c-primary, #0B266E); }
+        .pg-section-label { font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); }
+
+        /* ── Toolbar ────────────────────────────────────────────────── */
+        .pg-toolbar { display:flex; gap:8px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+        .pg-search-wrap { flex:1; min-width:200px; position:relative; }
+        .pg-search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--c-fg-placeholder, #808897); pointer-events:none; }
         .pg-search-wrap input {
-            width: 100%; padding: 10px 16px 10px 42px;
-            border: 1px solid #e5e7eb; border-radius: 10px;
-            background: #fafafa; font-size: .88rem; color: #374151; outline: none;
-            transition: all .2s;
+            width:100%; padding:8px 14px 8px 36px;
+            border:1px solid var(--c-border, #DFE1E7); border-radius:8px;
+            background:#fff; font-size:12px; color:var(--c-fg-sec, #353849); outline:none;
+            transition:border-color .15s, box-shadow .15s;
         }
-        .pg-search-wrap input:focus {
-            border-color: #6B4FF4; background: #fff;
-            box-shadow: 0 0 0 3px rgba(107,79,244,.1);
-        }
-        .pg-filter-dropdown { position: relative; }
+        .pg-search-wrap input::placeholder { color:var(--c-fg-placeholder, #808897); }
+        .pg-search-wrap input:focus { border-color:var(--c-primary, #0B266E); box-shadow:0 0 0 3px rgba(11,38,110,.1); }
+
+        .pg-filter-dropdown { position:relative; }
         .pg-filter-btn {
-            display: flex; align-items: center; gap: 8px; padding: 10px 18px;
-            border: 1px solid #e5e7eb; border-radius: 10px; background: #fff;
-            font-size: .88rem; font-weight: 500; color: #374151;
-            cursor: pointer; transition: all .2s; white-space: nowrap; min-width: 150px;
-            justify-content: space-between;
+            display:flex; align-items:center; gap:8px; justify-content:space-between;
+            padding:8px 14px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px; background:#fff;
+            font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
+            cursor:pointer; transition:all .15s; white-space:nowrap; min-width:150px;
+            box-shadow:0 1px 2px rgba(0,0,0,.04);
         }
-        .pg-filter-btn:hover,
-        .pg-filter-btn.active { border-color: #6B4FF4; color: #6B4FF4; background: #f5f3ff; }
-        .pg-filter-btn .chevron { transition: transform .2s; }
-        .pg-filter-btn.open .chevron { transform: rotate(180deg); }
+        .pg-filter-btn:hover { background:var(--c-bg, #F6F8FA); border-color:var(--c-border-strong, #C1C7CF); }
+        .pg-filter-btn.active { border-color:var(--c-primary, #0B266E); color:var(--c-primary, #0B266E); }
+        .pg-filter-btn .chevron { transition:transform .2s; }
+        .pg-filter-btn.open .chevron { transform:rotate(180deg); }
         .pg-filter-menu {
-            position: absolute; top: calc(100% + 6px); right: 0;
-            background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-            padding: 6px; min-width: 190px;
-            box-shadow: 0 12px 30px rgba(0,0,0,.1); z-index: 200; display: none;
+            position:absolute; top:calc(100% + 6px); right:0;
+            background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:10px;
+            padding:6px; min-width:190px; box-shadow:0 12px 30px rgba(0,0,0,.08); z-index:200; display:none;
         }
-        .pg-filter-menu.show { display: block; }
+        .pg-filter-menu.show { display:block; }
         .pg-filter-item {
-            display: flex; align-items: center; gap: 8px;
-            padding: 9px 12px; border-radius: 8px; cursor: pointer;
-            font-size: .85rem; color: #374151; transition: background .15s;
+            display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px;
+            cursor:pointer; font-size:12px; color:var(--c-fg-sec, #353849); transition:background .15s;
         }
-        .pg-filter-item:hover { background: #f5f3ff; }
-        .pg-filter-item.selected { background: #f5f3ff; color: #6B4FF4; font-weight: 600; }
-        .pg-filter-item .pg-check { width: 16px; color: #6B4FF4; opacity: 0; }
-        .pg-filter-item.selected .pg-check { opacity: 1; }
+        .pg-filter-item:hover { background:var(--c-bg, #F6F8FA); }
+        .pg-filter-item.selected { background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); font-weight:600; }
+        .pg-filter-item .pg-check { width:14px; color:var(--c-primary, #0B266E); opacity:0; }
+        .pg-filter-item.selected .pg-check { opacity:1; }
+
         .pg-perpage {
-            height: 42px; padding: 0 12px; border: 1px solid #e5e7eb;
-            border-radius: 10px; background: #fff; font-size: .85rem;
-            font-weight: 600; color: #374151; cursor: pointer; outline: none; transition: all .2s;
+            height:36px; padding:0 10px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px;
+            background:#fff; font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
+            cursor:pointer; outline:none; transition:all .15s; box-shadow:0 1px 2px rgba(0,0,0,.04);
         }
-        .pg-perpage:hover { border-color: #6B4FF4; }
+        .pg-perpage:hover { border-color:var(--c-border-strong, #C1C7CF); }
+
         .btn-buat-post {
-            display: inline-flex; align-items: center; gap: 7px;
-            padding: 10px 20px; background: #6B4FF4; color: #fff;
-            border-radius: 10px; font-size: .88rem; font-weight: 700;
-            text-decoration: none; transition: all .2s; white-space: nowrap; flex-shrink: 0;
+            display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
+            background:var(--c-primary, #0B266E); border:1px solid var(--c-primary, #0B266E); border-radius:8px;
+            font-size:12px; font-weight:600; color:#fff; text-decoration:none;
+            transition:all .15s; white-space:nowrap; flex-shrink:0;
+            box-shadow:0 2px 6px rgba(11,38,110,0.3);
         }
-        .btn-buat-post:hover {
-            background: #8266F5; color: #fff;
-            box-shadow: 0 4px 14px rgba(107,79,244,.35); transform: translateY(-1px);
-        }
+        .btn-buat-post:hover { background:var(--c-primary-hover, #091958); color:#fff; box-shadow:0 4px 12px rgba(11,38,110,0.4); }
 
-        /* ── Cards Grid ──────────────────────────────── */
-        .pg-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 22px;
-            margin-bottom: 32px;
-        }
-        @media (max-width: 992px) { .pg-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 600px)  { .pg-grid { grid-template-columns: 1fr; } }
+        /* ── Cards grid ─────────────────────────────────────────────── */
+        .pg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+        @media (max-width: 1280px) { .pg-grid { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width: 640px)  { .pg-grid { grid-template-columns:1fr; } }
 
-        /* ── Single Card ─────────────────────────────── */
         .pg-card {
-            background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
-            overflow: hidden; display: flex; flex-direction: column;
-            cursor: pointer; transition: box-shadow .25s, transform .25s;
+            background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px;
+            overflow:hidden; display:flex; flex-direction:column; cursor:pointer;
+            box-shadow:var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
+            transition:border-color .15s, box-shadow .15s;
         }
-        .pg-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,.1); transform: translateY(-3px); }
-        .pg-card.pinned-global   { border-top: 3px solid #d97706; }
-        .pg-card.pinned-personal { border-top: 3px solid #6B4FF4; }
-        .pg-card.pinned-global.pinned-personal { border-top: 3px solid #d97706; }
+        .pg-card:hover { border-color:var(--c-primary-border, #5C78B8); box-shadow:0 4px 14px rgba(11,38,110,0.07); }
 
         /* Image */
-        .pg-card-img {
-            position: relative; width: 100%; aspect-ratio: 16/9;
-            overflow: hidden; background: #f3f4f6; flex-shrink: 0;
-        }
-        .pg-card-img img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
-            transition: transform .4s ease;
-        }
-        .pg-card:hover .pg-card-img img { transform: scale(1.04); }
-        .pg-card-img-placeholder {
-            width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center;
-        }
+        .pg-card-img { position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:var(--c-bg, #F6F8FA); flex-shrink:0; }
+        .pg-card-img img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s ease; }
+        .pg-card:hover .pg-card-img img { transform:scale(1.03); }
+        .pg-card-img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
 
-        /* Overlays on image */
+        /* Overlay badges */
         .pg-badge-overlay {
-            position: absolute; top: 10px; left: 10px;
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 3px 9px; border-radius: 50px; font-size: 10px;
-            font-weight: 800; letter-spacing: .04em; text-transform: uppercase;
-            backdrop-filter: blur(6px);
+            position:absolute; top:10px; left:10px;
+            display:inline-flex; align-items:center; gap:4px;
+            padding:4px 9px; border-radius:8px; font-size:11px; font-weight:700; letter-spacing:.02em;
+            backdrop-filter:blur(6px);
         }
-        .pg-badge-pinned   { background: rgba(255,251,235,.92); color: #d97706; }
-        .pg-badge-draft    { background: rgba(243,244,246,.92); color: #6b7280; }
-        .pg-badge-archived { background: rgba(254,242,242,.92); color: #dc2626; }
-        .pg-badge-pending  { background: rgba(255,251,235,.92); color: #d97706; }
+        .pg-badge-pinned   { background:var(--c-warning-subtle, #F9ECCB); color:var(--c-warning, #956321); }
+        .pg-badge-pending  { background:var(--c-sky-subtle, #D1F0F9);     color:var(--c-sky, #0C4D6E); }
+        .pg-badge-draft    { background:var(--c-bg, #F6F8FA);             color:var(--c-fg-muted, #666D80); }
+        .pg-badge-archived { background:var(--c-error-subtle, #FADAE1);   color:var(--c-error, #DF1C41); }
 
-        /* Top-right overlay actions (pin personal + bookmark) */
-        .pg-img-actions {
-            position: absolute; top: 10px; right: 10px;
-            display: flex; flex-direction: column; gap: 6px;
-        }
+        /* Pin / bookmark buttons */
+        .pg-img-actions { position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:6px; }
         .pg-icon-btn {
-            width: 30px; height: 30px; border-radius: 50%;
-            background: rgba(255,255,255,.9); backdrop-filter: blur(4px);
-            border: none; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; transition: all .2s; color: #9ca3af;
+            width:28px; height:28px; border-radius:8px;
+            background:rgba(255,255,255,.92); backdrop-filter:blur(4px);
+            border:1px solid var(--c-border, #DFE1E7); cursor:pointer;
+            display:flex; align-items:center; justify-content:center;
+            transition:all .15s; color:var(--c-fg-muted, #666D80);
         }
-        .pg-icon-btn:hover { background: #fff; transform: scale(1.1); }
-        .pg-icon-btn.pin-active-personal { color: #6B4FF4; }
-        .pg-icon-btn.pin-active-global   { color: #d97706; }
+        .pg-icon-btn:hover { background:#fff; border-color:var(--c-primary-border, #5C78B8); color:var(--c-primary, #0B266E); }
+        .pg-icon-btn.pin-active-personal { color:var(--c-primary, #0B266E); border-color:var(--c-primary-border, #5C78B8); }
+        .pg-icon-btn.pin-active-global   { color:var(--c-warning, #956321); border-color:var(--c-warning, #956321); }
 
         /* Card body */
-        .pg-card-body { padding: 16px 18px 14px; flex: 1; display: flex; flex-direction: column; }
+        .pg-card-body { padding:14px; flex:1; display:flex; flex-direction:column; gap:8px; }
 
-        /* Category */
         .pg-category {
-            font-size: .72rem; font-weight: 800; letter-spacing: .08em;
-            text-transform: uppercase; margin-bottom: 7px;
+            display:inline-flex; align-items:center; align-self:flex-start;
+            padding:5px 9px; border-radius:8px;
+            font-size:11px; font-weight:700; letter-spacing:.02em;
         }
-        .pg-cat-akademik    { color: #1A8CD8; }
-        .pg-cat-himpunan    { color: #6B4FF4; }
-        .pg-cat-lowongan    { color: #0D9F5F; }
-        .pg-cat-event_prodi { color: #C6930A; }
-        .pg-cat-default     { color: #808897; }
+        .pg-cat-akademik    { background:var(--c-sky-subtle, #D1F0F9);     color:var(--c-sky, #0C4D6E); }
+        .pg-cat-himpunan    { background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); }
+        .pg-cat-lowongan    { background:var(--c-success-subtle, #DDF2EE); color:var(--c-success, #287F6E); }
+        .pg-cat-event_prodi { background:var(--c-warning-subtle, #F9ECCB); color:var(--c-warning, #956321); }
+        .pg-cat-default     { background:var(--c-bg, #F6F8FA);             color:var(--c-fg-muted, #666D80); }
 
-        /* Title */
         .pg-card-title {
-            font-size: 1rem; font-weight: 800; color: #0D0D12;
-            line-height: 1.4; margin-bottom: 8px; letter-spacing: -.01em;
-            display: -webkit-box; -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical; overflow: hidden;
+            font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); line-height:1.3;
+            display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
         }
-
-        /* Excerpt */
         .pg-card-excerpt {
-            font-size: .82rem; color: #6b7280; line-height: 1.6;
-            margin-bottom: 12px; flex: 1;
-            display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden;
+            font-size:11.5px; color:var(--c-fg-muted, #666D80); line-height:1.5; margin:0; flex:1;
+            display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
         }
 
-        /* Author + date */
         .pg-card-footer {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 8px; padding-top: 12px; border-top: 1px solid #f3f4f6; margin-top: auto;
+            display:flex; align-items:center; justify-content:space-between; gap:8px;
+            padding-top:10px; border-top:1px solid var(--c-border, #DFE1E7); margin-top:auto;
         }
-        .pg-author { display: flex; align-items: center; gap: 7px; min-width: 0; }
+        .pg-author { display:flex; align-items:center; gap:7px; min-width:0; }
         .pg-avatar {
-            width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-            background: linear-gradient(135deg, #6B4FF4, #8266F5);
-            color: #fff; font-size: 9px; font-weight: 700;
-            display: flex; align-items: center; justify-content: center;
+            width:26px; height:26px; border-radius:50%; flex-shrink:0;
+            background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E);
+            font-size:10px; font-weight:700; display:flex; align-items:center; justify-content:center;
         }
-        .pg-author-name {
-            font-size: .77rem; font-weight: 600; color: #374151;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .pg-date { font-size: .74rem; color: #9ca3af; white-space: nowrap; flex-shrink: 0; }
+        .pg-author-name { font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .pg-date { font-size:11px; color:var(--c-fg-muted, #666D80); white-space:nowrap; flex-shrink:0; font-variant-numeric:tabular-nums; }
 
-        /* Action bar (edit/delete) at bottom of card */
+        /* Action bar */
         .pg-card-actions {
-            display: flex; align-items: center; gap: 6px;
-            padding: 10px 16px; border-top: 1px solid #f3f4f6;
-            background: #fafafa; flex-shrink: 0;
+            display:flex; align-items:center; gap:6px;
+            padding:10px 14px; border-top:1px solid var(--c-border, #DFE1E7);
+            background:var(--c-bg, #F6F8FA); flex-shrink:0;
         }
         .pg-action-btn {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 5px 12px; border-radius: 7px; border: 1px solid #e5e7eb;
-            background: #fff; font-size: .76rem; font-weight: 600; cursor: pointer;
-            text-decoration: none; transition: all .15s; color: #374151;
+            display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:8px;
+            border:1px solid var(--c-border, #DFE1E7); background:#fff;
+            font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
+            cursor:pointer; text-decoration:none; transition:all .15s;
         }
-        .pg-action-btn:hover { border-color: #6B4FF4; color: #6B4FF4; background: #f5f3ff; }
-        .pg-action-btn.danger:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
-        .pg-action-btn.pin-on { border-color: #d97706; color: #d97706; background: #fffbeb; }
-        .pg-spacer { flex: 1; }
+        .pg-action-btn:hover { border-color:var(--c-primary, #0B266E); color:var(--c-primary, #0B266E); background:var(--c-primary-subtle, #EEF1F8); }
+        .pg-action-btn.danger:hover { border-color:var(--c-error, #DF1C41); color:var(--c-error, #DF1C41); background:var(--c-error-subtle, #FADAE1); }
+        .pg-action-btn.pin-on { border-color:var(--c-warning, #956321); color:var(--c-warning, #956321); background:var(--c-warning-subtle, #F9ECCB); }
+        .pg-spacer { flex:1; }
 
         /* Empty state */
-        .pg-empty {
-            grid-column: 1/-1; padding: 72px 20px; text-align: center; color: #9ca3af;
-        }
+        .pg-empty { grid-column:1/-1; padding:64px 20px; text-align:center; color:var(--c-fg-muted, #666D80); }
         .pg-empty-icon {
-            width: 72px; height: 72px; border-radius: 50%;
-            background: #f5f3ff; display: flex; align-items: center;
-            justify-content: center; margin: 0 auto 16px; color: #6B4FF4;
+            width:64px; height:64px; border-radius:50%;
+            background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E);
+            display:flex; align-items:center; justify-content:center; margin:0 auto 14px;
         }
-        .pg-empty h5 { font-size: 1rem; font-weight: 700; color: #374151; margin-bottom: 4px; }
-        .pg-empty p  { font-size: .88rem; }
+        .pg-empty h5 { font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin-bottom:4px; }
+        .pg-empty p  { font-size:12px; margin:0; }
 
         /* Pagination */
         .pagination .page-link {
-            color: #6B4FF4; border-color: #e5e7eb; border-radius: 8px;
-            margin: 0 2px; font-size: .875rem; font-weight: 500;
-            padding: 7px 13px; transition: all .2s;
+            color:var(--c-primary, #0B266E); border-color:var(--c-border, #DFE1E7); border-radius:8px;
+            margin:0 2px; font-size:12px; font-weight:600; padding:7px 13px; transition:all .15s;
         }
-        .pagination .page-link:hover { background: #f5f3ff; border-color: #6B4FF4; }
-        .pagination .page-item.active .page-link { background: #6B4FF4; border-color: #6B4FF4; color: #fff; }
-        .pagination .page-item.disabled .page-link { color: #d1d5db; border-color: #e5e7eb; }
-        .pg-pagination-info { font-size: .82rem; color: #9ca3af; font-weight: 500; }
+        .pagination .page-link:hover { background:var(--c-primary-subtle, #EEF1F8); border-color:var(--c-primary-border, #5C78B8); }
+        .pagination .page-item.active .page-link { background:var(--c-primary, #0B266E); border-color:var(--c-primary, #0B266E); color:#fff; }
+        .pagination .page-item.disabled .page-link { color:var(--c-border-strong, #C1C7CF); border-color:var(--c-border, #DFE1E7); }
+        .pg-pagination-info { font-size:12px; color:var(--c-fg-muted, #666D80); font-weight:500; }
 
         /* Lightbox */
-        .lightbox-modal {
-            display: none; position: fixed; inset: 0; z-index: 10000;
-            background: rgba(0,0,0,.92); align-items: center; justify-content: center;
-        }
-        .lightbox-modal.active { display: flex; }
-        .lightbox-content img {
-            max-width: 90vw; max-height: 82vh; object-fit: contain;
-            border-radius: 8px; box-shadow: 0 25px 60px rgba(0,0,0,.4);
-        }
+        .lightbox-modal { display:none; position:fixed; inset:0; z-index:10000; background:rgba(13,13,18,.92); align-items:center; justify-content:center; }
+        .lightbox-modal.active { display:flex; }
+        .lightbox-content img { max-width:90vw; max-height:82vh; object-fit:contain; border-radius:8px; box-shadow:0 25px 60px rgba(0,0,0,.4); }
         .lightbox-close {
-            position: fixed; top: 20px; right: 24px; width: 44px; height: 44px;
-            border-radius: 50%; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
-            color: #fff; font-size: 20px; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; transition: all .2s;
+            position:fixed; top:20px; right:24px; width:40px; height:40px; border-radius:50%;
+            background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2);
+            color:#fff; font-size:20px; cursor:pointer;
+            display:flex; align-items:center; justify-content:center; transition:all .15s;
         }
-        .lightbox-close:hover { background: rgba(255,255,255,.22); }
+        .lightbox-close:hover { background:rgba(255,255,255,.22); }
     </style>
     @endpush
 
@@ -263,258 +252,277 @@
         ];
         $selectedKategori = request('kategori', 'semua');
 
-        $placeholderGradients = [
-            'akademik'    => 'linear-gradient(135deg,#E8F4FF,#BFDBFE)',
-            'himpunan'    => 'linear-gradient(135deg,#F5F3FF,#DDD6FE)',
-            'lowongan'    => 'linear-gradient(135deg,#ECFDF5,#A7F3D0)',
-            'event_prodi' => 'linear-gradient(135deg,#FFFBEB,#FDE68A)',
-            'default'     => 'linear-gradient(135deg,#F8FAFC,#E2E8F0)',
+        $placeholderTints = [
+            'akademik'    => '#D1F0F9',
+            'himpunan'    => '#EEF1F8',
+            'lowongan'    => '#DDF2EE',
+            'event_prodi' => '#F9ECCB',
+            'default'     => '#F6F8FA',
         ];
     @endphp
 
-    {{-- ── Header ─────────────────────────────────── --}}
-    <div class="pg-header">
-        <h4>Pengumuman & Informasi</h4>
-        <p>Wadah informasi untuk mahasiswa dan alumni</p>
-    </div>
+    <div class="dash-wrap">
+        <div class="dash-box">
 
-    {{-- ── Toolbar ──────────────────────────────────── --}}
-    <form id="pgFilterForm" method="GET" action="{{ route('manajemenmahasiswa.pengumuman.index') }}">
-        <div class="pg-toolbar">
-            <div class="pg-search-wrap">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
-                </svg>
-                <input type="text" name="search" id="pgSearchInput"
-                    placeholder="Cari pengumuman..." value="{{ request('search') }}">
-            </div>
-
-            <div class="pg-filter-dropdown">
-                <input type="hidden" name="kategori" id="pgKategoriInput" value="{{ $selectedKategori }}">
-                <button type="button" class="pg-filter-btn {{ $selectedKategori !== 'semua' ? 'active' : '' }}"
-                    id="pgFilterToggle" onclick="pgToggleFilter()">
-                    <span id="pgFilterLabel">{{ $kategoriMap[$selectedKategori] ?? 'Filter' }}</span>
-                    <svg class="chevron" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-                </button>
-                <div class="pg-filter-menu" id="pgFilterMenu">
-                    @foreach($kategoriMap as $value => $label)
-                        <div class="pg-filter-item {{ $selectedKategori === $value ? 'selected' : '' }}"
-                            onclick="pgSelectFilter('{{ $value }}', '{{ $label }}')">
-                            <svg class="pg-check" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                            <span>{{ $label }}</span>
+            {{-- ── Header ─────────────────────────────────── --}}
+            <div class="dash-box-header">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
+                            <h1 style="font-size:22px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:-0.02em; line-height:1.2; margin:0;">Pengumuman &amp; Informasi</h1>
+                            <span style="font-size:10px; font-weight:600; color:var(--c-primary, #0B266E); background:rgba(11,38,110,0.09); border:1px solid rgba(11,38,110,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Modul Mahasiswa</span>
                         </div>
-                    @endforeach
+                        <p style="font-size:12px; color:var(--c-fg-muted, #666D80); margin:0;">
+                            Wadah informasi untuk mahasiswa dan alumni
+                        </p>
+                    </div>
+
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-buat-post">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        <span>Buat Post</span>
+                    </a>
                 </div>
             </div>
 
-            <select name="per_page" class="pg-perpage"
-                onchange="document.getElementById('pgFilterForm').submit()">
-                @foreach([9, 18, 27] as $opt)
-                    <option value="{{ $opt }}" {{ request('per_page', 9) == $opt ? 'selected' : '' }}>
-                        {{ $opt }} / hal
-                    </option>
-                @endforeach
-            </select>
+            <div class="dash-box-body">
 
-            <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-buat-post">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                </svg>
-                Buat Post
-            </a>
-        </div>
-    </form>
-
-    {{-- ── Cards Grid ───────────────────────────────── --}}
-    <div class="pg-grid">
-        @forelse($pengumuman as $item)
-            @php
-                $lampiran = collect($item->repoMulmed ?? []);
-                $images   = $lampiran->filter(fn($f) => in_array(
-                    strtolower(pathinfo($f->nama_file ?? '', PATHINFO_EXTENSION)),
-                    ['jpg','jpeg','png','gif','webp']
-                ));
-                $thumbnailUrl     = $images->first()
-                    ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($images->first()->path_file)
-                    : null;
-                $isPinnedGlobal   = (bool) $item->is_pinned;
-                $isPinnedPersonal = (bool) $item->is_personal_pinned;
-
-                $catKey   = $item->kategori ?? 'default';
-                $catClass = 'pg-cat-' . ($item->kategori ?? 'default');
-                $catLabel = $kategoriMap[$catKey] ?? ucfirst(str_replace('_',' ',$catKey));
-                $gradient = $placeholderGradients[$catKey] ?? $placeholderGradients['default'];
-
-                $authorName     = $item->author?->name ?? 'Kemahasiswaan';
-                $authorInitials = strtoupper(substr($authorName, 0, 2));
-
-                $canEdit   = $authUser->id === $item->user_id || $isAdminOrKoor;
-                $canDelete = $authUser->id === $item->user_id || $isAdminOrKoor;
-
-                $cardClass = 'pg-card'
-                    . ($isPinnedGlobal   ? ' pinned-global'   : '')
-                    . ($isPinnedPersonal ? ' pinned-personal' : '');
-            @endphp
-
-            <div class="{{ $cardClass }}"
-                 data-href="{{ route('manajemenmahasiswa.pengumuman.show', $item->id) }}"
-                 onclick="pgNavigate(event, this)">
-
-                {{-- Image ─────────────────────────────────── --}}
-                <div class="pg-card-img">
-                    @if($thumbnailUrl)
-                        <img src="{{ $thumbnailUrl }}" alt="{{ $item->judul }}"
-                             onclick="pgOpenLightbox(event,'{{ $thumbnailUrl }}','{{ addslashes($item->judul) }}')">
-                    @else
-                        <div class="pg-card-img-placeholder" style="background:{{ $gradient }};">
-                            <svg width="38" height="38" viewBox="0 0 24 24" fill="none"
-                                stroke="#9ca3af" stroke-width="1.5">
-                                <path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+                {{-- ── Toolbar ──────────────────────────────────── --}}
+                <form id="pgFilterForm" method="GET" action="{{ route('manajemenmahasiswa.pengumuman.index') }}">
+                    <div class="pg-toolbar">
+                        <div class="pg-search-wrap">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
                             </svg>
+                            <input type="text" name="search" id="pgSearchInput"
+                                placeholder="Cari pengumuman..." value="{{ request('search') }}">
                         </div>
-                    @endif
 
-                    {{-- Left overlay: pinned or status badge --}}
-                    @if($isPinnedGlobal)
-                        <span class="pg-badge-overlay pg-badge-pinned">
-                            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
-                            </svg>
-                            Penting
-                        </span>
-                    @elseif($item->status_publish === 'pending_review')
-                        <span class="pg-badge-overlay pg-badge-pending">⏳ Menunggu Verif</span>
-                    @elseif($item->status_publish === 'draft')
-                        <span class="pg-badge-overlay pg-badge-draft">Draft</span>
-                    @elseif($item->status_publish === 'archived')
-                        <span class="pg-badge-overlay pg-badge-archived">Archived</span>
-                    @endif
-
-                    {{-- Right overlay: personal pin + global pin buttons --}}
-                    <div class="pg-img-actions" onclick="event.stopPropagation()">
-                        {{-- Personal pin --}}
-                        <form method="POST"
-                            action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $item->id) }}"
-                            style="margin:0;">
-                            @csrf
-                            <button type="submit"
-                                class="pg-icon-btn {{ $isPinnedPersonal ? 'pin-active-personal' : '' }}"
-                                title="{{ $isPinnedPersonal ? 'Hapus pin pribadi' : 'Pin untuk saya' }}">
-                                <svg width="13" height="13" viewBox="0 0 24 24"
-                                    fill="{{ $isPinnedPersonal ? 'currentColor' : 'none' }}"
-                                    stroke="currentColor" stroke-width="2">
-                                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-                                </svg>
+                        <div class="pg-filter-dropdown">
+                            <input type="hidden" name="kategori" id="pgKategoriInput" value="{{ $selectedKategori }}">
+                            <button type="button" class="pg-filter-btn {{ $selectedKategori !== 'semua' ? 'active' : '' }}"
+                                id="pgFilterToggle" onclick="pgToggleFilter()">
+                                <span id="pgFilterLabel">{{ $kategoriMap[$selectedKategori] ?? 'Filter' }}</span>
+                                <svg class="chevron" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
                             </button>
-                        </form>
+                            <div class="pg-filter-menu" id="pgFilterMenu">
+                                @foreach($kategoriMap as $value => $label)
+                                    <div class="pg-filter-item {{ $selectedKategori === $value ? 'selected' : '' }}"
+                                        onclick="pgSelectFilter('{{ $value }}', '{{ $label }}')">
+                                        <svg class="pg-check" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                                        <span>{{ $label }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
 
-                        {{-- Global pin (admin only) --}}
-                        @if($canPinGlobal)
-                            <form method="POST"
-                                action="{{ route('manajemenmahasiswa.pengumuman.pin', $item->id) }}"
-                                style="margin:0;">
-                                @csrf @method('PATCH')
-                                <button type="submit"
-                                    class="pg-icon-btn {{ $isPinnedGlobal ? 'pin-active-global' : '' }}"
-                                    title="{{ $isPinnedGlobal ? 'Unpin global' : 'Pin global (semua user)' }}">
-                                    <svg width="13" height="13" viewBox="0 0 24 24"
-                                        fill="{{ $isPinnedGlobal ? 'currentColor' : 'none' }}"
-                                        stroke="currentColor" stroke-width="2">
-                                        <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
-                                    </svg>
-                                </button>
-                            </form>
-                        @endif
+                        <select name="per_page" class="pg-perpage"
+                            onchange="document.getElementById('pgFilterForm').submit()">
+                            @foreach([9, 18, 27] as $opt)
+                                <option value="{{ $opt }}" {{ request('per_page', 9) == $opt ? 'selected' : '' }}>
+                                    {{ $opt }} / hal
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
+                </form>
+
+                <div class="pg-section-header">
+                    <span class="pg-section-label">Daftar Pengumuman</span>
                 </div>
 
-                {{-- Body ──────────────────────────────────── --}}
-                <div class="pg-card-body">
-                    <div class="pg-category {{ $catClass }}">{{ $catLabel }}</div>
-                    <div class="pg-card-title">{{ $item->judul }}</div>
-                    <p class="pg-card-excerpt">
-                        {{ Str::limit(html_entity_decode(strip_tags($item->konten)), 110) }}
-                    </p>
-                    <div class="pg-card-footer">
-                        <div class="pg-author">
-                            <div class="pg-avatar">{{ $authorInitials }}</div>
-                            <span class="pg-author-name">{{ $authorName }}</span>
+                {{-- ── Cards Grid ───────────────────────────────── --}}
+                <div class="pg-grid">
+                    @forelse($pengumuman as $item)
+                        @php
+                            $lampiran = collect($item->repoMulmed ?? []);
+                            $images   = $lampiran->filter(fn($f) => in_array(
+                                strtolower(pathinfo($f->nama_file ?? '', PATHINFO_EXTENSION)),
+                                ['jpg','jpeg','png','gif','webp']
+                            ));
+                            $thumbnailUrl     = $images->first()
+                                ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($images->first()->path_file)
+                                : null;
+                            $isPinnedGlobal   = (bool) $item->is_pinned;
+                            $isPinnedPersonal = (bool) $item->is_personal_pinned;
+
+                            $catKey   = $item->kategori ?? 'default';
+                            $catClass = 'pg-cat-' . ($item->kategori ?? 'default');
+                            $catLabel = $kategoriMap[$catKey] ?? ucfirst(str_replace('_',' ',$catKey));
+                            $tint     = $placeholderTints[$catKey] ?? $placeholderTints['default'];
+
+                            $authorName     = $item->author?->name ?? 'Kemahasiswaan';
+                            $authorInitials = strtoupper(substr($authorName, 0, 2));
+
+                            $canEdit   = $authUser->id === $item->user_id || $isAdminOrKoor;
+                            $canDelete = $authUser->id === $item->user_id || $isAdminOrKoor;
+
+                        @endphp
+
+                        <div class="pg-card"
+                             data-href="{{ route('manajemenmahasiswa.pengumuman.show', $item->id) }}"
+                             onclick="pgNavigate(event, this)">
+
+                            {{-- Image ─────────────────────────────────── --}}
+                            <div class="pg-card-img">
+                                @if($thumbnailUrl)
+                                    <img src="{{ $thumbnailUrl }}" alt="{{ $item->judul }}"
+                                         onclick="pgOpenLightbox(event,'{{ $thumbnailUrl }}','{{ addslashes($item->judul) }}')">
+                                @else
+                                    <div class="pg-card-img-placeholder" style="background:{{ $tint }};">
+                                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"
+                                            stroke="#808897" stroke-width="1.5">
+                                            <path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+                                        </svg>
+                                    </div>
+                                @endif
+
+                                {{-- Left overlay: pinned or status badge --}}
+                                @if($isPinnedGlobal)
+                                    <span class="pg-badge-overlay pg-badge-pinned">
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
+                                        </svg>
+                                        Penting
+                                    </span>
+                                @elseif($item->status_publish === 'pending_review')
+                                    <span class="pg-badge-overlay pg-badge-pending">Menunggu Verifikasi</span>
+                                @elseif($item->status_publish === 'draft')
+                                    <span class="pg-badge-overlay pg-badge-draft">Draft</span>
+                                @elseif($item->status_publish === 'archived')
+                                    <span class="pg-badge-overlay pg-badge-archived">Archived</span>
+                                @endif
+
+                                {{-- Right overlay: personal pin + global pin buttons --}}
+                                <div class="pg-img-actions" onclick="event.stopPropagation()">
+                                    {{-- Personal pin --}}
+                                    <form method="POST"
+                                        action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $item->id) }}"
+                                        style="margin:0;">
+                                        @csrf
+                                        <button type="submit"
+                                            class="pg-icon-btn {{ $isPinnedPersonal ? 'pin-active-personal' : '' }}"
+                                            title="{{ $isPinnedPersonal ? 'Hapus pin pribadi' : 'Pin untuk saya' }}">
+                                            <svg width="13" height="13" viewBox="0 0 24 24"
+                                                fill="{{ $isPinnedPersonal ? 'currentColor' : 'none' }}"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                                            </svg>
+                                        </button>
+                                    </form>
+
+                                    {{-- Global pin (admin only) --}}
+                                    @if($canPinGlobal)
+                                        <form method="POST"
+                                            action="{{ route('manajemenmahasiswa.pengumuman.pin', $item->id) }}"
+                                            style="margin:0;">
+                                            @csrf @method('PATCH')
+                                            <button type="submit"
+                                                class="pg-icon-btn {{ $isPinnedGlobal ? 'pin-active-global' : '' }}"
+                                                title="{{ $isPinnedGlobal ? 'Unpin global' : 'Pin global (semua user)' }}">
+                                                <svg width="13" height="13" viewBox="0 0 24 24"
+                                                    fill="{{ $isPinnedGlobal ? 'currentColor' : 'none' }}"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Body ──────────────────────────────────── --}}
+                            <div class="pg-card-body">
+                                <div class="pg-category {{ $catClass }}">{{ $catLabel }}</div>
+                                <div class="pg-card-title">{{ $item->judul }}</div>
+                                <p class="pg-card-excerpt">
+                                    {{ Str::limit(html_entity_decode(strip_tags($item->konten)), 110) }}
+                                </p>
+                                <div class="pg-card-footer">
+                                    <div class="pg-author">
+                                        <div class="pg-avatar">{{ $authorInitials }}</div>
+                                        <span class="pg-author-name">{{ $authorName }}</span>
+                                    </div>
+                                    <span class="pg-date">
+                                        {{ ($item->published_at ?? $item->created_at)->translatedFormat('d M Y') }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {{-- Action bar: Edit / Delete ──────────────── --}}
+                            @if($canEdit || $canDelete)
+                                <div class="pg-card-actions" onclick="event.stopPropagation()">
+                                    @if($canEdit)
+                                        <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $item->id) }}"
+                                            class="pg-action-btn" title="Edit">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                            </svg>
+                                            Edit
+                                        </a>
+                                    @endif
+
+                                    @if($canDelete)
+                                        <form method="POST"
+                                            action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}"
+                                            onsubmit="return confirm('Hapus pengumuman ini?')" style="margin:0;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="pg-action-btn danger" title="Hapus">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="2">
+                                                    <polyline points="3 6 5 6 21 6"/>
+                                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                </svg>
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    @endif
+
+                                    <div class="pg-spacer"></div>
+                                </div>
+                            @endif
+
                         </div>
-                        <span class="pg-date">
-                            {{ ($item->published_at ?? $item->created_at)->translatedFormat('d M Y') }}
+                    @empty
+                        <div class="pg-empty">
+                            <div class="pg-empty-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" stroke-width="1.5">
+                                    <path d="m3 11 18-5v12L3 14v-3z"/>
+                                    <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
+                                </svg>
+                            </div>
+                            <h5>Belum ada pengumuman</h5>
+                            <p>Pengumuman terbaru akan muncul di sini</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- ── Pagination ───────────────────────────────── --}}
+                @if($pengumuman->total() > 0)
+                    <div class="mb-2">
+                        <span class="pg-pagination-info">
+                            Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
+                            dari {{ $pengumuman->total() }} pengumuman
                         </span>
                     </div>
-                </div>
-
-                {{-- Action bar: Edit / Delete ──────────────── --}}
-                @if($canEdit || $canDelete)
-                    <div class="pg-card-actions" onclick="event.stopPropagation()">
-                        @if($canEdit)
-                            <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $item->id) }}"
-                                class="pg-action-btn" title="Edit">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2.5">
-                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                </svg>
-                                Edit
-                            </a>
-                        @endif
-
-                        @if($canDelete)
-                            <form method="POST"
-                                action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}"
-                                onsubmit="return confirm('Hapus pengumuman ini?')" style="margin:0;">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="pg-action-btn danger" title="Hapus">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2.5">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                    Hapus
-                                </button>
-                            </form>
-                        @endif
-
-                        <div class="pg-spacer"></div>
+                @endif
+                @if($pengumuman->hasPages())
+                    <div class="d-flex justify-content-center mt-2 mb-2">
+                        {{ $pengumuman->appends(request()->query())->links('pagination::bootstrap-5') }}
                     </div>
                 @endif
 
-            </div>
-        @empty
-            <div class="pg-empty">
-                <div class="pg-empty-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.5">
-                        <path d="m3 11 18-5v12L3 14v-3z"/>
-                        <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>
-                    </svg>
-                </div>
-                <h5>Belum ada pengumuman</h5>
-                <p>Pengumuman terbaru akan muncul di sini</p>
-            </div>
-        @endforelse
-    </div>
-
-    {{-- ── Pagination ───────────────────────────────── --}}
-    @if($pengumuman->total() > 0)
-        <div class="mb-2">
-            <span class="pg-pagination-info">
-                Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
-                dari {{ $pengumuman->total() }} pengumuman
-            </span>
-        </div>
-    @endif
-    @if($pengumuman->hasPages())
-        <div class="d-flex justify-content-center mt-2 mb-4">
-            {{ $pengumuman->appends(request()->query())->links('pagination::bootstrap-5') }}
-        </div>
-    @endif
+            </div> <!-- end dash-box-body -->
+        </div> <!-- end dash-box -->
+    </div> <!-- end dash-wrap -->
 
     {{-- ── Lightbox ─────────────────────────────────── --}}
     <div class="lightbox-modal" id="pgLightbox">
