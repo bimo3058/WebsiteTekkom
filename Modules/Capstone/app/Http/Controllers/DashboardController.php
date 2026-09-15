@@ -16,13 +16,28 @@ use Modules\Capstone\Models\Title;
 
 class DashboardController extends Controller
 {
-    public function admin()
+    public function admin(Request $request)
     {
+        // Keep the same permission boundary as /admin/groups. Dashboard cards
+        // need counts and five labels, not every member and supervisor profile.
+        $canViewGroups = $request->user()->can('capstone.groups.view');
+        $groupCounts = $canViewGroups
+            ? Group::query()->selectRaw('COUNT(*) AS total')
+                ->selectRaw('COUNT(CASE WHEN status = ? THEN 1 END) AS pending', ['READY_FOR_FINALIZATION'])
+                ->first()
+            : null;
+
         return response()->json([
             'total_users' => User::count(),
             'total_students' => Student::count(),
             'total_lecturers' => Lecturer::count(),
             'active_periods' => Period::where('is_active', true)->get(),
+            'total_periods' => Period::count(),
+            'total_groups' => (int) ($groupCounts?->total ?? 0),
+            'pending_finalization' => (int) ($groupCounts?->pending ?? 0),
+            'recent_groups' => $canViewGroups
+                ? Group::query()->latest()->orderByDesc('id')->limit(5)->get(['id', 'code', 'status'])
+                : [],
         ]);
     }
 

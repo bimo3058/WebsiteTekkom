@@ -16,6 +16,7 @@
         }
         .sikape-card { background:#fff; border:1px solid var(--grey-200); border-radius:12px; }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body style="background:#f9fafb;" x-data="{ sidebarOpen: false, search: '', openItem: null }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -140,5 +141,6 @@
         </main>
     </div>
 </div>
+    <x-mobile-navigation />
 </body>
 </html>

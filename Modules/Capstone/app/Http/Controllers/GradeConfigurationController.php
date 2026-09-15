@@ -379,10 +379,12 @@ class GradeConfigurationController extends Controller
     public function getMyGrades(Request $request): JsonResponse
     {
         $user = $request->user();
+        $student = \Modules\Capstone\Support\CapstoneActor::student($user);
 
         // Get student's group
         $groupMember = \Modules\Capstone\Models\GroupMember::with('group.period')
-            ->where('student_id', $user->id)
+            ->where('student_id', $student->id)
+            ->whereHas('group', fn ($query) => $query->whereNotIn('status', ['CLOSED', 'DISSOLVED']))
             ->first();
 
         if (! $groupMember || ! $groupMember->group) {
@@ -393,7 +395,7 @@ class GradeConfigurationController extends Controller
 
         // Calculate grades using the service
         $grades = $this->gradeCalculationService->calculateFinalGradeForStudent(
-            $user->id,
+            $student->id,
             $group->id
         );
 
@@ -402,7 +404,7 @@ class GradeConfigurationController extends Controller
                 'grades' => null,
                 'group' => [
                     'id' => $group->id,
-                    'name' => $group->name,
+                    'name' => $group->code ?? 'Group #'.$group->id,
                 ],
                 'period' => [
                     'id' => $group->period->id,
@@ -415,16 +417,16 @@ class GradeConfigurationController extends Controller
             'grades' => $grades,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->code ?? 'Group #'.$group->id,
             ],
             'period' => [
                 'id' => $group->period->id,
                 'name' => $group->period->name,
             ],
             'student' => [
-                'id' => $user->id,
+                'id' => $student->id,
                 'name' => $user->name,
-                'nim' => $user->nim,
+                'nim' => $student->student_number,
             ],
         ]);
     }
@@ -457,7 +459,7 @@ class GradeConfigurationController extends Controller
             'grades' => $grades,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->code ?? 'Group #'.$group->id,
             ],
             'period' => [
                 'id' => $group->period->id,

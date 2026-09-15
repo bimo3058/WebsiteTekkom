@@ -29,6 +29,7 @@
         .form-input { width:100%; border-radius:8px; padding:8px 12px; font-size:14px; border: 1px solid var(--grey-200); background:#fff; }
         .form-input:focus { outline:none; border-color:var(--primary-500); box-shadow:0 0 0 2px var(--primary-100); }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body class="bg-grey-50" style="background:#f9fafb;" x-data="{ sidebarOpen: false }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -239,5 +240,6 @@ function suratManager(params = {}) {
     }
 }
 </script>
+    <x-mobile-navigation />
 </body>
 </html>

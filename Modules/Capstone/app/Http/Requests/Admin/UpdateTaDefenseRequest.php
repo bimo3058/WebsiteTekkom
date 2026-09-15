@@ -30,7 +30,9 @@ class UpdateTaDefenseRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             'status' => ['sometimes', 'in:SCHEDULED,CANCELLED'],
             'student_ids' => ['sometimes', 'array', 'min:1'],
-            'student_ids.*' => ['exists:students,id'],
+            'student_ids.*' => ['integer', 'distinct', 'exists:students,id'],
+            'examiner_1_id' => ['sometimes', 'required', 'integer', 'exists:lecturers,id'],
+            'examiner_2_id' => ['sometimes', 'required', 'integer', 'exists:lecturers,id', 'different:examiner_1_id'],
         ];
     }
 

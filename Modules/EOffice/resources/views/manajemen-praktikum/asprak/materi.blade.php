@@ -160,9 +160,9 @@
                     @endif
                     
                     <div style="font-size:12px;color:#999;display:flex;gap:20px;flex-wrap:wrap;">
-                        <span>📅 Diupload: {{ $materi->created_at?->locale('id')->format('d M Y, H:i') }}</span>
+                        <span><x-eoffice::manajemen-praktikum.ui.icon name="calendar" /> Diupload: {{ $materi->created_at?->locale('id')->format('d M Y, H:i') }}</span>
                         @if($materi->file_path)
-                        <span>📄 File: {{ strtoupper(pathinfo($materi->file_path, PATHINFO_EXTENSION)) }}</span>
+                        <span><x-eoffice::manajemen-praktikum.ui.icon name="file" /> File: {{ strtoupper(pathinfo($materi->file_path, PATHINFO_EXTENSION)) }}</span>
                         @endif
                     </div>
                 </div>

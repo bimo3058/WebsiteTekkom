@@ -4,13 +4,9 @@ namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\EOffice\Models\Absensi;
 use Modules\EOffice\Models\DaftarPraktikan;
-use Modules\EOffice\Models\Nilai;
 use Modules\EOffice\Models\PendaftaranAsprak;
 use Modules\EOffice\Models\Pengumuman;
-use Modules\EOffice\Models\PengumpulanTugas;
-use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Models\Tugas;
 
 class DashboardController extends Controller
@@ -52,13 +48,17 @@ class DashboardController extends Controller
 
         $semuaTugas = collect();
         if (!empty($praktikumIds)) {
-            $semuaTugas = Tugas::with(['modul.praktikum'])
+            $semuaTugas = Tugas::with([
+                'modul.praktikum',
+                'pengumpulan' => fn ($q) => $q->whereIn('daftar_praktikan_id', $dpIds->values())
+                    ->select('id', 'tugas_id', 'daftar_praktikan_id', 'status_pengumpulan'),
+            ])
                 ->whereHas('modul', fn($q) => $q->whereIn('praktikum_id', $praktikumIds))
                 ->where('is_published', true)
                 ->get()
                 ->map(function ($t) use ($dpIds) {
                     $dpId = $dpIds[$t->modul->praktikum_id] ?? null;
-                    $pengumpulan = $dpId ? PengumpulanTugas::where('tugas_id', $t->id)->where('daftar_praktikan_id', $dpId)->first() : null;
+                    $pengumpulan = $dpId ? $t->pengumpulan->firstWhere('daftar_praktikan_id', $dpId) : null;
                     $t->sudah_kumpul = !is_null($pengumpulan);
                     $t->status_tugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
                     return $t;
@@ -100,7 +100,7 @@ class DashboardController extends Controller
         $defaultTahunAjaran = $currentSemester === 'Genap' ? $currentYear - 1 : $currentYear;
         $semesterLabel = "Semester {$currentSemester} {$defaultTahunAjaran}/" . ($defaultTahunAjaran + 1);
 
-        $perPage = $request->input('per_page', 5);
+        $perPage = max(1, min(100, $request->integer('per_page', 5)));
         $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
         $tugasGabungan = collect($tugasTerlambat)->merge($tugasMendatang);
         $currentItems = $tugasGabungan->slice(($currentPage - 1) * $perPage, $perPage)->values();

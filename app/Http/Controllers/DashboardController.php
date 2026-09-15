@@ -104,7 +104,7 @@ class DashboardController extends Controller
         $eofficeItems = collect();
 
         // 1. Periode pendaftaran yang sedang aktif/baru dibuka (maks 5 terbaru)
-        $periodeAktif = PeriodePendaftaran::with(['praktikum', 'dibukaOleh'])
+        $periodeAktif = PeriodePendaftaran::with('praktikum')
             ->where('is_aktif', true)
             ->where(fn ($q) => $q->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', now()))
             ->where(fn ($q) => $q->whereNull('ditutup_pada')->orWhere('ditutup_pada', '>', now()))
@@ -155,7 +155,7 @@ class DashboardController extends Controller
         }
 
         // 3. Pengumuman praktikum yang published (maks 5 terbaru)
-        $pengumumanPraktikum = Pengumuman::with(['praktikum', 'user'])
+        $pengumumanPraktikum = Pengumuman::query()
             ->where('is_published', true)
             ->where(fn ($q) => $q->whereNull('tipe_sistem')->orWhere('tipe_sistem', 'buka'))
             ->orderByDesc('created_at')

@@ -964,8 +964,12 @@ class SupervisorEvaluationController extends Controller
      */
     public function adminScheduleSummary(Request $request, int $scheduleId): JsonResponse
     {
-        // Try Schedule table first, then TaDefenseSchedule for TA_DEFENSE, then SeminarSchedule for SEMPRO
-        $schedule = Schedule::with(['group.period', 'group.members.student'])->find($scheduleId);
+        $request->validate(['schedule_source'=>'nullable|in:schedule,seminar,ta']);
+        $source = $request->input('schedule_source');
+        // Explicit sources prevent collisions between the independent schedule tables.
+        $schedule = in_array($source, [null, 'schedule'], true)
+            ? Schedule::with(['group.period', 'group.members.student'])->find($scheduleId) : null;
+        if (! $schedule && $source === 'schedule') return $this->notFoundResponse('Schedule not found');
         $isTaDefense = false;
         $isSeminar = false;
         $taSchedule = null;
@@ -973,7 +977,9 @@ class SupervisorEvaluationController extends Controller
 
         if (! $schedule) {
             // Try TaDefenseSchedule for TA defense schedules
-            $taSchedule = TaDefenseSchedule::with(['group.period', 'group.members.student', 'student'])->find($scheduleId);
+            $taSchedule = in_array($source, [null, 'ta'], true)
+                ? TaDefenseSchedule::with(['group.period', 'group.members.student', 'student', 'students'])->find($scheduleId) : null;
+            if (! $taSchedule && $source === 'ta') return $this->notFoundResponse('Schedule not found');
             if ($taSchedule) {
                 $isTaDefense = true;
                 $schedule = (object) [
@@ -989,7 +995,7 @@ class SupervisorEvaluationController extends Controller
                     $isSeminar = true;
                     $schedule = (object) [
                         'id' => $seminarSchedule->id,
-                        'type' => 'SEMINAR',
+                        'type' => $seminarSchedule->type === 'EXPO' ? 'EXPO' : 'SEMINAR',
                         'date' => $seminarSchedule->date,
                         'room' => $seminarSchedule->room,
                     ];
@@ -1009,7 +1015,7 @@ class SupervisorEvaluationController extends Controller
 
         // Determine evaluation types based on schedule type
         $evaluationTypes = match ($schedule->type) {
-            'SEMINAR' => ['SEMPRO', 'BIMBINGAN_SEMPRO'],
+            'SEMINAR', 'SEMPRO' => ['SEMPRO', 'BIMBINGAN_SEMPRO'],
             'TA_DEFENSE' => ['SIDANG_TA', 'BIMBINGAN_TA'],
             'EXPO' => ['EXPO', 'MILESTONE'],
             default => [],
@@ -1019,9 +1025,9 @@ class SupervisorEvaluationController extends Controller
 
         // For TA_DEFENSE, only show the specific student (not all group members)
         if ($isTaDefense) {
-            $students = collect([$taSchedule->student]);
+            $students = $taSchedule->students->isNotEmpty() ? $taSchedule->students : collect([$taSchedule->student])->filter();
         } else {
-            $students = $group->members->map(fn ($m) => $m->student);
+            $students = $group->members->map(fn ($m) => $m->student)->filter();
         }
 
         foreach ($students as $student) {
@@ -1172,7 +1178,7 @@ class SupervisorEvaluationController extends Controller
             ],
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'summary' => $summary,

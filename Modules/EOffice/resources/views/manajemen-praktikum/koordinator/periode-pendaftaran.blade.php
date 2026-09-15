@@ -78,7 +78,6 @@
 @if($praktikumDipilih)
 
 @if($praktikumDipilih->is_active)
-@if($praktikumDipilih->is_active)
 {{-- ── BUKA PERIODE BARU ────────────────────────────────────────────────────── --}}
 <div class="sec-head" style="margin-top:24px;">
     <span class="sec-bar"></span>
@@ -109,7 +108,7 @@
             <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.tutup', $periodeAktif->id) }}"
                   style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran asisten praktikum sekarang?')">
                 @csrf
-                <button type="submit" class="mp-btn error sm">🔒 Tutup Periode Sekarang</button>
+                <button type="submit" class="mp-btn error sm"><x-eoffice::manajemen-praktikum.ui.icon name="lock" /> Tutup Periode Sekarang</button>
             </form>
         </div>
         @endif
@@ -128,9 +127,9 @@
                            value="{{ old('nama') }}">
                 </div>
                 <div style="display:flex;align-items:flex-end;">
-                    <div style="font-size:12px;color:#666D80;padding:8px;background:#F6F8FA;border-radius:8px;width:100%;">
-                        💡 Hanya mahasiswa yang terlihat di menu Pendaftaran Asisten Praktikum ketika periode ini aktif.
-                        Membuka periode baru akan otomatis menutup periode aktif sebelumnya.
+                    <div class="mp-inline-note">
+                        <x-eoffice::manajemen-praktikum.ui.icon name="info" /><span>Hanya mahasiswa yang terlihat di menu Pendaftaran Asisten Praktikum ketika periode ini aktif.
+                        Membuka periode baru akan otomatis menutup periode aktif sebelumnya.</span>
                     </div>
                 </div>
             </div>
@@ -155,7 +154,7 @@
             </div>
 
             <button type="submit" class="mp-btn primary md">
-                📢 Buka Periode Pendaftaran Asisten Praktikum
+                <x-eoffice::manajemen-praktikum.ui.icon name="announcement" /> Buka Periode Pendaftaran Asisten Praktikum
             </button>
         </form>
     </div>

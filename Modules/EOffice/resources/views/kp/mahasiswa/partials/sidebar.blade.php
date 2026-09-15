@@ -24,7 +24,7 @@
      style="display:none"></div>
 
 <!-- Sidebar -->
-<aside x-data="{ sidebarCollapsed: false }"
+<aside data-mobile-sidebar x-data="{ sidebarCollapsed: false }"
        :class="{
            'translate-x-0': sidebarOpen,
            '-translate-x-full': !sidebarOpen,

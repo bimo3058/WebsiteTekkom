@@ -3,6 +3,7 @@
 namespace Tests\Unit;
 
 use App\Database\CachedPostgresConnection;
+use Illuminate\Cache\Repository;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use PDO;
@@ -69,5 +70,77 @@ class CachedPostgresConnectionTest extends TestCase
             '',
             ['name' => 'query-cache-test']
         );
+    }
+
+    public function test_transaction_writes_invalidate_once_after_commit(): void
+    {
+        $connection = $this->connection();
+        $connection->statement('create table records (id integer primary key, name varchar(50))');
+        $connection->insert('insert into records values (1, ?)', ['before']);
+        $connection->select('select name from records');
+        $version = Cache::get('database:query-cache:version');
+
+        $connection->transaction(function () use ($connection, $version) {
+            $connection->update('update records set name = ?', ['middle']);
+            $connection->transaction(function () use ($connection) {
+                $connection->update('update records set name = ?', ['after']);
+            });
+            $this->assertSame($version, Cache::get('database:query-cache:version'));
+            $this->assertSame('after', $connection->select('select name from records')[0]->name);
+        });
+
+        $this->assertSame($version + 1, Cache::get('database:query-cache:version'));
+        $this->assertSame('after', $connection->select('select name from records')[0]->name);
+    }
+
+    public function test_rollback_keeps_cached_committed_data_and_manual_commit_invalidates(): void
+    {
+        $connection = $this->connection();
+        $connection->statement('create table records (id integer primary key, name varchar(50))');
+        $connection->insert('insert into records values (1, ?)', ['before']);
+        $connection->select('select name from records');
+        $version = Cache::get('database:query-cache:version');
+
+        $connection->beginTransaction();
+        $connection->update('update records set name = ?', ['discard']);
+        $connection->rollBack();
+        $this->assertSame($version, Cache::get('database:query-cache:version'));
+        $this->assertSame('before', $connection->select('select name from records')[0]->name);
+
+        $connection->beginTransaction();
+        $connection->commit();
+        $this->assertSame($version, Cache::get('database:query-cache:version'));
+
+        $connection->beginTransaction();
+        $connection->update('update records set name = ?', ['after']);
+        $connection->commit();
+        $this->assertSame($version + 1, Cache::get('database:query-cache:version'));
+        $this->assertSame('after', $connection->select('select name from records')[0]->name);
+    }
+
+    public function test_disabled_cache_does_not_contact_redis_even_for_writes(): void
+    {
+        config(['database.query_cache.enabled' => false]);
+        Cache::shouldReceive('store')->never();
+        $connection = $this->connection();
+        $connection->statement('create table records (id integer primary key)');
+        $connection->insert('insert into records values (1)');
+        $this->assertCount(1, $connection->select('select * from records'));
+    }
+
+    public function test_cache_outage_is_retried_on_the_next_request_only(): void
+    {
+        $store = \Mockery::mock(Repository::class);
+        $store->shouldReceive('rememberForever')->once()->andThrow(new \RuntimeException('Redis unavailable'));
+        Cache::shouldReceive('store')->with('array')->once()->andReturn($store);
+        $connection = $this->connection();
+        $this->assertSame(1, $connection->select('select 1 as value')[0]->value);
+        $this->assertSame(2, $connection->select('select 2 as value')[0]->value);
+
+        $this->app->instance('request', Request::create('/next-request', 'GET'));
+        $healthyStore = new Repository(new \Illuminate\Cache\ArrayStore);
+        Cache::shouldReceive('store')->with('array')->once()->andReturn($healthyStore);
+        $this->assertSame(3, $connection->select('select 3 as value')[0]->value);
+        $this->assertSame(1, request()->attributes->get('db_query_cache_misses'));
     }
 }
