@@ -21,8 +21,12 @@ import {registerAdminTaDefense} from './pages/admin-ta-defense.js';
 import {registerDocumentConfiguration} from './pages/document-configuration.js';
 import {registerPeriodWizard} from './pages/period-wizard.js';
 import {registerAssessmentBank} from './pages/assessment-bank.js';
+import {lecturerTitles,lecturerTitleDetail,lecturerApprovals,lecturerBids} from './pages/dosen/titles.js';
+import {lecturerGroups,lecturerDocuments,lecturerRequests} from './pages/dosen/mentoring.js';
+import {lecturerEvaluations,lecturerSupervisorEvaluations,lecturerEvaluationForm} from './pages/dosen/evaluations.js';
 
 export function registerPages(Alpine) {
+    for(const [name,factory] of Object.entries({lecturerTitles,lecturerTitleDetail,lecturerApprovals,lecturerBids,lecturerGroups,lecturerDocuments,lecturerRequests,lecturerEvaluations,lecturerSupervisorEvaluations,lecturerEvaluationForm}))Alpine.data(name,factory);
     for(const [name,factory] of Object.entries({adminAssessmentConfig:assessmentConfig,adminGradeConfig:gradeConfig,adminGroups,adminExpo:expoAdmin,adminSempro:semproAdmin,adminFinalization:finalizationAdmin,adminProgress:progressAdmin,adminPeerDashboard:peerDashboard,adminDocumentUploads:documentUploads,adminReports:reportsAdmin}))Alpine.data(name,factory);
     Alpine.data('studentGroup', studentGroup);
     Alpine.data('studentMarketplace', studentMarketplace);

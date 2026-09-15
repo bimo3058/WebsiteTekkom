@@ -10,8 +10,10 @@
     </div>
     @include('capstone::partials.loading')
     <div x-show="!loading && !error" x-cloak class="space-y-6">
+        <div class="flex flex-wrap items-center justify-between gap-3"><div class="inline-flex rounded-lg bg-muted p-1" role="group" aria-label="Schedule view"><button type="button" @click="view='calendar'" :aria-pressed="view==='calendar'" :class="view==='calendar'?'bg-background shadow-sm':''" class="rounded-md px-4 py-2 text-sm">Calendar</button><button type="button" @click="view='table'" :aria-pressed="view==='table'" :class="view==='table'?'bg-background shadow-sm':''" class="rounded-md px-4 py-2 text-sm">Table</button></div><x-capstone::button variant="outline" @click="exportCsv(true)">Export CSV</x-capstone::button></div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">@foreach(['BIMBINGAN'=>'Bimbingan','SEMPRO'=>'Sempro','EXPO'=>'Expo','TA_DEFENSE'=>'TA Defense'] as $type=>$label)<div class="p-4 rounded-lg border" :class="color('{{ $type }}')"><p class="text-2xl font-bold" x-text="count('{{ $type }}')"></p><p class="text-sm text-muted-foreground">{{ $label }}</p></div>@endforeach</div>
         @include('capstone::partials.schedule-calendar')
+        @include('capstone::partials.schedule-table')
     </div>
     <x-capstone::dialog id="schedule-form" class="sm:max-w-[480px]">
         <h2 class="text-lg font-semibold" x-text="editing ? 'Edit BIMBINGAN Schedule' : 'New BIMBINGAN Schedule'"></h2>
