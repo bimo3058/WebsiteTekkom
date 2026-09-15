@@ -2,7 +2,7 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Models\AssessmentComponentTemplate;
+use Modules\Capstone\Models\PeerReviewIndicatorTemplate;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodPeerReviewIndicator;
 use Illuminate\Http\Request;
@@ -19,10 +19,10 @@ class PeriodPeerReviewConfigController extends Controller
     {
         $period = Period::findOrFail($periodId);
 
-        // Get all active templates from Assessment Bank
-        $allTemplates = AssessmentComponentTemplate::where('is_active', true)
+        // Load templates from the table referenced by the period indicator foreign key.
+        $allTemplates = PeerReviewIndicatorTemplate::where('is_active', true)
             ->orderBy('sort_order')
-            ->orderBy('code')
+            ->orderBy('name')
             ->get();
 
         // Get selected indicators for this period
@@ -33,7 +33,7 @@ class PeriodPeerReviewConfigController extends Controller
             ->map(fn ($i) => [
                 'id' => $i->id,
                 'template_id' => $i->template_id,
-                'code' => $i->template->code,
+                'code' => $i->template->code ?? null,
                 'name' => $i->template->name,
                 'description' => $i->template->description,
                 'weight' => $i->template->weight,
@@ -53,22 +53,25 @@ class PeriodPeerReviewConfigController extends Controller
     public function store(Request $request, $periodId)
     {
         $request->validate([
-            'template_ids' => 'required|array',
-            'template_ids.*' => 'exists:assessment_component_templates,id',
+            'template_ids' => 'present|array',
+            'template_ids.*' => 'integer|distinct|exists:capstone_peer_review_indicator_templates,id',
         ]);
 
         return DB::transaction(function () use ($periodId, $request) {
+            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
+            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
+            $current = PeriodPeerReviewIndicator::where('period_id', $periodId)->orderBy('sort_order')->pluck('template_id')->map(fn($id)=>(int)$id)->all();
+            if ($current !== array_map('intval', $request->template_ids)) abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat diubah setelah kelompok terbentuk.');
             // Delete existing config for this period
-            PeriodPeerReviewIndicator::where('period_id', $periodId)->delete();
+            PeriodPeerReviewIndicator::where('period_id', $periodId)->whereNotIn('template_id', $request->template_ids)->delete();
 
             // Create new config
             $created = [];
             foreach ($request->template_ids as $i => $templateId) {
-                $created[] = PeriodPeerReviewIndicator::create([
+                $created[] = PeriodPeerReviewIndicator::updateOrCreate([
                     'period_id' => $periodId,
                     'template_id' => $templateId,
-                    'sort_order' => $i,
-                ]);
+                ], ['sort_order' => $i]);
             }
 
             return $this->createdResponse([
@@ -84,12 +87,15 @@ class PeriodPeerReviewConfigController extends Controller
     public function copy(Request $request, $periodId)
     {
         $request->validate([
-            'source_period_id' => 'required|exists:capstone_periods,id|different:period_id',
+            'source_period_id' => 'required|integer|exists:capstone_periods,id|not_in:'.$periodId,
         ]);
 
         $sourcePeriodId = $request->source_period_id;
 
         return DB::transaction(function () use ($periodId, $sourcePeriodId) {
+            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
+            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
+            abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat disalin setelah kelompok terbentuk.');
             // Get all indicators from source period
             $sourceIndicators = PeriodPeerReviewIndicator::where('period_id', $sourcePeriodId)
                 ->orderBy('sort_order')
@@ -100,16 +106,15 @@ class PeriodPeerReviewConfigController extends Controller
             }
 
             // Delete existing config for this period
-            PeriodPeerReviewIndicator::where('period_id', $periodId)->delete();
+            PeriodPeerReviewIndicator::where('period_id', $periodId)->whereNotIn('template_id', $sourceIndicators->pluck('template_id'))->delete();
 
             // Copy config
             $created = [];
             foreach ($sourceIndicators as $indicator) {
-                $created[] = PeriodPeerReviewIndicator::create([
+                $created[] = PeriodPeerReviewIndicator::updateOrCreate([
                     'period_id' => $periodId,
                     'template_id' => $indicator->template_id,
-                    'sort_order' => $indicator->sort_order,
-                ]);
+                ], ['sort_order' => $indicator->sort_order]);
             }
 
             return $this->createdResponse([

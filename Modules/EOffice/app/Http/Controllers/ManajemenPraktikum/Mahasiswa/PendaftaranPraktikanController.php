@@ -115,7 +115,7 @@ class PendaftaranPraktikanController extends Controller
             ->where('status', PendaftaranPraktikan::STATUS_APPROVED)
             ->exists();
         if ($approved) {
-            return back()->with('error', 'Anda sudah disetujui. Gunakan kode praktikum di dashboard untuk bergabung ke kelas.');
+            return back()->with('error', 'Anda sudah disetujui dan sudah terdaftar sebagai praktikan di praktikum ini.');
         }
 
         $irsPath = $this->supabase->upload($request->file('irs'), 'praktikan-irs/' . $user->id, 'eoffice');

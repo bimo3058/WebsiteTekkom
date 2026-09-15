@@ -5,7 +5,7 @@ namespace Modules\Capstone\Http\Controllers;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\PeerReview;
 use Modules\Capstone\Models\PeriodAssessmentComponent;
-use App\Models\User;
+use App\Models\Lecturer;
 use Modules\Capstone\Repositories\AssessmentScoreRepository;
 use Modules\Capstone\Services\GradeCalculationService;
 use Illuminate\Http\Request;
@@ -62,8 +62,10 @@ class ReportDetailController extends Controller
         if ($request->filled('student_search')) {
             $search = $request->student_search;
             $query->whereHas('student', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('nim', 'like', "%{$search}%");
+                $q->where(function ($student) use ($search) {
+                    $student->where('student_number', 'like', "%{$search}%")
+                        ->orWhereHas('user', fn ($user) => $user->where('name', 'like', "%{$search}%"));
+                });
             });
         }
 
@@ -174,14 +176,16 @@ class ReportDetailController extends Controller
     {
         switch ($sortBy) {
             case 'reviewer':
-                $query->join('students as reviewer_student', 'peer_reviews.reviewer_id', '=', 'reviewer_student.id')
-                    ->orderBy('reviewer_student.name', $sortOrder)
-                    ->select('peer_reviews.*');
+                $query->join('students as reviewer_student', 'capstone_peer_reviews.reviewer_id', '=', 'reviewer_student.id')
+                    ->join('users as reviewer_user', 'reviewer_student.user_id', '=', 'reviewer_user.id')
+                    ->orderBy('reviewer_user.name', $sortOrder)
+                    ->select('capstone_peer_reviews.*');
                 break;
             case 'reviewee':
-                $query->join('students as reviewee_student', 'peer_reviews.reviewee_id', '=', 'reviewee_student.id')
-                    ->orderBy('reviewee_student.name', $sortOrder)
-                    ->select('peer_reviews.*');
+                $query->join('students as reviewee_student', 'capstone_peer_reviews.reviewee_id', '=', 'reviewee_student.id')
+                    ->join('users as reviewee_user', 'reviewee_student.user_id', '=', 'reviewee_user.id')
+                    ->orderBy('reviewee_user.name', $sortOrder)
+                    ->select('capstone_peer_reviews.*');
                 break;
             case 'raw_score':
                 $query->orderBy('raw_score', $sortOrder);
@@ -219,7 +223,7 @@ class ReportDetailController extends Controller
 
         $groups = Group::where('period_id', $periodId)
             ->with(['title', 'members' => function ($query) {
-                $query->withTrashed()->with('student');
+                $query->with('student');
             }]);
 
         if ($request->filled('group_id')) {
@@ -378,7 +382,7 @@ class ReportDetailController extends Controller
 
         $groups = Group::where('period_id', $periodId)
             ->with(['title', 'members' => function ($query) {
-                $query->withTrashed()->with('student');
+                $query->with('student');
             }])
             ->get();
 
@@ -503,7 +507,7 @@ class ReportDetailController extends Controller
 
         $query = Group::where('period_id', $periodId)
             ->with(['title', 'supervisor1', 'supervisor2', 'members' => function ($query) {
-                $query->withTrashed()->with('student');
+                $query->with('student');
             }]);
 
         // Sort by creation date
@@ -520,6 +524,7 @@ class ReportDetailController extends Controller
         $transformedGroups = $groups->map(function ($group) {
             return [
                 'id' => $group->id,
+                'code' => $group->code,
                 'title' => [
                     'title' => $group->title->title ?? "Group {$group->id}",
                     'description' => $group->title->description ?? null,
@@ -722,9 +727,9 @@ class ReportDetailController extends Controller
             default => [],
         };
 
-        // Get all groups in period with students (include soft-deleted members)
+        // Get all groups in period with students
         $groups = Group::with(['members' => function ($query) {
-            $query->withTrashed()->with('student');
+            $query->with('student');
         }, 'title'])
             ->where('period_id', $periodId)
             ->get();
@@ -863,9 +868,9 @@ class ReportDetailController extends Controller
         $sortBy = $request->input('sort_by', 'group');
         $search = $request->input('student_search', '');
 
-        // Get all groups in period with students (include soft-deleted members)
+        // Get all groups in period with students
         $groupsQuery = Group::with(['members' => function ($query) {
-            $query->withTrashed()->with('student');
+            $query->with('student');
         }, 'title'])
             ->where('period_id', $periodId);
 
@@ -1033,13 +1038,13 @@ class ReportDetailController extends Controller
             return $this->errorResponse('Invalid evaluation type', 400);
         }
 
-        // Get student and group info (include soft-deleted members)
+        // Get student and group info
         $group = Group::where('period_id', $periodId)
             ->whereHas('members', function ($q) use ($studentId) {
-                $q->withTrashed()->where('student_id', $studentId);
+                $q->where('student_id', $studentId);
             })
             ->with(['members' => function ($q) {
-                $q->withTrashed()->with('student');
+                $q->with('student');
             }, 'title'])
             ->first();
 
@@ -1064,7 +1069,7 @@ class ReportDetailController extends Controller
         $scores = AssessmentScoreRepository::forType($evaluationType)
             ->where('student_id', $studentId)
             ->where('group_id', $group->id)
-            ->with(['periodComponent.template', 'evaluator:id,name'])
+            ->with(['periodComponent.template', 'evaluator:id,user_id'])
             ->get();
 
         // EXPO special handling - simplified view with only combined score
@@ -1324,9 +1329,9 @@ class ReportDetailController extends Controller
         $sortBy = $request->input('sort_by', 'group');
         $search = $request->input('student_search', '');
 
-        // Get all data (no pagination for export) - include soft-deleted members
+        // Get all data (no pagination for export)
         $groups = Group::with(['members' => function ($query) {
-            $query->withTrashed()->with('student');
+            $query->with('student');
         }, 'title'])
             ->where('period_id', $periodId)
             ->get();
@@ -1446,10 +1451,10 @@ class ReportDetailController extends Controller
         // Get student and group info
         $group = Group::where('period_id', $periodId)
             ->whereHas('members', function ($q) use ($studentId) {
-                $q->withTrashed()->where('student_id', $studentId);
+                $q->where('student_id', $studentId);
             })
             ->with(['members' => function ($q) {
-                $q->withTrashed()->with('student');
+                $q->with('student');
             }, 'title'])
             ->first();
 
@@ -1488,7 +1493,7 @@ class ReportDetailController extends Controller
 
         // Get all scores (don't key by period_component_id since it may be NULL)
         $allScores = $scoreQuery
-            ->with(['periodComponent.template', 'evaluator:id,name'])
+            ->with(['periodComponent.template', 'evaluator:id,user_id'])
             ->get();
 
         // Create lookup maps for efficient matching
@@ -1504,7 +1509,7 @@ class ReportDetailController extends Controller
         $evaluatorInfo = $allScores->first()?->evaluator;
         if (! $evaluatorInfo) {
             // Try to get evaluator info directly
-            $evaluatorInfo = User::find($evaluatorId);
+            $evaluatorInfo = Lecturer::find($evaluatorId);
             if (! $evaluatorInfo) {
                 return $this->notFoundResponse('Evaluator not found');
             }

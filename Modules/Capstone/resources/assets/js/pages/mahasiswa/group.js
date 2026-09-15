@@ -1,0 +1,15 @@
+import {api,unwrap,groupFrom,list,withBase,show,close,notify,url} from './shared.js';
+export function studentGroup(){return withBase({period:null,requests:[],memberEmail:'',confirmAction:null,withdrawal:null,
+async init(){await this.load();try{const notes=list(await api('/notifications'),'notifications');this.withdrawal=notes.find(n=>n.type==='title_approval_withdrawn' && !n.is_read)??null;if(this.withdrawal){notify(this.withdrawal.message,true);await this.load();}}catch{}},
+async load(){this.loading=true;this.error='';try{const [g,p]=await Promise.all([api('/mahasiswa/group'),api('/mahasiswa/my-period')]);this.group=groupFrom(g);this.period=unwrap(p)?.period??null;this.requests=[];if(this.isLeader && this.group?.is_solo)this.requests=list(await api('/mahasiswa/join-requests'),'requests').filter(r=>r.status==='PENDING');}catch(e){this.error=e.message;}finally{this.loading=false;}},
+get actions(){return this.group?.allowed_actions??{};},
+get isSolo(){return this.group?.is_solo && ['FORMING_SOLO','FORMING','TITLE_APPROVED'].includes(this.group.status);},
+async create(solo=false){if(!this.period || this.saving)return;if(await this.action('/mahasiswa/group'+(solo?'/store-solo':''),'POST',{period_id:this.period.id}))await this.load();},
+openMember(){this.errors={};this.memberEmail='';show('add-member');},
+async addMember(){if(!this.actions.can_add_member)return;if(await this.action('/mahasiswa/group/add-member','POST',{email:this.memberEmail},'add-member'))await this.load();},
+confirm(kind,member=null){this.errors={};this.confirmAction={kind,member};show('group-confirm');},
+get confirmTitle(){return {remove:'Remove Member',delete:'Delete Group',leave:'Leave Group',ready:'Mark Ready for Finalization',cancel:'Cancel Ready for Finalization'}[this.confirmAction?.kind]||'';},
+get confirmMessage(){return {remove:'Remove '+(this.confirmAction?.member?.student?.name||'this member')+' from the group?',delete:'Hapus kelompok ini? Anda perlu membuat atau bergabung dengan kelompok lagi.',leave:'Keluar dari kelompok ini?',ready:'Anggota kelompok akan dikunci. Pastikan judul dan seluruh anggota sudah benar sebelum finalisasi.',cancel:'Batalkan status siap finalisasi agar kelompok dapat diperbarui kembali?'}[this.confirmAction?.kind]||'';},
+async confirmSave(){const a=this.confirmAction;if(!a)return;const requests={remove:['/group/members/'+a.member?.id,'DELETE'],delete:['/group','DELETE'],leave:['/group/leave','POST'],ready:['/group/mark-ready-for-finalization','POST'],cancel:['/group/cancel-ready-for-finalization','POST']};const [path,method]=requests[a.kind];if(await this.action('/mahasiswa'+path,method,{group_id:this.group?.id},'group-confirm')){if(['delete','leave'].includes(a.kind)){window.location.assign(url('/mahasiswa/dashboard'));return;}await this.load();}},
+async answer(request,accept){if(await this.action('/mahasiswa/join-requests/'+request.id+'/'+(accept?'accept':'reject')))await this.load();}
+});}

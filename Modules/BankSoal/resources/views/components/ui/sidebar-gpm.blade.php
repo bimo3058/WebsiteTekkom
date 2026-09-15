@@ -7,7 +7,7 @@
     $iconRiwayat = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'; 
 @endphp
 
-<aside :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'"
+<aside data-mobile-sidebar :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'"
        class="relative h-screen bg-white border-r border-[#DFE1E7] flex flex-col flex-shrink-0 transition-all duration-200 ease-in-out z-20 font-sans"
        style="font-family: 'Inter Tight', system-ui, sans-serif;">
     

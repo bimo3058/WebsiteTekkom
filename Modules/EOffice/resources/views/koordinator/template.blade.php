@@ -77,14 +77,14 @@
                             <label class="block text-sm font-bold text-slate-700 mb-1.5">Nama Template <span
                                     class="text-red-500">*</span></label>
                             <input type="text" name="title" x-model="formData.title" required
-                                class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none"
+                                class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 border bg-white hover:border-slate-300 transition-all outline-none"
                                 placeholder="Contoh: Logbook Harian">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1.5">Fase KP <span
                                     class="text-red-500">*</span></label>
                             <select name="phase" x-model="formData.phase" required
-                                class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none">
+                                class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 border bg-white hover:border-slate-300 transition-all outline-none">
                                 <option value="pra_kp">Pra KP (Sebelum KP)</option>
                                 <option value="saat_kp">Saat KP (Pelaksanaan)</option>
                                 <option value="pasca_kp">Pasca KP (Selesai/Seminar)</option>
@@ -110,7 +110,7 @@
                                 <div class="space-y-2 text-center"
                                     x-show="!fileName && !(isEditing && formData.fileName)">
                                     <div
-                                        class="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                        class="w-12 h-12 bg-primary-50 text-primary-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -118,7 +118,7 @@
                                     </div>
                                     <div class="flex text-sm text-slate-600 justify-center">
                                         <span
-                                            class="relative cursor-pointer rounded-md font-semibold text-indigo-600 hover:text-indigo-500">Upload
+                                            class="relative cursor-pointer rounded-md font-semibold text-primary-500 hover:text-primary-500">Upload
                                             a file</span>
                                         <p class="pl-1">or drag and drop</p>
                                     </div>
@@ -148,7 +148,7 @@
                                 <div class="flex items-center gap-3 text-left w-full" x-show="fileName"
                                     style="display: none;">
                                     <div
-                                        class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                                        class="w-10 h-10 bg-primary-100 text-primary-500 rounded-lg flex items-center justify-center shrink-0">
                                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                             <path fill-rule="evenodd"
                                                 d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
@@ -179,7 +179,7 @@
                                     Batal
                                 </button>
                                 <button type="submit"
-                                    class="flex-1 px-5 py-3.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 outline-none flex items-center justify-center">
+                                    class="flex-1 px-5 py-3.5 bg-primary-500 text-white text-sm font-bold rounded-xl hover:bg-primary-500 transition-colors shadow-sm shadow-primary-200 focus:ring-4 focus:ring-primary-100 outline-none flex items-center justify-center">
                                     <svg x-show="!isEditing" class="w-4 h-4 mr-2" fill="none" stroke="currentColor"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -203,9 +203,9 @@
         <div class="space-y-4">
             @forelse($templates as $item)
                 <div
-                    class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all overflow-hidden p-5 flex flex-col md:flex-row gap-5 items-center">
+                    class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-primary-100 transition-all overflow-hidden p-5 flex flex-col md:flex-row gap-5 items-center">
                     <div
-                        class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0 border border-indigo-100">
+                        class="w-14 h-14 bg-primary-50 text-primary-500 rounded-xl flex items-center justify-center shrink-0 border border-primary-100">
                         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -214,14 +214,14 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-3 mb-1">
                             <span
-                                class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide {{ $item->phase == 'pra_kp' ? 'bg-amber-50 text-amber-700 border-amber-100' : ($item->phase == 'saat_kp' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100') }} border uppercase">
+                                class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide {{ $item->phase == 'pra_kp' ? 'bg-amber-50 text-amber-700 border-amber-100' : ($item->phase == 'saat_kp' ? 'bg-primary-50 text-primary-500 border-primary-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100') }} border uppercase">
                                 {{ str_replace('_', ' ', $item->phase) }}
                             </span>
                         </div>
                         <h3 class="text-lg font-bold text-slate-900 mb-1 truncate">{{ $item->title }}</h3>
                         @if($item->file_path)
                             <a href="{{ Storage::disk('public')->url($item->file_path) }}" target="_blank"
-                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 mt-1">
+                                class="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-500 hover:text-primary-500 mt-1">
                                 <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
                                         d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
@@ -235,7 +235,7 @@
                     <div class="flex flex-row items-center gap-2 shrink-0">
                         <button type="button"
                             @click='formData = { title: @json($item->title), phase: @json($item->phase), fileName: @json($item->file_name ?? basename($item->file_path ?? "")) }; formAction = `/eoffice/kp/koordinator/template/{{ $item->id }}`; isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });'
-                            class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                            class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-primary-500 transition-colors shadow-sm">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -254,8 +254,8 @@
             @empty
                 <div
                     class="bg-white rounded-2xl border border-slate-200 border-dashed p-12 text-center flex flex-col items-center justify-center">
-                    <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
-                        <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-20 h-20 bg-primary-50 rounded-full flex items-center justify-center mb-4">
+                        <svg class="w-10 h-10 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                 d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>

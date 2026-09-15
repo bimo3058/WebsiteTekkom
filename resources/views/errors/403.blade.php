@@ -50,6 +50,7 @@
         footer { position: fixed; bottom: 0; width: 100%; padding: 16px 24px; text-align: center; font-size: 11px; color: #94a3b8; }
         footer a { color: #7c6bf8; text-decoration: none; font-weight: 500; }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body>
     <div class="container">
@@ -75,5 +76,6 @@
     <footer>
         &copy; {{ date('Y') }} <a href="/">LuminHR</a>. All rights reserved.
     </footer>
+    <x-mobile-navigation />
 </body>
 </html>

@@ -455,8 +455,11 @@ class MahasiswaKpController extends Controller
                     $inputName = 'dokumen_' . $tmpl->id;
                     if ($request->hasFile($inputName)) {
                         $file = $request->file($inputName);
-                        $fileName = $file->getClientOriginalName();
-                        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $safeNama = preg_replace('/[^A-Za-z0-9\-\s]/', '', $mahasiswa->nama_lengkap);
+                        $jenisDok = $tmpl->title;
+                        $baseName = "{$safeNama}_{$mahasiswa->nim}_{$jenisDok}";
+                        $fileName = "{$baseName}.{$extension}";
                         $safeTitle = \Illuminate\Support\Str::slug($tmpl->title);
                         $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/pra-kp", 'eoffice', $baseName);
 
@@ -597,8 +600,14 @@ class MahasiswaKpController extends Controller
 
         // Simpan file
         $file = $request->file('file');
-        $fileName = $file->getClientOriginalName();
-        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+        $extension = $file->getClientOriginalExtension();
+        
+        // Format: nama_nim_nama dokumen
+        $safeNama = preg_replace('/[^A-Za-z0-9\-\s]/', '', $mahasiswa->nama_lengkap);
+        $jenisDok = $validated['jenis_dokumen'];
+        $baseName = "{$safeNama}_{$mahasiswa->nim}_{$jenisDok}";
+        $fileName = "{$baseName}.{$extension}";
+
         $folder = strtolower(str_replace(' ', '_', $validated['jenis_dokumen']));
         $path = $this->supabase->upload($file, "kp-uploads/{$mahasiswa->nim}/{$activePhase}", 'eoffice', $baseName);
 

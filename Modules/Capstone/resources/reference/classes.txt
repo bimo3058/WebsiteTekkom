@@ -1,0 +1,5269 @@
+@/features/admin/analytics
+use client
+react
+next/navigation
+react-hook-form
+@hookform/resolvers/zod
+lucide-react
+@/components/ui/button
+@/components/ui/input
+@/components/ui/textarea
+@/components/ui/switch
+@/components/ui/card
+@/components/ui/badge
+@/lib/validations/assessment
+@/components/ui/tooltip
+create
+edit
+
+description
+beforeunload
+/admin/assessment-bank
+min-h-screen bg-gray-50/50
+fixed inset-0 z-50 flex items-center justify-center bg-black/50
+bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl
+text-lg font-semibold text-gray-900 mb-2
+text-sm text-gray-600 mb-6
+flex justify-end gap-3
+outline
+destructive
+ sticky top-0 z-10
+max-w-5xl mx-auto px-6 py-4
+flex items-center justify-between
+flex items-center gap-4
+text-xl font-semibold text-gray-900
+Tambah Komponen Penilaian
+Edit Komponen Penilaian
+text-sm text-gray-500
+Buat komponen penilaian baru untuk digunakan dalam berbagai periode.
+Ubah informasi komponen penilaian yang sudah ada.
+flex gap-3
+bg-indigo-600 hover:bg-indigo-700
+mr-2 h-4 w-4 animate-spin
+Simpan
+max-w-5xl mx-auto px-6 py-8
+shadow-sm
+border-b pb-4
+text-lg font-semibold text-gray-900
+pt-6
+max-w-2xl space-y-6
+space-y-2
+flex items-center gap-1
+text-sm font-medium text-gray-900
+text-red-500
+h-4 w-4 text-gray-400
+code
+Contoh: CPL-001
+border-red-500
+text-sm text-red-500
+text-xs text-gray-500
+text-gray-400
+Masukkan deskripsi komponen penilaian...
+flex items-center gap-3
+weight
+number
+0
+bg-indigo-50 text-indigo-700 border-indigo-200
+space-y-3
+is_active
+text-sm text-gray-700
+Aktif
+Nonaktif
+@/features/admin/assessment-bank
+onBlur
+@tanstack/react-query
+sonner
+@/lib/api
+admin
+assessment-templates
+Gagal memuat data komponen
+flex min-h-screen items-center justify-center bg-gray-50/50
+flex flex-col items-center gap-4
+h-8 w-8 animate-spin text-indigo-600
+text-gray-600
+@/features/admin/assessments
+@/features/admin/audit-logs
+@/features/admin/dashboard
+@/features/admin/document-requirements
+PDC1
+SEMPRO
+PDC2
+EXPO
+TA
+SIDANG
+@/features/admin/document-types
+@/features/admin/document-uploads
+@/features/admin/grade-configuration
+@/features/admin/evaluation-summary
+@/hooks/use-params
+scheduleId
+@/features/admin/expo
+@/components/ui/alert
+@/components/ui/select
+@/components/ui/collapsible
+/admin/periods
+Failed to fetch finalization data
+Lock bidding? No more bids can be submitted after locking.
+Bidding locked.
+Failed to lock
+Unlock bidding? Students will be able to bid again.
+Bidding unlocked.
+Failed to unlock
+Run batch finalization? This will automatically allocate ACCEPTED bids based on priority and lock bidding if not already locked.
+/admin/finalization/finalize-period
+Failed to finalize
+Run Auto-Matchmaker? This will automatically group isolated students into incomplete groups and form new groups.
+/admin/finalization/run-automatchmaker
+Failed to run matchmaker
+flex justify-center items-center h-64
+h-8 w-8 animate-spin
+space-y-6
+flex flex-col md:flex-row justify-between items-start md:items-center gap-4
+text-3xl font-bold tracking-tight
+text-muted-foreground
+flex flex-wrap items-center gap-3
+w-[180px]
+Select period
+flex items-center gap-2
+px-3 py-1.5 h-10
+mr-1 h-3 w-3
+sm
+h-10
+mr-2 h-4 w-4
+default
+px-3 py-1.5 h-10 bg-green-600 hover:bg-green-700
+Re-open this period for registration? New students will be able to create groups again.
+/admin/finalization/reopen
+Period reopened for registration.
+Failed
+flex flex-col sm:flex-row gap-4
+relative flex-1
+absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground
+Search by title, lecturer, student name, or group ID...
+pl-9
+grid grid-cols-1 md:grid-cols-4 gap-4
+border-amber-200 bg-amber-50
+pb-2
+text-xs font-semibold
+text-2xl
+text-xs text-muted-foreground flex justify-between
+text-amber-600 font-bold
+border-destructive/20 bg-destructive/5
+text-destructive font-bold
+md:col-span-2 border-amber-500/50 bg-amber-50
+text-sm flex items-center gap-2
+text-amber-800 flex items-center
+h-4 w-4 mr-2
+max-h-[100px] overflow-y-auto text-xs space-y-1
+text-amber-800
+text-destructive
+, 
+pt-0 pb-2
+text-[10px] text-amber-700 italic
+md:col-span-2 border-green-200 bg-green-50
+text-sm text-green-700 flex items-center gap-2
+h-4 w-4
+text-xs text-green-600
+pb-3
+text-base flex items-center gap-2
+grid grid-cols-2 md:grid-cols-4 gap-3
+bg-destructive/10 border-destructive/30
+bg-muted/50
+font-medium truncate
+text-center py-12 border rounded-lg border-dashed
+h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground
+text-xl font-bold mb-2
+space-y-4
+w-full
+text-left
+text-base
+secondary
+h-4 w-4 text-muted-foreground
+pt-0
+text-sm text-muted-foreground py-3
+flex items-center justify-between p-3 bg-muted/50 rounded-lg border
+h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm
+font-medium text-sm
+text-xs text-muted-foreground
+ACCEPT
+ACCEPTED
+REJECTED
+next/dynamic
+@/features/admin/finalization
+@/features/admin/groups
+@/components/ui/separator
+@/lib/utils
+next/link
+@/lib/badge-variants
+@/components/ui/alert-dialog
+@/components/ui/dropdown-menu
+@/components/ui/avatar
+bg-emerald-100 text-emerald-700 border-emerald-200
+bg-indigo-100 text-indigo-700 border-indigo-200
+bg-violet-100 text-violet-700 border-violet-200
+bg-amber-100 text-amber-700 border-amber-200
+bg-rose-100 text-rose-700 border-rose-200
+bg-teal-100 text-teal-700 border-teal-200
+bg-orange-100 text-orange-700 border-orange-200
+string
+?
+APPROVED
+Approved
+READY_FOR_BIDDING
+Ready for Bidding
+FORMING
+Forming
+FORMING_SOLO
+Solo Forming
+READY_FOR_FINALIZATION
+Ready for Finalization
+KELOMPOK_FINAL
+Kelompok Final
+Rejected
+id
+members
+Invalid group ID
+Failed to fetch group
+Failed to load group details
+Failed to flag student
+Failed to flag student. Please try again.
+h-8 w-8 animate-spin text-muted-foreground
+flex flex-col items-center justify-center py-16 text-muted-foreground
+h-10 w-10 mb-3 opacity-40
+text-sm font-medium
+mt-4
+/admin/groups
+border-grey-100 text-grey-600 hover:bg-grey-25
+text-xs font-medium px-2.5 py-0.5
+ghost
+icon
+h-8 w-8
+end
+w-40
+grid grid-cols-1 lg:grid-cols-3 gap-6
+lg:col-span-2
+text-[32px] font-semibold text-grey-600 flex items-center gap-3
+text-sm font-medium text-grey-400 mb-2 flex items-center gap-2
+text-lg font-semibold text-grey-600
+flex items-center gap-2 text-sm text-muted-foreground
+font-medium
+text-xs border
+text-muted-foreground italic
+text-sm font-medium text-grey-400 mb-3 flex items-center gap-2
+flex items-center justify-between p-3 bg-grey-25 rounded-lg
+text-[10px] h-5
+flagged
+text-muted-foreground hover:text-primary
+h-8 w-8 text-muted-foreground hover:text-destructive
+Flag Student
+text-lg flex items-center gap-2
+h-5 w-5
+flex-1
+mt-1 text-[10px]
+text-sm text-muted-foreground text-center py-4
+space-y-3 text-sm
+flex justify-between
+font-mono
+text-xs
+text-lg
+py-4
+flag-reason
+text-sm font-medium mb-2 block
+Enter reason for flagging this student...
+resize-none
+text-xs text-muted-foreground mt-1
+bg-destructive text-destructive-foreground hover:bg-destructive/90
+./components/GroupDetailClient
+@/components/layout/DashboardLayout
+@/context/PeriodSelectionContext
+@/features/admin/locations
+@/components/ui/table
+@/lib/normalizers
+PEER_REVIEW
+PEER REVIEW
+Gagal memuat data periode
+/admin/peer-review/PEER_REVIEW/edit
+Pilih Periode
+container mx-auto py-6 max-w-7xl
+flex items-start justify-between mb-4
+text-2xl font-bold tracking-tight
+text-muted-foreground mt-1
+w-[250px]
+(Aktif)
+p-6
+flex items-center justify-between mb-6
+text-lg font-semibold
+relative
+absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground
+Search
+pl-10 w-[280px]
+gap-2
+rounded-md border
+w-[60px]
+checkbox
+rounded border-gray-300
+w-[100px] text-right
+text-center py-8
+h-6 w-6 animate-spin mx-auto text-muted-foreground
+text-center text-muted-foreground py-8
+hover:bg-muted/30
+flex flex-wrap gap-1
+font-normal
+text-muted-foreground text-sm
+text-right
+h-8 w-8 p-0
+flex items-center justify-between mt-6 pt-4 border-t
+text-sm text-muted-foreground
+w-[70px]
+10
+20
+50
+min-w-[32px]
+px-2
+@/components/ui/checkbox
+@/lib/error-utils
+Gagal memuat konfigurasi peer review
+Konfigurasi peer review berhasil disimpan
+Gagal menyimpan konfigurasi
+Konfigurasi berhasil disalin
+Gagal menyalin konfigurasi
+/admin/peer-review
+bg-cyan-100 text-cyan-700 border-cyan-200
+container mx-auto py-3 max-w-7xl
+gap-2 bg-slate-800 hover:bg-slate-900
+h-4 w-4 animate-spin
+mb-6
+text-muted-foreground mt-2
+text-slate-900
+border
+border rounded-lg p-5 mb-6
+font-medium text-slate-900 mb-3
+w-full max-w-md
+Pilih sumber periode
+text-sm text-muted-foreground mt-2
+mt-3
+border rounded-lg p-6
+grid gap-6 lg:grid-cols-[1fr_1.5fr]
+space-y-5
+text-lg font-semibold text-slate-900
+text-sm text-muted-foreground mt-1
+border rounded-lg p-5
+font-semibold text-slate-900 mb-4
+font-medium text-slate-900
+font-semibold text-slate-900 mb-3
+border rounded-lg overflow-hidden
+bg-slate-50 hover:bg-slate-50
+text-xs font-medium text-slate-600
+text-xs font-medium text-slate-600 text-right
+hover:bg-slate-50
+text-center text-muted-foreground py-4
+border rounded-lg
+p-4 border-b
+font-semibold text-slate-900
+absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400
+pl-10 w-[200px] h-9
+h-9 gap-1.5
+h-3.5 w-3.5
+border-b
+w-[40px]
+text-xs font-medium text-slate-600 text-right w-[80px]
+bg-slate-50/50
+text-sm text-slate-600 truncate max-w-[280px]
+-
+p-4 flex items-center justify-between
+text-sm text-slate-600
+w-[70px] h-8
+bg-slate-800 hover:bg-slate-900
+px-2 text-slate-400
+@/features/admin/peer-review-dashboard
+BIMBINGAN_SEMPRO
+BIMBINGAN SEMPRO
+CPL-1
+CPL-2
+CPL-3
+SEMINAR PROPOSAL
+NILAI_DOSEN
+NILAI DOSEN
+MILESTONE
+EXPO TA
+BIMBINGAN_TA
+BIMBINGAN TA
+SIDANG_TA
+SIDANG TA
+Gagal memuat konfigurasi penilaian
+Konfigurasi berhasil disimpan
+/admin/period-assessment-config
+@/lib/validations/period
+text-sm font-semibold text-gray-900
+mt-1 text-xs text-gray-500
+grid grid-cols-2 gap-4
+rounded-lg bg-gray-50 p-3 text-center
+text-2xl font-bold text-gray-900
+bg-green-50
+bg-red-50
+bg-gray-50
+text-green-700
+text-red-700
+text-gray-900
+text-xs font-medium tracking-wide text-gray-500 uppercase
+flex items-center justify-between rounded-lg bg-gray-50 p-2
+text-sm font-medium text-gray-700
+rounded-lg border border-amber-200 bg-amber-50 p-3
+text-xs text-amber-700
+border border-blue-200 bg-blue-50
+bg-green-600
+bg-red-600
+col-span-8 space-y-4
+flex flex-wrap gap-2
+button
+absolute -top-1 -right-1 h-2 w-2 rounded-full bg-green-500
+absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400
+Cari komponen...
+overflow-hidden rounded-lg border
+w-12 px-4 py-3
+px-4 py-3 text-left text-xs font-semibold text-gray-700
+px-4 py-3 text-center text-xs font-semibold text-gray-700
+divide-y divide-gray-100
+px-4 py-8 text-center text-gray-500
+mt-2
+_blank
+hover:bg-gray-50
+px-4 py-3
+text-sm font-medium text-blue-600
+px-4 py-3 text-sm font-medium text-gray-900
+px-4 py-3 text-sm text-gray-700
+px-4 py-3 text-center
+flex flex-col items-center justify-center rounded-xl border border-dashed bg-gray-50 py-16
+mb-4 h-12 w-12 text-gray-300
+text-lg font-medium text-gray-900
+mt-2 max-w-md text-center text-sm text-gray-500
+Cari indikator...
+h-4 w-4 text-amber-500
+flex items-start justify-between
+flex flex-1 items-start
+flex flex-col items-center flex-1
+w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold transition-all
+bg-green-600 text-white
+bg-blue-600 text-white ring-4 ring-blue-100
+bg-gray-100 text-gray-400 border-2 border-gray-200
+cursor-pointer hover:opacity-80
+mt-3 text-center
+text-sm font-semibold
+text-blue-700
+text-gray-500
+text-xs text-gray-400 mt-0.5 max-w-[120px]
+flex-1 pt-5 px-2
+h-0.5 transition-colors
+bg-gray-200
+@/app/admin/periods/components/PeriodStepper
+sticky top-0 z-10
+mx-auto max-w-7xl px-6 py-4
+text-2xl font-semibold text-gray-900
+mt-1 text-sm text-gray-500
+rounded-xl border bg-white shadow-sm
+px-6 py-6
+mx-auto max-w-7xl px-6 py-8
+flex items-center justify-between rounded-b-xl border-t bg-gray-50/50 px-6 py-4
+Kembali
+Sebelumnya
+submit
+period-wizard-form
+@/components/ui/label
+max-w-2xl mx-auto space-y-8
+flex items-start gap-3 pb-4 border-b
+p-2 bg-blue-50 rounded-lg
+h-5 w-5 text-blue-600
+name
+Contoh: Semester Ganjil 2025/2026
+border-red-300 focus:border-red-500 focus:ring-red-200
+text-sm text-red-600 flex items-center gap-1
+grid grid-cols-2 gap-6
+start_date
+date
+end_date
+pt-4 border-t
+space-y-0.5
+data-[state=checked]:bg-blue-600
+@/components/ui/tabs
+@/app/admin/periods/components/evaluation/EvaluationSummaryCard
+@/app/admin/periods/components/evaluation/EvaluationTypePanel
+@/app/admin/periods/components/evaluation/PeerReviewPanel
+sidang_ta
+expo
+bimbingan_sempro
+bimbingan_ta
+nilai_dosen
+milestone
+tipe_penilaian
+evaluation_configs
+peer_review_config
+/admin/assessment-templates
+1
+Active
+active
+Failed to fetch assessment templates:
+Unknown error
+rejected
+Failed to load configurations:
+new
+Silakan simpan periode terlebih dahulu sebelum menyalin konfigurasi
+Failed to copy config:
+Peer Review: Total bobot harus 100%
+Konfigurasi evaluasi berhasil disimpan
+Konfigurasi tersimpan (akan disimpan saat membuat periode)
+flex flex-col items-center justify-center py-16
+h-8 w-8 animate-spin text-blue-600
+mt-4 text-gray-600
+mx-auto max-w-2xl py-8
+rounded-lg border border-amber-200 bg-amber-50 p-6
+flex items-start gap-4
+rounded-full bg-amber-100 p-2
+h-6 w-6 text-amber-600
+text-lg font-semibold text-amber-900
+mt-2 text-sm text-amber-700
+Konfigurasi template evaluasi harus diselesaikan sebelum membuat periode.
+rounded-lg border border-green-200 bg-green-50 p-4
+h-5 w-5 text-green-600
+font-medium text-green-900
+text-sm text-green-700
+flex items-center justify-between border-b pb-4
+h-4 w-4 text-gray-500
+w-[280px]
+Memuat...
+Pilih periode...
+grid w-full grid-cols-2
+peer_review
+mt-6
+grid grid-cols-12 gap-6
+col-span-4 space-y-4
+text-sm text-gray-600
+peer_review_config.enabled
+flex flex-col
+rounded-lg border border-gray-200 bg-gray-50 p-3
+text-center text-xs text-gray-500
+border-blue-200 bg-blue-50
+pt-4
+flex items-start gap-3
+mt-0.5 h-5 w-5 text-blue-600
+text-sm font-medium text-blue-900
+mt-1 text-xs text-blue-700
+flex justify-end border-t pt-4
+Simpan Konfigurasi
+min_group_size
+max_group_size
+max_supervisor_load
+absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-500
+bg-amber-50 border border-amber-200 rounded-lg p-4
+h-5 w-5 text-amber-600 mt-0.5
+space-y-1
+text-sm font-medium text-amber-900
+text-sm text-amber-700
+bidding
+Bidding
+Periode pemilihan topik dan dosen pembimbing
+bidding_start
+bidding_end
+bidding_reminder_at
+pdc1
+Progress Defense Check 1
+pdc1_start
+pdc1_end
+pdc1_reminder_at
+pdc2
+Progress Defense Check 2
+pdc2_start
+pdc2_end
+pdc2_reminder_at
+Pameran dan presentasi tugas akhir
+expo_date
+expo_reminder_at
+sidang
+Sidang TA
+Sidang akhir tugas akhir
+ta_start
+ta_end
+ta_reminder_at
+start
+Tanggal Mulai
+Tanggal Berakhir
+reminder
+Tanggal Pengingat
+Tanggal
+space-y-8
+grid gap-6
+bg-gray-50 rounded-xl p-6 space-y-4
+font-semibold text-gray-900
+text-sm text-gray-500 mt-0.5
+grid-cols-2
+grid-cols-1 md:grid-cols-3
+text-red-500 ml-1
+h-11 bg-white
+date-fns
+date-fns/locale
+Belum diatur
+dd MMMM yyyy
+flex items-start gap-3 border-b pb-4
+rounded-lg bg-blue-50 p-2
+text-base font-semibold text-gray-900
+mt-1 text-sm font-medium text-gray-900
+—
+mt-1
+border-green-200 bg-green-50 text-green-700
+mr-1.5 h-1.5 w-1.5 rounded-full bg-green-500
+mr-1.5 h-1.5 w-1.5 rounded-full bg-gray-400
+grid grid-cols-1 gap-4 md:grid-cols-2
+rounded-lg bg-gray-50 p-3
+text-xs font-medium text-gray-500
+ 
+grid grid-cols-3 gap-4
+mt-1 text-lg font-semibold text-gray-900
+mb-3 text-xs font-medium tracking-wide text-gray-500 uppercase
+flex w-full items-center justify-between bg-gray-50 p-4 transition-colors hover:bg-gray-100
+h-4 w-4 text-green-600
+font-medium text-gray-900
+border-t bg-white p-4
+flex items-center justify-between rounded bg-gray-50 p-2
+rounded-lg bg-gray-50 py-4 text-center
+border-t pt-4
+rounded-lg bg-gray-50 p-4
+mb-3 flex items-center justify-between
+flex items-center justify-between text-sm
+flex items-center gap-2 text-sm text-gray-500
+@/features/admin/periods
+../components/PeriodWizardLayout
+../components/steps/BasicInfoStep
+../components/steps/EvaluationSetupStep
+../components/steps/PhaseDatesStep
+../components/steps/GroupConfigStep
+../components/steps/ReviewStep
+Tambah Periode Baru
+Buat periode baru dengan konfigurasi langkah demi langkah.
+../../../components/PeriodWizardLayout
+../../../components/steps/BasicInfoStep
+../../../components/steps/EvaluationSetupStep
+../../../components/steps/PhaseDatesStep
+../../../components/steps/GroupConfigStep
+../../../components/steps/ReviewStep
+T
+Failed to fetch period
+Edit Periode
+Perbarui konfigurasi periode yang sudah ada.
+./components/EditPeriodClient
+@/features/admin/reports/hooks/use-reports
+@/features/admin/reports/components/AssessmentTable
+period_id
+assessments
+/admin/reports
+pl-0
+py-12 text-center
+h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50
+text-lg font-semibold mb-2
+grid grid-cols-1 md:grid-cols-3 gap-4
+group
+25
+100
+@/components/ui/progress
+COMPLETE
+PARTIAL
+NOT_STARTED
+Seminar Proposal
+Bimbingan Sempro
+Bimbingan TA
+Expo
+Milestone
+Nilai Dosen
+Supervisor 1
+Supervisor 2
+Examiner 1
+Examiner 2
+Examiner
+Evaluator
+bg-emerald-100 text-emerald-800
+border-emerald-200
+bg-emerald-50
+text-emerald-600
+bg-amber-100 text-amber-800
+border-amber-200
+bg-amber-50
+text-amber-600
+border-gray-200
+text-blue-600
+text-red-600
+studentId
+evaluationType
+evaluatorId
+Failed to fetch evaluator detail
+Failed to load evaluator data
+_
+Unknown
+Evaluator Detail Report
+Student
+NIM
+Group
+Evaluation Type
+Role
+Status
+Score
+N/A
+Components
+Component
+Code
+Weight
+Normalized Weight
+Notes
+Date
+–
+Not evaluated
+Calculation Breakdown
+Weighted Score
+Final Score
+,
+
+
+text/csv;charset=utf-8;
+a
+Evaluator detail exported
+text-2xl font-bold
+flex items-center justify-center h-64
+flex items-center gap-2 text-sm text-muted-foreground flex-wrap
+hover:underline
+text-foreground font-medium
+text-muted-foreground flex items-center gap-2
+grid grid-cols-1 md:grid-cols-3 gap-6
+text-center md:text-left
+text-sm text-muted-foreground mb-1
+p-3 rounded-lg bg-white
+h-6 w-6 text-muted-foreground
+text-lg font-bold
+cursor-pointer hover:bg-muted/50 transition-colors
+space-y-6 pt-2
+flex justify-between items-center
+h-2
+w-[35%]
+text-center
+bg-gray-50/50
+text-center font-medium text-blue-600
+max-w-[150px] truncate
+text-right text-sm text-muted-foreground
+pt-2
+bg-muted/30
+bg-gray-50/30
+text-center text-muted-foreground
+text-right font-medium
+border-t-2 bg-muted/30
+text-right font-bold
+text-center font-bold
+text-lg font-bold text-blue-600
+flex items-center justify-end gap-2 font-bold text-lg
+border-blue-200
+bg-blue-50
+bg-blue-100 text-blue-600
+border-primary-200
+bg-primary-50
+bg-primary-100 text-primary-500
+bg-emerald-100 text-emerald-600
+border-orange-200
+bg-orange-50
+bg-orange-100 text-orange-600
+h-6 w-6
+text-xl
+text-sm mt-1
+flex items-center gap-6
+flex flex-col items-end gap-1
+h-5 w-5 text-muted-foreground
+space-y-6 pt-6
+w-[40%]
+bg-muted/50 px-4 py-3 border-b
+Failed to fetch evaluation detail
+Failed to load evaluation data
+Overall Score
+EVALUATORS
+Evaluator Name
+Components Scored
+Total Components
+COMPONENT DETAILS
+UNASSIGNED COMPONENTS
+Evaluation detail exported
+text-foreground
+grid grid-cols-1 md:grid-cols-4 gap-6
+h-10 w-10 text-muted-foreground
+Not yet
+text-xl font-bold flex items-center gap-2
+text-sm font-normal text-muted-foreground
+border-red-200 bg-red-50/50
+flex items-center gap-2 text-red-700
+bg-red-50/30
+@/types/guards
+bg-cyan-100 text-cyan-600
+bg-teal-100 text-teal-600
+bg-amber-100 text-amber-600
+bg-emerald-50/50
+bg-amber-50/50
+/admin/reports/student-evaluations-summary
+Student not found
+Failed to fetch student evaluations
+Failed to load student data
+Student evaluation data exported
+text-3xl
+text-3xl text-emerald-600
+text-3xl text-amber-600
+text-3xl text-gray-600
+grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4
+flex items-baseline gap-2
+flex justify-between items-center mb-1
+text-xs font-medium
+@/features/admin/reports/components/PhaseEvaluationTable
+PDC 1
+Project Design and Concept 1
+PDC 2
+Project Design and Concept 2
+TA (Tugas Akhir)
+Final Project / Thesis
+ta
+p-3 rounded-xl bg-muted text-muted-foreground
+@/features/admin/reports/components/FinalGradeTable
+@/features/admin/reports/components/GroupTable
+text-[10px]
+bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-[10px]
+bg-amber-100 text-amber-800 hover:bg-amber-100 text-[10px]
+hover:shadow-md transition-all duration-300 flex flex-col h-full cursor-pointer group border
+pb-3 flex-shrink-0
+text-3xl font-bold
+space-y-4 flex-1 flex flex-col
+font-semibold text-foreground
+No Data
+mt-auto pt-2
+w-full group-hover:bg-accent
+summary
+summary-all
+peer-reviews
+final-grades
+groups
+grid gap-6 md:grid-cols-3
+h-100
+animate-pulse space-y-4
+h-8 bg-muted rounded w-1/3
+h-4 bg-muted rounded w-1/2
+h-32 bg-muted rounded
+w-50
+(Active)
+flex flex-col sm:flex-row sm:items-center justify-between gap-4
+p-2 rounded-lg bg-emerald-50 text-emerald-600
+text-xl font-semibold
+flex gap-2
+p-0
+p-2 rounded-lg bg-green-50 text-green-600
+all
+text-2xl font-bold text-blue-600
+text-2xl font-bold text-primary-500
+text-2xl font-bold text-amber-600
+grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4
+All groups
+All statuses
+Complete
+Incomplete
+CONSISTENT
+INCONSISTENT
+/admin/reports/grade-consistency
+Failed to fetch grade consistency
+Failed to load grade consistency data
+csv
+blob
+Grade consistency report downloaded
+Failed to export report
+text-2xl font-bold text-emerald-600
+text-2xl font-bold text-red-600
+Name or NIM...
+p-8 text-center
+h-8 w-8 animate-spin mx-auto mb-4
+overflow-x-auto
+flex items-center gap-1 w-fit
+h-3 w-3
+System
+flex items-center justify-between px-4 py-4 border-t
+text-sm
+text-sm space-y-2
+list-disc list-inside space-y-1 text-muted-foreground
+text-emerald-600 font-medium
+text-amber-600 font-medium
+text-red-600 font-medium
+ACTIVE
+INACTIVE
+./components/ReportsDashboard
+../components/PhaseReportPage
+@/features/admin/reports/components/PeerReviewTable
+@/features/admin/schedule
+@/features/admin/sempro
+@/features/admin/settings
+@/features/admin/ta-defense
+@/components/ui/loading
+Failed to fetch groups
+section
+flex flex-col items-start justify-between gap-4 md:flex-row md:items-center
+relative max-w-sm
+text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2
+Search by title, student, or supervisor...
+rounded-lg border border-dashed py-12 text-center
+text-muted-foreground mx-auto mb-4 h-12 w-12 opacity-50
+mb-2 text-xl font-bold
+No matching groups found
+No Groups
+Try adjusting your search query.
+There are no groups in this period yet.
+grid gap-4 md:grid-cols-2 lg:grid-cols-3
+text-base font-bold
+text-muted-foreground mb-1 block
+No title assigned yet
+text-muted-foreground mb-1 flex items-center gap-1
+None
+text-muted-foreground mb-1 flex justify-between text-xs
+bg-muted h-2 w-full rounded-full
+bg-green-500
+bg-primary
+/admin/users
+@/features/admin/users
+axios
+@/lib/single-flight
+@/lib/sso
+user
+logout
+/auth/exchange
+Menghubungkan sesi SSO…
+ott
+Respons pertukaran sesi tidak lengkap.
+mahasiswa
+SICATA_STUDENT_NOT_REGISTERED
+Sesi SSO tidak valid. Mengalihkan ke halaman login…
+flex min-h-screen items-center justify-center
+@/features/dosen/bids
+@/features/dosen/bimbingan
+@/features/dosen/dashboard
+@/features/dosen/evaluation
+@/features/dosen/evaluation-detail
+type
+schedule_id
+@/features/dosen/requests
+@/features/dosen/schedule
+@/features/dosen/supervised-groups
+pending
+partial
+completed
+not_configured
+SUPERVISOR_1
+SUPERVISOR_2
+PENDING
+COMPLETED
+NOT_CONFIGURED
+Bimbingan Sidang TA
+bg-blue-100 text-blue-800
+bg-orange-100 text-orange-800
+bg-indigo-100 text-indigo-800
+bg-gray-100 text-gray-800
+bg-green-100 text-green-800 hover:bg-green-100
+w-3 h-3 mr-1
+bg-yellow-100 text-yellow-800 hover:bg-yellow-100
+bg-red-100 text-red-800 hover:bg-red-100
+schedule
+/periods-list
+Error fetching periods:
+/dosen/supervisor-evaluation/schedules
+/dosen/supervisor-evaluation/groups
+Error fetching data:
+Gagal memuat data
+text-3xl font-bold flex items-center gap-3
+w-8 h-8
+pt-6 space-y-4
+flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between
+relative w-full sm:w-72
+Cari kode atau nama grup...
+flex flex-wrap gap-4
+w-[200px]
+Semua Periode
+Semua Tipe
+grid w-full max-w-md grid-cols-2 mb-6
+w-4 h-4 mr-2
+py-10 text-center
+w-12 h-12 mx-auto text-muted-foreground mb-4
+text-lg font-semibold mb-4 flex items-center text-red-600
+w-2 h-2 bg-red-500 rounded-full mr-2 animate-pulse
+text-lg font-semibold mb-4 text-yellow-600
+text-lg font-semibold mb-4 text-gray-500 flex items-center gap-2 hover:text-gray-700 transition-colors w-full text-left
+w-4 h-4
+text-lg font-semibold mb-4 text-slate-600 flex items-center gap-2 hover:text-slate-800 transition-colors w-full text-left
+Tidak ada kelompok bimbingan yang memerlukan penilaian
+Tidak ada kelompok yang sesuai dengan filter
+grid gap-6 md:grid-cols-2 lg:grid-cols-3
+flex justify-between items-start
+Dosbing 1
+Dosbing 2
+flex-1 flex flex-col
+mb-4
+text-sm font-medium mb-2
+text-sm text-muted-foreground flex items-center gap-2
+space-y-3 flex-1
+border rounded-lg p-3 space-y-2
+Lanjutkan
+Nilai Sekarang
+Lihat Nilai
+Lanjutkan Nilai
+border-red-500 bg-red-50
+opacity-75
+text-lg mt-2
+flex items-center text-sm text-muted-foreground
+EEEE, dd MMMM yyyy
+rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700
+text-yellow-600 font-medium
+dd MMMM yyyy HH:mm
+ (Terlewat)
+pt-2 border-t
+groupId
+student_id
+Error fetching evaluation form:
+Gagal memuat form penilaian
+/dosen/supervisor-evaluation
+Penilaian berhasil disimpan
+Error saving evaluation:
+Gagal menyimpan penilaian
+Penilaian BIMBINGAN SEMPRO
+Penilaian NILAI_DOSEN
+Penilaian EXPO
+Penilaian MILESTONE
+Penilaian BIMBINGAN Sidang TA
+Penilaian komponen CPMK untuk Seminar Proposal oleh Dosen Pembimbing
+Penilaian dosen pembimbing pada fase PDC2
+Penilaian komponen CPMK untuk Expo oleh Dosen Pembimbing
+Penilaian kesesuaian milestone proyek oleh Dosen Pembimbing
+Penilaian komponen CPMK untuk Sidang TA oleh Dosen Pembimbing
+container py-12 text-center
+mx-auto h-12 w-12 text-destructive mb-4
+container py-6 space-y-8 animate-in fade-in duration-500
+rounded-full
+text-3xl font-extrabold tracking-tight
+px-3 py-1 text-sm
+grid grid-cols-1 lg:grid-cols-12 gap-8
+lg:col-span-4 space-y-6
+border-primary/20 shadow-lg overflow-hidden
+h-2 bg-primary
+h-5 w-5 text-primary
+p-4 bg-muted/30 rounded-xl space-y-3
+text-xs text-muted-foreground uppercase font-semibold
+font-medium text-sm leading-tight text-primary
+bg-primary/10
+flex items-center gap-3 bg-background p-2 rounded-lg border border-primary/5 shadow-sm
+h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs
+ml-auto text-xs
+TBA
+flex items-center gap-2 text-sm text-orange-600
+border-primary/10 shadow-md
+text-sm text-muted-foreground space-y-2
+lg:col-span-8 space-y-6
+shadow-xl
+Lihat nilai yang telah disubmit (mode read-only)
+Masukkan nilai (0-100) untuk setiap komponen penilaian
+text-sm px-3 py-1
+divide-y divide-border
+p-6 space-y-4 hover:bg-muted/5 transition-colors
+flex items-start justify-between gap-4
+text-xs font-bold px-2 py-0.5 bg-primary/10 text-primary rounded
+font-bold text-lg
+shrink-0 text-right
+text-xs font-bold text-muted-foreground uppercase
+text-lg font-extrabold text-primary
+grid grid-cols-1 md:grid-cols-2 gap-4 mt-4
+text-xs flex justify-between
+font-bold text-primary
+flex gap-4 items-start
+w-1/3
+0-100
+Tidak ada catatan
+Catatan/feedback (opsional)...
+h-10 min-h-[40px] text-sm py-2
+border-primary shadow-lg bg-primary/5
+flex flex-col md:flex-row items-center justify-between gap-6
+font-bold text-muted-foreground
+flex gap-4
+text-2xl font-black text-primary
+lg
+px-8 font-bold
+px-8 font-bold shadow-xl shadow-primary/20 hover:scale-105 transition-transform
+w-4 h-4 mr-2 animate-spin
+ml-2 h-5 w-5
+@/features/dosen/ta-evaluation
+@/features/dosen/ta-review
+@/features/dosen/title-approvals
+@/features/dosen/titles
+@/features/dosen/title-detail
+next
+./globals.css
+Beranda | SICATA
+Sistem Capstone dan Tugas Akhir terintegrasi WebsiteTekkom
+/images/UNDIPOfficial.png
+image/png
+@/components/layout/PageMetadataSync
+@/context/AuthContext
+./providers
+antialiased
+page
+@/features/mahasiswa/bidding
+@/features/mahasiswa/dashboard
+@/features/mahasiswa/documents
+@/features/mahasiswa/expo
+@/features/mahasiswa/expo-detail
+@/features/mahasiswa/grades
+@/features/mahasiswa/group
+@/features/mahasiswa/peer-review
+@/features/mahasiswa/propose-title
+@/features/mahasiswa/registration
+@/features/mahasiswa/schedule
+/mahasiswa/ta-submission
+@/features/mahasiswa/ta-submission
+@/features/mahasiswa/titles
+@/features/mahasiswa/title-detail
+Failed to fetch notifications
+Failed to mark as read
+accept
+reject
+You have been automatically registered and added to the group.
+/notifications/read-all
+All notifications marked as read
+Failed to mark all as read
+bg-blue-50 text-blue-600
+bg-green-50 text-green-600
+bg-red-50 text-red-600
+bg-amber-50 text-amber-600
+bg-primary-50 text-primary-500
+bg-emerald-50 text-emerald-600
+bg-rose-50 text-rose-600
+bg-indigo-50 text-indigo-600
+bg-gray-50 text-gray-500
+flex h-64 items-center justify-center
+border-primary/20 bg-primary/5 shadow-sm
+hover:border-primary/20 hover:bg-muted/30 shadow-none
+flex items-start gap-4 p-5
+min-w-0 flex-1
+text-primary
+px-1.5 py-0 text-xs
+text-muted-foreground mt-0.5 line-clamp-2 text-sm
+GROUP_INVITATION
+mt-4 flex gap-2
+text-muted-foreground flex items-center gap-2 text-sm font-medium
+h-4 w-4 text-green-500
+h-4 w-4 text-red-500
+text-muted-foreground mt-2 text-xs whitespace-nowrap
+flex justify-center gap-2
+text-muted-foreground flex items-center px-3 text-sm
+@/components/layout/Navbar
+@/components/home/HeroSection
+@/components/home/CapstoneSection
+@/components/home/TugasAkhirSection
+@/components/home/SiklusSection
+@/components/home/CTASection
+@/components/layout/Footer
+@/components/dashboard/CombinedDashboard
+dosen
+min-h-screen bg-background text-foreground selection:bg-black selection:text-white dark:selection:bg-white dark:selection:text-black font-sans
+relative z-10 bg-white dark:bg-black flex flex-col
+mx-auto max-w-3xl space-y-6
+h-16 w-16
+Pengguna
+mt-2 flex flex-wrap gap-2
+grid gap-4 sm:grid-cols-2
+rounded-lg border p-4
+mb-1 flex items-center gap-2 text-sm text-muted-foreground
+rounded-lg border p-4 sm:col-span-2
+min-h-screen flex items-center justify-center p-6 bg-background
+max-w-md w-full rounded-xl border bg-card p-6 space-y-4 text-center
+text-2xl font-semibold
+flex items-center justify-center gap-3
+/login
+text-sm underline underline-offset-4
+Access Denied
+You do not have permission to access this page. This area is restricted to administrators only.
+/
+Go Back
+flex items-center justify-center min-h-[60vh] p-4
+max-w-md w-full border-red-200
+text-center pb-2
+mx-auto w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4
+h-8 w-8 text-red-600
+text-2xl text-red-700
+text-center space-y-6
+Select roles...
+mousedown
+Enter
+listbox
+flex w-full min-h-10 items-center gap-1.5 rounded-md border bg-grey-25 px-3 py-2 text-sm transition-colors cursor-pointer
+border-primary-300 ring-1 ring-primary-300
+border-grey-100 hover:border-grey-200
+flex flex-1 flex-wrap items-center gap-1
+text-grey-300
+inline-flex items-center gap-1 rounded-md bg-warning-25 px-2 py-0.5 text-xs font-medium text-warning-200
+inline-flex size-3.5 items-center justify-center rounded-sm text-warning-200 hover:text-warning-300
+size-3
+size-4 shrink-0 text-grey-400 transition-transform
+rotate-180
+absolute left-0 right-0 top-full z-50 mt-1 rounded-md border border-grey-100 bg-card p-1 shadow-medium
+option
+flex w-full items-center gap-3 rounded-sm px-2 py-2 text-sm text-grey-600 hover:bg-accent transition-colors
+pointer-events-none size-4
+@/components/ui/dialog
+Administrator
+Manage system settings and users
+Dosen
+Manage courses and grades
+Mahasiswa
+View courses and grades
+sm:max-w-[480px]
+grid gap-4 py-4
+cursor-pointer hover:border-primary hover:bg-accent/50 transition-colors
+flex flex-row items-center gap-4 pb-2
+flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10 text-primary
+size
+font-semibold text-xs flex items-center justify-center
+Confirm
+Cancel
+bg-red-600 text-white hover:bg-red-700
+Processing...
+./PeriodSelector
+mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-end
+text-muted-foreground text-xs whitespace-nowrap
+h-8 w-[200px] text-xs
+text-muted-foreground h-4 w-4 animate-spin
+@tanstack/react-table
+Tidak ada data
+Data yang Anda cari tidak ditemukan
+py-16
+py-16 text-center
+mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100
+font-medium text-gray-500
+mt-1 text-sm text-gray-400
+bg-gray-50/50 hover:bg-gray-50/50
+font-semibold text-gray-700
+selected
+@/components/ui/popover
+h-10 cursor-pointer gap-2 bg-white
+w-44 p-1
+hover:bg-accent hover:text-accent-foreground flex w-full cursor-pointer items-center rounded-sm px-3 py-2 text-sm
+mr-2 w-4
+@/components/ui/pagination
+flex flex-col items-center justify-between gap-4 border-t px-6 py-4 sm:flex-row
+flex flex-1 items-center gap-4
+flex h-9 items-center overflow-hidden rounded-lg border
+text-grey-900 bg-white px-2 text-sm tracking-tight
+h-full border-l
+text-grey-900 h-full gap-1.5 rounded-none border-0 pr-1.5 pl-2 font-medium
+text-sm text-gray-900
+ml-auto w-auto
+#
+h-9 w-9
+pointer-events-none opacity-50
+bg-[#293C79] text-white hover:bg-[#293C79]/90
+Cari...
+border-b px-6 py-4
+flex flex-col gap-4 sm:flex-row
+flex flex-1 flex-col gap-3 sm:flex-row sm:justify-end
+h-10 pl-9
+flex flex-col items-center justify-center rounded-lg border border-dashed py-12 text-center
+mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted
+mt-1 max-w-sm text-sm text-muted-foreground
+@/lib/constants
+0 B
+B
+KB
+MB
+GB
+Upload File
+Select a file to upload.
+.pdf,.doc,.docx,.ppt,.pptx
+.
+Upload failed
+sm:max-w-md
+flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed p-8 transition-colors hover:bg-muted/50
+border-destructive bg-destructive/5
+mb-2 h-8 w-8 text-muted-foreground
+Click to select a file
+mt-1 text-xs text-muted-foreground
+file
+sr-only
+flex items-center gap-2 text-sm text-destructive
+Upload
+./PaginationCustom
+./PaginationControls
+./AvatarWithInitials
+./DashboardHeader
+./StatusBadge
+./EmptyState
+./PageHeader
+./SortableTableHeader
+./ScoringRubric
+./FileUploadDialog
+./ConfirmDialog
+./DataTable
+./DataTableFilterPopover
+./DataTablePagination
+./DataTableToolbar
+flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between
+h-7 w-15 text-[12px]
+h-9 w-[70px]
+flex items-center gap-1.5
+text-[12px] text-muted-foreground/60
+h-4 w-4 mr-1
+text-sm text-muted-foreground px-2
+h-4 w-4 ml-1
+Select Period
+All Periods
+loading
+h-3 w-3 animate-spin
+ (Active)
+Assessment Rubric
+Rate the student on each component (0-100)
+w-4 h-4 mr-1
+md:grid-cols-2
+No notes
+Notes/feedback (optional)...
+asc
+desc
+cursor-pointer select-none hover:bg-muted/50
+h-3 w-3 transition-opacity
+opacity-100
+opacity-30
+class-variance-authority
+role
+bid
+proposal
+sempro
+ta-defense
+custom
+span
+variant
+color
+@/components/ui/sidebar
+@/components/layout/AppSidebar
+@/components/ui/breadcrumb
+@/components/ui/sonner
+@/components/dashboard/StatsCard
+@/components/dashboard/RecentList
+@/components/dashboard/QuickActions
+@/components/dashboard/SectionHeader
+/dosen/groups/supervised
+/dosen/supervisor-evaluation/pending-count
+fulfilled
+CLOSED
+/dosen/supervised-groups
+Manage Groups
+View and manage
+TA Defense
+/admin/ta-defense
+Schedule defense
+Schedule Exam
+/admin/schedule
+SEMPRO & Expo
+Finalization
+/admin/finalization
+Finalize groups
+Review TA
+/dosen/ta-review
+Review submissions
+Evaluate
+Score students
+My Titles
+/dosen/titles
+Manage titles
+Bids
+/dosen/bids
+Review bids
+flex h-screen w-full flex-col overflow-hidden
+bg-background z-10 flex shrink-0 items-center gap-2 border-b px-4 py-3
+-ml-1
+vertical
+mr-2 h-4
+font-semibold
+bg-muted/50 flex-1 overflow-y-auto p-4 md:p-6
+flex items-center justify-center py-20
+border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent
+User
+grid grid-cols-1 gap-6 lg:grid-cols-2
+Admin Overview
+System management & monitoring
+grid grid-cols-2 gap-3
+Active Periods
+primary
+Total Groups
+Pending Finalization
+warning
+TA Defenses
+Scheduled this period
+Recent Groups
+No groups yet
+Dosen Overview
+Teaching & mentoring activities
+Supervised Groups
+Pending Evaluations
+Upcoming Schedules
+Pending Bids
+No supervised groups yet
+min-h-screen bg-background
+@/types/dashboard
+Belum Upload
+bg-red-50 text-red-700 border-red-200
+Draft
+bg-amber-50 text-amber-700 border-amber-200
+Terkirim
+bg-blue-50 text-blue-700 border-blue-200
+Disetujui
+bg-emerald-50 text-emerald-700 border-emerald-200
+Ditolak
+text-base font-semibold flex items-center gap-2
+flex flex-col items-center justify-center py-8 text-center
+h-10 w-10 text-emerald-400 mb-3
+text-xs text-gray-400 mt-1
+pb-3 flex flex-row items-center justify-between
+/mahasiswa/documents
+h-7 text-xs
+hover:bg-transparent
+text-xs font-medium text-gray-500 text-right
+bg-gray-50 text-gray-700 border-gray-200
+hover:bg-gray-50/50
+h-3.5 w-3.5 text-gray-400
+h-7 w-7 p-0
+missing
+h-3.5 w-3.5 text-primary-500
+@/types/group
+bg-sky-100 text-sky-700 border-sky-200
+Sempro
+bg-primary-50 text-primary-700 border-primary-200
+TA Draft
+bg-violet-50 text-violet-700 border-violet-200
+bg-rose-50 text-rose-700 border-rose-200
+Belum ada judul
+h-full
+p-5 space-y-4
+text-xs font-medium h-6 px-2.5
+text-lg font-semibold text-gray-800 leading-snug line-clamp-2
+text-sm text-gray-400 mt-1 font-mono
+space-y-1.5
+font-medium text-gray-700
+flex -space-x-2
+h-7 w-7 border-2 border-white text-xs
+bg-primary-100 text-primary-700 text-[10px]
+h-7 w-7 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] text-gray-500 font-medium
+text-xs text-gray-400
+h-6 w-6 text-[10px]
+bg-gray-100 text-gray-600
+text-[10px] h-5 bg-gray-100 text-gray-500
+bg-blue-500
+bg-amber-500
+bg-primary-500
+bg-emerald-500
+bg-rose-500
+bg-sky-500
+bg-violet-500
+text-base font-semibold
+h-7 w-7
+text-center mb-3
+MMMM yyyy
+grid grid-cols-7 mb-1
+Mo
+Tu
+We
+Th
+Fr
+Sa
+Su
+text-center text-xs font-medium text-gray-400 py-1
+grid grid-cols-7 gap-px bg-gray-100 border border-gray-100 rounded-lg overflow-hidden
+min-h-[40px] bg-white p-1 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors
+bg-gray-50 text-gray-300
+text-primary-600
+text-gray-300
+d
+flex gap-0.5 mt-0.5
+w-1.5 h-1.5 rounded-full
+bg-gray-400
+bottom
+max-w-xs
+w-2 h-2 rounded-full
+Jadwal
+/mahasiswa/schedule
+bg-blue-50 text-blue-600 border-blue-100 hover:border-blue-300
+bg-blue-100
+Dokumen
+bg-amber-50 text-amber-600 border-amber-100 hover:border-amber-300
+bg-amber-100
+Nilai
+/mahasiswa/grades
+bg-emerald-50 text-emerald-600 border-emerald-100 hover:border-emerald-300
+bg-emerald-100
+/mahasiswa/expo
+bg-violet-50 text-violet-600 border-violet-100 hover:border-violet-300
+bg-violet-100
+p-5
+text-base font-semibold text-gray-800 mb-4
+block
+w-full h-auto py-4 px-3 flex flex-col items-center gap-2.5 rounded-xl border transition-all hover:shadow-sm
+p-2 rounded-lg
+flex flex-col items-center gap-2 rounded-xl border bg-card p-4 text-center transition-colors hover:bg-muted/50 hover:border-primary/30
+rounded-lg bg-primary/10 p-2.5 text-primary
+text-xs text-muted-foreground leading-tight
+View All
+No items
+rounded-xl border bg-card p-6
+font-semibold text-sm mb-4
+rounded-xl border bg-card
+flex items-center justify-between p-4 pb-3
+font-semibold text-sm
+text-xs text-primary hover:underline flex items-center gap-1
+flex items-center justify-between p-4
+pb-4
+text-sm font-medium hover:text-primary truncate block
+text-sm font-medium truncate
+text-xs text-muted-foreground truncate mt-0.5
+ml-3 shrink-0
+flex items-end justify-between pb-3
+text-lg font-semibold tracking-tight
+rounded-xl border bg-card text-card-foreground shadow-sm
+border-primary/20 bg-primary/5
+border-green-200 bg-green-50
+border-yellow-200 bg-yellow-50
+border-red-200 bg-red-50
+text-xs font-medium mt-1
+text-green-600
+↑
+↓
+rounded-lg p-3
+bg-primary/10 text-primary
+success
+bg-green-100 text-green-700
+bg-yellow-100 text-yellow-700
+danger
+bg-red-100 text-red-700
+bg-muted text-muted-foreground
+TA_DRAFT
+Selesai
+Revisi
+Terbuka
+Terkunci
+bg-white rounded-xl border border-gray-100 p-5 shadow-sm
+text-base font-semibold text-gray-800
+text-sm text-gray-400 mt-0.5
+font-medium text-gray-600
+flex items-center justify-between gap-2
+locked
+flex flex-col items-center gap-2 flex-1 cursor-pointer
+w-10 h-10 rounded-lg flex items-center justify-center border-2 transition-all
+bg-emerald-50 border-emerald-500 text-emerald-600
+bg-gray-100 border-gray-200 text-gray-400
+bg-white border-primary-500 text-primary-500
+ring-2 ring-primary-500/30
+text-xs font-medium text-center leading-tight
+text-emerald-700
+text-gray-700
+@/components/ui/skeleton
+h-10 w-[200px]
+ml-2 text-xs text-muted-foreground
+flex items-center gap-4 py-2 px-4 bg-muted/50 rounded-md
+Select all
+flex items-center justify-between py-2 px-4 bg-primary/5 border border-primary/20 rounded-md
+h-8
+ml-2 h-3 w-3
+@/types/finalization
+h-8 gap-1.5 relative
+h-4 px-1 text-[10px] ml-1
+w-64
+font-medium text-sm flex items-center gap-2
+h-6 px-2 text-xs
+text-xs flex items-center gap-1.5
+h-8 text-xs
+Pilih status
+missing_sv1
+missing_sv2
+complete
+Pilih jumlah
+under_min
+in_range
+over_max
+ml-1 hover:text-destructive
+h-2.5 w-2.5 inline
+sm:max-w-[550px]
+space-y-4 py-4
+rounded-lg border bg-muted/50 p-3
+mt-1 text-2xl font-bold
+rounded-lg border bg-green-50 p-3
+flex items-center gap-2 text-sm text-green-600
+mt-1 text-2xl font-bold text-green-700
+bg-green-50 border-green-200
+text-green-800
+text-sm text-muted-foreground hover:text-foreground underline
+Sembunyikan
+Lihat
+max-h-[200px] overflow-y-auto rounded-lg border
+divide-y
+flex items-center justify-between p-3
+Belum ada supervisor
+text-green-600 border-green-200
+flex items-start space-x-2
+confirm
+grid gap-1.5 leading-none
+text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70
+@/components/ui/specialization-selector
+no_title
+assign_title
+add_title
+add
+DISSOLVED
+PDC1_ACTIVE
+PDC2_ACTIVE
+sm:max-w-[700px] max-h-[90vh] overflow-y-auto
+bg-yellow-50 border-yellow-200
+h-4 w-4 text-yellow-600
+text-yellow-700
+rounded-lg border p-4 space-y-4
+text-base font-medium
+grid grid-cols-1 gap-3
+bg-primary/5 border-primary
+hover:bg-muted
+bg-primary border-primary
+border-gray-300
+opacity-50 cursor-not-allowed
+text-xs text-red-500 mt-1
+space-y-3 pt-2 border-t
+bg-muted
+space-y-2 max-h-[150px] overflow-y-auto border rounded-lg p-2
+bg-primary/10 border border-primary
+hover:bg-muted border border-transparent
+new-title
+Masukkan judul...
+new-description
+Masukkan deskripsi...
+Pilih dosen
+rounded-lg border p-3 space-y-2
+space-y-2 max-h-[150px] overflow-y-auto
+h-[200px] rounded-lg border overflow-y-auto
+p-2 space-y-1
+flex items-center space-x-2 p-2 hover:bg-muted rounded
+flex-1 cursor-pointer text-sm
+sm:max-w-[600px]
+flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm
+h-4 w-4 flex-shrink-0
+grid gap-3
+cursor-pointer transition-all hover:border-primary hover:shadow-sm
+flex items-center gap-4 text-sm
+gap-1
+text-center py-8 text-muted-foreground
+h-12 w-12 mx-auto mb-3 opacity-50
+>
+@/lib/validations/finalization
+@/components/ui/field
+supervisor_1_id
+supervisor_2_id
+flex items-center gap-2 text-sm
+mt-2 flex flex-wrap gap-1
+supervisor-1
+Pilih Supervisor 1
+flex items-center justify-between w-full gap-4
+rounded-lg border p-3 space-y-2 mt-2
+bg-red-500
+text-xs text-destructive flex items-center gap-1
+supervisor-2
+Pilih Supervisor 2 (opsional)
+notes
+Tambahkan catatan untuk finalisasi ini...
+true
+false
+01
+REG
+Pendaftaran & Pembentukan Kelompok
+Mahasiswa yang memenuhi syarat (min. 110 SKS) mendaftar dan membentuk kelompok beranggotakan 3 orang.
+Syarat: Lulus Matkul Wajib Tahun 1-2
+Bentuk Tim 3 Orang
+Registrasi Awal
+02
+TOPIC
+Penentuan Topik & Judul
+Kelompok memilih topik sesuai roadmap penelitian (Smart System, IoT, dll) untuk menyelesaikan masalah nyata.
+Pilih Topik Roadmap
+Rumuskan Judul
+Solusi Masalah Nyata
+03
+C100
+Penyusunan Proposal
+Menyusun dokumen C100 berisi latar belakang, rumusan masalah, analisis solusi, dan aspek ekonomi/sustainabilitas.
+Latar Belakang & Masalah
+Analisis Solusi
+Skenario Pengguna
+04
+SEMINAR
+Sidang Proposal TA
+Proposal diuji oleh dosen penguji. Dokumen C100 final disahkan jika lulus, atau revisi/ulang jika belum.
+Presentasi Proposal
+Revisi Dokumen
+Pengesahan C100
+05
+C200
+Spesifikasi Produk
+Mendefinisikan kebutuhan fungsional & non-fungsional, use-case, ERD, dan gambaran sistem yang dikembangkan.
+Functional Requirements
+Use-Case & ERD
+System Overview
+06
+C300
+Perancangan Sistem
+Merancang arsitektur sistem, class/sequence diagram, API, komunikasi sistem, dan timeline implementasi.
+System Architecture
+UML Diagrams
+Implementation Plan
+07
+C400
+Implementasi
+Realisasi sistem melalui pengembangan software/hardware, prototyping, dan penyiapan demo produk.
+Software/Hardware Dev
+Prototyping
+Product Demo
+08
+C500
+Pengujian
+Melakukan testing (black-box/white-box), pengujian performa, dan evaluasi kesesuaian spesifikasi.
+Black-box/White-box
+Performance Test
+Spec Evaluation
+09
+Expo Capstone
+Presentasi produk final, poster ilmiah, video demo, dan makalah di hadapan publik dan penguji.
+Pameran Produk
+Poster & Video
+Submit Jurnal
+border-b border-black/10 dark:border-white/10
+flex w-full items-center justify-between py-8 text-left
+flex items-center gap-8 md:gap-16
+text-xl pl-2 font-medium text-muted-foreground w-8
+text-2xl font-semibold md:text-3xl
+pr-4
+grid-rows-[1fr] opacity-100 pb-8
+grid-rows-[0fr] opacity-0
+min-h-0
+grid gap-8 md:grid-cols-2 ml-16 md:ml-24 pr-4
+aspect-video w-full rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center
+text-4xl font-bold text-muted-foreground/20
+flex flex-col justify-center
+text-xl font-medium mb-4
+text-muted-foreground mb-6 leading-relaxed
+rounded-full border px-3 py-1 text-sm font-medium
+capstone
+container mx-auto py-16 px-4 sm:px-6 lg:px-8
+mb-16
+text-4xl font-medium tracking-tight sm:text-7xl
+flex flex-col border-t border-black/10 dark:border-white/10
+framer-motion
+cta
+py-16 px-4 sm:px-8 bg-black text-white rounded-t-[3rem] dark:bg-white dark:text-black transition-colors
+max-w-7xl mx-auto flex flex-col items-center text-center
+text-5xl md:text-8xl font-light mb-12 tracking-tight leading-tight
+group relative inline-flex items-center gap-4 px-12 py-6 rounded-full border-2 border-white/20 hover:bg-white hover:border-white transition-all duration-300 dark:border-black/20 dark:hover:bg-black dark:hover:border-black
+text-xl font-medium group-hover:text-black dark:group-hover:text-white tracking-wide transition-colors
+group-hover:text-black dark:group-hover:text-white transition-colors
+next/image
+relative min-h-screen bg-white text-black dark:bg-[#1a1a1a] dark:text-white flex flex-col
+relative z-0 h-[60vh] md:h-[65vh] w-full overflow-hidden
+/hero-bg.webp
+Architecture
+object-cover
+bg-white dark:bg-[#1a1a1a] flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-16 lg:gap-24 px-6 sm:px-12 w-full py-16
+flex flex-col justify-center items-center md:items-start text-center md:text-left
+text-5xl sm:text-7xl lg:text-8xl font-medium tracking-tighter leading-[0.9]
+flex flex-col justify-center items-center md:items-end text-center md:text-right
+max-w-xl
+text-lg sm:text-xl lg:text-2xl leading-relaxed text-muted-foreground font-light mb-4
+container mx-auto pt-24 pb-36 px-4 sm:px-6 lg:px-8
+mb-16 max-w-2xl
+grid grid-cols-1 md:grid-cols-2 gap-6 w-full
+flex flex-col p-8 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800
+text-xl font-semibold text-black dark:text-white mb-2
+text-muted-foreground mb-8 text-base
+mt-auto
+flex items-baseline gap-1
+text-5xl font-bold tracking-tight text-black dark:text-white
+text-lg text-muted-foreground font-medium
+mt-4 flex gap-3 text-sm font-medium text-zinc-600 dark:text-zinc-400
+bg-white dark:bg-zinc-800 px-3 py-1 rounded border border-zinc-200 dark:border-zinc-700
+Pengerjaan TA Individu
+Setiap mahasiswa menulis laporan TA individu berdasarkan kontribusi spesifik dalam proyek Capstone.
+Individu
+Penyusunan Laporan TA
+Menulis laporan sesuai format: Pendahuluan, Tinjauan Pustaka, Metodologi, Implementasi, Pengujian, Kesimpulan.
+Submit Artikel Ilmiah
+Wajib mensubmit artikel ilmiah ke jurnal (JTK atau lainnya) dengan mencantumkan dosen pembimbing.
+Publikasi
+Pendaftaran Sidang TA
+Mendaftar sidang setelah lulus Expo, dokumen lengkap, dan mendapatkan persetujuan pembimbing.
+Admin
+Sidang TA (Defense)
+Ujian lisan individu untuk mempertahankan metodologi, analisis, dan hasil penelitian di hadapan penguji.
+Ujian
+Kelulusan
+Pemberian nilai akhir. Mahasiswa dinyatakan lulus Capstone & Tugas Akhir jika memenuhi semua kriteria.
+mb-12
+relative mx-auto max-w-4xl
+absolute top-4 left-2 bg-zinc-200 dark:bg-zinc-800 h-full
+relative mb-10 pl-8
+absolute top-3.5 left-0 flex size-4 items-center justify-center rounded-full bg-black dark:bg-white
+rounded-xl py-2 text-xl font-bold tracking-tight xl:mb-4 xl:px-3
+text-base font-bold tracking-tight text-muted-foreground mt-2 xl:mt-0 xl:absolute xl:top-3 xl:-left-48 xl:text-right xl:w-40 xl:pr-4
+my-5 border-none shadow-none bg-transparent
+px-0
+prose text-foreground dark:prose-invert max-w-none
+mb-2
+text-xs font-bold px-2 py-0.5 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 uppercase tracking-wide
+text-muted-foreground leading-relaxed
+sidebar_sections
+undefined
+Master Data
+Periods
+Users
+Groups
+Locations
+/admin/locations
+Document Requirements
+/admin/document-requirements
+Evaluation Setup
+Assessment Bank
+Tipe Penilaian
+Peer Review
+Grade Config
+/admin/evaluation-setup/grade-configuration
+Management
+Schedule
+Sidang Proposal
+/admin/sempro
+Expo Events
+/admin/expo
+Analytics
+Progress
+/admin/analytics/progress
+Peer Review Dashboard
+/admin/peer-review-dashboard
+Reports
+Document Uploads
+/admin/document-uploads
+Registration
+/mahasiswa/registration
+Group & Titles
+My Group
+/mahasiswa/group
+Titles Marketplace
+/mahasiswa/titles
+Propose Title
+/mahasiswa/propose-title
+Title Bids
+/mahasiswa/bidding
+Progress & Docs
+Documents
+TA Submission
+Schedules
+My Schedule
+Daftar Expo
+Evaluations
+/mahasiswa/peer-review
+My Grades
+Titles & Bids
+Title Approvals
+/dosen/title-approvals
+Bid Review
+Mentoring
+Bimbingan
+/dosen/bimbingan
+Schedule & Review
+/dosen/schedule
+Evaluate Students
+/dosen/evaluation
+Supervisor Evaluation
+admin-master
+admin-evaluation
+admin-management
+admin-analytics
+dosen-titles
+dosen-mentoring
+dosen-schedule
+group/collapsible
+ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90
+group/subsection py-0.5
+ml-auto h-3 w-3 transition-transform duration-200 group-data-[state=open]/subsection:rotate-90
+/notifications/unread-count
+/dosen/seminar-schedules/examiner
+/mahasiswa/my-period
+registration-complete
+READY_FOR_SEMPRO
+SEMPRO_DONE
+PDC2_READY_FOR_EXPO
+EXPO_REGISTERED
+EXPO_DONE
+READY_FOR_TA_INDIVIDUAL
+/mahasiswa/dashboard
+Register for a period first
+Available after PDC1 starts
+section-admin
+section-dosen
+pointer-events-none
+flex min-w-0 items-center
+truncate
+bg-primary text-primary-foreground flex h-5 min-w-[20px] shrink-0 items-center justify-center rounded-full px-1.5 text-xs font-bold
+99+
+flex items-center justify-between px-2 py-2
+/logo.png
+Logo
+grid flex-1 text-left text-sm leading-tight
+truncate font-semibold
+truncate text-xs
+hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md
+Collapse sidebar
+Dashboard
+/notifications
+Notifications
+bg-primary text-primary-foreground ml-auto flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold
+/admin/settings
+Settings
+Logout
+text-red-500 hover:text-red-600
+opacity-50
+TA_IN_PROGRESS
+cursor-not-allowed opacity-50
+@/components/layout/TopBar
+@/components/auth/RoleSelector
+/unauthorized
+flex-1 overflow-y-auto p-4 bg-white
+border-grey-100 shadow-small min-h-full overflow-hidden rounded-xl border
+px-6 pt-6 pb-6
+bg-black text-white pt-8 pb-8 dark:bg-white dark:text-black transition-colors
+max-w-7xl mx-auto px-8
+grid grid-cols-1 md:grid-cols-4 gap-12 mb-16
+font-sans text-2xl font-semibold tracking-tight
+text-zinc-400 dark:text-zinc-600 text-sm leading-relaxed max-w-xs
+font-medium text-lg mb-6
+space-y-4 text-zinc-400 dark:text-zinc-600 text-sm
+hover:text-white dark:hover:text-black transition-colors
+#capstone
+#ta
+mailto:admin@ctms.ac.id
+border-t border-zinc-800 dark:border-zinc-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-4
+text-zinc-500 text-sm
+noopener noreferrer
+text-zinc-400 hover:text-white dark:hover:text-black transition-colors
+GitHub
+LinkedIn
+Instagram
+Email
+fixed inset-0 z-60 bg-black/50 backdrop-blur-sm md:hidden
+fixed top-0 right-0 z-70 h-full w-[85%] max-w-sm bg-white shadow-2xl md:hidden dark:bg-zinc-900
+100%
+spring
+flex items-center justify-between p-6 border-b border-gray-100 dark:border-white/10
+font-sans text-xl font-semibold tracking-tight text-gray-900 dark:text-white
+w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors dark:bg-white/10 dark:hover:bg-white/20
+Close Menu
+text-gray-900 dark:text-white
+block py-4 text-2xl font-medium text-gray-900 hover:text-gray-600 transition-colors border-b border-gray-100 dark:text-white dark:hover:text-gray-300 dark:border-white/10
+mt-8
+w-full py-6 text-lg rounded-full
+absolute bottom-0 left-0 right-0 p-6 border-t border-gray-100 dark:border-white/10
+text-sm text-gray-400 text-center
+./MobileMenu
+Home
+Capstone
+Tugas Akhir
+scroll
+fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-8 py-6 md:hidden bg-white/80 backdrop-blur-md border-b border-black/5 dark:bg-black/80 dark:border-white/5
+font-sans text-2xl font-semibold tracking-tight text-gray-900 dark:text-white
+w-12 h-12 bg-gray-100 rounded-xl flex flex-col items-center justify-center gap-1.5 shadow-sm hover:bg-gray-200 transition-colors dark:bg-white/10 dark:hover:bg-white/20
+Toggle Menu
+w-5 h-[1.5px] bg-gray-900 dark:bg-white
+fixed top-4 left-0 right-0 z-50 flex justify-center md:hidden pointer-events-none
+pointer-events-auto bg-white/80 backdrop-blur-xl border border-gray-200/50 px-4 py-2.5 rounded-full shadow-lg flex items-center gap-4 dark:bg-black/80 dark:border-white/10
+font-sans text-lg font-semibold tracking-tight text-gray-900 dark:text-white
+w-px h-5 bg-gray-300 dark:bg-white/20
+w-9 h-9 bg-gray-100 rounded-full flex flex-col items-center justify-center gap-1 hover:bg-gray-200 transition-colors dark:bg-white/10 dark:hover:bg-white/20
+w-4 h-[1.5px] bg-gray-900 dark:bg-white
+fixed top-0 left-0 right-0 z-40 hidden md:flex items-center justify-between px-12 md:px-24 lg:px-32 py-6 bg-white border-b border-black/5 dark:bg-black/90 dark:border-white/5
+flex items-center gap-8
+text-sm font-medium text-gray-600 hover:text-black transition-colors dark:text-gray-400 dark:hover:text-white
+rounded-full px-6 font-medium bg-black text-white hover:bg-black/90 dark:bg-white dark:text-black dark:hover:bg-white/90
+fixed top-6 left-0 right-0 z-50 hidden md:flex justify-center pointer-events-none
+pointer-events-auto bg-gray-100/80 backdrop-blur-xl border border-white/20 p-1.5 rounded-full shadow-sm flex items-center gap-1 dark:bg-black/80 dark:border-white/10
+flex items-center gap-2 pl-4 pr-4
+font-semibold tracking-tight text-lg text-gray-900 dark:text-white
+w-px h-4 bg-gray-300 mx-2 dark:bg-white/20
+px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300
+bg-white text-black shadow-sm dark:bg-zinc-800 dark:text-white
+text-gray-800 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white
+px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white
+breadcrumb
+flex flex-wrap items-center gap-1.5 text-sm text-grey-400
+inline-flex items-center gap-1.5
+text-grey-200
+text-grey-600 font-medium
+text-grey-400
+flex-1 min-w-0
+text-[32px] font-semibold text-grey-600 leading-tight
+mt-1 text-sm text-grey-400 max-w-2xl
+flex items-center gap-3 shrink-0
+@/lib/page-title
+SICATA
+sticky top-0 z-30 flex items-center justify-between gap-4 px-6 py-4 border-b border-grey-100
+flex flex-wrap items-center gap-2 text-sm
+inline-flex items-center gap-2
+h-9 w-9 text-grey-600 hover:text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border
+absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error-100
+flex items-center gap-3 h-10 px-2 hover:bg-grey-25
+h-8 w-8 bg-grey-100
+bg-grey-100 text-grey-500 text-sm font-semibold
+flex flex-col items-start text-left hidden sm:flex
+text-sm font-semibold text-grey-600 leading-tight
+text-xs text-grey-400 leading-tight
+w-56
+flex flex-col space-y-1
+text-sm font-semibold text-grey-600
+text-xs text-grey-400
+/profile
+/settings
+text-error-100
+@/components/ui/stepper
+Basic Info
+Period details
+Check templates
+Phase Dates
+Schedule phases
+Group Config
+Group settings
+Review
+Confirm details
+/admin/evaluation-setup/check
+Evaluation setup available
+Please complete evaluation setup first
+Period updated successfully
+Period created successfully
+Failed to save period
+flex items-center gap-2 text-sm text-muted-foreground mb-4
+grid gap-4
+e.g. Semester Ganjil 2025/2026
+flex items-center space-x-2 pt-2
+is-active
+flex items-center justify-center py-8
+h-8 w-8 animate-spin text-primary
+h-5 w-5 text-green-600 mt-0.5
+h-5 w-5 text-yellow-600 mt-0.5
+text-green-900
+text-yellow-900
+Evaluation Setup Ready
+Evaluation Setup Required
+/admin/evaluation-setup
+space-y-4 max-h-[60vh] overflow-y-auto pr-2
+space-y-2 p-3 bg-muted/30 rounded-lg
+font-medium flex items-center gap-2 text-sm
+text-xs font-normal text-muted-foreground
+text-xs text-muted-foreground flex items-center gap-1
+text-[10px] text-blue-600
+grid grid-cols-2 gap-4 pt-2
+flex justify-between py-2 border-b
+Inactive
+flex justify-between py-2
+text-yellow-600
+✓ Ready
+⚠ Required
+sm:max-w-[600px] max-h-[90vh] overflow-y-auto
+Edit Period
+New Academic Period
+Update period configuration in steps.
+Create a new period with step-by-step configuration.
+Back
+Save Changes
+Create Period
+flex flex-col items-center justify-center min-h-[50vh] text-center
+text-2xl font-bold mb-4
+Select period...
+flex items-center justify-between w-full
+ml-2 text-xs text-green-600 font-medium
+ml-2 text-xs text-amber-600 font-medium
+BIMBINGAN
+TA_DEFENSE
+text-amber-700
+text-primary-500
+bg-primary-100
+text-rose-700
+bg-rose-100
+border-rose-200
+Time not set
+Invalid date in schedule:
+yyyy-MM-dd
+Sun
+Mon
+Tue
+Wed
+Thu
+Fri
+Sat
+flex flex-col gap-6
+w-full overflow-hidden pt-0
+flex items-center justify-between border-b px-6 py-4
+bg-black text-white hover:bg-gray-800
+mr-1
+grid grid-cols-7 border-b
+py-3 text-center text-sm font-medium text-gray-500
+grid grid-cols-7
+min-h-[100px] cursor-pointer border-r border-b p-2 transition-colors
+bg-blue-50/50
+border-r-0
+border-b-0
+mb-1 flex justify-center
+inline-flex h-7 w-7 items-center justify-center rounded-full bg-black text-sm font-medium text-white
+cursor-pointer truncate rounded-md px-2 py-1 text-xs transition-opacity
+hover:opacity-80
+mr-1 font-medium
+px-2 py-0.5 text-xs text-gray-500
+min-h-[300px]
+border-b bg-gray-50/50 px-6 py-4
+EEEE, MMMM d, yyyy
+No events scheduled
+s
+flex flex-col items-center justify-center py-12 text-gray-400
+mb-3 h-12 w-12 opacity-20
+mt-1 text-xs opacity-70
+PENDING_APPROVAL
+CANCELLED
+group p-5 transition-colors hover:bg-gray-50
+rounded-t-lg
+rounded-b-lg
+mb-3 flex items-start justify-between
+rounded-md px-2.5 py-1 text-xs font-medium
+rounded-full px-2 py-0.5 text-xs font-medium
+SCHEDULED
+DONE
+bg-blue-100 text-blue-700
+bg-amber-100 text-amber-700
+mb-3 text-base font-semibold text-gray-900
+Untitled
+grid grid-cols-2 gap-4 text-sm
+flex items-center gap-2 text-gray-600
+online
+font-medium text-gray-900 capitalize
+col-span-2 flex items-start gap-2 text-gray-600
+mt-0.5 h-4 w-4 text-gray-400
+mb-0.5 block text-xs text-gray-400
+mt-3 border-t border-gray-100 pt-3
+flex items-start gap-2
+mt-3 rounded-md border border-red-100 bg-red-50 p-3
+text-sm text-red-700
+mt-4 flex items-center gap-2 border-t border-gray-100 pt-3
+border-green-200 text-green-600 hover:bg-green-50 hover:text-green-700
+mr-1.5 h-3.5 w-3.5
+border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700
+text-gray-600 hover:text-gray-900
+text-red-600 hover:bg-red-50 hover:text-red-700
+./ScheduleCalendar
+bg-green-100 text-green-800 border-green-200
+bg-red-100 text-red-800 border-red-200
+bg-amber-100 text-amber-800 border-amber-200
+bg-gray-100 text-gray-800 border-gray-200
+bg-blue-100 text-blue-800 border-blue-200
+bg-emerald-100 text-emerald-800 border-emerald-200
+bg-rose-100 text-rose-800 border-rose-200
+Guidance Session
+Proposal Defense
+Expo Presentation
+Final Defense
+max-w-2xl max-h-[90vh] overflow-y-auto
+text-2xl font-bold mt-2
+Schedule Details
+space-y-6 mt-4
+h-5 w-5 text-muted-foreground mt-0.5
+text-sm font-medium text-muted-foreground
+Invalid date
+TBD
+HH:mm
+Online Meeting
+Room not specified
+text-sm text-primary hover:underline inline-flex items-center gap-1
+h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center mt-0.5
+pl-7 space-y-2
+pl-7 text-sm text-muted-foreground
+space-y-2 rounded-md bg-red-50 p-4 border border-red-100
+text-sm font-medium text-red-800
+flex justify-end gap-2 mt-6
+schedules
+ID
+Type
+Start Time
+End Time
+Room
+Group Title
+Student Name
+Period
+Mode
+"
+""
+yyyy-MM-dd_HH-mm
+href
+download
+Exporting...
+Export
+w-48
+filtered
+dd MMM yyyy
+start_time
+Time
+group.title.title
+student_name
+text-muted-foreground text-xs ml-1
+room
+Online
+status
+text-xs capitalize
+actions
+Actions
+Reason...
+h-8 w-32 text-xs
+h-4 w-4 text-red-600
+text-xs text-red-600
+cursor-pointer
+h-32 text-center text-muted-foreground
+cursor-pointer hover:bg-muted/50
+calendar
+table
+inline-flex items-center rounded-lg border bg-muted p-1
+inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-all
+bg-background text-foreground shadow-sm
+text-muted-foreground hover:text-foreground
+@radix-ui/react-accordion
+AccordionItem
+flex
+flex flex-1 items-center justify-between py-4 font-medium transition-all hover:underline [&[data-state=open]>svg]:rotate-180
+h-4 w-4 shrink-0 transition-transform duration-200
+overflow-hidden text-sm transition-all data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down
+pb-4 pt-0
+@radix-ui/react-alert-dialog
+fixed inset-0 z-50 bg-black/80  data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
+fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg
+flex flex-col space-y-2 text-center sm:text-left
+AlertDialogHeader
+flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2
+AlertDialogFooter
+mt-2 sm:mt-0
+relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground
+bg-background text-foreground
+border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive
+alert
+Alert
+mb-1 font-medium leading-none tracking-tight
+AlertTitle
+text-sm [&_p]:leading-relaxed
+AlertDescription
+radix-ui
+avatar
+group/avatar relative flex size-8 shrink-0 overflow-hidden rounded-full select-none data-[size=lg]:size-10 data-[size=sm]:size-6
+avatar-image
+aspect-square size-full
+avatar-fallback
+bg-muted text-muted-foreground flex size-full items-center justify-center rounded-full text-sm group-data-[size=sm]/avatar:text-xs
+avatar-badge
+bg-primary text-primary-foreground ring-background absolute right-0 bottom-0 z-10 inline-flex items-center justify-center rounded-full ring-2 select-none
+group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden
+group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2
+group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2
+div
+avatar-group
+*:data-[slot=avatar]:ring-background group/avatar-group flex -space-x-2 *:data-[slot=avatar]:ring-2
+avatar-group-count
+bg-muted text-muted-foreground ring-background relative flex size-8 shrink-0 items-center justify-center rounded-full text-sm ring-2 group-has-data-[size=lg]/avatar-group:size-10 group-has-data-[size=sm]/avatar-group:size-6 [&>svg]:size-4 group-has-data-[size=lg]/avatar-group:[&>svg]:size-5 group-has-data-[size=sm]/avatar-group:[&>svg]:size-3
+inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-full border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3
+bg-primary text-primary-foreground [a&]:hover:bg-primary/90
+bg-secondary text-secondary-foreground [a&]:hover:bg-secondary/90
+bg-destructive text-white focus-visible:ring-destructive/20 dark:bg-destructive/60 dark:focus-visible:ring-destructive/40 [a&]:hover:bg-destructive/90
+border-border text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground
+[a&]:hover:bg-accent [a&]:hover:text-accent-foreground
+text-primary underline-offset-4 [a&]:hover:underline
+bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300
+bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300
+bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300
+bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300
+bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300
+bg-gray-50 text-gray-700 dark:bg-gray-950 dark:text-gray-300
+bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300
+badge
+nav
+ol
+breadcrumb-list
+text-muted-foreground flex flex-wrap items-center gap-1.5 text-sm wrap-break-word sm:gap-2.5
+li
+breadcrumb-item
+breadcrumb-link
+hover:text-foreground transition-colors
+breadcrumb-page
+link
+text-foreground font-normal
+breadcrumb-separator
+presentation
+[&>svg]:size-3.5
+breadcrumb-ellipsis
+flex size-9 items-center justify-center
+size-4
+inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive
+bg-primary text-primary-foreground hover:bg-primary/90
+bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60
+border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50
+bg-secondary text-secondary-foreground hover:bg-secondary/80
+hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50
+text-primary underline-offset-4 hover:underline
+h-9 px-4 py-2 has-[>svg]:px-3
+h-6 gap-1 rounded-md px-2 text-xs has-[>svg]:px-1.5 [&_svg:not([class*='size-'])]:size-3
+h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5
+h-10 rounded-md px-6 has-[>svg]:px-4
+size-9
+icon-xs
+size-6 rounded-md [&_svg:not([class*='size-'])]:size-3
+icon-sm
+size-8
+icon-lg
+size-10
+react-day-picker
+label
+bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent
+rtl:**:[.rdp-button_next>svg]:rotate-180
+rtl:**:[.rdp-button_previous>svg]:rotate-180
+MMM
+w-fit
+flex gap-4 flex-col md:flex-row relative
+flex flex-col w-full gap-4
+flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between
+size-(--cell-size) aria-disabled:opacity-50 p-0 select-none
+flex items-center justify-center h-(--cell-size) w-full px-(--cell-size)
+w-full flex items-center text-sm font-medium justify-center h-(--cell-size) gap-1.5
+relative has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md
+absolute bg-popover inset-0 opacity-0
+select-none font-medium
+rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5
+w-full border-collapse
+text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] select-none
+flex w-full mt-2
+select-none w-(--cell-size)
+text-[0.8rem] select-none text-muted-foreground
+relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day aspect-square select-none
+[&:nth-child(2)[data-selected=true]_button]:rounded-l-md
+[&:first-child[data-selected=true]_button]:rounded-l-md
+rounded-l-md bg-accent
+rounded-none
+rounded-r-md bg-accent
+bg-accent text-accent-foreground rounded-md data-[selected=true]:rounded-none
+text-muted-foreground aria-selected:text-muted-foreground
+text-muted-foreground opacity-50
+invisible
+left
+right
+flex size-(--cell-size) items-center justify-center text-center
+data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70
+card
+bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm
+card-header
+@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6
+card-title
+leading-none font-semibold
+card-description
+card-action
+col-start-2 row-span-2 row-start-1 self-start justify-self-end
+card-content
+px-6
+card-footer
+flex items-center px-6 [.border-t]:pt-6
+peer border-input dark:bg-input/30 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground dark:data-[state=checked]:bg-primary data-[state=checked]:border-primary focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive size-4 shrink-0 rounded-[4px] border shadow-xs transition-shadow outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50
+checkbox-indicator
+grid place-content-center text-current transition-none
+size-3.5
+collapsible
+collapsible-trigger
+collapsible-content
+center
+...
+No data found
+Try adjusting your search or filter.
+Search...
+Sort
+py-0 gap-0
+flex flex-col sm:flex-row sm:items-center justify-between gap-5 p-5 border-b
+text-[20px] leading-[1.4] font-semibold text-[#353849]
+pl-9 w-64
+mb-3 opacity-40
+text-xs mt-1
+hover:bg-transparent bg-grey-25
+w-10 text-[#666D80]
+indeterminate
+checked
+unchecked
+whitespace-nowrap text-[#666D80]
+data-[state=selected]:bg-muted
+py-3
+no
+flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t
+text-sm text-muted-foreground whitespace-nowrap
+h-8 w-20
+mx-0 w-auto
+Go to previous page
+Go to next page
+text-muted-foreground whitespace-nowrap text-sm
+NumberCell
+dialog
+dialog-trigger
+dialog-portal
+dialog-close
+dialog-overlay
+data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50
+dialog-content
+bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 outline-none sm:max-w-lg
+ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4
+dialog-header
+flex flex-col gap-2 text-center sm:text-left
+dialog-footer
+flex flex-col-reverse gap-2 sm:flex-row sm:justify-end
+dialog-title
+text-lg leading-none font-semibold
+dialog-description
+dropdown-menu
+dropdown-menu-portal
+dropdown-menu-trigger
+dropdown-menu-content
+bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border p-1 shadow-md
+dropdown-menu-group
+dropdown-menu-item
+focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive! [&_svg:not([class*='text-'])]:text-muted-foreground relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-inset:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4
+dropdown-menu-checkbox-item
+focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4
+pointer-events-none absolute left-2 flex size-3.5 items-center justify-center
+dropdown-menu-radio-group
+dropdown-menu-radio-item
+size-2 fill-current
+dropdown-menu-label
+px-2 py-1.5 text-sm font-medium data-inset:pl-8
+dropdown-menu-separator
+bg-border -mx-1 my-1 h-px
+dropdown-menu-shortcut
+text-muted-foreground ml-auto text-xs tracking-widest
+dropdown-menu-sub
+dropdown-menu-sub-trigger
+focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-inset:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4
+ml-auto size-4
+dropdown-menu-sub-content
+bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 min-w-32 origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-md border p-1 shadow-lg
+./field
+./field-label
+./field-error
+./field-description
+./field-set
+./field-legend
+./field-group
+./field-content
+./field-title
+field-content
+grid gap-1.5
+p
+field-description
+object
+message
+field-error
+text-destructive text-sm
+field-group
+field-label
+text-foreground font-semibold
+legend
+field-legend
+fieldset
+field-set
+field-title
+text-sm font-medium leading-none
+data-invalid
+horizontal
+responsive
+field
+grid gap-2
+grid-cols-[1fr_auto] items-center gap-x-4 gap-y-1
+sm:grid-cols-[1fr_auto] sm:items-center sm:gap-x-4 sm:gap-y-1
+text-sm text-destructive
+fieldset-legend
+flex flex-col gap-2
+@radix-ui/react-label
+@radix-ui/react-slot
+useFormField should be used within <FormField>
+FormItem
+FormLabel
+FormControl
+text-[0.8rem] text-muted-foreground
+FormDescription
+text-[0.8rem] font-medium text-destructive
+FormMessage
+input
+file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm
+focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]
+aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive
+flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50
+inline
+Memuat halaman...
+flex flex-col items-center justify-center gap-4
+min-h-screen
+min-h-[400px] rounded-lg
+py-8
+h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent
+navigation
+pagination
+mx-auto flex w-full justify-center
+Pagination
+ul
+flex flex-row items-center gap-1
+PaginationContent
+PaginationItem
+PaginationLink
+gap-1 pl-2.5
+PaginationPrevious
+gap-1 pr-2.5
+PaginationNext
+flex h-9 w-9 items-center justify-center
+PaginationEllipsis
+popover
+popover-trigger
+popover-content
+bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-72 origin-(--radix-popover-content-transform-origin) rounded-md border p-4 shadow-md outline-hidden
+popover-anchor
+popover-header
+flex flex-col gap-1 text-sm
+h2
+popover-title
+popover-description
+relative h-4 w-full overflow-hidden rounded-full bg-secondary
+h-full w-full flex-1 bg-primary transition-all
+@radix-ui/react-radio-group
+aspect-square h-4 w-4 rounded-full border border-primary text-primary shadow focus:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50
+aria-invalid:ring-destructive/20 aria-invalid:border-destructive
+flex items-center justify-center
+h-3.5 w-3.5 fill-primary
+select
+select-group
+select-value
+select-trigger
+border-input data-placeholder:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4
+size-4 opacity-50
+popper
+select-content
+bg-popover text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-50 max-h-[300px] min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-md border shadow-md
+data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1
+p-1
+h-(--radix-select-trigger-height) w-full min-w-(--radix-select-trigger-width) scroll-my-1
+select-label
+text-muted-foreground px-2 py-1.5 text-xs
+select-item
+focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2
+select-item-indicator
+absolute right-2 flex size-3.5 items-center justify-center
+select-separator
+bg-border pointer-events-none -mx-1 my-1 h-px
+select-scroll-up-button
+flex cursor-default items-center justify-center py-1
+select-scroll-down-button
+separator
+bg-border shrink-0 data-[orientation=horizontal]:h-px data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-px
+sheet
+sheet-trigger
+sheet-close
+sheet-portal
+sheet-overlay
+top
+sheet-content
+bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500
+data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm
+data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm
+data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top inset-x-0 top-0 h-auto border-b
+data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 h-auto border-t
+ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none
+sheet-header
+flex flex-col gap-1.5 p-4
+sheet-footer
+mt-auto flex flex-col gap-2 p-4
+sheet-title
+sheet-description
+@/hooks/use-mobile
+@/components/ui/sheet
+sidebar_state
+16rem
+18rem
+3rem
+b
+expanded
+collapsed
+useSidebar must be used within a SidebarProvider.
+function
+keydown
+sidebar-wrapper
+--sidebar-width
+--sidebar-width-icon
+group/sidebar-wrapper has-data-[variant=inset]:bg-sidebar flex min-h-svh w-full
+sidebar
+offcanvas
+floating
+inset
+none
+bg-sidebar text-sidebar-foreground flex h-full w-(--sidebar-width) flex-col
+bg-sidebar text-sidebar-foreground w-(--sidebar-width) p-0 [&>button]:hidden
+flex h-full w-full flex-col
+group peer text-sidebar-foreground hidden md:block
+sidebar-gap
+relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear
+group-data-[collapsible=offcanvas]:w-0
+group-data-[side=right]:rotate-180
+group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4)))]
+group-data-[collapsible=icon]:w-(--sidebar-width-icon)
+sidebar-container
+fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex
+left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]
+right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]
+p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]
+sidebar-inner
+bg-sidebar group-data-[variant=floating]:border-sidebar-border flex h-full w-full flex-col group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm
+trigger
+sidebar-trigger
+size-7
+rail
+sidebar-rail
+Toggle Sidebar
+hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex
+in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize
+[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize
+hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full
+[[data-side=left][data-collapsible=offcanvas]_&]:-right-2
+[[data-side=right][data-collapsible=offcanvas]_&]:-left-2
+main
+sidebar-inset
+bg-background relative flex w-full flex-1 flex-col
+md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2
+sidebar-input
+bg-background h-8 w-full shadow-none
+sidebar-header
+header
+flex flex-col gap-2 p-2
+sidebar-footer
+footer
+sidebar-separator
+bg-sidebar-border mx-2 w-auto
+sidebar-content
+content
+flex min-h-0 flex-1 flex-col gap-0 overflow-auto group-data-[collapsible=icon]:overflow-hidden
+sidebar-group
+relative flex w-full min-w-0 flex-col px-2 py-0.5
+sidebar-group-label
+group-label
+ring-sidebar-ring flex h-8 shrink-0 items-center rounded-md px-2 text-xs font-medium text-[#A4ACB9] outline-hidden transition-[margin,opacity] duration-200 ease-linear focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0
+group-data-[collapsible=icon]:-mt-8 group-data-[collapsible=icon]:opacity-0
+sidebar-group-action
+group-action
+text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground absolute top-3.5 right-3 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0
+after:absolute after:-inset-2 md:after:hidden
+group-data-[collapsible=icon]:hidden
+sidebar-group-content
+group-content
+w-full text-sm
+sidebar-menu
+menu
+flex w-full min-w-0 flex-col gap-1
+sidebar-menu-item
+menu-item
+group/menu-item relative has-data-[active=true]:not-has-data-[sidebar=menu-sub]:before:absolute has-data-[active=true]:not-has-data-[sidebar=menu-sub]:before:inset-y-2.5 has-data-[active=true]:not-has-data-[sidebar=menu-sub]:before:-left-2 has-data-[active=true]:not-has-data-[sidebar=menu-sub]:before:w-[3px] has-data-[active=true]:not-has-data-[sidebar=menu-sub]:before:rounded-r-full has-data-[active=true]:not-has-data-[sidebar=menu-sub]:before:bg-[#293C79]
+peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md py-2 px-2 text-left text-sm font-medium outline-hidden ring-sidebar-ring transition-[width,height,padding] text-grey-500 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-data-[sidebar=menu-action]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-grey-50 data-[active=true]:text-[#0D0D12] data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 [&[data-active=true]>svg]:text-[#293C79] [&[data-active=true]>svg]:stroke-[2.5]
+hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
+bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]
+min-h-8 text-sm
+min-h-7 text-xs
+min-h-12 text-sm group-data-[collapsible=icon]:p-0!
+sidebar-menu-button
+menu-button
+sidebar-menu-action
+menu-action
+text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground peer-hover/menu-button:text-sidebar-accent-foreground absolute top-1.5 right-1 flex aspect-square w-5 items-center justify-center rounded-md p-0 outline-hidden transition-transform focus-visible:ring-2 [&>svg]:size-4 [&>svg]:shrink-0
+peer-data-[size=sm]/menu-button:top-1
+peer-data-[size=default]/menu-button:top-1.5
+peer-data-[size=lg]/menu-button:top-2.5
+peer-data-[active=true]/menu-button:text-sidebar-accent-foreground group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 md:opacity-0
+sidebar-menu-badge
+menu-badge
+text-sidebar-foreground pointer-events-none absolute right-1 flex h-5 min-w-5 items-center justify-center rounded-md px-1 text-xs font-medium tabular-nums select-none
+peer-hover/menu-button:text-sidebar-accent-foreground peer-data-[active=true]/menu-button:text-sidebar-accent-foreground
+70%
+sidebar-menu-skeleton
+menu-skeleton
+flex h-8 items-center gap-2 rounded-md px-2
+size-4 rounded-md
+menu-skeleton-icon
+h-4 max-w-(--skeleton-width) flex-1
+menu-skeleton-text
+--skeleton-width
+sidebar-menu-sub
+menu-sub
+flex min-w-0 flex-col gap-0.5 py-1
+sidebar-menu-sub-item
+menu-sub-item
+group/menu-sub-item relative
+before:absolute before:inset-y-2.5 before:-left-2 before:w-[3px] before:rounded-r-full before:bg-[#293C79]
+md
+sidebar-menu-sub-button
+menu-sub-button
+text-grey-500 ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground flex min-h-8 w-full min-w-0 items-center gap-2 overflow-hidden rounded-md py-2 pr-3 pl-8 font-medium outline-hidden focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50
+data-[active=true]:bg-grey-50 data-[active=true]:rounded-md data-[active=true]:font-semibold data-[active=true]:text-[#0D0D12] [&[data-active=true]>svg]:stroke-[2.5]
+skeleton
+bg-accent animate-pulse rounded-md
+slider
+relative flex w-full touch-none items-center select-none data-disabled:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col
+slider-track
+bg-muted relative grow overflow-hidden rounded-full data-[orientation=horizontal]:h-1.5 data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1.5
+slider-range
+bg-primary absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full
+slider-thumb
+border-primary ring-ring/50 block size-4 shrink-0 rounded-full border bg-white shadow-sm transition-[color,box-shadow] hover:ring-4 focus-visible:ring-4 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50
+next-themes
+light
+dark
+system
+toaster group
+size-4 animate-spin
+--normal-bg
+var(--popover)
+--normal-text
+var(--popover-foreground)
+--normal-border
+var(--border)
+--border-radius
+var(--radius)
+Software
+Embedded
+Network
+Multimedia
+AI
+Blockchain
+Peminatan
+text-destructive ml-1
+flex flex-wrap gap-3
+flex items-center gap-2 cursor-pointer hover:bg-muted px-2 py-1 rounded
+text-xs text-destructive
+flex flex-col items-center flex-1 relative
+w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors z-10
+bg-primary text-primary-foreground
+bg-primary text-primary-foreground ring-4 ring-primary/20
+bg-muted text-muted-foreground border-2 border-muted
+mt-2 text-center
+text-xs text-muted-foreground mt-0.5 max-w-[120px]
+absolute top-4 left-[calc(50%+20px)] right-[calc(-50%+20px)] h-0.5 transition-colors
+flex justify-between items-center mt-6 pt-4 border-t
+switch
+peer data-[state=checked]:bg-primary data-[state=unchecked]:bg-input focus-visible:border-ring focus-visible:ring-ring/50 dark:data-[state=unchecked]:bg-input/80 group/switch inline-flex shrink-0 items-center rounded-full border border-transparent shadow-xs transition-all outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-[1.15rem] data-[size=default]:w-8 data-[size=sm]:h-3.5 data-[size=sm]:w-6
+switch-thumb
+bg-background dark:data-[state=unchecked]:bg-foreground dark:data-[state=checked]:bg-primary-foreground pointer-events-none block rounded-full ring-0 transition-transform group-data-[size=default]/switch:size-4 group-data-[size=sm]/switch:size-3 data-[state=checked]:translate-x-[calc(100%-2px)] data-[state=unchecked]:translate-x-0
+table-container
+relative w-full overflow-x-auto
+w-full caption-bottom text-sm
+thead
+table-header
+[&_tr]:border-b
+tbody
+table-body
+[&_tr:last-child]:border-0
+tfoot
+table-footer
+bg-muted/50 border-t font-medium [&>tr]:last:border-b-0
+tr
+table-row
+hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors
+th
+table-head
+text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-[2px]
+td
+table-cell
+p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-[2px]
+caption
+table-caption
+text-muted-foreground mt-4 text-sm
+tabs
+group/tabs flex gap-2 data-[orientation=horizontal]:flex-col
+rounded-lg p-[3px] group-data-[orientation=horizontal]/tabs:h-9 data-[variant=line]:rounded-none group/tabs-list text-muted-foreground inline-flex w-fit items-center justify-center group-data-[orientation=vertical]/tabs:h-fit group-data-[orientation=vertical]/tabs:flex-col
+gap-1 bg-transparent
+tabs-list
+tabs-trigger
+focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground/60 hover:text-foreground dark:text-muted-foreground dark:hover:text-foreground relative inline-flex h-[calc(100%-1px)] flex-1 items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-all group-data-[orientation=vertical]/tabs:w-full group-data-[orientation=vertical]/tabs:justify-start focus-visible:ring-[3px] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 group-data-[variant=default]/tabs-list:data-[state=active]:shadow-sm group-data-[variant=line]/tabs-list:data-[state=active]:shadow-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4
+group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:border-transparent dark:group-data-[variant=line]/tabs-list:data-[state=active]:bg-transparent
+data-[state=active]:bg-background dark:data-[state=active]:text-foreground dark:data-[state=active]:border-input dark:data-[state=active]:bg-input/30 data-[state=active]:text-foreground
+after:bg-foreground after:absolute after:opacity-0 after:transition-opacity group-data-[orientation=horizontal]/tabs:after:inset-x-0 group-data-[orientation=horizontal]/tabs:after:bottom-[-5px] group-data-[orientation=horizontal]/tabs:after:h-0.5 group-data-[orientation=vertical]/tabs:after:inset-y-0 group-data-[orientation=vertical]/tabs:after:-right-1 group-data-[orientation=vertical]/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-[state=active]:after:opacity-100
+tabs-content
+flex-1 outline-none
+textarea
+border-input placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 flex field-sizing-content min-h-16 w-full rounded-md border bg-transparent px-3 py-2 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 md:text-sm
+tooltip-provider
+tooltip
+tooltip-trigger
+tooltip-content
+bg-foreground text-background animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-50 w-fit origin-(--radix-tooltip-content-transform-origin) rounded-md px-3 py-1.5 text-xs text-balance
+bg-foreground fill-foreground z-50 size-2.5 translate-y-[calc(-50%-2px)] rotate-45 rounded-[2px]
+@/hooks/use-prefetch-dashboards
+null
+/auth/user
+No user data in response
+/auth/active-role
+useAuth must be used within an AuthProvider
+@/features/admin/analytics/hooks/use-group-progress
+@/features/admin/analytics/types
+TITLE_PROPOSED
+TITLE_APPROVED
+bg-slate-100 text-slate-700
+Solo
+Ready to Bid
+Title Proposed
+bg-emerald-100 text-emerald-700
+Title Approved
+Ready Final
+bg-cyan-100 text-cyan-700
+PDC1 Active
+Ready Sempro
+Sempro Done
+PDC2 Active
+bg-violet-100 text-violet-700
+bg-pink-100 text-pink-700
+Ready Expo
+Expo Reg
+Expo Done
+bg-indigo-100 text-indigo-700
+Ready TA
+TA Progress
+Closed
+Dissolved
+bg-gray-100 text-gray-700
+h-3.5 w-3.5 text-emerald-500
+submitted
+h-3.5 w-3.5 text-blue-500
+revision
+h-3.5 w-3.5 text-amber-500
+draft
+h-3.5 w-3.5 text-slate-400
+unlocked
+h-3.5 w-3.5 text-cyan-500
+h-3.5 w-3.5 text-slate-300
+bg-slate-400
+bg-cyan-500
+bg-slate-200
+flex items-center gap-2 mb-1
+text-xs font-medium text-muted-foreground
+h-2 w-full bg-slate-100 rounded-full overflow-hidden
+h-full bg-linear-to-r from-emerald-500 to-emerald-400 transition-all duration-500
+p-3
+text-xs text-muted-foreground capitalize
+h-8 w-8 text-muted-foreground opacity-50
+text-2xl font-bold text-cyan-600
+h-8 w-8 text-cyan-500 opacity-50
+h-8 w-8 text-emerald-500 opacity-50
+h-8 w-8 text-blue-500 opacity-50
+All periods
+Group, title, or student...
+w-10
+cursor-pointer hover:bg-muted/30
+h-6 w-6 p-0
+text-sm text-muted-foreground truncate max-w-[200px]
+No title assigned
+h-3.5 w-3.5 text-muted-foreground
+flex flex-col gap-1
+flex items-center gap-1 text-xs
+h-3 w-3 text-muted-foreground
+truncate max-w-[120px]
+text-xs text-muted-foreground italic
+bg-muted/20
+p-4
+bg-background p-3 rounded-lg border
+text-sm font-medium mb-1
+grid grid-cols-5 gap-2
+bg-emerald-50 border-emerald-200
+bg-blue-50 border-blue-200
+bg-amber-50 border-amber-200
+bg-cyan-50 border-cyan-200
+bg-slate-50 border-slate-200
+flex items-center gap-2 mb-2
+mt-2 space-y-1
+text-sm font-medium mb-2 flex items-center gap-2
+group-progress
+/admin/periods?per_page=100
+/admin/analytics/group-progress
+Failed to fetch group progress
+Failed to load group progress data
+Fallback also failed
+periods
+group_progress_report.csv
+Progress report downloaded
+./components/GroupProgressFeature
+./hooks/use-group-progress
+./types
+@/components/common/ConfirmDialog
+mx-auto max-w-7xl space-y-6
+flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between
+/admin/assessment-bank/new
+cursor-pointer gap-2 bg-indigo-600 hover:bg-indigo-700
+Hapus Komponen
+Hapus
+Batal
+Perubahan Belum Disimpan
+Anda memiliki perubahan yang belum disimpan. Apakah Anda yakin ingin meninggalkan halaman ini?
+Tinggalkan Halaman
+mx-auto max-w-5xl px-6 py-4
+assessment-bank-form
+mx-auto max-w-5xl px-6 py-8
+ml-1 inline h-4 w-4 text-gray-400
+w-32
+@/components/common/DataTable
+@/components/common/DataTableToolbar
+@/components/common/DataTableFilterPopover
+@/components/common/DataTablePagination
+@/features/admin/assessment-bank/components/AssessmentBankTableColumns
+@/features/admin/assessment-bank/types
+rounded-xl border
+Tabel Komponen
+Semua Status
+h-10 cursor-pointer gap-1.5 text-gray-500
+flex items-center justify-between border-b bg-indigo-50 px-6 py-3
+text-sm font-medium text-indigo-900
+h-8 w-8 text-gray-400
+Tidak ada komponen ditemukan
+Coba ubah filter atau buat komponen pertama untuk memulai
+bg-green-50 text-green-700 border-green-200
+Select row
+-ml-3 h-8 cursor-pointer font-semibold text-gray-700
+ml-2 h-4 w-4
+border-green-600 text-green-800 hover:bg-green-100
+mr-0.5 h-1.5 w-1.5 rounded-full bg-green-600
+border-gray-600 text-gray-600 hover:bg-gray-200
+mr-0.5 h-1.5 w-1.5 rounded-full bg-gray-400
+equals
+h-8 w-8 cursor-pointer
+text-red-600 focus:text-red-600
+Menyimpan komponen...
+Komponen penilaian berhasil dibuat
+Gagal membuat komponen penilaian
+Memperbarui komponen...
+Komponen penilaian berhasil diperbarui
+Gagal memperbarui komponen penilaian
+Menonaktifkan komponen...
+Mengaktifkan komponen...
+Komponen dinonaktifkan
+Komponen diaktifkan
+Gagal mengubah status komponen
+Menghapus komponen...
+Komponen berhasil dihapus
+Gagal menghapus komponen
+Gagal mengaktifkan komponen
+Gagal menonaktifkan komponen
+./components/AssessmentBankFeature
+./components/AssessmentBankFormDialog
+./components/AssessmentBankTable
+./components/AssessmentBankTableColumns
+./hooks/use-assessment-bank
+@/components/common/EmptyState
+@/components/common/PageHeader
+../hooks/use-assessments
+Active Assessment Components
+View assessment components configured for each period and evaluation type.
+h-auto p-0
+grid gap-4 md:grid-cols-2
+Select type
+Configure assessment components for this period and evaluation type.
+w-[80px]
+w-[100px]
+hidden md:table-cell
+hidden md:table-cell max-w-[300px] truncate
+text-sm text-destructive mt-4
+grid gap-4 md:grid-cols-2 mt-6
+cursor-pointer hover:border-primary transition-colors
+h-5 w-5 text-muted-foreground rotate-180
+@/features/admin/assessments/types
+Sidang Tugas Akhir
+Penilaian Dosbing SEMPRO
+Penilaian Dosbing Sidang TA
+Nilai Dosen Pembimbing
+Penilaian Milestone
+/admin/assessment-components
+components
+./components/AssessmentsFeature
+./hooks/use-assessments
+@/features/admin/audit-logs/hooks/use-audit-logs
+@/hooks/use-expandable-rows
+@/components/ui/calendar
+@/features/admin/audit-logs/types
+CREATE
+bg-green-500/10 text-green-700 border-green-200 hover:bg-green-500/20
+UPDATE
+bg-blue-500/10 text-blue-700 border-blue-200 hover:bg-blue-500/20
+DELETE
+bg-red-500/10 text-red-700 border-red-200 hover:bg-red-500/20
+APPROVE
+bg-emerald-500/10 text-emerald-700 border-emerald-200 hover:bg-emerald-500/20
+REJECT
+bg-orange-500/10 text-orange-700 border-orange-200 hover:bg-orange-500/20
+ASSIGN
+bg-purple-500/10 text-purple-700 border-purple-200 hover:bg-purple-500/20
+SUBMIT
+bg-cyan-500/10 text-cyan-700 border-cyan-200 hover:bg-cyan-500/20
+UPLOAD
+bg-indigo-500/10 text-indigo-700 border-indigo-200 hover:bg-indigo-500/20
+LOGIN
+bg-gray-500/10 text-gray-700 border-gray-200 hover:bg-gray-500/20
+LOGOUT
+EXPORT
+bg-teal-500/10 text-teal-700 border-teal-200 hover:bg-teal-500/20
+IMPORT
+bg-violet-500/10 text-violet-700 border-violet-200 hover:bg-violet-500/20
+FLAG
+bg-amber-500/10 text-amber-700 border-amber-200 hover:bg-amber-500/20
+UNFLAG
+bg-yellow-500/10 text-yellow-700 border-yellow-200 hover:bg-yellow-500/20
+ADD
+EDIT
+MODIFY
+REMOVE
+DENY
+bg-slate-500/10 text-slate-700 border-slate-200 hover:bg-slate-500/20
+dd MMM yyyy, HH:mm
+App\Models\User
+App\Models\Group
+No payload data
+Unable to format payload
+flex flex-col md:flex-row md:items-center justify-between gap-4
+h-8 px-2 text-xs
+h-3 w-3 mr-1
+flex flex-col lg:flex-row gap-4
+Search action, target type, or payload...
+All Actions
+w-[220px]
+flex flex-col sm:flex-row gap-4 items-start sm:items-center
+justify-start text-left font-normal
+PPP
+From date
+w-auto p-0
+single
+To date
+pb-3 text-sm font-medium border-b bg-muted/30
+flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4
+w-[80px] h-8
+text-center py-20 text-muted-foreground
+text-sm whitespace-nowrap
+font-medium text-sm hover:underline text-primary
+text-sm text-muted-foreground flex items-center gap-1
+\
+text-sm font-medium hover:underline text-primary flex items-center gap-1
+bg-muted/30 hover:bg-inherit
+p-4 space-y-3
+flex items-center gap-2 text-sm font-medium text-muted-foreground
+bg-background rounded-lg border p-4 overflow-x-auto
+text-xs font-mono text-muted-foreground whitespace-pre-wrap
+flex gap-2 text-xs text-muted-foreground
+border-t px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4
+audit-logs
+/admin/audit-logs/action-types
+/admin/audit-logs
+action-types
+Failed to fetch audit logs
+Failed to load audit logs
+./components/AuditLogsFeature
+./hooks/use-audit-logs
+@/features/admin/dashboard/hooks/use-admin-dashboard
+flex items-center justify-center py-12
+text-muted-foreground h-8 w-8 animate-spin
+text-muted-foreground py-20 text-center
+Total Users
+Total Periods
+@/features/admin/dashboard/types
+dashboard
+/admin/dashboard
+./components/AdminDashboardFeature
+./hooks/use-admin-dashboard
+@/components/ui/data-table
+../hooks/use-document-requirements
+../types
+Sidang
+phase
+count
+bg-grey-100 text-grey-700 border-grey-200
+No
+w-12
+Fase
+syarat
+Syarat Dokumen
+text-xs text-emerald-600 ml-1
+types
+Tipe Dokumen
+action
+Action
+Phase Configuration
+No phases found
+Try adjusting your search.
+h-10 w-10
+w-52
+px-3 py-2 text-xs font-semibold text-muted-foreground uppercase
+configured
+not configured
+Tahap awal pengembangan project capstone, termasuk proposal dan perencanaan awal.
+Seminar proposal untuk presentasi rencana project kepada dosen pembimbing.
+Tahap kedua pengembangan dengan fokus pada kemajuan implementasi project.
+Presentasi dan pameran hasil project capstone kepada publik.
+Penulisan dan pengembangan laporan Tugas Akhir secara menyeluruh.
+Sidang akhir untuk presentasi dan pembelaan Tugas Akhir.
+base
+addition
+Cannot modify requirements for finalized period
+Please select a period
+required
+Nama Dokumen
+h-8 text-sm
+Deskripsi
+Aksi
+w-20
+h-8 w-8 text-destructive hover:text-destructive
+border-amber-500 bg-amber-50
+h-4 w-4 text-amber-600
+grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6
+text-base px-3 py-1
+flex justify-between items-center mt-1
+text-lg font-semibold text-emerald-600
+flex flex-row items-center justify-between
+flex gap-2 items-start
+flex-1 space-y-2
+Nama dokumen
+Deskripsi (opsional)
+mt-0
+Belum ada dokumen yang dikonfigurasi
+Tambahkan dokumen menggunakan form di atas
+border rounded-lg border-dashed
+document-requirements
+Proposal
+Gantt Chart
+Buku Bimbingan
+Bukti Kemajuan
+Laporan Kemajuan
+Poster
+Laporan TA
+Draft TA
+Buku Panduan TA
+Buku TA Final
+CD Program
+/admin/document-requirements/bulk
+periods-list
+summaries
+requirements
+Document requirements saved successfully
+Failed to save requirements
+Default documents loaded for all phases
+Failed to load default documents
+./components/DocumentRequirementsFeature
+./components/PhaseRequirementFeature
+./hooks/use-document-requirements
+@/lib/validations/document-type
+../hooks/use-document-types
+ALL
+Delete this document type?
+Edit Document Type
+Add Document Type
+sm:max-w-[500px]
+HKI
+Hak Kekayaan Intelektual
+All phases
+Create
+Search document types...
+No matching document types found
+No document types defined yet
+text-muted-foreground max-w-[300px] truncate
+All
+flex justify-end gap-1
+@/features/admin/document-types/types
+document-types
+/admin/document-types
+Document type created
+Failed to save
+Document type updated
+Deleted
+Failed to delete
+./components/DocumentTypesFeature
+./hooks/use-document-types
+../hooks/use-document-uploads
+./DocumentUploadsTableColumns
+./DocumentUploadsTable
+Groups with Uploads
+Students with Uploads
+text-indigo-600
+bg-indigo-100
+Phase Documents
+Expo Documents
+text-purple-600
+bg-purple-100
+TA Documents
+bg-green-100
+Total Documents
+text-orange-600
+bg-orange-100
+grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4
+flex flex-row items-center justify-between space-y-0 pb-2
+@/components/common/AvatarWithInitials
+All Sources
+phase_documents
+expo_documents
+ta_documents
+All Statuses
+SUBMITTED
+Submitted
+Pending
+bg-purple-100 text-purple-800
+bg-green-100 text-green-800
+No groups with document uploads found
+Search by group code or member name...
+bg-accent
+group cursor-pointer hover:bg-muted/50 transition-colors border-b data-[state=selected]:bg-muted
+w-12 py-3 px-2
+h-7 w-7 shrink-0
+py-3 px-2
+group_code
+phase_documents_count
+expo_documents_count
+ta_documents_count
+total_documents
+latest_upload_at
+bg-muted/30 hover:bg-muted/30 border-b
+grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3
+flex items-start gap-3 p-3 bg-background rounded-lg border shadow-sm
+text-[10px] px-1 py-0 h-4
+h-2.5 w-2.5 mr-0.5
+text-xs text-muted-foreground flex items-center gap-1 mt-1
+rounded-lg border bg-background shadow-sm overflow-hidden
+border-b bg-muted/50
+text-left py-2 px-3 font-medium text-muted-foreground
+text-right py-2 px-3 font-medium text-muted-foreground
+border-b last:border-b-0 hover:bg-muted/30
+py-2.5 px-3
+max-w-[200px]
+ml-1
+id-ID
+2-digit
+short
+numeric
+py-2.5 px-3 text-right
+Download document
+Members
+font-medium text-sm text-foreground
+Phase Docs
+Expo Docs
+bg-purple-50 text-purple-700 border-purple-200
+TA Docs
+Total
+Latest Upload
+document-uploads
+/admin/document-uploads/summary
+Document downloaded successfully
+Failed to download document
+./components/DocumentUploadsFeature
+./components/DocumentUploadsTable
+./components/DocumentUploadsTableColumns
+./hooks/use-document-uploads
+period
+../hooks/use-evaluation-summary
+SEMPRO (Seminar Proposal)
+Bimbingan SEMPRO
+SIDANG TA (Sidang Tugas Akhir)
+Bimbingan EXPO
+container mx-auto py-6
+text-center py-12
+flex items-center gap-2 mb-4
+grid grid-cols-2 md:grid-cols-4 gap-4
+grid w-full grid-cols-2 md:grid-cols-4 lg:w-auto
+text-sm font-normal text-muted-foreground ml-2
+border rounded-lg p-4
+flex justify-between items-center mb-3
+text-center py-8 text-muted-foreground border rounded-lg border-dashed
+h-12 w-12 mx-auto text-muted-foreground mb-4
+evaluation-summary
+CSV exported successfully
+Failed to export CSV
+./components/EvaluationSummaryFeature
+./hooks/use-evaluation-summary
+@/components/common/SortableTableHeader
+@/components/common/PaginationControls
+@/components/common/PeriodSelector
+@/hooks/use-client-pagination
+@/lib/validations/expo
+../hooks/use-expo-events
+30
+text-2xl font-semibold tracking-tight
+text-muted-foreground text-sm mt-0.5
+flex flex-col sm:flex-row gap-3
+relative flex-1 sm:ml-auto sm:max-w-xs
+Search by name or room...
+text-center py-16 text-muted-foreground border rounded-lg border-dashed
+h-8 w-8 mx-auto mb-3 text-muted-foreground/40
+text-[13px] text-muted-foreground/60 mt-1
+Event
+w-[120px]
+w-[160px]
+w-[110px]
+w-[200px] text-right
+text-muted-foreground/70
+text-sm text-muted-foreground whitespace-nowrap font-mono tabular-nums
+text-muted-foreground/40 mx-0.5
+text-muted-foreground/40
+text-destructive font-medium
+w-full bg-muted rounded-full h-1.5
+bg-destructive
+bg-primary/60
+text-[11px]
+Published
+flex items-center justify-end gap-1
+text-[13px] h-7 px-2
+grid grid-cols-1 lg:grid-cols-2 gap-6
+text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70
+text-muted-foreground/70 text-[12px]
+text-[12px] text-muted-foreground font-mono tabular-nums
+text-[12px] text-muted-foreground
+text-[12px] font-medium text-foreground/80
+w-full bg-muted rounded-full h-2 mt-1
+Edit Event
+Create Expo Event
+Update the event details.
+Create a new expo event for student registration.
+space-y-4 py-2
+text-sm text-destructive mt-1
+e.g. Expo Capstone Batch 1
+location_id
+Select location...
+no-locations
+time
+end_time
+capacity
+Saving...
+Update
+Delete Expo Event
+Delete
+expo-events
+/admin/expo-events
+/locations
+locations
+Event created
+Event updated
+Publication status updated
+Event deleted
+./components/ExpoFeature
+./hooks/use-expo-events
+physical
+@/hooks/use-finalization-dashboard
+@/hooks/use-supervisor-load
+@/hooks/use-finalization-actions
+@/hooks/use-manual-grouping
+@/hooks/use-keyboard-shortcuts
+@/components/finalization/finalization-execute-dialog
+@/components/finalization/manual-grouping-dialog
+@/components/finalization/bulk-action-bar
+@/components/finalization/filter-panel
+ready
+final
+others
+excel
+Opening dialog, fetching data for period:
+Data fetching completed
+Error fetching dialog data:
+data
+/admin/finalization/set-supervisor
+Supervisor berhasil ditetapkan
+Gagal menetapkan supervisor
+Terjadi kesalahan
+Supervisor 1 harus ditetapkan terlebih dahulu
+Supervisor 2 harus ditetapkan terlebih dahulu
+Kelompok berhasil ditandai sebagai Kelompok Final
+Gagal menandai kelompok final
+Periode sudah difinalisasi. Reopen period terlebih dahulu.
+Alasan cancel Kelompok Final (opsional):
+pdf
+Tidak ada grup yang dipilih
+Nama Grup
+Judul
+Jumlah Anggota
+Gagal membuka kembali periode
+Status bukan Siap Finalisasi
+Belum ada Supervisor 1
+Belum ada Supervisor 2
+Tidak ada grup yang valid untuk di-mark final
+Gagal mark final bulk
+Perlu Judul
+bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200
+Judul OK
+bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200
+Siap Final
+bg-slate-100 text-slate-800 border-slate-300
+bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200
+bg-primary-100 text-primary-500 border-primary-300
+bg-violet-100 text-violet-700 border-violet-300
+bg-gray-100 text-gray-800 border-gray-300
+Solo Seeker
+Menunggu Approval
+bg-yellow-100 text-yellow-800 border-yellow-300
+Ditutup
+bg-red-100 text-red-800 border-red-300
+Dibubarkan
+Grup aktif di fase PDC1 (Semester 5-6)
+Siap untuk Sidang Proposal
+Sidang Proposal selesai
+Grup aktif di fase PDC2 (Semester 7-8)
+Menunggu upload TA Draft
+Siap untuk EXPO
+Terdaftar di EXPO
+EXPO selesai
+PDC2 selesai
+Siap untuk Tugas Akhir individu
+Periode sudah difinalisasi. Dashboard berada dalam mode read-only.
+Periode sudah difinalisasi.
+Supervisor 1 wajib ditentukan terlebih dahulu.
+Supervisor 2 wajib ditentukan terlebih dahulu.
+Aksi finalisasi saat ini tidak tersedia.
+container mx-auto py-6 space-y-6
+border-primary/20
+mx-auto h-10 w-10 mb-3 opacity-50 animate-pulse
+text-center py-8 text-destructive
+mx-auto h-10 w-10 mb-3 opacity-70
+text-sm mt-1 opacity-70
+grid gap-3 md:grid-cols-2 lg:grid-cols-3
+cursor-pointer transition-all hover:border-primary hover:shadow-md group
+text-base group-hover:text-primary transition-colors
+bg-amber-100 text-amber-800 text-xs
+bg-green-600 text-xs
+text-xs text-amber-600 mt-1
+flex items-center gap-1 mt-2 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity
+mx-auto h-10 w-10 mb-3 opacity-50
+h-8 w-[300px]
+h-10 w-[120px]
+grid grid-cols-4 gap-4
+h-24
+h-[400px]
+flex items-center gap-2 mt-1
+text-muted-foreground mr-2
+h-8 gap-2 px-3
+bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0
+px-2 py-1.5 text-xs font-medium text-muted-foreground
+bg-green-600 text-[10px] px-1.5 py-0
+animate-spin
+Keyboard Shortcuts (?)
+border-amber-200 bg-amber-50/40
+text-2xl font-bold text-green-600
+h-4 w-4 text-orange-600
+text-2xl font-bold text-orange-600
+border-green-200 bg-green-50/30
+border-yellow-200 bg-yellow-50/30
+flex items-center gap-2 mb-3
+text-sm font-medium text-green-700
+h-5 w-5 text-yellow-600
+text-sm font-medium text-yellow-700
+grid grid-cols-3 md:grid-cols-6 gap-2
+bg-green-100 text-green-700 border border-green-200
+bg-red-100 text-red-700 border border-red-200
+text-[10px] mt-0.5
+Done
+Not set
+mt-1.5
+text-green-700 hover:text-green-800 hover:bg-green-200
+text-red-700 hover:text-red-800 hover:bg-red-200
+Edit
+Configure
+mt-4 pt-4 border-t border-dashed border-border
+flex items-center justify-between mb-3
+h-6 text-xs px-2
+text-xs font-medium text-green-700
+text-xs font-medium text-yellow-700
+bg-gray-100 text-gray-500 border border-gray-200
+border-primary-200 bg-primary-50/30
+h-5 w-5 text-primary-500
+text-sm font-medium text-primary-500
+grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3
+p-3 rounded-lg border bg-white/60 border-primary-100
+flex items-center justify-between mb-1
+text-lg font-bold text-primary-500
+grid w-full grid-cols-3
+ml-2
+bg-blue-50 border border-blue-200 rounded-md p-3 mb-4 flex items-start gap-2
+h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0
+text-sm text-blue-800
+flex flex-col gap-4 mb-4
+relative flex-1 max-w-sm
+Cari grup, mahasiswa, atau judul... (Ctrl+F)
+rounded-md border mt-4
+mx-auto h-6 w-6 animate-spin text-muted-foreground
+Aksi belum tersedia untuk grup ini.
+font-medium text-sm truncate max-w-[180px]
+w-[160px] h-8 text-xs
+Pilih SV1
+flex items-center justify-between w-full gap-2
+text-xs text-muted-foreground shrink-0
+Pilih SV2
+text-xs h-8
+flex flex-col items-end
+mt-2 p-3 bg-red-50 border border-red-200 rounded-md max-w-md
+text-sm font-semibold text-red-800 mb-2
+text-xs text-red-500 mt-0.5 ml-0
+bg-emerald-50 border border-emerald-200 rounded-md p-3 mb-4 flex items-start gap-2
+h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0
+text-sm text-emerald-800
+Cari grup, mahasiswa, atau supervisor...
+no_group
+not_ready
+bg-amber-50 border border-amber-200 rounded-md p-3 flex items-start gap-2
+h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0
+text-sm text-amber-800
+Cari mahasiswa...
+Cari grup...
+bg-blue-50 border border-blue-200 rounded-md p-3 flex items-start gap-2
+text-sm truncate max-w-[200px]
+Aksi tidak tersedia
+Pilih judul...
+px-2 py-1 bg-muted rounded text-xs font-mono
+space-y-4 py-4 max-h-[400px] overflow-y-auto
+text-sm font-medium text-emerald-700 flex items-center gap-2
+bg-emerald-50 border border-emerald-200 rounded-md p-3 space-y-1
+text-sm font-medium text-red-700 flex items-center gap-2
+bg-red-50 border border-red-200 rounded-md p-3 space-y-1
+text-sm text-red-800 flex justify-between
+bg-amber-50 border border-amber-200 rounded-md p-3
+cancel-reason
+w-full min-h-[80px] px-3 py-2 border rounded-md text-sm
+Masukkan alasan cancel...
+./components/FinalizationFeature
+@/features/admin/grade-configuration/hooks/use-grade-configuration
+flex flex-col gap-4 md:flex-row md:justify-between md:items-start
+flex items-center gap-2 pt-2
+flex items-center justify-between p-3 bg-muted rounded-lg
+sempro-weight
+bimbingan-sempro-weight
+bimbingan-ta-weight
+sidang-ta-weight
+text-xs italic
+bg-muted p-4 rounded-lg
+font-medium mb-2
+@/features/admin/grade-configuration/types
+grade-configuration
+Grade configuration saved successfully
+Failed to save grade configuration
+Reset to defaults
+Failed to reset configuration
+./components/GradeConfigurationFeature
+./hooks/use-grade-configuration
+../hooks/use-groups
+./GroupTableColumns
+./GroupTable
+leader
+list-disc ml-5 mt-2 text-sm text-muted-foreground
+Deleting...
+Delete Group
+../lib/utils
+title
+Group Table
+No groups found
+w-10 py-3 px-2
+text-muted-foreground text-sm py-3 px-2
+supervisors
+text-right py-3 px-2
+flex items-center gap-2 flex-wrap
+font-medium text-sm truncate
+text-[10px] h-5 px-1.5
+h-3 w-3 mr-1 text-yellow-500
+text-xs text-muted-foreground truncate flex items-center gap-1 mt-0.5
+text-[10px] text-muted-foreground mt-1
+Group Leader
+Project Title
+text-sm font-medium line-clamp-2
+text-[10px] text-muted-foreground uppercase mt-0.5
+Supervisors
+Finalization locked
+text-destructive focus:text-destructive
+Failed to fetch groups data
+Failed to load groups
+Group deleted successfully
+Failed to delete group
+./components/GroupsFeature
+./components/GroupTable
+./components/GroupTableColumns
+./hooks/use-groups
+./lib/utils
+@/lib/validations/location
+@/features/admin/locations/types
+Edit Location
+Add Location
+Update the location details below.
+Create a new location for scheduling events and sessions.
+mb-1 ml-0.5 text-red-500
+e.g., Lab IF-101, Zoom Meeting Room
+offline
+e.g., 30
+Additional details about this location...
+mr-2 animate-spin
+Create Location
+@/features/admin/locations/hooks/use-locations
+@/features/admin/locations/components/LocationTable
+@/features/admin/locations/components/LocationFormDialog
+text-xl font-bold text-gray-900
+cursor-pointer gap-2
+Hapus Lokasi
+@/features/admin/locations/components/LocationTableColumns
+Location Table
+Cari lokasi...
+Tipe
+Offline
+Tidak ada lokasi ditemukan
+Coba ubah filter atau buat lokasi baru
+-ml-3 h-auto cursor-pointer px-3 py-1.5 font-semibold text-gray-700 hover:bg-transparent
+pl-2
+mt-0.5 ml-6 text-xs text-gray-500
+/locations/all
+Memperbarui lokasi...
+Menyimpan lokasi...
+Lokasi berhasil diperbarui
+Lokasi berhasil dibuat
+Gagal menyimpan lokasi
+Menghapus lokasi...
+Lokasi berhasil dihapus
+Gagal menghapus lokasi
+./components/LocationsFeature
+./components/LocationFormDialog
+./components/LocationTable
+./components/LocationTableColumns
+./hooks/use-locations
+@/features/admin/peer-review-dashboard/hooks/use-peer-review-dashboard
+TA_ACTIVE
+TA_DONE
+TA_BLOCKED
+grid gap-4 md:grid-cols-4
+text-2xl font-bold text-yellow-600
+text-2xl font-bold text-gray-500
+py-10 text-center text-muted-foreground
+h-12 w-12 mx-auto mb-4 opacity-50
+flex items-center gap-1 text-green-600
+flex items-center gap-1 text-yellow-600
+@/features/admin/peer-review-dashboard/types
+peer-review-dashboard
+/admin/peer-review-dashboard/groups
+Reminder sent successfully
+Failed to send reminder
+./components/PeerReviewDashboardFeature
+./hooks/use-peer-review-dashboard
+@/features/admin/periods/hooks/use-periods
+@/features/admin/periods/components/PeriodTable
+@/features/admin/periods/types
+/admin/periods/new
+Hapus Periode
+@/features/admin/periods/components/PeriodTableColumns
+Period Table
+Cari periode...
+Tidak ada periode ditemukan
+Coba ubah filter atau buat periode baru
+grid grid-cols-1 gap-6 px-4 py-4 md:grid-cols-2 lg:grid-cols-3
+text-xs font-semibold tracking-wider text-gray-500 uppercase
+space-y-2 text-sm
+expander
+mr-1 h-4 w-4
+includesString
+duration
+group_config
+text-sm text-gray-400
+Nonaktifkan
+Aktifkan
+Menghapus...
+wizard
+basic
+Informasi Dasar
+Informasi dasar periode
+evaluation
+Setup Evaluasi
+Konfigurasi penilaian
+phases
+Tanggal Fase
+Jadwal fase-fase
+Konfigurasi Group
+Pengaturan group
+review
+Konfirmasi data
+evaluation-setup
+Silakan lengkapi setup evaluasi terlebih dahulu
+Silakan klik "Lanjut" untuk melihat review
+Memperbarui periode...
+Menyimpan periode...
+Periode berhasil diperbarui
+Periode berhasil dibuat
+Gagal menyimpan periode
+Menghapus periode...
+Periode berhasil dihapus
+Gagal menghapus periode
+Menonaktifkan periode...
+Mengaktifkan periode...
+Periode dinonaktifkan
+Periode diaktifkan
+Gagal mengubah status periode
+./components/PeriodsFeature
+./components/PeriodTable
+./components/PeriodTableColumns
+./hooks/use-periods
+./hooks/use-period-wizard
+bg-emerald-100 text-emerald-800 hover:bg-emerald-100 text-xs
+bg-amber-100 text-amber-800 hover:bg-amber-100 text-xs
+group_name
+./AssessmentColumns
+Assessment Scores
+No students found
+No students match your search criteria.
+Search name or NIM...
+group_title
+student_nim
+pdc1_score
+pdc1_complete
+PDC1 Status
+pdc2_score
+pdc2_complete
+PDC2 Status
+ta_score
+ta_complete
+TA Status
+./FinalGradeColumns
+Final Grades
+No grades match your filters.
+expand
+text-sm text-muted-foreground mt-0.5
+No title
+members_count
+text-sm text-muted-foreground inline-flex items-center gap-1
+supervisor1
+text-muted-foreground italic text-xs
+supervisor2
+nim
+font-mono text-sm
+Name
+email
+./GroupColumns
+Group Details
+No groups match your filters.
+Search group, title, or student...
+border-b hover:bg-muted/50 transition-colors
+py-3 px-2 text-center
+bg-muted/30 border-b
+border rounded-lg overflow-hidden bg-background
+No members
+border-0
+created_at
+reviewer
+Reviewer
+reviewee
+Reviewee
+indicator
+Indicator
+raw_score
+Raw (1-4)
+score
+Score (0-100)
+comment
+Comment
+text-sm text-muted-foreground max-w-xs truncate block
+./PeerReviewColumns
+Raw Score
+Peer Reviews
+No peer reviews found
+No peer reviews match your search criteria.
+Search reviewer or reviewee...
+flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer
+Pembimbing 1
+Pembimbing 2
+Penguji 1
+Penguji 2
+text-sm font-medium tabular-nums
+text-center space-y-0.5
+inline-flex flex-col items-center
+text-[10px] text-muted-foreground truncate max-w-[100px]
+block hover:bg-muted/50 rounded-md transition-colors
+text-center space-y-1
+block hover:bg-muted/50 rounded-md transition-colors py-1
+EXAMINER_1
+EXAMINER_2
+font-semibold text-xs uppercase tracking-wider
+text-[10px] text-muted-foreground font-normal
+text-center text-[10px] leading-tight
+text-muted-foreground font-normal
+./PhaseEvaluationColumns
+reports
+/admin/reports/summary
+phase-evaluations
+/admin/reports/phase-evaluations
+/admin/reports/final-grades
+/admin/reports/peer-reviews
+/admin/reports/groups
+Period is required
+./components/AssessmentTable
+./components/PhaseEvaluationTable
+./components/FinalGradeTable
+./components/PeerReviewTable
+./components/AssessmentColumns
+./components/PhaseEvaluationColumns
+./components/FinalGradeColumns
+./components/PeerReviewColumns
+./components/GroupColumns
+./hooks/use-reports
+@/components/schedule/ScheduleCalendar
+@/components/schedule/ViewToggle
+@/components/schedule/PeriodFilter
+@/components/schedule/ScheduleExport
+@/components/schedule/ScheduleTable
+@/components/schedule/ScheduleDetailModal
+../hooks/use-schedules
+flex flex-col gap-4
+flex flex-col md:flex-row justify-between items-start md:items-center gap-4 p-4 bg-muted/50 rounded-lg
+flex flex-wrap items-center gap-4
+Use table view for quick actions
+/admin/sempro/schedules
+/admin/expo/schedules
+/admin/ta-defense-schedules
+/admin/schedules
+ta_
+Schedule approved!
+Approval failed.
+Schedule request rejected.
+Rejection failed.
+./components/ScheduleFeature
+./hooks/use-schedules
+@/lib/validations/sempro
+@/types/schedule
+../hooks/use-sempro
+Completed
+Cancelled
+group_id
+examiner_1_id
+w-55
+ml-2 text-[11px] text-muted-foreground/60
+Search by title, examiner, room...
+No groups are ready for SEMPRO in this period.
+w-35 text-right
+hover:bg-muted/40
+hover:bg-muted/50
+flex items-center gap-2 min-w-0
+text-muted-foreground/60
+text-[11px] text-muted-foreground/40 tabular-nums shrink-0
+text-sm text-muted-foreground leading-tight
+text-muted-foreground/50
+text-[12px]
+mr-1 h-3.5 w-3.5
+h-7 text-[13px]
+bg-primary/5
+text-[13px] text-muted-foreground font-mono tabular-nums
+text-[12px] text-muted-foreground/40
+sm:max-w-120
+Select a period...
+px-3 py-6 text-sm text-muted-foreground text-center
+Select a group...
+Select a period first...
+No groups ready for SEMPRO in this period
+Select a period to see available groups
+grid grid-cols-3 gap-3
+text-[13px]
+Select a room...
+Select...
+examiner_2_id
+Create Schedule
+sm:max-w-105
+e.g. Time conflict, wrong examiner...
+/admin/users?role=dosen
+?per_page=100
+dosens
+/admin/sempro/schedule
+Creating schedule...
+SEMPRO schedule created
+Scheduling failed
+Approving schedule...
+Schedule approved
+Approval failed
+Rejecting schedule...
+Schedule request rejected
+Rejection failed
+Cancelling schedule...
+Schedule deleted
+Failed to delete schedule
+Updating schedule...
+Schedule updated
+Update failed
+./components/SemproFeature
+@/components/PlaceholderPage
+./components/SettingsFeature
+../hooks/use-ta-defense
+./TaDefenseTable
+./TaDefenseFormDialog
+@/lib/validations/ta-defense
+Filter by status
+Search student, NIM, group...
+Create a new schedule to get started.
+Multiple Students
+student_ids
+Examiner 1 and Examiner 2 cannot be the same
+Examiner 1 cannot be a supervisor of this group
+Examiner 2 cannot be a supervisor of this group
+Failed to save schedule
+supervisor
+sm:max-w-150
+border-destructive
+Select group
+Select period first
+text-muted-foreground text-xs
+border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto
+flex items-center space-x-3
+Already selected students cannot be removed
+text-xs text-muted-foreground font-mono
+text-[10px] h-4 px-1.5 bg-secondary text-secondary-foreground rounded
+text-[10px] h-4 px-1.5 bg-primary text-primary-foreground rounded
+text-[10px] h-4 px-1.5 border rounded text-muted-foreground
+Not ready for sidang TA
+Select examiner
+Additional notes...
+Update Schedule
+Scheduled
+w-30
+w-45
+w-20 text-right
+text-xs text-muted-foreground ml-1
+text-[13px] h-7
+text-[13px] h-7 text-destructive hover:text-destructive
+border-b border-border/50 last:border-0 pb-1.5 last:pb-0
+users
+eligible-students
+/admin/ta-defense-schedules/eligible-students
+TA Defense schedule created
+Failed to create schedule
+TA Defense schedule updated
+Failed to update schedule
+Schedule cancelled
+Failed to cancel schedule
+./components/TaDefenseFeature
+./components/TaDefenseFormDialog
+./components/TaDefenseTable
+./hooks/use-ta-defense
+@/lib/validations/user
+roles
+Edit User
+Add New User
+Update user details.
+Create a new user account.
+Enter full name
+Enter email address
+password
+(Leave blank to keep current)
+Enter new password (optional)
+Enter password
+flex flex-wrap gap-4 mt-2
+flex items-center space-x-2
+capitalize cursor-pointer
+Enter NIM (min 8 characters)
+Creating...
+Create User
+Direktori Pengguna SSO
+User Table
+No users found
+my-1 h-px bg-border
+inactive
+Nama User
+Access Role
+flex items-center gap-1 text-xs px-2 py-0.5 capitalize
+Tanggal Daftar
+text-orange-600 focus:text-orange-600 focus:bg-orange-50
+Creating user...
+User created successfully
+Failed to create user
+Updating user...
+User updated successfully
+Failed to update user
+Are you sure you want to delete this user?
+Deleting user...
+User deleted
+Failed to delete user
+Deleting users...
+Some users could not be deleted
+Mahasiswa belum terdaftar pada periode manapun
+Aksi ini akan menghapus registrasi periode, menghapus keanggotaan grup di periode tersebut, dan membatalkan invitation/join request yang masih pending.
+Mengeluarkan mahasiswa dari periode...
+Mahasiswa berhasil dikeluarkan dari periode
+Gagal mengeluarkan mahasiswa dari periode
+./components/UsersFeature
+./components/UserFormDialog
+./components/UserTable
+./components/UserTableColumns
+./hooks/use-users
+../hooks/use-bids
+Periode sudah difinalisasi. Rekomendasi bidding tidak dapat diubah.
+Bidding sudah dikunci oleh sistem/admin.
+Aksi bidding saat ini tidak tersedia.
+Review bids on your titles. Your recommendation is advisory for admin.
+h-4 w-4 animate-spin text-muted-foreground
+Search titles, students, or groups...
+rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800
+No Bids Yet
+Bids on your titles will appear here.
+mb-3 p-3 bg-green-50 border border-green-200 rounded-lg text-sm
+text-xs text-green-600 mt-1
+TITLE_ALREADY_HAS_ACCEPTED_BID
+bg-green-50 border-green-300
+bg-muted/30 border-muted
+bg-muted/50 border-muted
+DITERIMA
+DITOLAK
+text-orange-600 border-orange-300 hover:bg-orange-50
+text-green-600 border-green-300 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed
+Anda sudah menerima kelompok lain untuk judul ini
+text-red-600 border-red-300 hover:bg-red-50
+bids
+Failed to submit recommendation
+./components/BidsFeature
+./hooks/use-bids
+../hooks/use-bimbingan
+content-type
+application/pdf
+Failed to view document
+flex flex-wrap items-center gap-2
+Filter by Group
+Search by student, title, or phase...
+text-center py-12 text-muted-foreground border rounded-lg border-dashed
+overflow-hidden
+bg-muted/40 border-b px-6 py-4
+text-xl font-bold tracking-tight text-foreground
+p-4 sm:p-6 flex flex-col sm:flex-row gap-4 sm:items-center justify-between hover:bg-muted/20 transition-colors
+space-y-1.5 flex-1
+h-4 w-4 text-primary
+font-semibold text-base
+GENERAL
+text-xs font-mono bg-muted px-1.5 py-0.5 rounded text-muted-foreground
+font-medium text-foreground
+mt-3 text-sm bg-orange-500/10 text-orange-700 dark:text-orange-400 p-3 rounded-md border border-orange-500/20 max-w-3xl
+font-semibold block mb-1
+whitespace-pre-wrap
+text-orange-600 hover:text-orange-800 underline ml-1 font-medium
+flex items-center gap-2 shrink-0
+w-full sm:w-auto
+Enter your feedback here...
+border-red-500 focus-visible:ring-red-500
+Save Review
+/dosen/documents
+dosen-bimbingan
+Document reviewed successfully
+Failed to submit review
+./components/BimbinganFeature
+./hooks/use-bimbingan
+DRAFT
+@/components/common/DashboardHeader
+../hooks/use-dosen-dashboard
+Welcome back
+Here's an overview of your mentoring dashboard.
+Pending Proposals
+Available Periods
+/dosen/dashboard
+supervised
+eval-count
+./components/DosenDashboardFeature
+./hooks/use-dosen-dashboard
+../hooks/use-evaluation
+text-lg mt-2 leading-tight
+--:--
+pt-2 border-t bg-green-50 rounded-lg p-3
+text-sm font-medium text-green-800
+font-bold text-2xl text-green-600
+text-xs text-green-600 text-right
+text-xs text-muted-foreground mt-2
+text-xs text-muted-foreground mt-2 italic border-t border-green-200 pt-2
+grid w-full max-w-md grid-cols-2
+flex-1 min-w-[200px]
+w-[300px]
+Cari mahasiswa atau judul...
+text-lg font-semibold mb-4 flex items-center text-green-600
+w-5 h-5 mr-2
+text-lg font-semibold mb-4 text-gray-500
+dosen-evaluations
+./components/EvaluationFeature
+./hooks/use-evaluation
+@/components/common/ScoringRubric
+Failed to fetch evaluation context:
+Gagal memuat detail penilaian
+0.00
+/dosen/assessment-scores
+Failed to submit evaluation:
+Penilaian Presentasi
+Seminar
+space-y-6 container py-6
+h-10 w-1/4
+h-[400px] md:col-span-1
+h-[600px] md:col-span-2
+(Per Mahasiswa)
+bg-green-500/10 text-green-700 border-green-500/20 px-3 py-1 text-sm
+Sudah Dinilai
+Belum Dinilai
+Informasi Mahasiswa
+Informasi Kelompok
+Anggota
+Tanggal belum ditentukan
+Rubrik Penilaian
+Menyimpan...
+Simpan Penilaian
+./components/EvaluationDetailFeature
+@/components/common/StatusBadge
+../hooks/use-requests
+Guidance Requests
+Review and approve student groups bidding for your titles.
+Search by title or student...
+No requests match your search
+No pending requests
+Title
+max-w-[250px]
+line-clamp-2 font-medium
+inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium
+ ★
+text-destructive hover:text-destructive
+approve
+requests
+/dosen/groups/pending
+./components/RequestsFeature
+./hooks/use-requests
+@/lib/validations/schedule
+../hooks/use-dosen-schedule
+text-rose-600
+bg-rose-50
+mode
+Edit BIMBINGAN Schedule
+New BIMBINGAN Schedule
+Update the schedule details.
+Set up a new bimbingan session for your group.
+Select location
+https://zoom.us/j/...
+Additional information...
+Save Schedule
+sm:max-w-[520px]
+py-4 space-y-4
+font-medium capitalize
+text-sm text-muted-foreground mb-2
+border-t pt-4 flex gap-2
+sm:max-w-[400px]
+dosen-schedule-locations
+/schedules
+./components/DosenScheduleFeature
+./hooks/use-dosen-schedule
+../hooks/use-supervised-groups
+Monitor the progress of your supervised groups.
+You are not currently supervising any groups.
+Unknown Period
+text-sm text-muted-foreground line-clamp-2
+No title set
+flex items-center gap-1 text-sm font-medium mb-1
+p-3 bg-muted/50 rounded-lg text-sm
+font-medium text-xs text-muted-foreground uppercase mb-1
+text-[10px] px-1.5 py-0
+flex justify-between text-xs font-medium mb-1.5
+w-full bg-muted rounded-full h-2
+supervised-groups
+./components/SupervisedGroupsFeature
+./hooks/use-supervised-groups
+../hooks/use-ta-evaluation
+container mx-auto py-6 max-w-4xl
+h-8 w-64 mb-4
+h-32 w-full
+flex items-center text-sm
+mr-2 h-4 w-4 text-muted-foreground
+text-muted-foreground ml-2
+Room not set
+Assessment Components
+flex items-center justify-between py-6
+text-green-600 flex items-center
+flex items-center
+Failed to load evaluation context
+PASS
+Evaluation completed
+Evaluation submitted successfully
+Failed to submit evaluation
+./components/TaEvaluationFeature
+./hooks/use-ta-evaluation
+../hooks/use-ta-review
+Locked
+Revised
+Ready
+Registered
+Defended
+TA Review
+Review student TA drafts and mark defenses.
+flex items-center gap-4 bg-muted/30 p-4 rounded-lg border
+w-[200px] h-9
+Search by student or title...
+No matching submissions found
+No TA Submissions
+TA submissions from your supervised groups will appear here.
+TA_DEFENDED
+text-sm mt-2
+border-t pt-3 gap-2
+TA_REVISED
+TA_REGISTERED
+Write your feedback here...
+text-amber-600 border-amber-300
+REVISE
+ta-submissions
+Review failed
+TA marked as defended.
+Failed to mark as defended
+Mark this TA as defended? This action is final.
+./components/TaReviewFeature
+./hooks/use-ta-review
+../hooks/use-title-approvals
+Periode sudah difinalisasi. Proposal tidak dapat diproses.
+Aksi persetujuan proposal tidak tersedia.
+Review and approve student-proposed capstone titles.
+No matching proposals found
+No pending proposals
+Student proposals will appear here when submitted.
+PROPOSAL_ALREADY_PROCESSED
+mx-6 mt-6 rounded-md border border-muted bg-muted/30 px-3 py-2 text-xs text-muted-foreground
+Pending Review
+Pre-Approved
+text-xs text-muted-foreground uppercase font-semibold mb-1
+text-xs text-muted-foreground uppercase font-semibold mb-2
+flex items-center gap-2 text-sm p-2 bg-muted/50 rounded-md
+text-xs text-muted-foreground border rounded px-1.5 py-0.5
+flex justify-end gap-2 border-t pt-4
+UNDER_REVIEW
+Re-Approve
+Pre-Approve
+Approve
+rejection_reason
+Explain why this proposal is being rejected...
+mr-2
+title-approvals
+Proposal approved! Group has been finalized.
+Failed to approve proposal
+Proposal rejected.
+Failed to reject proposal
+./components/TitleApprovalsFeature
+./hooks/use-title-approvals
+../hooks/use-title-detail
+Memuat detail judul...
+Judul tidak ditemukan
+Judul yang Anda cari tidak tersedia atau telah dihapus.
+open
+grid gap-6 md:grid-cols-2
+text-sm whitespace-pre-wrap
+Not specified
+ml-2 text-sm font-medium
+flex flex-wrap gap-1 mt-1
+flex items-center justify-between mb-2
+ (Leader)
+titles
+Failed to refresh title details
+./components/TitleDetailFeature
+./hooks/use-title-detail
+@/lib/validations/title
+../hooks/use-titles
+quota
+active_groups_count
+Please select a period first
+sm:max-w-[550px] max-h-[90vh] overflow-y-auto
+Edit Title
+Add New Title
+Update your project title details.
+Offer a new title for students to bid on.
+problem_statement
+What problem does this project solve?
+scope
+Define the boundaries and scope of this project
+specializations
+pre_assigned_group_id
+Pilih kelompok...
+no-groups-available
+ (Tidak tersedia)
+text-xs text-muted-foreground space-y-1
+Update Title
+Create Title
+Search titles...
+flex items-center gap-1.5 cursor-pointer
+text-center py-12 text-muted-foreground
+No titles found. Create one to get started.
+No titles match your search/filter.
+Quota
+font-medium max-w-[300px]
+line-clamp-2
+View title history
+Withdraw approval from this title
+p-3 bg-slate-50 rounded-lg
+text-xs text-gray-600 mt-1
+withdraw-reason
+Why are you withdrawing approval? (leave blank if not applicable)
+flex justify-center items-center h-32
+text-sm font-semibold mb-3 flex items-center gap-2
+w-2 h-2 bg-amber-500 rounded-full
+border-l-2 border-amber-500 pl-4 py-2
+text-xs text-gray-600
+text-xs text-muted-foreground whitespace-nowrap
+w-2 h-2 bg-red-500 rounded-full
+border-l-2 border-red-500 pl-4 py-2
+dosen-periods
+dosen-available-groups
+/dosen/groups
+Title created successfully
+Failed to create title
+Title updated successfully
+Failed to update title
+Title deleted successfully
+Failed to delete title
+Approval withdrawn successfully
+Failed to withdraw approval
+Are you sure you want to delete this title?
+Failed to fetch history
+Failed to fetch title history
+./components/TitlesFeature
+./hooks/use-titles
+@/types/title
+closed
+@/components/ui/field-label
+@/components/ui/field-error
+@/components/ui/field-content
+@/lib/validations/bidding
+proposed_supervisor_1_id
+/mahasiswa/bids
+Failed to fetch bids
+/mahasiswa/my-proposal
+Failed to fetch proposals
+Failed to fetch titles
+/mahasiswa/lecturers
+Failed to fetch lecturers
+Anda harus memiliki kelompok terlebih dahulu.
+Hanya ketua kelompok yang dapat mengelola bidding.
+Kelompok solo tidak dapat bidding judul dosen.
+Jumlah anggota kelompok belum memenuhi minimal untuk bidding.
+Status kelompok saat ini tidak memungkinkan bidding.
+Kelompok Anda memiliki proposal aktif. Bidding dinonaktifkan.
+Periode sudah ditutup oleh admin.
+Bidding sudah dikunci.
+Jendela waktu bidding belum dibuka atau sudah berakhir.
+Maksimal 3 slot judul (bidding + proposal) sudah tercapai.
+up
+down
+/mahasiswa/bids/reorder
+Urutan prioritas berhasil disimpan
+Gagal menyimpan urutan
+Bid submitted successfully!
+Failed to submit bid
+root
+manual
+Are you sure you want to delete this bid?
+Bid deleted.
+Failed to delete bid
+h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg
+Bidding tidak tersedia untuk kondisi kelompok saat ini.
+underline ml-1
+text-muted-foreground mb-4 max-w-md mx-auto
+text-lg font-semibold mb-3 flex items-center gap-2
+relative border-l-4 border-l-blue-500
+border-green-300 bg-green-50/30
+flex items-center gap-4 text-sm text-muted-foreground
+border-t pt-3
+flex justify-between w-full items-center
+title_id
+Select a title...
+flex items-center gap-2 px-3 py-2 bg-muted rounded-md border
+bg-background
+font-semibold text-lg
+Select supervisor...
+proposed_supervisor_2_id
+Select supervisor (optional)...
+Submitting...
+Submit Bid
+./components/BiddingFeature
+@/components/dashboard/StatusGroup
+@/components/dashboard/GroupProjectCard
+@/components/dashboard/MiniScheduleCalendar
+@/components/dashboard/DocumentUploadTable
+@/components/dashboard/QuickAccessCard
+../hooks/use-mahasiswa-dashboard
+Gagal memuat data dashboard
+Silakan coba lagi atau muat ulang halaman.
+flex flex-col space-y-6
+Halo
+mb-0
+Anda belum memiliki grup yang disetujui
+cursor-pointer hover:bg-primary-50
+bg-white shadow-sm
+lg:col-span-1
+/mahasiswa/all-schedules
+/mahasiswa/workflow
+Anda telah terdaftar otomatis berdasarkan grup yang sudah ada.
+./components/MahasiswaDashboardFeature
+./hooks/use-mahasiswa-dashboard
+Failed to fetch data
+SEMPRO belum dijadwalkan. Mohon tunggu admin menjadwalkan SEMPRO terlebih dahulu.
+Please select a file
+document_type
+Content-Type
+multipart/form-data
+Document uploaded successfully
+Failed to download document:
+General
+version
+uploaded_by
+Phase
+Document Type
+Version
+w-16
+w-24
+Uploaded By
+Uploaded At
+feedback
+Feedback
+text-sm text-muted-foreground max-w-[200px] block truncate
+border-dashed
+flex flex-col items-center justify-center py-16 text-center
+w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4
+h-8 w-8 text-muted-foreground
+text-xl font-semibold mb-2
+text-muted-foreground max-w-md mb-6
+You need to select a title and form a group before you can upload documents.
+Your group is pending approval from your lecturer. Documents will be available once approved.
+Your group needs to be approved before you can access documents.
+border-blue-500 bg-blue-50
+h-4 w-4 text-blue-600
+text-blue-800
+ & 
+border-orange-500 bg-orange-50
+text-orange-800
+text-orange-700
+mt-2 space-y-2
+w-2 h-2 rounded-full bg-orange-500
+border-green-500 bg-green-50
+w-2 h-2 rounded-full bg-amber-500
+text-sm text-muted-foreground ml-2
+mt-3 first:mt-2
+mt-1 space-y-2
+p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-center
+text-xl font-bold text-green-600
+grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3
+flex flex-col items-center gap-2 cursor-pointer
+flex flex-col items-center gap-1 w-full
+flex flex-col items-center gap-0.5 w-full
+text-blue-500
+Missing
+h-6 text-[10px] px-2
+Re-upload
+text-[10px] text-amber-600
+text-[10px] text-gray-400
+No documents
+text-[10px] h-6 px-2
+text-muted-foreground capitalize
+Submitted Documents
+No documents uploaded yet.
+Start by uploading your PDC 1 document above.
+Search documents...
+sm:max-w-[425px]
+.pdf,.doc,.docx
+Uploading...
+./components/DocumentsFeature
+TA_INDIVIDUAL_READY
+Ready for TA Individual
+/mahasiswa/expo-events
+Failed to fetch expo events
+Register your group for this expo event?
+Successfully registered for expo!
+Registration failed
+Withdraw your group from this expo event?
+Successfully withdrawn from expo.
+Withdrawal failed
+border-primary
+opacity-60
+w-full mt-2
+mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent
+text-sm text-green-600 font-medium text-center
+Undurkan dari Expo
+Failed to fetch expo detail
+Gagal memuat detail expo
+Self-evaluation berhasil disimpan
+Gagal menyimpan
+application/msword
+application/vnd.openxmlformats-officedocument.wordprocessingml.document
+application/vnd.ms-powerpoint
+application/vnd.openxmlformats-officedocument.presentationml.presentation
+Format file tidak didukung. Gunakan PDF, DOC, DOCX, PPT, atau PPTX.
+Ukuran file maksimal 10MB
+Dokumen berhasil diupload
+Gagal upload
+container py-6 space-y-6 animate-in fade-in duration-500
+border-primary/20 shadow-md
+flex items-center justify-between text-xs
+text-green-600 font-semibold
+Belum
+grid grid-cols-1 lg:grid-cols-12 gap-6
+flex items-center gap-3 bg-muted/30 p-3 rounded-lg border
+h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs shrink-0
+text-sm font-semibold truncate
+flex gap-1 shrink-0
+text-xs bg-green-100 text-green-700
+text-xs bg-blue-100 text-blue-700
+p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800
+h-5 w-5 text-green-600 shrink-0
+min-w-0
+p-4 border-2 border-dashed rounded-lg text-center hover:border-primary/50 transition-colors
+h-8 w-8 mx-auto mb-2 text-muted-foreground
+hidden
+Anda sudah mengirim nilai. Nilai yang sudah terkirim tidak dapat diubah.
+text-3xl font-black text-primary
+./components/ExpoDetailFeature
+Penguji
+Rekan
+A
+C
+D
+E
+text-sky-700
+bg-sky-100
+bg-orange-500
+group flex items-center gap-4 rounded-lg px-4 py-3 transition-colors hover:bg-muted/30
+flex items-baseline justify-between gap-3
+flex items-baseline gap-2 min-w-0
+truncate text-sm font-semibold
+hidden sm:inline truncate text-xs text-muted-foreground
+mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted
+space-y-10
+flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-20 text-center
+mb-5 h-12 w-12 text-muted-foreground/40
+mt-1.5 max-w-sm text-sm text-muted-foreground
+/mahasiswa/my-grades
+Gagal memuat nilai
+Seminar & Bimbingan
+Expo, Milestone & Peer Review
+Bimbingan & Sidang TA
+rounded-lg border px-4 py-3
+Dinilai
+Menunggu
+mt-3 space-y-1.5
+flex items-center justify-between rounded-md bg-muted/40 px-3 py-2
+h-3.5 w-3.5 shrink-0 text-muted-foreground
+truncate text-sm
+text-[10px] h-5 px-1.5 shrink-0
+hidden sm:inline truncate text-[11px] text-muted-foreground
+mt-2 text-xs text-muted-foreground italic
+mt-1.5 text-sm text-muted-foreground
+mt-5
+text-[11px] text-muted-foreground
+./components/GradesFeature
+@/lib/validations/group
+not registered
+belum terdaftar
+Gagal memuat data kelompok. Silakan coba lagi.
+/mahasiswa/join-requests
+title_approval_withdrawn
+Browse Titles
+Request accepted! Student has been added to your group.
+Failed to accept request
+Request rejected.
+Failed to reject request
+Anda belum terdaftar pada periode mana pun. Silakan daftar terlebih dahulu.
+Group created! You are the group leader.
+group-created
+Failed to create group
+/mahasiswa/group/store-solo
+Solo Group created! You can now propose an idea to find members.
+Failed to register as solo seeker
+Are you sure you want to delete this group? All members will be removed and you can join another group.
+Group deleted successfully.
+Are you sure you want to leave this group?
+/mahasiswa/group/leave
+Successfully left the group.
+Failed to leave group
+/mahasiswa/group/add-member
+Member added successfully!
+Failed to add member
+Member removed
+Failed to remove member
+/mahasiswa/group/mark-ready-for-finalization
+Kelompok berhasil ditandai siap untuk finalisasi!
+Gagal menandai siap finalisasi
+/mahasiswa/group/cancel-ready-for-finalization
+Status siap finalisasi dibatalkan.
+Gagal membatalkan status
+text-muted-foreground mb-6 max-w-md mx-auto
+Anda perlu mendaftar pada suatu periode terlebih dahulu untuk membuat kelompok.
+Pilih cara Anda ingin memulai perjalanan capstone.
+max-w-md mx-auto
+flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto
+text-sm text-muted-foreground mt-4
+underline font-medium text-primary hover:text-primary/80
+SOLO SEEKER
+READY FOR BIDDING
+READY FOR FINALIZATION
+h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent
+p-4 bg-muted rounded-lg
+h-5 w-5 mt-0.5 text-primary
+p-4 bg-muted/50 rounded-lg border border-dashed
+flex items-center gap-3 text-muted-foreground
+underline text-primary
+flex items-center justify-between mb-4
+flex items-center justify-between p-3 border rounded-lg
+h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center
+h-4 w-4 text-destructive
+border-t pt-6
+font-medium mb-4
+p-4 border rounded-lg bg-muted/30
+text-sm mt-2 italic
+Reject
+Accept
+flex flex-col items-start gap-4 border-t pt-6
+student@example.com
+h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent mr-2
+./components/GroupFeature
+/mahasiswa/peer-review/my-status
+Peer review fetch error:
+not in any group
+Failed to load peer review data: 
+You have already submitted your peer reviews.
+Peer review submitted successfully!
+Peer review submit error:
+Failed to submit peer review: 
+0.0
+text-center py-16 border rounded-lg border-dashed text-muted-foreground
+text-center py-16 border rounded-lg border-dashed text-muted-foreground bg-white
+text-xl font-bold mb-2 text-foreground
+mt-2 text-sm
+space-y-8 animate-in fade-in duration-500
+ml-2 border-green-300 text-green-700 bg-green-50
+Peer review configuration pending.
+text-center py-16 border rounded-lg border-dashed text-muted-foreground bg-muted/20
+h-12 w-12 mx-auto mb-4 opacity-30
+text-lg text-foreground font-semibold mb-2
+ml-auto text-xs shrink-0
+grid grid-cols-2 gap-2 text-xs pl-2
+flex items-start gap-2 text-sm text-green-700 bg-green-50 p-3 rounded-lg
+h-4 w-4 shrink-0 mt-0.5
+Submitted Peer Review
+Your submitted scores (read-only)
+Enter scores (1-4) for each member and indicator
+px-4 py-3 text-left font-semibold
+px-4 py-3 text-center font-semibold
+flex flex-col items-center
+hover:bg-muted/20
+h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-[10px]
+text-[10px] px-1 py-0
+font-bold text-primary text-lg
+text-xs text-muted-foreground mt-3 text-center
+grid grid-cols-1 gap-4 mt-4
+space-y-2 p-3 rounded-lg bg-muted/20 border border-border/50
+text-xs flex items-center gap-2 flex-1
+text-[10px] px-1 py-0 shrink-0
+w-20 h-8 text-center text-sm
+2
+3
+4
+Feedback (optional)...
+flex items-center gap-2 text-muted-foreground
+flex gap-4 flex-wrap
+w-4 h-4 mr-2 animate-spin rounded-full border-2 border-current border-t-transparent
+flex items-center gap-2 text-green-700 bg-green-50 px-4 py-2 rounded-lg
+h-5 w-5 text-amber-500
+space-y-6 py-4
+px-4 py-2 text-left font-semibold
+px-4 py-2 text-center font-semibold
+block text-xs font-normal text-muted-foreground
+px-4 py-3 font-medium
+bg-primary/5 p-4 rounded-lg text-center
+flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800
+h-5 w-5 shrink-0 mt-0.5
+bg-primary hover:bg-primary/90
+border-green-200 bg-green-50 shadow-lg
+flex items-center justify-between gap-4
+h-12 w-12 rounded-full bg-green-100 flex items-center justify-center
+h-6 w-6 text-green-600
+font-bold text-green-800
+Blocked
+ — 
+You can now access the TA phase.
+TA access will be granted shortly.
+border-green-600 text-green-700 hover:bg-green-100 font-bold
+./components/PeerReviewFeature
+@/components/ui/field-description
+@/components/ui/field-set
+@/components/ui/field-legend
+@/components/ui/field-group
+@/types/bid
+@/lib/validations/proposals
+Failed to load data
+Hanya ketua kelompok yang dapat mengajukan proposal.
+Jumlah anggota kelompok belum memenuhi batas minimal.
+Kelompok sudah memiliki judul yang disetujui.
+Masih ada proposal yang sedang ditinjau.
+Status kelompok saat ini tidak memperbolehkan pengajuan proposal.
+Masih ada bid aktif, proposal baru tidak diperbolehkan.
+Maksimal 3 slot judul (bids + proposals) sudah tercapai.
+Periode aktif tidak ditemukan untuk kelompok ini.
+Proposal updated successfully!
+Proposal resubmitted successfully!
+Proposal submitted successfully!
+Failed to submit proposal
+Apakah Anda yakin ingin membatalkan proposal ini?
+Proposal dibatalkan
+Gagal membatalkan proposal
+Pengajuan proposal tidak tersedia untuk kondisi kelompok saat ini.
+font-medium underline
+underline font-semibold
+Edit Proposal
+Resubmit Proposal
+New Title Proposal
+Edit your pending proposal before it is reviewed.
+Edit your proposal and resubmit for review.
+Fill in the details for your proposed title and select a supervisor.
+Enter your proposed title
+Describe your project in detail
+What problem does your project solve?
+Define the boundaries and scope of your project
+checkbox-group
+proposed_supervisor_id
+Select a supervisor
+flex justify-end gap-2
+Update Proposal
+Submit Proposal
+text-lg font-medium mb-1
+./components/ProposeTitleFeature
+Failed to load registration data
+/mahasiswa/periods/register
+Successfully registered for period
+Failed to register for period
+max-w-2xl mx-auto py-12
+border-green-200 bg-green-50/50
+pt-6 pb-6 text-center
+h-16 w-16 text-green-600 mx-auto mb-4
+text-2xl font-bold text-green-800 mb-2
+text-green-700 mb-4
+Selected Period
+text-sm text-green-600 mb-6
+max-w-4xl mx-auto py-8 px-4
+text-center mb-8
+inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4
+h-8 w-8 text-primary
+text-3xl font-bold tracking-tight mb-2
+text-muted-foreground text-lg max-w-2xl mx-auto
+mb-8
+pt-8 pb-8 text-center
+h-12 w-12 text-muted-foreground mx-auto mb-4
+text-lg font-medium mb-2
+relative overflow-hidden
+text-center text-sm text-muted-foreground mt-8
+./components/RegistrationFeature
+Failed to fetch schedules
+/mahasiswa/schedules
+Failed to fetch legacy schedules
+TA phase is locked. Complete EXPO first.
+Documents Required
+Upload all required TA documents to proceed.
+Under Review
+bg-yellow-100 text-yellow-800
+Documents submitted. Waiting for supervisor approval.
+Documents Approved
+All documents approved! Waiting for sidang schedule.
+Draft Uploaded
+TA draft uploaded and under review.
+Revision Submitted
+Revision submitted. Waiting for review.
+Ready for Defense
+TA approved! You can now register for defense.
+Ready for Sidang
+Sidang scheduled. Prepare for your defense.
+bg-cyan-100 text-cyan-800
+Registered for TA defense.
+TA defense has been scheduled.
+Congratulations! TA defense completed.
+documents
+Upload Documents
+Submit all required documents
+Document Review
+Supervisor review in progress
+approved
+Ready for scheduling
+Sidang Scheduled
+Defense date confirmed
+defense
+Defense Complete
+TA defense finished
+/mahasiswa/ta-detailed-status
+Failed to fetch TA data
+TA_LOCKED
+Failed to load TA data
+TA_READY_FOR_SIDANG
+TA_SCHEDULED
+/mahasiswa/ta-defense-schedules/my-schedule
+Failed to fetch defense schedule
+Failed to fetch grades
+Please upload a PDF, DOC, or DOCX file
+File size must be less than 10MB
+/mahasiswa/ta-documents/upload
+TA_DOCUMENTS_REQUIRED
+TA_DOCUMENTS_UNDER_REVIEW
+TA_DOCUMENTS_APPROVED
+space-y-6 max-w-5xl mx-auto
+mt-1 list-disc pl-5 space-y-1
+mt-1 space-y-1
+h-5 w-5 text-red-600
+text-red-800
+text-sm text-red-700 mb-4
+flex items-center justify-center w-6 h-6 rounded-full bg-red-200 text-red-700 text-xs font-semibold
+w-5 h-5
+flex flex-col md:flex-row gap-6
+text-lg bg-primary/10 text-primary
+S
+hidden md:block h-16
+flex-1 grid grid-cols-1 md:grid-cols-2 gap-4
+font-medium flex items-center gap-2
+Not assigned
+hidden md:block absolute top-6 left-0 right-0 h-0.5 bg-muted
+grid grid-cols-1 md:grid-cols-5 gap-4 md:gap-2
+relative flex md:flex-col items-start md:items-center gap-3 md:gap-2
+bg-primary border-primary text-primary-foreground
+bg-primary border-primary text-primary-foreground ring-4 ring-primary/20
+bg-background border-muted text-muted-foreground
+flex-1 md:text-center
+text-xs text-muted-foreground hidden md:block
+text-
+border-
+bg-
+bg-opacity-10 
+w-32 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden
+h-full bg-green-500 transition-all duration-500
+bg-red-50 border-red-200
+bg-gray-50 border-gray-200
+flex items-start gap-3 flex-1
+bg-green-100 text-green-800 text-xs
+bg-red-100 text-red-800 text-xs
+bg-yellow-100 text-yellow-800 text-xs
+mt-2 text-sm text-red-700 bg-red-100 p-2 rounded
+ml-4
+text-lg flex items-center gap-2 text-green-800
+Hasil Sidang TA
+Nilai dan evaluasi sidang tugas akhir Anda
+Your thesis defense schedule and information
+bg-gradient-to-r from-emerald-50 to-sky-50 border border-emerald-200 rounded-lg p-6
+text-sm font-medium text-gray-600 mb-1
+flex items-baseline gap-3
+Dalam Proses
+h-3 w-full bg-gray-200 rounded-full overflow-hidden
+text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2
+w-2 h-2 rounded-full bg-emerald-500
+flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg
+flex items-center justify-between py-2 px-3 bg-emerald-50 rounded-lg border border-emerald-200
+text-sm font-medium text-emerald-800
+text-sm font-bold text-emerald-700
+w-2 h-2 rounded-full bg-sky-500
+flex items-center justify-between py-2 px-3 bg-sky-50 rounded-lg border border-sky-200
+text-sm font-medium text-sky-800
+text-sm font-bold text-sky-700
+px-4 py-3 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-50
+px-4 pb-4 pt-2 space-y-2 text-sm
+bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3
+font-medium text-blue-900
+bg-blue-200
+text-xs text-blue-700
+text-yellow-800
+p-3 bg-muted rounded-lg
+flex justify-between text-sm
+mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent
+space-y-2 text-sm text-muted-foreground
+h-4 w-4 mt-0.5 text-primary
+./components/TaSubmissionFeature
+Failed to load title details
+Data dosen pembimbing untuk judul ini tidak tersedia.
+Failed to bid
+Unknown Lecturer
+lecturer
+Sesi Anda sudah habis. Silakan masuk kembali.
+Failed to fetch registered period
+Gagal memuat data periode. Silakan coba lagi.
+LECTURER
+STUDENT
+WAITING_SUPERVISOR_APPROVAL
+Failed to fetch marketplace data
+Gagal memuat data judul. Silakan coba lagi.
+Join request sent!
+Failed to send join request
+Anda belum memiliki kelompok.
+Periode sudah ditutup, fitur join tidak tersedia.
+Kelompok sudah terkunci (siap finalisasi).
+Hanya ghost student atau ketua kelompok seeker yang dapat request join.
+underline font-bold
+relative flex-1 w-full
+Search titles, lecturers, or student ideas...
+text-sm font-medium mr-1
+cursor-pointer select-none
+grid w-full grid-cols-2 lg:w-[400px]
+student
+group cursor-pointer hover:bg-muted/30
+font-medium max-w-[350px]
+whitespace-nowrap
+mr-2 h-3 w-3
+View & Bid
+Fitur join tidak tersedia untuk kondisi saat ini.
+Anda sudah memiliki judul tetap. Fitur bergabung tidak lagi tersedia.
+Anda sudah terdaftar di kelompok permanen (Ready for Bidding) atau bukan ketua kelompok. Fitur bergabung hanya untuk mahasiswa tanpa kelompok atau Ketua Kelompok Seeker.
+h-10 w-10 mx-auto mb-2 opacity-20
+text-base line-clamp-1
+FULL
+flex-1 space-y-4
+text-sm text-muted-foreground line-clamp-3
+flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t
+bg-muted/10 p-3 pt-0
+w-full text-xs font-semibold
+w-full text-xs font-semibold text-primary
+w-full text-xs
+Grup ini sudah siap finalisasi dan tidak menerima anggota baru
+mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent
+Merge Group
+Request to Join
+Merge Groups
+Request to Join Group
+Kirim pesan ke ketua kelompok untuk menjelaskan ketertarikan Anda bergabung dengan ide ini.
+Halo, saya tertarik dengan ide ini karena...
+Sending...
+Send Request
+./components/TitlesMarketplaceFeature
+./use-client-pagination
+./use-expandable-rows
+/admin/finalization/batch-set-supervisor
+Failed to set supervisor
+/admin/finalization/execute
+Failed to execute finalization
+/admin/finalization/rollback
+Failed to rollback finalization
+/admin/finalization/cancel-kelompok-final
+Failed to cancel Kelompok Final
+/admin/finalization/export
+text/csv
+text/html
+html
+Report downloaded successfully
+finalization-dashboard
+tab
+sub_tab
+supervisor_status
+member_count
+search
+per_page
+supervisorStatus
+memberCount
+/admin/finalization/dashboard
+Failed to load dashboard data
+Multiple active periods exist
+Multiple active periods exist. Please select a period.
+Failed to load periods
+INPUT
+TEXTAREA
+Escape
+MAC
+f
+r
+e
+manual-grouping
+/admin/finalization/available-groups
+/admin/finalization/available-titles
+lecturers
+/admin/finalization/lecturers
+/admin/finalization/create-manual-group
+Grup berhasil dibuat
+Gagal membuat grup
+/admin/finalization/add-to-existing-group
+Anggota berhasil ditambahkan ke grup
+Gagal menambahkan anggota
+/admin/finalization/assign-title
+Judul berhasil ditetapkan
+Gagal menetapkan judul
+/admin/finalization/promote-to-ready
+Grup berhasil dipromosikan ke Ready for Finalization
+Gagal mempromosikan grup
+change
+my-period
+workflow
+dashboard-stats
+supervisor-load
+Failed to load lecturers
+http://localhost:8000/api/capstone
+application/json
+anonymous
+|
+Cache-Control
+get
+arraybuffer
+stream
+no-cache
+no-store
+_fresh=
+X-Capstone-Role
+An error occurred
+roleAdmin
+roleDosen
+roleMahasiswa
+statusApproved
+statusRejected
+statusPending
+statusForming
+statusReady
+statusClosed
+supervisorApproved
+supervisorPending
+Tahap perencanaan awal dan pembentukan kelompok.
+Tahap seminar proposal untuk menyetujui topik.
+Tahap pengembangan lanjutan proyek.
+Tahap penulisan draf Tugas Akhir.
+Tahap presentasi dan publikasi proyek.
+Tahap akhir Tugas Akhir dan sidang.
+.pdf
+.doc
+.docx
+.ppt
+.pptx
+image/jpeg
+image/webp
+zod
+CTMS
+http://localhost:3000
+❌ Invalid environment variables:
+Invalid environment variables
+@/types/api
+response
+An unknown error occurred
+isAxiosError
+@/types/period
+Beranda
+Masuk
+Menghubungkan SSO
+Akses Ditolak
+Notifikasi
+Profil Saya
+Dashboard Admin
+Periode
+Tambah Periode
+/admin/users/new
+Tambah Pengguna
+Kelompok
+Lokasi
+Persyaratan Dokumen
+Bank Asesmen
+/admin/assessments
+Penilaian
+Konfigurasi Nilai
+Finalisasi Kelompok
+Progres Capstone
+Dashboard Peer Review
+Laporan
+/admin/reports/assessments
+Laporan Penilaian
+Nilai Akhir
+Konsistensi Nilai
+Laporan Kelompok
+/admin/reports/pdc1
+Laporan PDC 1
+/admin/reports/pdc2
+Laporan PDC 2
+Laporan Peer Review
+/admin/reports/ta
+Laporan Tugas Akhir
+Unggahan Dokumen
+Log Audit
+Pengaturan
+/admin/titles
+Judul Capstone
+Dashboard Dosen
+Judul Saya
+Persetujuan Judul
+Review Penawaran Judul
+/dosen/requests
+Permintaan Mahasiswa
+Kelompok Bimbingan
+Jadwal Saya
+Penilaian Mahasiswa
+Penilaian Pembimbing
+Review Tugas Akhir
+Dashboard Mahasiswa
+Registrasi Capstone
+Kelompok Saya
+Pilihan Judul
+Ajukan Judul
+Penawaran Judul
+Pengumpulan Tugas Akhir
+Nilai Saya
+/mahasiswa/ta-defense
+Edit Pengguna
+Detail Pengguna
+Detail Kelompok
+Edit Template Asesmen
+Ringkasan Penilaian
+Edit Peer Review
+Edit Tipe Penilaian
+Detail Penilaian Mahasiswa
+Detail Judul
+Penilaian Kelompok Bimbingan
+Penilaian Tugas Akhir
+Detail Expo Capstone
+Analitik
+bun:test
+./single-flight
+createSingleFlightByKey
+reuses the same request for the same key
+one-time-token
+response:one-time-token
+starts a new request for a different key
+first-token
+second-token
+capstone_access_token
+capstone_active_role
+capstone_logout_url
+capstone_logout_csrf
+capstone_user_snapshot
+http://localhost:8000/login
+activeRole
+form
+POST
+_token
+clsx
+tailwind-merge
+Code is required
+Code must be at most 50 characters
+Name is required
+Name must be at most 255 characters
+Description must be at most 500 characters
+Weight must be at least 0
+Weight must be at most 100
+Template name must be at least 3 characters
+Template name must be at most 100 characters
+Criterion name is required
+Weight must be between 0 and 100
+Max score must be at least 1
+Max score must be at most 100
+Please add at least one criterion
+Email is required
+Please enter a valid email address
+Password is required
+Password must be at least 6 characters
+Please select a title
+Please select first supervisor
+Please select second supervisor
+Name must be at most 100 characters
+Score must be at least 0
+Score must be at most 100
+Notes must be at most 500 characters
+Event name must be at least 3 characters
+Date is required
+Start time is required
+End time is required
+Location is required
+Capacity is required
+Capacity must be a number
+Capacity must be at least 1
+End time must be after start time
+Notes must be at most 1000 characters
+Supervisor 1 and Supervisor 2 cannot be the same
+Group name must be at least 3 characters
+Group name must be at most 50 characters
+./auth
+./proposals
+./bidding
+./group
+./period
+./evaluation
+./assessment
+./finalization
+./expo
+./sempro
+./user
+./title
+./location
+./document-type
+Name must be at least 2 characters
+Nama periode minimal 3 karakter
+Nama periode maksimal 100 karakter
+Tanggal mulai wajib diisi
+Tanggal berakhir wajib diisi
+Minimal 1 anggota
+Maksimal 10 anggota
+Minimal 1 group
+Maksimal 50 group
+Tanggal berakhir harus setelah tanggal mulai
+Minimal anggota harus lebih kecil atau sama dengan maksimal anggota
+Title must be at least 5 characters
+Title must be at most 100 characters
+Description must be at least 20 characters
+Problem statement must be at least 10 characters
+Problem statement must be at most 300 characters
+Scope must be at least 10 characters
+Scope must be at most 300 characters
+Please select at least one specialization
+Please select a proposed supervisor
+Please select a group
+Room/Location is required for offline mode
+Group is required
+Examiner 1 is required
+Examiner 2 is required
+Examiner 1 and Examiner 2 cannot be the same person
+Please select at least one student
+Please select Examiner 1
+Please select Examiner 2
+Title must be at most 200 characters
+Description must be at most 1000 characters
+Problem statement must be at most 500 characters
+Scope must be at most 500 characters
+Quota must be at least 1
+Quota must be at most 10
+At least one role must be selected
+Password must be at least 8 characters
+view_dashboard
+manage_users
+manage_groups
+manage_periods
+manage_titles
+manage_schedules
+evaluate_students
+submit_documents
+view_grades
+admin_access
+./document
+REVISION
+PROPOSAL
+TA_FINAL
+SEMPRO_SLIDES
+EXPO_POSTER
+PDC1_REPORT
+PDC2_REPORT
+BIMBINGAN_LOG
+in_progress
+not_started
+overdue
+NO_GROUP
+HAS_GROUP_NO_TITLE
+NOT_READY
+error
+SUPERVISOR_ASSIGNED
+FINALIZATION_EXECUTED
+FINALIZATION_ROLLBACK
+FINALIZATION_COMPLETED
+lecturer_title
+marketplace_title
+member
+./schedule
+boolean
+title_approved
+title_rejected
+group_invitation
+bid_accepted
+bid_rejected
+schedule_created
+schedule_updated
+document_approved
+document_rejected
+evaluation_completed
+phase_changed
+low
+medium
+high
+urgent
+unread
+read
+archived
+info
+cancelled
+WITHDRAWN
+suspended
+./dashboard
+BIDDING
+APPROVAL
+document

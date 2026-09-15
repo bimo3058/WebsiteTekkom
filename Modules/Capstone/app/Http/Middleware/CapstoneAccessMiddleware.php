@@ -26,7 +26,7 @@ class CapstoneAccessMiddleware
         }
 
         if ($role === 'mahasiswa') {
-            if (! $user->student) {
+            if (! CapstoneActor::loadProfiles($user, ['student'])->student) {
                 $user->tokens()->where('name', 'capstone-fe')->delete();
 
                 return response()->json([

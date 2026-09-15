@@ -8,7 +8,7 @@
     $iconArsip = 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4';
 @endphp
 
-<aside :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'"
+<aside data-mobile-sidebar :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'"
        class="relative h-screen bg-white border-r border-[#DFE1E7] flex flex-col flex-shrink-0 transition-all duration-200 ease-in-out z-20 font-sans"
        style="font-family: 'Inter Tight', system-ui, sans-serif;">
     

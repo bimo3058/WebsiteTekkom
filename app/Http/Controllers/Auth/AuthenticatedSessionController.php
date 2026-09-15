@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\AuditLogger;
+use App\Services\MicrosoftSsoSession;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,8 @@ class AuthenticatedSessionController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
+        $request->session()->forget([MicrosoftSsoSession::KEY, 'auth.after_microsoft_logout', 'sso_pending_user_id', 'sso_verified']);
+        $request->session()->put('auth.local_password', true);
         $request->session()->regenerate();
 
         $user = auth()->user();
@@ -77,8 +80,13 @@ class AuthenticatedSessionController extends Controller
             }
         }
 
-        // Mahasiswa, Dosen, GPM, DPM, Ketua Departemen ke dashboard global
-        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])->isNotEmpty()) {
+        // Dosen → langsung ke halaman Manajemen Praktikum
+        if ($roleNames->contains('dosen')) {
+            return redirect()->intended(route('eoffice.manprak.dosen.dashboard'));
+        }
+
+        // Mahasiswa, GPM, DPM, Ketua Departemen ke dashboard global
+        if ($roleNames->intersect(['mahasiswa', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 
@@ -97,21 +105,21 @@ class AuthenticatedSessionController extends Controller
         $user = auth()->user();
 
         if ($user) {
-            AuditLogger::log(
-                module: 'auth',
-                action: 'LOGOUT',
-                description: 'Logout dari sistem',
-                userId: $user->id,
-            );
+            try {
+                AuditLogger::log(
+                    module: 'auth',
+                    action: 'LOGOUT',
+                    description: 'Logout dari sistem',
+                    userId: $user->id,
+                );
+            } catch (\Throwable $exception) {
+                // Audit storage must not prevent the user from ending a session.
+                \Illuminate\Support\Facades\Log::warning('Logout audit failed', ['exception' => get_class($exception)]);
+            }
 
             $user->clearUserCache();
         }
 
-        Auth::guard('web')->logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/');
+        return app(MicrosoftSsoSession::class)->logout($request);
     }
 }

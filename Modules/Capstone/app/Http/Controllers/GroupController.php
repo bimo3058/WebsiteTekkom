@@ -57,7 +57,7 @@ class GroupController extends Controller
             'supervisor2',
         ])->find($membership->group_id);
 
-        return response()->json(['group' => $group]);
+        return response()->json(['group' => $this->groupService->buildCanonicalGroupPayload($group, $user)]);
     }
 
     public function listGroups(Request $request)
@@ -151,71 +151,47 @@ class GroupController extends Controller
     /**
      * Create a new group. Student becomes leader. Status = FORMING.
      */
-    public function store(Request $request)
+    public function store(Request $request) { return $this->createStudentGroup($request, false); }
+    public function storeSolo(Request $request) { return $this->createStudentGroup($request, true); }
+
+    private function createStudentGroup(Request $request, bool $solo)
     {
-        $user = $request->user();
-        $studentId = CapstoneActor::student($user)->id;
-
-        // V4: Accept explicit period_id or resolve from active periods
-        $period = null;
-        if ($request->has('period_id')) {
-            $period = Period::where('is_active', 'true')->findOrFail($request->period_id);
-        } else {
-            $activePeriods = Period::where('is_active', 'true')->get();
-            if ($activePeriods->count() === 0) {
-                return response()->json(['message' => 'No active academic period found.'], 400);
-            }
-            if ($activePeriods->count() > 1) {
-                return response()->json(['message' => 'Multiple active periods exist. Please specify period_id.'], 400);
-            }
-            $period = $activePeriods->first();
-        }
-
-        // âš  V4: Check student not already in a group for this specific period
-        $existingMembership = GroupMember::where('student_id', $studentId)
-            ->where('period_id', $period->id)
-            ->exists();
-
-        if ($existingMembership) {
-            return response()->json(['message' => 'You are already in a group for this period.'], 400);
-        }
-
-        DB::beginTransaction();
-        try {
-            $group = Group::create([
-                'title_id' => null,
-                'period_id' => $period->id,
-                'status' => 'FORMING',
-                'group_mode' => $request->input('group_mode', 'GROUP'),
-                'has_existing_group' => $request->boolean('has_existing_group', false),
-            ]);
-
-            GroupMember::create([
-                'group_id' => $group->id,
-                'student_id' => $studentId,
-                'is_leader' => DB::raw('true'),
-                'period_id' => $period->id, // V4: denormalized for unique constraint
-            ]);
-
-            // Auto-transition if 1 member meets min_group_size (unlikely but handle)
-            $this->checkAndTransitionToReady($group, $period);
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Group created successfully.',
-                'group' => $group->load('members.student'),
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return response()->json(['message' => 'Failed to create group: '.$e->getMessage()], 500);
-        }
+        $data = $request->validate(['period_id'=>'required|integer|exists:capstone_periods,id']);
+        return DB::transaction(function () use ($request,$data,$solo) {
+            $student = CapstoneActor::student($request->user());
+            \App\Models\Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $period = Period::lockForUpdate()->findOrFail($data['period_id']);
+            abort_unless($period->isRegistrationOpen(),403,'Period is closed.');
+            abort_unless(\Modules\Capstone\Models\PeriodRegistration::where('user_id',$student->id)->where('period_id',$period->id)->exists(),403,'Register for this period first.');
+            abort_if(GroupMember::where('student_id',$student->id)->whereHas('group',fn($q)=>$q->whereNotIn('status',['CLOSED','DISSOLVED']))->exists(),422,'You already have an active group.');
+            $group = Group::create(['period_id'=>$period->id,'status'=>$solo?'FORMING_SOLO':'FORMING','group_mode'=>'GROUP','has_existing_group'=>false,'is_solo'=>$solo]);
+            GroupMember::create(['group_id'=>$group->id,'student_id'=>$student->id,'is_leader'=>true,'period_id'=>$period->id]);
+            if (!$solo) $this->checkAndTransitionToReady($group,$period);
+            return response()->json(['group'=>$group->load('members.student','period'),'message'=>'Group created successfully.'],201);
+        });
     }
 
-    /**
-     * Delete/disband a group (leader only, only before finalization).
-     */
+    public function markReadyForFinalization(Request $request) { return $this->changeReady($request, false); }
+    public function cancelReadyForFinalization(Request $request) { return $this->changeReady($request, true); }
+
+    private function changeReady(Request $request, bool $cancel)
+    {
+        $data=$request->validate(['group_id'=>'required|integer|exists:capstone_groups,id']);
+        return DB::transaction(function () use ($request,$data,$cancel) {
+            $group=Group::with('period')->lockForUpdate()->findOrFail($data['group_id']);
+            $actions=$this->groupService->resolveAllowedActions($group,$request->user());
+            abort_unless($actions[$cancel?'can_cancel_ready_for_finalization':'can_mark_ready_for_finalization'],403,'Group prerequisites are not satisfied or you are not its leader.');
+            $target='READY_FOR_FINALIZATION';
+            if($cancel) $target=Title::where('proposed_by_group_id',$group->id)->where('title_source','STUDENT')->where('supervisor_approval_status','APPROVED')->exists()?'TITLE_APPROVED':'READY_FOR_BIDDING';
+            $this->stateMachine->transition($group,$target);
+            $group->load('members.student');
+            foreach($group->members as $member) {
+                app(NotificationService::class)->send($member->student->user_id, $cancel?'GROUP_FINALIZATION_CANCELLED':'GROUP_READY_FOR_FINALIZATION', $cancel?'Finalization Cancelled':'Ready for Finalization', $cancel?'Status siap finalisasi kelompok dibatalkan.':'Kelompok siap untuk finalisasi admin.', 'Group', $group->id);
+            }
+            return response()->json(['group'=>$group,'message'=>'Group status updated.']);
+        });
+    }
+
     public function deleteGroup(Request $request)
     {
         $user = $request->user();
@@ -236,6 +212,7 @@ class GroupController extends Controller
         }
 
         $group = Group::find($membership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_delete_group'], 403, 'Group action is locked.');
 
         // Only allow deletion before KELOMPOK_FINAL
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
@@ -293,6 +270,7 @@ class GroupController extends Controller
         }
 
         $group = Group::with('period')->find($leaderMembership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_add_member'], 403, 'Group action is locked.');
 
         // Only allow adding members before KELOMPOK_FINAL
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
@@ -519,6 +497,7 @@ class GroupController extends Controller
         }
 
         $group = Group::with('period')->find($leaderMembership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_remove_member'], 403, 'Group action is locked.');
 
         // After KELOMPOK_FINAL: require admin approval (handled separately)
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
@@ -569,6 +548,7 @@ class GroupController extends Controller
         }
 
         $group = Group::with('period')->find($membership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_leave_group'], 403, 'Group action is locked.');
 
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
             return response()->json(['message' => 'Group is finalized, you cannot leave.'], 400);

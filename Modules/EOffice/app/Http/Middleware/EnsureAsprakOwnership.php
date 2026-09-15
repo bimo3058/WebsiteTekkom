@@ -39,6 +39,7 @@ class EnsureAsprakOwnership
         $user = $request->user();
 
         $allAsprak = AsprakPraktikum::with('praktikum')
+            ->whereHas('praktikum')
             ->where('user_id', $user?->id)
             ->where('role', 'asprak')
             ->whereNull('deleted_at')
@@ -76,7 +77,7 @@ class EnsureAsprakOwnership
                 ->whereHas('modulAsprak', fn($q) => $q->where('asprak_id', $asprak->id))
                 ->first();
 
-            if (! $modul) {
+            if (!$modul) {
                 abort(403, 'Anda tidak memiliki akses ke modul ini.');
             }
 
