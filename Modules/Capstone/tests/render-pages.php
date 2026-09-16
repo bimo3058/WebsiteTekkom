@@ -16,6 +16,7 @@ foreach ($directory as $file) {
     $relative=str_replace('\\','/',substr($file->getPathname(),strlen(__DIR__.'/../resources/views/pages/')));
     $pagePath='/'.str_replace('.blade.php','',$relative);
     if (in_array('--dosen', $argv) && !str_starts_with($pagePath, '/dosen/')) continue;
+    if (in_array('--users', $argv) && !str_starts_with($pagePath, '/admin/users')) continue;
     $role=str_starts_with($pagePath,'/dosen')?'dosen':(str_starts_with($pagePath,'/mahasiswa')?'mahasiswa':'admin');
     if (in_array('--verbose', $argv)) fwrite(STDERR, $relative.PHP_EOL);
     try {
