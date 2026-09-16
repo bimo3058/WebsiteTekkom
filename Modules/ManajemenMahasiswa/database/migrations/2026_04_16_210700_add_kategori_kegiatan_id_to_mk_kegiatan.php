@@ -8,6 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasColumn('mk_kegiatan', 'kategori_kegiatan_id')) {
+            Schema::table('mk_kegiatan', function (Blueprint $table) {
+                $table->unsignedBigInteger('kategori_kegiatan_id')->nullable()->change();
+            });
+
+            return;
+        }
+
         Schema::table('mk_kegiatan', function (Blueprint $table) {
             $table->unsignedBigInteger('kategori_kegiatan_id')->nullable()->after('user_id');
             $table->foreign('kategori_kegiatan_id')->references('id')->on('mk_kategori_kegiatan')->onDelete('restrict');
@@ -16,9 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('mk_kegiatan', function (Blueprint $table) {
-            $table->dropForeign(['kategori_kegiatan_id']);
-            $table->dropColumn('kategori_kegiatan_id');
-        });
+        // Kolom dapat berasal dari migration create_mk_kegiatan_table.
     }
 };

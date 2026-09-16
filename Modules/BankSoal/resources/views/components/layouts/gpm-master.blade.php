@@ -25,6 +25,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('styles')
+    <x-mobile-navigation-assets />
 </head>
 <body class="font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
@@ -97,5 +98,6 @@
 
     @livewireScripts
     @stack('scripts')
+    <x-mobile-navigation />
 </body>
 </html>

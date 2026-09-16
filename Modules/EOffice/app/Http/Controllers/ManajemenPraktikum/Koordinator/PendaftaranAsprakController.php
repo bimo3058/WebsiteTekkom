@@ -18,14 +18,16 @@ use Modules\EOffice\Services\NotifikasiService;
  */
 class PendaftaranAsprakController extends Controller
 {
-    public function __construct(protected NotifikasiService $notif) {}
+    public function __construct(protected NotifikasiService $notif)
+    {
+    }
 
     public function index(Request $request)
     {
-        $user      = auth()->user();
+        $user = auth()->user();
         $praktikum = DashboardController::resolvePraktikum();
 
-        $query = PendaftaranAsprak::with(['user', 'praktikum'])
+        $query = PendaftaranAsprak::with(['user.student', 'praktikum'])
             ->where('praktikum_id', $praktikum?->id);
 
         $sort = $request->input('sort', 'terbaru');
@@ -42,18 +44,24 @@ class PendaftaranAsprakController extends Controller
             $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
 
-        $pendaftaran = $query->paginate(15)->withQueryString();
+        $perPage = request('per_page', 10);
+        $pendaftaran = $query->paginate($perPage)->withQueryString();
 
-        // Cek status periode pendaftaran asprak di praktikum ini
-        $periodeAktif = PeriodePendaftaran::where('praktikum_id', $praktikum?->id)
-            ->where('jenis', 'asprak')
-            ->where('is_aktif', true)
-            ->first();
+        $periodeList = $praktikum
+            ? PeriodePendaftaran::where('praktikum_id', $praktikum->id)
+                ->where('jenis', 'asprak')
+                ->with(['dibukaOleh'])
+                ->orderByDesc('created_at')
+                ->get()
+            : collect();
+
+        $periodeAktif = $periodeList->firstWhere('is_aktif', true);
 
         return view('eoffice::manajemen-praktikum.koordinator.pendaftaran-asprak', compact(
             'praktikum',
             'pendaftaran',
-            'periodeAktif'
+            'periodeAktif',
+            'periodeList'
         ));
     }
 
@@ -62,7 +70,7 @@ class PendaftaranAsprakController extends Controller
      */
     public function approve(Request $request, int $id)
     {
-        $user        = auth()->user();
+        $user = auth()->user();
         $pendaftaran = PendaftaranAsprak::with(['user', 'praktikum'])->findOrFail($id);
 
         if ($pendaftaran->praktikum?->koor_id !== $user->id) {
@@ -73,8 +81,8 @@ class PendaftaranAsprakController extends Controller
         }
 
         $pendaftaran->update([
-            'status_koor'   => 'disetujui',
-            'catatan_koor'  => $request->input('catatan_koor'),
+            'status_koor' => 'disetujui',
+            'catatan_koor' => $request->input('catatan_koor'),
             'direview_oleh' => $user->id,
             'direview_pada' => now(),
             // status tetap 'pending' menunggu admin final approve
@@ -94,7 +102,7 @@ class PendaftaranAsprakController extends Controller
      */
     public function reject(Request $request, int $id)
     {
-        $user        = auth()->user();
+        $user = auth()->user();
         $pendaftaran = PendaftaranAsprak::with(['user', 'praktikum'])->findOrFail($id);
 
         if ($pendaftaran->praktikum?->koor_id !== $user->id) {
@@ -105,19 +113,19 @@ class PendaftaranAsprakController extends Controller
         }
 
         $pendaftaran->update([
-            'status_koor'      => 'ditolak',
-            'status'           => 'rejected',
+            'status_koor' => 'ditolak',
+            'status' => 'rejected',
             'alasan_penolakan' => $request->input('alasan_penolakan'),
-            'catatan_koor'     => $request->input('catatan_koor'),
-            'direview_oleh'    => $user->id,
-            'direview_pada'    => now(),
+            'catatan_koor' => $request->input('catatan_koor'),
+            'direview_oleh' => $user->id,
+            'direview_pada' => now(),
         ]);
 
         $this->notif->kirim(
             $pendaftaran->user_id,
             'Pendaftaran Asprak Tidak Diterima',
             "Maaf, pendaftaran asprak Anda untuk {$pendaftaran->praktikum?->nama} tidak diterima."
-                . ($request->input('alasan_penolakan') ? " Alasan: {$request->input('alasan_penolakan')}" : '')
+            . ($request->input('alasan_penolakan') ? " Alasan: {$request->input('alasan_penolakan')}" : '')
         );
 
         return back()->with('success', "Pendaftaran {$pendaftaran->user?->name} ditolak.");
@@ -125,7 +133,7 @@ class PendaftaranAsprakController extends Controller
 
     public function destroy(int $id)
     {
-        $user        = auth()->user();
+        $user = auth()->user();
         $pendaftaran = PendaftaranAsprak::with('praktikum')->findOrFail($id);
 
         if ($pendaftaran->praktikum?->koor_id !== $user->id) {

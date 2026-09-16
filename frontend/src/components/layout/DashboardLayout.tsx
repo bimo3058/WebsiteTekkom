@@ -1,60 +1,113 @@
-"use client"
+"use client";
 
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/AppSidebar"
-import { Separator } from "@/components/ui/separator"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbList,
-  BreadcrumbPage,
-} from "@/components/ui/breadcrumb"
+import { useEffect, useState } from "react";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
+import { TopBar } from "@/components/layout/TopBar";
+import { Toaster } from "@/components/ui/sonner";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { RoleSelector } from "@/components/auth/RoleSelector";
+import { redirectToWebsiteLogin } from "@/lib/sso";
 
-import { Toaster } from "@/components/ui/sonner"
-import { usePathname } from "next/navigation"
+const GUARDED_ROLES = ["admin", "dosen", "mahasiswa"] as const;
 
 export default function DashboardLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode
+  children: React.ReactNode;
 }) {
-    const pathname = usePathname();
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, activeRole, isLoading, switchRole } = useAuth();
+  const roleFromPath = pathname.split("/").filter(Boolean)[0] || null;
+  const [roleSelectorOpen, setRoleSelectorOpen] = useState(false);
 
-    // Derive page title from pathname
-    // e.g. /mahasiswa/dashboard -> Dashboard
-    // e.g. /mahasiswa/titles -> Titles
-    const getPageTitle = (path: string) => {
-        const segments = path.split('/').filter(Boolean);
-        const lastSegment = segments[segments.length - 1];
-        if (!lastSegment) return 'Dashboard';
-        return lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
-    };
+  const isMultiRole =
+    user?.roles?.includes("admin") && user?.roles?.includes("dosen");
 
-    const pageTitle = getPageTitle(pathname);
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
 
-    return (
-        <SidebarProvider>
-            <AppSidebar />
-            <main className="w-full flex flex-col h-screen overflow-hidden">
-                <header className="flex items-center justify-between gap-2 border-b px-4 py-3 shrink-0 bg-background z-10">
-                    <div className="flex items-center gap-2">
-                        <SidebarTrigger className="-ml-1" />
-                        <Separator orientation="vertical" className="mr-2 h-4" />
-                        <Breadcrumb>
-                            <BreadcrumbList>
-                                <BreadcrumbItem>
-                                    <BreadcrumbPage className="font-semibold">{pageTitle}</BreadcrumbPage>
-                                </BreadcrumbItem>
-                            </BreadcrumbList>
-                        </Breadcrumb>
-                    </div>
-                    
-                </header>
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-muted/50">
-                    {children}
+    if (!user) {
+      redirectToWebsiteLogin();
+      return;
+    }
+
+    // Multi-role (admin + dosen) users can access any guard role's routes
+    if (isMultiRole) {
+      if (
+        roleFromPath &&
+        GUARDED_ROLES.includes(roleFromPath as (typeof GUARDED_ROLES)[number])
+      ) {
+        const userRoles = user.roles || [];
+        if (!userRoles.includes(roleFromPath)) {
+          router.replace("/unauthorized");
+        }
+        // Don't switch roles - multi-role users see everything
+        // Just sync activeRole for backwards compatibility
+        if (activeRole !== roleFromPath) {
+          void switchRole(roleFromPath);
+        }
+      }
+      return;
+    }
+
+    // Single role users - existing behavior
+    if (
+      roleFromPath &&
+      GUARDED_ROLES.includes(roleFromPath as (typeof GUARDED_ROLES)[number])
+    ) {
+      const userRoles = user?.roles || [user?.role || "mahasiswa"];
+      if (userRoles.includes(roleFromPath)) {
+        if (activeRole !== roleFromPath) {
+          switchRole(roleFromPath);
+        }
+      } else {
+        router.replace("/unauthorized");
+      }
+    }
+  }, [
+    isLoading,
+    user,
+    activeRole,
+    roleFromPath,
+    router,
+    switchRole,
+    isMultiRole,
+  ]);
+
+  const isReady = !isLoading && user;
+
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="flex h-screen w-full flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-4 bg-white">
+          <div className="border-grey-100 shadow-small min-h-full overflow-hidden rounded-xl border">
+            <TopBar />
+            <div className="px-6 pt-6 pb-6">
+              {!isReady ? (
+                <div className="flex items-center justify-center py-20">
+                  <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent" />
                 </div>
-                <Toaster />
-            </main>
-        </SidebarProvider>
-    )
+              ) : (
+                children
+              )}
+            </div>
+          </div>
+        </div>
+        <Toaster />
+        {/* Role Selector Dialog - only for non-combined multi-role users */}
+        {user?.roles && user.roles.length > 1 && !isMultiRole && (
+          <RoleSelector
+            open={roleSelectorOpen}
+            onOpenChange={setRoleSelectorOpen}
+          />
+        )}
+      </main>
+    </SidebarProvider>
+  );
 }

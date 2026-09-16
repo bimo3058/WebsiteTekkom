@@ -27,16 +27,8 @@ class CapstoneServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $this->loadViewsFrom(module_path('Capstone', 'resources/views'), 'capstone');
+        \Illuminate\Support\Facades\Blade::anonymousComponentPath(module_path('Capstone', 'resources/views/components'), 'capstone');
         $this->loadMigrationsFrom(module_path('Capstone', 'database/migrations'));
-
-        // PERBAIKAN: wrap dengan prefix 'api' dan middleware 'api'
-        $this->app['router']->group([
-            'prefix'     => 'api',
-            'middleware' => 'api',
-        ], function () {
-            $this->loadRoutesFrom(module_path('Capstone', 'routes/api.php'));
-        });
-
-        $this->loadRoutesFrom(module_path('Capstone', 'routes/web.php'));
     }
 }

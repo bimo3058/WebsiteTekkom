@@ -63,7 +63,7 @@
 
                 @if($praktikumDipilih)
                     <div
-                        style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 16px;border-radius:10px;background:#EEF2FF;">
+                        style="display:flex;align-items:center;gap:12px;margin-top:16px;padding:12px 16px;border-radius:10px;background:#EAF0FA;">
                         <div style="flex:1;font-size:13px;font-weight:600;color:#0D0D12;">{{ $praktikumDipilih->nama }}</div>
                         @if($praktikumDipilih->matkul)
                             <span style="font-size:11px;color:#666D80;">{{ $praktikumDipilih->matkul->kode }} · Sem
@@ -118,7 +118,7 @@
                                 action="{{ route('eoffice.manprak.dosen.periode-pendaftaran.tutup', $periodeAktif->id) }}"
                                 style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran koordinator sekarang?')">
                                 @csrf
-                                <button type="submit" class="mp-btn error sm">🔒 Tutup Periode Sekarang</button>
+                                <button type="submit" class="mp-btn error sm"><x-eoffice::manajemen-praktikum.ui.icon name="lock" /> Tutup Periode Sekarang</button>
                             </form>
                         </div>
                     @endif
@@ -136,10 +136,8 @@
                                     placeholder="cth. Pendaftaran Koordinator Gasal 2025/2026" value="{{ old('nama') }}">
                             </div>
                             <div style="display:flex;align-items:flex-end;">
-                                <div
-                                    style="font-size:12px;color:#666D80;padding:8px;background:#F6F8FA;border-radius:8px;width:100%;">
-                                    💡 Membuka periode ini akan otomatis menutup periode koordinator aktif sebelumnya untuk praktikum
-                                    ini.
+                                <div class="mp-inline-note">
+                                    <x-eoffice::manajemen-praktikum.ui.icon name="info" /><span>Membuka periode ini akan otomatis menutup periode koordinator aktif sebelumnya untuk praktikum ini.</span>
                                 </div>
                             </div>
                         </div>
@@ -166,7 +164,7 @@
                         </div>
 
                         <button type="submit" class="mp-btn primary md">
-                            📢 Buka Periode Pendaftaran Koordinator
+                            <x-eoffice::manajemen-praktikum.ui.icon name="announcement" /> Buka Periode Pendaftaran Koordinator
                         </button>
                     </form>
                 </div>

@@ -15,7 +15,9 @@ use Modules\EOffice\Models\Tugas;
 
 class TugasController extends Controller
 {
-    public function __construct(private SupabaseStorage $supabase) {}
+    public function __construct(private SupabaseStorage $supabase)
+    {
+    }
 
     public function index(Request $request)
     {
@@ -23,40 +25,41 @@ class TugasController extends Controller
             ?? AsistenPraktikum::where('user_id', auth()->id())
                 ->where('role', 'asprak')->whereNull('deleted_at')->first();
 
-        $modulIds = $asprak
+        $assignedModulIds = $asprak
             ? ModulAsprak::where('asprak_id', $asprak->id)->pluck('modul_id')
             : collect();
-            
-        if ($asprak && $modulIds->isEmpty()) {
-            session()->now('error', 'Akses terbatas: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
+
+        if ($asprak && $assignedModulIds->isEmpty()) {
+            session()->now('warning', 'Informasi: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
         }
 
-        $tugasList = Tugas::whereIn('modul_id', $modulIds)
-            ->with(['modul.praktikum', 'pengumpulan.daftarPraktikan.user', 'pengumpulan.riwayat'])
-            ->withCount([
-                'pengumpulan',
-                'pengumpulan as pengumpulan_acc_count'    => fn ($q) => $q->where('status_pengumpulan', 'acc'),
-                'pengumpulan as pengumpulan_revisi_count' => fn ($q) => $q->where('status_pengumpulan', 'revisi'),
+        $praktikum = $asprak ? $asprak->praktikum : null;
+
+        $modulList = collect();
+        if ($praktikum) {
+            $modulList = Modul::with([
+                'tugas' => function ($q) {
+                    $q->withCount([
+                        'pengumpulan',
+                        'pengumpulan as pengumpulan_acc_count' => fn($q) => $q->where('status_pengumpulan', 'acc'),
+                        'pengumpulan as pengumpulan_revisi_count' => fn($q) => $q->where('status_pengumpulan', 'revisi'),
+                    ])->orderBy('created_at');
+                },
+                'modulAsprak.asprak.user'
             ])
-            ->orderByDesc('created_at')
-            ->get();
-
-        $praktikumIds = $tugasList->map(fn($t) => $t->modul?->praktikum_id)->filter()->unique();
-        $allPraktikans = \Modules\EOffice\Models\DaftarPraktikan::whereIn('praktikum_id', $praktikumIds)
-            ->with(['user', 'user.student'])
-            ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
-            ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
-            ->orderBy('created_at')
-            ->get()
-            ->groupBy('praktikum_id');
-
-        foreach ($tugasList as $tugas) {
-            $praktikumId = $tugas->modul?->praktikum_id;
-            $tugas->praktikans = $praktikumId ? ($allPraktikans->get($praktikumId) ?? collect()) : collect();
-            $tugas->pengumpulan_mapped = $tugas->pengumpulan->keyBy('daftar_praktikan_id');
+                ->where('praktikum_id', $praktikum->id)
+                ->orderBy('urutan')
+                ->get()
+                ->map(function ($modul) {
+                    return [
+                        'modul' => $modul,
+                        'tugas' => $modul->tugas,
+                        'asprak' => $modul->modulAsprak->map(fn($ma) => $ma->asprak?->user?->name)->filter()->values(),
+                    ];
+                });
         }
 
-        return view('eoffice::manajemen-praktikum.asprak.tugas', compact('tugasList'));
+        return view('eoffice::manajemen-praktikum.asprak.tugas', compact('modulList', 'praktikum', 'asprak', 'assignedModulIds'));
     }
 
     public function create(Request $request)
@@ -75,23 +78,34 @@ class TugasController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'modul_id'     => 'required|exists:modul_praktikum,id',
-            'jenis_tugas'  => 'required|in:tugas_pendahuluan,praktikum,laporan,responsi',
-            'judul'        => 'required|string|max:255',
-            'deskripsi'    => 'nullable|string',
-            'deadline'     => 'nullable|date',
+            'modul_id' => 'required|exists:modul_praktikum,id',
+            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti',
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'deadline' => 'nullable|date',
             'deadline_acc' => 'nullable|date|after_or_equal:deadline',
             'is_published' => 'boolean',
-            'file'         => 'nullable|file|mimes:pdf|max:10240',
+            'files' => 'nullable|array|max:3',
+            'files.*' => 'file|max:5120',
         ]);
 
-        if (! $this->ownsModul((int) $request->modul_id)) {
+        if (!$this->ownsModul((int) $request->modul_id)) {
             abort(403, 'Anda tidak di-assign ke modul ini.');
         }
 
         $filePath = null;
-        if ($request->hasFile('file')) {
-            $filePath = $this->supabase->upload($request->file('file'), 'tugas-praktikum', 'eoffice');
+        if ($request->hasFile('files')) {
+            $paths = [];
+            foreach ($request->file('files') as $file) {
+                $uploadedPath = $this->supabase->upload($file, 'tugas-praktikum', 'eoffice');
+                if ($uploadedPath) {
+                    $paths[] = [
+                        'path' => $uploadedPath,
+                        'original_name' => $file->getClientOriginalName()
+                    ];
+                }
+            }
+            $filePath = json_encode($paths);
         }
 
         $tugas = Tugas::create([
@@ -107,7 +121,7 @@ class TugasController extends Controller
 
     public function edit(int $id)
     {
-        $tugas  = $this->findOwnedTugas($id, ['modul.praktikum']);
+        $tugas = $this->findOwnedTugas($id, ['modul.praktikum']);
         $asprak = AsistenPraktikum::where('user_id', auth()->id())
             ->where('role', 'asprak')->whereNull('deleted_at')->first();
 
@@ -121,30 +135,61 @@ class TugasController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'jenis_tugas'  => 'required|in:tugas_pendahuluan,praktikum,laporan,responsi',
-            'judul'        => 'required|string|max:255',
-            'deskripsi'    => 'nullable|string',
-            'deadline'     => 'nullable|date',
+            'jenis_tugas' => 'required|in:tugas_pendahuluan,laporan,responsi,tugas_pengganti',
+            'judul' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'deadline' => 'nullable|date',
             'deadline_acc' => 'nullable|date|after_or_equal:deadline',
             'is_published' => 'boolean',
-            'file'         => 'nullable|file|mimes:pdf|max:10240',
-            'hapus_file'   => 'nullable|boolean',
+            'files' => 'nullable|array|max:3',
+            'files.*' => 'file|max:5120',
+            'hapus_file' => 'nullable|string',
         ]);
 
         $tugas = $this->findOwnedTugas($id);
 
         $filePath = $tugas->file_path;
+        $finalPaths = [];
 
-        if ($request->boolean('hapus_file') || $request->hasFile('file')) {
-            if ($tugas->file_path) {
-                $this->supabase->delete($tugas->file_path, 'eoffice');
+        $oldFiles = json_decode($tugas->file_path, true) ?? [];
+        if (!is_array($oldFiles)) {
+            $oldFiles = $tugas->file_path ? [$tugas->file_path] : [];
+        }
+
+        if ($request->has('hapus_file')) {
+            $deleted = $request->input('hapus_file');
+            $deletedIndexes = is_string($deleted) ? json_decode($deleted, true) : (is_array($deleted) ? $deleted : []);
+            if (is_array($deletedIndexes)) {
+                foreach ($deletedIndexes as $idx) {
+                    if (isset($oldFiles[$idx])) {
+                        $f = $oldFiles[$idx];
+                        $p = is_array($f) && isset($f['path']) ? $f['path'] : $f;
+                        try {
+                            $this->supabase->delete($p, 'eoffice');
+                        } catch (\Throwable $e) {
+                        }
+                        unset($oldFiles[$idx]);
+                    }
+                }
             }
-            $filePath = null;
+        }
+        $finalPaths = $oldFiles;
+
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                if (count($finalPaths) < 3) {
+                    $uploadedPath = $this->supabase->upload($file, 'tugas-praktikum', 'eoffice');
+                    if ($uploadedPath) {
+                        $finalPaths[] = [
+                            'path' => $uploadedPath,
+                            'original_name' => $file->getClientOriginalName()
+                        ];
+                    }
+                }
+            }
         }
 
-        if ($request->hasFile('file')) {
-            $filePath = $this->supabase->upload($request->file('file'), 'tugas-praktikum', 'eoffice');
-        }
+        $filePath = count($finalPaths) > 0 ? json_encode(array_values($finalPaths)) : null;
 
         $tugas->update([
             ...$request->only(['jenis_tugas', 'judul', 'deskripsi', 'deadline', 'deadline_acc', 'is_published']),
@@ -163,7 +208,15 @@ class TugasController extends Controller
 
         // Hapus file dari storage jika ada
         if ($tugas->file_path) {
-            $this->supabase->delete($tugas->file_path, 'eoffice');
+            $oldFiles = json_decode($tugas->file_path, true) ?? [];
+            if (!is_array($oldFiles))
+                $oldFiles = [$tugas->file_path];
+            foreach ($oldFiles as $f) {
+                try {
+                    $this->supabase->delete($f, 'eoffice');
+                } catch (\Throwable $e) {
+                }
+            }
         }
 
         $tugas->delete();
@@ -176,12 +229,14 @@ class TugasController extends Controller
         $tugas = $this->findOwnedTugas($id, ['modul.praktikum']);
 
         // Ambil semua praktikan terdaftar di praktikum tugas ini
+        $perPage = request()->input('per_page', 10);
         $praktikans = DaftarPraktikan::where('praktikum_id', $tugas->modul?->praktikum_id)
             ->with(['user', 'user.student'])
             ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
             ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
             ->orderBy('created_at')
-            ->get();
+            ->paginate($perPage)
+            ->withQueryString();
 
         // Ambil data pengumpulan tugas untuk tugas_id ini
         $pengumpulan = PengumpulanTugas::where('tugas_id', $id)
@@ -195,7 +250,8 @@ class TugasController extends Controller
             ->get()
             ->keyBy('daftar_praktikan_id');
 
-        return view('eoffice::manajemen-praktikum.asprak.tugas-pengumpulan',
+        return view(
+            'eoffice::manajemen-praktikum.asprak.tugas-pengumpulan',
             compact('tugas', 'praktikans', 'pengumpulan', 'nilaiJenis')
         );
     }
@@ -211,15 +267,15 @@ class TugasController extends Controller
         ]);
 
         $pengumpulan = PengumpulanTugas::with(['daftarPraktikan', 'tugas.modul.modulAsprak'])->findOrFail($id);
-        if (! $this->ownsModul((int) $pengumpulan->tugas?->modul_id)) {
+        if (!$this->ownsModul((int) $pengumpulan->tugas?->modul_id)) {
             abort(403, 'Anda tidak berhak menilai pengumpulan ini.');
         }
 
         $pengumpulan->update([
-            'nilai'              => $request->nilai,
+            'nilai' => $request->nilai,
             'status_pengumpulan' => PengumpulanTugas::STATUS_ACC,
-            'catatan_revisi'     => null,
-            'is_revision'        => false,
+            'catatan_revisi' => null,
+            'is_revision' => false,
         ]);
 
         // Sync nilai ke tabel nilai_jenis_tugas (two-way sync)
@@ -228,8 +284,8 @@ class TugasController extends Controller
             NilaiJenisTugas::updateOrCreate(
                 [
                     'daftar_praktikan_id' => $pengumpulan->daftar_praktikan_id,
-                    'modul_id'            => $tugas->modul_id,
-                    'jenis_tugas'         => $tugas->jenis_tugas,
+                    'modul_id' => $tugas->modul_id,
+                    'jenis_tugas' => $tugas->jenis_tugas,
                 ],
                 ['nilai' => $request->nilai]
             );
@@ -248,11 +304,11 @@ class TugasController extends Controller
     {
         $request->validate([
             'catatan_revisi' => 'required|string',
-            'file_revisi'    => 'nullable|file|mimes:pdf,docx,doc,zip,rar|max:10240',
+            'file_revisi' => 'nullable|file|mimes:pdf,docx,doc,zip,rar|max:10240',
         ]);
 
         $pengumpulan = PengumpulanTugas::with('tugas.modul')->findOrFail($id);
-        if (! $this->ownsModul((int) $pengumpulan->tugas?->modul_id)) {
+        if (!$this->ownsModul((int) $pengumpulan->tugas?->modul_id)) {
             abort(403, 'Anda tidak berhak merevisi pengumpulan ini.');
         }
 
@@ -275,9 +331,9 @@ class TugasController extends Controller
         }
 
         $pengumpulan->update([
-            'catatan_revisi'     => $request->catatan_revisi,
+            'catatan_revisi' => $request->catatan_revisi,
             'file_revisi_asprak' => $filePath,
-            'is_revision'        => true,
+            'is_revision' => true,
             'status_pengumpulan' => PengumpulanTugas::STATUS_REVISI,
         ]);
 
@@ -291,13 +347,13 @@ class TugasController extends Controller
     public function updateNilaiJenis(Request $request, int $id)
     {
         $request->validate([
-            'nilai'                => 'required|array',
-            'nilai.*.nilai_jenis'  => 'nullable|numeric|min:0|max:100',
+            'nilai' => 'required|array',
+            'nilai.*.nilai_jenis' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $tugas = $this->findOwnedTugas($id, ['modul']);
 
-        if (! $tugas->jenis_tugas) {
+        if (!$tugas->jenis_tugas) {
             return back()->with('error', 'Tugas ini belum memiliki jenis tugas.');
         }
 
@@ -309,8 +365,8 @@ class TugasController extends Controller
             NilaiJenisTugas::updateOrCreate(
                 [
                     'daftar_praktikan_id' => $daftarPraktikanId,
-                    'modul_id'            => $tugas->modul_id,
-                    'jenis_tugas'         => $tugas->jenis_tugas,
+                    'modul_id' => $tugas->modul_id,
+                    'jenis_tugas' => $tugas->jenis_tugas,
                 ],
                 ['nilai' => $nilaiValue]
             );
@@ -345,7 +401,8 @@ class TugasController extends Controller
      */
     private function syncExistingNilaiJenisToPengumpulan(Tugas $tugas): void
     {
-        if (! $tugas->jenis_tugas) return;
+        if (!$tugas->jenis_tugas)
+            return;
 
         $existingNilai = NilaiJenisTugas::where('modul_id', $tugas->modul_id)
             ->where('jenis_tugas', $tugas->jenis_tugas)
@@ -354,14 +411,14 @@ class TugasController extends Controller
 
         foreach ($existingNilai as $nj) {
             $pengumpulan = PengumpulanTugas::firstOrCreate([
-                'tugas_id'            => $tugas->id,
+                'tugas_id' => $tugas->id,
                 'daftar_praktikan_id' => $nj->daftar_praktikan_id,
             ]);
 
             // Jika belum ada nilainya di pengumpulan_tugas, update
             if ($pengumpulan->nilai === null) {
                 $pengumpulan->update([
-                    'nilai'              => $nj->nilai,
+                    'nilai' => $nj->nilai,
                     'status_pengumpulan' => 'acc',
                 ]);
             }
@@ -395,10 +452,12 @@ class TugasController extends Controller
 
     private function ownsModul(int $modulId): bool
     {
-        return ModulAsprak::whereHas('asprak', fn($q) => $q
-            ->where('user_id', auth()->id())
-            ->where('role', 'asprak')
-            ->whereNull('deleted_at')
+        return ModulAsprak::whereHas(
+            'asprak',
+            fn($q) => $q
+                ->where('user_id', auth()->id())
+                ->where('role', 'asprak')
+                ->whereNull('deleted_at')
         )->where('modul_id', $modulId)->exists();
     }
 

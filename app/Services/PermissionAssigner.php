@@ -10,16 +10,16 @@ use Illuminate\Support\Facades\Log;
 class PermissionAssigner
 {
     private const ROLE_MODULE_MAPPING = [
-        'admin_banksoal'        => ['banksoal'],
-        'admin_capstone'        => ['capstone'],
-        'admin_eoffice'         => ['eoffice'],
-        'admin_kemahasiswaan'   => ['kemahasiswaan'],
-        'dosen'                 => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-        'mahasiswa'             => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-        'gpm'                   => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-        'pengurus_himpunan'     => ['kemahasiswaan'],
-        'alumni'                => ['kemahasiswaan'],
-        'superadmin'            => ['all'],
+        'admin_banksoal' => ['banksoal'],
+        'admin_capstone' => ['capstone'],
+        'admin_eoffice' => ['eoffice'],
+        'admin_kemahasiswaan' => ['kemahasiswaan'],
+        'dosen' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
+        'mahasiswa' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
+        'gpm' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
+        'pengurus_himpunan' => ['kemahasiswaan'],
+        'alumni' => ['kemahasiswaan'],
+        'superadmin' => ['all'],
     ];
 
     private const ACTIONS = ['view', 'edit', 'delete'];
@@ -31,39 +31,40 @@ class PermissionAssigner
 
             Log::info('Assigning permissions via Spatie', [
                 'user_id' => $user->id,
-                'email'   => $user->email,
-                'roles'   => $roleNames,
+                'email' => $user->email,
+                'roles' => $roleNames,
             ]);
 
-            $permissionIds = [];
+            $permissionNames = [];
+            $assignAllPermissions = false;
 
             foreach ($roleNames as $roleName) {
                 $modules = self::ROLE_MODULE_MAPPING[$roleName] ?? [];
 
                 if (empty($modules)) {
                     Log::warning('No module mapping for role', ['role' => $roleName]);
+
                     continue;
                 }
 
                 if (in_array('all', $modules)) {
-                    $permissionIds = Permission::all()->pluck('id')->toArray();
+                    $assignAllPermissions = true;
                     break;
                 }
 
                 foreach ($modules as $module) {
                     foreach (self::ACTIONS as $action) {
-                        $id = DB::table('permissions')
-                            ->where('name', "{$module}.{$action}")
-                            ->value('id');
-
-                        if ($id) {
-                            $permissionIds[] = $id;
-                        }
+                        $permissionNames[] = "{$module}.{$action}";
                     }
                 }
             }
 
-            $permissionIds = array_unique($permissionIds);
+            $permissionIds = $assignAllPermissions
+                ? Permission::query()->pluck('id')->all()
+                : Permission::query()
+                    ->whereIn('name', array_values(array_unique($permissionNames)))
+                    ->pluck('id')
+                    ->all();
 
             // Spatie direct permissions via model_has_permissions table
             $user->permissions()->sync($permissionIds);
@@ -75,7 +76,7 @@ class PermissionAssigner
             DB::rollBack();
             Log::error('Failed to assign permissions', [
                 'user_id' => $user->id,
-                'error'   => $e->getMessage(),
+                'error' => $e->getMessage(),
             ]);
             throw $e;
         }
@@ -84,7 +85,7 @@ class PermissionAssigner
     public static function verifyPermissions(User $user): array
     {
         $roleNames = $user->roles()->pluck('name')->toArray();
-        $modules   = [];
+        $modules = [];
 
         foreach ($roleNames as $roleName) {
             $mapped = self::ROLE_MODULE_MAPPING[$roleName] ?? [];
@@ -108,12 +109,12 @@ class PermissionAssigner
 
         $current = $user->permissions()->pluck('name')->toArray();
         $missing = array_diff($expected, $current);
-        $excess  = array_diff($current, $expected);
+        $excess = array_diff($current, $expected);
 
         return [
             'has_correct_permissions' => empty($missing) && empty($excess),
-            'missing'                 => array_values($missing),
-            'excess'                  => array_values($excess),
+            'missing' => array_values($missing),
+            'excess' => array_values($excess),
         ];
     }
 

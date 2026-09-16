@@ -28,13 +28,16 @@ class DaftarPraktikanController extends Controller
             ->orderBy('created_at');
 
         if ($search) {
-            $query->whereHas('user', fn($q) => $q
-                ->where('name', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")
+            $query->whereHas(
+                'user',
+                fn($q) => $q
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
             );
         }
 
-        $praktikans = $query->paginate(20)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $praktikans = $query->paginate($perPage)->withQueryString();
 
         // Hitung persentase kehadiran per praktikan
         $absensiMap = [];
@@ -44,15 +47,18 @@ class DaftarPraktikanController extends Controller
                 ->groupBy('daftar_praktikan_id');
 
             foreach ($absensiData as $dpId => $records) {
-                $total  = $records->count();
-                $hadir  = $records->where('status', 'hadir')->count();
+                $total = $records->count();
+                $hadir = $records->where('status', 'hadir')->count();
                 $absensiMap[$dpId] = $total > 0 ? round($hadir / $total * 100) : null;
             }
         }
 
+        $praktikum = $asprak?->praktikum;
+
         return view('eoffice::manajemen-praktikum.asprak.daftar-praktikan', compact(
             'praktikans',
             'asprak',
+            'praktikum',
             'search',
             'absensiMap'
         ));

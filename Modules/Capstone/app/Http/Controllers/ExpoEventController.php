@@ -4,7 +4,9 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\ExpoEvent;
-use App\Services\ExpoService;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Services\ExpoService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class ExpoEventController extends Controller
@@ -23,7 +25,7 @@ class ExpoEventController extends Controller
     public function index(Request $request)
     {
         $query = ExpoEvent::with(['period', 'creator'])
-            ->withCount('registrations');
+            ->withCount(['registrations' => fn ($query) => $query->where('status', 'REGISTERED')]);
 
         if ($request->has('period_id')) {
             $query->where('period_id', $request->period_id);
@@ -35,7 +37,7 @@ class ExpoEventController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'period_id' => 'required|exists:periods,id',
+            'period_id' => 'required|exists:capstone_periods,id',
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -108,7 +110,7 @@ class ExpoEventController extends Controller
     public function studentEvents(Request $request)
     {
         $user = $request->user();
-        $group = \App\Models\GroupMember::where('student_id', $user->id)
+        $group = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->first()?->group;
 
         if (!$group) {
@@ -117,18 +119,27 @@ class ExpoEventController extends Controller
 
         $events = ExpoEvent::where('period_id', $group->period_id)
             ->where('is_published', true)
-            ->withCount('registrations')
+            ->withCount(['registrations'=>fn($q)=>$q->where('status','REGISTERED')])
+            ->withExists(['registrations as is_registered'=>fn($q)=>$q->where('status','REGISTERED')->where('group_id',$group->id)])
             ->orderBy('date')
             ->get();
 
-        // Append registration status for this group
-        $events->each(function ($event) use ($group) {
-            $event->is_registered = $event->registrations()
-                ->where('group_id', $group->id)
-                ->exists();
+        $hasDraft=\Modules\Capstone\Models\TaSubmission::where('group_id',$group->id)->exists();
+        $events->each(function ($event) use ($group,$hasDraft) {
+            $event->registration_reason = $group->status !== 'PDC2_READY_FOR_EXPO' ? 'Group must be ready for Expo.' : (!$hasDraft ? 'At least 1 member must submit a TA draft.' : null);
+            $event->can_register = !$event->is_registered && !$event->registration_reason && $event->registrations_count < $event->capacity;
         });
 
         return response()->json($events);
+    }
+
+    public function withdraw(Request $request, ExpoEvent $expoEvent)
+    {
+        $member=GroupMember::where('student_id',CapstoneActor::student($request->user())->id)->firstOrFail();
+        try {
+            $this->expoService->withdrawGroupFromEvent($expoEvent->id,$member->group_id,$request->user()->id);
+            return response()->json(['message'=>'Successfully withdrawn from expo.']);
+        } catch (\InvalidArgumentException $e) {return response()->json(['message'=>$e->getMessage()],403);}
     }
 
     /**
@@ -137,7 +148,7 @@ class ExpoEventController extends Controller
     public function register(Request $request, ExpoEvent $expoEvent)
     {
         $user = $request->user();
-        $groupMember = \App\Models\GroupMember::where('student_id', $user->id)->first();
+        $groupMember = GroupMember::where('student_id', CapstoneActor::student($user)->id)->first();
 
         if (!$groupMember) {
             return response()->json(['message' => 'You are not in a group.'], 400);

@@ -168,11 +168,12 @@ class UserPeminjamanController extends Controller
             'jam_mulai' => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
             'berkas_pendukung' => $filePath,
-            'status' => $statusAkhir
+            'status' => $statusAkhir,
+            'created_by' => auth()->id()
         ]);
 
         $feedbackMsg = $statusAkhir == 'disetujui'
-            ? 'Akses VIP Dosen: Form Booking Ruangan berhasil diajukan dan LANGSUNG DISETUJUI oleh sistem.'
+            ? 'Pengajuan peminjaman ruangan Anda telah berhasil diproses dan disetujui secara otomatis oleh sistem.'
             : 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
 
         return redirect()->route('eoffice.peminjaman.user.saya')
@@ -211,9 +212,10 @@ class UserPeminjamanController extends Controller
         $allRuangansDaftar = Ruangan::where('is_active', true)->orderBy('nama')->get();
 
         // Fetch bookings for the week range
-        $bookingsRaw = Peminjaman::whereBetween('tanggal_pinjam', [$weekStart->format('Y-m-d'), $weekEnd->format('Y-m-d')])
+        $bookingsRaw = Peminjaman::with('user:id,name')
+            ->whereBetween('tanggal_pinjam', [$weekStart->format('Y-m-d'), $weekEnd->format('Y-m-d')])
             ->whereIn('status', ['menunggu', 'disetujui'])
-            ->get(['ruangan_id', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'status', 'tujuan']);
+            ->get(['id', 'user_id', 'ruangan_id', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'status', 'tujuan']);
 
         // For month heatmap - count bookings per day
         $monthStart = $monthDate->copy()->startOfMonth();
@@ -233,7 +235,7 @@ class UserPeminjamanController extends Controller
         $batasHMinBooking = (int) (Pengaturan::where('key', 'batas_h_min_booking')->value('value') ?? 0);
 
         $user = auth()->user();
-        $nim = explode('@', $user->email)[0];
+        $nim = $user->student->student_number ?? $user->lecturer->employee_number ?? explode('@', $user->email)[0];
         $phone = ''; // User model currently may not have phone natively unless it does, we can leave blank.
 
         $internalSchedules = \Modules\EOffice\Models\MrJadwalInternal::all();
@@ -335,8 +337,8 @@ class UserPeminjamanController extends Controller
                         });
                 });
             })
-            ->orderBy('tanggal_pinjam', 'desc')
-            ->get();
+            ->latest('updated_at')
+            ->paginate(request('per_page', 10))->appends(request()->query());
         return view('eoffice::manajemen-ruangan.user.riwayat.index', compact('riwayats'));
     }
 }

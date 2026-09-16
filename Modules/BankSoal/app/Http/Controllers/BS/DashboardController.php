@@ -263,16 +263,22 @@ class DashboardController extends Controller
         if ($roles->contains('dosen')) {
             $mataKuliah = \Modules\BankSoal\Models\MataKuliah::whereHas('dosenPengampu', function($q) use($user) {
                 $q->where('user_id', $user->id);
-            })->get();
+            })->withCount('pertanyaan')->get();
 
             $mkIds = $mataKuliah->pluck('id')->toArray();
 
             // Query Pertanyaan Status Data
-            $totalSoal = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->count();
-            $approved = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'disetujui')->count();
-            $perluReview = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->whereIn('status', ['diajukan'])->count();
-            $revisi = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'revisi')->count();
-            $ditolak = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'ditolak')->count();
+            $statusCounts = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)
+                ->selectRaw('status, COUNT(*) as total')
+                ->groupBy('status')->pluck('total', 'status');
+            $totalSoal = (int) $statusCounts->sum();
+            $approved = (int) $statusCounts->get('disetujui', 0);
+            $perluReview = (int) $statusCounts->get('diajukan', 0);
+            $revisi = (int) $statusCounts->get('revisi', 0);
+            $ditolak = (int) $statusCounts->get('ditolak', 0);
+
+            $mkDenganRps = DB::table('bs_rps_detail')->whereIn('mk_id', $mkIds)
+                ->distinct()->pluck('mk_id')->flip();
 
             // Data CPL untuk Bar Chart
             $cplDistRaw = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)
@@ -287,7 +293,7 @@ class DashboardController extends Controller
             $mkDist = [];
             $mkTanpaRps = [];
             foreach ($mataKuliah as $mk) {
-                $count = \Modules\BankSoal\Models\Pertanyaan::where('mk_id', $mk->id)->count();
+                $count = (int) $mk->pertanyaan_count;
                 $mkDist[] = [
                     'mk' => $mk->kode,
                     'count' => $count,
@@ -295,8 +301,7 @@ class DashboardController extends Controller
                 ];
 
                 // Cek RPS
-                $rpsCount = \Illuminate\Support\Facades\DB::table('bs_rps_detail')->where('mk_id', $mk->id)->count();
-                if ($rpsCount == 0) {
+                if (! $mkDenganRps->has($mk->id)) {
                     $mkTanpaRps[] = $mk->nama;
                 }
             }

@@ -8,6 +8,7 @@ use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Support\CapstoneActor;
 
 class TitleApprovalController extends Controller
 {
@@ -17,8 +18,9 @@ class TitleApprovalController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
-        $proposals = Title::where('proposed_supervisor_id', $user->id)
+        $proposals = Title::where('proposed_supervisor_id', $lecturerId)
             ->where('title_source', 'STUDENT')
             ->where('supervisor_approval_status', 'PENDING')
             ->with(['proposedByGroup.members.student', 'proposedSupervisor'])
@@ -34,9 +36,10 @@ class TitleApprovalController extends Controller
     public function show(Request $request, $id)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $proposal = Title::where('id', $id)
-            ->where('proposed_supervisor_id', $user->id)
+            ->where('proposed_supervisor_id', $lecturerId)
             ->where('title_source', 'STUDENT')
             ->with(['proposedByGroup.members.student', 'proposedByGroup.period', 'proposedSupervisor'])
             ->first();
@@ -59,9 +62,10 @@ class TitleApprovalController extends Controller
     public function approve(Request $request, $id)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $title = Title::where('id', $id)
-            ->where('proposed_supervisor_id', $user->id)
+            ->where('proposed_supervisor_id', $lecturerId)
             ->where('title_source', 'STUDENT')
             ->where('supervisor_approval_status', 'PENDING')
             ->first();
@@ -103,7 +107,7 @@ class TitleApprovalController extends Controller
             // Notify all group members
             foreach ($group->members()->with('student')->get() as $member) {
                 Notification::create([
-                    'user_id' => $member->student_id,
+                    'user_id' => $member->student->user_id,
                     'type' => 'PROPOSAL_APPROVED',
                     'title' => 'Title Proposal Approved',
                     'message' => "Your title proposal \"{$title->title}\" has been approved by the supervisor! Await admin finalization.",
@@ -134,9 +138,10 @@ class TitleApprovalController extends Controller
         ]);
 
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $title = Title::where('id', $id)
-            ->where('proposed_supervisor_id', $user->id)
+            ->where('proposed_supervisor_id', $lecturerId)
             ->where('title_source', 'STUDENT')
             ->where('supervisor_approval_status', 'PENDING')
             ->first();
@@ -165,7 +170,7 @@ class TitleApprovalController extends Controller
             // Notify all group members
             foreach ($group->members()->with('student')->get() as $member) {
                 Notification::create([
-                    'user_id' => $member->student_id,
+                    'user_id' => $member->student->user_id,
                     'type' => 'PROPOSAL_REJECTED',
                     'title' => 'Title Proposal Rejected',
                     'message' => "Your title proposal \"{$title->title}\" was rejected. Reason: {$validated['rejection_reason']}",

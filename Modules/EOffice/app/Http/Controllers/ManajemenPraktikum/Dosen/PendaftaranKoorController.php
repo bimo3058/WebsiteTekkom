@@ -24,14 +24,19 @@ class PendaftaranKoorController extends Controller
     {
         $user = auth()->user();
 
-        // Praktikum yang diampu dosen ini (ambil sebagai array string UUID)
-        $praktikumIds = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
-            ->pluck('id')
-            ->map(fn($id) => (string) $id)
-            ->toArray();
+        $praktikumList = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
+            ->orderByDesc('created_at')
+            ->get();
 
-        $query = PendaftaranKoordinator::with(['user', 'praktikum'])
-            ->whereIn('praktikum_id', $praktikumIds);
+        $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
+        $praktikum = $praktikumList->firstWhere('id', $praktikumId);
+
+        if ($praktikum) {
+            $praktikum->load(['koordinator.student']);
+        }
+
+        $query = PendaftaranKoordinator::with(['user.student', 'praktikum'])
+            ->where('praktikum_id', $praktikumId);
 
         $sort = $request->input('sort', 'terbaru');
         if ($sort === 'ipk_tertinggi') {
@@ -46,16 +51,33 @@ class PendaftaranKoorController extends Controller
         if ($search = $request->input('search')) {
             $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
-        if ($praktikumId = $request->input('praktikum_id')) {
-            $query->where('praktikum_id', (string) $praktikumId);
+
+        $pendaftaran = $query->paginate(request('per_page', 10))->withQueryString();
+
+        $koordinator = $praktikum ? $praktikum->koordinator : null;
+        $koorPendaftaran = null;
+        if ($koordinator) {
+            $koorPendaftaran = PendaftaranKoordinator::where('praktikum_id', $praktikumId)
+                ->where('user_id', $koordinator->id)
+                ->first();
         }
 
-        $pendaftaran = $query->paginate(15)->withQueryString();
-        $praktikumList = Praktikum::whereIn('id', $praktikumIds)->orderBy('nama')->get();
+        $periode = null;
+        if ($praktikumId) {
+            $periode = \Modules\EOffice\Models\PeriodePendaftaran::where('praktikum_id', $praktikumId)
+                ->where('jenis', 'koor')
+                ->where('is_aktif', true)
+                ->orderByDesc('created_at')
+                ->first();
+        }
 
         return view('eoffice::manajemen-praktikum.dosen.pendaftaran-koor', compact(
             'pendaftaran',
-            'praktikumList'
+            'praktikum',
+            'praktikumList',
+            'koordinator',
+            'koorPendaftaran',
+            'periode'
         ));
     }
 
@@ -70,17 +92,21 @@ class PendaftaranKoorController extends Controller
         if (!$pendaftaran->praktikum?->dosens->contains('id', $user->id)) {
             return back()->with('error', 'Anda tidak berhak mengelola pendaftaran ini.');
         }
-        if ($pendaftaran->status_dosen !== 'menunggu') {
+        if ($pendaftaran->status !== 'pending' || $pendaftaran->status_dosen !== 'menunggu') {
             return back()->with('error', 'Pendaftaran ini sudah pernah diproses oleh dosen.');
         }
 
-        $pendaftaran->update([
+        $updated = PendaftaranKoordinator::whereKey($id)->where('status', 'pending')->where('status_dosen', 'menunggu')->update([
             'status_dosen' => 'disetujui',
             'catatan_dosen' => $request->input('catatan_dosen'),
             'direview_oleh' => $user->id,
             'direview_pada' => now(),
             // status tetap 'pending' — menunggu admin final approve
         ]);
+
+        if (!$updated) {
+            return back()->with('error', 'Pendaftaran ini sudah diproses. Muat ulang halaman.');
+        }
 
         // Notifikasi ke admin (superadmin & admin_eoffice)
         $adminIds = \App\Models\User::whereHas(
@@ -105,24 +131,22 @@ class PendaftaranKoorController extends Controller
         $pendaftarLain = PendaftaranKoordinator::where('praktikum_id', $pendaftaran->praktikum_id)
             ->where('id', '!=', $pendaftaran->id)
             ->where('status_dosen', 'menunggu')
+            ->where('status', 'pending')
             ->get();
 
-        if ($pendaftarLain->isNotEmpty()) {
-            PendaftaranKoordinator::whereIn('id', $pendaftarLain->pluck('id'))->update([
-                'status_dosen' => 'ditolak',
-                'status' => 'rejected',
-                'alasan_penolakan' => 'Sudah ada kandidat lain yang disetujui sebagai Koordinator untuk praktikum ini.',
-                'direview_oleh' => $user->id,
-                'direview_pada' => now(),
-            ]);
-
-            // Kirim notifikasi penolakan ke mereka
-            foreach ($pendaftarLain as $lain) {
-                $this->notif->kirim(
-                    $lain->user_id,
-                    'Pendaftaran Koor Ditolak',
-                    "Maaf, pendaftaran koordinator Anda untuk {$pendaftaran->praktikum?->nama} tidak disetujui."
-                );
+        foreach ($pendaftarLain as $lain) {
+            // Conditional write protects a concurrent final approval by admin.
+            $rejected = PendaftaranKoordinator::whereKey($lain->id)
+                ->where('status', 'pending')->where('status_dosen', 'menunggu')->update([
+                    'status_dosen' => 'ditolak',
+                    'status' => 'rejected',
+                    'alasan_penolakan' => 'Sudah ada kandidat lain yang disetujui sebagai Koordinator untuk praktikum ini.',
+                    'direview_oleh' => $user->id,
+                    'direview_pada' => now(),
+                ]);
+            if ($rejected) {
+                $this->notif->kirim($lain->user_id, 'Pendaftaran Koor Ditolak',
+                    "Maaf, pendaftaran koordinator Anda untuk {$pendaftaran->praktikum?->nama} tidak disetujui.");
             }
         }
 
@@ -140,11 +164,11 @@ class PendaftaranKoorController extends Controller
         if (!$pendaftaran->praktikum?->dosens->contains('id', $user->id)) {
             return back()->with('error', 'Anda tidak berhak mengelola pendaftaran ini.');
         }
-        if ($pendaftaran->status_dosen !== 'menunggu') {
+        if ($pendaftaran->status !== 'pending' || $pendaftaran->status_dosen !== 'menunggu') {
             return back()->with('error', 'Pendaftaran ini sudah pernah diproses oleh dosen.');
         }
 
-        $pendaftaran->update([
+        $updated = PendaftaranKoordinator::whereKey($id)->where('status', 'pending')->where('status_dosen', 'menunggu')->update([
             'status_dosen' => 'ditolak',
             'catatan_dosen' => $request->input('catatan_dosen'),
             'alasan_penolakan' => $request->input('alasan_penolakan'),
@@ -152,6 +176,10 @@ class PendaftaranKoorController extends Controller
             'direview_oleh' => $user->id,
             'direview_pada' => now(),
         ]);
+
+        if (!$updated) {
+            return back()->with('error', 'Pendaftaran ini sudah diproses. Muat ulang halaman.');
+        }
 
         $this->notif->kirim(
             $pendaftaran->user_id,
@@ -172,7 +200,9 @@ class PendaftaranKoorController extends Controller
             return back()->with('error', 'Anda tidak berhak menghapus pendaftaran ini.');
         }
 
-        $pendaftaran->delete();
+        if ($pendaftaran->status === 'approved' || !PendaftaranKoordinator::whereKey($id)->where('status', '!=', 'approved')->delete()) {
+            return back()->with('error', 'Pendaftaran yang sudah disetujui admin tidak dapat dihapus.');
+        }
         return back()->with('success', 'Pendaftaran berhasil dihapus.');
     }
 }

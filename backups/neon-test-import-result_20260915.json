@@ -1,0 +1,1235 @@
+{
+  "applied": true,
+  "summary": {
+    "existingAccounts": 164,
+    "newAccounts": 3,
+    "newStudents": 3,
+    "newLecturers": 0,
+    "capstoneRows": 1144,
+    "capstoneTables": 50
+  },
+  "members_linked": 147,
+  "orphaned_foreign_keys": 0,
+  "existing_shared_data_unchanged": true,
+  "role_assignments_added": 3,
+  "statuses": {
+    "FORMING_SOLO": 2,
+    "PDC1_ACTIVE": 42,
+    "PDC2_ACTIVE": 1
+  },
+  "periods": [
+    {
+      "id": 1,
+      "name": "Capstone TA S1T26"
+    },
+    {
+      "id": 2,
+      "name": "Capstone TA S2T26"
+    }
+  ],
+  "backup": "C:\\WebsiteTekkom - Copy\\backups/supabase_before_neon_test_import_20260915_125105.dump",
+  "committed_at": "2026-09-15T12:58:26+07:00",
+  "verification": {
+    "counts": {
+      "users": 237,
+      "students": 202,
+      "lecturers": 41,
+      "groups": 45,
+      "periods": 2
+    },
+    "student_roles": [
+      "mahasiswa"
+    ],
+    "student_feature_state": {
+      "registered": true,
+      "group_status": "PDC1_ACTIVE",
+      "pdc1_started": true
+    },
+    "blocked_reasons": {
+      "/mahasiswa/documents": null,
+      "/mahasiswa/schedule": null,
+      "/mahasiswa/grades": null
+    },
+    "documents": 126,
+    "scores": {
+      "sempro": 24,
+      "bimbingan_sempro": 24
+    }
+  },
+  "identityMapping": [
+    {
+      "sourceUserId": "1",
+      "targetUserId": 386,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "2",
+      "targetUserId": 387,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "3",
+      "targetUserId": 388,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "4",
+      "targetUserId": 389,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "5",
+      "targetUserId": 390,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "6",
+      "targetUserId": 391,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "7",
+      "targetUserId": 392,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "8",
+      "targetUserId": 393,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "9",
+      "targetUserId": 394,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "10",
+      "targetUserId": 395,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "11",
+      "targetUserId": 396,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "12",
+      "targetUserId": 397,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "13",
+      "targetUserId": 398,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "14",
+      "targetUserId": 400,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "15",
+      "targetUserId": 401,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "16",
+      "targetUserId": 402,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "17",
+      "targetUserId": 403,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "18",
+      "targetUserId": 404,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "19",
+      "targetUserId": 405,
+      "role": "dosen",
+      "basis": "unique_full_name_and_lecturer_profile"
+    },
+    {
+      "sourceUserId": "20",
+      "targetUserId": 242,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "21",
+      "targetUserId": 243,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "22",
+      "targetUserId": 244,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "23",
+      "targetUserId": 245,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "24",
+      "targetUserId": 246,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "25",
+      "targetUserId": 247,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "26",
+      "targetUserId": 248,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "27",
+      "targetUserId": 249,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "28",
+      "targetUserId": 250,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "29",
+      "targetUserId": 251,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "30",
+      "targetUserId": 252,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "31",
+      "targetUserId": 253,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "32",
+      "targetUserId": 254,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "33",
+      "targetUserId": 255,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "34",
+      "targetUserId": 256,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "35",
+      "targetUserId": 257,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "36",
+      "targetUserId": 258,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "37",
+      "targetUserId": 259,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "38",
+      "targetUserId": 260,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "39",
+      "targetUserId": 261,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "40",
+      "targetUserId": 262,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "41",
+      "targetUserId": 263,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "42",
+      "targetUserId": 264,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "43",
+      "targetUserId": 265,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "44",
+      "targetUserId": 266,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "45",
+      "targetUserId": 267,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "46",
+      "targetUserId": 268,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "47",
+      "targetUserId": 269,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "48",
+      "targetUserId": 270,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "49",
+      "targetUserId": 271,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "50",
+      "targetUserId": 272,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "51",
+      "targetUserId": 273,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "52",
+      "targetUserId": 274,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "53",
+      "targetUserId": 275,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "54",
+      "targetUserId": 276,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "55",
+      "targetUserId": 277,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "56",
+      "targetUserId": 278,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "57",
+      "targetUserId": 279,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "59",
+      "targetUserId": 281,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "60",
+      "targetUserId": 282,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "61",
+      "targetUserId": 283,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "62",
+      "targetUserId": 284,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "63",
+      "targetUserId": 285,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "64",
+      "targetUserId": 286,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "65",
+      "targetUserId": 287,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "66",
+      "targetUserId": 288,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "67",
+      "targetUserId": 289,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "68",
+      "targetUserId": 290,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "69",
+      "targetUserId": 291,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "70",
+      "targetUserId": 292,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "71",
+      "targetUserId": 293,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "72",
+      "targetUserId": 294,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "73",
+      "targetUserId": 295,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "74",
+      "targetUserId": 296,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "75",
+      "targetUserId": 297,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "76",
+      "targetUserId": 298,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "77",
+      "targetUserId": 299,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "78",
+      "targetUserId": 300,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "79",
+      "targetUserId": 301,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "80",
+      "targetUserId": 302,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "81",
+      "targetUserId": 303,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "82",
+      "targetUserId": 304,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "83",
+      "targetUserId": 305,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "84",
+      "targetUserId": 306,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "85",
+      "targetUserId": 307,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "86",
+      "targetUserId": 308,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "87",
+      "targetUserId": 309,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "88",
+      "targetUserId": 310,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "89",
+      "targetUserId": 311,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "90",
+      "targetUserId": 312,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "91",
+      "targetUserId": 313,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "92",
+      "targetUserId": 314,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "93",
+      "targetUserId": 315,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "94",
+      "targetUserId": 316,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "95",
+      "targetUserId": 317,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "96",
+      "targetUserId": 318,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "97",
+      "targetUserId": 319,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "98",
+      "targetUserId": 320,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "99",
+      "targetUserId": 321,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "100",
+      "targetUserId": 322,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "101",
+      "targetUserId": 323,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "102",
+      "targetUserId": 324,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "103",
+      "targetUserId": 325,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "104",
+      "targetUserId": 326,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "105",
+      "targetUserId": 327,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "106",
+      "targetUserId": 328,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "107",
+      "targetUserId": 329,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "108",
+      "targetUserId": 330,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "109",
+      "targetUserId": 331,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "110",
+      "targetUserId": 332,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "111",
+      "targetUserId": 333,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "112",
+      "targetUserId": 334,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "113",
+      "targetUserId": 335,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "114",
+      "targetUserId": 336,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "115",
+      "targetUserId": 337,
+      "role": "mahasiswa",
+      "basis": "email"
+    },
+    {
+      "sourceUserId": "116",
+      "targetUserId": 338,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "117",
+      "targetUserId": 339,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "118",
+      "targetUserId": 340,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "119",
+      "targetUserId": 341,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "120",
+      "targetUserId": 342,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "121",
+      "targetUserId": 343,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "122",
+      "targetUserId": 344,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "123",
+      "targetUserId": 345,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "124",
+      "targetUserId": 346,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "125",
+      "targetUserId": 347,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "126",
+      "targetUserId": 348,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "127",
+      "targetUserId": 349,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "128",
+      "targetUserId": 350,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "129",
+      "targetUserId": 351,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "130",
+      "targetUserId": 352,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "131",
+      "targetUserId": 353,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "132",
+      "targetUserId": 354,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "133",
+      "targetUserId": 355,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "134",
+      "targetUserId": 356,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "135",
+      "targetUserId": 357,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "136",
+      "targetUserId": 358,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "137",
+      "targetUserId": 359,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "138",
+      "targetUserId": 360,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "139",
+      "targetUserId": 361,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "140",
+      "targetUserId": 362,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "141",
+      "targetUserId": 363,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "142",
+      "targetUserId": 364,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "143",
+      "targetUserId": 365,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "144",
+      "targetUserId": 366,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "145",
+      "targetUserId": 367,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "146",
+      "targetUserId": 368,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "147",
+      "targetUserId": 369,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "148",
+      "targetUserId": 370,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "149",
+      "targetUserId": 371,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "150",
+      "targetUserId": 372,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "152",
+      "targetUserId": 374,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "153",
+      "targetUserId": 375,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "154",
+      "targetUserId": 376,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "155",
+      "targetUserId": 377,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "156",
+      "targetUserId": 378,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "157",
+      "targetUserId": 379,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "158",
+      "targetUserId": 380,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "159",
+      "targetUserId": 381,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "160",
+      "targetUserId": 382,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "161",
+      "targetUserId": 383,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "162",
+      "targetUserId": 384,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "163",
+      "targetUserId": 385,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "164",
+      "targetUserId": 1229,
+      "role": "mahasiswa",
+      "basis": "new_account"
+    },
+    {
+      "sourceUserId": "165",
+      "targetUserId": 79,
+      "role": "admin",
+      "basis": "email"
+    },
+    {
+      "sourceUserId": "151",
+      "targetUserId": 373,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "58",
+      "targetUserId": 280,
+      "role": "mahasiswa",
+      "basis": "academic_number"
+    },
+    {
+      "sourceUserId": "166",
+      "targetUserId": 1230,
+      "role": "mahasiswa",
+      "basis": "new_account"
+    },
+    {
+      "sourceUserId": "167",
+      "targetUserId": 1231,
+      "role": "mahasiswa",
+      "basis": "new_account"
+    }
+  ],
+  "profileIdMapping": {
+    "students": {
+      "20": 1,
+      "21": 193,
+      "22": 37,
+      "23": 38,
+      "24": 39,
+      "25": 40,
+      "26": 41,
+      "27": 42,
+      "28": 43,
+      "29": 44,
+      "30": 45,
+      "31": 46,
+      "32": 47,
+      "33": 48,
+      "34": 49,
+      "35": 50,
+      "36": 51,
+      "37": 52,
+      "38": 53,
+      "39": 54,
+      "40": 55,
+      "41": 56,
+      "42": 57,
+      "43": 58,
+      "44": 59,
+      "45": 60,
+      "46": 61,
+      "47": 62,
+      "48": 63,
+      "49": 64,
+      "50": 65,
+      "51": 66,
+      "52": 67,
+      "53": 68,
+      "54": 69,
+      "55": 70,
+      "56": 71,
+      "57": 72,
+      "58": 73,
+      "59": 74,
+      "60": 75,
+      "61": 76,
+      "62": 77,
+      "63": 78,
+      "64": 79,
+      "65": 80,
+      "66": 81,
+      "67": 82,
+      "68": 83,
+      "69": 84,
+      "70": 85,
+      "71": 86,
+      "72": 87,
+      "73": 88,
+      "74": 89,
+      "75": 90,
+      "76": 91,
+      "77": 92,
+      "78": 93,
+      "79": 94,
+      "80": 95,
+      "81": 96,
+      "82": 97,
+      "83": 98,
+      "84": 99,
+      "85": 100,
+      "86": 101,
+      "87": 102,
+      "88": 103,
+      "89": 104,
+      "90": 105,
+      "91": 106,
+      "92": 107,
+      "93": 108,
+      "94": 109,
+      "95": 110,
+      "96": 111,
+      "97": 112,
+      "98": 113,
+      "99": 114,
+      "100": 115,
+      "101": 116,
+      "102": 117,
+      "103": 118,
+      "104": 119,
+      "105": 120,
+      "106": 121,
+      "107": 122,
+      "108": 123,
+      "109": 124,
+      "110": 125,
+      "111": 126,
+      "112": 127,
+      "113": 128,
+      "114": 129,
+      "115": 130,
+      "116": 131,
+      "117": 132,
+      "118": 133,
+      "119": 134,
+      "120": 135,
+      "121": 136,
+      "122": 137,
+      "123": 138,
+      "124": 139,
+      "125": 140,
+      "126": 141,
+      "127": 142,
+      "128": 143,
+      "129": 144,
+      "130": 145,
+      "131": 146,
+      "132": 147,
+      "133": 148,
+      "134": 149,
+      "135": 150,
+      "136": 151,
+      "137": 152,
+      "138": 153,
+      "139": 154,
+      "140": 155,
+      "141": 156,
+      "142": 157,
+      "143": 158,
+      "144": 159,
+      "145": 160,
+      "146": 161,
+      "147": 162,
+      "148": 163,
+      "149": 164,
+      "150": 165,
+      "151": 166,
+      "152": 167,
+      "153": 168,
+      "154": 169,
+      "155": 170,
+      "156": 171,
+      "157": 172,
+      "158": 173,
+      "159": 174,
+      "160": 175,
+      "161": 176,
+      "162": 177,
+      "163": 178,
+      "164": 200,
+      "166": 201,
+      "167": 202
+    },
+    "lecturers": {
+      "1": 13,
+      "2": 14,
+      "3": 7,
+      "4": 8,
+      "5": 9,
+      "6": 10,
+      "7": 11,
+      "8": 12,
+      "9": 15,
+      "10": 16,
+      "11": 17,
+      "12": 18,
+      "13": 19,
+      "14": 21,
+      "15": 22,
+      "16": 23,
+      "17": 24,
+      "18": 25,
+      "19": 26
+    }
+  }
+}

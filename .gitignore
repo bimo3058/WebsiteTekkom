@@ -16,6 +16,7 @@
 /public/build
 /public/hot
 /public/storage
+/storage/framework/views/
 /storage/*.key
 /storage/pail
 /vendor
@@ -23,6 +24,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 package-lock.json
+!frontend/package-lock.json
 boost.json
 composer.json
 Modules/BankSoal/node_modules
@@ -30,6 +32,7 @@ Modules/BankSoal/node_modules
 composer.json
 composer.lock
 bootstrap/providers.php
+/scratch
 
 # AI assistant files
 .claude/
@@ -41,6 +44,7 @@ AI_*.md
 .copilot/
 /Modules/BankSoal/Skills
 *.md
+!Modules/Capstone/PERFORMANCE.md
 *.sql
 
 _design_system_tmp/
@@ -53,3 +57,11 @@ _ds_tmp/
 # Redis dump
 dump.rdb
 package-lock.json
+Modules/EOffice/node_modules
+
+*.dump
+*.list
+
+# Frontend build and lint caches
+/frontend/.next/
+/frontend/.eslintcache

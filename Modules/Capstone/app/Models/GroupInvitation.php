@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 
 class GroupInvitation extends Model
@@ -21,11 +22,11 @@ class GroupInvitation extends Model
 
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     public function inviter()
     {
-        return $this->belongsTo(User::class, 'inviter_id');
+        return $this->belongsTo(Student::class, 'inviter_id');
     }
 }

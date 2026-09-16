@@ -11,7 +11,7 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Dashboard Koordinator</h1>
-            <span class="mp-badge sm" style="background:#E0E7FF;color:#6366F1;"><span class="dot"></span>Koor. Prak.</span>
+            <span class="mp-badge sm" style="background:#D0D6E9;color:#5D6DA2;"><span class="dot"></span>Koor. Prak.</span>
             @if(isset($praktikum) && $praktikum)
             <span class="mp-badge sm" style="background:{{ $praktikum->status === 'aktif' ? '#DDF2EE' : '#ECEFF3' }};color:{{ $praktikum->status === 'aktif' ? '#174E43' : '#666D80' }};">
                 <span class="dot" style="background:{{ $praktikum->status === 'aktif' ? '#40C4AA' : '#A4ABB8' }};"></span>

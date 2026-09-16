@@ -1,16 +1,23 @@
 <?php
+
 // bootstrap/app.php
 
+use App\Http\Middleware\ApplyPageMetadata;
+use App\Http\Middleware\CheckModuleActive;
+use App\Http\Middleware\CheckSessionVersion;
+use App\Http\Middleware\CheckSuspended;
+use App\Http\Middleware\PreventBackHistory;
+use App\Http\Middleware\RedirectBasedOnRole;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\CheckSuspended;
-use App\Http\Middleware\RedirectBasedOnRole;
-use App\Http\Middleware\LockToModule;
-use App\Http\Middleware\CheckModuleActive;
-use App\Http\Middleware\PreventBackHistory;
-use App\Http\Middleware\CheckSessionVersion;
+use Illuminate\Session\TokenMismatchException;
 use Illuminate\Support\Facades\Route;
+use Modules\Capstone\Http\Middleware\CapstoneAccessMiddleware;
+use Modules\Capstone\Http\Middleware\CapstoneRoleMiddleware;
+use Spatie\Permission\Middleware\PermissionMiddleware;
+use Spatie\Permission\Middleware\RoleMiddleware;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -59,32 +66,35 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureMicrosoftSsoSession::class,
             CheckSuspended::class,
             CheckSessionVersion::class,
             PreventBackHistory::class,
             RedirectBasedOnRole::class,
+            ApplyPageMetadata::class,
         ]);
 
         $middleware->alias([
-            'role'          => \Spatie\Permission\Middleware\RoleMiddleware::class,
-            'permission'    => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
             'module.active' => CheckModuleActive::class,
-            'capstone.role' => \Modules\Capstone\Http\Middleware\CapstoneRoleMiddleware::class,
+            'capstone.access' => CapstoneAccessMiddleware::class,
+            'capstone.role' => CapstoneRoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
 
-        $exceptions->renderable(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+        $exceptions->renderable(function (HttpException $e, $request) {
             $code = $e->getStatusCode();
             $supported = [400, 401, 403, 404, 429, 500, 503];
 
-            if (in_array($code, $supported) && !$request->expectsJson()) {
+            if (in_array($code, $supported) && ! $request->expectsJson()) {
                 return redirect()->route('error.page', ['code' => $code])
                     ->with('from_exception', true);
             }
         });
 
-        $exceptions->renderable(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+        $exceptions->renderable(function (HttpException $e, $request) {
             if ($e->getStatusCode() === 419) {
                 if ($request->expectsJson()) {
                     return response()->json([
@@ -97,7 +107,7 @@ return Application::configure(basePath: dirname(__DIR__))
             }
         });
 
-        $exceptions->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+        $exceptions->renderable(function (TokenMismatchException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman.',

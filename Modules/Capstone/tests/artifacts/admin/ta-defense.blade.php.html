@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="">
+    <title>TA Defense Schedules | SICATA</title>
+    <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/ta-defense","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+</head>
+<body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
+    <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
+<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+    <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
+        <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
+        <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                    <path  d="m15 18-6-6 6-6"  />
+    </svg>
+</button>
+    </div>
+    </div>
+    <nav aria-label="Capstone navigation" class="min-h-0 flex-1 overflow-y-auto p-2 space-y-1">
+        <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">Menu</div>
+                                <a href="http://localhost:8000/capstone/admin/dashboard" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " title="Dashboard"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <rect  width="7"  height="9"  x="3"  y="3"  rx="1"  />
+                    <rect  width="7"  height="5"  x="14"  y="3"  rx="1"  />
+                    <rect  width="7"  height="9"  x="14"  y="12"  rx="1"  />
+                    <rect  width="7"  height="5"  x="3"  y="16"  rx="1"  />
+    </svg>
+<span x-show="!collapsed">Dashboard</span></a>
+                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Master Data"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+<span x-show="!collapsed">Master Data</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/users"  title="Users" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Users</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/groups"  title="Groups" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Groups</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/locations"  title="Locations" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Locations</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Requirements</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Evaluation Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M13 5h8"  />
+                    <path  d="M13 12h8"  />
+                    <path  d="M13 19h8"  />
+                    <path  d="m3 17 2 2 4-4"  />
+                    <path  d="m3 7 2 2 4-4"  />
+    </svg>
+<span x-show="!collapsed">Evaluation Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/period-assessment-config"  title="Tipe Penilaian" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Tipe Penilaian</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/peer-review"  title="Peer Review" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Peer Review</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: true }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Management"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+<span x-show="!collapsed">Management</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/schedule"  title="Schedule" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Schedule</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/sempro"  title="Sidang Proposal" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Sidang Proposal</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/ta-defense"  title="TA Defense" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">TA Defense</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Analytics"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span x-show="!collapsed">Analytics</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/analytics/progress"  title="Progress" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Progress</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/peer-review-dashboard"  title="Peer Review Dashboard" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Peer Review Dashboard</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/reports"  title="Reports" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Reports</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/document-uploads"  title="Document Uploads" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Uploads</a>
+                                                    </div>
+                    </div>
+                                            <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">System</div>
+        <a href="http://localhost:8000/capstone/notifications" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="!collapsed">Notifications</span><span x-show="unread > 0 && !collapsed" x-text="unread" class="ml-auto rounded-full bg-primary px-1.5 text-xs text-white"></span></a>
+    </nav>
+    <div class="p-2 border-t">
+        <a  href="http://localhost:8000/capstone/admin/settings"  class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+<span x-show="!collapsed">Settings</span></a>
+        <form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm text-destructive hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+<span x-show="!collapsed">Logout</span></button></form>
+    </div>
+</aside>
+    <main class="flex h-screen w-full min-w-0 flex-col overflow-hidden">
+        <div class="flex-1 overflow-y-auto p-4 bg-white">
+            <div class="border-grey-100 shadow-small min-h-full overflow-hidden rounded-xl border">
+                <header class="sticky top-0 z-30 flex items-center justify-between gap-4 px-3 sm:px-6 py-4 border-b border-grey-100 bg-white">
+    <button type="button" @click="mobileSidebar = !mobileSidebar" aria-label="Open menu" class="md:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M4 5h16"  />
+                    <path  d="M4 12h16"  />
+                    <path  d="M4 19h16"  />
+    </svg>
+</button>
+    <nav aria-label="breadcrumb"><ol class="flex flex-wrap items-center gap-2 text-sm"><li class="text-grey-400">SICATA</li><li class="text-grey-300">/</li><li class="text-grey-600 font-medium">Ta Defense</li></ol></nav>
+    <div class="flex items-center gap-2">
+        <button type="button" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+</button>
+        <a href="http://localhost:8000/capstone/notifications" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Notifications"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="unread > 0" class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error-100"></span></a>
+        <div x-data="{ open:false }" class="relative" @click.outside="open=false" @keydown.escape.window="open=false">
+            <button type="button" @click="open=!open" :aria-expanded="open" class="flex items-center gap-3 h-10 px-2 hover:bg-grey-25 rounded-md">
+                <span class="h-8 w-8 flex items-center justify-center rounded-full bg-grey-100 text-grey-500 text-sm font-semibold">TA</span>
+                <span class="flex-col items-start text-left hidden sm:flex"><span class="text-sm font-semibold text-grey-600 leading-tight">Test Administrator</span><span class="text-xs text-grey-400 leading-tight">Admin</span></span>
+            </button>
+            <div x-show="open" x-cloak class="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 shadow-md z-50">
+                <div class="px-2 py-1.5 text-sm"><p class="font-semibold">Test Administrator</p><p class="text-xs text-muted-foreground">test@example.test</p></div><hr class="my-1">
+                <a href="http://localhost:8000/capstone/profile" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"  />
+                    <circle  cx="12"  cy="7"  r="4"  />
+    </svg>
+Profile</a>
+                <a  href="http://localhost:8000/capstone/admin/settings"  class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+Settings</a>
+                <hr class="my-1"><form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-error-100 hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+Logout</button></form>
+            </div>
+        </div>
+    </div>
+</header>
+                <div class="px-3 sm:px-6 pt-6 pb-6"><div x-data="capstoneAdminTaDefense" class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-4"><div><h1 class="text-2xl font-semibold tracking-tight">TA Defense Schedules</h1><p class="text-muted-foreground text-sm mt-0.5">Manage individual TA defense schedules for students.</p></div><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="open()" :disabled="!selectedPeriod || loading"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mr-2 h-4 w-4">
+                    <path  d="M5 12h14"  />
+                    <path  d="M12 5v14"  />
+    </svg>
+Schedule TA Defense</button>
+</div>
+    <div class="flex flex-col sm:flex-row gap-3"><label class="flex items-center gap-2"><span class="text-sm text-muted-foreground whitespace-nowrap">Period</span><select x-model="selectedPeriod" @change="page=1;load()" class="h-9 w-55 rounded-md border bg-transparent px-3 text-sm"><option value="all">All Periods</option><template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name+(period.is_active?' (active)':'')"></option></template></select></label><label class="flex items-center gap-2"><span class="text-sm text-muted-foreground whitespace-nowrap">Status</span><select x-model="statusFilter" @change="page=1" class="h-9 w-40 rounded-md border bg-transparent px-3 text-sm"><option value="ALL">All Status</option><option value="SCHEDULED">Scheduled</option><option value="DONE">Done</option><option value="CANCELLED">Cancelled</option></select></label><div class="relative flex-1 sm:ml-auto sm:max-w-xs"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+<input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] pl-9" type="text" x-model="search" @input="page=1" placeholder="Search student, NIM, group..." aria-label="Search schedules">
+</div></div>
+    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span class="sr-only">Loading</span></div>
+<div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
+    <div x-show="!loading && !error" x-cloak>
+        <div x-show="!filtered.length" class="text-center py-16 text-muted-foreground border rounded-lg border-dashed"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-8 w-8 mx-auto mb-3 text-muted-foreground/40">
+                    <path  d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"  />
+                    <path  d="M22 10v6"  />
+                    <path  d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"  />
+    </svg>
+<p class="text-sm font-medium">No TA defense schedules found</p><p class="text-[13px] text-muted-foreground/60 mt-1" x-text="statusFilter!=='ALL'?'No '+statusFilter.toLowerCase()+' schedules. Try changing the status filter.':'Create a new schedule to get started.'"></p></div>
+        <div x-show="filtered.length"><div class="rounded-md border overflow-x-auto"><table class="w-full caption-bottom text-sm"><thead class="border-b"><tr><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap "></th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap "><button type="button" @click="sort('name')" class="inline-flex items-center gap-2">Student<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4 text-muted-foreground">
+                    <path  d="m21 16-4 4-4-4"  />
+                    <path  d="M17 20V4"  />
+                    <path  d="m3 8 4-4 4 4"  />
+                    <path  d="M7 4v16"  />
+    </svg>
+</button></th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap ">NIM</th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap ">Group</th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap "><button type="button" @click="sort('date')" class="inline-flex items-center gap-2">Date<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4 text-muted-foreground">
+                    <path  d="m21 16-4 4-4-4"  />
+                    <path  d="M17 20V4"  />
+                    <path  d="m3 8 4-4 4 4"  />
+                    <path  d="M7 4v16"  />
+    </svg>
+</button></th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap ">Time</th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap ">Location</th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap ">Examiners</th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap "><button type="button" @click="sort('status')" class="inline-flex items-center gap-2">Status<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4 text-muted-foreground">
+                    <path  d="m21 16-4 4-4-4"  />
+                    <path  d="M17 20V4"  />
+                    <path  d="m3 8 4-4 4 4"  />
+                    <path  d="M7 4v16"  />
+    </svg>
+</button></th><th class="h-10 px-2 text-left align-middle font-medium whitespace-nowrap text-right">Actions</th></tr></thead>
+    <template x-for="s in visible" :key="s.id"><tbody><tr class="border-b cursor-pointer hover:bg-muted/50" @click="toggle(s.id)" :class="s.status==='CANCELLED'?'text-muted-foreground/60':''">
+        <td class="p-2"><button type="button" class="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent" @click.stop="toggle(s.id)" :aria-expanded="expanded.includes(s.id)" aria-label="Schedule details"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted-foreground" :class="expanded.includes(s.id)?'rotate-180':''">
+                    <path  d="m6 9 6 6 6-6"  />
+    </svg>
+</button></td>
+        <td class="p-2"><span class="font-semibold" x-text="students(s)[0]?.name || 'N/A'"></span><span x-show="students(s).length>1" class="text-xs text-muted-foreground ml-1" x-text="'+'+(students(s).length-1)+' more'"></span></td>
+        <td class="p-2 text-sm font-mono tabular-nums text-muted-foreground" x-text="students(s)[0]?.nim || '-'"></td><td class="p-2 text-sm tabular-nums text-muted-foreground" x-text="s.group?.code || '#'+s.group_id"></td>
+        <td class="p-2 text-sm whitespace-nowrap font-mono tabular-nums text-muted-foreground" x-text="date(s.date)"></td><td class="p-2 text-sm whitespace-nowrap font-mono tabular-nums text-muted-foreground"><span x-text="s.start_time?.slice(0,5)"></span><span class="text-muted-foreground/40 mx-0.5">–</span><span x-text="s.end_time?.slice(0,5)"></span></td><td class="p-2 text-sm text-muted-foreground" x-text="location(s)"></td><td class="p-2 text-xs text-muted-foreground"><p x-text="s.examiner1?.name || '—'"></p><p x-text="s.examiner2?.name || '—'"></p></td>
+        <td class="p-2"><span class="inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium" :class="s.status==='SCHEDULED'?'bg-blue-100 text-blue-800 border-blue-200':s.status==='DONE'?'bg-green-100 text-green-800 border-green-200':'bg-gray-100 text-gray-700 border-gray-200'" x-text="statusLabel(s.status)"></span></td>
+        <td class="p-2"><div class="flex items-center justify-end gap-1" @click.stop><a  href="http://localhost:8000/capstone/admin/evaluation-summary/1"  class="inline-flex items-center rounded-md border px-2 h-7 text-[13px] shadow-xs hover:bg-accent" :href="url('/admin/evaluation-summary/'+s.id)" x-show="s.status!=='CANCELLED'"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mr-1 h-3.5 w-3.5">
+                    <path  d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"  />
+                    <path  d="M14 2v5a1 1 0 0 0 1 1h5"  />
+                    <path  d="M10 9H8"  />
+                    <path  d="M16 13H8"  />
+                    <path  d="M16 17H8"  />
+    </svg>
+Eval</a>
+<button type="button" x-show="s.status==='SCHEDULED'" @click="open(s)" class="rounded-md border h-7 px-3 text-[13px] shadow-xs hover:bg-accent">Edit</button><button type="button" x-show="s.status==='SCHEDULED'" @click="confirmCancel(s)" class="rounded-md h-7 px-3 text-[13px] text-destructive hover:bg-accent">Cancel</button></div></td>
+    </tr><tr x-show="expanded.includes(s.id)" class="bg-muted/30 border-b"><td colspan="10" class="p-4"><div class="grid grid-cols-1 lg:grid-cols-2 gap-6"><div class="space-y-2"><h3 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Defense Info</h3><p class="text-[12px] font-medium text-foreground/80" x-text="s.group?.title?.title || 'No title assigned'"></p><div class="space-y-1.5"><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]">Examiner 1</span><span class="text-[12px] font-medium text-foreground/80" x-text="s.examiner1?.name || '—'"></span></div><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]">Examiner 2</span><span class="text-[12px] font-medium text-foreground/80" x-text="s.examiner2?.name || '—'"></span></div><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]">Eval Deadline</span><span class="text-[12px] font-medium text-foreground/80" x-text="date(s.evaluation_deadline) || '—'"></span></div></div></div><div class="space-y-2"><h3 class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">Student Info</h3><div class="space-y-1.5"><template x-for="(student,index) in students(s)" :key="student.id"><div class="border-b border-border/50 last:border-0 pb-1.5 last:pb-0"><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]" x-text="'Name'+(index?' #'+(index+1):'')"></span><span class="text-[12px] font-medium text-foreground/80" x-text="student.name"></span></div><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]">NIM</span><span class="text-[12px] text-muted-foreground font-mono tabular-nums" x-text="student.nim"></span></div></div></template><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]">Group</span><span class="text-[12px] text-muted-foreground" x-text="&#039;#&#039;+s.group_id || '—'"></span></div><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]">Period</span><span class="text-[12px] text-muted-foreground" x-text="s.period?.name || s.group?.period?.name || '—'"></span></div><div class="flex items-center justify-between"><span class="text-muted-foreground/70 text-[12px]">Notes</span><span class="text-[12px] text-muted-foreground" x-text="s.notes || '—'"></span></div></div></div></div></td></tr></tbody></template>
+</table></div>
+<div class="mt-4 flex flex-wrap items-center justify-between gap-4 text-sm"><span class="text-muted-foreground" x-text="'Showing '+((currentPage-1)*Number(perPage)+1)+' to '+Math.min(currentPage*Number(perPage),filtered.length)+' of '+filtered.length"></span><div class="flex items-center gap-3"><label class="flex items-center gap-2">Rows per page<select x-model.number="perPage" @change="page=1" class="rounded-md border p-1"><option>10</option><option>25</option><option>50</option></select></label><span x-text="'Page '+currentPage+' of '+totalPages"></span><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-8" type="button" aria-label="Previous page" :disabled="currentPage<=1" @click="page=currentPage-1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m15 18-6-6 6-6"  />
+    </svg></button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 size-8" type="button" aria-label="Next page" :disabled="currentPage>=totalPages" @click="page=currentPage+1"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg></button>
+</div></div>
+</div>
+    </div>
+    <dialog id="admin-ta-form" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg sm:max-w-150" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg leading-none font-semibold pr-6">Schedule TA Defense</h2><p class="text-muted-foreground mt-2 text-sm">Create a new TA defense schedule for selected students. Examiners cannot be supervisors of the group.</p><div x-show="formError" role="alert" class="mt-4 rounded-lg border border-destructive/40 bg-destructive/5 text-destructive p-3 text-sm" x-text="formError"></div>
+    <form @submit.prevent="save"><div class="grid gap-4 py-4">
+        <div x-show="!editing"><div class="space-y-2 ">
+    <label for="field-period_id" class="text-sm font-medium leading-none">Period<span class="ml-0.5 text-red-500">*</span></label>
+    <select id="field-period_id" name="period_id" x-model="form.period_id" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" @change="periodChanged"><option value="">Select period</option><template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name+(period.is_active?' (active)':'')"></option></template></select>
+        <p class="text-destructive text-sm" x-show="errors['period_id']" x-text="errors['period_id']?.[0]"></p>
+</div>
+</div>
+        <div class="space-y-2 ">
+    <label for="field-group_id" class="text-sm font-medium leading-none">Group<span class="ml-0.5 text-red-500">*</span></label>
+    <select id="field-group_id" name="group_id" x-model="form.group_id" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" @change="form.student_ids=[]" :disabled="!!editing || !form.period_id || eligibleLoading"><option value="">Select group</option><template x-for="group in eligible" :key="group.id"><option :value="String(group.id)" x-text="'Group '+group.id+(group.code?' ('+group.code+')':'')"></option></template></select>
+        <p class="text-destructive text-sm" x-show="errors['group_id']" x-text="errors['group_id']?.[0]"></p>
+</div>
+        <p x-show="eligibleLoading" class="text-sm text-muted-foreground">Loading students...</p>
+        <div x-show="form.group_id" class="space-y-2"><p class="text-sm font-medium">Students <span class="text-muted-foreground text-xs">(select at least one)</span></p><div class="border rounded-md p-3 space-y-2 max-h-48 overflow-y-auto"><p x-show="!members.length" class="text-sm text-muted-foreground">No students in this group.</p><template x-for="member in members" :key="member.student.id"><label class="flex items-center space-x-3" :class="!member.is_ready_for_sidang?'opacity-50':''"><input type="checkbox" x-model="form.student_ids" :value="String(member.student.id)" :disabled="member.is_already_selected || !member.is_ready_for_sidang" class="size-4 accent-primary rounded border"><span class="text-sm flex-1"><span x-text="member.student.name"></span><span class="text-muted-foreground text-xs ml-2" x-text="member.student.nim"></span></span><span class="text-xs text-muted-foreground" x-text="member.is_already_selected?'Already selected':member.has_active_defense?'Already scheduled':member.is_ready_for_sidang?'Ready':member.status_text"></span></label></template></div><p x-show="errors.student_ids" x-text="errors.student_ids?.[0]" class="text-sm text-destructive"></p></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div class="space-y-2 ">
+    <label for="field-date" class="text-sm font-medium leading-none">Date<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]" type="date" id="field-date" name="date" x-model="form.date" placeholder="" required="required" :min="today">
+    <p class="text-destructive text-sm" x-show="errors['date']" x-text="errors['date']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-location_id" class="text-sm font-medium leading-none">Location<span class="ml-0.5 text-red-500">*</span></label>
+    <select id="field-location_id" name="location_id" x-model="form.location_id" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" ><option value="">Select location...</option><template x-for="location in locations" :key="location.id"><option :value="String(location.id)" x-text="location.name"></option></template></select>
+        <p class="text-destructive text-sm" x-show="errors['location_id']" x-text="errors['location_id']?.[0]"></p>
+</div>
+</div>
+        <div class="grid grid-cols-2 gap-4"><div class="space-y-2 ">
+    <label for="field-start_time" class="text-sm font-medium leading-none">Start Time<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]" type="time" id="field-start_time" name="start_time" x-model="form.start_time" placeholder="" required="required">
+    <p class="text-destructive text-sm" x-show="errors['start_time']" x-text="errors['start_time']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-end_time" class="text-sm font-medium leading-none">End Time<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]" type="time" id="field-end_time" name="end_time" x-model="form.end_time" placeholder="" required="required">
+    <p class="text-destructive text-sm" x-show="errors['end_time']" x-text="errors['end_time']?.[0]"></p>
+</div>
+</div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div class="space-y-2 ">
+    <label for="field-examiner_1_id" class="text-sm font-medium leading-none">Examiner 1<span class="ml-0.5 text-red-500">*</span></label>
+    <select id="field-examiner_1_id" name="examiner_1_id" x-model="form.examiner_1_id" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" ><option value="">Select examiner</option><template x-for="lecturer in lecturers" :key="lecturer.id"><option :value="String(lecturer.id)" :disabled="supervisorIds.includes(Number(lecturer.id))" x-text="lecturer.name"></option></template></select>
+        <p class="text-destructive text-sm" x-show="errors['examiner_1_id']" x-text="errors['examiner_1_id']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-examiner_2_id" class="text-sm font-medium leading-none">Examiner 2<span class="ml-0.5 text-red-500">*</span></label>
+    <select id="field-examiner_2_id" name="examiner_2_id" x-model="form.examiner_2_id" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" ><option value="">Select examiner</option><template x-for="lecturer in lecturers" :key="lecturer.id"><option :value="String(lecturer.id)" :disabled="supervisorIds.includes(Number(lecturer.id))" x-text="lecturer.name"></option></template></select>
+        <p class="text-destructive text-sm" x-show="errors['examiner_2_id']" x-text="errors['examiner_2_id']?.[0]"></p>
+</div>
+</div>
+        <div class="space-y-2 col-span-full">
+    <label for="field-notes" class="text-sm font-medium leading-none">Notes</label>
+    <textarea id="field-notes" name="notes" x-model="form.notes" placeholder="Additional notes..."  class="border-input placeholder:text-muted-foreground min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" maxlength="1000"></textarea>
+        <p class="text-destructive text-sm" x-show="errors['notes']" x-text="errors['notes']?.[0]"></p>
+</div>
+    </div><div class="flex justify-end gap-2"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="document.getElementById('admin-ta-form').close()" :disabled="saving">Cancel</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit" :disabled="saving || eligibleLoading"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 animate-spin" x-show="saving">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span x-text="saving?'Saving...':editing?'Update Schedule':'Create Schedule'"></span></button>
+</div></form>
+</dialog>
+    <dialog id="admin-ta-cancel" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg leading-none font-semibold pr-6">Cancel Schedule</h2><p class="text-muted-foreground mt-2 text-sm">Are you sure you want to cancel this TA defense schedule? This action cannot be undone.</p><div class="py-4 text-sm space-y-1"><p x-text="students(cancelling || {})[0]?.name || ''"></p><p class="text-muted-foreground" x-text="date(cancelling?.date)"></p></div><div class="flex justify-end gap-2"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="document.getElementById('admin-ta-cancel').close()">Keep Schedule</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="cancel" :disabled="saving">Cancel Schedule</button>
+</div>
+</dialog>
+</div>
+</div>
+            </div>
+        </div>
+    </main>
+</div>
+<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+</div>
+</body>
+</html>

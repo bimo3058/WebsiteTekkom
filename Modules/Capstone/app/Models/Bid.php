@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
 use Illuminate\Database\Eloquent\Model;
 
 class Bid extends Model
@@ -29,11 +30,11 @@ class Bid extends Model
 
     public function proposedSupervisor1()
     {
-        return $this->belongsTo(User::class, 'proposed_supervisor_1_id');
+        return $this->belongsTo(Lecturer::class, 'proposed_supervisor_1_id');
     }
 
     public function proposedSupervisor2()
     {
-        return $this->belongsTo(User::class, 'proposed_supervisor_2_id');
+        return $this->belongsTo(Lecturer::class, 'proposed_supervisor_2_id');
     }
 }

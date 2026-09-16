@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -28,6 +29,6 @@ class TaDefenseEvaluation extends Model
 
     public function examiner(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'examiner_id');
+        return $this->belongsTo(Lecturer::class, 'examiner_id');
     }
 }

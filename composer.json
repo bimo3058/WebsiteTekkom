@@ -60,11 +60,17 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently \"php artisan serve\" \"npm run dev\""
+            "npm run dev"
         ],
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "optimize:production": [
+            "@php artisan optimize --ansi"
+        ],
+        "optimize:clear": [
+            "@php artisan optimize:clear --ansi"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

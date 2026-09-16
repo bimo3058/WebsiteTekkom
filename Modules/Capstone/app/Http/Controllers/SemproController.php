@@ -7,8 +7,11 @@ use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarEvaluation;
 use Modules\Capstone\Models\SeminarSchedule;
-use App\Services\GroupStateMachine;
-use App\Services\SchedulingService;
+use App\Models\Lecturer;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Services\SchedulingService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 
 class SemproController extends Controller
@@ -35,6 +38,43 @@ class SemproController extends Controller
         return response()->json(['data' => $schedules]);
     }
 
+    public function update(Request $request, int $id)
+    {
+        $data = $request->validate([
+            'date'=>'required|date', 'start_time'=>'required|date_format:H:i',
+            'end_time'=>'required|date_format:H:i|after:start_time', 'room'=>'nullable|string|max:255',
+            'examiner_1_id'=>'required|exists:lecturers,id',
+            'examiner_2_id'=>'required|exists:lecturers,id|different:examiner_1_id',
+        ]);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id, $data) {
+            $schedule = SeminarSchedule::where('type', 'SEMPRO')->lockForUpdate()->findOrFail($id);
+            abort_unless($schedule->status === 'SCHEDULED', 422, 'Hanya jadwal aktif yang dapat diubah.');
+            abort_if($schedule->evaluations()->where('status', '!=', 'PENDING')->exists(), 422, 'Jadwal yang sudah dinilai tidak dapat diubah.');
+            $ids = [(int)$data['examiner_1_id'], (int)$data['examiner_2_id']];
+            $error = $this->schedulingService->validateExaminerConstraints($schedule->group, $ids);
+            abort_if($error !== null, 422, $error ?? 'Penguji tidak valid.');
+            $conflicts = $this->schedulingService->validateScheduleConflicts($ids, $data['date'], $data['start_time'], $data['end_time'], $data['room'] ?? null, $schedule->id);
+            abort_if(count($conflicts)>0, 422, implode(' ', $conflicts));
+            $schedule->update($data);
+            $schedule->evaluations()->whereNotIn('examiner_id', $ids)->delete();
+            foreach ($ids as $examinerId) $schedule->evaluations()->firstOrCreate(['examiner_id'=>$examinerId], ['status'=>'PENDING']);
+            AuditLog::create(['user_id'=>$request->user()->id, 'action'=>'SEMPRO_UPDATED', 'target_type'=>'SeminarSchedule', 'target_id'=>$id, 'payload'=>$data]);
+            return response()->json(['data'=>$schedule->fresh(), 'message'=>'Jadwal diperbarui.']);
+        });
+    }
+
+    public function cancel(Request $request, int $id)
+    {
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+            $schedule = SeminarSchedule::where('type', 'SEMPRO')->lockForUpdate()->findOrFail($id);
+            abort_unless(in_array($schedule->status, ['SCHEDULED', 'PENDING_APPROVAL'], true), 422, 'Jadwal tidak dapat dibatalkan.');
+            abort_if($schedule->evaluations()->where('status', '!=', 'PENDING')->exists(), 422, 'Jadwal yang sudah dinilai tidak dapat dibatalkan.');
+            $schedule->update(['status'=>'CANCELLED']);
+            AuditLog::create(['user_id'=>$request->user()->id, 'action'=>'SEMPRO_CANCELLED', 'target_type'=>'SeminarSchedule', 'target_id'=>$id]);
+            return response()->json(['message'=>'Jadwal dibatalkan.']);
+        });
+    }
+
     /**
      * Schedule a SEMPRO for a group (admin only).
      * Validates double-booking and room conflicts.
@@ -43,13 +83,13 @@ class SemproController extends Controller
     public function schedule(Request $request)
     {
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => 'required|exists:capstone_groups,id',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         $group = Group::findOrFail($request->group_id);
@@ -104,8 +144,8 @@ class SemproController extends Controller
         ]);
 
         // Send notifications to group members and examiners
-        $notificationService = app(\App\Services\NotificationService::class);
-        $studentIds = $group->members()->pluck('student_id')->toArray();
+        $notificationService = app(NotificationService::class);
+        $studentIds = $group->members()->with('student')->get()->pluck('student.user_id')->filter()->all();
         $notificationService->sendToMany(
             $studentIds,
             'SCHEDULE_APPROVED', // Using existing type for scheduled
@@ -115,7 +155,7 @@ class SemproController extends Controller
             $schedule->id
         );
         $notificationService->sendToMany(
-            [$schedule->examiner_1_id, $schedule->examiner_2_id],
+            Lecturer::whereIn('id', [$schedule->examiner_1_id, $schedule->examiner_2_id])->pluck('user_id')->all(),
             'SCHEDULE_APPROVED',
             'You are assigned as an examiner',
             "You have been assigned as an examiner for a SEMPRO on {$schedule->date} at {$schedule->start_time}.",
@@ -141,10 +181,11 @@ class SemproController extends Controller
         ]);
 
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         // Find the examiner's evaluation row
         $evaluation = SeminarEvaluation::where('schedule_id', $scheduleId)
-            ->where('examiner_id', $user->id)
+            ->where('examiner_id', $lecturerId)
             ->first();
 
         if (!$evaluation) {
@@ -182,8 +223,8 @@ class SemproController extends Controller
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'room' => 'nullable|string',
-            'examiner_1_id' => 'required|exists:users,id',
-            'examiner_2_id' => 'required|exists:users,id|different:examiner_1_id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
         $schedule = SeminarSchedule::where('id', $id)
@@ -235,8 +276,8 @@ class SemproController extends Controller
         ]);
 
         // Send notifications to group members and examiners
-        $notificationService = app(\App\Services\NotificationService::class);
-        $studentIds = $group->members()->pluck('student_id')->toArray();
+        $notificationService = app(NotificationService::class);
+        $studentIds = $group->members()->with('student')->get()->pluck('student.user_id')->filter()->all();
         $notificationService->sendToMany(
             $studentIds,
             'SCHEDULE_APPROVED',
@@ -246,7 +287,7 @@ class SemproController extends Controller
             $schedule->id
         );
         $notificationService->sendToMany(
-            [$schedule->examiner_1_id, $schedule->examiner_2_id],
+            Lecturer::whereIn('id', [$schedule->examiner_1_id, $schedule->examiner_2_id])->pluck('user_id')->all(),
             'SCHEDULE_APPROVED',
             'You are assigned as an examiner',
             "You have been assigned as an examiner for a SEMPRO on {$schedule->date} at {$schedule->start_time}.",
@@ -280,10 +321,10 @@ class SemproController extends Controller
         ]);
 
         // Notify students
-        $notificationService = app(\App\Services\NotificationService::class);
+        $notificationService = app(NotificationService::class);
         $group = Group::find($schedule->group_id);
         if ($group) {
-            $studentIds = $group->members()->pluck('student_id')->toArray();
+            $studentIds = $group->members()->with('student')->get()->pluck('student.user_id')->filter()->all();
             $notificationService->sendToMany(
                 $studentIds,
                 'SCHEDULE_REJECTED',

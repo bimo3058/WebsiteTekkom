@@ -18,13 +18,18 @@ class DocumentTypeController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'phase' => 'nullable|string|in:PDC1,PDC2,TA',
+            'phase' => 'nullable|string|in:PDC1,SEMPRO,PDC2,TA,EXPO,SIDANG',
             'is_active' => 'boolean',
         ]);
 
         $type = DocumentType::create($data);
 
         return response()->json($type, 201);
+    }
+
+    public function show($id)
+    {
+        return response()->json(DocumentType::findOrFail($id));
     }
 
     public function update(Request $request, $id)
@@ -34,7 +39,7 @@ class DocumentTypeController extends Controller
         $data = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
-            'phase' => 'nullable|string|in:PDC1,PDC2,TA',
+            'phase' => 'nullable|string|in:PDC1,SEMPRO,PDC2,TA,EXPO,SIDANG',
             'is_active' => 'boolean',
         ]);
 

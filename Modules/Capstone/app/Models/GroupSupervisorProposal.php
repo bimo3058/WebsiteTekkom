@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
 use Illuminate\Database\Eloquent\Model;
 
 class GroupSupervisorProposal extends Model
@@ -21,11 +22,11 @@ class GroupSupervisorProposal extends Model
 
     public function supervisor1()
     {
-        return $this->belongsTo(User::class, 'proposed_supervisor_1_id');
+        return $this->belongsTo(Lecturer::class, 'proposed_supervisor_1_id');
     }
 
     public function supervisor2()
     {
-        return $this->belongsTo(User::class, 'proposed_supervisor_2_id');
+        return $this->belongsTo(Lecturer::class, 'proposed_supervisor_2_id');
     }
 }

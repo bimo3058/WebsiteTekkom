@@ -6,8 +6,10 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Dashboard Mahasiswa — E-Office SIPERKOM</title>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+@include('eoffice::dashboard._styles')
+    <x-mobile-navigation-assets />
 </head>
-<body class="h-full overflow-hidden bg-[#F6F8FA] text-[#0D0D12] antialiased" style="font-family:'Inter Tight',system-ui,sans-serif;">
+<body class="eo-dashboard h-full overflow-hidden bg-[#F6F8FA] text-[#0D0D12] antialiased" style="font-family:'Inter Tight',system-ui,sans-serif;">
 
 @php
     $user         = auth()->user();
@@ -30,145 +32,31 @@
     $absensiPct        = $absensiPct        ?? null;   // int 0-100 | null
 @endphp
 
-<div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: localStorage.getItem('eo_sb') !== '0' }"
-     x-init="$watch('sidebarOpen', v => localStorage.setItem('eo_sb', v ? '1' : '0'))">
-
+<div class="eo-dashboard-shell flex h-screen overflow-hidden" x-data="{ sidebarOpen: false, isMobile: window.innerWidth < 768 }"
+     :class="{ 'eo-sidebar-open': sidebarOpen }"
+     x-init="(() => { try { sidebarOpen = window.innerWidth >= 768 &amp;&amp; localStorage.getItem('eo_sb') !== '0'; } catch { sidebarOpen = window.innerWidth >= 768; } $watch('sidebarOpen', v => { if (window.innerWidth >= 768) { try { localStorage.setItem('eo_sb', v ? '1' : '0'); } catch {} } }); })()"
+     @resize.window.debounce.150ms="if (isMobile !== (window.innerWidth < 768)) { isMobile = window.innerWidth < 768; try { sidebarOpen = !isMobile &amp;&amp; localStorage.getItem('eo_sb') !== '0'; } catch { sidebarOpen = !isMobile; } }"
+     @keydown.escape.window="if (isMobile &amp;&amp; sidebarOpen) { sidebarOpen = false; $refs.eoMenuButton.focus(); }">
+    <button type="button" class="eo-sidebar-backdrop" x-show="sidebarOpen" x-cloak @click="sidebarOpen = false" aria-label="Tutup menu navigasi"></button>
     @include('eoffice::dashboard._sidebar')
 
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <main class="eo-dashboard-main" :inert="isMobile &amp;&amp; sidebarOpen">
 
-        {{-- Topbar --}}
-        <div class="flex items-center justify-between px-6 bg-white border-b border-[#DFE1E7] flex-shrink-0" style="height:56px;">
-            <div class="flex items-center gap-3 min-w-0">
-                <div>
-                    <div class="font-bold text-[15px] text-[#0D0D12] leading-[1.2]">Dashboard</div>
-                    <div class="text-[11px] text-[#666D80]">Modul E-Office · SIPERKOM UNDIP</div>
-                </div>
-                <span class="text-[11px] font-semibold px-[9px] py-[3px] rounded-full whitespace-nowrap"
-                      style="background:#F9ECCB; color:#7C5309;">Mahasiswa</span>
-                @if($user->student)
-                <span class="text-[11px] text-[#A4ABB8]">{{ $user->student->student_number }}</span>
-                @endif
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg border border-[#DFE1E7] bg-white cursor-pointer transition-colors hover:bg-[#F6F8FA]">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- Content --}}
-        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-[18px]">
-
-            {{-- Welcome banner --}}
-            <div class="flex items-center justify-between rounded-[14px] px-6 py-5 text-white flex-shrink-0"
-                 style="background:linear-gradient(120deg,#7C5309 0%,#D39C3D 100%);">
-                <div>
-                    <div class="text-[18px] font-bold tracking-tight">Halo, {{ $name }}!</div>
-                    <div class="text-[12px] opacity-75 mt-1">
-                        {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel ?? 'Semester Genap 2025/2026' }}
-                    </div>
-                </div>
-                <div class="flex gap-3 flex-shrink-0">
-                    <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.15);">
-                        <div class="text-[20px] font-bold">{{ $tugasMendatang->count() }}</div>
-                        <div class="text-[10px] opacity-75 mt-[2px]">Tugas Pending</div>
-                    </div>
-                    @if($absensiPct !== null)
-                    <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.15);">
-                        <div class="text-[20px] font-bold">{{ $absensiPct }}%</div>
-                        <div class="text-[10px] opacity-75 mt-[2px]">Kehadiran</div>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            {{-- Grid atas: Info Praktikum + Status KP --}}
-            <div class="grid grid-cols-2 gap-[14px] flex-shrink-0">
-
-                {{-- Praktikum Aktif --}}
-                @if($praktikumAktif)
-                <div class="bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)]">
-                    <div class="flex items-start justify-between mb-3">
-                        <div>
-                            <div class="text-[11px] font-semibold text-[#A4ABB8] uppercase tracking-wider mb-1">Praktikum Aktif</div>
-                            <div class="text-[15px] font-bold text-[#0D0D12]">{{ $praktikumAktif->nama }}</div>
-                        </div>
-                        <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#DDF2EE] text-[#174E43]">Aktif</span>
-                    </div>
-                    <div class="text-[12px] text-[#666D80] mb-1">
-                        Kode: <span class="font-semibold text-[#D39C3D]">{{ $praktikumAktif->kode ?? '—' }}</span>
-                    </div>
-                    <div class="text-[12px] text-[#666D80] mb-3">
-                        Dosen: <span class="font-semibold text-[#353849]">{{ $praktikumAktif->dosen?->name ?? '—' }}</span>
-                    </div>
-                    @if($absensiPct !== null)
-                    <div class="mb-1 flex items-center justify-between">
-                        <span class="text-[11px] text-[#666D80]">Kehadiran</span>
-                        <span class="text-[11px] font-bold" style="color:{{ $absensiPct >= 75 ? '#40C4AA' : '#DF1C41' }}">{{ $absensiPct }}%</span>
-                    </div>
-                    <div class="w-full bg-[#F0F1F4] rounded-full h-[6px]">
-                        <div class="h-[6px] rounded-full" style="width:{{ $absensiPct }}%; background:{{ $absensiPct >= 75 ? '#40C4AA' : '#DF1C41' }};"></div>
-                    </div>
-                    @endif
-                    <a href="{{ route('eoffice.manprak.mahasiswa.dashboard') }}"
-                       class="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold no-underline" style="color:#D39C3D;">
-                        Lihat Detail
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </a>
-                </div>
-                @else
-                <div class="bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)] flex flex-col items-center justify-center text-center">
-                    <svg class="mb-2 text-[#DFE1E7]" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-                        <path d="{{ $iPraktikum }}"/>
-                    </svg>
-                    <div class="text-[13px] font-semibold text-[#353849]">Belum Terdaftar Praktikum</div>
-                    <div class="text-[11px] text-[#A4ABB8] mt-1 mb-3">Masukkan kode untuk bergabung ke kelas</div>
-                    <a href="{{ route('eoffice.manprak.mahasiswa.dashboard') }}"
-                       class="text-[12px] font-semibold px-4 py-[7px] rounded-[8px] no-underline text-white"
-                       style="background:#D39C3D;">Masukkan Kode</a>
-                </div>
-                @endif
-
-                {{-- Status KP --}}
-                <div class="bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)]">
-                    <div class="text-[11px] font-semibold text-[#A4ABB8] uppercase tracking-wider mb-3">Kerja Praktik (KP)</div>
-                    @if($statusKp)
-                    @php
-                        $kpColors = [
-                            'Pra-KP'     => ['#D1F0F9','#106A97'],
-                            'KP Berjalan'=> ['#DDF2EE','#40C4AA'],
-                            'Selesai'    => ['#F0E6FA','#9B59B6'],
-                            'default'    => ['#F0F1F4','#666D80'],
-                        ];
-                        [$kpBg, $kpFg] = $kpColors[$statusKp] ?? $kpColors['default'];
-                    @endphp
-                    <div class="flex items-center gap-2 mb-3">
-                        <span class="text-[12px] font-bold px-3 py-[4px] rounded-full"
-                              style="background:{{ $kpBg }}; color:{{ $kpFg }};">{{ $statusKp }}</span>
-                    </div>
-                    <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}"
-                       class="text-[12px] font-semibold no-underline" style="color:#106A97;">
-                        Pantau Progress →
-                    </a>
-                    @else
-                    <div class="text-[13px] text-[#A4ABB8] mb-3">Masuk ke modul KP.</div>
-                    <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}"
-                       class="text-[12px] font-semibold px-4 py-[7px] rounded-[8px] no-underline text-white inline-block"
-                       style="background:#106A97;">Masuk KP</a>
-                    @endif
-                </div>
-            </div>
+        @include('eoffice::dashboard._topbar')
+        <div class="eo-dashboard-wrap">
+            <section class="eo-dashboard-box" aria-labelledby="eo-dashboard-title">
+                @include('eoffice::dashboard._header', ['dashboardRole' => 'mahasiswa'])
+                <div class="eo-dashboard-content">
+                    @include('eoffice::dashboard._summary', ['dashboardRole' => 'mahasiswa'])
+                    @include('eoffice::dashboard._services', ['dashboardRole' => 'mahasiswa'])
 
             {{-- Bottom: Tugas Mendatang + Pengumuman --}}
-            <div class="flex gap-[14px] flex-1 min-h-0 mb-1">
+            <div class="eo-two-grid">
 
                 {{-- Tugas Mendatang --}}
                 <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-1 min-w-0">
                     <div class="flex items-center justify-between px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
-                        <div class="font-bold text-[15px] text-[#0D0D12]">Tugas Mendatang</div>
+                        <div class="font-bold text-[15px] text-[#0D0D12]">Tugas yang Perlu Ditindaklanjuti</div>
                         @if($praktikumAktif)
                         <a href="{{ route('eoffice.manprak.mahasiswa.tugas.index') }}"
                            class="text-[12px] font-medium text-[#353849] px-3 py-[6px] rounded-[7px] border border-[#DFE1E7] bg-white no-underline hover:bg-[#F6F8FA]">Lihat Semua</a>
@@ -177,20 +65,24 @@
                     <div class="overflow-y-auto flex-1">
                         @forelse($tugasMendatang as $t)
                         @php
-                            $dl   = \Carbon\Carbon::parse($t['deadline'] ?? now()->addDay());
-                            $sisa = now()->diffInDays($dl, false);
-                            $warn = $sisa <= 2;
+                            $dl   = !empty($t['deadline']) ? \Carbon\Carbon::parse($t['deadline']) : null;
+                            $sisa = $dl ? (int) now()->diffInDays($dl, false) : null;
+                            $warn = $dl && $sisa <= 2;
                         @endphp
                         <div class="px-5 py-[11px] border-b border-[#F8F9FB] last:border-0">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="min-w-0">
-                                    <div class="text-[13px] font-semibold text-[#0D0D12] truncate">{{ $t['judul'] ?? '—' }}</div>
+                                    <div class="text-[13px] font-semibold text-[#0D0D12] truncate"><a href="{{ $t['url'] ?? route('eoffice.manprak.mahasiswa.tugas.index') }}">{{ $t['judul'] ?? '—' }}</a></div>
                                     <div class="text-[11px] mt-[2px]" style="color:{{ $warn ? '#DF1C41' : '#666D80' }}">
-                                        Deadline: {{ $dl->format('d M Y') }}
-                                        @if(!$warn) <span class="text-[#A4ABB8]">({{ $sisa }} hari)</span> @endif
+                                        Deadline: {{ $dl ? $dl->format('d M Y H:i') : 'Belum ditentukan' }}
+                                        @if($dl && !$warn) <span class="text-[#A4ABB8]">({{ $sisa }} hari)</span> @endif
                                     </div>
                                 </div>
-                                @if($t['sudah_kumpul'] ?? false)
+                                @if($t['revisi'] ?? false)
+                                <span class="eo-status-label">Perlu revisi</span>
+                                @elseif($dl && $dl->isPast())
+                                <span class="eo-status-label">Tenggat lewat</span>
+                                @elseif($t['sudah_kumpul'] ?? false)
                                 <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#DDF2EE] text-[#174E43] flex-shrink-0">✓ Dikumpul</span>
                                 @elseif($warn)
                                 <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#FADAE1] text-[#7C1028] flex-shrink-0">Segera!</span>
@@ -205,7 +97,7 @@
                                 <svg class="mx-auto mb-2" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
                                     <polyline points="20 6 9 17 4 12"/>
                                 </svg>
-                                <div class="text-[13px]">Tidak ada tugas mendatang 🎉</div>
+                                <div class="text-[13px]">Tidak ada tugas yang perlu ditindaklanjuti.</div>
                             </div>
                         </div>
                         @endforelse
@@ -231,33 +123,14 @@
                     </div>
                 </div>
 
-                {{-- Timeline KP --}}
-                <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-1 min-w-0">
-                    <div class="px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
-                        <div class="font-bold text-[15px] text-[#0D0D12]">Timeline KP</div>
-                    </div>
-                    <div class="overflow-y-auto flex-1 px-5 py-4">
-                        @if(isset($timelineKp) && $timelineKp->count() > 0)
-                            <div class="relative border-l-2 border-[#DFE1E7] ml-2 space-y-4">
-                                @foreach($timelineKp as $item)
-                                <div class="relative pl-5">
-                                    <div class="absolute w-3 h-3 bg-[#D39C3D] rounded-full -left-[7px] top-1.5 border-2 border-white"></div>
-                                    <div class="text-[13px] font-semibold text-[#0D0D12]">{{ $item->judul }}</div>
-                                    <div class="text-[12px] text-[#666D80] mt-[2px]">{{ $item->konten }}</div>
-                                </div>
-                                @endforeach
-                            </div>
-                        @else
-                            <div class="py-6 text-center text-[13px] text-[#A4ABB8]">Belum ada timeline KP.</div>
-                        @endif
-                    </div>
-                </div>
-
             </div>
 
-        </div>{{-- /content --}}
-    </div>{{-- /main --}}
+                </div>{{-- /content --}}
+            </section>
+        </div>
+    </main>
 </div>
 
+    <x-mobile-navigation />
 </body>
 </html>

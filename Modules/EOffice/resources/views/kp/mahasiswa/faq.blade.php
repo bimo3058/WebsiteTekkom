@@ -10,12 +10,13 @@
     <style>
         * { font-family: 'Inter Tight', sans-serif; }
         :root {
-            --primary-50:#eef2ff;--primary-100:#e0e7ff;--primary-500:#4f46e5;
+            --primary-50:#EBEDF6;--primary-100:#D0D6E9;--primary-500:#2A3A7C;
             --grey-50:#f9fafb;--grey-100:#f3f4f6;--grey-200:#e5e7eb;
             --grey-400:#9ca3af;--grey-500:#6b7280;--grey-700:#374151;--grey-800:#1f2937;--grey-900:#030712;
         }
         .sikape-card { background:#fff; border:1px solid var(--grey-200); border-radius:12px; }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body style="background:#f9fafb;" x-data="{ sidebarOpen: false, search: '', openItem: null }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -46,7 +47,7 @@
                 $staticFaqs = [
                     ['cat'=>'Umum','popular'=>true,
                      'q'=>'Apa saja syarat untuk mendaftar Kerja Praktik?',
-                     'a'=>'Syarat utama mendaftar KP: (1) Telah menempuh minimal 100 SKS, (2) IPK minimal 2.50, (3) Telah lulus mata kuliah Metodologi Penelitian, (4) Memiliki rencana tempat KP yang jelas. Lengkapi dokumen: transkrip nilai, proposal KP, dan surat pengantar dari departemen.'],
+                     'a'=>'Syarat utama mendaftar KP: (1) Telah menempuh minimal 100 SKS, (2) IPK minimal 2.50, (3) Telah lulus mata kuliah Metodologi Penelitian, (4) Memiliki rencana tempat KP yang jelas. Lengkapi dokumen: KHS semester 4, proposal KP, dan surat pengantar dari departemen.'],
                     ['cat'=>'Umum','popular'=>true,
                      'q'=>'Berapa lama durasi Kerja Praktik yang diperbolehkan?',
                      'a'=>'Durasi KP minimal 1 bulan (30 hari kerja) dan maksimal 6 bulan. Disarankan melaksanakan KP selama 2–3 bulan agar materi yang didapat lebih mendalam dan laporan lebih berbobot.'],
@@ -140,5 +141,6 @@
         </main>
     </div>
 </div>
+    <x-mobile-navigation />
 </body>
 </html>
