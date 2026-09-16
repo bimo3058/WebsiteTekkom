@@ -368,6 +368,22 @@ class SuperAdminController extends Controller
 
         $validated = $validator->validated();
 
+        // ── Custom Validation for Roles ──────────────────────────────────────────
+        $roleIds = $validated['roles'] ?? [];
+        $roleNames = \App\Models\Role::whereIn('id', $roleIds)->pluck('name');
+
+        if ($roleNames->contains('dosen') && empty($validated['employee_number'])) {
+            return redirect()->route('superadmin.users.index')
+                ->withErrors(['employee_number' => 'NIP/Nomor Pegawai wajib diisi untuk role Dosen.'])
+                ->withInput();
+        }
+
+        if ($roleNames->contains('mahasiswa') && empty($validated['student_number'])) {
+            return redirect()->route('superadmin.users.index')
+                ->withErrors(['student_number' => 'NIM wajib diisi untuk role Mahasiswa.'])
+                ->withInput();
+        }
+
         DB::beginTransaction();
         try {
             $user = User::create([
@@ -377,19 +393,17 @@ class SuperAdminController extends Controller
                 'external_id' => $validated['external_id'],
             ]);
 
-            $roleIds   = $validated['roles'] ?? [];
-            $roleNames = collect();
-
             if (!empty($roleIds)) {
                 $user->roles()->sync($roleIds);
-                $roleNames = Role::whereIn('id', $roleIds)->pluck('name');
+                // Sync permissions immediately after roles are assigned
+                $user->syncPermissionsFromRoles();
             }
 
-            if ($roleNames->contains('dosen') && !empty($validated['employee_number'])) {
+            if ($roleNames->contains('dosen')) {
                 Lecturer::create(['user_id' => $user->id, 'employee_number' => $validated['employee_number']]);
             }
 
-            if ($roleNames->contains('mahasiswa') && !empty($validated['student_number'])) {
+            if ($roleNames->contains('mahasiswa')) {
                 Student::create([
                     'user_id'        => $user->id,
                     'student_number' => $validated['student_number'],
@@ -417,6 +431,11 @@ class SuperAdminController extends Controller
 
         } catch (\Throwable $e) {
             DB::rollBack();
+            // Log the error for debugging
+            \Illuminate\Support\Facades\Log::error("Error in storeUser: " . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all()
+            ]);
             return back()->withInput()->with('error', 'Gagal menambahkan user: ' . $e->getMessage());
         }
     }
@@ -621,6 +640,15 @@ class SuperAdminController extends Controller
             if ($type === 'permanent') {
                 // Hapus Permanen dari DB
                 $user->roles()->detach(); // Putus relasi pivot
+
+                // Hapus data profil terkait agar tidak menjadi orphan
+                if ($user->student) {
+                    $user->student()->delete();
+                }
+                if ($user->lecturer) {
+                    $user->lecturer()->delete();
+                }
+
                 $user->forceDelete();
                 $msg = "User \"{$user->name}\" dihapus permanen.";
             } else {
@@ -758,6 +786,15 @@ class SuperAdminController extends Controller
             foreach ($users as $user) {
                 if ($type === 'permanent') {
                     $user->roles()->detach(); // Putus semua relasi role
+
+                    // Hapus data profil terkait agar tidak menjadi orphan
+                    if ($user->student) {
+                        $user->student()->delete();
+                    }
+                    if ($user->lecturer) {
+                        $user->lecturer()->delete();
+                    }
+
                     $user->forceDelete();     // Hapus permanen dari DB
                 } else {
                     $user->delete();          // Soft delete (masuk ke trashed)

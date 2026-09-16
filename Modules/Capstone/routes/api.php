@@ -95,6 +95,7 @@ Route::prefix('capstone')->group(function () {
             Route::get('/dashboard', [DashboardController::class, 'admin']);
             Route::apiResource('periods', PeriodController::class);
             Route::get('/users', [UserController::class, 'index']);
+            Route::apiResource('user-management', \Modules\Capstone\Http\Controllers\Admin\BladeUserController::class)->parameters(['user-management'=>'user']);
             Route::apiResource('expo-events', ExpoEventController::class);
             Route::put('/expo-events/{expoEvent}/publish', [ExpoEventController::class, 'publish']);
             Route::apiResource('document-types', DocumentTypeController::class);

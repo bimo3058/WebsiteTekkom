@@ -6,6 +6,7 @@ use App\Models\Lecturer;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
 
 final class CapstoneActor
 {
@@ -69,7 +70,26 @@ final class CapstoneActor
         $lecturer = self::loadProfiles($user, ['lecturer'])->lecturer;
 
         if (! $lecturer) {
-            throw new AuthorizationException('Profil dosen untuk akun SSO ini tidak ditemukan.');
+            if (! in_array('dosen', self::roles($user), true)) {
+                throw new AuthorizationException('Akun ini tidak memiliki role dosen.');
+            }
+
+            // Manually assigned academic roles may predate the lecturer row.
+            // Reuse the SSO identifier convention; never claim another user's profile.
+            $lecturer = DB::transaction(function () use ($user) {
+                $account = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+                $existing = Lecturer::without('user')->where('user_id', $account->id)->first();
+                if ($existing) return $existing;
+
+                $raw = $account->sso_data ?? [];
+                $number = trim((string) ($raw['onPremisesSamAccountName'] ?? $raw['employeeId'] ?? explode('@', $account->email)[0]));
+                if ($number === '' || strlen($number) > 100 || Lecturer::where('employee_number', $number)->exists()) {
+                    throw new AuthorizationException('Profil dosen perlu dilengkapi dengan NIP unik melalui User Management.');
+                }
+
+                return Lecturer::create(['user_id' => $account->id, 'employee_number' => $number]);
+            });
+            $user->setRelation('lecturer', $lecturer);
         }
 
         return $lecturer;
