@@ -52,6 +52,33 @@
         }
         /* Sembunyikan elemen x-cloak sebelum Alpine.js inisialisasi */
         [x-cloak] { display: none !important; }
+        .cbt-mobile-control { display:none; }
+        .cbt-control-icon { width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0; }
+        @media(max-width:767px) {
+            .viewport-container { aspect-ratio:auto;max-width:none;max-height:none;height:100dvh;padding-bottom:calc(74px + env(safe-area-inset-bottom,0px)); }
+            .viewport-container > header { padding:12px; }
+            .viewport-container > header > div { flex-wrap:wrap;gap:10px;width:100%; }
+            .viewport-container > header > div > div { gap:12px;flex-wrap:wrap; }
+            .viewport-container > header .text-right { max-width:150px; }
+            .viewport-container > .flex-grow { min-height:0; }
+            .viewport-container main { width:100%;padding:12px;min-width:0; }
+            .viewport-container main > div { padding:16px; }
+            .viewport-container main h1 { font-size:20px; }
+            .viewport-container main .prose { overflow-wrap:anywhere;min-width:0;font-size:16px; }
+            .viewport-container main img { max-width:100%;height:auto; }
+            .viewport-container main label { padding:12px;gap:10px;min-height:48px; }
+            .viewport-container main label input { flex-shrink:0; }
+            .cbt-question-list { display:none;position:fixed;inset:90px 12px calc(88px + env(safe-area-inset-bottom,0px));width:auto;padding:0;z-index:55;box-shadow:0 0 0 100vmax rgb(15 23 42 / .4); }
+            .cbt-question-list.cbt-question-list-open { display:block; }
+            .cbt-question-list .p-3 { display:block;overflow-y:auto;min-height:0; }
+            .cbt-question-list .grid { grid-template-rows:none !important;grid-auto-rows:44px;aspect-ratio:auto !important;max-height:none;gap:8px; }
+            .cbt-question-list .flex-nowrap { flex-wrap:wrap;row-gap:8px; }
+            .cbt-mobile-control { display:flex;align-items:center;justify-content:center;gap:4px; }
+            .viewport-container > footer { position:fixed;inset:auto 0 0;padding:8px 6px calc(8px + env(safe-area-inset-bottom,0px));min-height:74px; }
+            .viewport-container > footer > div { width:100%;gap:4px; }
+            .viewport-container > footer button { flex:1;min-width:0;min-height:52px;padding:6px 2px;flex-direction:column;gap:3px;font-size:10px;letter-spacing:0; }
+            .viewport-container > footer svg { width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8; }
+        }
     </style>
 </head>
 <body class="text-slate-900 overflow-hidden flex items-center justify-center min-h-screen" oncontextmenu="return false;">
@@ -238,10 +265,11 @@
             </main>
 
             <!-- SideNavBar (20%) -->
-            <aside class="w-1/5 pr-10 py-8 overflow-hidden">
+            <aside class="cbt-question-list w-1/5 pr-10 py-8 overflow-hidden" :class="{ 'cbt-question-list-open': mobileQuestions }" aria-label="Daftar nomor soal">
                 <div class="bg-white border border-slate-200 h-full flex flex-col shadow-sm rounded-2xl overflow-hidden">
                     <div class="p-5 border-b border-slate-200 bg-white">
                         <h2 class="text-sm font-black uppercase tracking-tight text-slate-800">Navigasi Soal</h2>
+                        <button type="button" class="cbt-mobile-control mt-2 text-sm" @click="mobileQuestions = false" aria-label="Tutup daftar soal">Tutup daftar soal</button>
                         <div class="flex flex-nowrap gap-x-4 mt-3">
                             <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500"><div class="w-4 h-4 bg-primary border-none rounded-[3px]"></div> Terjawab</div>
                             <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500"><div class="w-4 h-4 bg-yellow-400 border-none rounded-[3px]"></div> Ragu-Ragu</div>
@@ -252,7 +280,7 @@
                     <div class="p-3 overflow-hidden flex-grow flex justify-center items-center">
                         <div class="grid gap-1 w-full max-h-full" style="grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(20, 1fr); aspect-ratio: 1/4;">
                             <template x-for="(soal, idx) in soals" :key="soal.id">
-                                <div @click="goToSoal(idx)" 
+                                <button type="button" @click="goToSoal(idx); mobileQuestions = false"
                                      :class="{
                                          'border-[3px] border-primary scale-110 z-10 shadow-md': currentIndex === idx,
                                          'border border-slate-300': currentIndex !== idx,
@@ -263,7 +291,7 @@
                                      class="flex items-center justify-center font-bold text-xs cursor-pointer rounded-lg transition-transform hover:scale-105 active:scale-95" 
                                      :title="'Soal ' + (idx + 1)">
                                     <span x-text="idx + 1"></span>
-                                </div>
+                                </button>
                             </template>
                         </div>
                     </div>
@@ -277,24 +305,28 @@
         <footer class="w-full z-50 flex justify-center items-center px-10 py-5 bg-white border-t border-slate-200 shrink-0 relative">
             <div class="flex items-center gap-3">
                 <button @click="prevSoal()" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90 active:translate-y-0.5'" class="border border-slate-200 px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-colors flex items-center gap-2 bg-slate-100 text-slate-800 hover:bg-slate-200 rounded-xl">
-                    <span class="material-symbols-outlined">arrow_back</span>
+                    <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14"/></svg>
                     Prev
+                </button>
+                <button type="button" class="cbt-mobile-control border border-slate-200 rounded-xl bg-slate-100 text-slate-800" @click="mobileQuestions = !mobileQuestions" :aria-expanded="mobileQuestions" aria-label="Buka daftar soal">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"/></svg>
+                    Soal
                 </button>
                 
                 <button @click="toggleRagu()" :class="isRagu ? 'bg-yellow-400 text-yellow-900 border-yellow-500' : 'bg-yellow-400 border-yellow-500 text-yellow-900 hover:bg-yellow-300'" class="border px-8 py-2.5 rounded-xl text-sm font-bold uppercase tracking-tight transition-colors active:translate-y-0.5 flex items-center gap-2">
-                    <span class="material-symbols-outlined" x-text="isRagu ? 'flag' : 'outlined_flag'">flag</span>
+                    <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4c5-4 9 4 14 0v10c-5 4-9-4-14 0" :fill="isRagu ? 'currentColor' : 'none'"/></svg>
                     <span x-text="isRagu ? 'Hapus Ragu' : 'Ragu-ragu'"></span>
                 </button>
                 
                 <template x-if="currentIndex < soals.length - 1">
                     <button @click="nextSoal()" class="bg-primary text-white border-2 border-primary px-6 py-2.5 text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:opacity-90 active:translate-y-0.5 transition-colors rounded-xl">
                         Next
-                        <span class="material-symbols-outlined">arrow_forward</span>
+                        <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5 7 7-7 7M5 12h14"/></svg>
                     </button>
                 </template>
                 <template x-if="currentIndex === soals.length - 1">
                     <button @click="submitExam()" class="bg-red-600 text-white border px-6 py-2.5 rounded-xl shadow-sm hover:shadow-md text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:bg-red-700 active:translate-y-0.5 transition-colors">
-                        <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
+                        <svg class="cbt-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 12 5 5L19 6M13 16l2 2 7-8"/></svg>
                         Submit
                     </button>
                 </template>
@@ -367,6 +399,7 @@
             Alpine.data('cbtEngine', () => ({
                 soals: rawSoals,
                 currentIndex: 0,
+                mobileQuestions: false,
                 endTime: new Date(endTimeRaw).getTime(),
                 timeLeft: 0,
                 formattedTime: '--:--:--',

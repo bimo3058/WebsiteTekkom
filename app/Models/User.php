@@ -54,6 +54,7 @@ class User extends Authenticatable
             'last_synced_from_sso' => 'datetime',
             'suspended_at' => 'datetime',
             'is_online' => 'boolean',
+            'notification_preferences' => 'array',
         ];
     }
 

@@ -11,6 +11,7 @@ use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
 use Modules\ManajemenMahasiswa\Models\PengumumanDraft;
+use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
 
@@ -79,12 +80,21 @@ class PengumumanController extends Controller
     public function create()
     {
         $user = Auth::user();
+
         $drafts = PengumumanDraft::where('user_id', $user->id)->latest()->get();
-        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts'));
+
+        // Payload lampiran per draf, dipakai JS saat tombol "Load Draft" ditekan.
+        $draftAttachments = $this->draftAttachments($drafts);
+
+        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts', 'draftAttachments'));
     }
 
     /**
-     * Simpan / Update Draft (AJAX)
+     * Simpan / Update Draft (AJAX).
+     *
+     * Poster & lampiran langsung diupload ke storage saat draf disimpan, lalu
+     * ID barisnya dicatat di draf. Tanpa ini file akan hilang begitu halaman
+     * di-reload, karena input file tidak bisa diisi ulang dari server.
      */
     public function saveDraft(Request $request)
     {
@@ -95,62 +105,137 @@ class PengumumanController extends Controller
                 'kategori' => 'nullable|string|max:100',
                 'target_audience' => 'nullable|in:all,mahasiswa,alumni,dosen,pengurus',
                 'konten' => 'nullable|string',
+                'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
+                'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Draft validation failed: ', $e->errors());
             throw $e;
         }
 
-        $draftId = $request->input('draft_id');
+        $attributes = [
+            'judul' => $request->input('judul'),
+            'kategori' => $request->input('kategori'),
+            'target_audience' => $request->input('target_audience'),
+            'konten' => $request->input('konten'),
+        ];
 
-        if ($draftId) {
-            $draft = PengumumanDraft::where('id', $draftId)
-                ->where('user_id', Auth::id())
-                ->first();
+        $draft = PengumumanDraft::where('id', $request->input('draft_id'))
+            ->where('user_id', Auth::id())
+            ->first();
 
-            if ($draft) {
-                $draft->update([
-                    'judul' => $request->input('judul'),
-                    'kategori' => $request->input('kategori'),
-                    'target_audience' => $request->input('target_audience'),
-                    'konten' => $request->input('konten'),
-                ]);
-            } else {
-                $draft = PengumumanDraft::create([
-                    'user_id' => Auth::id(),
-                    'judul' => $request->input('judul'),
-                    'kategori' => $request->input('kategori'),
-                    'target_audience' => $request->input('target_audience'),
-                    'konten' => $request->input('konten'),
-                ]);
-            }
+        if ($draft) {
+            $draft->update($attributes);
         } else {
-            $draft = PengumumanDraft::create([
-                'user_id' => Auth::id(),
-                'judul' => $request->input('judul'),
-                'kategori' => $request->input('kategori'),
-                'target_audience' => $request->input('target_audience'),
-                'konten' => $request->input('konten'),
+            $draft = PengumumanDraft::create($attributes + ['user_id' => Auth::id()]);
+        }
+
+        $judulPengumuman = $request->input('judul') ?: 'Draf pengumuman';
+
+        // Poster baru menggantikan poster lama — file lama dihapus agar tidak jadi sampah.
+        if ($posterFile = $request->file('poster')) {
+            $posterLama = $draft->posterRepo;
+
+            $posterBaru = $this->repoMulmedService->upload($posterFile, [
+                'judul_file' => 'Poster: ' . $judulPengumuman,
+                'visibility_status' => 'public',
             ]);
+
+            $draft->update(['poster_repo_id' => $posterBaru->id]);
+
+            if ($posterLama) {
+                $this->repoMulmedService->deletePermanent($posterLama->id);
+            }
+        }
+
+        if ($request->hasFile('lampiran')) {
+            $lampiranIds = $draft->lampiran_repo_ids ?? [];
+
+            foreach ($request->file('lampiran') as $file) {
+                $lampiranIds[] = $this->repoMulmedService->upload($file, [
+                    'judul_file' => $file->getClientOriginalName(),
+                    'visibility_status' => 'public',
+                ])->id;
+            }
+
+            $draft->update(['lampiran_repo_ids' => $lampiranIds]);
         }
 
         return response()->json([
             'success' => true,
             'draft_id' => $draft->id,
+            'attachments' => $this->draftAttachments(collect([$draft->fresh()]))[$draft->id],
             'message' => 'Draf berhasil disimpan.'
         ]);
     }
 
     /**
-     * Hapus Draft
+     * Hapus Draft beserta file yang sudah terlanjur diupload untuk draf itu.
      */
     public function deleteDraft($id)
     {
-        PengumumanDraft::where('id', $id)
+        $draft = PengumumanDraft::where('id', $id)
             ->where('user_id', Auth::id())
-            ->delete();
+            ->first();
+
+        if (!$draft) {
+            return redirect()->back()->with('success', 'Draf berhasil dihapus.');
+        }
+
+        foreach ($draft->allRepoIds() as $repoId) {
+            $this->repoMulmedService->deletePermanent($repoId);
+        }
+
+        $draft->delete();
 
         return redirect()->back()->with('success', 'Draf berhasil dihapus.');
+    }
+
+    /**
+     * Susun daftar file (poster + lampiran) untuk sekumpulan draf.
+     *
+     * Semua baris mk_repo_mulmed diambil dalam satu query agar tidak N+1
+     * saat halaman "Buat Pengumuman" menampilkan banyak draf sekaligus.
+     *
+     * @param  \Illuminate\Support\Collection<PengumumanDraft>  $drafts
+     * @return array<int, array{poster: ?array, lampiran: array}>
+     */
+    private function draftAttachments($drafts): array
+    {
+        $semuaId = $drafts->flatMap(fn (PengumumanDraft $draft) => $draft->allRepoIds())->unique();
+
+        $files = RepoMulmed::whereIn('id', $semuaId)->get()->keyBy('id');
+
+        $ringkas = fn (?RepoMulmed $file) => $file ? [
+            'id'   => $file->id,
+            'nama' => $file->nama_file,
+            'url'  => $file->url,
+        ] : null;
+
+        return $drafts->mapWithKeys(fn (PengumumanDraft $draft) => [
+            $draft->id => [
+                'poster' => $ringkas($files->get($draft->poster_repo_id)),
+                'lampiran' => collect($draft->lampiran_repo_ids ?? [])
+                    ->map(fn ($id) => $ringkas($files->get($id)))
+                    ->filter()
+                    ->values()
+                    ->all(),
+            ],
+        ])->all();
+    }
+
+    /**
+     * Ambil draf milik user yang sedang login. Null jika tidak ada / bukan miliknya.
+     */
+    private function userDraft(mixed $draftId): ?PengumumanDraft
+    {
+        if (!$draftId) {
+            return null;
+        }
+
+        return PengumumanDraft::where('id', $draftId)
+            ->where('user_id', Auth::id())
+            ->first();
     }
 
     //Simpan pengumuman baru.
@@ -172,14 +257,33 @@ class PengumumanController extends Controller
 
         $pengumuman = $this->pengumumanService->create(Auth::id(), $validated);
 
-        // Handle poster upload via RepoMulmed
+        // File yang sudah diupload saat draf disimpan — tinggal dipindah kepemilikannya.
+        $draft            = $this->userDraft($request->input('draft_id'));
+        $draftPosterId    = $draft?->poster_repo_id;
+        $draftLampiranIds = $draft?->lampiran_repo_ids ?? [];
+
+        // Poster baru yang dipilih di form menang atas poster bawaan draf.
         if ($posterFile) {
+            if ($draftPosterId) {
+                $this->repoMulmedService->deletePermanent($draftPosterId);
+                $draftPosterId = null;
+            }
+
             $this->repoMulmedService->upload($posterFile, [
                 'judul_file' => 'Poster: ' . $validated['judul'],
                 'visibility_status' => 'public',
                 'pengumuman_id' => $pengumuman->id,
             ]);
         }
+
+        $fileDariDraft = array_values(array_filter(array_merge([$draftPosterId], $draftLampiranIds)));
+
+        if ($fileDariDraft) {
+            RepoMulmed::whereIn('id', $fileDariDraft)->update(['pengumuman_id' => $pengumuman->id]);
+        }
+
+        // Lepaskan referensi agar file tidak ikut terhapus saat draf dibuang.
+        $draft?->update(['poster_repo_id' => null, 'lampiran_repo_ids' => null]);
 
         // Handle lampiran upload
         if ($request->hasFile('lampiran')) {
@@ -201,12 +305,7 @@ class PengumumanController extends Controller
                     'status_publish' => 'pending_review',
                 ]);
 
-                // Hapus draf jika post dikirim dari draf
-                if ($request->filled('draft_id')) {
-                    PengumumanDraft::where('id', $request->input('draft_id'))
-                        ->where('user_id', Auth::id())
-                        ->delete();
-                }
+                $draft?->delete();
 
                 return redirect()
                     ->route('manajemenmahasiswa.pengumuman.verification.request', $pengumuman->id)
@@ -216,12 +315,7 @@ class PengumumanController extends Controller
             $this->pengumumanService->publish($pengumuman->id);
         }
 
-        // Hapus draf jika post dikirim dari draf
-        if ($request->filled('draft_id')) {
-            PengumumanDraft::where('id', $request->input('draft_id'))
-                ->where('user_id', Auth::id())
-                ->delete();
-        }
+        $draft?->delete();
 
         return redirect()
             ->route('manajemenmahasiswa.pengumuman.index')

@@ -56,7 +56,7 @@
             <!-- Foto & Detail Mahasiswa -->
             <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 flex flex-col items-center">
                 <div
-                    class="w-20 h-20 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center text-3xl font-black text-indigo-600 mb-4 shadow-inner">
+                    class="w-20 h-20 bg-primary-50 border border-primary-100 rounded-full flex items-center justify-center text-3xl font-black text-primary-500 mb-4 shadow-inner">
                     {{ substr($m->nama, 0, 1) }}
                 </div>
                 <h2 class="text-lg font-extrabold text-slate-800 text-center leading-tight mb-1">{{ $m->nama }}</h2>
@@ -70,7 +70,7 @@
                         <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider shrink-0">Status
                             KP</span>
                         <span
-                            class="text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap {{ $m->status_kp === 'Pra KP' ? 'bg-amber-50 text-amber-600' : ($m->status_kp === 'Saat KP' ? 'bg-blue-50 text-blue-600' : (in_array($m->status_kp, ['Dibatalkan', 'Gagal']) ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600')) }}">
+                            class="text-xs font-bold px-2 py-0.5 rounded-full whitespace-nowrap {{ $m->status_kp === 'Pra KP' ? 'bg-amber-50 text-amber-600' : ($m->status_kp === 'Saat KP' ? 'bg-primary-50 text-primary-500' : (in_array($m->status_kp, ['Dibatalkan', 'Gagal']) ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600')) }}">
                             {{ $m->status_kp }}
                         </span>
                     </div>
@@ -117,7 +117,7 @@
                         class="w-full p-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
                         <div class="flex items-center gap-3 text-slate-700">
                             <div
-                                class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                                class="w-8 h-8 rounded-lg bg-primary-50 text-primary-500 flex items-center justify-center shrink-0 border border-primary-100">
                                 <svg class="w-4 h-4 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -139,7 +139,7 @@
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Override Dosen
                                 Pembimbing</label>
                             <select name="dosen_pembimbing_id"
-                                class="w-full text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-2 shadow-sm focus:ring-1 focus:ring-indigo-500">
+                                class="w-full text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-2 shadow-sm focus:ring-1 focus:ring-primary-500">
                                 <option value="">-- Kosongi untuk lepas --</option>
                                 @foreach($dosens as $dosen)
                                     <option value="{{ $dosen->id }}" {{ $m->dosen_pembimbing_id == $dosen->id ? 'selected' : '' }}>
@@ -152,7 +152,7 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1.5">Alokasi Kelas</label>
                             <select name="kelas"
-                                class="w-full text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-2 shadow-sm focus:ring-1 focus:ring-indigo-500">
+                                class="w-full text-xs font-semibold text-slate-600 border border-slate-200 rounded-lg px-2.5 py-2 shadow-sm focus:ring-1 focus:ring-primary-500">
                                 <option value="" {{ $m->kelas === '-' ? 'selected' : '' }}>-- Belum Dialokasikan --
                                 </option>
                                 @if(!empty($m->kelas_dibuka))
@@ -204,7 +204,7 @@
                         </div>
 
                         <button type="submit"
-                            class="w-full mt-2 inline-flex justify-center items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[13px] font-bold shadow-sm transition-colors">
+                            class="w-full mt-2 inline-flex justify-center items-center px-4 py-2 bg-primary-500 hover:bg-primary-500 text-white rounded-lg text-[13px] font-bold shadow-sm transition-colors">
                             Simpan Perubahan
                         </button>
                     </div>
@@ -251,7 +251,7 @@
                                                     $isPdf = $ext === 'pdf';
                                                 @endphp
                                                 <div
-                                                    class="mt-0.5 shrink-0 w-8 h-8 rounded-lg {{ $isPdf ? 'bg-rose-50 text-rose-500' : 'bg-blue-50 text-blue-500' }} flex items-center justify-center shadow-sm border {{ $isPdf ? 'border-rose-100' : 'border-blue-100' }}">
+                                                    class="mt-0.5 shrink-0 w-8 h-8 rounded-lg {{ $isPdf ? 'bg-rose-50 text-rose-500' : 'bg-primary-50 text-primary-500' }} flex items-center justify-center shadow-sm border {{ $isPdf ? 'border-rose-100' : 'border-primary-100' }}">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -278,7 +278,7 @@
                                             <div class="flex items-center justify-end gap-2 flex-wrap">
                                                 <!-- Tombol Buka/Download File -->
                                                 <a href="{{ $dok->file_url }}" target="_blank"
-                                                    class="px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-[13px] font-bold shadow-sm hover:text-indigo-600 hover:border-indigo-200 hover:bg-slate-50 transition-colors flex items-center gap-1.5">
+                                                    class="px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-[13px] font-bold shadow-sm hover:text-primary-500 hover:border-primary-200 hover:bg-slate-50 transition-colors flex items-center gap-1.5">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -350,7 +350,7 @@
                                                                                                 class="block text-xs font-semibold text-slate-500 mb-1 pointer-events-none">Alasan
                                                                                                 Penolakan / Catatan Revisi:</label>
                                                                                             <textarea x-model="note" rows="3"
-                                                                                                class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-all font-medium"
+                                                                                                class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 shadow-sm focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20 transition-all font-medium"
                                                                                                 placeholder="Tuliskan alasan penolakan dokumen agar mahasiswa dapat merevisinya..."></textarea>
                                                                                         </div>
                                                                                     </div>
@@ -404,7 +404,7 @@
                 <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100">
+                            class="w-8 h-8 rounded-lg bg-primary-50 text-primary-500 flex items-center justify-center shrink-0 border border-primary-100">
                             <svg class="w-4 h-4 shadow-sm" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
@@ -437,7 +437,7 @@
                                                     $isPdf = $ext === 'pdf';
                                                 @endphp
                                                 <div
-                                                    class="mt-0.5 shrink-0 w-8 h-8 rounded-lg {{ $isPdf ? 'bg-rose-50 text-rose-500' : 'bg-blue-50 text-blue-500' }} flex items-center justify-center shadow-sm border {{ $isPdf ? 'border-rose-100' : 'border-blue-100' }}">
+                                                    class="mt-0.5 shrink-0 w-8 h-8 rounded-lg {{ $isPdf ? 'bg-rose-50 text-rose-500' : 'bg-primary-50 text-primary-500' }} flex items-center justify-center shadow-sm border {{ $isPdf ? 'border-rose-100' : 'border-primary-100' }}">
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -457,7 +457,7 @@
                                         <td class="px-6 py-4 text-right">
                                             <div class="flex items-center justify-end gap-2 flex-wrap">
                                                 <a href="{{ $dok->file_url }}" target="_blank"
-                                                    class="px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-[13px] font-bold shadow-sm hover:text-indigo-600 hover:border-indigo-200 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5">
+                                                    class="px-3 py-1.5 bg-white border border-slate-200 text-slate-500 rounded-lg text-[13px] font-bold shadow-sm hover:text-primary-500 hover:border-primary-200 hover:bg-slate-50 transition-colors inline-flex items-center gap-1.5">
                                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                         viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -534,7 +534,7 @@
                                         <div class="relative">
                                             <input type="number" step="0.01" min="0" max="100" name="nilai_{{ $komp->id }}"
                                                 value="{{ $komp->nilai_angka ?? '' }}"
-                                                class="w-full text-sm font-bold text-indigo-700 bg-indigo-50/30 border border-slate-200 rounded-lg px-4 py-2.5 shadow-sm focus:bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-20 transition-all font-mono"
+                                                class="w-full text-sm font-bold text-primary-500 bg-primary-50/30 border border-slate-200 rounded-lg px-4 py-2.5 shadow-sm focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500 focus:ring-opacity-20 transition-all font-mono"
                                                 placeholder="Contoh: 85.50">
                                             @if(!empty($komp->nilai_angka))
                                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
@@ -554,7 +554,7 @@
 
                             <div class="flex items-center justify-end">
                                 <button type="submit"
-                                    class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                                    class="px-5 py-2.5 bg-primary-500 hover:bg-primary-500 text-white rounded-xl text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                             d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />

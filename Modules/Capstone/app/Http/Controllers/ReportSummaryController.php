@@ -68,7 +68,7 @@ class ReportSummaryController extends Controller
 
         $groups = Group::where('period_id', $periodId)
             ->with(['members' => function ($query) {
-                $query->withTrashed()->with('student');
+                $query->with('student');
             }])
             ->get();
 
@@ -159,9 +159,8 @@ class ReportSummaryController extends Controller
         })->avg('score') ?? 0;
 
         // Get top 5 groups by peer review average
-        $topGroups = DB::table('peer_reviews')
-            ->join('groups', 'peer_reviews.group_id', '=', 'groups.id')
-            ->leftJoin('titles', 'groups.title_id', '=', 'titles.id')
+        $topGroups = DB::table('capstone_peer_reviews as peer_reviews')
+            ->join('capstone_groups as groups', 'peer_reviews.group_id', '=', 'groups.id')
             ->where('groups.period_id', $periodId)
             ->select(
                 'groups.id as group_id',
@@ -169,7 +168,7 @@ class ReportSummaryController extends Controller
                 DB::raw('COUNT(DISTINCT peer_reviews.reviewee_id) as student_count'),
                 DB::raw('ROUND(AVG(peer_reviews.score), 2) as average_score')
             )
-            ->groupBy('groups.id', 'titles.title')
+            ->groupBy('groups.id', 'groups.code')
             ->orderByDesc('average_score')
             ->limit(5)
             ->get();
@@ -201,7 +200,7 @@ class ReportSummaryController extends Controller
 
         $groups = Group::where('period_id', $periodId)
             ->with(['title', 'members' => function ($query) {
-                $query->withTrashed()->with('student');
+                $query->with('student');
             }])
             ->get();
 
@@ -316,6 +315,11 @@ class ReportSummaryController extends Controller
             }
         }
 
+        // Averages include every student with a score, including zero scores.
+        $pdc1Scores = collect($topStudents)->pluck('pdc1_score')->filter(fn ($score) => $score !== null)->all();
+        $pdc2Scores = collect($topStudents)->pluck('pdc2_score')->filter(fn ($score) => $score !== null)->all();
+        $taScores = collect($topStudents)->pluck('ta_score')->filter(fn ($score) => $score !== null)->all();
+
         // Sort by average score descending and take top 5
         usort($topStudents, fn ($a, $b) => $b['_avg_score'] <=> $a['_avg_score']);
         $topStudents = array_slice($topStudents, 0, 5);
@@ -334,11 +338,6 @@ class ReportSummaryController extends Controller
             'pdc2_complete' => $s['pdc2_complete'],
             'ta_complete' => $s['ta_complete'],
         ], $topStudents);
-
-        // Calculate per-phase averages for students who have scores
-        $pdc1Scores = collect($topStudents)->pluck('pdc1_score')->filter()->all();
-        $pdc2Scores = collect($topStudents)->pluck('pdc2_score')->filter()->all();
-        $taScores = collect($topStudents)->pluck('ta_score')->filter()->all();
 
         $pdc1Average = count($pdc1Scores) > 0 ? round(array_sum($pdc1Scores) / count($pdc1Scores), 2) : null;
         $pdc2Average = count($pdc2Scores) > 0 ? round(array_sum($pdc2Scores) / count($pdc2Scores), 2) : null;

@@ -9,6 +9,16 @@ use Illuminate\Auth\Access\AuthorizationException;
 
 final class CapstoneActor
 {
+    /** Load academic identities without fetching the owning user again. */
+    public static function loadProfiles(User $user, array $profiles = ['student', 'lecturer']): User
+    {
+        foreach ($profiles as $profile) {
+            $user->loadMissing([$profile => fn ($query) => $query->without('user')]);
+        }
+
+        return $user;
+    }
+
     public static function roles(User $user): array
     {
         $roles = [];
@@ -45,7 +55,7 @@ final class CapstoneActor
 
     public static function student(User $user): Student
     {
-        $student = $user->student;
+        $student = self::loadProfiles($user, ['student'])->student;
 
         if (! $student) {
             throw new AuthorizationException('Profil mahasiswa untuk akun SSO ini tidak ditemukan.');
@@ -56,7 +66,7 @@ final class CapstoneActor
 
     public static function lecturer(User $user): Lecturer
     {
-        $lecturer = $user->lecturer;
+        $lecturer = self::loadProfiles($user, ['lecturer'])->lecturer;
 
         if (! $lecturer) {
             throw new AuthorizationException('Profil dosen untuk akun SSO ini tidak ditemukan.');
@@ -67,6 +77,7 @@ final class CapstoneActor
 
     public static function payload(User $user, ?string $activeRole = null): array
     {
+        self::loadProfiles($user);
         $roles = self::roles($user);
         $activeRole = in_array($activeRole, $roles, true)
             ? $activeRole

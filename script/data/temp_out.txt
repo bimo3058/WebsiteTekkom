@@ -1,0 +1,1 @@
+                        <div x-data="{ dropdownOpen: false, options: [{value:'Ganjil', label:'Ganjil'}, {value:'Genap', label:'Genap'}] }" class="relative w-full text-left" @click.away="dropdownOpen = false">

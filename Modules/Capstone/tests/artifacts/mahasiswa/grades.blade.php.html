@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="">
+    <title>Nilai Saya | SICATA</title>
+    <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["mahasiswa"],"active_role":"mahasiswa","nim":null,"nip":"TEST-NIP"},"role":"mahasiswa","path":"\/mahasiswa\/grades","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+</head>
+<body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
+    <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
+<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+    <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
+        <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
+        <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                    <path  d="m15 18-6-6 6-6"  />
+    </svg>
+</button>
+    </div>
+    </div>
+    <nav aria-label="Capstone navigation" class="min-h-0 flex-1 overflow-y-auto p-2 space-y-1">
+        <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">Menu</div>
+                                <a href="http://localhost:8000/capstone/mahasiswa/dashboard" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " title="Dashboard"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <rect  width="7"  height="9"  x="3"  y="3"  rx="1"  />
+                    <rect  width="7"  height="5"  x="14"  y="3"  rx="1"  />
+                    <rect  width="7"  height="9"  x="14"  y="12"  rx="1"  />
+                    <rect  width="7"  height="5"  x="3"  y="16"  rx="1"  />
+    </svg>
+<span x-show="!collapsed">Dashboard</span></a>
+                                                                <a  href="http://localhost:8000/capstone/mahasiswa/registration"  class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent  " title="Registration"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+    </svg>
+<span x-show="!collapsed">Registration</span></a>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Group &amp; Titles"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"  />
+                    <path  d="M16 3.128a4 4 0 0 1 0 7.744"  />
+                    <path  d="M22 21v-2a4 4 0 0 0-3-3.87"  />
+                    <circle  cx="9"  cy="7"  r="4"  />
+    </svg>
+<span x-show="!collapsed">Group &amp; Titles</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/group"  title="My Group" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">My Group</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/titles"  title="Titles Marketplace" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Titles Marketplace</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/propose-title"  title="Propose Title" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Propose Title</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/bidding"  title="Title Bids" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Title Bids</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Progress &amp; Docs"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"  />
+                    <path  d="M14 2v5a1 1 0 0 0 1 1h5"  />
+                    <path  d="M10 9H8"  />
+                    <path  d="M16 13H8"  />
+                    <path  d="M16 17H8"  />
+    </svg>
+<span x-show="!collapsed">Progress &amp; Docs</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/documents"  title="Documents" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Documents</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/ta-submission"  title="TA Submission" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">TA Submission</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Schedules"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+    </svg>
+<span x-show="!collapsed">Schedules</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/schedule"  title="My Schedule" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">My Schedule</a>
+                                                                                            <a  aria-disabled="true" tabindex="-1"  title="Available when your group is ready for Expo" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent pointer-events-none opacity-50 ">Daftar Expo</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: true }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Evaluations"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"  />
+                    <path  d="M22 10v6"  />
+                    <path  d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"  />
+    </svg>
+<span x-show="!collapsed">Evaluations</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  aria-disabled="true" tabindex="-1"  title="Available after Expo registration" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent pointer-events-none opacity-50 ">Peer Review</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/grades"  title="My Grades" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">My Grades</a>
+                                                    </div>
+                    </div>
+                                            <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">System</div>
+        <a href="http://localhost:8000/capstone/notifications" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="!collapsed">Notifications</span><span x-show="unread > 0 && !collapsed" x-text="unread" class="ml-auto rounded-full bg-primary px-1.5 text-xs text-white"></span></a>
+    </nav>
+    <div class="p-2 border-t">
+                <form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm text-destructive hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+<span x-show="!collapsed">Logout</span></button></form>
+    </div>
+</aside>
+    <main class="flex h-screen w-full min-w-0 flex-col overflow-hidden">
+        <div class="flex-1 overflow-y-auto p-4 bg-white">
+            <div class="border-grey-100 shadow-small min-h-full overflow-hidden rounded-xl border">
+                <header class="sticky top-0 z-30 flex items-center justify-between gap-4 px-3 sm:px-6 py-4 border-b border-grey-100 bg-white">
+    <button type="button" @click="mobileSidebar = !mobileSidebar" aria-label="Open menu" class="md:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M4 5h16"  />
+                    <path  d="M4 12h16"  />
+                    <path  d="M4 19h16"  />
+    </svg>
+</button>
+    <nav aria-label="breadcrumb"><ol class="flex flex-wrap items-center gap-2 text-sm"><li class="text-grey-400">SICATA</li><li class="text-grey-300">/</li><li class="text-grey-600 font-medium">Grades</li></ol></nav>
+    <div class="flex items-center gap-2">
+        <button type="button" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+</button>
+        <a href="http://localhost:8000/capstone/notifications" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Notifications"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="unread > 0" class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error-100"></span></a>
+        <div x-data="{ open:false }" class="relative" @click.outside="open=false" @keydown.escape.window="open=false">
+            <button type="button" @click="open=!open" :aria-expanded="open" class="flex items-center gap-3 h-10 px-2 hover:bg-grey-25 rounded-md">
+                <span class="h-8 w-8 flex items-center justify-center rounded-full bg-grey-100 text-grey-500 text-sm font-semibold">TA</span>
+                <span class="flex-col items-start text-left hidden sm:flex"><span class="text-sm font-semibold text-grey-600 leading-tight">Test Administrator</span><span class="text-xs text-grey-400 leading-tight">Mahasiswa</span></span>
+            </button>
+            <div x-show="open" x-cloak class="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 shadow-md z-50">
+                <div class="px-2 py-1.5 text-sm"><p class="font-semibold">Test Administrator</p><p class="text-xs text-muted-foreground">test@example.test</p></div><hr class="my-1">
+                <a href="http://localhost:8000/capstone/profile" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"  />
+                    <circle  cx="12"  cy="7"  r="4"  />
+    </svg>
+Profile</a>
+                                <hr class="my-1"><form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-error-100 hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+Logout</button></form>
+            </div>
+        </div>
+    </div>
+</header>
+                <div class="px-3 sm:px-6 pt-6 pb-6"><div x-data="capstoneGrades">
+    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span class="sr-only">Loading</span></div>
+<div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
+    <div class="space-y-10" x-show="!loading && !error" x-cloak>
+        <div><h1 class="text-3xl font-bold tracking-tight">Nilai Saya</h1><p class="mt-1.5 text-sm text-muted-foreground" x-show="sections.length && result?.period?.name" x-text="result?.period?.name"></p></div>
+        <div x-show="!sections.length" class="flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-20 text-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mb-5 h-12 w-12 text-muted-foreground/40">
+                    <path  d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"  />
+                    <path  d="M22 10v6"  />
+                    <path  d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"  />
+    </svg>
+<h3 class="text-lg font-semibold">Belum ada nilai</h3><p class="mt-1.5 max-w-sm text-sm text-muted-foreground">Nilai akan muncul setelah pembimbing dan penguji mengirimkan evaluasi.</p></div>
+        <template x-if="sections.length"><div class="space-y-10">
+            <div class="space-y-2"><template x-for="item in sections" :key="item.key"><div class="group flex items-center gap-4 rounded-lg px-4 py-3 transition-colors hover:bg-muted/30">
+                <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-sm font-bold" :class="[palette(item.section.grade).bg,palette(item.section.grade).text]" :aria-label="'Letter grade '+palette(item.section.grade).letter" x-text="palette(item.section.grade).letter"></span>
+                <div class="min-w-0 flex-1"><div class="flex items-baseline justify-between gap-3"><div class="flex items-baseline gap-2 min-w-0"><span class="truncate text-sm font-semibold" x-text="item.label"></span><span class="hidden sm:inline truncate text-xs text-muted-foreground" x-text="item.subtitle"></span></div><div class="flex items-center gap-2 shrink-0"><span class="text-lg font-bold tabular-nums" :class="palette(item.section.grade).text" x-text="score(item.section.grade)"></span><span class="inline-flex items-center rounded-md text-[10px] h-5 px-1.5 font-medium" :class="item.section.status==='COMPLETE'?'bg-primary text-primary-foreground':'bg-secondary text-secondary-foreground'" x-text="item.section.status"></span></div></div><div class="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted"><div class="h-full rounded-full transition-all duration-700 ease-out-quart" :class="palette(item.section.grade).bar" :style="{width:Math.min(100,Math.max(0,Number(item.section.grade)))+'%'}"></div></div></div>
+            </div></template></div>
+            <div role="separator" class="bg-border h-px w-full"></div>
+            <div>
+                <div role="tablist" aria-label="Komponen nilai" class="inline-flex h-9 items-center justify-center rounded-lg bg-muted p-[3px] text-muted-foreground"><template x-for="item in sections" :key="item.key"><button type="button" role="tab" :id="'grade-tab-'+item.key" :aria-controls="'grade-panel-'+item.key" :aria-selected="tab===item.key" @click="tab=item.key" class="inline-flex items-center justify-center gap-1.5 rounded-md border border-transparent px-2 py-1 text-sm font-medium whitespace-nowrap transition-all focus-visible:ring-2 focus-visible:ring-ring" :class="tab===item.key ? 'bg-background text-foreground shadow-sm' : ''" x-text="item.label"></button></template></div>
+                <div role="tabpanel" :id="'grade-panel-'+tab" :aria-labelledby="'grade-tab-'+tab" class="mt-5 space-y-4"><template x-for="detail in components" :key="tab+':'+detail.type"><div class="rounded-lg border px-4 py-3">
+                    <div class="flex items-center justify-between"><h4 class="text-sm font-medium" x-text="componentLabel(detail.type)"></h4><div class="flex items-center gap-2"><span x-show="detail.score!=null" class="text-sm font-semibold tabular-nums" :class="palette(detail.score).text" x-text="score(detail.score)"></span><span class="inline-flex items-center rounded-md text-[10px] h-5 px-1.5 font-medium" :class="detail.score!=null?'bg-primary text-primary-foreground':'bg-secondary text-secondary-foreground'" x-text="detail.score!=null?'Dinilai':'Menunggu'"></span></div></div>
+                    <div x-show="detail.score!=null && detail.evaluators?.length" class="mt-3 space-y-1.5"><template x-for="(e,index) in (detail.evaluators || [])" :key="index"><div class="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2"><div class="flex items-center gap-2 min-w-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-3.5 w-3.5 shrink-0 text-muted-foreground">
+                    <path  d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"  />
+                    <path  d="M16 3.128a4 4 0 0 1 0 7.744"  />
+                    <path  d="M22 21v-2a4 4 0 0 0-3-3.87"  />
+                    <circle  cx="9"  cy="7"  r="4"  />
+    </svg>
+<span class="truncate text-sm" x-text="e.name"></span><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground text-[10px] h-5 px-1.5 shrink-0" x-text="roleLabel(e.role)"></span>
+<span x-show="e.component" class="hidden sm:inline truncate text-[11px] text-muted-foreground" x-text="e.component"></span></div><span class="ml-2 text-sm font-semibold tabular-nums shrink-0" :class="e.score!=null?palette(e.score).text:'text-muted-foreground'" x-text="score(e.score)"></span></div></template></div>
+                    <p x-show="detail.score==null || !detail.evaluators?.length" class="mt-2 text-xs text-muted-foreground italic">Belum ada evaluasi masuk.</p>
+                </div></template></div>
+            </div>
+            <p class="text-[11px] text-muted-foreground">Skala: A &ge; 85 &middot; B 70&ndash;84 &middot; C 60&ndash;69 &middot; D 50&ndash;59 &middot; E &lt; 50</p>
+        </div></template>
+    </div>
+</div>
+</div>
+            </div>
+        </div>
+    </main>
+</div>
+<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+</div>
+</body>
+</html>

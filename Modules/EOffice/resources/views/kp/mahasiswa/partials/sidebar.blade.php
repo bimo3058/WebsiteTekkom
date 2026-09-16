@@ -24,7 +24,7 @@
      style="display:none"></div>
 
 <!-- Sidebar -->
-<aside x-data="{ sidebarCollapsed: false }"
+<aside data-mobile-sidebar x-data="{ sidebarCollapsed: false }"
        :class="{
            'translate-x-0': sidebarOpen,
            '-translate-x-full': !sidebarOpen,
@@ -175,12 +175,12 @@
 /* ── SIKAPE Design Tokens ───────────────────────────────── */
 :root {
     /* Primary */
-    --primary-50:  #eef2ff;
-    --primary-100: #e0e7ff;
+    --primary-50:  #EBEDF6;
+    --primary-100: #D0D6E9;
     --primary-200: #c7d2fe;
     --primary-300: #a5b4fc;
     --primary-400: #818cf8;
-    --primary-500: #4f46e5;
+    --primary-500: #2A3A7C;
 
     /* Grey */
     --grey-0:   #ffffff;

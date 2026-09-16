@@ -122,7 +122,7 @@
                     <th class="mp-th text-center" style="padding:10px 16px;width:60px;">Hadir</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:60px;">Izin</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:60px;border-right:1px solid #DFE1E7;">Alpha</th>
-                    <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#EEF2FF;">Pendahuluan</th>
+                    <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#EBEDF6;">Pendahuluan</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#F0FDF4;">Praktikum</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FEF9C3;">Laporan</th>
                     <th class="mp-th text-center" style="padding:10px 16px;width:110px;background:#FFF7ED;">Responsi</th>
@@ -183,7 +183,7 @@
                     </td>
 
                     {{-- Tugas Pendahuluan --}}
-                    <td style="padding:8px 12px;text-align:center;vertical-align:middle;" :style="status === 'hadir' ? 'background:#EEF2FF;' : 'background:#F1F5F9;'">
+                    <td style="padding:8px 12px;text-align:center;vertical-align:middle;" :style="status === 'hadir' ? 'background:#EBEDF6;' : 'background:#F1F5F9;'">
                         <input type="number" name="nilai[{{ $p->id }}][tugas_pendahuluan]"
                                value="{{ $nilaiTP !== null ? $nilaiTP : '' }}"
                                min="0" max="100" step="0.5"

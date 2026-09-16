@@ -44,7 +44,7 @@
 
     {{-- Avatar --}}
     <div style="position:relative;flex-shrink:0;">
-        <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08);" class="{{ $roleColor }}">
+        <div style="width:60px;height:60px;border-radius:50%;overflow:hidden;border:2px solid #e2e8f0;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;box-shadow:0 1px 3px rgba(0,0,0,.08);" class="{{ $isSuperadmin ? 'bg-[#F3F4F6] text-[#6B7280]' : $roleColor }}">
             @if($user->avatar_url)
                 <img src="{{ $user->avatar_url }}" id="currentAvatar" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">
             @else

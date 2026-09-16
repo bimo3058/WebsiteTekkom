@@ -15,6 +15,10 @@ use Modules\Capstone\Services\DocumentStorageService;
 use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Services\NotificationService;
 use Modules\Capstone\Support\CapstoneActor;
+use Modules\Capstone\Support\BladeFeatureAccess;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Services\IndividualTaWorkflow;
+use Illuminate\Support\Facades\DB;
 
 class DocumentController extends Controller
 {
@@ -58,6 +62,13 @@ class DocumentController extends Controller
         $allRequirements = PhaseDocumentRequirement::where('period_id', $periodId)->get();
         $documents = Document::where('group_id', $groupMember->group_id)->get();
         $phases = [];
+        $semproScheduled = SeminarSchedule::where('group_id', $groupMember->group_id)->where('type', 'SEMPRO')
+            ->whereNotIn('status', ['CANCELLED', 'REJECTED', 'PENDING', 'PENDING_APPROVAL'])->exists();
+        $groupReason = BladeFeatureAccess::reason('/mahasiswa/documents', [
+            'registered' => true,
+            'group_status' => $groupMember->group->status,
+            'pdc1_started' => BladeFeatureAccess::hasStartedPdc1($groupMember->group),
+        ]);
 
         foreach (self::PHASES as $phase) {
             $phaseDocs = $documents->where('phase', $phase);
@@ -160,13 +171,22 @@ class DocumentController extends Controller
                 }
             }
 
-            $phases[] = [
+            $phaseInfo = [
                 'phase' => $phase,
                 'status' => $phaseStatus,
                 'documents' => $typesStatus,
                 'required_types' => $requiredTypes,
                 'document_count' => $phaseDocs->count(),
             ];
+            if ($groupReason) $phaseInfo['status'] = 'locked';
+            $phaseInfo['locked_reason'] = $groupReason ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled);
+            $phaseInfo['can_upload'] = $phaseInfo['locked_reason'] === null;
+            $phaseInfo['documents'] = array_map(function ($document) use ($phaseInfo, $semproScheduled) {
+                $document['locked_reason'] = $phaseInfo['locked_reason'] ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled, $document['status']);
+                $document['can_upload'] = $document['locked_reason'] === null;
+                return $document;
+            }, $typesStatus);
+            $phases[] = $phaseInfo;
         }
 
         // Determine current phase
@@ -185,6 +205,7 @@ class DocumentController extends Controller
             'phases' => $phases,
             'current_phase' => $currentPhase,
             'is_graduated' => $allCompleted,
+            'seminar_schedule' => ['exists'=>$semproScheduled],
         ]);
     }
 
@@ -205,6 +226,7 @@ class DocumentController extends Controller
                 return response()->json(['data' => []]);
             }
             $documents = Document::where('group_id', $groupMember->group_id)
+                ->where(fn ($query) => $query->where('phase', '!=', IndividualTaWorkflow::DOCUMENT_PHASE)->orWhere('student_id', CapstoneActor::student($user)->id))
                 ->with('student')
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -265,32 +287,27 @@ class DocumentController extends Controller
 
         $request->validate($validationRules);
 
-        // Check workflow unlock rules
-        $prereq = self::UNLOCK_RULES[$request->phase];
-        if ($prereq !== null) {
-            $prereqApproved = Document::where('group_id', $groupMember->group_id)
-                ->where('phase', $prereq)
-                ->where('status', 'APPROVED')
-                ->exists();
+        // Recompute the workflow at submission time, before touching storage.
+        // Disabling a button alone does not protect a forged or stale upload.
+        $workflow = $this->workflow($request)->getData(true);
+        $phaseInfo = collect($workflow['phases'])->firstWhere('phase', $request->phase);
+        $documentInfo = collect($phaseInfo['documents'] ?? [])->firstWhere('type', $request->input('document_type', 'GENERAL'));
+        $reason = $phaseInfo['locked_reason'] ?? $documentInfo['locked_reason'] ?? null;
+        if (! $phaseInfo || ! ($phaseInfo['can_upload'] ?? false) || ($documentInfo && ! $documentInfo['can_upload'])) {
+            return response()->json(['message'=>$reason ?? 'Document upload is locked.'], 403);
+        }
 
-            if (! $prereqApproved) {
-                return response()->json([
-                    'message' => "You must have an approved {$prereq} document before uploading {$request->phase}.",
-                ], 400);
-            }
+        $existingDoc = Document::where('group_id', $groupMember->group_id)
+            ->where('phase', $request->phase)
+            ->where('document_type', $request->input('document_type', 'GENERAL'))
+            ->first();
+        if ($existingDoc?->status === 'APPROVED') {
+            return response()->json(['message'=>'Approved documents cannot be replaced.'], 403);
         }
 
         $path = $this->documentStorage->store(
-            $request->file('file'),
-            'documents',
-            $groupMember->group_id.'/'.$request->phase
+            $request->file('file'), 'documents', $groupMember->group_id.'/'.$request->phase
         );
-
-        // V5: Replace (overwrite) existing document instead of creating new version
-        $existingDoc = Document::where('group_id', $groupMember->group_id)
-            ->where('phase', $request->phase)
-            ->when($request->document_type, fn ($q) => $q->where('document_type', $request->document_type))
-            ->first();
 
         if ($existingDoc) {
             // Delete old file from storage
@@ -345,6 +362,7 @@ class DocumentController extends Controller
             $allowed = $student && GroupMember::where('group_id', $document->group_id)
                 ->where('student_id', $student->id)
                 ->exists();
+            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) $allowed = $allowed && $document->student_id === $student->id;
         }
         if ($role === 'dosen') {
             $lecturer = CapstoneActor::lecturer($user);
@@ -377,49 +395,57 @@ class DocumentController extends Controller
             'feedback' => ['nullable', 'string'],
         ]);
 
-        $document = Document::findOrFail($id);
-        abort_unless(
-            Group::whereKey($document->group_id)
-                ->supervisedBy($lecturerId)
-                ->exists(),
-            403,
-            'Anda bukan dosen pembimbing kelompok ini.'
-        );
-        $document->update([
-            'status' => $request->status,
-            'feedback' => $request->feedback,
-            'reviewed_by' => $user->id,
-        ]);
+        return DB::transaction(function () use ($id, $lecturerId, $request, $user) {
+            $document = Document::findOrFail($id);
+            Group::whereKey($document->group_id)->lockForUpdate()->firstOrFail();
+            $document = Document::whereKey($id)->lockForUpdate()->firstOrFail();
+            abort_unless(
+                Group::whereKey($document->group_id)
+                    ->supervisedBy($lecturerId)
+                    ->exists(),
+                403,
+                'Anda bukan dosen pembimbing kelompok ini.'
+            );
+            $document->update([
+                'status' => $request->status,
+                'feedback' => $request->feedback,
+                'reviewed_by' => $user->id,
+            ]);
 
-        // Auto-transition: if all required document subtypes for phase are APPROVED
-        $group = Group::findOrFail($document->group_id);
-        $hasRequirements = PhaseDocumentRequirement::where('period_id', $group->period_id)
-            ->where('phase', $document->phase)
-            ->where('is_required', true)
-            ->exists();
+            // Auto-transition: if all required document subtypes for phase are APPROVED
+            $group = Group::findOrFail($document->group_id);
+            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) {
+                app(IndividualTaWorkflow::class)->syncSubmission($document->student_id);
+            }
+            $hasRequirements = PhaseDocumentRequirement::where('period_id', $group->period_id)
+                ->where('phase', $document->phase)
+                ->where('is_required', true)
+                ->exists();
 
-        if ($request->status === 'APPROVED' && $hasRequirements) {
-            $this->checkPhaseCompletion($document->group_id, $document->phase);
-        }
+            if ($request->status === 'APPROVED' && $hasRequirements) {
+                $this->checkPhaseCompletion($document->group_id, $document->phase);
+            }
 
-        // Send notifications
-        $notificationService = app(NotificationService::class);
-        $studentIds = $group->members()->with('student')->get()
-            ->pluck('student.user_id')
-            ->filter()
-            ->values()
-            ->all();
-        $statusStr = strtolower($request->status);
-        $notificationService->sendToMany(
-            $studentIds,
-            'PROPOSAL_'.strtoupper($request->status), // e.g. PROPOSAL_APPROVED, PROPOSAL_REJECTED (reused for doc status)
-            "Document {$request->status}",
-            "Your {$document->phase} document ({$document->document_type}) has been {$statusStr}".($request->feedback ? " with feedback: {$request->feedback}" : '.'),
-            'documents',
-            $document->id
-        );
+            // Send notifications
+            $notificationService = app(NotificationService::class);
+            $studentIds = $group->members()->with('student')->get()
+                ->pluck('student.user_id')
+                ->filter()
+                ->values()
+                ->all();
+            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) $studentIds = array_filter([$document->student?->user_id]);
+            $statusStr = strtolower($request->status);
+            $notificationService->sendToMany(
+                $studentIds,
+                'PROPOSAL_'.strtoupper($request->status), // e.g. PROPOSAL_APPROVED, PROPOSAL_REJECTED (reused for doc status)
+                "Document {$request->status}",
+                "Your {$document->phase} document ({$document->document_type}) has been {$statusStr}".($request->feedback ? " with feedback: {$request->feedback}" : '.'),
+                'documents',
+                $document->id
+            );
 
-        return response()->json(['message' => 'Document review updated', 'data' => $document]);
+            return response()->json(['message' => 'Document review updated', 'data' => $document]);
+        });
     }
 
     /**

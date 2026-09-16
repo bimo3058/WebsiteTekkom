@@ -7,6 +7,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsprakPraktikum;
+use Modules\EOffice\Models\AsistenPraktikum;
+use Modules\EOffice\Models\ModulAsprak;
 use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\Modul;
 use Modules\EOffice\Models\Praktikum;
@@ -18,15 +20,42 @@ class ModulController extends Controller
     public function index()
     {
         $praktikum = DashboardController::resolvePraktikum();
+        $perPage = request('per_page', 10);
 
         $moduls = $praktikum
             ? Modul::with(['materi', 'tugas', 'modulAsprak.asprak.user'])
                 ->where('praktikum_id', $praktikum->id)
                 ->orderBy('urutan')
+                ->paginate($perPage)->withQueryString()
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage);
+
+        $asistenList = $praktikum
+            ? AsistenPraktikum::where('praktikum_id', $praktikum->id)
+                ->where('role', 'asprak')
+                ->with(['user', 'modulAsprak.modul'])
                 ->get()
             : collect();
 
-        return view('eoffice::manajemen-praktikum.koordinator.modul', compact('praktikum', 'moduls'));
+        $distribusiList = $praktikum
+            ? ModulAsprak::whereHas('modul', fn ($q) => $q->where('praktikum_id', $praktikum->id))
+                ->with(['modul', 'asprak.user'])
+                ->get()
+            : collect();
+
+        $asistenPage = request('asisten_page', 1);
+        $asistenPerPage = request('asisten_per_page', 10);
+        
+        $asistenPaginated = $praktikum
+            ? AsistenPraktikum::where('praktikum_id', $praktikum->id)
+                ->where('role', 'asprak')
+                ->with(['user.student', 'modulAsprak.modul'])
+                ->paginate($asistenPerPage, ['*'], 'asisten_page', $asistenPage)->withQueryString()
+            : new \Illuminate\Pagination\LengthAwarePaginator([], 0, $asistenPerPage);
+
+        // Also define $modulList for the template
+        $modulList = $moduls;
+
+        return view('eoffice::manajemen-praktikum.koordinator.modul', compact('praktikum', 'moduls', 'modulList', 'asistenList', 'distribusiList', 'asistenPaginated'));
     }
 
     public function show(int $modulId)

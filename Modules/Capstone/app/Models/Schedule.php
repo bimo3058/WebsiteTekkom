@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Schedule extends Model
 {
     protected $table = 'capstone_seminar_schedules';
-    protected $fillable = ['group_id', 'type', 'date', 'room', 'mode', 'notes'];
+    protected $fillable = ['group_id', 'type', 'date', 'start_time', 'end_time', 'room', 'mode', 'notes'];
 
     protected $casts = [
-        'date' => 'datetime',
+        'date' => 'date',
     ];
 
     public function group()
