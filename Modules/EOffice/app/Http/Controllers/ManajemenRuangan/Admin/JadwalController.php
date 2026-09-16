@@ -24,7 +24,7 @@ class JadwalController extends Controller
         $filterHari = $request->query('hari');
         $filterRuangan = $request->query('ruangan_id');
         $filterKategori = $request->query('kategori');
-        $sort = $request->query('sort', 'waktu');
+        $sort = $request->query('sort', $isAkademik ? 'waktu' : 'terbaru');
 
         $query = MrJadwalInternal::with('ruangan');
 

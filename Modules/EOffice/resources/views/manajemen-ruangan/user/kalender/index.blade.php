@@ -25,7 +25,8 @@
                     'id' => 'pm_' . $b->id,
                     'status' => $b->status,
                     'tujuan' => $b->tujuan ?? '',
-                    'pengguna' => $b->user->name ?? 'Mahasiswa'
+                    'pengguna' => $b->user->name ?? 'Mahasiswa',
+                    'user_id' => $b->user_id,
                 ];
             }
         }
@@ -124,26 +125,38 @@
                                 document.getElementById('roomFilterForm').submit();
                             }
                         }" class="relative w-48" @click.away="open = false">
-                        
+
                         <input type="hidden" name="ruangan_id" id="ruanganInput" :value="selectedId">
 
-                        <button type="button" @click="open = !open" 
+                        <button type="button" @click="open = !open"
                             class="w-full flex items-center justify-between py-1.5 px-3 text-[13px] font-medium bg-white border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 transition-all cursor-pointer">
                             <span x-text="selectedName" class="truncate pr-2 text-gray-800"></span>
-                            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 shrink-0"
+                                :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        
-                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
-                            class="absolute right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 max-h-60 overflow-y-auto" style="display: none;">
+
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="transform opacity-0 scale-95"
+                            x-transition:enter-end="transform opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="transform opacity-100 scale-100"
+                            x-transition:leave-end="transform opacity-0 scale-95"
+                            class="absolute right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 max-h-60 overflow-y-auto"
+                            style="display: none;">
                             <div class="p-1.5">
-                                <button type="button" @click="selectRoom('', 'Semua Ruangan')" class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50': selectedId != ''}">
+                                <button type="button" @click="selectRoom('', 'Semua Ruangan')"
+                                    class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors cursor-pointer"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50': selectedId != ''}">
                                     Semua Ruangan
                                 </button>
-                                
+
                                 @foreach($allRuangansDaftar as $r)
-                                    <button type="button" @click="selectRoom('{{ $r->id }}', '{{ addslashes($r->nama) }}')" class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors mt-0.5 cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': selectedId != '{{ $r->id }}'}">
+                                    <button type="button" @click="selectRoom('{{ $r->id }}', '{{ addslashes($r->nama) }}')"
+                                        class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors mt-0.5 cursor-pointer"
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': selectedId != '{{ $r->id }}'}">
                                         {{ $r->nama }}
                                     </button>
                                 @endforeach
@@ -152,16 +165,41 @@
                     </div>
                 </form>
 
-                {{-- Mode Toggle --}}
-                <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
-                    <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
-                        Mingguan
+                {{-- Navigation Actions --}}
+                <div class="flex items-center gap-2">
+                    {{-- Hari Ini Button --}}
+                    @php
+                        if ($mode === 'week') {
+                            $todayDate = \Carbon\Carbon::now()->format('Y-m-d');
+                            $isTodayView = $todayDate === $weekStart->format('Y-m-d');
+                            $todayUrl = request()->fullUrlWithQuery(['week_start' => $todayDate]);
+                        } else {
+                            $todayMonth = \Carbon\Carbon::now()->format('Y-m');
+                            $isTodayView = $todayMonth === $monthDate->format('Y-m');
+                            $todayUrl = request()->fullUrlWithQuery(['month' => $todayMonth]);
+                        }
+                    @endphp
+                    <a href="{{ $todayUrl }}"
+                        class="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all border {{ $isTodayView ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-default' : 'bg-white text-[#0B266E] border-gray-200 hover:bg-[#EFF6FF] hover:border-[#0B266E]/30 shadow-sm' }}"
+                        {{ $isTodayView ? 'onclick="return false;"' : '' }} title="Kembali ke Hari Ini">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Hari Ini
                     </a>
-                    <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
-                        class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
-                        Bulanan
-                    </a>
+
+                    {{-- Mode Toggle --}}
+                    <div class="flex bg-gray-100 rounded-lg p-1 gap-1">
+                        <a href="{{ request()->fullUrlWithQuery(['mode' => 'week', 'week_start' => $weekStart->format('Y-m-d')]) }}"
+                            class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'week' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
+                            Mingguan
+                        </a>
+                        <a href="{{ request()->fullUrlWithQuery(['mode' => 'month', 'month' => $monthDate->format('Y-m')]) }}"
+                            class="px-3 py-1.5 rounded-md text-[12px] font-semibold transition-all {{ $mode === 'month' ? 'bg-white text-[#0B266E] shadow-sm' : 'text-gray-500 hover:text-[#0B266E]' }}">
+                            Bulanan
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -171,36 +209,78 @@
     <div x-data="bookingKalender()" @mouseup.window="stopDrag()">
 
         {{-- =================== LEGEND =================== --}}
-        <div class="flex items-center gap-4 mt-3 mb-5 text-[12px] font-medium text-gray-600">
+        <div class="flex flex-wrap items-center gap-4 mt-3 mb-5 text-[12px] font-medium text-gray-600">
             <div class="flex items-center gap-1.5">
                 <span class="w-3 h-3 rounded-sm bg-emerald-400 inline-block"></span> Tersedia (klik untuk booking)
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> Menunggu Persetujuan
+                <span class="w-3 h-3 rounded-sm bg-amber-400 inline-block"></span> Booking Saya (Menunggu)
             </div>
             <div class="flex items-center gap-1.5">
-                <span class="w-3 h-3 rounded-sm bg-red-400 inline-block"></span> Terpakai
+                <span class="w-3 h-3 rounded-sm bg-purple-400 inline-block"></span> Terpakai
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-sm bg-blue-400 inline-block"></span> Jadwal Kuliah
+            </div>
+            <div class="flex items-center gap-1.5">
+                <span class="w-3 h-3 rounded-sm bg-red-400 inline-block"></span> Libur / Tutup
             </div>
         </div>
 
         {{-- =================== WEEKLY MODE =================== --}}
         @if($mode === 'week')
             {{-- Week Nav --}}
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-4 mt-2">
                 @if($canGoBackWeek)
                     <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
-                        ← Minggu Lalu
+                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span class="hidden md:inline">Minggu Lalu</span>
                     </a>
                 @else
-                    <div class="px-3 py-2 w-[120px]"></div>
+                    <div class="min-w-[36px] md:min-w-[130px]"></div>
                 @endif
-                <div class="text-[15px] font-bold text-gray-800">
-                    {{ $weekStart->translatedFormat('d M Y') }} — {{ $weekEnd->translatedFormat('d M Y') }}
+
+                {{-- Date Picker Dropdown (Weekly) --}}
+                <div x-data="{ open: false }" class="relative">
+                    <button @click="open = !open" type="button"
+                        class="flex items-center gap-2 text-[15px] font-bold text-[#0B266E] hover:bg-[#EFF6FF] px-4 py-1.5 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-[#0B266E]/20">
+                        {{ $weekStart->translatedFormat('d M Y') }} — {{ $weekEnd->translatedFormat('d M Y') }}
+                        <svg class="w-4 h-4 text-[#0B266E] transition-transform duration-200" :class="{'rotate-180': open}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="open" @click.away="open = false" x-cloak
+                        x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[220px] bg-white border border-gray-200 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 p-4"
+                        style="display: none;">
+                        <p class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2 text-center">Pindah ke
+                            Tanggal</p>
+                        <form method="GET" action="{{ url()->current() }}" class="flex flex-col gap-2">
+                            <input type="hidden" name="mode" value="week">
+                            @if(request('ruangan_id'))
+                                <input type="hidden" name="ruangan_id" value="{{ request('ruangan_id') }}">
+                            @endif
+                            <input type="date" name="week_start" value="{{ $weekStart->format('Y-m-d') }}"
+                                class="w-full text-[13px] border-gray-300 rounded-md shadow-sm focus:ring-[#0B266E] focus:border-[#0B266E] cursor-pointer">
+                            <button type="submit"
+                                class="w-full bg-[#0B266E] text-white text-[12px] font-bold py-1.5 rounded-md hover:bg-[#091F5E] transition-colors cursor-pointer">Pergi</button>
+                        </form>
+                    </div>
                 </div>
+
                 <a href="{{ request()->fullUrlWithQuery(['week_start' => $nextWeek]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
-                    Minggu Depan →
+                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
+                    <span class="hidden md:inline">Minggu Depan</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
                 </a>
             </div>
 
@@ -258,8 +338,16 @@
                             if ($stObj['st'] === 'penuh' || $stObj['st'] === 'internal' || $stObj['st'] === 'menunggu') {
                                 for ($k = $hIndex + 1; $k < count($jamList); $k++) {
                                     $nextStObj = $hourStatuses[$jamList[$k]];
-                                    // Combine if they are the exact same event
                                     if ($nextStObj['st'] === $stObj['st'] && $nextStObj['id'] === $stObj['id']) {
+                                        $rowspan++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            } elseif (in_array($stObj['st'], ['tutup', 'libur', 'too_early'])) {
+                                for ($k = $hIndex + 1; $k < count($jamList); $k++) {
+                                    $nextStObj = $hourStatuses[$jamList[$k]];
+                                    if ($nextStObj['st'] === $stObj['st']) {
                                         $rowspan++;
                                     } else {
                                         break;
@@ -289,7 +377,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E;
-                                                                    {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
+                                                                                    {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">
                                             {{ $day->format('d/m') }}
@@ -345,10 +433,7 @@
                                                 $cleanTujuan = str_ireplace(' - Kelas ', '-', $cleanTujuan);
                                                 $cleanTujuan = str_ireplace(' (Kelas ', '-', $cleanTujuan);
                                                 $cleanTujuan = str_replace(')', '', $cleanTujuan);
-                                                $words = explode(' ', $cleanTujuan);
-                                                if (count($words) > 3) {
-                                                    $cleanTujuan = implode(' ', array_slice($words, 0, 3)) . '..';
-                                                }
+
                                                 // Jika status Internal (Jadwal Kuliah), gunakan default jika kosong
                                                 if ($slotStatus === 'internal' && empty($cleanTujuan)) {
                                                     $cleanTujuan = 'Jadwal Kuliah';
@@ -369,6 +454,8 @@
                                                 $jamStr = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00';
                                                 $isOutOfHours = ($jamStr < $jamBuka) || ($jamStr >= $jamTutup);
 
+                                                $onClick = null;
+                                                $isOwnBooking = ($slotData['user_id'] ?? null) === auth()->id();
                                                 if ($isPast || $isClosedWeekend || $isOutOfHours) {
                                                     $bg = '#F3F4F6';
                                                     $border = '#D1D5DB';
@@ -376,23 +463,59 @@
                                                     $cursor = 'not-allowed';
                                                     $href = null;
                                                 } elseif ($slotStatus === 'disetujui') {
+                                                    // Disetujui: ungu, info minimal (Ruangan + Waktu)
                                                     $bg = '#EDE9FE';
                                                     $border = '#C4B5FD';
-                                                    $label = strtoupper($cleanTujuan) ?: 'TERISI';
-                                                    $cursor = 'not-allowed';
+                                                    $label = 'Terpakai';
+                                                    $cursor = 'pointer';
                                                     $href = null;
+                                                    $roomName = addslashes($ruang->nama);
+                                                    $jamDisplay = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00 - ' . str_pad($jam + $cData['rowspan'], 2, '0', STR_PAD_LEFT) . ':00';
+                                                    $tanggalDisplay = $day->translatedFormat('l, d M Y');
+                                                    $onClick = "openDetailModal('Terpakai', '-', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'terpakai', '')";
                                                 } elseif ($slotStatus === 'internal') {
                                                     $bg = '#DBEAFE';
                                                     $border = '#60A5FA';
-                                                    $label = strtoupper($cleanTujuan);
-                                                    $cursor = 'not-allowed';
+                                                    $label = $cleanTujuan;
+                                                    $cursor = 'pointer';
                                                     $href = null;
-                                                } elseif ($slotStatus === 'menunggu') {
+                                                    $roomName = addslashes($ruang->nama);
+                                                    $jamDisplay = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00 - ' . str_pad($jam + $cData['rowspan'], 2, '0', STR_PAD_LEFT) . ':00';
+                                                    $tanggalDisplay = $day->translatedFormat('l, d M Y');
+
+                                                    // Parse Kelas if present (e.g. "Sistem Basis Data-A")
+                                                    $matkul = $label;
+                                                    $kelas = '-';
+                                                    if (strpos($label, '-') !== false) {
+                                                        $parts = explode('-', $label);
+                                                        $kelas = trim(array_pop($parts));
+                                                        $matkul = trim(implode('-', $parts));
+                                                    }
+
+                                                    $onClick = "openDetailModal('" . addslashes($matkul) . "', '" . addslashes($kelas) . "', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'internal', '')";
+                                                } elseif ($slotStatus === 'menunggu' && $isOwnBooking) {
+                                                    // Booking milik user sendiri: kuning, detail lengkap
                                                     $bg = '#FEF9C3';
                                                     $border = '#FBBF24';
                                                     $label = 'Menunggu';
-                                                    $cursor = 'not-allowed';
+                                                    $cursor = 'pointer';
                                                     $href = null;
+                                                    $roomName = addslashes($ruang->nama);
+                                                    $jamDisplay = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00 - ' . str_pad($jam + $cData['rowspan'], 2, '0', STR_PAD_LEFT) . ':00';
+                                                    $tanggalDisplay = $day->translatedFormat('l, d M Y');
+                                                    $tujuanOwn = addslashes($cleanTujuan);
+                                                    $onClick = "openDetailModal('Menunggu Konfirmasi', '-', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'menunggu', '{$tujuanOwn}')";
+                                                } elseif ($slotStatus === 'menunggu') {
+                                                    // Booking milik user lain: tampil ungu, info minimal
+                                                    $bg = '#EDE9FE';
+                                                    $border = '#C4B5FD';
+                                                    $label = 'Terpakai';
+                                                    $cursor = 'pointer';
+                                                    $href = null;
+                                                    $roomName = addslashes($ruang->nama);
+                                                    $jamDisplay = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00 - ' . str_pad($jam + $cData['rowspan'], 2, '0', STR_PAD_LEFT) . ':00';
+                                                    $tanggalDisplay = $day->translatedFormat('l, d M Y');
+                                                    $onClick = "openDetailModal('Terpakai', '-', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'terpakai', '')";
                                                 } elseif ($isHoliday) {
                                                     $bg = '#FEE2E2';
                                                     $border = '#F87171';
@@ -402,7 +525,7 @@
                                                 } elseif ($isTooEarly) {
                                                     $bg = '#F3F4F6';
                                                     $border = '#FCA5A5';
-                                                    $label = 'H-' . $batasHMinBooking;
+                                                    $label = 'Pinjam H-' . $batasHMinBooking;
                                                     $cursor = 'not-allowed';
                                                     $href = null;
                                                 } else {
@@ -441,12 +564,14 @@
                                                         else
                                                             $tColor = '#374151';
                                                     @endphp
-                                                    <div
+                                                    <div @if($onClick) @click="{{ $onClick }}"
+                                                        @mouseover="$el.style.transform='scale(1.03)'; $el.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)'"
+                                                    @mouseout="$el.style.transform='scale(1)'; $el.style.boxShadow='none'" @endif
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                               background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                               text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                               font-size:9px; font-weight:800; color:{{ $tColor }};
-                                                                                                                                                                                                                                                                                                                                                                                                                                                               cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-size:9px; font-weight:800; color:{{ $tColor }}; transition: all 0.15s;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -471,17 +596,91 @@
             <div class="flex items-center justify-between mb-4">
                 @if($canGoBackMonth)
                     <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
                         ← Bulan Lalu
                     </a>
                 @else
-                    <div class="px-3 py-2 w-[120px]"></div>
+                    <div class="px-4 py-2 min-w-[130px]"></div>
                 @endif
-                <div class="text-[15px] font-bold text-gray-800">
-                    {{ $monthDate->translatedFormat('F Y') }}
+
+                {{-- Month/Year Picker Dropdown (Monthly) --}}
+                <div x-data="{ open: false, selectedYear: {{ $monthDate->format('Y') }} }" class="relative">
+                    <button @click="open = !open" type="button"
+                        class="flex items-center gap-2 text-[15px] font-bold text-[#0B266E] hover:bg-[#EFF6FF] px-4 py-1.5 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-[#0B266E]/20">
+                        {{ $monthDate->translatedFormat('F Y') }}
+                        <svg class="w-4 h-4 text-[#0B266E] transition-transform duration-200" :class="{'rotate-180': open}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="open" @click.away="open = false" x-cloak
+                        x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[280px] bg-white border border-gray-200 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 p-4"
+                        style="display: none;">
+
+                        <!-- Year selector -->
+                        <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                            <button type="button" @click="selectedYear--"
+                                class="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-[#0B266E] transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+                            <span class="font-bold text-[16px] text-[#0B266E]" x-text="selectedYear"></span>
+                            <button type="button" @click="selectedYear++"
+                                class="p-1.5 hover:bg-gray-100 rounded-lg text-gray-500 hover:text-[#0B266E] transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5l7 7-7 7" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Months grid -->
+                        <div class="grid grid-cols-3 gap-2">
+                            @php
+                                $months = [
+                                    '01' => 'Jan',
+                                    '02' => 'Feb',
+                                    '03' => 'Mar',
+                                    '04' => 'Apr',
+                                    '05' => 'Mei',
+                                    '06' => 'Jun',
+                                    '07' => 'Jul',
+                                    '08' => 'Agu',
+                                    '09' => 'Sep',
+                                    '10' => 'Okt',
+                                    '11' => 'Nov',
+                                    '12' => 'Des'
+                                ];
+                                $currentMonthNum = $monthDate->format('m');
+                                $currentYearNum = $monthDate->format('Y');
+                            @endphp
+
+                            @foreach($months as $num => $name)
+                                <button type="button" @click="
+                                                            let url = new URL(window.location.href);
+                                                            url.searchParams.set('mode', 'month');
+                                                            url.searchParams.set('month', selectedYear + '-{{ $num }}');
+                                                            window.location.href = url.href;
+                                                        "
+                                    class="py-2 text-center text-[13px] rounded-lg transition-colors cursor-pointer" :class="{
+                                                            'bg-[#0B266E] text-white font-bold shadow-md': selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}',
+                                                            'text-gray-600 hover:bg-[#EFF6FF] hover:text-[#0B266E] hover:font-bold': !(selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}')
+                                                        }">
+                                    {{ $name }}
+                                </button>
+                            @endforeach
+                        </div>
+                    </div>
                 </div>
+
                 <a href="{{ request()->fullUrlWithQuery(['month' => $nextMonth]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
                     Bulan Depan →
                 </a>
             </div>
@@ -539,8 +738,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                                                                                                                                                                      background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                                                                                                                                      transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -572,6 +771,72 @@
                     class="text-[#0B266E] font-bold">Mingguan</span> di minggu tersebut secara detail.
             </div>
         @endif
+
+        {{-- =================== DETAIL MODAL =================== --}}
+        <div x-show="showDetailModal" x-cloak style="display: none;"
+            class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+            aria-labelledby="detail-modal-title" role="dialog" aria-modal="true">
+
+            {{-- Backdrop --}}
+            <div x-show="showDetailModal" x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" aria-hidden="true"
+                @click="closeDetailModal"></div>
+
+            {{-- Modal Panel --}}
+            <div x-show="showDetailModal" x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
+
+                <div class="px-5 py-4 flex flex-col items-center">
+                    <div class="text-[#0B266E] font-extrabold text-[15px] mb-1 text-center w-full pb-3 border-b border-gray-100"
+                        x-text="detailData.kegiatan"></div>
+
+                    <div class="w-full mt-3 space-y-2">
+                        {{-- Kelas: hanya untuk Jadwal Kuliah (internal) --}}
+                        <div class="flex justify-between items-center text-[12px]" x-show="detailData.status === 'internal' && detailData.kelas !== '-'">
+                            <span class="text-gray-500 font-medium">Kelas</span>
+                            <span class="text-gray-800 font-bold" x-text="detailData.kelas"></span>
+                        </div>
+                        <div class="flex justify-between items-center text-[12px]">
+                            <span class="text-gray-500 font-medium">Ruangan</span>
+                            <span class="text-gray-800 font-bold" x-text="detailData.ruangan"></span>
+                        </div>
+                        {{-- Tanggal & Waktu: selalu tampil --}}
+                        <div class="flex justify-between items-center text-[12px]">
+                            <span class="text-gray-500 font-medium">Tanggal</span>
+                            <span class="text-gray-800 font-bold" x-text="detailData.tanggal"></span>
+                        </div>
+                        <div class="flex justify-between items-center text-[12px]">
+                            <span class="text-gray-500 font-medium">Waktu</span>
+                            <span class="text-gray-800 font-bold" x-text="detailData.waktu"></span>
+                        </div>
+                        {{-- Tujuan: hanya untuk booking milik sendiri (menunggu) --}}
+                        <div class="flex justify-between items-center text-[12px]" x-show="detailData.status === 'menunggu' && detailData.tujuan">
+                            <span class="text-gray-500 font-medium">Keperluan</span>
+                            <span class="text-gray-800 font-bold text-right max-w-[55%]" x-text="detailData.tujuan"></span>
+                        </div>
+                        {{-- Pesan konfirmasi untuk booking sendiri --}}
+                        <div x-show="detailData.status === 'menunggu'" class="mt-2 pt-2 border-t border-amber-100">
+                            <p class="text-[11px] text-amber-600 font-medium text-center">⏳ Booking Anda sedang menunggu konfirmasi dari admin.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-4 py-3 border-t border-gray-100 sm:flex sm:flex-row-reverse">
+                    <button type="button" @click="closeDetailModal"
+                        class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-[#0B266E] text-sm font-bold text-white hover:bg-[#091F5E] focus:outline-none transition-colors sm:w-auto sm:text-[13px] cursor-pointer">
+                        Tutup
+                    </button>
+                </div>
+            </div>
+        </div>
 
         {{-- =================== BOOKING MODAL =================== --}}
         <div x-show="showModal" x-cloak style="display: none;"
@@ -760,6 +1025,26 @@
                     waktu: '',
                     jamMulai: '',
                     jamSelesai: ''
+                },
+
+                showDetailModal: false,
+                detailData: {
+                    kegiatan: '',
+                    kelas: '',
+                    ruangan: '',
+                    tanggal: '',
+                    waktu: '',
+                    status: '',
+                    tujuan: ''
+                },
+
+                openDetailModal(kegiatan, kelas, ruangan, tanggal, waktu, status = '', tujuan = '') {
+                    this.detailData = { kegiatan, kelas, ruangan, tanggal, waktu, status, tujuan };
+                    this.showDetailModal = true;
+                },
+
+                closeDetailModal() {
+                    this.showDetailModal = false;
                 },
 
                 startDrag(roomId, roomName, date, hourStart) {
