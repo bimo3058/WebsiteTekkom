@@ -87,22 +87,9 @@ class SoloTitleController extends Controller
     public function store(Request $request, $titleId)
     {
         $user = Auth::user();
+        $student = CapstoneActor::student($user);
 
-        // 1. Must be in a group
-        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
-            ->where('is_leader', true)
-            ->first();
-
-        if (! $membership) {
-            return $this->unauthorizedResponse('Hanya pemimpin kelompok yang dapat mengajukan bid.');
-        }
-        $group = Group::with('period', 'members')->find($membership->group_id);
-
-        $this->ensurePeriodIsActive($group);
-
-        $period = $group->period;
-
-        // 2. Check title exists and is a solo title
+        // 1. Check title exists and is a solo title
         $title = Title::find($titleId);
 
         if (! $title) {
@@ -114,10 +101,47 @@ class SoloTitleController extends Controller
         }
 
         $soloGroup = $title->proposedByGroup;
+        $soloGroup?->loadMissing('period');
 
         if (! $soloGroup || ! $soloGroup->is_solo) {
             return $this->errorResponse('Judul ini bukan dari solo seeker.', 400);
         }
+
+        // 2. Resolve bidder group. Group leaders bid with their group;
+        // ghost students (no group at all) get a temporary 1-person group
+        // vessel so they can join the solo seeker as individuals.
+        $membership = GroupMember::where('student_id', $student->id)
+            ->where('is_leader', true)
+            ->first();
+
+        $isGhost = false;
+        if (! $membership) {
+            $anyMembership = GroupMember::where('student_id', $student->id)->first();
+            if ($anyMembership) {
+                return $this->unauthorizedResponse('Hanya pemimpin kelompok yang dapat mengajukan bid.');
+            }
+            $group = Group::create([
+                'period_id' => $soloGroup->period_id,
+                'status' => 'FORMING',
+                'group_mode' => 'GROUP',
+                'has_existing_group' => false,
+                'is_solo' => false,
+            ]);
+            GroupMember::create([
+                'group_id' => $group->id,
+                'student_id' => $student->id,
+                'is_leader' => true,
+                'period_id' => $soloGroup->period_id,
+            ]);
+            $group->load('period', 'members');
+            $isGhost = true;
+        } else {
+            $group = Group::with('period', 'members')->find($membership->group_id);
+        }
+
+        $this->ensurePeriodIsActive($group);
+
+        $period = $group->period;
 
         // 3. Check merge quota - total members after merge should not exceed max
         $soloMembers = $soloGroup->members()->count();
@@ -129,9 +153,10 @@ class SoloTitleController extends Controller
             return $this->errorResponse("Total anggota setelah merge ({$totalAfterMerge}) akan melebihi batas maksimal ({$maxSize}). Kurangi anggota kelompok Anda atau cari judul lain.", 400);
         }
 
-        // 4. Check group has enough members for the bid itself (not for merge)
+        // 4. Check group has enough members for the bid itself (not for merge).
+        // Skipped for ghost individuals joining as a single person.
         $minSize = $period->min_group_size ?? 3;
-        if ($bidderMembers < $minSize) {
+        if (! $isGhost && $bidderMembers < $minSize) {
             return $this->errorResponse("Kelompok Anda memiliki {$bidderMembers} anggota. Minimal {$minSize} anggota diperlukan untuk mengajukan bid.", 400);
         }
 
@@ -170,7 +195,9 @@ class SoloTitleController extends Controller
                 'user_id' => $soloLeader->student->user_id,
                 'type' => 'BID_TO_SOLO_TITLE',
                 'title' => 'Permintaan Join ke Judul Anda',
-                'message' => "Kelompok {$group->id} mengajukan bid pada judul Anda '{$title->title}'. Terima atau tolak permintaan mereka.",
+                'message' => $isGhost
+                    ? "{$student->name} ingin bergabung ke kelompok Anda melalui judul '{$title->title}'. Terima atau tolak permintaan mereka."
+                    : "Kelompok {$group->id} mengajukan bid pada judul Anda '{$title->title}'. Terima atau tolak permintaan mereka.",
                 'related_type' => 'Bid',
                 'related_id' => $bid->id,
             ]);
