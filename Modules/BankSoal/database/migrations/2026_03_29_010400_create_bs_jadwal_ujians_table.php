@@ -8,22 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('bs_jadwal_ujians', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('periode_ujian_id');
-            $table->string('nama_sesi');
-            $table->integer('kuota');
+        if (! Schema::hasColumn('bs_jadwal_ujians', 'tanggal_ujian')) {
+            Schema::table('bs_jadwal_ujians', function (Blueprint $table) {
             $table->date('tanggal_ujian')->nullable();
-            $table->time('waktu_mulai');
-            $table->time('waktu_selesai');
-            $table->string('ruangan')->nullable();
-            $table->softDeletes();
-            $table->timestamps();
-        });
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('bs_jadwal_ujians');
+        if (Schema::hasColumn('bs_jadwal_ujians', 'tanggal_ujian')) {
+            Schema::table('bs_jadwal_ujians', function (Blueprint $table) {
+                $table->dropColumn('tanggal_ujian');
+            });
+        }
     }
 };

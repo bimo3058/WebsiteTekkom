@@ -1,0 +1,1 @@
+<?php $c = file_get_contents("Modules/EOffice/resources/views/manajemen-praktikum/asprak/tugas-pengumpulan.blade.php"); echo "Has bad dash: " . substr_count($c, "â€”") . "\n"; echo "Has replacement: " . substr_count($c, "\xEF\xBF\xBD") . "\n"; echo "Has dash: " . substr_count($c, "—") . "\n";

@@ -34,14 +34,14 @@
                         </svg>
                     </div>
                     <input type="text" name="search" value="{{ request('search') }}"
-                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all placeholder-gray-400"
+                        class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400"
                         placeholder="Search" x-on:input.debounce.700ms="$el.form.submit()">
                 </div>
 
                 {{-- Filter Engine Dropdown --}}
                 <div class="relative" x-data="{ open: false }">
                     <button type="button" @click="open = !open"
-                        class="h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                        class="h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
@@ -96,7 +96,7 @@
                                 <a href="{{ route('eoffice.peminjaman.admin.riwayat.index') }}"
                                     class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-transparent">Reset</a>
                                 <button type="submit"
-                                    class="px-3 py-1.5 text-xs font-medium text-white bg-gray-900 rounded-md hover:bg-black">Terapkan
+                                    class="px-3 py-1.5 text-xs font-medium text-white bg-[#060E2A] rounded-md hover:bg-[#030715] transition-colors cursor-pointer">Terapkan
                                     Filter</button>
                             </div>
                         </div>
@@ -106,73 +106,107 @@
             </form>
         </div>
 
-        <div class="overflow-x-auto bg-[#F9FAFB]/50">
-            <table class="w-full text-left border-collapse">
+        <div class="mp-table-wrap mt-0 border-t-0">
+            <table class="mp-table" style="table-layout: auto; width: 100%;">
                 <thead>
-                    <tr class="border-b border-gray-100 bg-[#F9FAFB]/80">
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Pengaju</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Ruangan & Tujuan</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Waktu Acara</th>
-                        <th class="py-3.5 px-5 text-[13px] font-medium text-[#6B7280]">Status</th>
+                    <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Pengaju</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan & Kegiatan</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Status</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-100">
+                <tbody>
                     @forelse($peminjamans as $pinjam)
-                        <tr class="hover:bg-gray-50/50 transition-colors group">
-                            <td class="py-4 px-5 align-middle">
-                                <div class="flex items-center gap-3">
-                                    <div class="text-[13px] font-medium text-[#111827]">
-                                        {{ $pinjam->user->name ?? 'User Tidak Diketahui' }}
-                                    </div>
+                        <tr class="mp-tr">
+                            <td>
+                                <div class="text-[13px] font-medium text-[#111827] flex items-center gap-2">
+                                    @php
+                                        $fullName = $pinjam->user->name ?? 'User Tidak Diketahui';
+                                        $isDosen = $pinjam->user && $pinjam->user->hasRole('dosen');
+                                        $displayName = $fullName;
+                                        
+                                        if (!$isDosen) {
+                                            $nameParts = explode(' ', $fullName);
+                                            if (count($nameParts) > 2) {
+                                                $displayName = $nameParts[0] . ' ' . $nameParts[1];
+                                                for ($i = 2; $i < count($nameParts); $i++) {
+                                                    $displayName .= ' ' . strtoupper(substr($nameParts[$i], 0, 1)) . '.';
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    @if($isDosen)
+                                        <span class="truncate max-w-[140px]" title="{{ $fullName }}">{{ $fullName }}</span>
+                                    @else
+                                        <span title="{{ $fullName }}">{{ $displayName }}</span>
+                                    @endif
+                                    @if($pinjam->created_by && $pinjam->created_by !== $pinjam->user_id)
+                                        <span
+                                            class="bg-slate-100 text-slate-500 border border-slate-200 text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider flex-shrink-0"
+                                            title="Didaftarkan oleh Sistem/Admin">By Admin</span>
+                                    @endif
+                                </div>
+                                <div class="text-[11px] text-gray-500 mt-0.5">
+                                    @php
+                                        $identityNumber = null;
+                                        if ($pinjam->user) {
+                                            $identityNumber = $pinjam->user->student->student_number ?? $pinjam->user->lecturer->employee_number ?? $pinjam->user->external_id;
+                                        }
+                                    @endphp
+                                    @if($identityNumber)({{ $identityNumber }})
+                                    @endif{{ $pinjam->nomor_telepon ?: '-' }}
                                 </div>
                             </td>
-                            <td class="py-4 px-5 align-middle">
-                                <div class="text-[13px] text-[#111827]">{{ $pinjam->ruangan->nama ?? 'Dihapus' }}</div>
-                                <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
-                                    title="{{ $pinjam->tujuan }}">{{ $pinjam->tujuan }}</div>
-                                @if($pinjam->berkas_pendukung)
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
-                                        target="_blank"
-                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 mt-1">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
-                                            </path>
-                                        </svg>
-                                        Lihat Berkas
-                                    </a>
-                                @endif
+                            <td>
+                                <div style="max-width: 220px;">
+                                    <div class="text-[13px] font-medium text-[#111827] truncate" title="{{ $pinjam->ruangan->nama ?? 'Dihapus' }}">
+                                        {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
+                                    </div>
+                                    <div class="text-[11px] text-gray-500 truncate mt-0.5" title="{{ $pinjam->tujuan }}">
+                                        {{ $pinjam->tujuan }}
+                                    </div>
+                                    @if($pinjam->berkas_pendukung)
+                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1 text-[11px] font-medium text-[#0065ff] hover:text-[#0052cc] transition-colors mt-1">
+                                            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                                </path>
+                                            </svg>
+                                            Lihat Berkas
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
-                            <td class="py-4 px-5 align-middle">
-                                <div class="text-[13px] text-[#111827]">
-                                    {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d F Y') }} <span
-                                        class="text-gray-400 mx-1">•</span>
+                            <td>
+                                <div class="text-[13px] font-medium text-[#111827]">
+                                    {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}
+                                    <span class="text-gray-400 mx-1">•</span>
                                     {{ \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') }} -
                                     {{ \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') }} WIB
                                 </div>
                             </td>
-                            <td class="py-4 px-5 align-middle">
+                            <td>
                                 @php
-                                    $style = '';
-                                    if ($pinjam->status === 'disetujui')
-                                        $style = 'border-emerald-500 text-emerald-600 bg-emerald-50/30';
-                                    elseif ($pinjam->status === 'ditolak')
-                                        $style = 'border-red-500 text-red-600 bg-red-50/30';
-                                    elseif ($pinjam->status === 'menunggu')
-                                        $style = 'border-amber-500 text-amber-600 bg-amber-50/30';
-                                    else
-                                        $style = 'border-gray-400 text-gray-700 bg-gray-50';
+                                    $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
+                                    if (strtolower($pinjam->status) === 'disetujui')
+                                        $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
+                                    elseif (strtolower($pinjam->status) === 'ditolak' || strtolower($pinjam->status) === 'dibatalkan')
+                                        $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                    elseif (strtolower($pinjam->status) === 'menunggu')
+                                        $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
+                                    elseif (strtolower($pinjam->status) === 'selesai')
+                                        $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
                                 @endphp
-                                <span
-                                    class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border {{ $style }} text-[12px] font-medium">
-                                    <span
-                                        class="w-1.5 h-1.5 rounded-full {{ str_replace(['border-', ' text-', ' bg-', '/30', '500', '600', '700', '400'], ['bg-', '', '', '', '500', '500', '500', '500'], current(explode(' ', $style))) }}"></span>
-                                    {{ ucfirst($pinjam->status) }}
+                                <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
+                                    {{ $pinjam->status }}
                                 </span>
                             </td>
                         </tr>
                     @empty
-                        <tr>
+                        <tr class="mp-tr">
                             <td colspan="4" class="py-12 text-center text-gray-500 text-[13px]">Belum ada arsip peminjaman
                                 yang tersedia.</td>
                         </tr>
@@ -181,26 +215,75 @@
             </table>
         </div>
 
-        @if($peminjamans->hasPages())
-            <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-                <div class="flex items-center gap-2 text-[13px] text-gray-600">
-                    <span>Per page</span>
-                    <select class="border border-gray-200 rounded px-1.5 py-0.5 outline-none font-medium text-gray-800">
-                        <option>15</option>
+        <div
+            class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+            <div class="flex items-center gap-4">
+                <div
+                    class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
+                    <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per
+                        halaman</span>
+                    <select aria-label="Per halaman" onchange="window.location.href=this.value"
+                        class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat"
+                        style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
                     </select>
-                    <span class="ml-2">Showing {{ $peminjamans->firstItem() }} to {{ $peminjamans->lastItem() }} of
-                        {{ $peminjamans->total() }} results</span>
+                </div>
+                <p class="text-xs font-medium text-slate-600">
+                    Menampilkan <span class="font-bold text-slate-800">{{ $peminjamans->firstItem() ?? 0 }}</span>
+                    sampai <span class="font-bold text-slate-800">{{ $peminjamans->lastItem() ?? 0 }}</span>
+                    dari <span class="font-bold text-slate-800">{{ $peminjamans->total() }}</span> entri
+                </p>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                @if ($peminjamans->onFirstPage())
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                @else
+                    <a href="{{ $peminjamans->previousPageUrl() }}"
+                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                @endif
+
+                <div
+                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
+                    @foreach ($peminjamans->getUrlRange(max(1, $peminjamans->currentPage() - 2), min($peminjamans->lastPage(), $peminjamans->currentPage() + 2)) as $page => $url)
+                        @if ($page == $peminjamans->currentPage())
+                            <span
+                                class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}"
+                                class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
+                        @endif
+                    @endforeach
                 </div>
 
-                <div class="flex items-center">
-                    {{ $peminjamans->links('pagination::tailwind') }}
-                </div>
+                @if ($peminjamans->hasMorePages())
+                    <a href="{{ $peminjamans->nextPageUrl() }}"
+                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                @else
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                @endif
             </div>
-        @else
-            <div class="flex items-center gap-2 text-[13px] text-gray-600 px-5 py-3 border-t border-gray-100">
-                <span>Showing {{ $peminjamans->count() }} results</span>
-            </div>
-        @endif
+        </div>
     </div>
 
     <script>

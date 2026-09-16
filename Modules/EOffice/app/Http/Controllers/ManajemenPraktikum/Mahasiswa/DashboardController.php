@@ -4,13 +4,9 @@ namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\EOffice\Models\Absensi;
 use Modules\EOffice\Models\DaftarPraktikan;
-use Modules\EOffice\Models\Nilai;
 use Modules\EOffice\Models\PendaftaranAsprak;
 use Modules\EOffice\Models\Pengumuman;
-use Modules\EOffice\Models\PengumpulanTugas;
-use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Models\Tugas;
 
 class DashboardController extends Controller
@@ -47,57 +43,52 @@ class DashboardController extends Controller
             }
         }
 
-        $tugasMendatang = collect();
-        $nilaiList = collect();
-        $pengumuman = collect();
-        $absensiStat = ['hadir' => 0, 'total' => 0];
+        $praktikumIds = $daftarPraktikan->pluck('praktikum_id')->toArray();
+        $dpIds = $daftarPraktikan->pluck('id', 'praktikum_id'); // [praktikum_id => daftar_praktikan_id]
 
-        if ($terdaftarDi) {
-            $dp = $daftarPraktikan->firstWhere('praktikum_id', $terdaftarDi->id);
-
-            // Tugas belum dikumpul / mendatang
-            $tugasMendatang = Tugas::whereHas('modul', fn($q) => $q->where('praktikum_id', $terdaftarDi->id))
+        $semuaTugas = collect();
+        if (!empty($praktikumIds)) {
+            $semuaTugas = Tugas::with([
+                'modul.praktikum',
+                'pengumpulan' => fn ($q) => $q->whereIn('daftar_praktikan_id', $dpIds->values())
+                    ->select('id', 'tugas_id', 'daftar_praktikan_id', 'status_pengumpulan'),
+            ])
+                ->whereHas('modul', fn($q) => $q->whereIn('praktikum_id', $praktikumIds))
                 ->where('is_published', true)
-                ->where('deadline', '>=', now())
-                ->orderBy('deadline')
-                ->limit(5)
                 ->get()
-                ->map(function ($t) use ($dp) {
-                    $pengumpulan = PengumpulanTugas::where('tugas_id', $t->id)
-                        ->where('daftar_praktikan_id', $dp->id)
-                        ->first();
+                ->map(function ($t) use ($dpIds) {
+                    $dpId = $dpIds[$t->modul->praktikum_id] ?? null;
+                    $pengumpulan = $dpId ? $t->pengumpulan->firstWhere('daftar_praktikan_id', $dpId) : null;
                     $t->sudah_kumpul = !is_null($pengumpulan);
                     $t->status_tugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
                     return $t;
                 });
-
-            // Nilai (hanya yang sudah dipublikasikan)
-            $nilaiList = Nilai::where('daftar_praktikan_id', $dp->id)
-                ->where('dipublikasikan', true)
-                ->get();
-
-            // Pengumuman terbaru yang published (terkait kelas ini atau pengumuman pendaftaran sistem)
-            $pengumuman = Pengumuman::where(function ($q) use ($terdaftarDi) {
-                $q->where('praktikum_id', $terdaftarDi->id)
-                    ->orWhereIn('tipe_sistem', ['buka', 'tutup']);
-            })
-                ->where('is_published', true)
-                ->orderByDesc('created_at')
-                ->limit(4)
-                ->get();
-
-            // Statistik absensi
-            $absensiAll = Absensi::where('daftar_praktikan_id', $dp->id)->get();
-            $absensiStat['total'] = $absensiAll->count();
-            $absensiStat['hadir'] = $absensiAll->where('status', 'hadir')->count();
-        } else {
-            // Jika belum terdaftar di mana pun, minimal ambil pengumuman sistem (global)
-            $pengumuman = Pengumuman::whereIn('tipe_sistem', ['buka', 'tutup'])
-                ->where('is_published', true)
-                ->orderByDesc('created_at')
-                ->limit(4)
-                ->get();
         }
+
+        $now = now();
+        $tugasMendatang = $semuaTugas->filter(function ($t) use ($now) {
+            return $t->deadline && \Carbon\Carbon::parse($t->deadline)->gte($now) && !$t->sudah_kumpul;
+        })->sortBy('deadline')->values();
+
+        $tugasTerlambat = $semuaTugas->filter(function ($t) use ($now) {
+            return $t->deadline && \Carbon\Carbon::parse($t->deadline)->lt($now) && !$t->sudah_kumpul;
+        })->sortByDesc('deadline')->values();
+
+        $pengumumanPraktikum = Pengumuman::with(['praktikum', 'user'])
+            ->whereIn('praktikum_id', $praktikumIds)
+            ->whereNull('tipe_sistem') // hanya pengumuman manual dari asisten/koordinator
+            ->where('is_published', true)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $pengumumanRekrutmen = Pengumuman::with('praktikum')
+            ->whereHas('praktikum', function ($q) {
+                $q->where('is_active', true);
+            })
+            ->whereIn('tipe_sistem', ['buka', 'tutup'])
+            ->where('is_published', true)
+            ->orderByDesc('created_at')
+            ->get();
 
         // Status pendaftaran asprak/koor
         $statusAsprak = PendaftaranAsprak::where('user_id', $user->id)
@@ -109,13 +100,26 @@ class DashboardController extends Controller
         $defaultTahunAjaran = $currentSemester === 'Genap' ? $currentYear - 1 : $currentYear;
         $semesterLabel = "Semester {$currentSemester} {$defaultTahunAjaran}/" . ($defaultTahunAjaran + 1);
 
+        $perPage = max(1, min(100, $request->integer('per_page', 5)));
+        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $tugasGabungan = collect($tugasTerlambat)->merge($tugasMendatang);
+        $currentItems = $tugasGabungan->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $tugasPaginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $currentItems,
+            $tugasGabungan->count(),
+            $perPage,
+            $currentPage,
+            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
         return view('eoffice::manajemen-praktikum.mahasiswa.dashboard', compact(
             'daftarPraktikan',
             'terdaftarDi',
             'tugasMendatang',
-            'nilaiList',
-            'pengumuman',
-            'absensiStat',
+            'tugasTerlambat',
+            'tugasPaginator',
+            'pengumumanPraktikum',
+            'pengumumanRekrutmen',
             'statusAsprak',
             'belumTerdaftar',
             'semesterLabel'

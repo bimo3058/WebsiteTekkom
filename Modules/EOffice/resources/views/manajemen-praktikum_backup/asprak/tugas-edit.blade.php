@@ -48,14 +48,14 @@
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
                 @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'praktikum' => 'Praktikum', 'laporan' => 'Laporan', 'responsi' => 'Responsi'] as $val => $label)
                 @php $isChecked = old('jenis_tugas', $tugas->jenis_tugas) === $val; @endphp
-                <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ $isChecked ? '#6366F1' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ $isChecked ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
+                <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ $isChecked ? '#5D6DA2' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ $isChecked ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
                        x-data
-                       :style="$refs.jenis_edit_{{ $val }}.checked ? 'border-color:#6366F1;background:#F0F1FE;' : 'border-color:#DFE1E7;background:#FAFBFC;'">
+                       :style="$refs.jenis_edit_{{ $val }}.checked ? 'border-color:#5D6DA2;background:#F0F1FE;' : 'border-color:#DFE1E7;background:#FAFBFC;'">
                     <input type="radio" name="jenis_tugas" value="{{ $val }}"
                            id="jenis_edit_{{ $val }}" x-ref="jenis_edit_{{ $val }}"
-                           @change="$el.closest('[x-data]').querySelectorAll('label').forEach(l=>l.style.cssText=''); $el.parentElement.style.borderColor='#6366F1'; $el.parentElement.style.background='#F0F1FE';"
+                           @change="$el.closest('[x-data]').querySelectorAll('label').forEach(l=>l.style.cssText=''); $el.parentElement.style.borderColor='#5D6DA2'; $el.parentElement.style.background='#F0F1FE';"
                            @if($isChecked) checked @endif
-                           style="accent-color:#6366F1;width:16px;height:16px;cursor:pointer;">
+                           style="accent-color:#5D6DA2;width:16px;height:16px;cursor:pointer;">
                     <span style="font-size:13px;font-weight:600;color:#353849;">{{ $label }}</span>
                 </label>
                 @endforeach
@@ -143,7 +143,7 @@
 
             {{-- Drop zone --}}
             <div @click="$refs.filePdfEdit.click()"
-                 @dragover.prevent="$el.style.borderColor='#6366F1';$el.style.background='#F0F1FE'"
+                 @dragover.prevent="$el.style.borderColor='#5D6DA2';$el.style.background='#F0F1FE'"
                  @dragleave="$el.style.borderColor=hasFile?'#40C4AA':'#DFE1E7';$el.style.background=hasFile?'#F0FBF9':'#FAFBFC'"
                  @drop="drop($event);$el.style.borderColor='#40C4AA';$el.style.background='#F0FBF9'"
                  :style="hasFile ? 'border-color:#40C4AA;background:#F0FBF9;border-style:solid;' : 'border-color:#DFE1E7;background:#FAFBFC;'"
@@ -216,7 +216,7 @@
             <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;margin-top:4px;">
                 <input type="hidden" name="is_published" value="0">
                 <input type="checkbox" name="is_published" value="1"
-                       style="accent-color:#6366F1;width:18px;height:18px;cursor:pointer;"
+                       style="accent-color:#5D6DA2;width:18px;height:18px;cursor:pointer;"
                        @if(old('is_published', $tugas->is_published)) checked @endif>
                 <div>
                     <span style="font-size:13px;font-weight:600;color:#353849;display:block;">Publikasikan</span>

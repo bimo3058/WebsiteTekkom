@@ -1,38 +1,47 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\GroupSupervisorProposal;
-use Modules\Capstone\Models\Supervision;
-use Modules\Capstone\Models\Title;
-use Modules\Capstone\Models\Period;
+use App\Http\Controllers\Controller;
+use App\Models\Lecturer;
 use App\Models\User;
-use App\Services\GroupStateMachine;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupInvitation;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\GroupSupervisorProposal;
+use Modules\Capstone\Models\Notification;
+use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\Supervision;
+use Modules\Capstone\Models\Title;
+use Modules\Capstone\Services\GroupService;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Support\CapstoneActor;
 
 class GroupController extends Controller
 {
     protected GroupStateMachine $stateMachine;
 
-    public function __construct(GroupStateMachine $stateMachine)
-    {
+    public function __construct(
+        GroupStateMachine $stateMachine,
+        private readonly GroupService $groupService,
+    ) {
         $this->stateMachine = $stateMachine;
     }
 
     public function index(Request $request)
     {
         $user = $request->user();
-        $membership = GroupMember::where('student_id', $user->id)
+        $studentId = CapstoneActor::student($user)->id;
+        $membership = GroupMember::where('student_id', $studentId)
             ->whereHas('group', function ($q) {
                 $q->whereNotIn('status', ['CLOSED']);
             })
             ->first();
 
-        if (!$membership) {
+        if (! $membership) {
             return response()->json(['group' => null]);
         }
 
@@ -48,102 +57,162 @@ class GroupController extends Controller
             'supervisor2',
         ])->find($membership->group_id);
 
-        return response()->json(['group' => $group]);
+        return response()->json(['group' => $this->groupService->buildCanonicalGroupPayload($group, $user)]);
     }
 
     public function listGroups(Request $request)
     {
-        $groups = Group::with(['title', 'members.student', 'supervisor1', 'supervisor2'])
-            ->whereNotIn('status', ['FORMING', 'CLOSED'])
-            ->get();
+        $role = CapstoneActor::role(
+            $request->user(),
+            $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+        );
+        $query = Group::with([
+            'title',
+            'members.student',
+            'period',
+            'supervisor1',
+            'supervisor2',
+            'supervisions.supervisor',
+        ]);
 
-        return response()->json(['data' => $groups]);
+        $lecturer = null;
+        if ($role === 'dosen') {
+            $lecturer = CapstoneActor::lecturer($request->user());
+            $query->supervisedBy($lecturer->id);
+        }
+
+        if ($request->filled('period_id') && $request->input('period_id') !== 'all') {
+            $query->where('period_id', $request->integer('period_id'));
+        }
+
+        if ($request->filled('status') && $request->input('status') !== 'all') {
+            $query->where('status', $request->string('status')->toString());
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->string('search')->toString();
+            $query->where(function ($groups) use ($search) {
+                $groups->where('code', 'like', "%{$search}%")
+                    ->orWhereHas('title', fn ($titles) => $titles->where('title', 'like', "%{$search}%"))
+                    ->orWhereHas('members.student', function ($students) use ($search) {
+                        $students->where('student_number', 'like', "%{$search}%")
+                            ->orWhereHas('user', fn ($users) => $users
+                                ->where('name', 'like', "%{$search}%")
+                                ->orWhere('email', 'like', "%{$search}%"));
+                    });
+            });
+        }
+
+        $perPage = min(max($request->integer('per_page', 10), 1), 100);
+        $groups = $query->latest()->paginate($perPage);
+        $data = $role === 'admin'
+            ? $groups->getCollection()->map(fn (Group $group) => $this->groupService->transformGroupForAdminList($group))
+            : $this->groupService->enrichSupervisedGroups($groups->getCollection(), $lecturer);
+
+        return response()->json([
+            'data' => $data->values(),
+            'pagination' => [
+                'current_page' => $groups->currentPage(),
+                'last_page' => $groups->lastPage(),
+                'per_page' => $groups->perPage(),
+                'total' => $groups->total(),
+            ],
+        ]);
+    }
+
+    public function show(Request $request, Group $group)
+    {
+        $role = CapstoneActor::role(
+            $request->user(),
+            $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+        );
+
+        if ($role === 'dosen') {
+            $lecturer = CapstoneActor::lecturer($request->user());
+            abort_unless($group->isSupervisedBy($lecturer->id), 403, 'Anda bukan dosen pembimbing kelompok ini.');
+        }
+
+        abort_unless(in_array($role, ['admin', 'dosen'], true), 403);
+
+        return response()->json([
+            'data' => $group->load([
+                'title.lecturer',
+                'members.student',
+                'period',
+                'supervisor1',
+                'supervisor2',
+                'supervisions.supervisor',
+                'documents',
+                'schedules',
+            ]),
+        ]);
     }
 
     /**
      * Create a new group. Student becomes leader. Status = FORMING.
      */
-    public function store(Request $request)
+    public function store(Request $request) { return $this->createStudentGroup($request, false); }
+    public function storeSolo(Request $request) { return $this->createStudentGroup($request, true); }
+
+    private function createStudentGroup(Request $request, bool $solo)
     {
-        $user = $request->user();
-
-        // V4: Accept explicit period_id or resolve from active periods
-        $period = null;
-        if ($request->has('period_id')) {
-            $period = Period::where('is_active', 'true')->findOrFail($request->period_id);
-        } else {
-            $activePeriods = Period::where('is_active', 'true')->get();
-            if ($activePeriods->count() === 0) {
-                return response()->json(['message' => 'No active academic period found.'], 400);
-            }
-            if ($activePeriods->count() > 1) {
-                return response()->json(['message' => 'Multiple active periods exist. Please specify period_id.'], 400);
-            }
-            $period = $activePeriods->first();
-        }
-
-        // âš  V4: Check student not already in a group for this specific period
-        $existingMembership = GroupMember::where('student_id', $user->id)
-            ->where('period_id', $period->id)
-            ->exists();
-
-        if ($existingMembership) {
-            return response()->json(['message' => 'You are already in a group for this period.'], 400);
-        }
-
-        DB::beginTransaction();
-        try {
-            $group = Group::create([
-                'title_id' => null,
-                'period_id' => $period->id,
-                'status' => 'FORMING',
-                'group_mode' => $request->input('group_mode', 'GROUP'),
-                'has_existing_group' => $request->boolean('has_existing_group', false),
-            ]);
-
-            GroupMember::create([
-                'group_id' => $group->id,
-                'student_id' => $user->id,
-                'is_leader' => \Illuminate\Support\Facades\DB::raw('true'),
-                'period_id' => $period->id, // V4: denormalized for unique constraint
-            ]);
-
-            // Auto-transition if 1 member meets min_group_size (unlikely but handle)
-            $this->checkAndTransitionToReady($group, $period);
-
-            DB::commit();
-            return response()->json([
-                'message' => 'Group created successfully.',
-                'group' => $group->load('members.student'),
-            ], 201);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json(['message' => 'Failed to create group: ' . $e->getMessage()], 500);
-        }
+        $data = $request->validate(['period_id'=>'required|integer|exists:capstone_periods,id']);
+        return DB::transaction(function () use ($request,$data,$solo) {
+            $student = CapstoneActor::student($request->user());
+            \App\Models\Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            $period = Period::lockForUpdate()->findOrFail($data['period_id']);
+            abort_unless($period->isRegistrationOpen(),403,'Period is closed.');
+            abort_unless(\Modules\Capstone\Models\PeriodRegistration::where('user_id',$student->id)->where('period_id',$period->id)->exists(),403,'Register for this period first.');
+            abort_if(GroupMember::where('student_id',$student->id)->whereHas('group',fn($q)=>$q->whereNotIn('status',['CLOSED','DISSOLVED']))->exists(),422,'You already have an active group.');
+            $group = Group::create(['period_id'=>$period->id,'status'=>$solo?'FORMING_SOLO':'FORMING','group_mode'=>'GROUP','has_existing_group'=>false,'is_solo'=>$solo]);
+            GroupMember::create(['group_id'=>$group->id,'student_id'=>$student->id,'is_leader'=>true,'period_id'=>$period->id]);
+            if (!$solo) $this->checkAndTransitionToReady($group,$period);
+            return response()->json(['group'=>$group->load('members.student','period'),'message'=>'Group created successfully.'],201);
+        });
     }
 
-    /**
-     * Delete/disband a group (leader only, only before finalization).
-     */
+    public function markReadyForFinalization(Request $request) { return $this->changeReady($request, false); }
+    public function cancelReadyForFinalization(Request $request) { return $this->changeReady($request, true); }
+
+    private function changeReady(Request $request, bool $cancel)
+    {
+        $data=$request->validate(['group_id'=>'required|integer|exists:capstone_groups,id']);
+        return DB::transaction(function () use ($request,$data,$cancel) {
+            $group=Group::with('period')->lockForUpdate()->findOrFail($data['group_id']);
+            $actions=$this->groupService->resolveAllowedActions($group,$request->user());
+            abort_unless($actions[$cancel?'can_cancel_ready_for_finalization':'can_mark_ready_for_finalization'],403,'Group prerequisites are not satisfied or you are not its leader.');
+            $target='READY_FOR_FINALIZATION';
+            if($cancel) $target=Title::where('proposed_by_group_id',$group->id)->where('title_source','STUDENT')->where('supervisor_approval_status','APPROVED')->exists()?'TITLE_APPROVED':'READY_FOR_BIDDING';
+            $this->stateMachine->transition($group,$target);
+            $group->load('members.student');
+            foreach($group->members as $member) {
+                app(NotificationService::class)->send($member->student->user_id, $cancel?'GROUP_FINALIZATION_CANCELLED':'GROUP_READY_FOR_FINALIZATION', $cancel?'Finalization Cancelled':'Ready for Finalization', $cancel?'Status siap finalisasi kelompok dibatalkan.':'Kelompok siap untuk finalisasi admin.', 'Group', $group->id);
+            }
+            return response()->json(['group'=>$group,'message'=>'Group status updated.']);
+        });
+    }
+
     public function deleteGroup(Request $request)
     {
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $membership = GroupMember::where('student_id', $user->id)
+        $membership = GroupMember::where('student_id', $studentId)
             ->whereHas('group', function ($q) {
                 $q->whereNotIn('status', ['CLOSED']);
             })
             ->first();
 
-        if (!$membership) {
+        if (! $membership) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 
-        if (!$membership->is_leader) {
+        if (! $membership->is_leader) {
             return response()->json(['message' => 'Only the group leader can delete the group.'], 403);
         }
 
         $group = Group::find($membership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_delete_group'], 403, 'Group action is locked.');
 
         // Only allow deletion before KELOMPOK_FINAL
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
@@ -170,10 +239,12 @@ class GroupController extends Controller
             $group->delete();
 
             DB::commit();
+
             return response()->json(['message' => 'Group deleted successfully.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to delete group: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed to delete group: '.$e->getMessage()], 500);
         }
     }
 
@@ -187,17 +258,19 @@ class GroupController extends Controller
         ]);
 
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $leaderMembership = GroupMember::where('student_id', $user->id)->first();
-        if (!$leaderMembership) {
+        $leaderMembership = GroupMember::where('student_id', $studentId)->first();
+        if (! $leaderMembership) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 
-        if (!$leaderMembership->is_leader) {
+        if (! $leaderMembership->is_leader) {
             return response()->json(['message' => 'Only the group leader can add members.'], 403);
         }
 
         $group = Group::with('period')->find($leaderMembership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_add_member'], 403, 'Group action is locked.');
 
         // Only allow adding members before KELOMPOK_FINAL
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
@@ -212,12 +285,16 @@ class GroupController extends Controller
         }
 
         // Find the student to add
-        $student = User::where('email', $request->email)->where('role', 'mahasiswa')->first();
-        if (!$student) {
+        $studentUser = User::with('student')
+            ->where('email', $request->email)
+            ->whereHas('roles', fn ($query) => $query->where('name', 'mahasiswa'))
+            ->first();
+        $student = $studentUser?->student;
+        if (! $student) {
             return response()->json(['message' => 'Student not found.'], 404);
         }
 
-        if ($student->id === $user->id) {
+        if ($studentUser->id === $user->id) {
             return response()->json(['message' => 'You are already in this group.'], 400);
         }
 
@@ -230,7 +307,7 @@ class GroupController extends Controller
         }
 
         // Check if there's already a pending invitation
-        $existingInvite = \App\Models\GroupInvitation::where('group_id', $group->id)
+        $existingInvite = GroupInvitation::where('group_id', $group->id)
             ->where('student_id', $student->id)
             ->where('status', 'PENDING')
             ->exists();
@@ -240,14 +317,14 @@ class GroupController extends Controller
 
         DB::beginTransaction();
         try {
-            $invitation = \App\Models\GroupInvitation::updateOrCreate(
+            $invitation = GroupInvitation::updateOrCreate(
                 ['group_id' => $group->id, 'student_id' => $student->id],
-                ['inviter_id' => $user->id, 'status' => 'PENDING']
+                ['inviter_id' => $studentId, 'status' => 'PENDING']
             );
 
             // Send notification to student
-            app(\App\Services\NotificationService::class)->send(
-                $student->id,
+            app(NotificationService::class)->send(
+                $studentUser->id,
                 'GROUP_INVITATION',
                 'Group Invitation',
                 "{$user->name} invited you to join their capstone group.",
@@ -256,13 +333,15 @@ class GroupController extends Controller
             );
 
             DB::commit();
+
             return response()->json([
                 'message' => 'Invitation sent successfully',
                 'group' => $group->fresh()->load('members.student'),
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to send invitation: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed to send invitation: '.$e->getMessage()], 500);
         }
     }
 
@@ -272,18 +351,19 @@ class GroupController extends Controller
     public function acceptInvite(Request $request, $id)
     {
         $user = $request->user();
-        $invitation = \App\Models\GroupInvitation::where('id', $id)
-            ->where('student_id', $user->id)
+        $studentId = CapstoneActor::student($user)->id;
+        $invitation = GroupInvitation::with('inviter.user')->where('id', $id)
+            ->where('student_id', $studentId)
             ->where('status', 'PENDING')
             ->first();
 
-        if (!$invitation) {
+        if (! $invitation) {
             return response()->json(['message' => 'Invitation not found or already processed.'], 404);
         }
 
         $group = Group::with('period')->find($invitation->group_id);
 
-        if (!$group || $group->status === 'CLOSED') {
+        if (! $group || $group->status === 'CLOSED') {
             return response()->json(['message' => 'Group is no longer available.'], 400);
         }
 
@@ -291,7 +371,7 @@ class GroupController extends Controller
             return response()->json(['message' => 'Group is finalized, cannot join now.'], 400);
         }
 
-        $inPeriodGroup = GroupMember::where('student_id', $user->id)
+        $inPeriodGroup = GroupMember::where('student_id', $studentId)
             ->where('period_id', $group->period_id)
             ->exists();
 
@@ -311,15 +391,15 @@ class GroupController extends Controller
 
             GroupMember::create([
                 'group_id' => $group->id,
-                'student_id' => $user->id,
-                'is_leader' => \Illuminate\Support\Facades\DB::raw('false'),
+                'student_id' => $studentId,
+                'is_leader' => DB::raw('false'),
                 'period_id' => $group->period_id,
             ]);
 
             $this->checkAndTransitionToReady($group, $group->period);
 
-            app(\App\Services\NotificationService::class)->send(
-                $invitation->inviter_id,
+            app(NotificationService::class)->send(
+                $invitation->inviter->user_id,
                 'INVITE_ACCEPTED',
                 'Invitation Accepted',
                 "{$user->name} has joined your group.",
@@ -328,13 +408,13 @@ class GroupController extends Controller
             );
 
             // Mark invitation notification as read
-            \App\Models\Notification::where('user_id', $user->id)
+            Notification::where('user_id', $user->id)
                 ->where('type', 'GROUP_INVITATION')
                 ->where('related_id', $invitation->id)
-                ->update(['is_read' => \Illuminate\Support\Facades\DB::raw('true')]);
+                ->update(['is_read' => DB::raw('true')]);
 
             // Cancel any other pending invitations for this student in this period
-            \App\Models\GroupInvitation::where('student_id', $user->id)
+            GroupInvitation::where('student_id', $studentId)
                 ->where('status', 'PENDING')
                 ->whereHas('group', function ($q) use ($group) {
                     $q->where('period_id', $group->period_id);
@@ -342,10 +422,12 @@ class GroupController extends Controller
                 ->update(['status' => 'REJECTED']);
 
             DB::commit();
+
             return response()->json(['message' => 'Invitation accepted.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to accept invitation: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed to accept invitation: '.$e->getMessage()], 500);
         }
     }
 
@@ -355,19 +437,20 @@ class GroupController extends Controller
     public function rejectInvite(Request $request, $id)
     {
         $user = $request->user();
-        $invitation = \App\Models\GroupInvitation::where('id', $id)
-            ->where('student_id', $user->id)
+        $studentId = CapstoneActor::student($user)->id;
+        $invitation = GroupInvitation::with('inviter.user')->where('id', $id)
+            ->where('student_id', $studentId)
             ->where('status', 'PENDING')
             ->first();
 
-        if (!$invitation) {
+        if (! $invitation) {
             return response()->json(['message' => 'Invitation not found or already processed.'], 404);
         }
 
         $invitation->update(['status' => 'REJECTED']);
 
-        app(\App\Services\NotificationService::class)->send(
-            $invitation->inviter_id,
+        app(NotificationService::class)->send(
+            $invitation->inviter->user_id,
             'INVITE_REJECTED',
             'Invitation Rejected',
             "{$user->name} declined your group invitation.",
@@ -376,10 +459,10 @@ class GroupController extends Controller
         );
 
         // Mark invitation notification as read
-        \App\Models\Notification::where('user_id', $user->id)
+        Notification::where('user_id', $user->id)
             ->where('type', 'GROUP_INVITATION')
             ->where('related_id', $invitation->id)
-            ->update(['is_read' => \Illuminate\Support\Facades\DB::raw('true')]);
+            ->update(['is_read' => DB::raw('true')]);
 
         return response()->json(['message' => 'Invitation rejected.']);
     }
@@ -390,13 +473,14 @@ class GroupController extends Controller
     public function removeMember(Request $request, $memberId)
     {
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $leaderMembership = GroupMember::where('student_id', $user->id)->first();
-        if (!$leaderMembership) {
+        $leaderMembership = GroupMember::where('student_id', $studentId)->first();
+        if (! $leaderMembership) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 
-        if (!$leaderMembership->is_leader) {
+        if (! $leaderMembership->is_leader) {
             return response()->json(['message' => 'Only the group leader can remove members.'], 403);
         }
 
@@ -404,15 +488,16 @@ class GroupController extends Controller
             ->where('group_id', $leaderMembership->group_id)
             ->first();
 
-        if (!$member) {
+        if (! $member) {
             return response()->json(['message' => 'Member not found in your group.'], 404);
         }
 
-        if ($member->student_id === $user->id) {
+        if ($member->student_id === $studentId) {
             return response()->json(['message' => 'You cannot remove yourself.'], 400);
         }
 
         $group = Group::with('period')->find($leaderMembership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_remove_member'], 403, 'Group action is locked.');
 
         // After KELOMPOK_FINAL: require admin approval (handled separately)
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
@@ -436,10 +521,12 @@ class GroupController extends Controller
             DB::commit();
 
             $group = Group::with('members.student')->find($leaderMembership->group_id);
+
             return response()->json(['message' => 'Member removed', 'group' => $group]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to remove member: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed to remove member: '.$e->getMessage()], 500);
         }
     }
 
@@ -449,9 +536,10 @@ class GroupController extends Controller
     public function leaveGroup(Request $request)
     {
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $membership = GroupMember::where('student_id', $user->id)->first();
-        if (!$membership) {
+        $membership = GroupMember::where('student_id', $studentId)->first();
+        if (! $membership) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 
@@ -460,6 +548,7 @@ class GroupController extends Controller
         }
 
         $group = Group::with('period')->find($membership->group_id);
+        abort_unless($this->groupService->resolveAllowedActions($group, $user)['can_leave_group'], 403, 'Group action is locked.');
 
         if ($this->stateMachine->isAtLeast($group, 'KELOMPOK_FINAL')) {
             return response()->json(['message' => 'Group is finalized, you cannot leave.'], 400);
@@ -477,10 +566,12 @@ class GroupController extends Controller
             }
 
             DB::commit();
+
             return response()->json(['message' => 'You have left the group.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed to leave group: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed to leave group: '.$e->getMessage()], 500);
         }
     }
 
@@ -490,16 +581,17 @@ class GroupController extends Controller
     public function proposeSupervisors(Request $request)
     {
         $request->validate([
-            'proposed_supervisor_1_id' => 'required|exists:users,id',
-            'proposed_supervisor_2_id' => 'nullable|exists:users,id|different:proposed_supervisor_1_id',
+            'proposed_supervisor_1_id' => 'required|exists:lecturers,id',
+            'proposed_supervisor_2_id' => 'nullable|exists:lecturers,id|different:proposed_supervisor_1_id',
         ]);
 
         $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
 
-        $leaderMembership = GroupMember::where('student_id', $user->id)
+        $leaderMembership = GroupMember::where('student_id', $studentId)
             ->first();
 
-        if (!$leaderMembership || !$leaderMembership->is_leader) {
+        if (! $leaderMembership || ! $leaderMembership->is_leader) {
             return response()->json(['message' => 'Only the group leader can propose supervisors.'], 403);
         }
 
@@ -515,13 +607,17 @@ class GroupController extends Controller
         }
 
         // Validate supervisors are dosen
-        $sup1 = User::find($request->proposed_supervisor_1_id);
-        if ($sup1->role !== 'dosen') {
+        $sup1 = Lecturer::whereKey($request->proposed_supervisor_1_id)
+            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+            ->first();
+        if (! $sup1) {
             return response()->json(['message' => 'Proposed supervisor 1 must be a lecturer.'], 400);
         }
         if ($request->proposed_supervisor_2_id) {
-            $sup2 = User::find($request->proposed_supervisor_2_id);
-            if ($sup2->role !== 'dosen') {
+            $sup2 = Lecturer::whereKey($request->proposed_supervisor_2_id)
+                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+                ->first();
+            if (! $sup2) {
                 return response()->json(['message' => 'Proposed supervisor 2 must be a lecturer.'], 400);
             }
         }
@@ -544,22 +640,73 @@ class GroupController extends Controller
 
     public function supervisedGroups(Request $request)
     {
-        $user = $request->user();
-        $groups = Group::with(['title', 'members.student', 'period', 'supervisions.supervisor'])
-            ->whereHas('supervisions', function ($query) use ($user) {
-                $query->where('supervisor_id', $user->id);
+        $lecturer = CapstoneActor::lecturer($request->user());
+        $groups = Group::with([
+            'title',
+            'members.student',
+            'period',
+            'supervisor1',
+            'supervisor2',
+            'supervisions.supervisor',
+            'documents' => fn ($documents) => $documents->latest(),
+        ])
+            ->supervisedBy($lecturer->id)
+            ->when(
+                $request->filled('period_id') && $request->input('period_id') !== 'all',
+                fn ($query) => $query->where('period_id', $request->integer('period_id'))
+            )
+            ->latest()
+            ->get();
+
+        return response()->json([
+            'data' => $this->groupService->enrichSupervisedGroups($groups, $lecturer)->values(),
+        ]);
+    }
+
+    public function supervisedStudents(Request $request)
+    {
+        $lecturer = CapstoneActor::lecturer($request->user());
+        $memberships = GroupMember::with(['student.user', 'group.title', 'group.period'])
+            ->whereHas('group', function ($groups) use ($lecturer, $request) {
+                $groups->supervisedBy($lecturer->id)
+                    ->when(
+                        $request->filled('period_id') && $request->input('period_id') !== 'all',
+                        fn ($query) => $query->where('period_id', $request->integer('period_id'))
+                    );
             })
             ->get();
 
-        return response()->json(['data' => $groups]);
+        $students = $memberships->groupBy('student_id')->map(function ($studentMemberships) {
+            $student = $studentMemberships->first()->student;
+
+            return [
+                'id' => $student->id,
+                'user_id' => $student->user_id,
+                'name' => $student->name,
+                'email' => $student->email,
+                'nim' => $student->student_number,
+                'cohort_year' => $student->cohort_year,
+                'groups' => $studentMemberships->map(fn (GroupMember $membership) => [
+                    'id' => $membership->group->id,
+                    'code' => $membership->group->code,
+                    'status' => $membership->group->status,
+                    'title' => $membership->group->title?->title,
+                    'period' => $membership->group->period?->name,
+                    'is_leader' => $membership->is_leader,
+                ])->values(),
+            ];
+        })->values();
+
+        return response()->json(['data' => $students]);
     }
 
     public function pendingGroups(Request $request)
     {
         $user = $request->user();
+        $lecturerId = CapstoneActor::lecturer($user)->id;
         $groups = Group::with(['title', 'members.student'])
-            ->whereHas('title', function ($query) use ($user) {
-                $query->where('lecturer_id', $user->id);
+            ->whereHas('title', function ($query) use ($lecturerId) {
+                $query->where('lecturer_id', $lecturerId);
             })
             ->where('status', 'READY_FOR_BIDDING')
             ->get();
@@ -593,12 +740,14 @@ class GroupController extends Controller
     public function assignSupervisor2(Request $request, Group $group)
     {
         $request->validate([
-            'supervisor_2_id' => 'required|exists:users,id',
+            'supervisor_2_id' => 'required|exists:lecturers,id',
         ]);
 
-        $supervisor = User::findOrFail($request->supervisor_2_id);
+        $supervisor = Lecturer::whereKey($request->supervisor_2_id)
+            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+            ->first();
 
-        if ($supervisor->role !== 'dosen') {
+        if (! $supervisor) {
             return response()->json(['message' => 'Supervisor 2 must be a lecturer.'], 400);
         }
 
@@ -629,7 +778,8 @@ class GroupController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Failed: ' . $e->getMessage()], 500);
+
+            return response()->json(['message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 }

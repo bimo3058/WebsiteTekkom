@@ -2,7 +2,7 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\Group;
+use Modules\Capstone\Models\Group;
 use InvalidArgumentException;
 
 class GroupStateMachine
@@ -11,15 +11,19 @@ class GroupStateMachine
      * All valid state transitions: from => [to, to, ...]
      */
     const TRANSITIONS = [
-        'FORMING' => ['READY_FOR_BIDDING'],
-        'READY_FOR_BIDDING' => ['KELOMPOK_FINAL', 'FORMING'], // FORMING if members drop below min
+        'FORMING_SOLO' => ['FORMING', 'READY_FOR_BIDDING', 'TITLE_APPROVED', 'READY_FOR_FINALIZATION'],
+        'WAITING_SUPERVISOR_APPROVAL' => ['FORMING', 'READY_FOR_BIDDING', 'TITLE_APPROVED'],
+        'TITLE_APPROVED' => ['FORMING', 'READY_FOR_BIDDING', 'READY_FOR_FINALIZATION'],
+        'READY_FOR_FINALIZATION' => ['TITLE_APPROVED', 'READY_FOR_BIDDING', 'KELOMPOK_FINAL'],
+        'FORMING' => ['READY_FOR_BIDDING', 'TITLE_APPROVED'],
+        'READY_FOR_BIDDING' => ['READY_FOR_FINALIZATION', 'KELOMPOK_FINAL', 'FORMING'], // FORMING if members drop below min
         'KELOMPOK_FINAL' => ['PDC1_ACTIVE'],
         'PDC1_ACTIVE' => ['READY_FOR_SEMPRO'],
         'READY_FOR_SEMPRO' => ['SEMPRO_DONE', 'PDC1_ACTIVE'], // PDC1_ACTIVE on sempro fail
         'SEMPRO_DONE' => ['PDC2_ACTIVE'],
         'PDC2_ACTIVE' => ['PDC2_READY_FOR_EXPO'],
         'PDC2_READY_FOR_EXPO' => ['EXPO_REGISTERED'],
-        'EXPO_REGISTERED' => ['EXPO_DONE', 'PDC2_ACTIVE'], // PDC2_ACTIVE on expo fail
+        'EXPO_REGISTERED' => ['EXPO_DONE', 'PDC2_ACTIVE', 'PDC2_READY_FOR_EXPO'], // Withdrawal returns to ready; failure returns to PDC2.
         'EXPO_DONE' => ['PDC2_COMPLETED'],
         'PDC2_COMPLETED' => ['CLOSED'],
         'CLOSED' => [],
@@ -29,8 +33,12 @@ class GroupStateMachine
      * All valid statuses.
      */
     const ALL_STATUSES = [
+        'FORMING_SOLO',
         'FORMING',
+        'WAITING_SUPERVISOR_APPROVAL',
         'READY_FOR_BIDDING',
+        'TITLE_APPROVED',
+        'READY_FOR_FINALIZATION',
         'KELOMPOK_FINAL',
         'PDC1_ACTIVE',
         'READY_FOR_SEMPRO',

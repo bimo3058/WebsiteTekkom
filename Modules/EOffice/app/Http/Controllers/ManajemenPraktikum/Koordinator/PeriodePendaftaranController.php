@@ -99,8 +99,12 @@ class PeriodePendaftaranController extends Controller
             'praktikum_id' => $praktikum->id,
             'jenis'        => 'asprak',
             'nama'         => $request->nama ?? 'Periode Asprak ' . now()->format('M Y'),
+            'deskripsi'    => $request->deskripsi,
             'dibuka_pada'  => $request->dibuka_pada ?? now(),
             'ditutup_pada' => $request->ditutup_pada,
+            'nama_berkas_tambahan' => $request->nama_berkas_tambahan,
+            'jenis_berkas_tambahan' => $request->jenis_berkas_tambahan,
+            'keterangan_berkas_tambahan' => $request->keterangan_berkas_tambahan,
             'is_aktif'     => true,
             'dibuka_oleh'  => $user->id,
         ]);

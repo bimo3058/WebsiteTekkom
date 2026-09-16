@@ -2,15 +2,16 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\Group;
-use App\Models\GroupMember;
-use App\Models\SeminarEvaluation;
-use App\Models\SeminarSchedule;
-use App\Models\TaDefenseEvaluation;
-use App\Models\TaDefenseExaminer;
-use App\Models\TaDefenseSchedule;
-use App\Models\TaSubmission;
-use App\Models\AuditLog;
+use App\Models\Lecturer;
+use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\SeminarEvaluation;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\TaDefenseEvaluation;
+use Modules\Capstone\Models\TaDefenseExaminer;
+use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Models\TaSubmission;
 use Illuminate\Support\Facades\DB;
 
 class SchedulingService
@@ -49,8 +50,10 @@ class SchedulingService
 
         // All must be dosen
         foreach ($examinerIds as $examinerId) {
-            $user = \App\Models\User::find($examinerId);
-            if (!$user || $user->role !== 'dosen') {
+            $lecturer = Lecturer::whereKey($examinerId)
+                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
+                ->first();
+            if (! $lecturer) {
                 return "Examiner ID {$examinerId} must be a dosen.";
             }
         }
@@ -237,6 +240,15 @@ class SchedulingService
                 'examiner_id' => $examiner->examiner_id,
                 'status' => 'PENDING',
             ]);
+        }
+    }
+
+    /** Create the examiner assignments and pending evaluation rows together. */
+    public function createTaDefenseEvaluations(TaDefenseSchedule $schedule, array $studentIds): void
+    {
+        foreach ([$schedule->examiner_1_id, $schedule->examiner_2_id] as $index => $examinerId) {
+            TaDefenseExaminer::firstOrCreate(['schedule_id'=>$schedule->id,'examiner_id'=>$examinerId], ['role'=>'EXAMINER_'.($index+1)]);
+            TaDefenseEvaluation::firstOrCreate(['schedule_id'=>$schedule->id,'examiner_id'=>$examinerId], ['status'=>'PENDING']);
         }
     }
 

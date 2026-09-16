@@ -131,7 +131,7 @@
                                     <td class="py-4 px-6">
                                         <button @click="openDetail(mhs)" :disabled="!mhs.file_nilai"
                                             class="px-4 py-2 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 w-full"
-                                            :class="mhs.file_nilai ? 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border border-indigo-100 hover:border-transparent shadow-sm hover:shadow-md hover:shadow-indigo-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed'">
+                                            :class="mhs.file_nilai ? 'bg-primary-50 text-primary-500 hover:bg-primary-500 hover:text-white border border-primary-100 hover:border-transparent shadow-sm hover:shadow-md hover:shadow-primary-500/20' : 'bg-slate-100 text-slate-400 cursor-not-allowed'">
                                             Lihat Berkas
                                         </button>
                                     </td>
@@ -148,7 +148,7 @@
             x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-x-4"
             x-transition:enter-end="opacity-100 translate-x-0">
             <button @click="viewMode = 'table'"
-                class="mb-4 flex-shrink-0 flex items-center text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors bg-white hover:bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm w-fit">
+                class="mb-4 flex-shrink-0 flex items-center text-sm font-bold text-slate-500 hover:text-primary-500 transition-colors bg-white hover:bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm w-fit">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -163,7 +163,7 @@
                     class="w-full lg:w-[65%] bg-slate-900 relative flex flex-col items-center justify-center text-center p-8 border-b lg:border-b-0 lg:border-r border-slate-200">
                     <div x-show="loadingPdf"
                         class="absolute inset-0 flex flex-col items-center justify-center bg-slate-800 z-10 text-white">
-                        <svg class="w-10 h-10 animate-spin text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg"
+                        <svg class="w-10 h-10 animate-spin text-primary-500 mb-4" xmlns="http://www.w3.org/2000/svg"
                             fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
                             </circle>
@@ -189,7 +189,7 @@
                     <div class="p-6 border-b border-slate-100">
                         <h3 class="text-lg font-extrabold text-slate-900 tracking-tight" x-text="selectedStudent?.nama">
                         </h3>
-                        <p class="text-sm font-bold text-indigo-600 font-mono mt-0.5" x-text="selectedStudent?.nim"></p>
+                        <p class="text-sm font-bold text-primary-500 font-mono mt-0.5" x-text="selectedStudent?.nim"></p>
                     </div>
                     <div class="p-6 flex-1">
                         <form
@@ -210,7 +210,7 @@
                                             </label>
                                             <input type="number" :name="'nilai_' + komp.id" :value="komp.nilai_angka"
                                                 min="0" max="100" step="0.01" placeholder="Masukkan nilai 0-100"
-                                                class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-base font-bold px-4 py-3 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                                class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-base font-bold px-4 py-3 rounded-xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none"
                                                 required>
                                         </div>
                                     </template>
@@ -227,7 +227,7 @@
                                     <div class="relative">
                                         <input type="number" name="nilai_validasi_koordinator" x-model="inputNilai"
                                             min="0" max="100" placeholder="Masukkan nilai 0-100"
-                                            class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-base font-bold px-4 py-3 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                            class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-base font-bold px-4 py-3 rounded-xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all outline-none"
                                             required>
                                         <div
                                             class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
@@ -243,7 +243,7 @@
                                 </div>
                             </template>
                             <button type="submit" @click.prevent="konfirmasiNilai"
-                                class="w-full mt-4 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 group">
+                                class="w-full mt-4 flex items-center justify-center gap-2 bg-primary-500 hover:bg-primary-500 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-primary-500/20 hover:shadow-lg hover:shadow-primary-500/30 group">
                                 Konfirmasi Nilai
                                 <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">

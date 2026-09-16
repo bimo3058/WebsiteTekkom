@@ -2,6 +2,8 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Student;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class TaSubmission extends Model
@@ -14,6 +16,10 @@ class TaSubmission extends Model
     const TA_STATUS_ORDER = [
         'TA_LOCKED' => 0,
         'TA_DRAFT' => 1,
+        'TA_DOCUMENTS_REQUIRED' => 1,
+        'TA_DOCUMENTS_UNDER_REVIEW' => 2,
+        'TA_DOCUMENTS_APPROVED' => 3,
+        'TA_READY_FOR_SIDANG' => 4,
         'TA_REVISED' => 2,
         'TA_READY' => 3,
         'TA_REGISTERED' => 4,
@@ -24,6 +30,7 @@ class TaSubmission extends Model
     protected $fillable = [
         'student_id',
         'group_id',
+        'period_id',
         'status',
         'file_path',
         'draft_report_path',
@@ -51,7 +58,7 @@ class TaSubmission extends Model
 
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 
     public function group()

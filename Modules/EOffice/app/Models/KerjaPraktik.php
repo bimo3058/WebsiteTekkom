@@ -28,6 +28,7 @@ class KerjaPraktik extends Model
         'tanggal_selesai',
         'status_kp',
         'is_acc_admin',
+        'periode_id',
     ];
 
     /**
@@ -131,6 +132,34 @@ class KerjaPraktik extends Model
             return $query->where('mahasiswa_id', $mahasiswa->id);
         }
         return $query->whereRaw('1 = 0'); // return empty jika belum ada profil
+    }
+
+    /**
+     * Accessor dinamis untuk nilai_seminar_pembimbing (sebelumnya hardcoded di tabel)
+     */
+    public function getNilaiSeminarPembimbingAttribute()
+    {
+        $details = $this->nilaiDetail()->whereHas('komponen', function ($q) {
+            $q->where('role_penilai', 'dosen_pembimbing');
+        })->get();
+
+        if ($details->isEmpty())
+            return null;
+        return round($details->avg('nilai_angka'), 2);
+    }
+
+    /**
+     * Accessor dinamis untuk nilai_lapangan (sebelumnya hardcoded di tabel)
+     */
+    public function getNilaiLapanganAttribute()
+    {
+        $details = $this->nilaiDetail()->whereHas('komponen', function ($q) {
+            $q->where('role_penilai', 'koordinator');
+        })->get();
+
+        if ($details->isEmpty())
+            return null;
+        return round($details->avg('nilai_angka'), 2);
     }
 
     // protected static function newFactory(): KerjaPraktikFactory

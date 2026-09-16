@@ -1,0 +1,2 @@
+@props(['title'=>null, 'variant'=>'default', 'icon'=>'Info'])
+<div role="alert" {{ $attributes->class(['relative w-full rounded-lg border px-4 py-3 text-sm grid grid-cols-[auto_1fr] items-start gap-x-3', 'text-destructive border-destructive/50' => $variant === 'destructive']) }}><x-capstone::icon :name="$icon" class="h-4 w-4 mt-0.5" /><div>@if($title)<h3 class="font-medium leading-none tracking-tight mb-1">{{ $title }}</h3>@endif<div class="text-sm leading-relaxed">{{ $slot }}</div></div></div>

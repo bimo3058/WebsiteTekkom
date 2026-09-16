@@ -7,6 +7,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
         // Ubah kolom kategori dari varchar(50) ke jsonb dan bungkus data lama ke dalam array
         DB::statement("ALTER TABLE mk_threads ALTER COLUMN kategori TYPE jsonb USING (
             CASE 
@@ -18,6 +22,10 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::getDriverName() !== 'pgsql') {
+            return;
+        }
+
         // Kembalikan ke format text/varchar (mengambil elemen pertama dari array JSON)
         DB::statement("ALTER TABLE mk_threads ALTER COLUMN kategori TYPE varchar(50) USING (
             CASE 

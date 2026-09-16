@@ -22,7 +22,8 @@
                             <span style="color:red">*</span></label>
                         <input type="text" name="nama" class="mp-input" placeholder="Misal: A201"
                             value="{{ old('nama') }}" required>
-                        @error('nama') <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @error('nama')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
@@ -33,7 +34,8 @@
                             Gedung <span style="color:red">*</span></label>
                         <input type="text" name="lokasi" class="mp-input" placeholder="Misal: Gedung A"
                             value="{{ old('lokasi') }}" required>
-                        @error('lokasi') <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @error('lokasi')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                         @enderror
                     </div>
                     <div style="width: 120px;">
@@ -54,7 +56,7 @@
                         Tersedia</label>
                     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                         @php
-                            $opsiFasilitas = ['AC', 'Proyektor', 'Papan Tulis / Whiteboard', 'Sound System', 'Koneksi WiFi', 'PC / Komputer Desktop', 'Kursi Rapat', 'Stop Kontak Ekstra'];
+                            $opsiFasilitas = \Modules\EOffice\Models\Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
                         @endphp
                         @foreach($opsiFasilitas as $opsi)
                             <label
@@ -85,9 +87,11 @@
                     <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
                     </div>
 
-                    @error('fotos') <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                    @error('fotos')
+                        <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                     @enderror
-                    @error('fotos.*') <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                    @error('fotos.*')
+                        <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                     @enderror
                 </div>
 

@@ -29,4 +29,17 @@ class KpDokumen extends Model
     {
         return $this->belongsTo(KerjaPraktik::class, 'kp_id');
     }
+
+    public function getFileUrlAttribute()
+    {
+        if (empty($this->file_path)) {
+            return '#';
+        }
+
+        if (\Illuminate\Support\Str::startsWith($this->file_path, 'kp-uploads/')) {
+            return app(\App\Services\SupabaseStorage::class)->publicUrl($this->file_path, 'eoffice');
+        }
+
+        return asset('storage/' . $this->file_path);
+    }
 }

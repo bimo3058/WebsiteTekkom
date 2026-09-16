@@ -4,7 +4,8 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\Notification;
-use App\Services\NotificationService;
+use Modules\Capstone\Models\GroupInvitation;
+use Modules\Capstone\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -23,13 +24,15 @@ class NotificationController extends Controller
     {
         $notifications = Notification::where('user_id', $request->user()->id)
             ->orderBy('created_at', 'desc')
-            ->paginate($request->get('per_page', 20));
+            ->paginate(max(1, min(100, (int) $request->get('per_page', 20))));
+
+        $invitationIds = $notifications->getCollection()->where('type', 'GROUP_INVITATION')->pluck('related_id')->filter();
+        $invitationStatuses = $invitationIds->isEmpty() ? collect() : GroupInvitation::whereIn('id', $invitationIds)->pluck('status', 'id');
 
         foreach ($notifications as $notification) {
             if ($notification->type === 'GROUP_INVITATION' && $notification->related_id) {
-                $invitation = \App\Models\GroupInvitation::find($notification->related_id);
-                if ($invitation) {
-                    $notification->invitation_status = $invitation->status;
+                if ($invitationStatuses->has($notification->related_id)) {
+                    $notification->invitation_status = $invitationStatuses[$notification->related_id];
                 }
             }
         }

@@ -1,34 +1,38 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\Title;
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Modules\Capstone\Models\Title;
+use Modules\Capstone\Support\CapstoneActor;
 
 class TitleController extends Controller
 {
     public function index(Request $request)
     {
         $user = $request->user();
+        $role = CapstoneActor::role(
+            $user,
+            $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+        );
 
-        if ($user->hasRole('dosen')) {
-            return Title::where('lecturer_id', $user->id)
+        if ($role === 'dosen') {
+            return Title::where('lecturer_id', CapstoneActor::lecturer($user)->id)
                 ->with('lecturer')
                 ->withCount([
                     'groups as active_groups_count' => function ($query) {
                         $query->where('status', '!=', 'REJECTED');
-                    }
+                    },
                 ])
                 ->get();
         }
 
-        if ($user->hasRole('mahasiswa')) {
-            // Students see only LECTURER titles (exclude student-proposed titles)
+        if ($role === 'mahasiswa') {
+            $periodId = $request->integer('period_id') ?: \Modules\Capstone\Models\PeriodRegistration::where('user_id', CapstoneActor::student($user)->id)->value('period_id');
+            // Student ideas come from the period-scoped Bursa Ide endpoint.
             return Title::where('status', 'open')
+                ->when($periodId, fn($q)=>$q->where(fn($q)=>$q->where('period_id',$periodId)->orWhereNull('period_id')))
                 ->where('quota', '>', 0)
                 ->where(function ($query) {
                     $query->where('title_source', 'LECTURER')
@@ -38,7 +42,7 @@ class TitleController extends Controller
                 ->withCount([
                     'groups as active_groups_count' => function ($query) {
                         $query->where('status', '!=', 'REJECTED');
-                    }
+                    },
                 ])
                 ->get()
                 ->filter(function ($title) {
@@ -63,7 +67,7 @@ class TitleController extends Controller
         ]);
 
         $title = Title::create([
-            'lecturer_id' => $request->user()->id,
+            'lecturer_id' => CapstoneActor::lecturer($request->user())->id,
             'title' => $validated['title'],
             'description' => $validated['description'],
             'problem_statement' => $validated['problem_statement'],
@@ -77,19 +81,32 @@ class TitleController extends Controller
         return response()->json($title, 201);
     }
 
-    public function show(Title $title)
+    public function show(Request $request, Title $title)
     {
+        $role = CapstoneActor::role(
+            $request->user(),
+            $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+        );
+
+        if ($role === 'dosen') {
+            abort_unless(
+                $title->lecturer_id === CapstoneActor::lecturer($request->user())->id,
+                403,
+                'Judul ini bukan milik Anda.'
+            );
+        }
+
         return $title->load([
             'lecturer',
             'groups' => function ($q) {
                 $q->where('status', '!=', 'REJECTED')->with('members.student');
-            }
+            },
         ]);
     }
 
     public function update(Request $request, Title $title)
     {
-        if ($request->user()->id !== $title->lecturer_id && $request->user()->role !== 'admin') {
+        if (CapstoneActor::lecturer($request->user())->id !== $title->lecturer_id) {
             abort(403, 'Unauthorized');
         }
 
@@ -111,7 +128,7 @@ class TitleController extends Controller
 
     public function destroy(Request $request, Title $title)
     {
-        if ($request->user()->id !== $title->lecturer_id && $request->user()->role !== 'admin') {
+        if (CapstoneActor::lecturer($request->user())->id !== $title->lecturer_id) {
             abort(403, 'Unauthorized');
         }
 

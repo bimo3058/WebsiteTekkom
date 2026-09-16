@@ -17,6 +17,7 @@ class KpSeminar extends Model
         'waktu_seminar',
         'ruangan',
         'status_validasi_syarat',
+        'status_validasi_dosen',
         'path_undangan',
     ];
 

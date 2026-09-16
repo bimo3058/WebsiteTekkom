@@ -47,7 +47,7 @@
     style="font-family:'Inter Tight',system-ui,sans-serif;">
 
     {{-- ═══════════ SIDEBAR ═══════════ --}}
-    <aside :class="open ? 'is-open' : 'is-collapsed'" class="sitkom-sidebar">
+    <aside data-mobile-sidebar :class="open ? 'is-open' : 'is-collapsed'" class="sitkom-sidebar">
 
         {{-- Brand + Collapse Button --}}
         <div class="sb-brand">
@@ -158,6 +158,9 @@
             </div>
 
             <div class="sitkom-topbar-right">
+                @if($user->hasRole('superadmin'))
+                    @include('superadmin.partials.notification-bell')
+                @else
                 <button class="sitkom-icon-btn" title="Notifications">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -165,8 +168,9 @@
                         <path d="M10 21a2 2 0 004 0" />
                     </svg>
                 </button>
+                @endif
                 <div class="sitkom-topbar-user">
-                    <div class="sitkom-topbar-avatar">
+                    <div class="sitkom-topbar-avatar" @if($user->hasRole('superadmin')) style="background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;" @endif>
                         @if($user->avatar_url)
                             <img src="{{ $user->avatar_url }}" alt=""
                                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;">

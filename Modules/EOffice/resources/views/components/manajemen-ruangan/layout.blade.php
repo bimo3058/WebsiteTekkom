@@ -358,7 +358,7 @@
 
         .mp-stat-icon.violet {
             background: linear-gradient(135deg, #f3f0ff, #e4dffd);
-            color: #6B39F4;
+            color: #2A3A7C;
         }
 
         .mp-stat-icon.sky {
@@ -487,9 +487,10 @@
 
         .mp-av.violet {
             background: #E4DFFD;
-            color: #6B39F4;
+            color: #2A3A7C;
         }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 
 <body class="h-full overflow-hidden bg-[#F6F8FA] text-[#0D0D12] antialiased"
@@ -516,58 +517,108 @@
         $iLogout = "M13 8.73V8.14C13 6.58 12.19 5.24 11.07 4.94L7.87 4.06C6.39 3.66 5 5.21 5 7.27v9.46C5 18.79 6.39 20.34 7.87 19.94l3.2-.87C12.19 18.76 13 17.42 13 15.86v-.59M11 12h8M19 12l-2.5-2.72M19 12l-2.5 2.72";
         $iBack = "M19 12H5M5 12l7-7M5 12l7 7";
         $iList = "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2";
+        $iKey = "M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L6.5 21.5H3v-3.5l1.5-1.5v-2l1.5-1.5 2-2 2.257-2.257A6 6 0 1121 9z";
+
+        // Query Menu Visibility Settings for Sidebar
+        $rawSettings = \Modules\EOffice\Models\Pengaturan::where('key', 'like', 'sb_%')->pluck('value', 'key')->toArray();
+        $sb_katalog = filter_var($rawSettings['sb_user_katalog'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_kalender = filter_var($rawSettings['sb_user_kalender'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_peminjaman = filter_var($rawSettings['sb_user_peminjaman'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_riwayat = filter_var($rawSettings['sb_user_riwayat'] ?? true, FILTER_VALIDATE_BOOLEAN);
+
+        $isSuperadmin = $user && $user->hasRole('superadmin');
+
+        $sb_adm_klg = $isSuperadmin || filter_var($rawSettings['sb_admin_kalenderglobal'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_jad = $isSuperadmin || filter_var($rawSettings['sb_admin_jadwalakademik'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_evt = $isSuperadmin || filter_var($rawSettings['sb_admin_event'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_set = $isSuperadmin || filter_var($rawSettings['sb_admin_persetujuan'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_ars = $isSuperadmin || filter_var($rawSettings['sb_admin_arsip'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_fas = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenfasilitas'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_rua = $isSuperadmin || filter_var($rawSettings['sb_admin_manajemenruangan'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        $sb_adm_pgt = $isSuperadmin || filter_var($rawSettings['sb_admin_pengaturan'] ?? true, FILTER_VALIDATE_BOOLEAN);
 
         $sections = [];
 
         if ($isAdmin) {
+            $admGroups = [];
+
+            $admGroups['Utama'] = [
+                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'peminjaman.dashboard', 'icon' => $iHome],
+            ];
+
+            $admSisRuangan = [];
+            if ($sb_adm_klg)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.kalender-global.index'), 'label' => 'Kalender Global', 'match' => 'admin.kalender', 'icon' => $iCal];
+            if ($sb_adm_jad)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.jadwal-akademik.index'), 'label' => 'Jadwal Akademik', 'match' => 'admin.jadwal-akademik', 'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'];
+            if ($sb_adm_evt)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.jadwal-internal.index'), 'label' => 'Event & Maintenance', 'match' => 'admin.jadwal-internal', 'icon' => $iList];
+            if ($sb_adm_set)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan', 'match' => 'admin.persetujuan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'];
+            if ($sb_adm_ars)
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.riwayat.index'), 'label' => 'Arsip & Rekap', 'match' => 'admin.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'];
+            if (count($admSisRuangan) > 0)
+                $admGroups['Sistem Ruangan'] = $admSisRuangan;
+
+            $admMasterData = [];
+            if ($sb_adm_rua) {
+                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.ruangan.index'), 'label' => 'Manajemen Ruangan', 'match' => 'admin.ruangan', 'icon' => $iBook];
+            }
+            if ($sb_adm_fas) {
+                $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.fasilitas.index'), 'label' => 'Manajemen Fasilitas', 'match' => 'admin.fasilitas', 'icon' => 'M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z'];
+            }
+            $admMasterData[] = ['href' => route('eoffice.peminjaman.admin.hak-akses.index'), 'label' => 'Hak Akses Menu', 'match' => 'admin.hak-akses', 'icon' => $iKey];
+
+            if (count($admMasterData) > 0)
+                $admGroups['Master Data'] = $admMasterData;
+
+            $admSistemWeb = [];
+            if ($sb_adm_pgt)
+                $admSistemWeb[] = ['href' => route('eoffice.peminjaman.admin.pengaturan.index'), 'label' => 'Pengaturan Operasional', 'match' => 'admin.pengaturan', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'];
+
+            if (count($admSistemWeb) > 0)
+                $admGroups['Sistem Web'] = $admSistemWeb;
+
             $sections[] = [
                 'label' => 'Admin Ruangan',
                 'color' => '#10B981',
                 'bg' => 'rgba(16, 185, 129, 0.08)',
                 'match' => 'peminjaman.admin',
-                'groups' => [
-                    'Utama' => [
-                        ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'admin.dashboard', 'icon' => $iHome],
-                    ],
-                    'Sistem Ruangan' => [
-                        ['href' => route('eoffice.peminjaman.admin.kalender-global.index'), 'label' => 'Kalender Global', 'match' => 'admin.kalender', 'icon' => $iCal],
-                        ['href' => route('eoffice.peminjaman.admin.jadwal-akademik.index'), 'label' => 'Jadwal Akademik', 'match' => 'admin.jadwal-akademik', 'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'],
-                        ['href' => route('eoffice.peminjaman.admin.jadwal-internal.index'), 'label' => 'Event & Maintenance', 'match' => 'admin.jadwal-internal', 'icon' => $iList],
-                        ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan', 'match' => 'admin.persetujuan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
-                        ['href' => route('eoffice.peminjaman.admin.riwayat.index'), 'label' => 'Arsip', 'match' => 'admin.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                    ],
-                    'Master Data' => [
-                        ['href' => route('eoffice.peminjaman.admin.user.index'), 'label' => 'Manajemen User', 'match' => 'admin.user', 'icon' => $iUser],
-                        ['href' => route('eoffice.peminjaman.admin.ruangan.index'), 'label' => 'Manajemen Ruangan', 'match' => 'admin.ruangan', 'icon' => $iBook],
-                    ],
-                    'Sistem Web' => [
-                        ['href' => route('eoffice.peminjaman.admin.pengaturan.index'), 'label' => 'Pengaturan Peminjaman', 'match' => 'admin.pengaturan', 'icon' => 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z'],
-                    ],
-                ],
+                'groups' => $admGroups,
             ];
         } else {
             // General User / Mahasiswa / Dosen View
+
+            $userGroups = [];
+
+            $userGroups['Utama'] = [
+                ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'peminjaman.dashboard', 'icon' => $iHome],
+            ];
+
+            $sistemRuangan = [];
+            if ($sb_katalog)
+                $sistemRuangan[] = ['href' => route('eoffice.peminjaman.user.booking'), 'label' => 'Katalog Ruangan', 'match' => 'user.booking', 'icon' => $iBook];
+            if ($sb_kalender)
+                $sistemRuangan[] = ['href' => route('eoffice.peminjaman.user.kalender'), 'label' => 'Kalender Ruangan', 'match' => 'user.kalender', 'icon' => $iCal];
+            if (count($sistemRuangan) > 0)
+                $userGroups['Sistem Ruangan'] = $sistemRuangan;
+
+            $peminjamanItems = [];
+            if ($sb_peminjaman)
+                $peminjamanItems[] = ['href' => route('eoffice.peminjaman.user.saya'), 'label' => 'Peminjaman Saya', 'match' => 'user.saya', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'];
+            if ($sb_riwayat)
+                $peminjamanItems[] = ['href' => route('eoffice.peminjaman.user.riwayat'), 'label' => 'Riwayat', 'match' => 'user.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'];
+            if (count($peminjamanItems) > 0)
+                $userGroups['Peminjaman'] = $peminjamanItems;
+
+
+
             $sections[] = [
                 'label' => 'Akses Mahasiswa',
                 'color' => '#3B82F6',
                 'bg' => 'rgba(59, 130, 246, 0.08)',
                 'match' => 'peminjaman.user',
-                'groups' => [
-                    'Utama' => [
-                        ['href' => route('eoffice.peminjaman.dashboard'), 'label' => 'Dashboard', 'match' => 'user.dashboard', 'icon' => $iHome],
-                    ],
-                    'Sistem Ruangan' => [
-                        ['href' => route('eoffice.peminjaman.user.booking'), 'label' => 'Katalog Ruangan', 'match' => 'user.booking', 'icon' => $iBook],
-                        ['href' => route('eoffice.peminjaman.user.kalender'), 'label' => 'Kalender Ruangan', 'match' => 'user.kalender', 'icon' => $iCal],
-                    ],
-                    'Peminjaman' => [
-                        ['href' => route('eoffice.peminjaman.user.saya'), 'label' => 'Peminjaman Saya', 'match' => 'user.saya', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
-                        ['href' => route('eoffice.peminjaman.user.riwayat'), 'label' => 'Riwayat', 'match' => 'user.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
-                    ],
-                    'Akun' => [
-                        ['href' => '#', 'label' => 'Profil', 'match' => 'user.profil', 'icon' => $iUser],
-                    ]
-                ],
+                'groups' => $userGroups,
             ];
         }
     @endphp
@@ -576,41 +627,32 @@
         x-init="$watch('sidebarOpen', v => localStorage.setItem('mr_sb', v ? '1' : '0'))">
 
         {{-- SIDEBAR --}}
-        <aside
-            class="flex flex-col flex-shrink-0 bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
-            :class="sidebarOpen ? 'w-[272px]' : 'w-[64px]'">
+        <aside data-mobile-sidebar
+            class="flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
+            :class="sidebarOpen ? '' : '!w-[64px]'">
 
-            <div class="relative px-[10px] pt-[18px] pb-[10px]">
-                <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-[10px]">
-                    <div
-                        class="flex items-center justify-center w-[34px] h-[34px] rounded-[9px] flex-shrink-0 bg-[#F3F4F6] shadow-sm overflow-hidden border border-[#E5E7EB]">
-                        {{-- Ruangan Icon --}}
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"
-                            stroke-linecap="round">
-                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                            <line x1="9" y1="3" x2="9" y2="21"></line>
-                        </svg>
-                    </div>
-                    <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200"
-                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
-                        <div class="font-bold text-[13px] text-[#0D0D12] leading-[1.2] whitespace-nowrap">SIPERKOM</div>
-                        <div
-                            class="text-[9px] font-semibold text-[#10B981] uppercase tracking-[.04em] whitespace-nowrap">
-                            Man. Ruangan</div>
-                    </div>
+            <div class="relative px-[14px] h-[60px] flex items-center border-b border-[#DFE1E7] flex-shrink-0 transition-all duration-200" :class="sidebarOpen ? 'gap-[8px]' : 'justify-center'">
+                <div class="flex items-center justify-center w-[32px] h-[32px] flex-shrink-0">
+                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" class="w-full h-full object-contain drop-shadow-sm">
                 </div>
+                <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen" x-transition.opacity.duration.200ms>
+                    <div class="font-bold text-[14px] text-[#0D0D12] leading-[1.2] whitespace-nowrap tracking-[-0.01em]">SIPERKOM</div>
+                    <div class="text-[9px] font-medium text-[#808897] whitespace-nowrap mt-[2px]">Manajemen Ruangan</div>
+                </div>
+                
+                {{-- Floating collapse button --}}
                 <button @click="sidebarOpen = !sidebarOpen"
-                    class="absolute right-[-12px] top-[34px] flex items-center justify-center w-6 h-6 rounded-full bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.08)] cursor-pointer z-30 hover:bg-[#F6F8FA]">
+                    class="absolute right-[-14px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[28px] h-[28px] rounded-[7px] bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.05)] cursor-pointer z-30 text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors" title="Toggle Sidebar">
                     <svg class="transition-transform duration-[240ms]" :class="sidebarOpen ? '' : 'rotate-180'"
-                        width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="#666D80" stroke-width="2.2"
-                        stroke-linecap="round">
-                        <path d="M7 1L3 5L7 9" />
+                        width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 18l-6-6 6-6" />
                     </svg>
                 </button>
             </div>
 
             <nav
-                class="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-1 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                class="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-1 flex flex-col [scrollbar-width:thin] [scrollbar-color:#DFE1E7_transparent] [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#DFE1E7] [&::-webkit-scrollbar-thumb]:rounded-full">
                 @foreach($sections as $section)
                     @php
                         $sectionColor = $section['color'];
@@ -619,26 +661,23 @@
                     <div class="mb-[2px]">
                         <div>
                             @foreach($section['groups'] as $groupLabel => $items)
-                                <div class="text-[10px] font-semibold text-[#A4ABB8] uppercase tracking-[.06em] px-[10px] pt-[6px] pb-[2px] whitespace-nowrap overflow-hidden transition-opacity duration-200"
+                                <div class="text-[11px] font-semibold text-[#64748b] uppercase tracking-[.05em] px-[14px] pt-[16px] pb-[6px] whitespace-nowrap overflow-hidden transition-opacity duration-200"
                                     :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">{{ $groupLabel }}</div>
 
                                 @foreach($items as $item)
                                     @php $active = str_contains($currentRoute, $item['match']); @endphp
                                     <a href="{{ $item['href'] }}"
-                                        class="flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
-                                        :class="sidebarOpen ? '' : 'justify-center'" @if($active)
-                                        style="background:{{ $sectionColor }}; color:white;" @else style="color:#353849"
-                                            onmouseover="this.style.background='#F6F8FA'"
-                                        onmouseout="this.style.background='transparent'" @endif>
-                                        <svg class="w-[16px] h-[16px] flex-shrink-0"
-                                            style="color:{{ $active ? 'white' : '#808897' }}" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        class="group relative flex items-center gap-[9px] pl-[14px] pr-[10px] py-[7px] rounded-[8px] mb-[2px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap {{ $active ? 'bg-[#EEF2FF] text-[#0B266E] font-semibold' : 'text-[#475569] font-medium hover:bg-[#F8FAFC]' }}"
+                                        :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
+                                        @if($active)
+                                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></div>
+                                        @endif
+                                        <svg class="w-[16px] h-[16px] flex-shrink-0 transition-colors {{ $active ? 'text-[#0B266E]' : 'text-[#94A3B8]' }}"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
                                             <path d="{{ $item['icon'] }}" />
                                         </svg>
-                                        <span
-                                            class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
-                                                                                                                                                                                                                                     {{ $active ? 'font-semibold' : 'font-medium' }}"
-                                            :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">{{ $item['label'] }}</span>
+                                        <span class="text-[13px] flex-1 overflow-hidden text-ellipsis" x-show="sidebarOpen">{{ $item['label'] }}</span>
                                     </a>
                                 @endforeach
                             @endforeach
@@ -651,26 +690,23 @@
 
                 <div class="h-px bg-[#F0F1F4] mx-[14px] my-[6px]"></div>
                 <a href="{{ route('eoffice.dashboard') }}"
-                    class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg no-underline transition-colors hover:bg-[#F6F8FA] text-[#666D80]"
-                    :class="sidebarOpen ? '' : 'justify-center'">
-                    <svg class="w-[14px] h-[14px] flex-shrink-0 text-[#A4ABB8]" viewBox="0 0 24 24" fill="none"
+                    class="group relative flex items-center gap-[9px] pl-[14px] pr-[10px] py-[7px] rounded-[8px] no-underline transition-colors hover:bg-[#F8FAFC] text-[#475569]"
+                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
+                    <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#94A3B8]" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                         <path d="{{ $iBack }}" />
                     </svg>
-                    <span class="text-[12px] font-medium flex-1 transition-[opacity,width] duration-200"
-                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Kembali ke EOffice Utama</span>
+                    <span class="text-[12px] font-medium flex-1" x-show="sidebarOpen">Kembali ke EOffice Utama</span>
                 </a>
             </nav>
 
-            <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0">
-                <div
-                    class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg overflow-hidden transition-colors hover:bg-[#F6F8FA]">
+            <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0" :class="sidebarOpen ? '' : '!px-[10px]'">
+                <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg overflow-hidden transition-colors hover:bg-[#F6F8FA]"
+                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
                     <div class="flex items-center justify-center w-[30px] h-[30px] rounded-full flex-shrink-0 text-white text-[11px] font-bold"
                         style="background:linear-gradient(135deg,#1F2937,#111827);">{{ $initials }}</div>
-                    <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200"
-                        :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
-                        <div
-                            class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">
+                    <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen">
+                        <div class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">
                             {{ $name }}
                         </div>
                         <div class="text-[10px] text-[#666D80] whitespace-nowrap overflow-hidden text-ellipsis">
@@ -762,6 +798,7 @@
             </div>
         </div>
     </div>
+    <x-mobile-navigation />
 </body>
 
 </html>

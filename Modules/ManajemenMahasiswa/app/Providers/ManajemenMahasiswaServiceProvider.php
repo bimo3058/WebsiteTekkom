@@ -2,8 +2,11 @@
 
 namespace Modules\ManajemenMahasiswa\Providers;
 
+use App\Database\CachedPostgresConnection;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\ManajemenMahasiswa\Console\Commands\CheckAlumniStatus;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -34,25 +37,10 @@ class ManajemenMahasiswaServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // PostgreSQL (Supabase): pastikan binding boolean tidak di-cast jadi integer (1/0),
-        // karena PostgreSQL tidak menerima integer untuk kolom bertipe boolean.
-        \Illuminate\Database\Connection::resolverFor('pgsql', function ($connection, $database, $prefix, $config) {
-            return new class($connection, $database, $prefix, $config) extends \Illuminate\Database\PostgresConnection {
-                public function prepareBindings(array $bindings)
-                {
-                    $grammar = $this->getQueryGrammar();
-
-                    foreach ($bindings as $key => $value) {
-                        if ($value instanceof \DateTimeInterface) {
-                            $bindings[$key] = $value->format($grammar->getDateFormat());
-                        } elseif (is_bool($value)) {
-                            $bindings[$key] = $value ? 'true' : 'false';
-                        }
-                    }
-
-                    return $bindings;
-                }
-            };
+        // Keep the global Redis query cache resolver active even when this
+        // module is registered after the application's main service providers.
+        Connection::resolverFor('pgsql', function ($connection, $database, $prefix, $config) {
+            return new CachedPostgresConnection($connection, $database, $prefix, $config);
         });
 
         $this->app->register(EventServiceProvider::class);
@@ -65,7 +53,7 @@ class ManajemenMahasiswaServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         $this->commands([
-            \Modules\ManajemenMahasiswa\Console\Commands\CheckAlumniStatus::class,
+            CheckAlumniStatus::class,
         ]);
     }
 
@@ -152,7 +140,7 @@ class ManajemenMahasiswaServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        Blade::componentNamespace(config('modules.namespace').'\\' . $this->name . '\\View\\Components', $this->nameLower);
+        Blade::componentNamespace(config('modules.namespace').'\\'.$this->name.'\\View\\Components', $this->nameLower);
     }
 
     /**

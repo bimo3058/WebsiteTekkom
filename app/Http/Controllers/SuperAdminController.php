@@ -100,6 +100,7 @@ class SuperAdminController extends Controller
                                 ),
 
             'modules'           => Cache::remember('sa:modules_stats',     self::TTL_STATS,  fn() => $this->getModulesStats()),
+            'moduleAccess'      => app(\App\Services\ModuleAccessOverview::class)->forDashboard(),
             'recent_logs' => Cache::remember('sa:recent_logs', 30, fn() =>
                 AuditLog::with(['user' => fn($q) => $q->select('id', 'name', 'email', 'avatar_url')])
                     ->latest('created_at')->limit(8)->get()

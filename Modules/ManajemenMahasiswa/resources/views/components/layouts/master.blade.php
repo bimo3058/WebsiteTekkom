@@ -21,6 +21,7 @@
     {{-- {{ module_vite('build-manajemenmahasiswa', 'resources/assets/sass/app.scss') }} --}}
 
     @stack('styles')
+    <x-mobile-navigation-assets />
 </head>
 
 <body>
@@ -30,6 +31,7 @@
     {{-- {{ module_vite('build-manajemenmahasiswa', 'resources/assets/js/app.js') }} --}}
 
     @stack('scripts')
+    <x-mobile-navigation />
 </body>
 
 </html>

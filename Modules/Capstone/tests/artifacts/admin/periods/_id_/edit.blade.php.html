@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="">
+    <title>Edit Periode | SICATA</title>
+    <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/periods\/_id_\/edit","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+</head>
+<body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
+    <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
+<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+    <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
+        <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
+        <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                    <path  d="m15 18-6-6 6-6"  />
+    </svg>
+</button>
+    </div>
+    </div>
+    <nav aria-label="Capstone navigation" class="min-h-0 flex-1 overflow-y-auto p-2 space-y-1">
+        <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">Menu</div>
+                                <a href="http://localhost:8000/capstone/admin/dashboard" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " title="Dashboard"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <rect  width="7"  height="9"  x="3"  y="3"  rx="1"  />
+                    <rect  width="7"  height="5"  x="14"  y="3"  rx="1"  />
+                    <rect  width="7"  height="9"  x="14"  y="12"  rx="1"  />
+                    <rect  width="7"  height="5"  x="3"  y="16"  rx="1"  />
+    </svg>
+<span x-show="!collapsed">Dashboard</span></a>
+                                                                                    <div x-data="{ expanded: true }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Master Data"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+<span x-show="!collapsed">Master Data</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/users"  title="Users" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Users</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/groups"  title="Groups" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Groups</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/locations"  title="Locations" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Locations</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Requirements</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Evaluation Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M13 5h8"  />
+                    <path  d="M13 12h8"  />
+                    <path  d="M13 19h8"  />
+                    <path  d="m3 17 2 2 4-4"  />
+                    <path  d="m3 7 2 2 4-4"  />
+    </svg>
+<span x-show="!collapsed">Evaluation Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/period-assessment-config"  title="Tipe Penilaian" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Tipe Penilaian</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/peer-review"  title="Peer Review" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Peer Review</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Management"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+<span x-show="!collapsed">Management</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/schedule"  title="Schedule" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Schedule</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/sempro"  title="Sidang Proposal" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Sidang Proposal</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/ta-defense"  title="TA Defense" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">TA Defense</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Analytics"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span x-show="!collapsed">Analytics</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/admin/analytics/progress"  title="Progress" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Progress</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/peer-review-dashboard"  title="Peer Review Dashboard" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Peer Review Dashboard</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/reports"  title="Reports" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Reports</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/document-uploads"  title="Document Uploads" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Uploads</a>
+                                                    </div>
+                    </div>
+                                            <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">System</div>
+        <a href="http://localhost:8000/capstone/notifications" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="!collapsed">Notifications</span><span x-show="unread > 0 && !collapsed" x-text="unread" class="ml-auto rounded-full bg-primary px-1.5 text-xs text-white"></span></a>
+    </nav>
+    <div class="p-2 border-t">
+        <a  href="http://localhost:8000/capstone/admin/settings"  class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+<span x-show="!collapsed">Settings</span></a>
+        <form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm text-destructive hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+<span x-show="!collapsed">Logout</span></button></form>
+    </div>
+</aside>
+    <main class="flex h-screen w-full min-w-0 flex-col overflow-hidden">
+        <div class="flex-1 overflow-y-auto p-4 bg-white">
+            <div class="border-grey-100 shadow-small min-h-full overflow-hidden rounded-xl border">
+                <header class="sticky top-0 z-30 flex items-center justify-between gap-4 px-3 sm:px-6 py-4 border-b border-grey-100 bg-white">
+    <button type="button" @click="mobileSidebar = !mobileSidebar" aria-label="Open menu" class="md:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M4 5h16"  />
+                    <path  d="M4 12h16"  />
+                    <path  d="M4 19h16"  />
+    </svg>
+</button>
+    <nav aria-label="breadcrumb"><ol class="flex flex-wrap items-center gap-2 text-sm"><li class="text-grey-400">SICATA</li><li class="text-grey-300">/</li><li class="text-grey-600 font-medium">Edit</li></ol></nav>
+    <div class="flex items-center gap-2">
+        <button type="button" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+</button>
+        <a href="http://localhost:8000/capstone/notifications" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Notifications"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="unread > 0" class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error-100"></span></a>
+        <div x-data="{ open:false }" class="relative" @click.outside="open=false" @keydown.escape.window="open=false">
+            <button type="button" @click="open=!open" :aria-expanded="open" class="flex items-center gap-3 h-10 px-2 hover:bg-grey-25 rounded-md">
+                <span class="h-8 w-8 flex items-center justify-center rounded-full bg-grey-100 text-grey-500 text-sm font-semibold">TA</span>
+                <span class="flex-col items-start text-left hidden sm:flex"><span class="text-sm font-semibold text-grey-600 leading-tight">Test Administrator</span><span class="text-xs text-grey-400 leading-tight">Admin</span></span>
+            </button>
+            <div x-show="open" x-cloak class="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 shadow-md z-50">
+                <div class="px-2 py-1.5 text-sm"><p class="font-semibold">Test Administrator</p><p class="text-xs text-muted-foreground">test@example.test</p></div><hr class="my-1">
+                <a href="http://localhost:8000/capstone/profile" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"  />
+                    <circle  cx="12"  cy="7"  r="4"  />
+    </svg>
+Profile</a>
+                <a  href="http://localhost:8000/capstone/admin/settings"  class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+Settings</a>
+                <hr class="my-1"><form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-error-100 hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+Logout</button></form>
+            </div>
+        </div>
+    </div>
+</header>
+                <div class="px-3 sm:px-6 pt-6 pb-6"><div class="min-h-screen bg-gray-50/50" x-data="periodWizard(1)">
+    <div class="sticky top-0 z-10"><div class="mx-auto max-w-7xl px-6 py-4"><h1 class="text-2xl font-semibold text-gray-900">Edit Periode</h1><p class="mt-1 text-sm text-gray-500">Perbarui konfigurasi periode yang sudah ada.</p></div></div>
+    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span class="sr-only">Loading</span></div>
+<div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
+    <div x-show="!loading && !error" x-cloak>
+        <div class="mx-auto max-w-7xl px-6 py-4"><div class="rounded-xl border bg-white px-6 py-6 shadow-sm"><div class="flex items-start justify-between overflow-x-auto">
+                            <div class="flex flex-1 items-start"><div class="flex flex-1 flex-col items-center"><button type="button" @click="go(0)" :disabled="0>step+1 || saving || copying" :aria-current="step===0 ? 'step' : null" class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all" :class="step>0 ? 'bg-green-600 text-white' : (step===0 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400 border-2 border-gray-200')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="step>0" class="h-5 w-5">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+<span x-show="step<=0">1</span></button><div class="mt-3 min-w-20 text-center"><p class="text-sm font-semibold" :class="step>0 ? 'text-green-700' : (step===0 ? 'text-blue-700' : 'text-gray-500')">Informasi Dasar</p><p class="mt-0.5 max-w-[120px] text-xs text-gray-400">Informasi dasar periode</p></div></div><div class="flex-1 px-2 pt-5"><div class="h-0.5" :class="step>0 ? 'bg-green-600' : 'bg-gray-200'"></div></div></div>
+                            <div class="flex flex-1 items-start"><div class="flex flex-1 flex-col items-center"><button type="button" @click="go(1)" :disabled="1>step+1 || saving || copying" :aria-current="step===1 ? 'step' : null" class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all" :class="step>1 ? 'bg-green-600 text-white' : (step===1 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400 border-2 border-gray-200')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="step>1" class="h-5 w-5">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+<span x-show="step<=1">2</span></button><div class="mt-3 min-w-20 text-center"><p class="text-sm font-semibold" :class="step>1 ? 'text-green-700' : (step===1 ? 'text-blue-700' : 'text-gray-500')">Setup Evaluasi</p><p class="mt-0.5 max-w-[120px] text-xs text-gray-400">Konfigurasi penilaian</p></div></div><div class="flex-1 px-2 pt-5"><div class="h-0.5" :class="step>1 ? 'bg-green-600' : 'bg-gray-200'"></div></div></div>
+                            <div class="flex flex-1 items-start"><div class="flex flex-1 flex-col items-center"><button type="button" @click="go(2)" :disabled="2>step+1 || saving || copying" :aria-current="step===2 ? 'step' : null" class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all" :class="step>2 ? 'bg-green-600 text-white' : (step===2 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400 border-2 border-gray-200')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="step>2" class="h-5 w-5">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+<span x-show="step<=2">3</span></button><div class="mt-3 min-w-20 text-center"><p class="text-sm font-semibold" :class="step>2 ? 'text-green-700' : (step===2 ? 'text-blue-700' : 'text-gray-500')">Tanggal Fase</p><p class="mt-0.5 max-w-[120px] text-xs text-gray-400">Jadwal fase-fase</p></div></div><div class="flex-1 px-2 pt-5"><div class="h-0.5" :class="step>2 ? 'bg-green-600' : 'bg-gray-200'"></div></div></div>
+                            <div class="flex flex-1 items-start"><div class="flex flex-1 flex-col items-center"><button type="button" @click="go(3)" :disabled="3>step+1 || saving || copying" :aria-current="step===3 ? 'step' : null" class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all" :class="step>3 ? 'bg-green-600 text-white' : (step===3 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400 border-2 border-gray-200')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="step>3" class="h-5 w-5">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+<span x-show="step<=3">4</span></button><div class="mt-3 min-w-20 text-center"><p class="text-sm font-semibold" :class="step>3 ? 'text-green-700' : (step===3 ? 'text-blue-700' : 'text-gray-500')">Konfigurasi Group</p><p class="mt-0.5 max-w-[120px] text-xs text-gray-400">Pengaturan group</p></div></div><div class="flex-1 px-2 pt-5"><div class="h-0.5" :class="step>3 ? 'bg-green-600' : 'bg-gray-200'"></div></div></div>
+                            <div class="flex flex-1 items-start"><div class="flex flex-1 flex-col items-center"><button type="button" @click="go(4)" :disabled="4>step+1 || saving || copying" :aria-current="step===4 ? 'step' : null" class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all" :class="step>4 ? 'bg-green-600 text-white' : (step===4 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400 border-2 border-gray-200')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="step>4" class="h-5 w-5">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+<span x-show="step<=4">5</span></button><div class="mt-3 min-w-20 text-center"><p class="text-sm font-semibold" :class="step>4 ? 'text-green-700' : (step===4 ? 'text-blue-700' : 'text-gray-500')">Review</p><p class="mt-0.5 max-w-[120px] text-xs text-gray-400">Konfirmasi data</p></div></div></div>
+                    </div></div></div>
+        <div class="mx-auto max-w-7xl px-6 py-8"><div class="rounded-xl border bg-white shadow-sm"><div class="p-6">
+            <p x-show="finalized" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Periode final tidak dapat diubah.</p>
+            <form id="period-wizard-form" @submit.prevent="save()" novalidate>
+                <fieldset :disabled="!editable" class="min-w-0">
+                    <div x-show="step===0"><div class="mx-auto max-w-2xl space-y-8"><div class="flex items-start gap-3 border-b pb-4"><div class="rounded-lg bg-blue-50 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 text-blue-600">
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+    </svg>
+</div><div><h2 class="text-lg font-semibold text-gray-900">Informasi Dasar Periode</h2><p class="text-sm text-gray-500">Masukkan informasi dasar untuk periode akademik baru</p></div></div><div class="space-y-6"><div class="space-y-2 ">
+    <label for="field-name" class="text-sm font-medium leading-none">Nama Periode<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="text" id="field-name" name="name" x-model="form.name" placeholder="Contoh: Semester Ganjil 2025/2026" required="required" maxlength="255">
+    <p class="text-destructive text-sm" x-show="errors['name']" x-text="errors['name']?.[0]"></p>
+</div>
+<div class="grid grid-cols-2 gap-6"><div class="space-y-2 ">
+    <label for="field-start_date" class="text-sm font-medium leading-none">Start Date<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-start_date" name="start_date" x-model="form.start_date" placeholder="" required="required">
+    <p class="text-destructive text-sm" x-show="errors['start_date']" x-text="errors['start_date']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-end_date" class="text-sm font-medium leading-none">End Date<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-end_date" name="end_date" x-model="form.end_date" placeholder="" required="required">
+    <p class="text-destructive text-sm" x-show="errors['end_date']" x-text="errors['end_date']?.[0]"></p>
+</div>
+</div><div class="flex items-center justify-between border-t pt-4"><div><label for="period-active" class="text-sm font-medium text-gray-700">Set Aktif <span class="text-red-500">*</span></label><p class="text-xs text-gray-500">Periode yang aktif akan digunakan untuk proses akademik saat ini</p></div><input id="period-active" type="checkbox" role="switch" x-model="form.is_active" class="h-5 w-9 accent-blue-600" /></div></div></div>
+</div>
+                    <div x-show="step===1"><div class="space-y-6">
+    <div class="flex items-center justify-between gap-3 rounded-lg border p-4" :class="hasTemplates ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'"><div><h2 class="font-medium" :class="hasTemplates ? 'text-green-900' : 'text-amber-900'" x-text="hasTemplates ? 'Setup Evaluasi Siap' : 'Setup Evaluasi Diperlukan'"></h2><p class="text-sm" x-text="hasTemplates ? templates.filter(t=>t.is_active).length+' template tersedia' : 'Konfigurasi template evaluasi harus diselesaikan sebelum membuat periode.'"></p></div><a href="http://localhost:8000/capstone/admin/assessment-bank" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" target="_blank" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M5 12h14"  />
+                    <path  d="M12 5v14"  />
+    </svg>
+Tambah Template</a>
+</div>
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b pb-4"><span class="flex items-center gap-2 text-sm font-medium text-gray-700"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-gray-500">
+                    <rect  width="14"  height="14"  x="8"  y="8"  rx="2"  ry="2"  />
+                    <path  d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"  />
+    </svg>
+Salin Penilaian dari Periode:</span><select x-model="copyPeriod" @change="copy()" class="h-9 rounded-md border px-3 text-sm" aria-label="Salin penilaian dari periode"><option value="">Pilih periode</option><template x-for="period in periods.filter(p=>String(p.id)!==String(id))" :key="period.id"><option :value="period.id" x-text="period.name"></option></template></select></div>
+    <div class="inline-flex gap-1 rounded-lg bg-muted p-1" role="tablist"><button type="button" role="tab" :aria-selected="tab==='assessment'" @click="tab='assessment';search=''" class="rounded-md px-4 py-2 text-sm" :class="tab==='assessment' && 'bg-white shadow-sm'">Tipe Penilaian</button><button type="button" role="tab" :aria-selected="tab==='peer'" @click="tab='peer';search=''" class="rounded-md px-4 py-2 text-sm" :class="tab==='peer' && 'bg-white shadow-sm'">Peer Review</button></div>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]"><div class="min-w-0 space-y-4"><div x-show="tab==='assessment'" class="flex flex-wrap gap-2"><template x-for="type in types" :key="type"><button type="button" @click="evaluationType=type;search=''" class="rounded-md border px-3 py-2 text-xs font-medium" :class="evaluationType===type ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'" x-text="type.replaceAll('_',' ')"></button></template></div><div class="relative"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400">
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+<input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] pl-9" type="text" x-model="search" placeholder="Cari komponen..." aria-label="Cari komponen">
+</div><div class="overflow-x-auto rounded-lg border"><table class="w-full"><thead class="bg-gray-50"><tr><th class="w-12 px-4 py-3"><input type="checkbox" @change="toggleAll($event.target.checked)" :checked="choices.length>0 && choices.every(t=>selectedIds.includes(t.id))" aria-label="Pilih semua komponen" /></th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Kode</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Nama</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Deskripsi</th><th class="px-4 py-3 text-left text-xs font-semibold text-gray-700">Bobot</th></tr></thead><tbody class="divide-y divide-gray-100"><tr x-show="!choices.length"><td colspan="5" class="px-4 py-8 text-center text-gray-500">Tidak ada komponen yang tersedia untuk fase ini.</td></tr><template x-for="item in choices" :key="item.id"><tr class="hover:bg-gray-50"><td class="px-4 py-3"><input type="checkbox" :checked="selectedIds.includes(item.id)" @change="toggle(item.id)" :aria-label="item.name" /></td><td class="px-4 py-3 text-sm font-medium text-blue-600" x-text="item.code || '-'"></td><td class="px-4 py-3 text-sm font-medium text-gray-900" x-text="item.name"></td><td class="px-4 py-3 text-sm text-gray-700" x-text="item.description || '-'"></td><td class="px-4 py-3 text-center"><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground" x-text="item.weight+'%'"></span>
+</td></tr></template></tbody></table></div></div><aside class="space-y-4"><div class="rounded-xl border p-5"><h3 class="font-semibold">Ringkasan Penilaian</h3><p class="mt-3 text-sm text-muted-foreground"><span x-text="selectedIds.length"></span> komponen dipilih</p><p class="mt-2 text-2xl font-semibold" :class="totalWeight===100 ? 'text-green-600' : 'text-amber-600'" x-text="totalWeight+'%'"></p><p class="mt-1 text-xs text-muted-foreground">Total bobot komponen yang dipilih harus 100%.</p></div><div class="rounded-xl border p-5"><h3 class="mb-3 font-semibold">Ringkasan Semua Fase</h3><template x-for="type in types" :key="type"><div class="flex justify-between gap-2 py-1 text-xs"><span x-text="type.replaceAll('_',' ')"></span><span x-text="weight(assessments[type])+'%'"></span></div></template><div class="flex justify-between py-1 text-xs"><span>Peer Review</span><span x-text="weight(peerIds,true)+'%'"></span></div></div></aside></div>
+</div>
+</div>
+                    <div x-show="step===2"><div class="space-y-8"><div class="flex items-start gap-3 border-b pb-4"><div class="rounded-lg bg-blue-50 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 text-blue-600">
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+                    <path  d="M8 14h.01"  />
+                    <path  d="M12 14h.01"  />
+                    <path  d="M16 14h.01"  />
+                    <path  d="M8 18h.01"  />
+                    <path  d="M12 18h.01"  />
+                    <path  d="M16 18h.01"  />
+    </svg>
+</div><div><h2 class="text-lg font-semibold text-gray-900">Tanggal Fase Periode</h2><p class="text-sm text-gray-500">Atur jadwal dan pengingat untuk setiap fase</p></div></div>
+<div class="rounded-xl border p-5"><div class="mb-4"><h3 class="font-semibold text-gray-900">Bidding</h3><p class="text-sm text-gray-500">Periode pemilihan topik dan dosen pembimbing</p></div><div class="grid grid-cols-1 gap-4 sm:grid-cols-3"><div class="space-y-2 ">
+    <label for="field-bidding_start" class="text-sm font-medium leading-none">Tanggal Mulai</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-bidding_start" name="bidding_start" x-model="form.bidding_start" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['bidding_start']" x-text="errors['bidding_start']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-bidding_end" class="text-sm font-medium leading-none">Tanggal Berakhir</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-bidding_end" name="bidding_end" x-model="form.bidding_end" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['bidding_end']" x-text="errors['bidding_end']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-bidding_reminder_at" class="text-sm font-medium leading-none">Tanggal Pengingat</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-bidding_reminder_at" name="bidding_reminder_at" x-model="form.bidding_reminder_at" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['bidding_reminder_at']" x-text="errors['bidding_reminder_at']?.[0]"></p>
+</div>
+</div></div>
+<div class="rounded-xl border p-5"><div class="mb-4"><h3 class="font-semibold text-gray-900">PDC1</h3><p class="text-sm text-gray-500">Progress Defense Check 1</p></div><div class="grid grid-cols-1 gap-4 sm:grid-cols-3"><div class="space-y-2 ">
+    <label for="field-pdc1_start" class="text-sm font-medium leading-none">Tanggal Mulai</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-pdc1_start" name="pdc1_start" x-model="form.pdc1_start" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['pdc1_start']" x-text="errors['pdc1_start']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-pdc1_end" class="text-sm font-medium leading-none">Tanggal Berakhir</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-pdc1_end" name="pdc1_end" x-model="form.pdc1_end" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['pdc1_end']" x-text="errors['pdc1_end']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-pdc1_reminder_at" class="text-sm font-medium leading-none">Tanggal Pengingat</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-pdc1_reminder_at" name="pdc1_reminder_at" x-model="form.pdc1_reminder_at" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['pdc1_reminder_at']" x-text="errors['pdc1_reminder_at']?.[0]"></p>
+</div>
+</div></div>
+<div class="rounded-xl border p-5"><div class="mb-4"><h3 class="font-semibold text-gray-900">PDC2</h3><p class="text-sm text-gray-500">Progress Defense Check 2</p></div><div class="grid grid-cols-1 gap-4 sm:grid-cols-3"><div class="space-y-2 ">
+    <label for="field-pdc2_start" class="text-sm font-medium leading-none">Tanggal Mulai</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-pdc2_start" name="pdc2_start" x-model="form.pdc2_start" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['pdc2_start']" x-text="errors['pdc2_start']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-pdc2_end" class="text-sm font-medium leading-none">Tanggal Berakhir</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-pdc2_end" name="pdc2_end" x-model="form.pdc2_end" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['pdc2_end']" x-text="errors['pdc2_end']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-pdc2_reminder_at" class="text-sm font-medium leading-none">Tanggal Pengingat</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-pdc2_reminder_at" name="pdc2_reminder_at" x-model="form.pdc2_reminder_at" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['pdc2_reminder_at']" x-text="errors['pdc2_reminder_at']?.[0]"></p>
+</div>
+</div></div>
+<div class="rounded-xl border p-5"><div class="mb-4"><h3 class="font-semibold text-gray-900">EXPO TA</h3><p class="text-sm text-gray-500">Pameran dan presentasi tugas akhir</p></div><div class="grid grid-cols-1 gap-4 sm:grid-cols-3"><div class="space-y-2 ">
+    <label for="field-expo_date" class="text-sm font-medium leading-none">Tanggal</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-expo_date" name="expo_date" x-model="form.expo_date" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['expo_date']" x-text="errors['expo_date']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-expo_reminder_at" class="text-sm font-medium leading-none">Tanggal Pengingat</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-expo_reminder_at" name="expo_reminder_at" x-model="form.expo_reminder_at" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['expo_reminder_at']" x-text="errors['expo_reminder_at']?.[0]"></p>
+</div>
+</div></div>
+<div class="rounded-xl border p-5"><div class="mb-4"><h3 class="font-semibold text-gray-900">Sidang TA</h3><p class="text-sm text-gray-500">Sidang akhir tugas akhir</p></div><div class="grid grid-cols-1 gap-4 sm:grid-cols-3"><div class="space-y-2 ">
+    <label for="field-ta_start" class="text-sm font-medium leading-none">Tanggal Mulai</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-ta_start" name="ta_start" x-model="form.ta_start" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['ta_start']" x-text="errors['ta_start']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-ta_end" class="text-sm font-medium leading-none">Tanggal Berakhir</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-ta_end" name="ta_end" x-model="form.ta_end" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['ta_end']" x-text="errors['ta_end']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-ta_reminder_at" class="text-sm font-medium leading-none">Tanggal Pengingat</label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="date" id="field-ta_reminder_at" name="ta_reminder_at" x-model="form.ta_reminder_at" placeholder="">
+    <p class="text-destructive text-sm" x-show="errors['ta_reminder_at']" x-text="errors['ta_reminder_at']?.[0]"></p>
+</div>
+</div></div>
+</div>
+</div>
+                    <div x-show="step===3"><div class="mx-auto max-w-2xl space-y-8"><div class="flex items-start gap-3 border-b pb-4"><div class="rounded-lg bg-blue-50 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 text-blue-600">
+                    <path  d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"  />
+                    <path  d="M16 3.128a4 4 0 0 1 0 7.744"  />
+                    <path  d="M22 21v-2a4 4 0 0 0-3-3.87"  />
+                    <circle  cx="9"  cy="7"  r="4"  />
+    </svg>
+</div><div><h2 class="text-lg font-semibold text-gray-900">Konfigurasi Group</h2><p class="text-sm text-gray-500">Atur batasan jumlah anggota group dan beban dosen</p></div></div><div class="space-y-6"><div class="grid grid-cols-2 gap-6"><div class="space-y-2 ">
+    <label for="field-min_group_size" class="text-sm font-medium leading-none">Minimal Jumlah Anggota<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="number" id="field-min_group_size" name="min_group_size" x-model="form.min_group_size" placeholder="" required="required" min="1" max="10">
+    <p class="text-destructive text-sm" x-show="errors['min_group_size']" x-text="errors['min_group_size']?.[0]"></p>
+</div>
+<div class="space-y-2 ">
+    <label for="field-max_group_size" class="text-sm font-medium leading-none">Maximal Jumlah Anggota<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="number" id="field-max_group_size" name="max_group_size" x-model="form.max_group_size" placeholder="" required="required" min="1" max="10">
+    <p class="text-destructive text-sm" x-show="errors['max_group_size']" x-text="errors['max_group_size']?.[0]"></p>
+</div>
+</div><div class="space-y-2 ">
+    <label for="field-max_supervisor_load" class="text-sm font-medium leading-none">Maximal Dosen Pembimbing (group/dosen)<span class="ml-0.5 text-red-500">*</span></label>
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-11" type="number" id="field-max_supervisor_load" name="max_supervisor_load" x-model="form.max_supervisor_load" placeholder="" required="required" min="1" max="50">
+    <p class="text-destructive text-sm" x-show="errors['max_supervisor_load']" x-text="errors['max_supervisor_load']?.[0]"></p>
+</div>
+<div class="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mt-0.5 h-5 w-5 text-amber-600">
+                    <path  d="m16 11 2 2 4-4"  />
+                    <path  d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"  />
+                    <circle  cx="9"  cy="7"  r="4"  />
+    </svg>
+<div class="space-y-1"><p class="text-sm font-medium text-amber-900">Informasi Beban Dosen</p><p class="text-sm text-amber-700">Maximal Dosen Pembimbing menentukan jumlah maksimal group yang dapat dibimbing oleh satu dosen dalam periode ini. Ini membantu menjaga keseimbangan beban mengajar dan memastikan kualitas bimbingan yang optimal.</p></div></div></div></div>
+</div>
+                    <div x-show="step===4"><div class="mx-auto max-w-4xl space-y-6"><div class="flex items-start gap-3 border-b pb-4"><div class="rounded-lg bg-blue-50 p-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 text-blue-600">
+                    <rect  width="8"  height="4"  x="8"  y="2"  rx="1"  ry="1"  />
+                    <path  d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"  />
+                    <path  d="m9 14 2 2 4-4"  />
+    </svg>
+</div><div><h2 class="text-lg font-semibold text-gray-900">Review Konfigurasi Periode</h2><p class="text-sm text-gray-500">Periksa kembali data sebelum menyimpan periode</p></div></div><div class="grid gap-6 md:grid-cols-2"><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Informasi Dasar</h3><p class="text-lg font-medium" x-text="form.name"></p><p class="mt-2 text-sm text-gray-600" x-text="form.start_date+' — '+form.end_date"></p><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground mt-3" x-text="form.is_active ? 'Aktif' : 'Nonaktif'"></span>
+</div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Konfigurasi Group</h3><p class="text-sm text-gray-600" x-text="form.min_group_size+'–'+form.max_group_size+' anggota per group'"></p><p class="mt-2 text-sm text-gray-600" x-text="form.max_supervisor_load+' group/dosen'"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Tanggal Fase</h3><div class="mb-3 text-sm"><p class="font-medium">Bidding</p><p class="text-gray-600" x-text="(form.bidding_start || '-')+' — '+(form.bidding_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.bidding_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">PDC1</p><p class="text-gray-600" x-text="(form.pdc1_start || '-')+' — '+(form.pdc1_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.pdc1_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">PDC2</p><p class="text-gray-600" x-text="(form.pdc2_start || '-')+' — '+(form.pdc2_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.pdc2_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">Sidang TA</p><p class="text-gray-600" x-text="(form.ta_start || '-')+' — '+(form.ta_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.ta_reminder_at || '-')"></p></div><p class="text-sm font-medium">EXPO TA</p><p class="text-sm text-gray-600" x-text="form.expo_date || '-'"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.expo_reminder_at || '-')"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Setup Evaluasi</h3><template x-for="type in types" :key="type"><div class="flex justify-between gap-3 py-2 text-sm"><span x-text="type.replaceAll('_',' ')"></span><span x-text="assessments[type].length+' komponen / '+weight(assessments[type])+'%'"></span></div></template><div class="flex justify-between py-2 text-sm"><span>Peer Review</span><span x-text="peerIds.length+' indikator / '+weight(peerIds,true)+'%'"></span></div></div></div></div>
+</div>
+                </fieldset>
+                <div x-show="Object.keys(errors).length" role="alert" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><template x-for="(messages,key) in errors" :key="key"><p x-text="messages[0]"></p></template></div>
+            </form>
+        </div><div class="flex items-center justify-between rounded-b-xl border-t bg-gray-50/50 px-6 py-4"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3 gap-2" type="button" @click="back()" :disabled="saving || copying"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m12 19-7-7 7-7"  />
+                    <path  d="M19 12H5"  />
+    </svg>
+<span x-text="step===0 ? 'Kembali' : 'Sebelumnya'"></span></button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3 gap-2" type="button" x-show="step<4" @click="go(step+1)" :disabled="saving || copying || (step===1 && !hasTemplates)">Lanjut<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg></button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit" x-show="step===4" form="period-wizard-form" :disabled="!editable || !hasTemplates" x-text="saving ? 'Menyimpan...' : 'Simpan'"></button>
+</div></div></div>
+    </div>
+</div>
+</div>
+            </div>
+        </div>
+    </main>
+</div>
+<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+</div>
+</body>
+</html>
