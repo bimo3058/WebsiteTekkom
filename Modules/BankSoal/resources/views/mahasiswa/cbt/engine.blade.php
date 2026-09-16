@@ -368,7 +368,8 @@
                             <p class="text-xs font-bold uppercase text-slate-800">Student: {{ auth()->user()->name }}
                             </p>
                             <p class="text-[10px] text-slate-800/60 font-bold tracking-wider">
-                                {{ optional(auth()->user()->student)->student_number ?? 'NIM' }}</p>
+                                {{ optional(auth()->user()->student)->student_number ?? 'NIM' }}
+                            </p>
                         </div>
                         <span class="material-symbols-outlined text-4xl text-slate-800">account_circle</span>
                     </div>
