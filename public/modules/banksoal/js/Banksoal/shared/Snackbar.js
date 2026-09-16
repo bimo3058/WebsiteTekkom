@@ -46,10 +46,22 @@ class SnackbarManager {
 
     // Menampilkan snackbar baru dengan tipe pesan tertentu.
     show(message, type = "info", timeout = this.defaultTimeout) {
+        // Mencegah penumpukan snackbar dengan pesan dan tipe yang persis sama
+        const currentSnackbars = document.querySelectorAll(".snackbar");
+        for (const el of currentSnackbars) {
+            const elType = el.getAttribute("data-type");
+            const elMsg = el.getAttribute("data-message");
+            if (elType === type && elMsg === message) {
+                return null; // Abaikan jika sudah ada yang identik
+            }
+        }
+
         // Membuat elemen snackbar baru.
         const snackbar = document.createElement("div");
         snackbar.className = `snackbar snackbar-${type}`;
         snackbar.setAttribute("role", "alert");
+        snackbar.setAttribute("data-type", type);
+        snackbar.setAttribute("data-message", message);
 
         // Pemetaan judul, ikon, kelas warna berdasarkan tipe pesan.
         const typeConfig = {

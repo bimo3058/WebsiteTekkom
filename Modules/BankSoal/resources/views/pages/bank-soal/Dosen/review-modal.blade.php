@@ -21,6 +21,7 @@
                 <input type="hidden" name="bobot_total" id="reviewBobotTotal" value="">
                 <input type="hidden" name="soal_json" id="reviewSoalJson" value="[]">
                 <input type="hidden" name="nama_ekstraksi" id="reviewNamaEkstraksi" value="">
+                <input type="hidden" name="require_blind_review" id="reviewRequireBlindReview" value="0">
                 
                 <div class="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 z-10">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -150,10 +151,7 @@
         </div>
 
         <!-- Body / Loading state -->
-        <div id="manualInsertLoading" class="p-8 flex flex-col items-center justify-center space-y-3 tbl-loading">
-             <div class="tbl-spinner"></div>
-             <span class="text-sm font-medium text-slate-500 animate-pulse">Memuat bank soal...</span>
-        </div>
+        <div id="manualInsertLoading" style="display:none;"></div>
 
         <!-- List -->
         <div id="manualInsertList" class="px-6 py-4 overflow-y-auto flex-1 space-y-3 hidden bg-slate-50">
@@ -183,6 +181,7 @@
         document.getElementById('reviewMkNama').value = data.mataKuliah.nama;
         document.getElementById('reviewSoalJson').value = JSON.stringify(data.soals || []);
         document.getElementById('reviewNamaEkstraksi').value = `${data.mataKuliah.nama} - ${document.querySelector('select[name="agenda"]')?.value || 'Ekstraksi'}`;
+        document.getElementById('reviewRequireBlindReview').value = document.getElementById('requireBlindReview')?.checked ? '1' : '0';
         
         // Build Soal List
         const container = document.getElementById('soalListContainer');
@@ -396,8 +395,7 @@
         }, 10);
 
         listDiv.classList.add('hidden');
-        loadDiv.classList.remove('hidden');
-        loadDiv.classList.add('flex');
+        if (window.Spinner) window.Spinner.showTable('manualInsertLoading');
 
         fetch(`/bank-soal/soal/dosen/get-by-mk/${mkId}`, {
                 method: 'GET',
@@ -408,8 +406,7 @@
             })
             .then(response => response.json())
             .then(data => {
-                loadDiv.classList.add('hidden');
-                loadDiv.classList.remove('flex');
+                if (window.Spinner) window.Spinner.hideTable('manualInsertLoading');
                 listDiv.classList.remove('hidden');
                 
                 listDiv.innerHTML = '';
@@ -458,8 +455,7 @@
                 }
             })
             .catch(error => {
-                loadDiv.classList.add('hidden');
-                loadDiv.classList.remove('flex');
+                if (window.Spinner) window.Spinner.hideTable('manualInsertLoading');
                 listDiv.classList.remove('hidden');
                 listDiv.innerHTML = `<div class="text-center py-8 text-red-500 font-medium text-sm"><i class="fas fa-exclamation-triangle mr-2"></i>Gagal memuat soal. Silakan coba lagi.</div>`;
             });
