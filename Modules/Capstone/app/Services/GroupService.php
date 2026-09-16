@@ -587,6 +587,27 @@ class GroupService
     public function buildCanonicalGroupPayload(Group $group, User $user): array
     {
         $groupArray = $group->toArray();
+
+        // Surface an approved student proposal as the display title while
+        // title_id is still null (admin finalization has not run yet).
+        // Governance is preserved: title_id itself is never written here.
+        if (empty($groupArray['title_id']) && empty($groupArray['title'])) {
+            $approvedProposal = Title::where('proposed_by_group_id', $group->id)
+                ->where('title_source', 'STUDENT')
+                ->where('supervisor_approval_status', 'APPROVED')
+                ->with('proposedSupervisor')
+                ->first();
+            if ($approvedProposal) {
+                $groupArray['title'] = [
+                    'id' => $approvedProposal->id,
+                    'title' => $approvedProposal->title,
+                    'description' => $approvedProposal->description,
+                    'lecturer' => $approvedProposal->proposedSupervisor,
+                    'title_source' => 'STUDENT',
+                ];
+            }
+        }
+
         $groupArray['status_label'] = $this->resolveStatusLabel($group);
         $groupArray['allowed_actions'] = $this->resolveAllowedActions($group, $user);
 

@@ -24,8 +24,14 @@ class SoloTitleController extends Controller
     {
         $user = Auth::user();
 
-        // Get active period
-        $period = Period::where('is_active', true)->first();
+        // Respect period_id like BursaIdeController, fallback to active period
+        $periodId = $request->query('period_id');
+        $period = $periodId
+            ? Period::find($periodId)
+            : Period::where('is_active', true)->first();
+        if (! $period) {
+            $period = Period::where('is_active', true)->first();
+        }
 
         // Get current user's group (if any)
         $currentGroupId = null;
@@ -34,52 +40,40 @@ class SoloTitleController extends Controller
             $currentGroupId = $membership->group_id;
         }
 
-        // Get solo titles that are APPROVED and available for bidding
-        $soloTitles = Title::with(['proposedByGroup.members.student', 'proposedSupervisor'])
+        // Get solo titles that are APPROVED and available for bidding.
+        // Returned as full Title models (same shape as BursaIdeController)
+        // so the marketplace Student Ideas tab can render them directly.
+        $query = Title::with(['proposedByGroup.members.student', 'proposedByGroup.period', 'proposedSupervisor'])
             ->where('title_source', 'STUDENT')
             ->where('supervisor_approval_status', 'APPROVED')
             ->where('status', 'open')
-            ->whereHas('proposedByGroup', function ($q) use ($period) {
-                $q->where('period_id', $period->id)
-                    ->where('is_solo', true);
-            })
+            ->whereHas('proposedByGroup', function ($q) {
+                $q->where('is_solo', true);
+            });
+
+        if ($period) {
+            $query->where('period_id', $period->id);
+        }
+
+        $maxSize = $period?->max_group_size ?? 4;
+
+        $soloTitles = $query->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($title) use ($currentGroupId, $period) {
-                $group = $title->proposedByGroup;
-
-                // Calculate available quota after merge
-                $currentMembers = $group->members()->count();
-                $maxSize = $period->max_group_size ?? 4;
-                $availableSlots = $maxSize - $currentMembers;
-
-                // Check if current user already has a bid on this title
-                $hasBid = false;
-                if ($currentGroupId) {
-                    $hasBid = \Modules\Capstone\Models\Bid::where('group_id', $currentGroupId)
-                        ->where('title_id', $title->id)
-                        ->exists();
+            ->filter(function ($title) use ($currentGroupId, $maxSize) {
+                if (! $title->proposedByGroup) {
+                    return false;
+                }
+                // Only show titles with available slots and not already bid
+                if ($maxSize - $title->proposedByGroup->members->count() <= 0) {
+                    return false;
+                }
+                if ($currentGroupId && \Modules\Capstone\Models\Bid::where('group_id', $currentGroupId)
+                    ->where('title_id', $title->id)
+                    ->exists()) {
+                    return false;
                 }
 
-                return [
-                    'id' => $title->id,
-                    'title' => $title->title,
-                    'description' => $title->description,
-                    'problem_statement' => $title->problem_statement,
-                    'scope' => $title->scope,
-                    'specializations' => $title->specializations,
-                    'proposed_supervisor' => $title->proposedSupervisor,
-                    'group' => [
-                        'id' => $group->id,
-                        'member_count' => $currentMembers,
-                        'leader_name' => $group->members()->where('is_leader', true)->first()?->student->name,
-                    ],
-                    'available_slots' => $availableSlots,
-                    'has_bid' => $hasBid,
-                ];
-            })
-            ->filter(function ($title) {
-                // Only show titles with available slots and not already bid
-                return $title['available_slots'] > 0 && ! $title['has_bid'];
+                return true;
             })
             ->values();
 
