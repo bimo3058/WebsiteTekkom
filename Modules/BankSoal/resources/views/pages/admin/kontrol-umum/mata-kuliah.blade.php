@@ -808,10 +808,10 @@
 
     @push('scripts')
     <script>
-        const API_URL = '{{ url("/bank-soal/admin/api/mata-kuliah") }}';
-        const EDIT_MK_URL = '{{ url("/bank-soal/admin/kontrol-umum/mata-kuliah") }}';
-        const EDIT_CPL_URL = '{{ url("/bank-soal/admin/kontrol-umum/cpl") }}';
-        const csrfToken = '{{ csrf_token() }}';
+        const API_URL = '{{ route("banksoal.api.v1.admin.mata-kuliah.index") }}';
+        const EDIT_MK_URL_TEMPLATE = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah.edit", ["id" => "__ID__"]) }}';
+        const EDIT_CPL_URL_TEMPLATE = '{{ route("banksoal.admin.kontrol-umum.cpl.edit", ["id" => "__ID__"]) }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const PAGE_SIZE = 10;
         const TABLE_STATE_STORAGE_KEY = 'banksoal.admin.kontrol-umum.mata-kuliah.state';
 
@@ -1125,7 +1125,7 @@
                         <div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_MK_URL}/${mk.id}/edit" onclick="saveMataKuliahTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_MK_URL_TEMPLATE.replace('__ID__', mk.id)}" onclick="saveMataKuliahTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteMataKuliah(${mk.id})">${ICON_DEL} Hapus</button>
                             </div>
                         </div>
@@ -1399,7 +1399,7 @@
             window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'warning', message: message } }));
         }
 
-        const API_URL_CPL = '{{ url("/bank-soal/admin/api/cpl") }}';
+        const API_URL_CPL = '{{ route("banksoal.api.v1.admin.cpl.index") }}';
         let allCpl = [];
         let filteredCpl = [];
         let searchTimeoutCpl;
@@ -1480,7 +1480,7 @@
                         <div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_CPL_URL}/${cpl.id}/edit" onclick="saveCplTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_CPL_URL_TEMPLATE.replace('__ID__', cpl.id)}" onclick="saveCplTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteCpl(${cpl.id}, '${escapeHtml(cpl.kode)}')">${ICON_DEL} Hapus</button>
                             </div>
                         </div>

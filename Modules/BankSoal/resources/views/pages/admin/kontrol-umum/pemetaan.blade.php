@@ -644,15 +644,13 @@
     <script>
         const PAGE_SIZE = 5;
         const TABLE_STATE_STORAGE_KEY = 'banksoal.admin.kontrol-umum.pemetaan.state';
-        const csrfToken = '{{ csrf_token() }}';
-        const BASE_API = '{{ url("/bank-soal/admin/api/pemetaan") }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         let mkCplTomSelect = null;
         let dosenMkTomSelect = null;
 
         const mappingConfig = {
-
             mkCpl: {
-                listApi: `${BASE_API}/mk-cpl`,
+                listApi: '{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.index") }}',
                 searchId: 'mkCplSearch',
                 sortId: 'mkCplSortDirection',
                 tableBodyId: 'mkCplTableBody',
@@ -663,7 +661,7 @@
                 filterText: (item) => `${item.mk_nama} ${item.mk_kode} ${(item.cpl_codes || []).join(' ')}`,
             },
             dosenMk: {
-                listApi: `${BASE_API}/dosen-mk`,
+                listApi: '{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.index") }}',
                 searchId: 'dosenMkSearch',
                 sortId: 'dosenMkSortDirection',
                 tableBodyId: 'dosenMkTableBody',
@@ -726,19 +724,18 @@
         const ROW_KEY = { mkCpl: 'mk_id', dosenMk: 'mk_id' };
         // edit URL builders
         const EDIT_URL = {
-
-            mkCpl:   (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-cpl') }}/${id}/edit`,
-            dosenMk: (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-dosen') }}/${id}/edit`,
+            mkCpl:   (id) => `{{ route('banksoal.admin.kontrol-umum.pemetaan.mk-cpl.edit', ['mk_id' => '__ID__']) }}`.replace('__ID__', id),
+            dosenMk: (id) => `{{ route('banksoal.admin.kontrol-umum.pemetaan.mk-dosen.edit', ['mk_id' => '__ID__']) }}`.replace('__ID__', id),
         };
         // delete-all API URLs
         const DEL_ALL_URL = {
-            mkCpl:   (id) => `${BASE_API}/mk-cpl/${id}/all`,
-            dosenMk: (id) => `${BASE_API}/dosen-mk/${id}/all`,
+            mkCpl:   (id) => '{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.destroy-all", ["mk_id" => "__ID__"]) }}'.replace('__ID__', id),
+            dosenMk: (id) => '{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.destroy-all", ["mk_id" => "__ID__"]) }}'.replace('__ID__', id),
         };
         // bulk delete API URLs
         const BULK_DEL_URL = {
-            mkCpl:   `${BASE_API}/mk-cpl/bulk`,
-            dosenMk: `${BASE_API}/dosen-mk/bulk`,
+            mkCpl:   '{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.bulk-destroy") }}',
+            dosenMk: '{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.bulk-destroy") }}',
         };
         // bulk body key
         const BULK_KEY = { mkCpl: 'mk_ids', dosenMk: 'mk_ids' };
@@ -829,7 +826,7 @@
 
         async function loadOptions() {
             try {
-                const response = await fetch(`${BASE_API}/options`, {
+                const response = await fetch('{{ route("banksoal.api.v1.admin.pemetaan.options") }}', {
                     headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
                 });
                 const result = await readApiResponse(response);
@@ -1235,7 +1232,7 @@
                 cpl_ids: cplIds,
             };
 
-            await createMapping(`${BASE_API}/mk-cpl`, payload, 'modalMkCpl', 'mkCpl', {
+            await createMapping('{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.store") }}', payload, 'modalMkCpl', 'mkCpl', {
                 mk_id: 'mapMkIdForCpl',
                 cpl_ids: 'mapCplIdsForMk',
                 'cpl_ids.0': 'mapCplIdsForMk',
@@ -1254,7 +1251,7 @@
                 user_ids: userIds,
             };
 
-            await createMapping(`${BASE_API}/dosen-mk`, payload, 'modalDosenMk', 'dosenMk', {
+            await createMapping('{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.store") }}', payload, 'modalDosenMk', 'dosenMk', {
                 mk_id: 'mapMkIdForDosen',
                 user_ids: 'mapDosenIdsForMk',
                 'user_ids.0': 'mapDosenIdsForMk',
@@ -1295,11 +1292,11 @@
 
 
         async function deleteMkCpl(mkId, cplId) {
-            await deleteMapping(`${BASE_API}/mk-cpl`, { mk_id: mkId, cpl_id: cplId }, 'mkCpl', 'Pemetaan MK ke CPL');
+            await deleteMapping('{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.destroy") }}', { mk_id: mkId, cpl_id: cplId }, 'mkCpl', 'Pemetaan MK ke CPL');
         }
 
         async function deleteDosenMk(id) {
-            await deleteMapping(`${BASE_API}/dosen-mk/${id}`, null, 'dosenMk', 'Pemetaan Dosen ke MK');
+            await deleteMapping('{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.destroy", ["id" => "__ID__"]) }}'.replace('__ID__', id), null, 'dosenMk', 'Pemetaan Dosen ke MK');
         }
 
         async function deleteMapping(url, payload, listKey, label) {

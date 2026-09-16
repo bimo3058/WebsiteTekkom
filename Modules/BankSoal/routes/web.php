@@ -34,7 +34,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
     // PERMISSION: VIEW (Dashboard & List)
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.view'])->group(function () {
-        
+
         # Dashboard Utama
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('role:admin_banksoal|superadmin|dosen|gpm')
@@ -59,7 +59,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             Route::get('/pemetaan/mk-dosen/{mk_id}/edit', [PemetaanController::class, 'editMkDosen'])->name('pemetaan.mk-dosen.edit');
         });
 
-        Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
+        Route::middleware('role:admin_banksoal|superadmin')->prefix('admin')->name('banksoal.api.v1.admin.')->group(function () {
             Route::get('/cpl', [CplController::class, 'listCpl'])->name('cpl.index');
             Route::get('/cpl/next-code', [CplController::class, 'nextCplCode'])->name('cpl.next-code');
             Route::get('/cpl/export-template', [CplController::class, 'exportCplTemplate'])->name('cpl.export-template');
@@ -119,7 +119,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
                 Route::get('/periode-rps', [PeriodeRpsController::class, 'index'])->name('periode-rps.index');
                 Route::get('/periode-rps/create', [PeriodeRpsController::class, 'create'])->name('periode-rps.create');
-                
+
                 // Delete routes for GPM
                 Route::middleware('permission:banksoal.delete')->group(function () {
                     Route::delete('/periode-rps/{id}', [PeriodeRpsController::class, 'destroy'])->name('periode-rps.destroy');
@@ -152,15 +152,15 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
                 Route::get('/{id}/edit', [BankSoalController::class, 'edit'])->name('edit');
                 Route::put('/{id}', [BankSoalController::class, 'update'])->name('update');
             });
-            
-           // Banksoal - GPM
+
+            // Banksoal - GPM
             Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::get('/riwayat-validasi', [RiwayatValidasiController::class, 'index'])->name('riwayat-validasi');
                 Route::get('/validasi-bank-soal', [ValidasiBankSoalController::class, 'index'])->name('validasi-bank-soal');
                 Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
                 Route::get('/riwayat-validasi/bank-soal', [RiwayatValidasiController::class, 'bankSoal'])->name('riwayat-validasi.bank-soal');
                 Route::get('/riwayat-validasi/bank-soal/{id}/detail', [RiwayatValidasiController::class, 'detailBankSoal'])->name('riwayat-validasi.bank-soal.detail');
-                
+
                 // Parameter Management - Moved to block below for consolidation
 
             });
@@ -194,7 +194,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
     // PERMISSION: EDIT (Store, Update, Submit)
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.edit'])->group(function () {
-        
+
         // 0. Admin Mata Kuliah CRUD Routes
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api/mata-kuliah')->name('banksoal.api.v1.admin.mata-kuliah.')->group(function () {
             Route::get('/', [MataKuliahController::class, 'index'])->name('index');
@@ -229,7 +229,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             });
             // RPS - GPM
             Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
-                Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');                
+                Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');
                 Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
                 Route::put('/periode-rps/{id}', [PeriodeRpsController::class, 'update'])->name('periode-rps.update');
                 Route::post('/periode-rps/open-session', [PeriodeRpsController::class, 'openSession'])->name('periode-rps.open-session');
@@ -242,9 +242,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
         Route::prefix('soal')->name('banksoal.soal.')->group(function () {
             // Bank Soal - GPM
             Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
-                Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
+                Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');
                 Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
-                
+
                 // Parameter Management (Full CRUD)
                 Route::prefix('parameter')->name('parameter.')->group(function () {
                     Route::get('/', [ParameterController::class, 'index'])->name('index');
@@ -269,7 +269,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.delete'])->group(function () {
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
-        
+
         // Admin Mata Kuliah Delete Routes
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api/mata-kuliah')->name('banksoal.api.v1.admin.mata-kuliah.')->group(function () {
             Route::delete('/{id}', [MataKuliahController::class, 'destroy'])->name('destroy');
@@ -286,7 +286,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             Route::delete('/pemetaan/dosen-mk/{mk_id}/all', [PemetaanController::class, 'destroyAllDosenByMk'])->name('pemetaan.dosen-mk.destroy-all');
             Route::delete('/pemetaan/dosen-mk/bulk', [PemetaanController::class, 'bulkDestroyDosenMk'])->name('pemetaan.dosen-mk.bulk-destroy');
         });
-        
+
         // RPS Dosen Delete
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
@@ -305,21 +305,21 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
     Route::get('/rps/template/download', [TemplateRpsController::class, 'download'])
         ->middleware('role:dosen')
         ->name('rps.template.download');
-    
-    
+
+
 
     # Periode Ujian Routes
     Route::prefix('admin/periode')->name('banksoal.periode.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
-            Route::get('/setup',                         [PeriodeController::class, 'index'])->name('setup');
-            Route::post('/setup',                        [PeriodeController::class, 'store'])->name('store');
-            Route::put('/setup/{id}',                    [PeriodeController::class, 'update'])->name('update');
-            Route::delete('/setup/{id}',                 [PeriodeController::class, 'destroy'])->name('destroy');
-            Route::patch('/setup/{id}/close-pendaftaran',[PeriodeController::class, 'closePendaftaran'])->name('close-pendaftaran');
+            Route::get('/setup', [PeriodeController::class, 'index'])->name('setup');
+            Route::post('/setup', [PeriodeController::class, 'store'])->name('store');
+            Route::put('/setup/{id}', [PeriodeController::class, 'update'])->name('update');
+            Route::delete('/setup/{id}', [PeriodeController::class, 'destroy'])->name('destroy');
+            Route::patch('/setup/{id}/close-pendaftaran', [PeriodeController::class, 'closePendaftaran'])->name('close-pendaftaran');
             Route::patch('/setup/{id}/open-pendaftaran', [PeriodeController::class, 'openPendaftaran'])->name('open-pendaftaran');
 
-            Route::get('/jadwal',    [JadwalController::class, 'index'])->name('jadwal');
-            Route::post('/jadwal',   [JadwalController::class, 'store'])->name('jadwal.store');
+            Route::get('/jadwal', [JadwalController::class, 'index'])->name('jadwal');
+            Route::post('/jadwal', [JadwalController::class, 'store'])->name('jadwal.store');
             Route::delete('/jadwal/{id}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
         });
     });
@@ -327,21 +327,21 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
     # Manajemen Peserta Routes
     Route::prefix('admin/pendaftar')->name('banksoal.pendaftaran.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
-            Route::get('/',               [PendaftarAdminController::class, 'index'])->name('index');
-            Route::get('/lookup-nim',     [PendaftarAdminController::class, 'lookupNIM'])->name('lookupNIM');
-            Route::post('/',              [PendaftarAdminController::class, 'store'])->name('store');
-            Route::patch('/{id}/status',  [PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
-            Route::post('/bulk-approve',  [PendaftarAdminController::class, 'bulkApprove'])->name('bulkApprove');
-            Route::post('/bulk-reject',   [PendaftarAdminController::class, 'bulkReject'])->name('bulkReject');
-            Route::delete('/{id}',        [PendaftarAdminController::class, 'destroy'])->name('destroy');
+            Route::get('/', [PendaftarAdminController::class, 'index'])->name('index');
+            Route::get('/lookup-nim', [PendaftarAdminController::class, 'lookupNIM'])->name('lookupNIM');
+            Route::post('/', [PendaftarAdminController::class, 'store'])->name('store');
+            Route::patch('/{id}/status', [PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
+            Route::post('/bulk-approve', [PendaftarAdminController::class, 'bulkApprove'])->name('bulkApprove');
+            Route::post('/bulk-reject', [PendaftarAdminController::class, 'bulkReject'])->name('bulkReject');
+            Route::delete('/{id}', [PendaftarAdminController::class, 'destroy'])->name('destroy');
         });
     });
 
     # Alokasi Sesi Routes
     Route::prefix('admin/alokasi-sesi')->name('banksoal.pendaftaran.alokasi-sesi.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
-            Route::get('/',        [AlokasiSesiController::class, 'index'])->name('index');
-            Route::post('/',       [AlokasiSesiController::class, 'store'])->name('store');
+            Route::get('/', [AlokasiSesiController::class, 'index'])->name('index');
+            Route::post('/', [AlokasiSesiController::class, 'store'])->name('store');
             Route::post('/remove', [AlokasiSesiController::class, 'remove'])->name('remove');
         });
     });
@@ -350,20 +350,20 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
     # Aktivasi Sesi Routes
     Route::prefix('admin/aktivasi-sesi')->name('banksoal.aktivasi.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
-            Route::get('/',            [AktivasiSesiController::class, 'index'])->name('index');
-            Route::patch('/{id}/toggle',[AktivasiSesiController::class, 'toggle'])->name('toggle');
+            Route::get('/', [AktivasiSesiController::class, 'index'])->name('index');
+            Route::patch('/{id}/toggle', [AktivasiSesiController::class, 'toggle'])->name('toggle');
         });
     });
 
     # Manajemen Ujian (Live Proctoring & Riwayat)
     Route::prefix('admin/cbt')->name('banksoal.admin.cbt.')->group(function () {
         Route::middleware('role:admin_banksoal|admin|superadmin')->group(function () {
-            Route::get('/live-proctoring',              [AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
+            Route::get('/live-proctoring', [AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
             Route::post('/live-proctoring/{id}/force-submit', [AdminCbtController::class, 'forceSubmit'])->name('force-submit');
-            Route::get('/riwayat',                      [AdminCbtController::class, 'riwayat'])->name('riwayat');
-            Route::get('/analitik',                     [AdminCbtController::class, 'analytics'])->name('analitik');
-            Route::get('/riwayat/{id}',                 [AdminCbtController::class, 'detailHasil'])->name('detail');
-            Route::post('/reset-semua',                 [AdminCbtController::class, 'resetSemua'])->name('reset-semua');
+            Route::get('/riwayat', [AdminCbtController::class, 'riwayat'])->name('riwayat');
+            Route::get('/analitik', [AdminCbtController::class, 'analytics'])->name('analitik');
+            Route::get('/riwayat/{id}', [AdminCbtController::class, 'detailHasil'])->name('detail');
+            Route::post('/reset-semua', [AdminCbtController::class, 'resetSemua'])->name('reset-semua');
         });
     });
 
@@ -376,14 +376,14 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
     ->prefix('ujian-komprehensif')
     ->name('komprehensif.mahasiswa.')
     ->group(function () {
-        Route::get('/dashboard',                      [MahasiswaController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', [MahasiswaController::class, 'dashboard'])->name('dashboard');
 
         // Route lama di-redirect langsung ke form (landing page tidak diperlukan)
         Route::get('/pengajuan-pendaftaran', function () {
             return redirect()->route('komprehensif.mahasiswa.pendaftaran.form');
         })->name('pendaftaran');
 
-        Route::get('/pengajuan-pendaftaran/form',  [MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
+        Route::get('/pengajuan-pendaftaran/form', [MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
         Route::post('/pengajuan-pendaftaran/form', [MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
 
         Route::get('/riwayat-ujian', [MahasiswaController::class, 'riwayat'])->name('riwayat');
@@ -395,15 +395,15 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::post('/engine/validate-token', [CbtEngineController::class, 'validateToken'])
             ->middleware('throttle:cbt-token-validation')  // Max 5 percobaan/menit per user
             ->name('engine.validate');
-        Route::get('/engine/run',             [CbtEngineController::class, 'run'])->name('engine.run');
+        Route::get('/engine/run', [CbtEngineController::class, 'run'])->name('engine.run');
 
         // Waiting room dipertahankan sebagai fallback (tidak digunakan dalam flow normal)
-        Route::get('/engine/waiting-room',    [CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
+        Route::get('/engine/waiting-room', [CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
 
         // CBT Engine API Routes
-        Route::post('/engine/save-answer',  [CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
-        Route::post('/engine/toggle-ragu',  [CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
-        Route::post('/engine/log-violation',[CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
-        Route::get('/engine/finish',        [CbtEngineController::class, 'finish'])->name('engine.finish');
+        Route::post('/engine/save-answer', [CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
+        Route::post('/engine/toggle-ragu', [CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
+        Route::post('/engine/log-violation', [CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
+        Route::get('/engine/finish', [CbtEngineController::class, 'finish'])->name('engine.finish');
     });
 
