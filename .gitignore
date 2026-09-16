@@ -57,6 +57,7 @@ _ds_tmp/
 .kiro/specs/ui-standardization/.config.kiro
 # Redis dump
 dump.rdb
+package-lock.json
 Modules/EOffice/node_modules
 
 *.dump
@@ -65,3 +66,27 @@ Modules/EOffice/node_modules
 # Frontend build and lint caches
 /frontend/.next/
 /frontend/.eslintcache
+composer.json
+composer.lock
+Modules/BankSoal/skills-lock.json
+composer.json
+Modules/BankSoal/vendor/composer/installed.json
+Modules/BankSoal/vendor/composer/LICENSE
+resources/views/vendor/scramble/.gitkeep
+resources/views/vendor/scramble/dev-tools.blade.php
+resources/views/vendor/scramble/scalar.blade.php
+.gitignore
+resources/views/vendor/scramble/docs.blade.php
+Modules/BankSoal/vendor/composer/InstalledVersions.php
+Modules/BankSoal/vendor/composer/installed.php
+.gitignore
+.gitignore
+Modules/BankSoal/vendor/composer/autoload_real.php
+config/scramble.php
+Modules/BankSoal/vendor/autoload.php
+Modules/BankSoal/vendor/composer/autoload_classmap.php
+Modules/BankSoal/vendor/composer/autoload_namespaces.php
+Modules/BankSoal/vendor/composer/autoload_psr4.php
+Modules/BankSoal/vendor/composer/autoload_static.php
+Modules/BankSoal/vendor/composer/ClassLoader.php
+.agents/

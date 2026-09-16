@@ -22,7 +22,7 @@
     };
 @endphp
 
-<div class="inline-block" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
+<div class="inline-block relative" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
     {{-- Three-dots trigger button --}}
     <button
         @click="open = !open"

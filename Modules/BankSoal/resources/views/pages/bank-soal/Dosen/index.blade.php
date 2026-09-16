@@ -26,21 +26,7 @@
     .pagination-btn.active { background: rgb(11,38,110); border-color: rgb(11,38,110); color: #fff; }
     .pagination-ellipsis { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; font-size: 12px; color: #94a3b8; }
 
-    /* Table loading spinner */
-    .tbl-loading {
-        align-items: center; justify-content: center;
-        gap: 10px; padding: 40px 20px;
-        color: #475569; font-size: 13px;
-    }
-    .tbl-spinner {
-        width: 32px; height: 32px;
-        border: 3px solid #e2e8f0;
-        border-top-color: rgb(11, 38, 110);
-        border-radius: 50%;
-        animation: tbl-spin 0.7s linear infinite;
-        flex-shrink: 0;
-    }
-    @keyframes tbl-spin { to { transform: rotate(360deg); } }
+
 </style>
 
 <x-banksoal::ui.page-header title="Manajemen Bank Soal" subtitle="Kelola dan organisir repositori pertanyaan Anda">
@@ -153,6 +139,8 @@
                                 <span>{{ $soal->kode_soal }}</span>
                                 @if(strtolower($soal->tipe_soal) === 'essay')
                                     <span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold rounded uppercase whitespace-nowrap">Essay</span>
+                                @elseif(strtolower($soal->tipe_soal) === 'take_home')
+                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded uppercase whitespace-nowrap">Take-Home</span>
                                 @else
                                     <span class="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold rounded uppercase whitespace-nowrap">Pilihan Ganda</span>
                                 @endif
@@ -423,6 +411,27 @@
                             <input type="checkbox" name="jenis_soal[]" value="Essay" class="w-4 h-4 border-slate-300 rounded">
                             <span class="text-sm font-medium text-slate-700">Essay</span>
                         </label>
+                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+                            <input type="checkbox" name="jenis_soal[]" value="Take-Home" class="w-4 h-4 border-slate-300 rounded">
+                            <span class="text-sm font-medium text-slate-700">Take-Home Test</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-5 rounded-xl border border-slate-200 p-4 bg-slate-50/60">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="requireBlindReview" name="require_blind_review" value="1" class="w-4 h-4 border-slate-300 rounded">
+                        <span class="text-sm font-semibold text-slate-700">Aktifkan Blind Review Antar Dosen</span>
+                    </label>
+                    <p class="text-xs text-slate-500 mt-1">Saat aktif, soal hasil tarik otomatis dikirim ke dosen pengampu lain untuk review anonim.</p>
+
+                    <div id="blindReviewerCountWrap" class="mt-3 hidden">
+                        <label for="requiredReviewers" class="block text-xs font-semibold text-slate-600 mb-1">Jumlah Reviewer per Soal</label>
+                        <select id="requiredReviewers" name="required_reviewers" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
+                            <option value="1" selected>1 Reviewer</option>
+                            <option value="2">2 Reviewer</option>
+                            <option value="3">3 Reviewer</option>
+                        </select>
                     </div>
                 </div>
 
@@ -545,7 +554,9 @@
         
         const cbs = Array.from(document.querySelectorAll('input[name="jenis_soal[]"]:checked'));
         const typesChecked = cbs.map(cb => {
-            return cb.value === 'Pilihan Ganda' ? 'pilihan_ganda' : 'essay';
+            if (cb.value === 'Pilihan Ganda') return 'pilihan_ganda';
+            if (cb.value === 'Take-Home') return 'take_home';
+            return 'essay';
         });
 
         const selectedMk = mkData.find(mk => mk.id == window.currentTarikMkId);
@@ -628,6 +639,18 @@
         document.querySelectorAll('input[name="jenis_soal[]"]').forEach(cb => {
             cb.addEventListener('change', filterCplCpmk);
         });
+
+        const blindToggle = document.getElementById('requireBlindReview');
+        const blindCountWrap = document.getElementById('blindReviewerCountWrap');
+        if (blindToggle && blindCountWrap) {
+            blindToggle.addEventListener('change', () => {
+                if (blindToggle.checked) {
+                    blindCountWrap.classList.remove('hidden');
+                } else {
+                    blindCountWrap.classList.add('hidden');
+                }
+            });
+        }
     });
 
     function openTarikModal(mk_id = null) {
@@ -683,8 +706,7 @@
         }, 10);
 
         listDiv.classList.add('hidden');
-        loadDiv.classList.remove('hidden');
-        loadDiv.classList.add('flex');
+        if (window.Spinner) window.Spinner.showTable('lihatSoalLoading');
 
         fetch(`/bank-soal/soal/dosen/get-by-mk/${mk_id}`, {
             method: 'GET',
@@ -695,8 +717,7 @@
         })
         .then(response => response.json())
         .then(data => {
-            loadDiv.classList.remove('flex');
-            loadDiv.classList.add('hidden');
+            if (window.Spinner) window.Spinner.hideTable('lihatSoalLoading');
             listDiv.classList.remove('hidden');
             listDiv.innerHTML = '';
 
@@ -711,8 +732,14 @@
                         badges += `<span class="px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold rounded uppercase">${soal.cpmk}</span>`;
                     }
                     
-                    const tipeLabel = soal.tipe_soal === 'essay' ? 'Essay' : 'Pilihan Ganda';
-                    const tipeColor = soal.tipe_soal === 'essay' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-primary/10 text-primary border-primary/20';
+                    const tipeLabel = soal.tipe_soal === 'essay'
+                        ? 'Essay'
+                        : (soal.tipe_soal === 'take_home' ? 'Take-Home' : 'Pilihan Ganda');
+                    const tipeColor = soal.tipe_soal === 'essay'
+                        ? 'bg-purple-50 text-purple-700 border-purple-200'
+                        : (soal.tipe_soal === 'take_home'
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-primary/10 text-primary border-primary/20');
                     badges += `<span class="px-2 py-0.5 ${tipeColor} border text-[10px] font-bold rounded uppercase">${tipeLabel}</span>`;
 
                     listDiv.innerHTML += `
@@ -740,8 +767,7 @@
             }
         })
         .catch(error => {
-            loadDiv.classList.add('hidden');
-            loadDiv.classList.remove('flex');
+            if (window.Spinner) window.Spinner.hideTable('lihatSoalLoading');
             listDiv.classList.remove('hidden');
             listDiv.innerHTML = `<div class="text-center py-12 text-red-500 bg-white border border-slate-200 shadow-sm rounded-xl mx-5 mb-5"><i class="fas fa-exclamation-triangle text-3xl mb-3"></i><p class="text-sm font-medium">Gagal memuat soal.</p></div>`;
         });
@@ -795,6 +821,14 @@
             }
             
             if (data.success) {
+                if (data.blind_review?.enabled && !data.blind_review?.round_id) {
+                    if (typeof showSnackbar === 'function') {
+                        showSnackbar('Blind review tidak terbentuk karena tidak ada dosen pengampu lain pada MK ini.', 'warning');
+                    } else {
+                        alert('Blind review tidak terbentuk karena tidak ada dosen pengampu lain pada MK ini.');
+                    }
+                }
+
                 closeTarikModal();
                 // Pass extra param for modal filler
                 data.mk_id = formData.get('mk_id');
@@ -835,10 +869,7 @@
 
         <!-- Body -->
         <div class="flex-1 overflow-y-auto bg-slate-50/50">
-            <div id="lihatSoalLoading" class="hidden flex-col items-center justify-center py-16 tbl-loading">
-                <div class="tbl-spinner mb-4"></div>
-                <p class="text-sm font-medium text-slate-500">Memuat rincian soal...</p>
-            </div>
+            <div id="lihatSoalLoading" style="display:none;"></div>
             <div id="lihatSoalList" class="flex flex-col">
                 <!-- Items go here -->
             </div>
