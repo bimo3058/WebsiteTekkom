@@ -50,6 +50,11 @@ class Pertanyaan extends Model
         return $this->hasMany(Jawaban::class, 'soal_id');
     }
 
+    public function blindReviewItems(): HasMany
+    {
+        return $this->hasMany(BlindReviewItem::class, 'pertanyaan_id');
+    }
+
     public function scopeByMk($query, int $mkId)
     {
         return $query->where('mk_id', $mkId);

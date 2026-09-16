@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 Schedule::command('app:set-users-offline')->everyMinute();
 Schedule::command('app:prune-notifications')->daily();
+// Auto-approve blind review items yang sudah melewati deadline 2 hari
+Schedule::command('banksoal:auto-approve-blind-review')->daily();

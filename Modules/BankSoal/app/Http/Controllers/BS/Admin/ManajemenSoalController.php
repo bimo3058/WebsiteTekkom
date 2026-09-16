@@ -62,10 +62,12 @@ class ManajemenSoalController extends Controller
         }
 
         $mataKuliah = MataKuliah::find($penarikan->mk_id);
+        $dosenName  = $penarikan->dosen?->name ?? auth()->user()->name;
         $request->merge([
-            'agenda' => explode(' - ', $penarikan->nama_ekstraksi)[1] ?? 'Ujian',
+            'agenda'       => explode(' - ', $penarikan->nama_ekstraksi)[1] ?? 'Ujian',
             'tahun_ajaran' => $penarikan->tahun_akademik,
-            'semester' => $penarikan->semester
+            'semester'     => $penarikan->semester,
+            'dosen_name'   => $dosenName,
         ]);
 
         return view('banksoal::pages.bank-soal.Dosen.print-ujian', compact('soals', 'mataKuliah', 'request'));
