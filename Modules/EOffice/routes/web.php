@@ -603,6 +603,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Persetujuan Peminjaman & Riwayat...
                 Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');
                 Route::get('/riwayat-peminjaman', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'riwayat'])->name('riwayat.index');
+                Route::get('/riwayat-peminjaman/export-excel', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportExcel'])->name('riwayat.export-excel');
+                Route::get('/riwayat-peminjaman/export-pdf', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportPdf'])->name('riwayat.export-pdf');
                 Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
                 Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
                 Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');

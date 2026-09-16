@@ -113,15 +113,43 @@
                     @if($mode === 'month') <input type="hidden" name="month" value="{{ $monthDate->format('Y-m') }}">
                     @endif
 
-                    <select name="ruangan_id" onchange="document.getElementById('roomFilterForm').submit()"
-                        class="mp-input py-1.5 px-3 text-[13px] font-medium bg-white border-gray-300 rounded-lg shadow-sm w-40">
-                        <option value="">Semua Ruangan</option>
-                        @foreach($allRuangansDaftar as $r)
-                            <option value="{{ $r->id }}" {{ $selectedRoomId == $r->id ? 'selected' : '' }}>
-                                {{ $r->nama }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div x-data="{
+                            open: false,
+                            selectedId: '{{ $selectedRoomId }}',
+                            selectedName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
+                            selectRoom(id, name) {
+                                this.selectedId = id;
+                                this.selectedName = name;
+                                document.getElementById('ruanganInput').value = id;
+                                document.getElementById('roomFilterForm').submit();
+                            }
+                        }" class="relative w-48" @click.away="open = false">
+                        
+                        <input type="hidden" name="ruangan_id" id="ruanganInput" :value="selectedId">
+
+                        <button type="button" @click="open = !open" 
+                            class="w-full flex items-center justify-between py-1.5 px-3 text-[13px] font-medium bg-white border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 transition-all cursor-pointer">
+                            <span x-text="selectedName" class="truncate pr-2 text-gray-800"></span>
+                            <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
+                            class="absolute right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 max-h-60 overflow-y-auto" style="display: none;">
+                            <div class="p-1.5">
+                                <button type="button" @click="selectRoom('', 'Semua Ruangan')" class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50': selectedId != ''}">
+                                    Semua Ruangan
+                                </button>
+                                
+                                @foreach($allRuangansDaftar as $r)
+                                    <button type="button" @click="selectRoom('{{ $r->id }}', '{{ addslashes($r->nama) }}')" class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors mt-0.5 cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': selectedId != '{{ $r->id }}'}">
+                                        {{ $r->nama }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
                 </form>
 
                 {{-- Mode Toggle --}}
@@ -191,7 +219,7 @@
                             $id = $slotData['id'] ?? null;
 
                             $isPastDay = $day->isPast() && !$day->isToday();
-                            $isPastHourToday = $day->isToday() && $jam <= (int) now()->format('H');
+                            $isPastHourToday = $day->isToday() && ($jam + 1) <= (int) now()->format('H');
                             $isPast = $isPastDay || $isPastHourToday;
                             $isHoliday = isset($holidays[$dateStr]);
                             $isWeekend = $day->isWeekend();
@@ -261,7 +289,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E;
-                                                            {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
+                                                                    {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">
                                             {{ $day->format('d/m') }}
@@ -328,7 +356,7 @@
 
                                                 // Validasi Past, Holiday, dan Operasional
                                                 $isPastDay = $day->isPast() && !$day->isToday();
-                                                $isPastHourToday = $day->isToday() && $jam <= (int) now()->format('H');
+                                                $isPastHourToday = $day->isToday() && ($jam + 1) <= (int) now()->format('H');
                                                 $isPast = $isPastDay || $isPastHourToday;
 
                                                 $isHoliday = isset($holidays[$dateStr]);
@@ -415,10 +443,10 @@
                                                     @endphp
                                                     <div
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
-                                                                                                                                                                                                                                                                                                                                                                                                                                           background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                           text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                                                                                                                                                                                                                                                                                           font-size:9px; font-weight:800; color:{{ $tColor }};
-                                                                                                                                                                                                                                                                                                                                                                                                                                           cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                               background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                               text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                               font-size:9px; font-weight:800; color:{{ $tColor }};
+                                                                                                                                                                                                                                                                                                                                                                                                                                                               cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -511,8 +539,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                                                                  background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                                                                  transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -575,7 +603,7 @@
                                 class="font-semibold text-emerald-600" x-text="bookingData.waktu"></span>.</p>
                     </div>
                     <button type="button" @click="closeModal"
-                        class="text-gray-400 hover:text-gray-500 rounded-md focus:outline-none">
+                        class="text-gray-400 hover:text-gray-500 rounded-md focus:outline-none cursor-pointer">
                         <span class="sr-only">Close menu</span>
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -616,7 +644,7 @@
                                 <label
                                     class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">No.
                                     Telepon / WhatsApp <span class="text-red-500">*</span></label>
-                                <input type="text" name="nomor_telepon" class="mp-input w-full"
+                                <input type="text" name="nomor_telepon" class="mp-input w-full cursor-text"
                                     value="{{ $phone ?? '' }}" required placeholder="Contoh: 08123456789">
                             </div>
 
@@ -634,7 +662,7 @@
                                         class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Hingga
                                         <span class="text-red-500">*</span></label>
                                     <input type="time"
-                                        class="mp-input w-full bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold focus:ring-emerald-500"
+                                        class="mp-input w-full bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold focus:ring-emerald-500 cursor-text"
                                         x-model="bookingData.jamSelesai" required>
                                     <p class="text-[11px] text-gray-400 mt-1">Estimasi slot: 1 jam.</p>
                                 </div>
@@ -644,7 +672,7 @@
                                 <label
                                     class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama
                                     Kegiatan <span class="text-red-500">*</span></label>
-                                <input type="text" name="tujuan" class="mp-input w-full"
+                                <input type="text" name="tujuan" class="mp-input w-full cursor-text"
                                     placeholder="Misal: Rapat Kerja HIMASKOM" required>
                             </div>
 
@@ -667,6 +695,25 @@
                                 <p class="text-[10px] text-gray-500 mt-2">Format PDF/Word maksimal 2MB. Hanya
                                     diperlukan untuk acara formal.</p>
                             </div>
+
+                            {{-- Persetujuan S&K --}}
+                            <div class="mt-2 pt-4 border-t border-gray-100">
+                                <label class="flex items-start gap-3 cursor-pointer group">
+                                    <div class="flex items-center h-5 mt-0.5">
+                                        <input type="checkbox" name="syarat_ketentuan" required
+                                            class="w-4 h-4 border border-gray-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm">
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
+                                            Saya bersedia <strong class="text-gray-700">merapikan kembali
+                                                ruangan</strong> setelah digunakan dan siap <strong
+                                                class="text-gray-700">bertanggung jawab penuh mengganti
+                                                kerusakan</strong> barang atau fasilitas akibat kelalaian selama masa
+                                            peminjaman.
+                                        </span>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -674,11 +721,11 @@
                 {{-- Footer / Actions --}}
                 <div class="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
                     <button type="button" @click="closeModal"
-                        class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200">
+                        class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200 cursor-pointer">
                         Batal
                     </button>
                     <button type="submit" form="bookingForm"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] border border-transparent rounded-lg shadow-sm hover:bg-[#071946] transition-colors focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2">
+                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] border border-transparent rounded-lg shadow-sm hover:bg-[#071946] transition-colors focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2 cursor-pointer">
                         Kirim Pengajuan
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -44,6 +44,12 @@
             scrollbar-color: var(--c-border-strong) transparent;
         }
 
+        @media (max-width: 767px) {
+            .mp-box-body {
+                padding-bottom: 80px;
+            }
+        }
+
         .mp-box-body::-webkit-scrollbar {
             width: 5px;
         }
@@ -627,7 +633,7 @@
 
         {{-- SIDEBAR --}}
         <aside
-            class="flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
+            class="hidden md:flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
             :class="sidebarOpen ? '' : '!w-[64px]'">
 
             <div class="relative px-[14px] h-[60px] flex items-center border-b border-[#DFE1E7] flex-shrink-0 transition-all duration-200" :class="sidebarOpen ? 'gap-[8px]' : 'justify-center'">
@@ -730,13 +736,45 @@
         {{-- MAIN AREA --}}
         <div class="flex-1 flex flex-col overflow-hidden">
             {{-- Topbar --}}
-            <div class="flex items-center justify-between px-6 bg-white border-b border-[#DFE1E7] flex-shrink-0"
-                style="height:56px;">
+            <div class="flex items-center justify-between px-[14px] md:pl-[28px] md:pr-8 bg-white border-b border-[#DFE1E7] flex-shrink-0 h-[52px] md:h-[60px] transition-all">
                 <div class="flex items-center gap-3 min-w-0">
                     <div>
-                        <div class="font-bold text-[15px] text-[#0D0D12] leading-[1.2]">{{ $pageTitle ?? 'Dashboard' }}
+                        <div class="font-bold text-[14px] md:text-[15px] text-[#0D0D12] leading-[1.2] truncate">
+                            {{ $pageTitle ?? 'Dashboard' }}
                         </div>
-                        <div class="text-[11px] text-[#666D80]">Manajemen Ruangan · SIPERKOM</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 md:gap-5">
+                    {{-- ── Right Actions ── --}}
+                    <div class="flex items-center gap-2 md:gap-4">
+                        {{-- Notification Bell --}}
+                        <div class="relative flex items-center justify-center cursor-pointer transition-colors hover:bg-gray-50 rounded-[10px] border border-[#DFE1E7] bg-white text-[#666D80] w-[30px] h-[30px] md:w-[36px] md:h-[36px]">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                <path d="M10 21a2 2 0 004 0" />
+                            </svg>
+                            @php
+                                $notifCount = class_exists('\Modules\EOffice\Models\Notifikasi') ? \Modules\EOffice\Models\Notifikasi::where('user_id', $user->id)->where('is_read', false)->count() : 0;
+                            @endphp
+                            @if($notifCount > 0)
+                            <span class="absolute rounded-full w-[6px] h-[6px] bg-[#DF1C41] border-[1.5px] border-white top-1 right-1 md:top-2 md:right-2"></span>
+                            @endif
+                        </div>
+
+                        {{-- Separator --}}
+                        <div class="hidden md:block w-px h-[24px] bg-[#DFE1E7]"></div>
+
+                        {{-- User Profile --}}
+                        <div class="flex items-center gap-1.5 md:gap-2.5">
+                            <div class="flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden rounded-full w-[30px] h-[30px] text-[10px] md:w-[36px] md:h-[36px] md:text-[13px]"
+                                 style="background: linear-gradient(135deg, #1F2937, #111827);">
+                                {{ $initials }}
+                            </div>
+                            <div class="hidden md:flex flex-col min-w-[100px]">
+                                <span class="text-[13px] font-semibold text-[#0D0D12] truncate">{{ $name }}</span>
+                                <span class="text-[11px] text-[#666D80] truncate">{{ $user?->email ?? '' }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -797,6 +835,20 @@
             </div>
         </div>
     </div>
+
+    @if(!$isAdmin)
+        @include('eoffice::components.manajemen-ruangan.sidebar-mobile', [
+            'user' => $user,
+            'rawSettings' => $rawSettings,
+            'currentRoute' => $currentRoute
+        ])
+    @else
+        @include('eoffice::components.manajemen-ruangan.sidebar-admin-mobile', [
+            'user' => $user,
+            'rawSettings' => $rawSettings,
+            'currentRoute' => $currentRoute
+        ])
+    @endif
 </body>
 
 </html>

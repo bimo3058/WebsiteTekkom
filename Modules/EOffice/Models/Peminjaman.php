@@ -38,6 +38,12 @@ class Peminjaman extends Model
         if ($value === 'Sistem (Kadaluarsa otomatis - Waktu peminjaman sudah terlewat)') {
             return 'Dibatalkan Sistem: Kedaluwarsa';
         }
+
+        // Jika status dibatalkan dan alasan kosong, berarti dibatalkan oleh user sendiri
+        if (strtolower($this->status) === 'dibatalkan' && empty($value)) {
+            return 'Dibatalkan oleh pengguna secara mandiri';
+        }
+
         return $value;
     }
 
@@ -46,10 +52,6 @@ class Peminjaman extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function creator()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
 
     public function ruangan()
     {

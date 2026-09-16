@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\EOffice\Models\MrJadwalInternal;
 use Modules\EOffice\Models\Ruangan;
-use Illuminate\Support\Str;
 
 class JadwalController extends Controller
 {
