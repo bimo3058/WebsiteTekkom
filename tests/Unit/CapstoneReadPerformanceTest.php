@@ -176,7 +176,7 @@ class CapstoneReadPerformanceTest extends TestCase
     private function adminRequest(bool $canViewGroups): Request
     {
         $user = \Mockery::mock(User::class)->makePartial();
-        $user->shouldReceive('can')->with('capstone.groups.view')->once()->andReturn($canViewGroups);
+        $user->shouldReceive('can')->with('capstone.view')->once()->andReturn($canViewGroups);
         $request = Request::create('/api/capstone/admin/dashboard');
         $request->setUserResolver(fn () => $user);
 

@@ -44,20 +44,20 @@
                 -webkit-font-feature-settings: "liga" 0 !important;
                 font-feature-settings: "liga" 0 !important;
             }
-            
+
             /* Pastikan tinggi penuh */
-            html, body { 
-                height: 100%; 
+            html, body {
+                height: 100%;
             }
-            
-            body { 
-                font-family: 'Inter Tight', system-ui, sans-serif; 
+
+            body {
+                font-family: 'Inter Tight', system-ui, sans-serif;
             }
 
             /* =========================================================
                KUSTOMISASI SCROLLBAR & OVERFLOW (PERBAIKAN)
                ========================================================= */
-            
+
             /* Mengatur agar scroll hanya muncul jika butuh (auto) */
             html {
                 overflow-y: auto;
@@ -92,7 +92,7 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         <x-mobile-navigation-assets />
-</head>
+    </head>
 
     @php
         $hasSidebar = request()->is('superadmin*')
@@ -111,9 +111,24 @@
                 @yield('content')
             @endisset
 
-            <x-ui.loader />
             <x-mobile-navigation />
-</body>
+            <script>
+                (function() {
+                    const HEARTBEAT_INTERVAL = 120000; // 2 minutes
+                    function sendHeartbeat() {
+                        fetch('{{ route('user.heartbeat') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        }).catch(e => console.error('Heartbeat failed', e));
+                    }
+                    setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+                })();
+            </script>
+        </body>
     @else
         <body class="font-sans antialiased">
             <div class="min-h-screen" style="background:#F6F8FA;">
@@ -136,8 +151,23 @@
                 </main>
             </div>
 
-            <x-ui.loader />
             <x-mobile-navigation />
-</body>
+            <script>
+                (function() {
+                    const HEARTBEAT_INTERVAL = 120000; // 2 minutes
+                    function sendHeartbeat() {
+                        fetch('{{ route('user.heartbeat') }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        }).catch(e => console.error('Heartbeat failed', e));
+                    }
+                    setInterval(sendHeartbeat, HEARTBEAT_INTERVAL);
+                })();
+            </script>
+        </body>
     @endif
 </html>

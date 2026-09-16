@@ -128,7 +128,7 @@ class CapstoneAuthorizationTest extends TestCase
 
     public function test_admin_capstone_and_superadmin_can_read_all_groups_and_details(): void
     {
-        $admin = $this->roleUser('admin_capstone', ['capstone.groups.view']);
+        $admin = $this->roleUser('admin_capstone', ['capstone.view']);
         $superadmin = $this->roleUser('superadmin', ['capstone.groups.view']);
         [, $firstStudent] = $this->actor('mahasiswa');
         [, $secondStudent] = $this->actor('mahasiswa');
@@ -255,7 +255,7 @@ class CapstoneAuthorizationTest extends TestCase
 
     public function test_admin_dashboard_counts_all_groups_but_only_loads_five_labels(): void
     {
-        $admin = $this->roleUser('admin_capstone', ['capstone.groups.view']);
+        $admin = $this->roleUser('admin_capstone', ['capstone.view']);
         $period = $this->period();
         $archived = $this->period();
         $archived->delete();
@@ -327,7 +327,7 @@ class CapstoneAuthorizationTest extends TestCase
     /** @return array{User, Student|Lecturer} */
     private function actor(string $roleName): array
     {
-        $permissions = $roleName === 'dosen' ? ['capstone.documents.review'] : [];
+        $permissions = $roleName === 'dosen' ? ['capstone.edit'] : [];
         $user = $this->roleUser($roleName, $permissions);
 
         $profile = $roleName === 'mahasiswa'
