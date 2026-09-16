@@ -28,15 +28,15 @@
 
     <input type="hidden" name="akses_kelola_dikirim" value="1">
 
-    <p style="font-size: 13px; color: #666D80; margin-bottom: 14px;">
-        Pembuat: <strong style="color: #374151;">{{ $namaPembuat }}</strong>.
+    <p style="font-size: 13px; color: var(--c-fg-muted); margin-bottom: 14px;">
+        Pembuat: <strong style="color: var(--c-fg-sec);">{{ $namaPembuat }}</strong>.
         Admin dan Ketua Himpunan otomatis bisa mengelola semua kegiatan.
         Tambahkan pengurus lain yang boleh ikut mengubah kegiatan ini.
     </p>
 
     <label class="form-label-custom">
         Pengelola
-        <span style="color: #666D80; font-weight: 400;">(opsional)</span>
+        <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
     </label>
     <div class="panitia-select-wrapper" id="pengelolaSelectWrapper">
         <div class="panitia-chips-container" id="pengelolaChipsContainer"
@@ -154,10 +154,10 @@ function renderPengelola() {
         row.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
 
         const nama = document.createElement('div');
-        nama.style.cssText = 'flex: 1; font-size: 13px; font-weight: 600; color: #374151;';
+        nama.style.cssText = 'flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);';
         nama.textContent = p.nama;
         const role = document.createElement('div');
-        role.style.cssText = 'font-size: 11px; font-weight: 500; color: #666D80;';
+        role.style.cssText = 'font-size: 11px; font-weight: 500; color: var(--c-fg-muted);';
         role.textContent = p.role;
         nama.appendChild(role);
 
@@ -176,8 +176,8 @@ function renderPengelola() {
         hak.style.cssText = 'flex: none; font-size: 11px; font-weight: 600; padding: 4px 10px;'
             + 'border-radius: 999px; border: 1px solid; white-space: nowrap;'
             + (p.bisa_hapus
-                ? 'background:#FEF2F2; color:#DC2626; border-color:#FECACA;'
-                : 'background:#F1F5F9; color:#475569; border-color:#E2E8F0;');
+                ? 'background:var(--c-error-subtle); color:var(--c-error); border-color:var(--c-error-subtle);'
+                : 'background:var(--c-bg); color:var(--c-fg-sec); border-color:var(--c-border);');
 
         row.append(nama, hak, idInput);
         baris.appendChild(row);

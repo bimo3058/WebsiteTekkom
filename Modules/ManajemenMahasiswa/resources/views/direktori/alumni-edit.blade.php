@@ -1,12 +1,12 @@
 <x-dynamic-component :component="$layout">
 
+@include('manajemenmahasiswa::direktori.partials.palette')
+
 @push('styles')
 <style>
-    .main-wrapper {
-        background: transparent !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-    }
+    /* Kotak putih pembungkus halaman sengaja tidak lagi dibuat transparan, supaya latar
+       halaman ini sama dengan Edit Mahasiswa: konten di dalam kotak putih di atas
+       latar abu, seperti dashboard Super Admin. */
 
     .back-bar {
         display: flex;
@@ -14,6 +14,7 @@
         align-items: center;
         margin-bottom: 20px;
     }
+    /* Tombol sekunder: sama dengan tombol outline "Audit Logs"/"Users" di dashboard global */
     .btn-back {
         font-weight: 600;
         font-size: 13px;
@@ -24,25 +25,27 @@
         align-items: center;
         gap: 6px;
         background: #fff;
-        border: 1px solid #DFE1E7;
-        color: #374151;
+        border: 1px solid var(--c-border);
+        color: var(--c-fg-sec);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         transition: all 0.2s;
     }
-    .btn-back:hover { background: #f9fafb; color: #0D0D12; }
+    .btn-back:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-fg); }
 
     .edit-card {
         background: #fff;
         border-radius: 14px;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
+        box-shadow: var(--shadow-card);
         padding: 32px;
     }
     .section-divider {
         font-size: 15px;
         font-weight: 700;
-        color: #0B266E;
+        color: var(--c-primary);
         margin-bottom: 16px;
         padding-bottom: 10px;
-        border-bottom: 2px solid #eef2ff;
+        border-bottom: 2px solid var(--c-primary-subtle);
         display: flex;
         align-items: center;
         gap: 8px;
@@ -50,25 +53,31 @@
     .form-label {
         font-size: 13px;
         font-weight: 600;
-        color: #353849;
+        color: var(--c-fg-sec);
         margin-bottom: 6px;
     }
+    /* Latar input putih, sama dengan Edit Mahasiswa & kotak input global */
     .form-control, .form-select {
-        border: 1.5px solid #DFE1E7;
+        border: 1.5px solid var(--c-border);
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
-        color: #0D0D12;
-        background: #FAFAFA;
+        color: var(--c-fg);
+        background: #ffffff;
         transition: all 0.2s;
     }
     .form-control:focus, .form-select:focus {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
         background: #ffffff;
     }
+    /* Pesan validasi Bootstrap memakai merah bawaannya; disamakan dengan merah palet global */
+    .form-control.is-invalid, .form-select.is-invalid { border-color: var(--c-error); }
+    .form-control.is-invalid:focus, .form-select.is-invalid:focus { box-shadow: 0 0 0 3px var(--c-error-subtle); }
+    .invalid-feedback { color: var(--c-error); }
+    /* Tombol utama solid, sama dengan tombol "Permissions" di dashboard global */
     .btn-save {
-        background: linear-gradient(135deg, #0B266E, #091958);
+        background: var(--c-primary);
         color: #ffffff;
         border: none;
         padding: 11px 28px;
@@ -79,7 +88,7 @@
         transition: all 0.2s;
     }
     .btn-save:hover {
-        background: linear-gradient(135deg, #091958, #0B266E);
+        background: var(--c-primary-hover);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
     }
@@ -96,8 +105,8 @@
 
 <div class="edit-card">
     <div class="mb-4">
-        <h5 class="fw-bold mb-1" style="font-size: 20px; color: #0D0D12;">Edit Data Alumni</h5>
-        <p class="mb-0" style="font-size: 14px; color: #666D80;">Admin — perbarui biodata dan karir alumni</p>
+        <h5 class="fw-bold mb-1" style="font-size: 20px; color: var(--c-fg);">Edit Data Alumni</h5>
+        <p class="mb-0" style="font-size: 14px; color: var(--c-fg-muted);">Admin — perbarui biodata dan karir alumni</p>
     </div>
 
     <form action="{{ route('manajemenmahasiswa.direktori.alumni.update', $alumni->id) }}" method="POST">
@@ -138,7 +147,7 @@
 
         <!-- Section: Akademik -->
         <div class="section-divider">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             Informasi Akademik
         </div>
         <div class="row g-3 mb-4">
@@ -167,31 +176,32 @@
                 <label class="form-label">IPK</label>
                 <input type="number" step="0.01" min="0" max="4" name="ipk" class="form-control @error('ipk') is-invalid @enderror" value="{{ old('ipk', $alumni->ipk) }}" placeholder="0.00">
                 @error('ipk') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                <small class="text-muted d-block mt-1" style="font-size: 11px;">Tersinkron dengan data Kemahasiswaan · skala 0–4.</small>
+                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Tersinkron dengan data Kemahasiswaan · skala 0–4.</small>
             </div>
             @endif
 
             <!-- Kontak -->
             <div class="col-md-12" x-data="alumniPhoneCode('{{ $savedCode }}')">
                 <label class="form-label">Kontak / WhatsApp</label>
-                <div class="d-flex position-relative p-0" style="overflow: visible; background: #fff; border: 1.5px solid #DFE1E7; border-radius: 10px;">
+                <div class="d-flex position-relative p-0" style="overflow: visible; background: #fff; border: 1.5px solid var(--c-border); border-radius: 10px;">
                     <button type="button" @click.prevent="toggle($el)"
-                            class="btn border-0 d-flex align-items-center gap-2" style="background: #FAFAFA; border-right: 1.5px solid #DFE1E7 !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
+                            class="btn border-0 d-flex align-items-center gap-2" style="background: var(--c-grey-0); color: var(--c-fg-sec); border-right: 1.5px solid var(--c-border) !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
                         <span x-text="selected.flag" style="font-size: 15px;"></span>
-                        <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: #353849;"></span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#353849" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: var(--c-fg-sec);"></span>
+                        {{-- Warna panah diwarisi dari tombol: :style Alpine menimpa seluruh atribut style SVG ini. --}}
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                              :style="open ? 'transform:rotate(180deg)' : ''" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <input type="text" name="kontak" class="form-control border-0 shadow-none w-100"
-                           value="{{ old('kontak', $localNum) }}" placeholder="8123456789" 
+                           value="{{ old('kontak', $localNum) }}" placeholder="8123456789"
                            @input="$el.value = $el.value.replace(/[^0-9]/g, '')"
-                           style="background: transparent; font-size: 14px; font-weight: 600; color: #374151;">
+                           style="background: transparent; font-size: 14px; font-weight: 600; color: var(--c-fg);">
                     <input type="hidden" name="phone_code" :value="selected.dial">
 
                     <!-- Dropdown -->
                     <div x-show="open" @click.outside="open = false" :style="dropdownStyle"
                          class="position-fixed bg-white border rounded shadow-lg" style="display:none; width: 240px; z-index: 9999; border-radius: 12px !important; overflow: hidden;">
-                        <div class="p-2 border-bottom" style="background: #FAFAFA;">
+                        <div class="p-2 border-bottom" style="background: var(--c-grey-0);">
                             <input type="text" x-model="search" @click.stop placeholder="Cari negara..." class="form-control form-control-sm" style="font-size: 12px; border-radius: 8px;">
                         </div>
                         <ul class="list-unstyled mb-0" style="max-height: 200px; overflow-y: auto;">
@@ -199,21 +209,21 @@
                                 <li>
                                     <button type="button" @click="select(c)"
                                             class="w-100 btn text-start d-flex align-items-center gap-2 py-2 px-3 border-0 rounded-0"
-                                            :style="selected.name === c.name ? 'background: #F6F8FA;' : 'background: #fff;'">
+                                            :style="selected.name === c.name ? 'background: var(--c-bg);' : 'background: #fff;'">
                                         <span x-text="c.flag" style="font-size: 15px;"></span>
-                                        <span x-text="c.name" class="text-truncate flex-grow-1" style="font-size: 12px; color: #374151; font-weight: 500;"></span>
-                                        <span x-text="c.dial" style="font-size: 11px; font-weight: 700; color: #666D80;"></span>
+                                        <span x-text="c.name" class="text-truncate flex-grow-1" style="font-size: 12px; color: var(--c-fg-sec); font-weight: 500;"></span>
+                                        <span x-text="c.dial" style="font-size: 11px; font-weight: 700; color: var(--c-fg-muted);"></span>
                                     </button>
                                 </li>
                             </template>
-                            <li x-show="filtered.length === 0" class="text-center py-3 text-muted" style="font-size: 12px;">
+                            <li x-show="filtered.length === 0" class="text-center py-3" style="font-size: 12px; color: var(--c-fg-muted);">
                                 Tidak ditemukan
                             </li>
                         </ul>
                     </div>
                 </div>
-                <small class="text-muted d-block mt-2" style="font-size: 11px;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-warning"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <small class="d-block mt-2" style="font-size: 11px; color: var(--c-fg-muted);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1" style="color: var(--c-warning);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     Hanya masukkan <strong>angka</strong> tanpa spasi atau karakter khusus.
                 </small>
             </div>
@@ -223,13 +233,13 @@
                 <label class="form-label">Email Pribadi</label>
                 <input type="email" name="personal_email" class="form-control @error('personal_email') is-invalid @enderror" value="{{ old('personal_email', $alumni->user->personal_email ?? '') }}" placeholder="nama@email.com">
                 @error('personal_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                <small class="text-muted d-block mt-1" style="font-size: 11px;">Email pribadi alumni (di luar email SSO UNDIP).</small>
+                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Email pribadi alumni (di luar email SSO UNDIP).</small>
             </div>
         </div>
 
         <!-- Section: Karir -->
         <div class="section-divider">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
             Informasi Karir
         </div>
         <div class="row g-3">
@@ -275,7 +285,7 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid #F6F8FA;">
+        <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid var(--c-border);">
             <button type="submit" class="btn-save">
                 Simpan Perubahan
             </button>

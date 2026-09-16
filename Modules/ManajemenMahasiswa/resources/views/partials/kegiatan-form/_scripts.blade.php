@@ -6,7 +6,7 @@ function updateCharCount(inputId, countId, max) {
     if (!el || !cnt) return;
     const len = el.value.length;
     cnt.textContent = len;
-    cnt.style.color = len >= max ? '#dc2626' : (len > max * 0.9 ? '#f59e0b' : '#666D80');
+    cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
 }
 document.addEventListener('DOMContentLoaded', () => {
     ['judulInput','deskripsiInput'].forEach(id => {
@@ -359,7 +359,7 @@ function updatePanitiaHiddenInputs() {
         const roleDiv = document.createElement('div');
         roleDiv.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
         roleDiv.innerHTML = `
-            <div style="flex: 1; font-size: 13px; font-weight: 600; color: #374151;">${name}</div>
+            <div style="flex: 1; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">${name}</div>
             <div style="flex: 2;">
                 <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${currentRole}">
             </div>

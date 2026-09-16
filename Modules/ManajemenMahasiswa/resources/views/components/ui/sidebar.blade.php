@@ -238,7 +238,7 @@
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
                     @if($pendingVerifCount > 0)
                         <span class="nav-label"
-                            style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $pendingVerifCount }}</span>
+                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $pendingVerifCount }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -255,7 +255,7 @@
                         <span class="nav-label">Verifikasi Pengumuman</span>
                         @if($pendingVerifCount > 0)
                             <span
-                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
+                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
                         @endif
                     </a>
                 </div>
@@ -272,7 +272,7 @@
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
                     @if($staffPendingCount > 0)
                         <span class="nav-label"
-                            style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $staffPendingCount }}</span>
+                            style="background:var(--c-warning, #956321);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $staffPendingCount }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -289,7 +289,7 @@
                         <span class="nav-label">Status Verifikasi</span>
                         @if($staffPendingCount > 0)
                             <span
-                                style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
+                                style="background:var(--c-warning, #956321);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
                         @endif
                     </a>
                 </div>
@@ -432,7 +432,7 @@
                     <span class="nav-label" style="flex-grow: 1;">Verifikasi Data</span>
                     @if($verifPendingRiwayat + $verifPendingPrestasi > 0)
                         <span class="nav-label"
-                            style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi }}</span>
+                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -445,7 +445,7 @@
                         <span class="nav-label">Verifikasi Prestasi</span>
                         @if($verifPendingPrestasi > 0)
                             <span
-                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
+                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
                         @endif
                     </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']) }}"
@@ -453,7 +453,7 @@
                         <span class="nav-label">Verifikasi Kegiatan</span>
                         @if($verifPendingRiwayat > 0)
                             <span
-                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
+                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
                         @endif
                     </a>
                 </div>

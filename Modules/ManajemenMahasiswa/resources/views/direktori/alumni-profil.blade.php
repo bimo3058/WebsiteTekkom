@@ -1,15 +1,15 @@
 <x-dynamic-component :component="$layout">
 
+@include('manajemenmahasiswa::direktori.partials.palette')
+
 @push('styles')
 <style>
-    .main-wrapper {
-        background: transparent !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-    }
+    /* Kotak putih pembungkus halaman sengaja tidak lagi dibuat transparan, supaya latar
+       halaman ini sama dengan halaman Direktori Mahasiswa: konten di dalam kotak putih
+       di atas latar abu, seperti dashboard Super Admin. */
 
     .page-header-profil {
-        background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
+        background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-hover) 100%);
         border-radius: 16px;
         padding: 28px 32px;
         margin-bottom: 24px;
@@ -37,11 +37,22 @@
         color: rgba(255,255,255,0.8);
         margin: 0;
     }
+    /* Tombol Download CV di atas banner navy — sama dengan Detail Mahasiswa & Detail Alumni */
+    .btn-banner-cv {
+        background: #fff;
+        border: 1px solid #fff;
+        color: var(--c-primary);
+    }
+    .btn-banner-cv:hover {
+        background: var(--c-grey-0);
+        color: var(--c-primary-hover);
+    }
 
     .card-section {
         background: #fff;
         border-radius: 14px;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
+        box-shadow: var(--shadow-card);
         padding: 28px;
     }
 
@@ -49,12 +60,13 @@
         text-align: center;
         padding: 32px 24px;
     }
+    /* Avatar inisial netral, sama dengan komponen user-avatar global */
     .identity-avatar {
         width: 100px;
         height: 100px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #eef2ff, #dbe4f5);
-        color: #0B266E;
+        background: var(--c-grey-50);
+        color: var(--c-fg-muted);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -62,7 +74,7 @@
         font-weight: bold;
         margin: 0 auto 16px;
         overflow: hidden;
-        border: 3px solid #eef2ff;
+        border: 3px solid var(--c-border);
     }
     .identity-avatar img {
         width: 100%;
@@ -72,12 +84,12 @@
     .identity-name {
         font-size: 18px;
         font-weight: 700;
-        color: #0D0D12;
+        color: var(--c-fg);
         margin-bottom: 4px;
     }
     .identity-nim {
         font-family: monospace;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 14px;
         margin-bottom: 12px;
     }
@@ -92,52 +104,57 @@
         font-weight: 600;
         padding: 4px 12px;
         border-radius: 6px;
-        background: #f3f4f6;
-        color: #374151;
+        background: var(--c-grey-50);
+        color: var(--c-fg-sec);
     }
     .identity-note {
         margin-top: 20px;
         padding-top: 20px;
-        border-top: 1px dashed #DFE1E7;
+        border-top: 1px dashed var(--c-border);
         font-size: 12.5px;
-        color: #808897;
+        color: var(--c-fg-placeholder);
         line-height: 1.6;
     }
 
     .form-title {
         font-size: 16px;
         font-weight: 700;
-        color: #0D0D12;
+        color: var(--c-fg);
         margin-bottom: 20px;
         padding-bottom: 12px;
-        border-bottom: 2px solid #F6F8FA;
     }
     .form-label {
         font-size: 13px;
         font-weight: 600;
-        color: #353849;
+        color: var(--c-fg-sec);
         margin-bottom: 6px;
     }
+    /* Latar input putih, sama dengan form Edit Mahasiswa & kotak input global */
     .form-control-custom,
     .form-select-custom {
-        border: 1.5px solid #DFE1E7;
+        border: 1.5px solid var(--c-border);
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
-        color: #0D0D12;
-        background: #FAFAFA;
+        color: var(--c-fg);
+        background: #ffffff;
         transition: all 0.2s;
         width: 100%;
     }
     .form-control-custom:focus,
     .form-select-custom:focus {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
         background: #ffffff;
         outline: none;
     }
+    /* Pesan validasi Bootstrap memakai merah bawaannya; disamakan dengan merah palet global */
+    .form-control-custom.is-invalid, .form-select-custom.is-invalid { border-color: var(--c-error); }
+    .form-control-custom.is-invalid:focus, .form-select-custom.is-invalid:focus { box-shadow: 0 0 0 3px var(--c-error-subtle); }
+    .invalid-feedback { color: var(--c-error); }
+    /* Tombol utama solid, sama dengan tombol "Permissions" di dashboard global */
     .btn-submit {
-        background: linear-gradient(135deg, #0B266E, #091958);
+        background: var(--c-primary);
         color: #ffffff;
         border: none;
         padding: 11px 28px;
@@ -148,7 +165,7 @@
         transition: all 0.2s;
     }
     .btn-submit:hover {
-        background: linear-gradient(135deg, #091958, #0B266E);
+        background: var(--c-primary-hover);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
     }
@@ -158,7 +175,7 @@
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -167,7 +184,7 @@
 
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert"
-         style="border-radius: 10px; border: none; background: #fef2f2; color: #991b1b; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -180,7 +197,7 @@
     </div>
     <div>
         <a href="{{ route('manajemenmahasiswa.direktori.alumni.profil.cv') }}" target="_blank"
-           class="btn-primary-custom" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); padding: 10px 20px; border-radius: 10px; color: white; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 600;">
+           class="btn-banner-cv" style="padding: 10px 20px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 600; transition: all 0.2s;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Download CV
         </a>
@@ -277,7 +294,7 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid #F6F8FA;">
+                <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid var(--c-border);">
                     <button type="submit" class="btn-submit">
                         Simpan Perubahan
                     </button>
