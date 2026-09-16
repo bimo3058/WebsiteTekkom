@@ -18,6 +18,7 @@
     $iconUsers = 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM22 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75';
     $iconShield = 'M12 2L4 6v6c0 5 3.4 9.5 8 10 4.6-.5 8-5 8-10V6l-8-4z';
     $iconAuditLog = 'M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h11a2 2 0 002-2v-7M7 13h7M7 17h5';
+    $iconNotification = 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0';
     $iconBankSoal = 'M6 4h12v16H6zM9 8h6M9 12h6M9 16h4';
     $iconCapstone = 'M3 17l5-5 4 4 8-8M14 8h6v6';
     $iconSimenma = 'M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M17 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z';
@@ -33,6 +34,7 @@
         'superadmin.users.index' => 'User Management',
         'superadmin.users.online' => 'User Management',
         'superadmin.users.suspended' => 'User Management',
+        'superadmin.notifications.index' => 'Notifications',
         'superadmin.permissions' => 'Permissions',
         'superadmin.permissions.category' => 'Permissions',
         'superadmin.modules' => 'Modul Setting',
@@ -94,6 +96,14 @@
                 <div x-show="open" class="sb-section-label">Kendali</div>
                 <x-sidebar-link :href="route('superadmin.users.index')" :icon="$iconUsers" label="User Management"
                     :active="str_contains($currentRoute, 'users')" />
+                <x-sidebar-link :href="route('superadmin.notifications.index')" :icon="$iconNotification" label="Notifications"
+                    :active="str_contains($currentRoute, 'notifications')">
+                    @if($notificationCount > 0)
+                        <span style="margin-left:auto; background:#EF4444; color:#fff; font-size:10px; font-weight:800; padding:2px 6px; border-radius:99px; line-height:1;">
+                            {{ $notificationCount > 99 ? '99+' : $notificationCount }}
+                        </span>
+                    @endif
+                </x-sidebar-link>
                 <x-sidebar-link :href="route('superadmin.permissions')" :icon="$iconShield" label="Permissions"
                     :active="str_contains($currentRoute, 'permissions')" />
                 <x-sidebar-link :href="route('superadmin.audit-logs')" :icon="$iconAuditLog" label="Audit Logs"

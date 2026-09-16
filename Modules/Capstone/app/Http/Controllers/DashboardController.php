@@ -20,7 +20,7 @@ class DashboardController extends Controller
     {
         // Keep the same permission boundary as /admin/groups. Dashboard cards
         // need counts and five labels, not every member and supervisor profile.
-        $canViewGroups = $request->user()->can('capstone.groups.view');
+        $canViewGroups = $request->user()->can('capstone.view');
         $groupCounts = $canViewGroups
             ? Group::query()->selectRaw('COUNT(*) AS total')
                 ->selectRaw('COUNT(CASE WHEN status = ? THEN 1 END) AS pending', ['READY_FOR_FINALIZATION'])

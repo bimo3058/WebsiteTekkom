@@ -70,6 +70,25 @@ class SuperAdminController extends Controller
         }
     }
 
+    private function checkNoAccess(User $user): void
+    {
+        // Load fresh relations to be sure
+        $user->load(['roles', 'permissions']);
+
+        $hasRoles = $user->roles->isNotEmpty();
+        // Direct permissions + permissions inherited from roles
+        $hasPerms = $user->permissions->isNotEmpty() || $user->roles->flatMap->permissions->isNotEmpty();
+
+        if ($hasRoles && !$hasPerms) {
+            AuditLogger::log(
+                module: 'user_management',
+                action: 'NO_ACCESS',
+                description: "User {$user->name} ({$user->email}) has roles assigned but 0 permissions.",
+                subject: $user
+            );
+        }
+    }
+
     // ── Dashboard ──────────────────────────────────────────────────────────────
 
     public function index()
@@ -426,6 +445,8 @@ class SuperAdminController extends Controller
             $this->bustUserCache();
             DB::commit();
 
+            $this->checkNoAccess($user);
+
             return redirect()->route('superadmin.users.index')
                 ->with('success', "User \"{$user->name}\" berhasil ditambahkan.");
 
@@ -487,6 +508,7 @@ class SuperAdminController extends Controller
             );
 
             DB::commit();
+            $this->checkNoAccess($user);
             return back()->with('success', "Permission user \"{$user->name}\" berhasil diperbarui.");
 
         } catch (\Throwable $e) {
@@ -612,6 +634,8 @@ class SuperAdminController extends Controller
 
             $this->bustUserCache();
             DB::commit();
+
+            $this->checkNoAccess($user);
 
             return back()->with('success', "Role untuk {$user->name} berhasil diperbarui.");
 
@@ -1055,8 +1079,14 @@ class SuperAdminController extends Controller
         $query = User::query();
 
         if ($category === 'Unassigned') {
-            // Cari user yang tidak punya role sama sekali
-            $query->doesntHave('roles');
+            // Cari user yang tidak punya role ATAU tidak punya permission sama sekali
+            $query->where(function($q) {
+                $q->doesntHave('roles')
+                  ->orWhere(function($sq) {
+                      $sq->doesntHave('permissions')
+                        ->whereDoesntHave('roles.permissions');
+                  });
+            });
         } else {
             // Cari user berdasarkan role yang didefinisikan di atas
             $slugs = $categories[$category];
