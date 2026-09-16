@@ -1,4 +1,4 @@
-import {basePage,api,rows,unwrap,query,download,allRows} from './shared.js';
+import {basePage,api,rows,unwrap,query,download,allRows,mergePage} from './shared.js';
 import {context} from '../../api.js';
 export const reportKinds={assessments:'student-evaluations-summary','final-grades':'final-grades','peer-reviews':'peer-reviews',groups:'groups','grade-consistency':'grade-consistency',pdc1:'phase-evaluations',pdc2:'phase-evaluations',ta:'phase-evaluations'};
 export const reportColumns={
@@ -9,7 +9,7 @@ export const reportColumns={
     'grade-consistency':[['student_name','Mahasiswa'],['student_nim','NIM'],['pdc1_score','PDC 1'],['pdc2_score','PDC 2'],['deviation','Deviasi']],
     phase:[['group_name','Kelompok'],['student_name','Mahasiswa'],['student_nim','NIM'],['overall_status','Status']],
 };
-export function reportsAdmin(kind='summary'){return Object.assign(basePage(),{kind,summary:{},pagination:{last_page:1,total:0},data:{},
+export function reportsAdmin(kind='summary'){return mergePage(basePage(),{kind,summary:{},pagination:{last_page:1,total:0},data:{},
     async init(){try{this.periodId=new URLSearchParams(window.location.search).get('period_id')||'';await this.periodsLoad();await this.load();}catch(e){this.error=e.message;this.loading=false;}},
     get columns(){return reportColumns[this.kind]||reportColumns.phase;},
     value(item,key){if(key==='code')return this.groupName(item);return key.split('.').reduce((value,k)=>value?.[k],item)??'-';},
