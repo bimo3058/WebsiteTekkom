@@ -9,7 +9,7 @@ export const reportColumns={
     'grade-consistency':[['student_name','Mahasiswa'],['student_nim','NIM'],['pdc1_score','PDC 1'],['pdc2_score','PDC 2'],['deviation','Deviasi']],
     phase:[['group_name','Kelompok'],['student_name','Mahasiswa'],['student_nim','NIM'],['overall_status','Status']],
 };
-export function reportsAdmin(kind='summary'){return {...basePage(),kind,summary:{},pagination:{last_page:1,total:0},data:{},
+export function reportsAdmin(kind='summary'){return Object.assign(basePage(),{kind,summary:{},pagination:{last_page:1,total:0},data:{},
     async init(){try{this.periodId=new URLSearchParams(window.location.search).get('period_id')||'';await this.periodsLoad();await this.load();}catch(e){this.error=e.message;this.loading=false;}},
     get columns(){return reportColumns[this.kind]||reportColumns.phase;},
     value(item,key){if(key==='code')return this.groupName(item);return key.split('.').reduce((value,k)=>value?.[k],item)??'-';},
@@ -34,4 +34,4 @@ export function reportsAdmin(kind='summary'){return {...basePage(),kind,summary:
         }
         download(blob,this.kind+'-'+this.periodId+'.csv');
     },'Laporan diunduh');},
-};}
+});}

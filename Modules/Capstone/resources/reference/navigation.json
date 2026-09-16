@@ -5,11 +5,6 @@
       "icon": "Settings",
       "items": [
         {
-          "title": "Periods",
-          "url": "/admin/periods",
-          "icon": "CalendarIcon"
-        },
-        {
           "title": "Users",
           "url": "/admin/users",
           "icon": "Users"
@@ -25,9 +20,14 @@
           "icon": "MapPin"
         },
         {
-          "title": "Document Requirements",
-          "url": "/admin/document-requirements",
-          "icon": "FileText"
+          "title": "Grade Config",
+          "url": "/admin/evaluation-setup/grade-configuration",
+          "icon": "GraduationCap"
+        },
+        {
+          "title": "Assessment Bank",
+          "url": "/admin/assessment-bank",
+          "icon": "Library"
         }
       ]
     },
@@ -36,9 +36,9 @@
       "icon": "ListChecks",
       "items": [
         {
-          "title": "Assessment Bank",
-          "url": "/admin/assessment-bank",
-          "icon": "Library"
+          "title": "Periods",
+          "url": "/admin/periods",
+          "icon": "CalendarIcon"
         },
         {
           "title": "Tipe Penilaian",
@@ -51,9 +51,9 @@
           "icon": "Star"
         },
         {
-          "title": "Grade Config",
-          "url": "/admin/evaluation-setup/grade-configuration",
-          "icon": "GraduationCap"
+          "title": "Document Requirements",
+          "url": "/admin/document-requirements",
+          "icon": "FileText"
         }
       ]
     },
