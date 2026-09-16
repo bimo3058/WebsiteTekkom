@@ -197,6 +197,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         // ── Forum Diskusi ──────────────────────────────────────────────────
         Route::prefix('forum')->name('forum.')->group(function () {
             Route::get('/', [ForumController::class, 'index'])->name('index');
+            Route::get('/saya', [ForumController::class, 'myThreads'])->name('my');
+            Route::get('/leaderboard', [ForumController::class, 'leaderboard'])->name('leaderboard');
             Route::get('/create', [ForumController::class, 'create'])->name('create');
             Route::post('/drafts', [ForumController::class, 'saveDraft'])->name('drafts.store');
             Route::delete('/drafts/{id}', [ForumController::class, 'deleteDraft'])->name('drafts.destroy');
@@ -204,6 +206,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
             // Report Management (admin only) — MUST be before /{id} wildcard
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
+                Route::get('/laporan', [ForumController::class, 'forumReports'])->name('reports');
                 Route::delete('/reports/{reportId}/dismiss', [ForumController::class, 'dismissReport'])->name('reports.dismiss');
                 Route::delete('/reports/{reportId}/delete-thread', [ForumController::class, 'deleteReportedThread'])->name('reports.delete_thread');
                 Route::patch('/reports/{reportId}/lock-thread', [ForumController::class, 'lockReportedThread'])->name('reports.lock_thread');
