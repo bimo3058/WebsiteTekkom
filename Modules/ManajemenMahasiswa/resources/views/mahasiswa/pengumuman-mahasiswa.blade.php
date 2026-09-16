@@ -47,12 +47,12 @@
         }
 
         /* ── Section label ──────────────────────────────────────────── */
-        .pg-section-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+        .pg-section-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
         .pg-section-header::before { content:''; display:inline-block; width:3px; height:14px; border-radius:2px; background:var(--c-primary, #0B266E); }
         .pg-section-label { font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); }
 
         /* ── Toolbar ────────────────────────────────────────────────── */
-        .pg-toolbar { display:flex; gap:8px; align-items:center; margin-bottom:18px; flex-wrap:wrap; }
+        .pg-toolbar { display:flex; gap:8px; align-items:center; margin-bottom:10px; flex-wrap:wrap; }
         .pg-search-wrap { flex:1; min-width:200px; position:relative; }
         .pg-search-wrap svg { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--c-fg-placeholder, #808897); pointer-events:none; }
         .pg-search-wrap input {
@@ -64,33 +64,6 @@
         .pg-search-wrap input::placeholder { color:var(--c-fg-placeholder, #808897); }
         .pg-search-wrap input:focus { border-color:var(--c-primary, #0B266E); box-shadow:0 0 0 3px rgba(11,38,110,.1); }
 
-        .pg-filter-dropdown { position:relative; }
-        .pg-filter-btn {
-            display:flex; align-items:center; gap:8px; justify-content:space-between;
-            padding:8px 14px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px; background:#fff;
-            font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
-            cursor:pointer; transition:all .15s; white-space:nowrap; min-width:150px;
-            box-shadow:0 1px 2px rgba(0,0,0,.04);
-        }
-        .pg-filter-btn:hover { background:var(--c-bg, #F6F8FA); border-color:var(--c-border-strong, #C1C7CF); }
-        .pg-filter-btn.active { border-color:var(--c-primary, #0B266E); color:var(--c-primary, #0B266E); }
-        .pg-filter-btn .chevron { transition:transform .2s; }
-        .pg-filter-btn.open .chevron { transform:rotate(180deg); }
-        .pg-filter-menu {
-            position:absolute; top:calc(100% + 6px); right:0;
-            background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:10px;
-            padding:6px; min-width:190px; box-shadow:0 12px 30px rgba(0,0,0,.08); z-index:200; display:none;
-        }
-        .pg-filter-menu.show { display:block; }
-        .pg-filter-item {
-            display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:6px;
-            cursor:pointer; font-size:12px; color:var(--c-fg-sec, #353849); transition:background .15s;
-        }
-        .pg-filter-item:hover { background:var(--c-bg, #F6F8FA); }
-        .pg-filter-item.selected { background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); font-weight:600; }
-        .pg-filter-item .pg-check { width:14px; color:var(--c-primary, #0B266E); opacity:0; }
-        .pg-filter-item.selected .pg-check { opacity:1; }
-
         .pg-perpage {
             height:36px; padding:0 10px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px;
             background:#fff; font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
@@ -99,7 +72,7 @@
         .pg-perpage:hover { border-color:var(--c-border-strong, #C1C7CF); }
 
         /* ── Cards grid ─────────────────────────────────────────────── */
-        .pg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+        .pg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:10px; }
         @media (max-width: 1280px) { .pg-grid { grid-template-columns:repeat(2,1fr); } }
         @media (max-width: 640px)  { .pg-grid { grid-template-columns:1fr; } }
 
@@ -176,7 +149,7 @@
         .pg-date { font-size:11px; color:var(--c-fg-muted, #666D80); white-space:nowrap; flex-shrink:0; font-variant-numeric:tabular-nums; }
 
         /* ── Empty state ────────────────────────────────────────────── */
-        .pg-empty { grid-column:1/-1; padding:64px 20px; text-align:center; color:var(--c-fg-muted, #666D80); }
+        .pg-empty { grid-column:1/-1; padding:44px 20px; text-align:center; color:var(--c-fg-muted, #666D80); }
         .pg-empty-icon {
             width:64px; height:64px; border-radius:50%;
             background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E);
@@ -267,26 +240,6 @@
                                 placeholder="Cari pengumuman..." value="{{ request('search') }}">
                         </div>
 
-                        <div class="pg-filter-dropdown">
-                            <input type="hidden" name="kategori" id="pgKategoriInput" value="{{ $selectedKategori }}">
-                            <button type="button" class="pg-filter-btn {{ $selectedKategori !== 'semua' ? 'active' : '' }}"
-                                id="pgFilterToggle" onclick="pgToggleFilter()">
-                                <span id="pgFilterLabel">{{ $kategoriMap[$selectedKategori] ?? 'Filter' }}</span>
-                                <svg class="chevron" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-                            <div class="pg-filter-menu" id="pgFilterMenu">
-                                @foreach($kategoriMap as $value => $label)
-                                    <div class="pg-filter-item {{ $selectedKategori === $value ? 'selected' : '' }}"
-                                        onclick="pgSelectFilter('{{ $value }}', '{{ $label }}')">
-                                        <svg class="pg-check" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        <span>{{ $label }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
                         <select name="per_page" class="pg-perpage"
                             onchange="document.getElementById('pgFilterForm').submit()">
                             @foreach([9, 18, 27] as $opt)
@@ -296,6 +249,11 @@
                             @endforeach
                         </select>
                     </div>
+
+                    @include('manajemenmahasiswa::pengumuman._filter-kategori', [
+                        'selectedKategori' => $selectedKategori,
+                        'formId'           => 'pgFilterForm',
+                    ])
                 </form>
 
                 <div class="pg-section-header">
@@ -453,29 +411,6 @@
         if (event.target.closest('form, button, a')) return;
         window.location.href = card.dataset.href;
     }
-
-    // ── Filter dropdown ─────────────────────────────────────────────────────────
-    function pgToggleFilter() {
-        const menu = document.getElementById('pgFilterMenu');
-        const btn  = document.getElementById('pgFilterToggle');
-        menu.classList.toggle('show');
-        btn.classList.toggle('open');
-    }
-    function pgSelectFilter(value, label) {
-        document.getElementById('pgKategoriInput').value = value;
-        document.getElementById('pgFilterLabel').textContent = value === 'semua' ? 'Filter' : label;
-        document.querySelectorAll('.pg-filter-item').forEach(i => i.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
-        pgToggleFilter();
-        document.getElementById('pgFilterForm').submit();
-    }
-    document.addEventListener('click', e => {
-        const d = document.querySelector('.pg-filter-dropdown');
-        if (d && !d.contains(e.target)) {
-            document.getElementById('pgFilterMenu')?.classList.remove('show');
-            document.getElementById('pgFilterToggle')?.classList.remove('open');
-        }
-    });
 
     // ── Search on Enter ─────────────────────────────────────────────────────────
     document.getElementById('pgSearchInput')?.addEventListener('keydown', e => {

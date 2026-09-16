@@ -288,13 +288,14 @@
             </div>
 
         @else
-            {{-- Dashboard (Pengumuman) — landing page untuk mahasiswa, alumni, dosen, pengurus --}}
+            {{-- Pengumuman — menu tunggal untuk mahasiswa, alumni, dosen, pengurus:
+                 role ini hanya membaca pengumuman, tidak ada submenu verifikasi. --}}
             <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.pengumuman.*') ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
-                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/home-01.svg'))) !!}
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}
                 </span>
-                <span class="nav-label" style="flex-grow:1;">Dashboard</span>
+                <span class="nav-label" style="flex-grow:1;">Pengumuman</span>
             </a>
         @endif
 

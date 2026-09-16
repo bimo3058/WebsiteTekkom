@@ -50,7 +50,7 @@
                 border: 1px solid var(--c-border, #DFE1E7);
                 border-radius: 14px;
                 box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
-                margin-bottom: 12px;
+                margin-bottom: 10px;
                 overflow: hidden;
             }
             .fc-card-header {
@@ -62,7 +62,7 @@
             .fc-card-body { padding: 18px; }
 
             /* ── Form controls ──────────────────────────────────────────── */
-            .form-group { margin-bottom: 16px; }
+            .form-group { margin-bottom: 10px; }
             .form-group:last-child { margin-bottom: 0; }
 
             .form-group label {
@@ -114,7 +114,7 @@
             .file-upload-zone {
                 border: 1px dashed var(--c-border-strong, #C1C7CF);
                 border-radius: 12px;
-                padding: 26px;
+                padding: 20px;
                 text-align: center;
                 background: var(--c-bg, #F6F8FA);
                 transition: border-color .15s, background .15s;
@@ -166,12 +166,57 @@
             .file-item .file-remove:disabled { opacity: .6; cursor: default; }
             .file-item .file-meta { flex-shrink: 0; font-size: 11.5px; color: var(--c-fg-placeholder, #808897); }
 
-            .poster-preview {
-                margin-top: 12px; max-width: 300px; border-radius: 10px;
-                overflow: hidden; border: 1px solid var(--c-border, #DFE1E7);
+            /* ── Grid gambar pengumuman ─────────────────────────────────── */
+            .cover-grid {
+                display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+                gap: 10px; margin-top: 10px;
             }
-            .poster-preview img { width: 100%; display: block; }
-            .poster-label { font-size: 11.5px; color: var(--c-fg-muted, #666D80); margin-top: 8px; }
+            .cover-item {
+                position: relative; aspect-ratio: 1;
+                border: 1px solid var(--c-border, #DFE1E7); border-radius: 10px;
+                overflow: hidden; background: var(--c-bg, #F6F8FA);
+                transition: border-color .15s, box-shadow .15s, opacity .15s;
+            }
+            .cover-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+
+            /* Cover terkunci: tidak bisa diganti maupun dihapus dari halaman edit */
+            .cover-item.is-cover { border-color: var(--c-primary, #0B266E); }
+
+            /* Kartu gambar baru bisa diseret untuk mengatur urutan tampilnya */
+            .cover-item[draggable="true"] { cursor: grab; }
+            .cover-item[draggable="true"]:hover { border-color: var(--c-primary-border, #5C78B8); }
+            .cover-item.dragging { opacity: .35; cursor: grabbing; }
+            .cover-item.drag-target {
+                border-color: var(--c-primary, #0B266E);
+                box-shadow: 0 0 0 3px var(--c-primary-subtle, #EEF1F8);
+            }
+
+            .cover-badge {
+                position: absolute; top: 6px; left: 6px;
+                display: inline-flex; align-items: center; gap: 4px;
+                padding: 2px 7px; border-radius: 6px;
+                font-size: 10px; font-weight: 700; letter-spacing: .02em;
+                background: var(--c-primary, #0B266E); color: #fff;
+            }
+            .cover-order {
+                position: absolute; bottom: 6px; left: 6px;
+                width: 19px; height: 19px; border-radius: 50%;
+                background: rgba(13,13,18,.6); color: #fff;
+                font-size: 10px; font-weight: 700;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .cover-remove {
+                position: absolute; top: 6px; right: 6px;
+                width: 22px; height: 22px; border-radius: 6px;
+                border: none; background: rgba(13,13,18,.55); color: #fff;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer; transition: background .15s; padding: 0;
+            }
+            .cover-remove:hover { background: var(--c-error, #DF1C41); }
+            .cover-remove:disabled { opacity: .6; cursor: default; }
+
+            .cover-hint { font-size: 11.5px; color: var(--c-fg-muted, #666D80); margin: 10px 0 0; }
+            .cover-hint strong { color: var(--c-primary, #0B266E); }
 
             /* ── Actions ────────────────────────────────────────────────── */
             .form-actions {
@@ -270,7 +315,7 @@
 
             .editor-content {
                 min-height: 220px;
-                padding: 14px 16px;
+                padding: 12px 14px;
                 font-size: 13px;
                 color: var(--c-fg-sec, #353849);
                 line-height: 1.7;
@@ -306,7 +351,7 @@
             .alert-success,
             .alert-danger {
                 border-radius: 10px; padding: 12px 16px;
-                font-size: 12px; font-weight: 500; margin-bottom: 12px;
+                font-size: 12px; font-weight: 500; margin-bottom: 10px;
             }
             .alert-success {
                 background: var(--c-success-subtle, #DDF2EE);
@@ -322,17 +367,15 @@
     @endpush
 
     @php
-        $existingLampiran = collect($pengumuman->repoMulmed ?? []);
-        $existingPoster = $existingLampiran->first(function ($f) {
-            return in_array(strtolower(pathinfo($f->nama_file ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-        });
-        $posterUrl = $existingPoster
-            ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($existingPoster->path_file)
-            : null;
+        $semuaFile = collect($pengumuman->repoMulmed ?? []);
 
-        $existingDokumen = $existingLampiran->filter(function ($f) {
-            return !in_array(strtolower(pathinfo($f->nama_file ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-        });
+        // Urutan mengikuti relasi repoMulmed (orderBy id): gambar pertama adalah
+        // cover, dan gambar yang ditambahkan dari sini selalu masuk di belakangnya.
+        $existingGambar  = $semuaFile->filter(fn ($f) => $f->isGambar())->values();
+        $existingDokumen = $semuaFile->reject(fn ($f) => $f->isGambar())->values();
+
+        $maxGambar = $maxGambar ?? 5;
+        $sisaSlot  = max(0, $maxGambar - $existingGambar->count());
     @endphp
 
     <div class="dash-wrap">
@@ -367,6 +410,10 @@
                 {{-- Flash Messages --}}
                 @if(session('success'))
                     <div class="alert-success">{{ session('success') }}</div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert-danger">{{ session('error') }}</div>
                 @endif
 
                 @if($errors->any())
@@ -507,54 +554,75 @@
                         </div>
                     </div>
 
-                    {{-- ── Poster & Lampiran ─────────────────────── --}}
+                    {{-- ── Gambar & Lampiran ─────────────────────── --}}
                     <div class="fc-card">
-                        <div class="fc-card-header">Poster &amp; Lampiran</div>
+                        <div class="fc-card-header">Gambar &amp; Lampiran</div>
                         <div class="fc-card-body">
 
                             <div class="form-group">
-                                <label>Poster / Gambar (opsional)</label>
+                                <label>Gambar Pengumuman</label>
 
-                                @if($posterUrl)
-                                    <div style="margin-bottom: 12px;">
-                                        <div class="file-item" style="max-width: 380px;">
-                                            <span class="file-name">
-                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666D80"
-                                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect width="18" height="18" x="3" y="3" rx="2" />
-                                                    <circle cx="9" cy="9" r="2" />
-                                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                                                </svg>
-                                                {{ $existingPoster->nama_file }}
-                                            </span>
-                                            <button type="button" class="file-remove"
-                                                onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $existingPoster->id]) }}', this, 'Hapus poster ini?')">
-                                                Hapus
-                                            </button>
-                                        </div>
-                                        <div class="poster-preview" style="margin-top: 8px;">
-                                            <img src="{{ $posterUrl }}" alt="Poster saat ini">
-                                        </div>
-                                        <p class="poster-label">Upload gambar baru di bawah untuk mengganti poster</p>
+                                @if($existingGambar->isNotEmpty())
+                                    <p class="cover-hint" style="margin-top:0;">
+                                        <strong>Cover</strong> tidak dapat diganti dari halaman ini.
+                                        Terpakai {{ $existingGambar->count() }} dari {{ $maxGambar }} gambar.
+                                    </p>
+                                    <div class="cover-grid">
+                                        @foreach($existingGambar as $i => $gbr)
+                                            <div class="cover-item {{ $i === 0 ? 'is-cover' : '' }}" title="{{ $gbr->nama_file }}">
+                                                <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($gbr->path_file) }}" alt="">
+                                                @if($i === 0)
+                                                    <span class="cover-badge">
+                                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                            <rect width="18" height="11" x="3" y="11" rx="2" />
+                                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                        </svg>
+                                                        Cover
+                                                    </span>
+                                                @else
+                                                    <span class="cover-order">{{ $i + 1 }}</span>
+                                                    <button type="button" class="cover-remove" title="Hapus gambar"
+                                                        onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $gbr->id]) }}', this, 'Hapus gambar ini?')">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="2.5" stroke-linecap="round">
+                                                            <path d="M18 6L6 18M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                @endif
+                                            </div>
+                                        @endforeach
                                     </div>
                                 @endif
 
-                                <div class="file-upload-zone" id="posterZone">
-                                    <div class="upload-icon">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-                                            <circle cx="9" cy="9" r="2" />
-                                            <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-                                        </svg>
+                                @if($sisaSlot > 0)
+                                    <div class="file-upload-zone" id="posterZone" style="margin-top:10px;">
+                                        <div class="upload-icon">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                                                <circle cx="9" cy="9" r="2" />
+                                                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                                            </svg>
+                                        </div>
+                                        <h6>{{ $existingGambar->isNotEmpty() ? 'Klik atau seret untuk menambah gambar' : 'Klik atau seret gambar ke sini' }}</h6>
+                                        <p>JPG, PNG — sisa {{ $sisaSlot }} gambar, maks. 10MB per gambar</p>
+                                        <input type="file" name="poster[]" accept="image/jpeg,image/png" id="posterInput"
+                                            data-sisa-slot="{{ $sisaSlot }}" multiple>
                                     </div>
-                                    <h6>{{ $posterUrl ? 'Klik untuk mengganti poster' : 'Klik atau seret gambar ke sini' }}</h6>
-                                    <p>JPG, PNG — Maks. 10MB</p>
-                                    <input type="file" name="poster" accept="image/jpeg,image/png" id="posterInput">
-                                </div>
-                                <div class="poster-preview" id="posterPreview" style="display: none; margin-top: 12px;">
-                                    <img id="posterImg" src="" alt="Preview Poster Baru">
-                                </div>
+
+                                    {{-- Gambar baru selalu masuk di belakang gambar lama; urutan antar
+                                         gambar baru bisa diatur dengan menyeret kartunya. --}}
+                                    <p class="cover-hint" id="coverHint" style="display:none;">
+                                        Seret untuk mengatur urutan gambar baru di galeri.
+                                    </p>
+                                    <div class="cover-grid" id="posterPreview"></div>
+                                @else
+                                    <p class="cover-hint" style="margin-top:10px;">
+                                        Kuota {{ $maxGambar }} gambar sudah penuh. Hapus salah satu gambar di atas
+                                        untuk menambahkan yang baru.
+                                    </p>
+                                @endif
                             </div>
 
                             @if($existingDokumen->isNotEmpty())
@@ -636,8 +704,11 @@
             function deleteLampiran(url, btn, confirmMsg) {
                 if (!confirm(confirmMsg)) return;
 
+                // Tombol bisa berupa teks (lampiran) atau ikon (kartu gambar), jadi
+                // isinya disimpan dulu supaya bisa dikembalikan kalau gagal.
+                const isiAwal = btn.innerHTML;
                 btn.disabled = true;
-                btn.textContent = 'Menghapus...';
+                if (!btn.classList.contains('cover-remove')) btn.textContent = 'Menghapus...';
 
                 fetch(url, {
                     method: 'DELETE',
@@ -657,7 +728,7 @@
                     .catch(error => {
                         alert(error.message);
                         btn.disabled = false;
-                        btn.textContent = 'Hapus';
+                        btn.innerHTML = isiAwal;
                     });
             }
 
@@ -785,20 +856,105 @@
                 syncEditorContent();
             }
 
-            // Poster preview (gambar baru)
-            document.getElementById('posterInput').addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                const preview = document.getElementById('posterPreview');
-                const img = document.getElementById('posterImg');
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = ev => { img.src = ev.target.result; preview.style.display = 'block'; };
-                    reader.readAsDataURL(file);
-                } else {
-                    preview.style.display = 'none';
-                    img.src = '';
-                }
-            });
+            // ── Gambar baru ────────────────────────────────────────────────────
+            // Cover tidak ikut berubah dari halaman ini: gambar yang dipilih di sini
+            // selalu ditambahkan di belakang gambar yang sudah tersimpan, dan
+            // jumlahnya dibatasi sisa slot yang dikirim server lewat data-sisa-slot.
+            const posterInput = document.getElementById('posterInput');
+            let gambarBaru = [];
+            let dragDari = null;
+
+            /** Tulis ulang FileList input sesuai urutan kartu supaya ikut terkirim. */
+            function syncInputGambar() {
+                const dt = new DataTransfer();
+                gambarBaru.forEach(f => dt.items.add(f));
+                posterInput.files = dt.files;
+            }
+
+            function renderGambarBaru() {
+                const grid = document.getElementById('posterPreview');
+                const hint = document.getElementById('coverHint');
+
+                // Bebaskan object URL kartu lama sebelum digambar ulang
+                grid.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
+                grid.innerHTML = '';
+                hint.style.display = gambarBaru.length > 1 ? 'block' : 'none';
+
+                gambarBaru.forEach((file, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'cover-item';
+                    card.draggable = true;
+                    card.title = file.name;
+                    card.innerHTML = `
+                        <img src="${URL.createObjectURL(file)}" alt="">
+                        <span class="cover-order">${i + 1}</span>
+                        <button type="button" class="cover-remove" title="Hapus gambar">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round">
+                                <path d="M18 6L6 18M6 6l12 12"/>
+                            </svg>
+                        </button>`;
+
+                    card.querySelector('.cover-remove').addEventListener('click', () => {
+                        gambarBaru.splice(i, 1);
+                        syncInputGambar();
+                        renderGambarBaru();
+                    });
+
+                    card.addEventListener('dragstart', () => {
+                        dragDari = i;
+                        card.classList.add('dragging');
+                    });
+                    card.addEventListener('dragend', () => {
+                        dragDari = null;
+                        grid.querySelectorAll('.cover-item').forEach(c => {
+                            c.classList.remove('dragging', 'drag-target');
+                        });
+                    });
+                    card.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        if (dragDari !== null && dragDari !== i) card.classList.add('drag-target');
+                    });
+                    card.addEventListener('dragleave', () => card.classList.remove('drag-target'));
+                    card.addEventListener('drop', e => {
+                        e.preventDefault();
+                        if (dragDari === null || dragDari === i) return;
+                        const [dipindah] = gambarBaru.splice(dragDari, 1);
+                        gambarBaru.splice(i, 0, dipindah);
+                        syncInputGambar();
+                        renderGambarBaru();
+                    });
+
+                    grid.appendChild(card);
+                });
+            }
+
+            if (posterInput) {
+                const sisaSlot = parseInt(posterInput.dataset.sisaSlot, 10) || 0;
+
+                posterInput.addEventListener('change', function (e) {
+                    // Input ditulis ulang tiap render, jadi file baru ditambahkan ke
+                    // daftar (bukan menggantikan) dengan penjagaan duplikat.
+                    const kunci = new Set(gambarBaru.map(f => f.name + f.size + f.lastModified));
+                    let ditolak = 0;
+
+                    Array.from(e.target.files).forEach(f => {
+                        const k = f.name + f.size + f.lastModified;
+                        if (kunci.has(k)) return;
+                        if (gambarBaru.length >= sisaSlot) { ditolak++; return; }
+                        gambarBaru.push(f);
+                        kunci.add(k);
+                    });
+
+                    if (ditolak > 0) {
+                        alert('Hanya tersisa ' + sisaSlot + ' gambar yang bisa ditambahkan. '
+                            + ditolak + ' gambar terakhir tidak dimasukkan.');
+                    }
+
+                    syncInputGambar();
+                    renderGambarBaru();
+                });
+            }
 
             // Lampiran baru - tampilkan nama file
             document.getElementById('lampiranInput').addEventListener('change', function (e) {
@@ -825,6 +981,7 @@
             // Drag-over styling
             ['posterZone', 'lampiranZone'].forEach(id => {
                 const zone = document.getElementById(id);
+                if (!zone) return;   // zona gambar disembunyikan saat kuota penuh
                 zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
                 zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
                 zone.addEventListener('drop', () => zone.classList.remove('drag-over'));

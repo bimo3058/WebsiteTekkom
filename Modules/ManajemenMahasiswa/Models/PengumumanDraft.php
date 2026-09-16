@@ -17,10 +17,12 @@ class PengumumanDraft extends Model
         'target_audience',
         'konten',
         'poster_repo_id',
+        'poster_repo_ids',
         'lampiran_repo_ids',
     ];
 
     protected $casts = [
+        'poster_repo_ids'   => 'array',
         'lampiran_repo_ids' => 'array',
     ];
 
@@ -38,15 +40,29 @@ class PengumumanDraft extends Model
     }
 
     /**
-     * Semua ID file (poster + lampiran) yang menempel pada draf ini.
+     * ID gambar pengumuman sesuai urutan yang dipilih — indeks 0 adalah cover.
      *
-     * Lampiran disimpan sebagai array ID, bukan relasi HasMany, karena satu baris
+     * Draf lama hanya punya satu gambar di kolom `poster_repo_id`, jadi nilainya
+     * dipakai sebagai fallback supaya draf yang dibuat sebelum fitur multi-gambar
+     * tetap terbaca.
+     */
+    public function posterRepoIds(): array
+    {
+        return array_values(array_filter(
+            $this->poster_repo_ids ?: [$this->poster_repo_id]
+        ));
+    }
+
+    /**
+     * Semua ID file (gambar + lampiran) yang menempel pada draf ini.
+     *
+     * Disimpan sebagai array ID, bukan relasi HasMany, karena satu baris
      * mk_repo_mulmed hanya boleh terikat ke satu pengumuman saat dipublikasikan.
      */
     public function allRepoIds(): array
     {
         return array_values(array_filter(
-            array_merge([$this->poster_repo_id], $this->lampiran_repo_ids ?? [])
+            array_merge($this->posterRepoIds(), $this->lampiran_repo_ids ?? [])
         ));
     }
 

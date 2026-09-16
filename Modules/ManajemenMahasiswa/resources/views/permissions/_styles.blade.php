@@ -83,7 +83,7 @@
     /* ── Filter bar: pola _search_filter Super Admin ─────────────────── */
     .mp-filter-bar {
         background: #fff; border: 1px solid var(--c-border);
-        border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;
+        border-radius: 12px; padding: 12px 16px; margin-bottom: 10px;
         position: relative; z-index: 40;
     }
     .mp-filter-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
@@ -137,7 +137,7 @@
 
     /* ── Flash messages ─────────────────────────────────────────────── */
     .mp-flash {
-        border-radius: 10px; padding: 12px 16px; margin-bottom: 12px;
+        border-radius: 10px; padding: 12px 16px; margin-bottom: 10px;
         display: flex; align-items: center; gap: 10px;
         font-size: 12px; font-weight: 500;
     }
@@ -210,7 +210,7 @@
     .mp-row-action svg { transition: transform .3s; }
     .mp-locked { display: inline-flex; color: var(--c-border-strong); }
 
-    .mp-empty-cell { padding: 56px 24px; text-align: center; color: var(--c-border-strong); }
+    .mp-empty-cell { padding: 44px 24px; text-align: center; color: var(--c-border-strong); }
     .mp-empty-title {
         font-size: 12px; font-weight: 600; color: var(--c-fg-muted);
         text-transform: uppercase; letter-spacing: .06em; margin: 8px 0 2px;
@@ -223,7 +223,7 @@
         padding: 16px; border-bottom: 1px solid var(--c-border);
         background: var(--c-bg);
     }
-    .uc-section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .uc-section-header { display: flex; align-items: center; gap: 8px; margin-bottom:8px; }
     .uc-section-header::before {
         content: ''; display: inline-block; width: 3px; height: 14px;
         border-radius: 2px; background: var(--c-primary);
@@ -232,7 +232,7 @@
     .uc-hint { font-size: 11.5px; color: var(--c-fg-muted); margin: 0 0 12px; line-height: 1.5; }
     .uc-hint strong { color: var(--c-fg-sec); }
 
-    .uc-role-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .uc-role-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
     .uc-role-options label { cursor: pointer; }
     .mk-role-pill {
         display: flex; align-items: center; gap: 8px;
@@ -283,7 +283,7 @@
     }
     .mp-warning-box {
         background: var(--c-error-subtle); border: 1px solid var(--c-error);
-        border-radius: 8px; padding: 10px 14px; margin-bottom: 12px;
+        border-radius: 8px; padding: 10px 14px; margin-bottom: 10px;
         font-size: 11.5px; color: var(--c-error); line-height: 1.5;
         display: flex; gap: 8px; align-items: flex-start;
     }
