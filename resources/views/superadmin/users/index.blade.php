@@ -220,6 +220,80 @@
             const activeId  = container?.getAttribute('data-import-id') || '';
             if (activeId && activeId !== 'null' && activeId !== '') startPolling(activeId);
 
+            // Validation for Add User Form
+            const addUserForm = document.getElementById('addUserForm');
+            const btnSaveUser = document.getElementById('btnSaveUser');
+
+            function validateAddUserForm() {
+                if (!addUserForm || !btnSaveUser) return;
+
+                const password = addUserForm.querySelector('[name="password"]').value;
+                const confirmation = addUserForm.querySelector('[name="password_confirmation"]').value;
+
+                // ── Password Strength ──────────────────────────────────────────
+                const strengthFill = document.getElementById('passStrengthFill');
+                const strengthText = document.getElementById('passStrengthText');
+                const reqWarning = document.getElementById('passReqWarning');
+
+                let score = 0;
+                if (password.length >= 8) score++;
+                if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
+                if (/[0-9]/.test(password)) score++;
+                if (/[^A-Za-z0-9]/.test(password)) score++;
+
+                const strengthMap = {
+                    0: { text: 'Too Short', color: 'bg-slate-300', width: '10%', label: 'Weak' },
+                    1: { text: 'Weak', color: 'bg-red-500', width: '25%', label: 'Weak' },
+                    2: { text: 'Good', color: 'bg-yellow-500', width: '50%', label: 'Good' },
+                    3: { text: 'Strong', color: 'bg-green-500', width: '75%', label: 'Strong' },
+                    4: { text: 'Very Strong', color: 'bg-emerald-600', width: '100%', label: 'Strong' },
+                };
+
+                const currentStrength = strengthMap[score] || strengthMap[0];
+                if (strengthFill) strengthFill.className = `h-full transition-all duration-300 ${currentStrength.color}`;
+                if (strengthFill) strengthFill.style.width = currentStrength.width;
+                if (strengthText) strengthText.textContent = currentStrength.label;
+                if (reqWarning) reqWarning.classList.toggle('hidden', password.length >= 8);
+
+                const passwordValid = password.length >= 8 && password === confirmation;
+
+                // ── Academic Data ──────────────────────────────────────────────
+                let academicValid = true;
+                const selectedRoles = Array.from(addUserForm.querySelectorAll('.add-role-cb:checked')).map(cb => parseInt(cb.value));
+
+                if (selectedRoles.includes(DOSEN_ID)) {
+                    const empNum = addUserForm.querySelector('[name="employee_number"]')?.value;
+                    const nipWarning = document.getElementById('nipWarning');
+                    const isValidNip = /^\d{18}$/.test(empNum);
+                    if (nipWarning) nipWarning.classList.toggle('hidden', !empNum || isValidNip);
+                    if (!isValidNip) academicValid = false;
+                }
+
+                if (selectedRoles.includes(MAHASISWA_ID)) {
+                    const stdNum = addUserForm.querySelector('[name="student_number"]')?.value;
+                    const cohort = addUserForm.querySelector('[name="cohort_year"]')?.value;
+                    const nimWarning = document.getElementById('nimWarning');
+                    const isValidNim = /^\d{14}$/.test(stdNum);
+                    if (nimWarning) nimWarning.classList.toggle('hidden', !stdNum || isValidNim);
+                    if (!isValidNim || !cohort || cohort.trim() === '') academicValid = false;
+                }
+
+                const isValid = passwordValid && academicValid;
+                btnSaveUser.disabled = !isValid;
+                btnSaveUser.className = isValid
+                    ? 'bg-[var(--c-primary)] hover:bg-[var(--c-primary-hover)] text-white text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2'
+                    : 'bg-slate-300 text-slate-500 cursor-not-allowed text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all flex items-center gap-2';
+            }
+
+            if (addUserForm) {
+                addUserForm.addEventListener('input', validateAddUserForm);
+                addUserForm.addEventListener('submit', function(e) {
+                    if (!validateAddUserForm()) { // Not exactly returning a bool but we can check state
+                        // Logic handled by button disabled, but just in case
+                    }
+                });
+            }
+
             // AJAX import form
             const importForm = document.getElementById('formImportUser');
             if (importForm) {
@@ -316,6 +390,7 @@
                     const id = parseInt(this.value);
                     if (id === DOSEN_ID)     document.getElementById('addFieldDosen')?.classList.toggle('hidden', !this.checked);
                     if (id === MAHASISWA_ID) document.getElementById('addFieldMahasiswa')?.classList.toggle('hidden', !this.checked);
+                    validateAddUserForm();
                 });
             });
 

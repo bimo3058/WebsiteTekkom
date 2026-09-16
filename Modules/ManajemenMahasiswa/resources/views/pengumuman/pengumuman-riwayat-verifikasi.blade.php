@@ -45,7 +45,7 @@
         }
 
         /* ── Stat cards: pola _stats dashboard Super Admin ──────────── */
-        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom: 10px; }
         @media (max-width: 768px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 480px) { .stat-grid { grid-template-columns: 1fr; } }
 
@@ -53,7 +53,7 @@
             background: #fff;
             border: 1px solid var(--c-border, #DFE1E7);
             border-radius: 12px;
-            padding: 14px 16px;
+            padding: 12px 14px;
             box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
             transition: border-color .15s, box-shadow .15s;
         }
@@ -61,7 +61,7 @@
             border-color: var(--c-primary-border, #5C78B8);
             box-shadow: 0 4px 14px rgba(11, 38, 110, 0.07);
         }
-        .stat-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+        .stat-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
         .stat-icon {
             width: 28px; height: 28px; border-radius: 8px;
             background: var(--c-primary-subtle, #EEF1F8); color: var(--c-primary, #0B266E);
@@ -76,7 +76,7 @@
         /* ── Tab filter ─────────────────────────────────────────────── */
         .rv-tabs {
             display: flex; gap: 4px; flex-wrap: wrap;
-            margin-bottom: 18px;
+            margin-bottom: 10px;
             border-bottom: 1px solid var(--c-border, #DFE1E7);
         }
         .rv-tab {
@@ -106,7 +106,7 @@
         .alert-success,
         .alert-error {
             border-radius: 10px; padding: 12px 16px;
-            font-size: 12px; font-weight: 500; margin-bottom: 12px;
+            font-size: 12px; font-weight: 500; margin-bottom: 10px;
         }
         .alert-success {
             background: var(--c-success-subtle, #DDF2EE);
@@ -125,7 +125,7 @@
             border: 1px solid var(--c-border, #DFE1E7);
             border-radius: 12px;
             padding: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
             transition: border-color .15s, box-shadow .15s;
         }
@@ -142,7 +142,7 @@
 
         .request-header {
             display: flex; align-items: flex-start; justify-content: space-between;
-            gap: 14px; margin-bottom: 12px;
+            gap: 14px; margin-bottom: 10px;
         }
         .request-title {
             font-size: 14px; font-weight: 700; color: var(--c-fg, #0D0D12);
@@ -244,7 +244,7 @@
         }
 
         /* ── Empty state ────────────────────────────────────────────── */
-        .empty-state { text-align: center; padding: 64px 20px; color: var(--c-fg-muted, #666D80); }
+        .empty-state { text-align: center; padding: 44px 20px; color: var(--c-fg-muted, #666D80); }
         .empty-state-icon {
             width: 64px; height: 64px; border-radius: 50%;
             background: var(--c-primary-subtle, #EEF1F8); color: var(--c-primary, #0B266E);
@@ -252,7 +252,7 @@
             margin: 0 auto 14px;
         }
         .empty-state h6 { font-size: 14px; font-weight: 700; color: var(--c-fg, #0D0D12); margin-bottom: 4px; }
-        .empty-state p  { font-size: 12px; margin-bottom: 14px; }
+        .empty-state p  { font-size: 12px; margin-bottom: 10px; }
 
         @media (max-width: 640px) {
             .request-header { flex-direction: column; }

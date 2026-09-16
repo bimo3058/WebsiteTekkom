@@ -50,7 +50,7 @@
                 border: 1px solid var(--c-border, #DFE1E7);
                 border-radius: 14px;
                 box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
-                margin-bottom: 12px;
+                margin-bottom: 10px;
                 overflow: hidden;
             }
             .fc-card-header {
@@ -62,7 +62,7 @@
             .fc-card-body { padding: 18px; }
 
             /* ── Form controls ──────────────────────────────────────────── */
-            .form-group { margin-bottom: 16px; }
+            .form-group { margin-bottom: 10px; }
             .form-group:last-child { margin-bottom: 0; }
 
             .form-group label {
@@ -116,7 +116,7 @@
             .file-upload-zone {
                 border: 1px dashed var(--c-border-strong, #C1C7CF);
                 border-radius: 12px;
-                padding: 26px;
+                padding: 20px;
                 text-align: center;
                 background: var(--c-bg, #F6F8FA);
                 transition: border-color .15s, background .15s;
@@ -155,11 +155,53 @@
             }
             .file-item .file-remove:hover { background: var(--c-error-subtle, #FADAE1); }
 
-            .poster-preview {
-                margin-top: 12px; max-width: 300px; border-radius: 10px;
-                overflow: hidden; border: 1px solid var(--c-border, #DFE1E7);
+            /* ── Grid gambar pengumuman (cover) ─────────────────────────── */
+            .cover-grid {
+                display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+                gap: 10px; margin-top: 10px;
             }
-            .poster-preview img { width: 100%; display: block; }
+            .cover-item {
+                position: relative; aspect-ratio: 1;
+                border: 1px solid var(--c-border, #DFE1E7); border-radius: 10px;
+                overflow: hidden; background: var(--c-bg, #F6F8FA);
+                transition: border-color .15s, box-shadow .15s, opacity .15s;
+            }
+            .cover-item img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+
+            /* Kartu yang bisa diseret untuk mengatur urutan */
+            .cover-item[draggable="true"] { cursor: grab; }
+            .cover-item[draggable="true"]:hover { border-color: var(--c-primary-border, #5C78B8); }
+            .cover-item.dragging { opacity: .35; cursor: grabbing; }
+            .cover-item.drag-target {
+                border-color: var(--c-primary, #0B266E);
+                box-shadow: 0 0 0 3px var(--c-primary-subtle, #EEF1F8);
+            }
+            .cover-item.is-saved { border-color: var(--c-success, #287F6E); }
+
+            .cover-badge {
+                position: absolute; top: 6px; left: 6px;
+                padding: 2px 7px; border-radius: 6px;
+                font-size: 10px; font-weight: 700; letter-spacing: .02em;
+                background: var(--c-primary, #0B266E); color: #fff;
+            }
+            .cover-order {
+                position: absolute; bottom: 6px; left: 6px;
+                width: 19px; height: 19px; border-radius: 50%;
+                background: rgba(13,13,18,.6); color: #fff;
+                font-size: 10px; font-weight: 700;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .cover-remove {
+                position: absolute; top: 6px; right: 6px;
+                width: 22px; height: 22px; border-radius: 6px;
+                border: none; background: rgba(13,13,18,.55); color: #fff;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer; transition: background .15s; padding: 0;
+            }
+            .cover-remove:hover { background: var(--c-error, #DF1C41); }
+
+            .cover-hint { font-size: 11.5px; color: var(--c-fg-muted, #666D80); margin: 10px 0 0; }
+            .cover-hint strong { color: var(--c-primary, #0B266E); }
 
             /* Penanda file yang sudah tersimpan di draf */
             .saved-note {
@@ -284,7 +326,7 @@
 
             .editor-content {
                 min-height: 220px;
-                padding: 14px 16px;
+                padding: 12px 14px;
                 font-size: 13px;
                 color: var(--c-fg-sec, #353849);
                 line-height: 1.7;
@@ -320,7 +362,7 @@
             .alert-success,
             .alert-danger {
                 border-radius: 10px; padding: 12px 16px;
-                font-size: 12px; font-weight: 500; margin-bottom: 12px;
+                font-size: 12px; font-weight: 500; margin-bottom: 10px;
             }
             .alert-success {
                 background: var(--c-success-subtle, #DDF2EE);
@@ -513,7 +555,7 @@
                         <div class="fc-card-body">
 
                             <div class="form-group">
-                                <label>Poster / Gambar (opsional)</label>
+                                <label>Gambar Pengumuman <span style="color:var(--c-fg-placeholder, #808897); font-weight:400;">(opsional, maks. 5)</span></label>
                                 <div class="file-upload-zone" id="posterZone">
                                     <div class="upload-icon">
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -524,18 +566,24 @@
                                         </svg>
                                     </div>
                                     <h6>Klik atau seret gambar ke sini</h6>
-                                    <p>JPG, PNG — Maks. 10MB</p>
-                                    <input type="file" name="poster" accept="image/jpeg,image/png" id="posterInput">
+                                    <p>JPG, PNG — maks. 5 gambar, 10MB per gambar</p>
+                                    <input type="file" name="poster[]" accept="image/jpeg,image/png" id="posterInput" multiple>
                                 </div>
+
+                                {{-- Gambar yang baru dipilih: bisa diseret untuk menentukan cover --}}
+                                <p class="cover-hint" id="coverHint" style="display: none;">
+                                    Seret gambar untuk mengubah urutan — gambar paling depan dipakai sebagai <strong>cover</strong>.
+                                </p>
+                                <div class="cover-grid" id="posterPreview"></div>
+
+                                {{-- Gambar yang sudah tersimpan di draf (hanya tampilan) --}}
                                 <div class="saved-note" id="posterSavedNote" style="display: none;">
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M20 6 9 17l-5-5"/>
                                     </svg>
-                                    <span id="posterSavedName">Poster tersimpan di draf</span>
+                                    <span id="posterSavedName">Gambar tersimpan di draf</span>
                                 </div>
-                                <div class="poster-preview" id="posterPreview" style="display: none;">
-                                    <img id="posterImg" src="" alt="Preview Poster">
-                                </div>
+                                <div class="cover-grid" id="posterSavedList"></div>
                             </div>
 
                             <div class="form-group">
@@ -652,27 +700,28 @@
             }
 
             /**
-             * Tampilkan file yang sudah tersimpan di draf (poster + lampiran).
+             * Tampilkan file yang sudah tersimpan di draf (gambar + lampiran).
              * Dipanggil saat draf di-load dan setelah draf berhasil disimpan.
              */
             function renderDraftAttachments(payload) {
                 const savedNote = document.getElementById('posterSavedNote');
                 const savedName = document.getElementById('posterSavedName');
-                const preview   = document.getElementById('posterPreview');
-                const img       = document.getElementById('posterImg');
+                const savedGrid = document.getElementById('posterSavedList');
                 const savedList = document.getElementById('lampiranSavedList');
 
-                const poster = payload?.poster ?? null;
-                if (poster) {
-                    savedName.textContent = 'Poster tersimpan: ' + poster.nama;
-                    savedNote.style.display = 'flex';
-                    img.src = poster.url;
-                    preview.style.display = 'block';
-                } else {
-                    savedNote.style.display = 'none';
-                    preview.style.display = 'none';
-                    img.src = '';
-                }
+                const gambar = payload?.gambar ?? [];
+                savedNote.style.display = gambar.length ? 'flex' : 'none';
+                savedName.textContent = gambar.length + ' gambar tersimpan di draf'
+                    + (gambar.length > 1 ? ' — yang pertama menjadi cover' : '');
+
+                savedGrid.innerHTML = gambar.map((f, i) => `
+                    <div class="cover-item is-saved" title="${escHtml(f.nama)}">
+                        <img src="${escHtml(f.url)}" alt="${escHtml(f.nama)}">
+                        ${i === 0
+                            ? '<span class="cover-badge">Cover</span>'
+                            : `<span class="cover-order">${i + 1}</span>`}
+                    </div>
+                `).join('');
 
                 const lampiran = payload?.lampiran ?? [];
                 savedList.innerHTML = lampiran.map(f => `
@@ -690,25 +739,105 @@
                 `).join('');
             }
 
-            // Poster preview
-            document.getElementById('posterInput').addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                const preview = document.getElementById('posterPreview');
-                const img = document.getElementById('posterImg');
+            // ── Gambar pengumuman: pilih maks. 5, urutkan dengan drag ──────────
+            const MAX_GAMBAR = 5;
+            const posterInput = document.getElementById('posterInput');
+            let gambarTerpilih = [];   // File[] — indeks 0 dipakai sebagai cover
+            let dragDari = null;
 
-                if (file && file.type.startsWith('image/')) {
-                    // Poster baru akan menggantikan poster yang tersimpan di draf.
-                    document.getElementById('posterSavedNote').style.display = 'none';
-                    const reader = new FileReader();
-                    reader.onload = function (ev) {
-                        img.src = ev.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    preview.style.display = 'none';
-                    img.src = '';
+            /** Tulis ulang FileList input sesuai urutan kartu supaya ikut terkirim. */
+            function syncInputGambar() {
+                const dt = new DataTransfer();
+                gambarTerpilih.forEach(f => dt.items.add(f));
+                posterInput.files = dt.files;
+            }
+
+            function renderGambarTerpilih() {
+                const grid = document.getElementById('posterPreview');
+                const hint = document.getElementById('coverHint');
+
+                // Bebaskan object URL kartu lama sebelum digambar ulang
+                grid.querySelectorAll('img').forEach(img => URL.revokeObjectURL(img.src));
+                grid.innerHTML = '';
+                hint.style.display = gambarTerpilih.length > 1 ? 'block' : 'none';
+
+                gambarTerpilih.forEach((file, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'cover-item';
+                    card.draggable = true;
+                    card.title = file.name;
+                    card.innerHTML = `
+                        <img src="${URL.createObjectURL(file)}" alt="">
+                        ${i === 0
+                            ? '<span class="cover-badge">Cover</span>'
+                            : `<span class="cover-order">${i + 1}</span>`}
+                        <button type="button" class="cover-remove" title="Hapus gambar">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round">
+                                <path d="M18 6L6 18M6 6l12 12"/>
+                            </svg>
+                        </button>`;
+
+                    card.querySelector('.cover-remove').addEventListener('click', () => {
+                        gambarTerpilih.splice(i, 1);
+                        syncInputGambar();
+                        renderGambarTerpilih();
+                    });
+
+                    card.addEventListener('dragstart', () => {
+                        dragDari = i;
+                        card.classList.add('dragging');
+                    });
+                    card.addEventListener('dragend', () => {
+                        dragDari = null;
+                        grid.querySelectorAll('.cover-item').forEach(c => {
+                            c.classList.remove('dragging', 'drag-target');
+                        });
+                    });
+                    card.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        if (dragDari !== null && dragDari !== i) card.classList.add('drag-target');
+                    });
+                    card.addEventListener('dragleave', () => card.classList.remove('drag-target'));
+                    card.addEventListener('drop', e => {
+                        e.preventDefault();
+                        if (dragDari === null || dragDari === i) return;
+                        const [dipindah] = gambarTerpilih.splice(dragDari, 1);
+                        gambarTerpilih.splice(i, 0, dipindah);
+                        syncInputGambar();
+                        renderGambarTerpilih();
+                    });
+
+                    grid.appendChild(card);
+                });
+            }
+
+            posterInput.addEventListener('change', function (e) {
+                // Input di-reset tiap render, jadi file baru ditambahkan ke daftar
+                // (bukan menggantikan) dengan penjagaan duplikat.
+                const kunci = new Set(gambarTerpilih.map(f => f.name + f.size + f.lastModified));
+                let ditolak = 0;
+
+                Array.from(e.target.files).forEach(f => {
+                    const k = f.name + f.size + f.lastModified;
+                    if (kunci.has(k)) return;
+                    if (gambarTerpilih.length >= MAX_GAMBAR) { ditolak++; return; }
+                    gambarTerpilih.push(f);
+                    kunci.add(k);
+                });
+
+                if (ditolak > 0) {
+                    alert('Maksimal ' + MAX_GAMBAR + ' gambar. ' + ditolak + ' gambar terakhir tidak ditambahkan.');
                 }
+
+                // Gambar baru akan menggantikan gambar yang tersimpan di draf.
+                if (gambarTerpilih.length) {
+                    document.getElementById('posterSavedNote').style.display = 'none';
+                    document.getElementById('posterSavedList').innerHTML = '';
+                }
+
+                syncInputGambar();
+                renderGambarTerpilih();
             });
 
             // Lampiran file list
@@ -794,7 +923,9 @@
 
                         // File sudah tersimpan di server — kosongkan input supaya
                         // auto-save berikutnya tidak mengupload ulang file yang sama.
-                        document.getElementById('posterInput').value = '';
+                        gambarTerpilih = [];
+                        posterInput.value = '';
+                        renderGambarTerpilih();
                         document.getElementById('lampiranInput').value = '';
                         document.getElementById('lampiranList').innerHTML = '';
 
@@ -840,8 +971,10 @@
                 document.getElementById('editorContent').innerHTML = konten || '';
                 syncEditorContent();
 
-                // Poster & lampiran yang ikut tersimpan di draf ini
-                document.getElementById('posterInput').value = '';
+                // Gambar & lampiran yang ikut tersimpan di draf ini
+                gambarTerpilih = [];
+                posterInput.value = '';
+                renderGambarTerpilih();
                 document.getElementById('lampiranInput').value = '';
                 document.getElementById('lampiranList').innerHTML = '';
                 renderDraftAttachments(DRAFT_ATTACHMENTS[id] ?? null);

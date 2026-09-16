@@ -217,8 +217,8 @@
                     </div>
 
                     <div class="mt-4 flex gap-3">
-                        <button type="button" class="flex-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" id="btnKembalikan">Kembalikan</button>
-                        <button type="button" class="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed" id="btnSetujui">Setujui RPS</button>
+                        <button type="button" class="flex-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100 hover:text-rose-800 hover:border-rose-300 cursor-pointer transition-all shadow-sm hover:shadow-md disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed disabled:shadow-none" id="btnKembalikan">Kembalikan</button>
+                        <button type="button" class="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm hover:shadow-md" id="btnSetujui">Setujui RPS</button>
                     </div>
                 </form>
             </div>
@@ -347,7 +347,7 @@
             }
 
             if (btnKembalikan) {
-                btnKembalikan.addEventListener('click', function (e) {
+                btnKembalikan.addEventListener('click', async function (e) {
                     e.preventDefault();
 
                     if (!validateParametersNotEmpty()) {
@@ -361,21 +361,57 @@
                         return;
                     }
 
-                    actionInput.value = 'revisi';
-                    submitForm();
+                    const confirm = await Swal.fire({
+                        title: 'Kembalikan RPS?',
+                        text: "RPS ini akan dikembalikan ke dosen untuk direvisi sesuai catatan Anda.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Kembalikan',
+                        cancelButtonText: 'Batal'
+                    });
+
+                    if (confirm.isConfirmed) {
+                        const originalText = btnKembalikan.innerHTML;
+                        btnKembalikan.disabled = true;
+                        btnKembalikan.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+                        if (btnSetujui) btnSetujui.disabled = true;
+
+                        actionInput.value = 'revisi';
+                        submitForm(btnKembalikan, originalText);
+                    }
                 });
             }
 
             if (btnSetujui) {
-                btnSetujui.addEventListener('click', function (e) {
+                btnSetujui.addEventListener('click', async function (e) {
                     e.preventDefault();
 
                     if (!validateParametersNotEmpty()) {
                         return;
                     }
 
-                    actionInput.value = 'setuju';
-                    submitForm();
+                    const confirm = await Swal.fire({
+                        title: 'Setujui RPS?',
+                        text: "RPS yang disetujui dapat digunakan dosen untuk mengelola bank soal.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0ea5e9',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Setujui',
+                        cancelButtonText: 'Batal'
+                    });
+
+                    if (confirm.isConfirmed) {
+                        const originalText = btnSetujui.innerHTML;
+                        btnSetujui.disabled = true;
+                        btnSetujui.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+                        if (btnKembalikan) btnKembalikan.disabled = true;
+
+                        actionInput.value = 'setuju';
+                        submitForm(btnSetujui, originalText);
+                    }
                 });
 
                 btnSetujui.addEventListener('mousedown', function (e) {
@@ -386,7 +422,7 @@
                 });
             }
 
-            function submitForm() {
+            function submitForm(activeBtn = null, originalText = null) {
                 const formData = new FormData(form);
 
                 fetch('{{ route("banksoal.rps.gpm.validasi-rps.store") }}', {
@@ -417,6 +453,20 @@
                 .catch(error => {
                     console.error('Error:', error);
                     showToast(error.message || 'Gagal menyimpan validasi', 'error');
+
+                    if (activeBtn && originalText) {
+                        activeBtn.disabled = false;
+                        activeBtn.innerHTML = originalText;
+
+                        if (activeBtn.id === 'btnKembalikan') {
+                            const total = form.querySelectorAll('input[type="radio"]:checked');
+                            let val = 0;
+                            total.forEach(i => { if(i.value === '1') val += parseInt(i.getAttribute('data-bobot')) || 0; });
+                            updateButtonState(val);
+                        } else {
+                            if (btnKembalikan) btnKembalikan.disabled = false;
+                        }
+                    }
                 });
             }
 

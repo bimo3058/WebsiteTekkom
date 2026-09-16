@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'SIBASO') }}</title>
+    <title>SIBASO: Sistem Informasi Bank Soal</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -16,7 +16,11 @@
 
     <!-- Tom Select for Dropdowns -->
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+    <link href="{{ asset('modules/banksoal/css/tom-select-custom.css') }}" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -44,10 +48,6 @@
                 </div>
 
                 <div class="flex items-center gap-4">
-                    <button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </button>
-
                     <button class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors relative">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                         <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
@@ -80,24 +80,11 @@
     <!-- Global Component untuk Toast Message -->
     <x-banksoal::global-toast />
 
-    <!-- Global Loader Overlay (Style 1 for non-interruptible POST/mutation queries) -->
-    <div class="pm-loader" id="loaderOverlay" style="position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:999999;">
-        <div class="pm-spinner" style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:rgb(11,38,110);border-radius:50%;animation:pm-spin .7s linear infinite;"></div>
-    </div>
-    <style>
-        .pm-loader.show { display: flex !important; }
-        @keyframes pm-spin { to { transform: rotate(360deg); } }
-    </style>
-    <script>
-        window.showLoader = function() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) overlay.classList.add('show');
-        };
-        window.hideLoader = function() {
-            const overlay = document.getElementById('loaderOverlay');
-            if (overlay) overlay.classList.remove('show');
-        };
-    </script>
+    <!-- Global Loader Overlay (Initialized by Spinner.js) -->
+    <script src="{{ asset('modules/banksoal/js/Banksoal/shared/Spinner.js') }}"></script>
+
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
 
     @livewireScripts
     @stack('scripts')

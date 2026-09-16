@@ -53,7 +53,7 @@
     .da-section { display:block; }
 
     /* ─── Header ─────────────────────────────────────────── */
-    .da-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .da-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
     .da-header h4 { font-size:1.45rem; font-weight:800; color:#0D0D12; margin-bottom:2px; letter-spacing:-.02em; }
     .da-header-meta { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:4px; }
     .da-tier-badge {
@@ -70,21 +70,21 @@
     .da-refresh-btn:hover { border-color:#0B266E; color:#0B266E; background:#EEF1F8; }
 
     /* ─── Section Label ──────────────────────────────────── */
-    .section-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; margin-top:24px; }
+    .section-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; margin-top:12px; }
     .section-label { font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:normal; text-transform:none; }
     .section-line { display:none; }
     .section-header::before { content:''; display:inline-block; width:3px; height:14px; border-radius:2px; background:var(--c-primary, #0B266E); }
 
     /* ─── Tier 1: Action Cards ───────────────────────────── */
-    .action-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px; }
+    .action-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:10px; }
     @media(max-width:1100px){ .action-grid { grid-template-columns:repeat(3,1fr); } }
     @media(max-width:640px) { .action-grid { grid-template-columns:1fr 1fr; } }
 
     .action-card {
         background:#fff; border-radius:12px; border:1px solid var(--c-border, #DFE1E7);
-        padding:14px 16px; text-decoration:none; transition:box-shadow .15s, border-color .15s; cursor:pointer;
+        padding:12px 14px; text-decoration:none; transition:box-shadow .15s, border-color .15s; cursor:pointer;
         box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
-        display: grid; grid-template-areas: "icon label" "num num"; grid-template-columns: auto 1fr; align-items: center; gap: 14px 8px;
+        display: grid; grid-template-areas: "icon label" "num num"; grid-template-columns: auto 1fr; align-items: center; gap: 8px 8px;
     }
     .action-card:hover { border-color: var(--c-primary-border, #5C78B8); box-shadow: 0 4px 14px rgba(11,38,110,0.07); }
     .action-card::before { display:none; }
@@ -100,14 +100,14 @@
     .action-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#eff6ff !important; color:#2563eb !important; }
 
     /* ─── Tier 2: Activity Stats + Chart ────────────────── */
-    .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:10px; }
     @media(max-width:900px){ .activity-grid { grid-template-columns:repeat(2,1fr); } }
     @media(max-width:480px){ .activity-grid { grid-template-columns:1fr; } }
 
     .stat-card {
         background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:12px;
-        padding:14px 16px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); transition:box-shadow .15s, border-color .15s;
-        display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px 8px;
+        padding:12px 14px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); transition:box-shadow .15s, border-color .15s;
+        display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 8px;
     }
     .stat-card:hover { border-color: var(--c-primary-border, #5C78B8); box-shadow: 0 4px 14px rgba(11,38,110,0.07); }
     .stat-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background: #eff6ff !important; color: #2563eb !important; }
@@ -117,13 +117,13 @@
     .stat-sub { display: none; }
 
     /* ─── Tier 3 & 4: KPI Mini Cards ────────────────────── */
-    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:10px; }
     @media(max-width:900px){ .kpi-row { grid-template-columns:repeat(2,1fr); } }
     @media(max-width:480px){ .kpi-row { grid-template-columns:1fr; } }
     
     .kpi-mini {
         background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:12px;
-        padding:14px 16px; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 14px 8px;
+        padding:12px 14px; display: flex; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px 8px;
     }
     .kpi-mini-icon { width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background: #eff6ff !important; color: #2563eb !important; }
     .kpi-mini > div:last-child { display: contents; }
@@ -131,7 +131,7 @@
     .kpi-mini-val { order: 2; width: 100%; font-size:24px; font-weight:700; color:#0D0D12 !important; line-height:1; letter-spacing:-.02em; margin:0; }
 
     /* ─── Chart Grid ─────────────────────────────────────── */
-    .chart-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px; }
+    .chart-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
     @media(max-width:768px){ .chart-grid-2 { grid-template-columns:1fr; } }
     
     .chart-card { background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; box-shadow:var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); display:flex; flex-direction:column; overflow:hidden; }
@@ -163,7 +163,7 @@
     .progress-bar-fill { height:100%; border-radius:50px; }
 
     /* ─── Table ──────────────────────────────────────────── */
-    .table-card { background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; box-shadow:var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); margin-bottom:18px; overflow:hidden; }
+    .table-card { background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; box-shadow:var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); margin-bottom:10px; overflow:hidden; }
     .table-header { display:flex; align-items:center; justify-content:space-between; padding:13px 18px; border-bottom:1px solid var(--c-border, #DFE1E7); flex-wrap:wrap; gap:10px; margin:0; }
     .table-title { font-size:13px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0; display:flex; align-items:center; gap:7px; }
     .table-title svg { color:var(--c-primary, #0B266E); }
@@ -185,7 +185,7 @@
     .badge-belum     { background:#f3f4f6; color:#666D80; }
     .avatar-sm { width:32px; height:32px; border-radius:50%; background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
     .empty-row td { text-align:center; color:var(--c-fg-muted, #666D80); padding:32px; font-size:12px; }
-    .section-gap { margin-bottom:24px; }
+    .section-gap { margin-bottom:10px; }
 
     /* ─── Global Font Override: force superadmin px sizes on inline styles ─── */
     .dash-box-body, .dash-box-body * { font-family: 'Inter Tight', sans-serif; }
@@ -912,13 +912,13 @@
     @endforeach
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:18px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:12px;">
     <div class="chart-card">
         <div class="chart-title">
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/headphone-01.svg'))) !!}</span>
             Layanan Pengaduan
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:10px;">
             @foreach([
                 ['label'=>'Baru', 'val'=>$ops['pengaduan_baru'] ?? 0, 'color'=>'#dc2626'],
                 ['label'=>'Dibaca', 'val'=>$ops['pengaduan_dibaca'] ?? 0, 'color'=>'#2563eb'],
@@ -971,7 +971,7 @@
     </div>
 </div>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:18px;">
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:12px;">
     <div class="chart-card">
         <div class="chart-title">
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/calendar.svg'))) !!}</span>
@@ -981,7 +981,7 @@
             $pesertaPct = min(100, $ops['persen_realisasi_peserta'] ?? 0);
             $anggaranPct = min(100, $ops['persen_realisasi_anggaran'] ?? 0);
         @endphp
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:16px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:10px;">
             @foreach([
                 ['label'=>'Draft', 'val'=>$ops['kegiatan_draft'] ?? 0],
                 ['label'=>'Pelaksanaan', 'val'=>$ops['kegiatan_pelaksanaan'] ?? 0],
@@ -994,7 +994,7 @@
             @endforeach
         </div>
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.82rem;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0) }} / {{ number_format($ops['target_peserta'] ?? 0) }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
-        <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin-bottom:12px;"><div style="width:{{ $pesertaPct }}%;height:100%;background:#2563eb;border-radius:999px;"></div></div>
+        <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin-bottom:10px;"><div style="width:{{ $pesertaPct }}%;height:100%;background:#2563eb;border-radius:999px;"></div></div>
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.82rem;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span></div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;"><div style="width:{{ $anggaranPct }}%;height:100%;background:#059669;border-radius:999px;"></div></div>
         <div style="margin-top:10px;font-size:.72rem;color:#808897;">
@@ -1120,13 +1120,13 @@
             'kurang'   => ['bg'=>'#f3f4f6','color'=>'#808897','txt'=>'Data belum cukup'],
         ];
         $c = $map[$t['status']] ?? $map['kurang'];
-        return '<div style="margin-top:6px;display:flex;flex-direction:column;gap:2px;">'
+        return '<div style="display:inline-flex;align-items:center;gap:6px;">'
             . '<span style="display:inline-block;width:fit-content;padding:1px 8px;border-radius:50px;font-size:.66rem;font-weight:700;background:'.$c['bg'].';color:'.$c['color'].';">'.$c['txt'].'</span>'
             . '<span style="font-size:.64rem;color:#808897;">'.$t['label'].'</span>'
             . '</div>';
     };
 @endphp
-<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px;">
+<div class="kpi-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:10px;">
     {{-- Rata-rata Masa Studi --}}
     <div class="kpi-mini">
         <div class="kpi-mini-icon" style="background:#eff6ff;color:#2563eb;">
@@ -1259,7 +1259,7 @@
     <div class="section-line"></div>
 </div>
 
-<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px;">
+<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:10px;">
     <div class="kpi-mini">
         <div class="kpi-mini-icon" style="background:#eff6ff;color:#2563eb;">
             <span style="display:inline-flex;width:18px;height:18px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/calendar.svg'))) !!}</span>
@@ -1436,7 +1436,7 @@
             Distribusi Mahasiswa per Angkatan
         </div>
         {{-- Filter Buttons --}}
-        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;" id="angkatanFilters">
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;" id="angkatanFilters">
             @php
                 $lineStatuses = [
                     'aktif'       => ['label'=>'Aktif',        'color'=>'#3b82f6','bg'=>'#eff6ff','border'=>'#bfdbfe'],
@@ -1633,7 +1633,7 @@
     <div class="section-line"></div>
 </div>
 
-<div class="chart-grid-2" style="margin-bottom:18px;">
+<div class="chart-grid-2" style="margin-bottom:10px;">
     {{-- Evaluasi Calon DO --}}
     @if($hasSection('calon_do') && !empty($cdo))
     @php $cdoTotal = $cdo['total_count'] ?? 0; @endphp
@@ -1651,7 +1651,7 @@
         </div>
 
         {{-- Dua tier deteksi dini (FASE 3B) --}}
-        <div style="display:flex;gap:10px;margin-bottom:12px;">
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
             <div style="flex:1;text-align:center;padding:12px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;">
                 <div style="font-size:2rem;font-weight:900;line-height:1;color:#dc2626;">{{ $cdo['kritis_count'] ?? 0 }}</div>
                 <div style="font-size:.72rem;color:#dc2626;font-weight:700;margin-top:4px;">Kritis · Smt ≥ 12</div>
@@ -1661,7 +1661,7 @@
                 <div style="font-size:.72rem;color:#d97706;font-weight:700;margin-top:4px;">Perlu Pemantauan · Smt 9–11</div>
             </div>
         </div>
-        <div style="font-size:.78rem;color:#808897;line-height:1.5;margin-bottom:12px;">
+        <div style="font-size:.78rem;color:#808897;line-height:1.5;margin-bottom:10px;">
             Mahasiswa <strong>aktif</strong> pada semester lanjut (angkatan ≤ {{ $cdo['threshold_pantau'] ?? '-' }}). Perlu evaluasi &amp; pendampingan akademik bertingkat.
         </div>
 
@@ -1703,14 +1703,14 @@
 
         {{-- Indikator sinkronisasi alumni --}}
         @if(($lulus['belum_sinkron'] ?? 0) > 0)
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:14px;">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:10px;">
             <span style="display:inline-flex;width:18px;height:18px;color:#d97706;flex-shrink:0;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-circle.svg'))) !!}</span>
             <div style="flex:1;font-size:.8rem;color:#92400e;line-height:1.5;">
                 <strong>{{ $lulus['belum_sinkron'] }}</strong> mahasiswa berstatus lulus belum tersinkron ke direktori alumni.
             </div>
         </div>
         @else
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:14px;font-size:.8rem;color:#166534;font-weight:600;">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:10px;font-size:.8rem;color:#166534;font-weight:600;">
             ✓ Semua lulusan sudah tersinkron ke direktori alumni
         </div>
         @endif

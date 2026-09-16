@@ -6,18 +6,33 @@
     <title>Hasil Ekstraksi Soal - {{ $mataKuliah->nama }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @page {
+            margin: 1.5cm 1.5cm 1.5cm 1.5cm;
+        }
         @media print {
             .no-print { display: none !important; }
             body { padding: 0; background: white; font-size: 11pt; }
-            .page-break { page-break-after: always; }
+            .page-break { page-break-after: always; break-after: page; }
+            .document-container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                background: white !important;
+            }
+            .soal-item {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
         }
         body { font-family: 'Times New Roman', Times, serif; background-color: #f1f5f9; padding: 2rem 0; }
-        .document-container { max-width: 21cm; margin: 0 auto; background: white; padding: 2.5cm; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .document-container { max-width: 21cm; margin: 0 auto; background: white; padding: 1.5cm 2.5cm 2.5cm 2.5cm; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .soal-item { break-inside: avoid; page-break-inside: avoid; }
     </style>
 </head>
 <body>
     <div class="text-center no-print mb-6 space-x-4">
-        <button onclick="window.print()" class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-sans font-medium text-sm shadow-sm transition-colors">
+        <button onclick="window.print()" class="text-white px-6 py-2.5 rounded-lg font-sans font-medium text-sm shadow-sm transition-colors" style="background-color:#2563eb;">
             Cetak PDF / Print
         </button>
         <button onclick="window.close()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2.5 rounded-lg font-sans font-medium text-sm transition-colors">
@@ -27,12 +42,14 @@
 
     <div class="document-container">
         <!-- Header -->
-        <div style="border-bottom: 3px solid black; padding-bottom: 8px; margin-bottom: 20px;">
+        <div style="border-bottom: 3px solid black; padding-bottom: 4px; margin-bottom: 10px;">
             <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                 <tr style="vertical-align: middle;">
                     <!-- Logo (kiri) -->
-                    <td style="width: 13%; text-align: center; padding: 0; line-height: 0">
-                        <img src="{{ asset('images/logo-undip.png') }}" style="width: 180px; height: 180px; object-fit: contain; display: block; margin: 0 auto;" alt="Logo Undip" />
+                    <td style="width: 13%; text-align: center; padding: 0; line-height: 0; vertical-align: middle;">
+                        <div style="position: relative; width: 90px; height: 90px; margin: 0 auto;">
+                            <img src="{{ asset('images/logo-undip.png') }}" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 180px; height: 180px; object-fit: contain;" alt="Logo Undip" />
+                        </div>
                     </td>
 
                     <!-- Judul & Info -->
@@ -65,7 +82,7 @@
         </div>
 
         <!-- Judul Ujian & Informasi Pelaksanaan -->
-        <div class="mb-8">
+        <div class="mb-4">
             <table class="w-full text-left text-[11pt] border-none">
                 <tbody>
                     <tr>
@@ -93,7 +110,7 @@
                         
                         <td class="py-1.5 align-top pl-4">Dosen Penguji</td>
                         <td class="py-1.5 align-top">:</td>
-                        <td class="py-1.5 align-top">{{ auth()->user()->name ?? '............................' }}</td>
+                        <td class="py-1.5 align-top">{{ $request->dosen_name ?? auth()->user()->name ?? '............................' }}</td>
                     </tr>
                 </tbody>
             </table>
@@ -129,7 +146,7 @@
                         <div class="mt-3 space-y-1">
                             @foreach($soal->jawaban as $idx => $jawab)
                                 @php $char = chr(65 + $idx); @endphp
-                                <div class="flex gap-2 {{ $jawab->is_benar ? 'font-bold' : '' }}">
+                                <div class="flex gap-2">
                                     <div>{{ $jawab->opsi ?? $char }}.</div>
                                     <div class="prose prose-sm max-w-none">{!! $jawab->deskripsi !!}</div>
                                 </div>

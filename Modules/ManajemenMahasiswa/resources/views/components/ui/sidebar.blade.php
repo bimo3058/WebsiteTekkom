@@ -183,21 +183,13 @@
     <nav class="sb-nav">
         <div x-show="sidebarOpen" class="sb-section-label">Main Menu</div>
 
-        <a href="{{ $mainDashboardUrl }}"
-            class="{{ str_contains($currentRoute, 'dashboard') && !str_contains($currentRoute, 'manajemenmahasiswa') ? 'active' : '' }}">
-            <span class="nav-icon d-inline-flex">
-                {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/home-01.svg'))) !!}
-            </span>
-            <span class="nav-label" style="flex-grow:1;">Dashboard</span>
-        </a>
-
         @if($showDashboardAnalitik)
             <a href="{{ route('manajemenmahasiswa.dashboard') }}"
                 class="{{ $currentRoute === 'manajemenmahasiswa.dashboard' ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
-                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/home-01.svg'))) !!}
                 </span>
-                <span class="nav-label" style="flex-grow:1;">Analitik</span>
+                <span class="nav-label" style="flex-grow:1;">Dashboard</span>
             </a>
         @endif
 
@@ -296,7 +288,8 @@
             </div>
 
         @else
-            {{-- Link tunggal Pengumuman — untuk role lain (mahasiswa, alumni, dosen, dll) --}}
+            {{-- Pengumuman — menu tunggal untuk mahasiswa, alumni, dosen, pengurus:
+                 role ini hanya membaca pengumuman, tidak ada submenu verifikasi. --}}
             <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.pengumuman.*') ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
@@ -460,13 +453,58 @@
             </div>
         @endif
 
-        <a href="{{ route('manajemenmahasiswa.forum.index') }}"
-            class="{{ request()->routeIs('manajemenmahasiswa.forum.*') ? 'active' : '' }}">
-            <span class="nav-icon d-inline-flex">
-                {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}
-            </span>
-            <span class="nav-label" style="flex-grow:1;">Forum Diskusi</span>
-        </a>
+        @php
+            $forumDropdownActive = request()->routeIs('manajemenmahasiswa.forum.*');
+        @endphp
+        @php
+            $canSeeForumReports = in_array('superadmin', $sidebarRoles) || in_array('admin', $sidebarRoles) || in_array('admin_kemahasiswaan', $sidebarRoles) || in_array('gpm', $sidebarRoles) || in_array('dpm', $sidebarRoles) || in_array('ketua_departemen', $sidebarRoles);
+            $pendingReportsCount = $canSeeForumReports ? \Modules\ManajemenMahasiswa\Models\ForumReport::where('status','pending')->count() : 0;
+        @endphp
+        <div class="sidebar-dropdown {{ $forumDropdownActive ? 'open' : '' }}">
+            <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $forumDropdownActive ? 'active' : '' }}"
+                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
+                <span class="nav-icon d-inline-flex">
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}
+                </span>
+                <span class="nav-label" style="flex-grow: 1;">Forum Diskusi</span>
+                @if($pendingReportsCount > 0)
+                    <span style="background:#ef4444; color:#fff; font-size:9px; font-weight:700; padding:1px 5px; border-radius:20px; margin-right:4px; flex-shrink:0;">{{ $pendingReportsCount }}</span>
+                @endif
+                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </a>
+            <div class="sidebar-dropdown-menu">
+                @php
+                    $forumOnlyActive = request()->routeIs('manajemenmahasiswa.forum.*')
+                        && !request()->routeIs('manajemenmahasiswa.forum.my')
+                        && !request()->routeIs('manajemenmahasiswa.forum.leaderboard')
+                        && !request()->routeIs('manajemenmahasiswa.forum.reports');
+                @endphp
+                <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+                    class="sub-item {{ $forumOnlyActive ? 'active' : '' }}">
+                    <span class="nav-label">Forum</span>
+                </a>
+                <a href="{{ route('manajemenmahasiswa.forum.my') }}"
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.my') ? 'active' : '' }}">
+                    <span class="nav-label">Forum Saya</span>
+                </a>
+                <a href="{{ route('manajemenmahasiswa.forum.leaderboard') }}"
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.leaderboard') ? 'active' : '' }}">
+                    <span class="nav-label">Leaderboard</span>
+                </a>
+                @if($canSeeForumReports)
+                    <a href="{{ route('manajemenmahasiswa.forum.reports') }}"
+                        class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.reports') ? 'active' : '' }}">
+                        <span class="nav-label">Laporan</span>
+                        @if($pendingReportsCount > 0)
+                            <span style="background:#ef4444; color:#fff; font-size:9px; font-weight:700; padding:1px 5px; border-radius:20px; margin-left:auto;">{{ $pendingReportsCount }}</span>
+                        @endif
+                    </a>
+                @endif
+            </div>
+        </div>
 
         @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'dpm', 'ketua_departemen']))
             <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
@@ -480,6 +518,15 @@
     </nav>
 
     <div class="sb-footer">
+        <a href="{{ $mainDashboardUrl }}" class="btn-logout">
+            <span class="nav-icon d-inline-flex">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </span>
+            <span class="nav-label">Kembali ke SITKOM</span>
+        </a>
+
         <a href="{{ route('profile.edit') }}" class="btn-logout">
             <span class="nav-icon d-inline-flex">
                 {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/gear.svg'))) !!}

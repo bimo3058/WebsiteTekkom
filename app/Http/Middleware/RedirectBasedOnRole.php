@@ -64,7 +64,7 @@ class RedirectBasedOnRole
 
         // 2. Admin modul — lock ke prefix modul masing-masing
         $adminModuleRoles = [
-            'admin_banksoal'      => ['route' => 'banksoal.dashboard',                     'prefix' => 'bank-soal*'],
+            'admin_banksoal'      => ['route' => 'banksoal.dashboard',                     'prefix' => 'api/v1/bank-soal*'],
             'admin_capstone'      => ['route' => 'capstone.dashboard',                     'prefix' => 'capstone*'],
             'admin_eoffice'       => ['route' => 'eoffice.dashboard',                      'prefix' => 'eoffice*'],
             'admin_kemahasiswaan' => ['route' => 'manajemenmahasiswa.dashboard',           'prefix' => 'manajemen-mahasiswa*'],

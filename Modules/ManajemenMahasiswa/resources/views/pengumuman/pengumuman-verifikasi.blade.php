@@ -65,7 +65,7 @@
             /* ── Tab filter ─────────────────────────────────────────────── */
             .verif-tabs {
                 display: flex; gap: 4px; flex-wrap: wrap;
-                margin-bottom: 18px;
+                margin-bottom: 10px;
                 border-bottom: 1px solid var(--c-border, #DFE1E7);
             }
             .verif-tab {
@@ -88,7 +88,7 @@
             .alert-success,
             .alert-error {
                 border-radius: 10px; padding: 12px 16px;
-                font-size: 12px; font-weight: 500; margin-bottom: 12px;
+                font-size: 12px; font-weight: 500; margin-bottom: 10px;
             }
             .alert-success {
                 background: var(--c-success-subtle, #DDF2EE);
@@ -107,7 +107,7 @@
                 border: 1px solid var(--c-border, #DFE1E7);
                 border-radius: 12px;
                 padding: 16px;
-                margin-bottom: 10px;
+                margin-bottom: 8px;
                 box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
                 transition: border-color .15s, box-shadow .15s;
             }
@@ -117,7 +117,7 @@
             }
             .request-card-header {
                 display: flex; align-items: flex-start; justify-content: space-between;
-                gap: 14px; margin-bottom: 12px;
+                gap: 14px; margin-bottom: 10px;
             }
             .request-card-title {
                 font-size: 14px; font-weight: 700; color: var(--c-fg, #0D0D12);
@@ -147,7 +147,7 @@
                 border-radius: 8px;
                 padding: 10px 14px;
                 font-size: 12px; color: var(--c-fg-sec, #353849);
-                margin-bottom: 12px; line-height: 1.5;
+                margin-bottom: 10px; line-height: 1.5;
             }
             .request-pesan .pesan-label {
                 font-weight: 700; color: var(--c-fg, #0D0D12);
@@ -231,7 +231,7 @@
             }
 
             /* ── Empty state ────────────────────────────────────────────── */
-            .empty-state { text-align: center; padding: 64px 20px; color: var(--c-fg-muted, #666D80); }
+            .empty-state { text-align: center; padding: 44px 20px; color: var(--c-fg-muted, #666D80); }
             .empty-state-icon {
                 width: 64px; height: 64px; border-radius: 50%;
                 background: var(--c-primary-subtle, #EEF1F8); color: var(--c-primary, #0B266E);

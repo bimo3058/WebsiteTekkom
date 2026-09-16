@@ -52,7 +52,7 @@
                 border: 1px solid var(--c-border, #DFE1E7);
                 border-radius: 14px;
                 box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
-                margin-bottom: 12px;
+                margin-bottom: 10px;
                 overflow: hidden;
             }
             .vr-card-header {
@@ -90,7 +90,7 @@
             .alert-info,
             .alert-danger {
                 border-radius: 10px; padding: 12px 16px;
-                font-size: 12px; font-weight: 500; margin-bottom: 12px;
+                font-size: 12px; font-weight: 500; margin-bottom: 10px;
             }
             .alert-info {
                 background: var(--c-sky-subtle, #D1F0F9);
@@ -106,7 +106,7 @@
             }
 
             /* ── Form controls ──────────────────────────────────────────── */
-            .form-group { margin-bottom: 16px; }
+            .form-group { margin-bottom: 10px; }
             .form-group label {
                 display: block;
                 font-size: 12px; font-weight: 600; color: var(--c-fg-sec, #353849);

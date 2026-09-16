@@ -47,12 +47,12 @@
         }
 
         /* ── Section label ──────────────────────────────────────────── */
-        .pg-section-header { display:flex; align-items:center; gap:8px; margin-bottom:12px; }
+        .pg-section-header { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
         .pg-section-header::before { content:''; display:inline-block; width:3px; height:14px; border-radius:2px; background:var(--c-primary, #0B266E); }
         .pg-section-label { font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); }
 
         /* ── Toolbar ────────────────────────────────────────────────── */
-        .search-filter-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+        .search-filter-bar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
         .search-input-wrapper { flex:1; min-width:200px; position:relative; }
         .search-input-wrapper input {
             width:100%; padding:8px 14px 8px 36px;
@@ -66,35 +66,6 @@
             position:absolute; left:12px; top:50%; transform:translateY(-50%);
             color:var(--c-fg-placeholder, #808897); pointer-events:none;
         }
-
-        .filter-dropdown { position:relative; }
-        .filter-btn {
-            display:flex; align-items:center; gap:8px; justify-content:space-between;
-            padding:8px 14px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px; background:#fff;
-            font-size:12px; color:var(--c-fg-sec, #353849); font-weight:600; cursor:pointer;
-            transition:all .15s; white-space:nowrap; min-width:150px;
-            box-shadow:0 1px 2px rgba(0,0,0,.04);
-        }
-        .filter-btn:hover  { background:var(--c-bg, #F6F8FA); border-color:var(--c-border-strong, #C1C7CF); }
-        .filter-btn.active { border-color:var(--c-primary, #0B266E); color:var(--c-primary, #0B266E); }
-        .filter-btn .chevron-icon { transition:transform .2s; }
-        .filter-btn.open .chevron-icon { transform:rotate(180deg); }
-
-        .filter-menu {
-            position:absolute; top:calc(100% + 6px); right:0; background:#fff;
-            border:1px solid var(--c-border, #DFE1E7); border-radius:10px; padding:6px; min-width:200px;
-            box-shadow:0 12px 30px rgba(0,0,0,.08); z-index:100; display:none;
-        }
-        .filter-menu.show { display:block; }
-        .filter-menu-item {
-            display:flex; align-items:center; gap:8px; padding:8px 10px;
-            border-radius:6px; cursor:pointer; transition:background .15s;
-            font-size:12px; color:var(--c-fg-sec, #353849);
-        }
-        .filter-menu-item:hover { background:var(--c-bg, #F6F8FA); }
-        .filter-menu-item.selected { background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); font-weight:600; }
-        .filter-menu-item .check-icon { width:14px; color:var(--c-primary, #0B266E); opacity:0; transition:opacity .15s; }
-        .filter-menu-item.selected .check-icon { opacity:1; }
 
         .pg-perpage {
             height:36px; padding:0 10px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px;
@@ -114,10 +85,10 @@
         .btn-buat-post:hover { background:var(--c-primary-hover, #091958); color:#fff; box-shadow:0 4px 12px rgba(11,38,110,0.4); }
 
         /* ── Kartu list ─────────────────────────────────────────────── */
-        .pengumuman-list { display:flex; flex-direction:column; gap:10px; margin-bottom:20px; }
+        .pengumuman-list { display:flex; flex-direction:column; gap:10px; margin-bottom:10px; }
         .pengumuman-card {
             background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:12px;
-            padding:14px 16px; cursor:pointer; display:block;
+            padding:12px 14px; cursor:pointer; display:block;
             box-shadow:var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5));
             transition:border-color .15s, box-shadow .15s;
         }
@@ -199,11 +170,11 @@
         .pagination-info-text { font-size:12px; color:var(--c-fg-muted, #666D80); font-weight:500; }
 
         /* ── Empty state ────────────────────────────────────────────── */
-        .pengumuman-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:64px 20px; text-align:center; }
+        .pengumuman-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:44px 20px; text-align:center; }
         .pengumuman-empty .empty-icon {
             width:64px; height:64px; border-radius:50%;
             background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E);
-            display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+            display:flex; align-items:center; justify-content:center; margin-bottom:10px;
         }
         .pengumuman-empty h5 { font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin-bottom:4px; }
         .pengumuman-empty p  { font-size:12px; color:var(--c-fg-muted, #666D80); margin:0; }
@@ -240,7 +211,7 @@
         $canPinGlobal  = $authUser->hasAnyRole(['superadmin','admin','admin_kemahasiswaan']);
         $isAdminOrKoor = $authUser->roles->pluck('name')->intersect(['superadmin','admin','dosen_koordinator'])->isNotEmpty();
 
-        $kategoriMap      = ['semua'=>'Filter','akademik'=>'Akademik','himpunan'=>'Himpunan','lowongan'=>'Lowongan','event_prodi'=>'Event Prodi'];
+        // Daftar labelnya sekarang dipegang partial _filter-kategori.
         $selectedKategori = request('kategori','semua');
     @endphp
 
@@ -284,26 +255,6 @@
                                 value="{{ request('search') }}">
                         </div>
 
-                        <div class="filter-dropdown">
-                            <input type="hidden" name="kategori" id="kategoriInput" value="{{ $selectedKategori }}">
-                            <button type="button" class="filter-btn {{ $selectedKategori !== 'semua' ? 'active' : '' }}"
-                                id="filterToggle" onclick="toggleFilterMenu()">
-                                <span id="filterLabel">{{ $kategoriMap[$selectedKategori] ?? 'Filter' }}</span>
-                                <svg class="chevron-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                    stroke="currentColor" stroke-width="2.5"><path d="m6 9 6 6 6-6"/></svg>
-                            </button>
-                            <div class="filter-menu" id="filterMenu">
-                                @foreach(['semua'=>'Semua Kategori','akademik'=>'Akademik','himpunan'=>'Himpunan','lowongan'=>'Lowongan','event_prodi'=>'Event Prodi'] as $value => $label)
-                                    <div class="filter-menu-item {{ $selectedKategori === $value ? 'selected' : '' }}"
-                                        onclick="selectFilter('{{ $value }}', '{{ $label }}')">
-                                        <svg class="check-icon" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                                            stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                        <span>{{ $label }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-
                         <select name="per_page" class="pg-perpage"
                             onchange="document.getElementById('pengumumanFilterForm').submit()">
                             @foreach([5,10,20,50] as $opt)
@@ -313,6 +264,11 @@
                             @endforeach
                         </select>
                     </div>
+
+                    @include('manajemenmahasiswa::pengumuman._filter-kategori', [
+                        'selectedKategori' => $selectedKategori,
+                        'formId'           => 'pengumumanFilterForm',
+                    ])
                 </form>
 
                 <div class="pg-section-header">
@@ -519,25 +475,6 @@
         if (event.target.closest('form, button, a')) return;
         window.location.href = card.dataset.href;
     }
-    function toggleFilterMenu() {
-        document.getElementById('filterMenu')?.classList.toggle('show');
-        document.getElementById('filterToggle')?.classList.toggle('open');
-    }
-    function selectFilter(value, label) {
-        document.getElementById('kategoriInput').value = value;
-        document.getElementById('filterLabel').textContent = value === 'semua' ? 'Filter' : label;
-        document.querySelectorAll('.filter-menu-item').forEach(i => i.classList.remove('selected'));
-        event.currentTarget.classList.add('selected');
-        toggleFilterMenu();
-        document.getElementById('pengumumanFilterForm').submit();
-    }
-    document.addEventListener('click', e => {
-        const d = document.querySelector('.filter-dropdown');
-        if (d && !d.contains(e.target)) {
-            document.getElementById('filterMenu')?.classList.remove('show');
-            document.getElementById('filterToggle')?.classList.remove('open');
-        }
-    });
     document.getElementById('searchInput')?.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pengumumanFilterForm').submit(); }
     });

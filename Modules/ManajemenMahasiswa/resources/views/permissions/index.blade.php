@@ -5,16 +5,16 @@
             /* ── Stat cards: pola _stats dashboard Super Admin ───────── */
             .mp-stat-row {
                 display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 12px; margin-bottom: 18px;
+                gap: 12px; margin-bottom: 10px;
             }
             .mp-stat-card {
                 background: #fff; border: 1px solid var(--c-border); border-radius: 12px;
-                padding: 14px 16px; text-decoration: none; display: block;
+                padding: 12px 14px; text-decoration: none; display: block;
                 box-shadow: var(--shadow-card);
                 transition: border-color .15s, box-shadow .15s;
             }
             .mp-stat-card:hover { border-color: var(--c-primary-border); box-shadow: 0 4px 14px rgba(11,38,110,.07); }
-            .mp-stat-top { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+            .mp-stat-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
             .mp-stat-icon {
                 width: 28px; height: 28px; border-radius: 8px;
                 background: var(--c-primary-subtle); color: var(--c-primary);
@@ -27,8 +27,8 @@
             }
 
             /* ── Section per kategori ────────────────────────────────── */
-            .mp-section { margin-bottom: 24px; }
-            .mp-section-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+            .mp-section { margin-bottom: 10px; }
+            .mp-section-header { display: flex; align-items: center; gap: 8px; margin-bottom:8px; }
             .mp-section-header::before {
                 content: ''; display: inline-block; width: 3px; height: 14px;
                 border-radius: 2px; background: var(--c-primary);
