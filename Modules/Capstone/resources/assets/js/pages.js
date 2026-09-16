@@ -2,6 +2,7 @@ import {assessmentConfig,gradeConfig} from './pages/admin/configuration.js';
 import {adminGroups,expoAdmin,semproAdmin,finalizationAdmin} from './pages/admin/management.js';
 import {progressAdmin,peerDashboard,documentUploads} from './pages/admin/monitoring.js';
 import {reportsAdmin} from './pages/admin/reports.js';
+import {adminUsers} from './pages/admin/users.js';
 import {studentGroup} from './pages/mahasiswa/group.js';
 import {studentMarketplace} from './pages/mahasiswa/marketplace.js';
 import {studentTitleDetail} from './pages/mahasiswa/title-detail.js';
@@ -26,6 +27,7 @@ import {lecturerGroups,lecturerDocuments,lecturerRequests} from './pages/dosen/m
 import {lecturerEvaluations,lecturerSupervisorEvaluations,lecturerEvaluationForm} from './pages/dosen/evaluations.js';
 
 export function registerPages(Alpine) {
+    Alpine.data('adminUsers',adminUsers);
     for(const [name,factory] of Object.entries({lecturerTitles,lecturerTitleDetail,lecturerApprovals,lecturerBids,lecturerGroups,lecturerDocuments,lecturerRequests,lecturerEvaluations,lecturerSupervisorEvaluations,lecturerEvaluationForm}))Alpine.data(name,factory);
     for(const [name,factory] of Object.entries({adminAssessmentConfig:assessmentConfig,adminGradeConfig:gradeConfig,adminGroups,adminExpo:expoAdmin,adminSempro:semproAdmin,adminFinalization:finalizationAdmin,adminProgress:progressAdmin,adminPeerDashboard:peerDashboard,adminDocumentUploads:documentUploads,adminReports:reportsAdmin}))Alpine.data(name,factory);
     Alpine.data('studentGroup', studentGroup);
