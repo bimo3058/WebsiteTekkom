@@ -21,7 +21,7 @@ class SoloTitleController extends Controller
      * Covers solo seekers AND merged (ex-solo) groups that fell below
      * minimum members. Locked/finalized groups are excluded.
      */
-    private const RECRUITABLE_STATUSES = ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL', 'TITLE_APPROVED', 'READY_FOR_BIDDING'];
+    public const RECRUITABLE_STATUSES = ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL', 'TITLE_APPROVED', 'READY_FOR_BIDDING'];
 
     /**
      * List solo seeker titles in marketplace.
