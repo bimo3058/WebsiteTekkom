@@ -159,8 +159,10 @@ class TaDefenseScheduleController extends Controller
         }
 
         $validated = $request->validated();
+        return DB::transaction(function () use ($validated, $request) {
         $studentIds = $validated['student_ids'];
-        $group = Group::with(['supervisors', 'period', 'members'])->findOrFail($validated['group_id']);
+        $group = Group::with(['supervisors', 'period', 'members'])->whereKey($validated['group_id'])->lockForUpdate()->firstOrFail();
+        if (isset($validated['period_id']) && (int) $validated['period_id'] !== $group->period_id) return $this->errorResponse('The selected group belongs to another period', 400);
 
         // Validate all students are from the same group
         $groupMemberIds = $group->members->pluck('student_id')->toArray();
@@ -183,9 +185,7 @@ class TaDefenseScheduleController extends Controller
         }
 
         // Check for existing scheduled defenses for these students
-        $existingScheduled = TaDefenseSchedule::whereHas('students', function ($q) use ($studentIds) {
-            $q->whereIn('student_id', $studentIds);
-        })
+        $existingScheduled = TaDefenseSchedule::where(fn ($q) => $q->whereIn('student_id', $studentIds)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $studentIds)))
             ->whereIn('status', ['SCHEDULED', 'DONE'])
             ->exists();
 
@@ -194,7 +194,7 @@ class TaDefenseScheduleController extends Controller
         }
 
         // Validate examiners are not supervisors
-        $supervisorIds = $group->supervisors->pluck('id')->toArray();
+        $supervisorIds = array_unique(array_merge($group->supervisors->pluck('id')->all(), array_filter([$group->supervisor_1_id, $group->supervisor_2_id])));
 
         if (in_array($validated['examiner_1_id'], $supervisorIds)) {
             return $this->errorResponse('Examiner 1 cannot be a supervisor of this group', 400);
@@ -270,7 +270,7 @@ class TaDefenseScheduleController extends Controller
             // Update or create TA submissions for all scheduled students
             foreach ($studentIds as $studentId) {
                 TaSubmission::updateOrCreate(
-                    ['student_id' => $studentId],
+                    ['student_id' => $studentId, 'group_id' => $group->id],
                     [
                         'status' => 'TA_READY_FOR_SIDANG',
                         'group_id' => $group->id,
@@ -306,6 +306,7 @@ class TaDefenseScheduleController extends Controller
 
             return $this->errorResponse('Failed to create schedule: '.$e->getMessage(), 500);
         }
+        });
     }
 
     /**
@@ -344,145 +345,53 @@ class TaDefenseScheduleController extends Controller
      */
     public function update(UpdateTaDefenseRequest $request, $id): JsonResponse
     {
-        $user = Auth::user();
-
-        if (CapstoneActor::role($user) !== 'admin') {
-            return $this->unauthorizedResponse('Unauthorized');
-        }
-
-        $schedule = TaDefenseSchedule::with(['group', 'students'])->findOrFail($id);
-
-        if ($schedule->status === 'DONE') {
-            return $this->errorResponse('Cannot update completed schedule', 400);
-        }
-
-        $validated = $request->validated();
-
-        DB::beginTransaction();
-        try {
-            // Handle student changes if provided
-            if ($request->has('student_ids')) {
-                $newStudentIds = $validated['student_ids'];
-                $currentStudentIds = $schedule->students->pluck('id')->toArray();
-                $group = $schedule->group;
-
-                // Validate all students are from the same group
-                $groupMemberIds = $group->members->pluck('student_id')->toArray();
-                $invalidStudents = array_diff($newStudentIds, $groupMemberIds);
-
-                if (! empty($invalidStudents)) {
-                    return $this->errorResponse('All selected students must be from the same group', 400);
-                }
-
-                // Validate all students have TA_DOCUMENTS_APPROVED status
-                $validSubmissions = TaSubmission::whereIn('student_id', $newStudentIds)
-                    ->where('group_id', $group->id)
-                    ->where('status', 'TA_DOCUMENTS_APPROVED')
-                    ->pluck('student_id')
-                    ->toArray();
-
-                $invalidStatusStudents = array_diff($newStudentIds, $validSubmissions);
-                if (! empty($invalidStatusStudents)) {
-                    return $this->errorResponse('All selected students must have TA_DOCUMENTS_APPROVED status', 400);
-                }
-
-                // Check for existing scheduled defenses (excluding current schedule)
-                $existingScheduled = TaDefenseSchedule::where('id', '!=', $schedule->id)
-                    ->whereHas('students', function ($q) use ($newStudentIds) {
-                        $q->whereIn('student_id', $newStudentIds);
-                    })
-                    ->whereIn('status', ['SCHEDULED', 'COMPLETED'])
-                    ->exists();
-
-                if ($existingScheduled) {
-                    return $this->errorResponse('One or more selected students already have a scheduled or completed defense', 400);
-                }
-
-                // Find removed students
-                $removedStudents = array_diff($currentStudentIds, $newStudentIds);
-                // Find added students
-                $addedStudents = array_diff($newStudentIds, $currentStudentIds);
-
-                // Update pivot table
-                $schedule->students()->sync($newStudentIds);
-
-                // Update backward-compatible student_id
-                $schedule->update(['student_id' => $newStudentIds[0]]);
-
-                // Revert status for removed students
-                if (! empty($removedStudents)) {
-                    TaSubmission::whereIn('student_id', $removedStudents)
-                        ->where('status', 'TA_READY_FOR_SIDANG')
-                        ->update(['status' => 'TA_DOCUMENTS_APPROVED']);
-                }
-
-                // Update status for added students
-                if (! empty($addedStudents)) {
-                    TaSubmission::whereIn('student_id', $addedStudents)
-                        ->update(['status' => 'TA_READY_FOR_SIDANG']);
-                }
-
-                // Notify added students
-                if (! empty($addedStudents)) {
-                    $this->notifyStudentsAddedToDefense($schedule, $addedStudents);
-                }
-            }
-
-            // Validate scheduling conflicts
-            if ($request->has('date') || $request->has('start_time') || $request->has('end_time') || $request->has('room') || $request->has('location_id')) {
-                $examDate = $request->date ?? $schedule->date;
-                $examStartTime = $request->start_time ?? $schedule->start_time;
-                $examEndTime = $request->end_time ?? $schedule->end_time;
-
-                // Determine room/location for conflict checking
-                $examRoom = $request->room ?? $schedule->room;
-                $locationId = $request->location_id ?? $schedule->location_id;
-                if ($locationId && ! $request->has('room')) {
-                    $location = Location::find($locationId);
-                    $examRoom = $location->name;
-                }
-
-                $examinerIds = array_filter([$schedule->examiner_1_id, $schedule->examiner_2_id]);
-                $conflicts = $this->schedulingService->validateScheduleConflicts(
-                    $examinerIds,
-                    $examDate,
-                    $examStartTime,
-                    $examEndTime,
-                    $examRoom,
-                    null,
-                    $schedule->id
-                );
-
-                if (! empty($conflicts)) {
-                    return $this->errorResponse('Scheduling conflicts detected.', 400, $conflicts);
-                }
-            }
-
-            $schedule->update(collect($validated)->only([
-                'date', 'start_time', 'end_time', 'room', 'location_id', 'notes', 'status',
-            ])->toArray());
-
-            // Notify all students of update
-            $studentIds = $schedule->fresh()->students->pluck('id')->toArray();
-            $this->notifyDefenseUpdated($schedule, $studentIds);
-
-            DB::commit();
-
-            return $this->successResponse(
-                $schedule->fresh()->load(['students', 'group.title', 'group.period', 'examiner1', 'examiner2']),
-                'Schedule updated successfully'
-            );
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse('Failed to update schedule: '.$e->getMessage(), 500);
-        }
+        return $this->updateSchedule($request, $request->validated(), $id);
     }
 
-    /**
-     * Get schedules for current user (student view)
-     */
+    private function updateSchedule(Request $request, array $validated, $id): JsonResponse
+    {
+        if (CapstoneActor::role($request->user()) !== 'admin') return $this->unauthorizedResponse('Unauthorized');
+        if (($validated['status'] ?? null) === 'CANCELLED') return $this->cancel($id);
+        return DB::transaction(function () use ($validated, $id) {
+            $initial = TaDefenseSchedule::findOrFail($id);
+            $group = Group::with(['members', 'supervisors'])->whereKey($initial->group_id)->lockForUpdate()->firstOrFail();
+            $schedule = TaDefenseSchedule::with('students')->whereKey($id)->lockForUpdate()->firstOrFail();
+            if ($schedule->status !== 'SCHEDULED' && ! in_array($schedule->status, ['PENDING','PENDING_APPROVAL'], true)) return $this->errorResponse('Cannot update a completed or cancelled schedule', 400);
+            $currentIds = $schedule->students->pluck('id')->all() ?: array_filter([$schedule->student_id]);
+            $studentIds = array_values(array_unique(array_map('intval', $validated['student_ids'] ?? $currentIds)));
+            if (array_diff($currentIds, $studentIds)) return $this->errorResponse('Already selected students cannot be removed', 400);
+            if (array_diff($studentIds, $group->members->pluck('student_id')->all())) return $this->errorResponse('All selected students must be from the same group', 400);
+            $added = array_values(array_diff($studentIds, $currentIds));
+            $ready = TaSubmission::where('group_id', $group->id)->whereIn('student_id', $added)->where('status', 'TA_DOCUMENTS_APPROVED')->pluck('student_id')->all();
+            if (array_diff($added, $ready)) return $this->errorResponse('All selected students must have TA_DOCUMENTS_APPROVED status', 400);
+            $hasOtherDefense = TaDefenseSchedule::whereKeyNot($id)->whereIn('status', ['SCHEDULED','DONE','COMPLETED'])
+                ->where(fn ($q) => $q->whereIn('student_id', $added)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $added)))->exists();
+            if ($hasOtherDefense) return $this->errorResponse('A selected student already has an active defense', 400);
+            $examinerIds = [(int) ($validated['examiner_1_id'] ?? $schedule->examiner_1_id), (int) ($validated['examiner_2_id'] ?? $schedule->examiner_2_id)];
+            $supervisorIds = array_unique(array_merge($group->supervisors->pluck('id')->all(), array_filter([$group->supervisor_1_id,$group->supervisor_2_id])));
+            if ($examinerIds[0] === $examinerIds[1] || count(array_filter($examinerIds)) !== 2) return $this->errorResponse('Choose two different examiners', 400);
+            if (array_intersect($examinerIds, $supervisorIds)) return $this->errorResponse('Examiners cannot be supervisors of this group', 400);
+            $examinersChanged = $examinerIds !== [(int) $schedule->examiner_1_id,(int) $schedule->examiner_2_id];
+            if (($examinersChanged || $added) && TaDefenseEvaluation::where('schedule_id', $id)->where('status', '!=', 'PENDING')->exists()) return $this->errorResponse('Examiners and students are locked after evaluation submission', 403);
+            $payload = collect($validated)->only(['date','start_time','end_time','room','location_id','notes','status','examiner_1_id','examiner_2_id'])->all();
+            if (! empty($payload['location_id'])) $payload['room'] = Location::findOrFail($payload['location_id'])->name;
+            $conflicts = $this->schedulingService->validateScheduleConflicts($examinerIds, $payload['date'] ?? $schedule->date->format('Y-m-d'), $payload['start_time'] ?? $schedule->start_time, $payload['end_time'] ?? $schedule->end_time, $payload['room'] ?? $schedule->room, null, $schedule->id);
+            if ($conflicts) return $this->errorResponse('Scheduling conflicts detected.', 400, $conflicts);
+            $schedule->update($payload);
+            if ($added) {
+                $schedule->students()->syncWithoutDetaching($added);
+                TaSubmission::where('group_id', $group->id)->whereIn('student_id', $added)->update(['status'=>'TA_READY_FOR_SIDANG']);
+            }
+            if ($examinersChanged) {
+                TaDefenseEvaluation::where('schedule_id', $id)->where('status', 'PENDING')->delete();
+                \Modules\Capstone\Models\TaDefenseExaminer::where('schedule_id', $id)->delete();
+                $this->schedulingService->createTaDefenseEvaluations($schedule->fresh(), $studentIds);
+            }
+            $this->notifyDefenseUpdated($schedule, $studentIds);
+            return $this->successResponse($schedule->fresh()->load(['students','group.title','group.period','examiner1','examiner2']), 'Schedule updated successfully');
+        });
+    }
+
     public function mySchedule(): JsonResponse
     {
         $user = Auth::user();
@@ -492,8 +401,9 @@ class TaDefenseScheduleController extends Controller
         }
 
         $schedules = TaDefenseSchedule::with(['examiner1', 'examiner2', 'students'])
-            ->whereHas('students', function ($q) use ($user) {
-                $q->where('student_id', CapstoneActor::student($user)->id);
+            ->where(function ($query) use ($user) {
+                $studentId = CapstoneActor::student($user)->id;
+                $query->where('student_id', $studentId)->orWhereHas('students', fn ($q) => $q->where('students.id', $studentId));
             })
             ->whereIn('status', ['SCHEDULED', 'DONE'])
             ->orderBy('date', 'desc')
@@ -613,7 +523,7 @@ class TaDefenseScheduleController extends Controller
         $currentScheduleId = $request->input('current_schedule_id'); // For edit mode
 
         // Get groups with ALL their members
-        $groupQuery = Group::with(['members.student', 'supervisors'])
+        $groupQuery = Group::with(['members.student', 'supervisors', 'supervisor1', 'supervisor2'])
             ->whereHas('members');
 
         // Handle period_id filter including 'all'
@@ -633,20 +543,17 @@ class TaDefenseScheduleController extends Controller
         })->unique();
 
         $submissions = TaSubmission::whereIn('student_id', $memberIds)
-            ->get()
-            ->keyBy('student_id');
+            ->latest('id')->get()->unique(fn ($submission) => $submission->student_id.':'.$submission->group_id)
+            ->keyBy(fn ($submission) => $submission->student_id.':'.$submission->group_id);
 
         // Get students already in active defenses (SCHEDULED or DONE)
-        $activeDefenseStudentIds = TaDefenseSchedule::whereHas('students', function ($q) use ($memberIds) {
-            $q->whereIn('student_id', $memberIds);
-        })
+        $activeDefenseStudentIds = TaDefenseSchedule::with('students:id')->where(fn ($q) => $q->whereIn('student_id', $memberIds)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $memberIds)))
             ->whereIn('status', ['SCHEDULED', 'DONE'])
             ->when($currentScheduleId, function ($q) use ($currentScheduleId) {
                 // Exclude current schedule when editing
                 $q->where('id', '!=', $currentScheduleId);
             })
-            ->pluck('student_id')
-            ->toArray();
+            ->get()->flatMap(fn ($schedule) => $schedule->students->pluck('id')->push($schedule->student_id))->filter()->unique()->values()->all();
 
         // Get students in current schedule (for edit mode)
         $currentScheduleStudentIds = [];
@@ -661,9 +568,9 @@ class TaDefenseScheduleController extends Controller
         $result = $groups->map(function ($group) use ($submissions, $activeDefenseStudentIds, $currentScheduleStudentIds) {
             return [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->code ?? 'Group #'.$group->id,
                 'code' => $group->code ?? null,
-                'supervisors' => $group->supervisors->map(function ($sv) {
+                'supervisors' => $group->supervisors->concat([$group->supervisor1, $group->supervisor2])->filter()->unique('id')->values()->map(function ($sv) {
                     return [
                         'id' => $sv->id,
                         'name' => $sv->name,
@@ -672,9 +579,9 @@ class TaDefenseScheduleController extends Controller
                         ],
                     ];
                 }),
-                'members' => $group->members->map(function ($member) use ($submissions, $activeDefenseStudentIds, $currentScheduleStudentIds) {
+                'members' => $group->members->map(function ($member) use ($group, $submissions, $activeDefenseStudentIds, $currentScheduleStudentIds) {
                     $studentId = $member->student_id;
-                    $submission = $submissions->get($studentId);
+                    $submission = $submissions->get($studentId.':'.$group->id);
                     $hasActiveDefense = in_array($studentId, $activeDefenseStudentIds);
                     $isInCurrentSchedule = in_array($studentId, $currentScheduleStudentIds);
 
@@ -828,99 +735,6 @@ class TaDefenseScheduleController extends Controller
      */
     public function assignExaminers(AssignExaminersRequest $request, $id): JsonResponse
     {
-        $user = Auth::user();
-
-        if (CapstoneActor::role($user) !== 'admin') {
-            return $this->unauthorizedResponse('Unauthorized');
-        }
-
-        $schedule = TaDefenseSchedule::with(['group', 'students'])->findOrFail($id);
-
-        if ($schedule->status === 'DONE') {
-            return $this->errorResponse('Cannot assign examiners to completed schedule', 400);
-        }
-
-        $validated = $request->validated();
-
-        $group = $schedule->group;
-
-        // Validate examiner cannot be supervisor
-        $supervisorIds = array_filter([
-            $group->supervisor_1_id,
-            $group->supervisor_2_id,
-        ]);
-
-        if (in_array($validated['examiner_1_id'], $supervisorIds)) {
-            return $this->errorResponse('Examiner 1 cannot be a supervisor of this group.', 400);
-        }
-
-        if (in_array($validated['examiner_2_id'], $supervisorIds)) {
-            return $this->errorResponse('Examiner 2 cannot be a supervisor of this group.', 400);
-        }
-
-        // Validate examiners are dosen
-        $examinerIds = [$validated['examiner_1_id'], $validated['examiner_2_id']];
-        $examiners = User::whereIn('id', $examinerIds)
-            ->whereHas('roles', fn ($q) => $q->where('slug', 'dosen'))
-            ->get();
-
-        if ($examiners->count() !== 2) {
-            return $this->errorResponse('Both examiners must be dosen (lecturers).', 400);
-        }
-
-        // Check for scheduling conflicts with new examiners
-        $conflicts = $this->schedulingService->validateScheduleConflicts(
-            $examinerIds,
-            $schedule->date,
-            $schedule->start_time,
-            $schedule->end_time,
-            $schedule->room,
-            null,
-            $schedule->id
-        );
-
-        if (! empty($conflicts)) {
-            return $this->errorResponse('Scheduling conflicts detected with new examiners.', 400, $conflicts);
-        }
-
-        DB::beginTransaction();
-        try {
-            $schedule->update([
-                'examiner_1_id' => $validated['examiner_1_id'],
-                'examiner_2_id' => $validated['examiner_2_id'],
-            ]);
-
-            // Recreate evaluations for new examiners
-            TaDefenseEvaluation::where('schedule_id', $schedule->id)->delete();
-            $studentIds = $schedule->students->pluck('id')->toArray();
-            $this->schedulingService->createTaDefenseEvaluations($schedule->fresh(), $studentIds);
-
-            // Notify new examiners
-            $studentNames = $schedule->students->pluck('name')->join(', ');
-            $notificationService = app(\Modules\Capstone\Services\NotificationService::class);
-
-            foreach ($examinerIds as $examinerId) {
-                $notificationService->sendToUser(
-                    $examinerId,
-                    'TA_DEFENSE_ASSIGNED',
-                    'You are assigned as an examiner',
-                    "You have been assigned as an examiner for a TA defense on {$schedule->date} at {$schedule->start_time} for students: {$studentNames}.",
-                    'ta_defense_schedules',
-                    $schedule->id
-                );
-            }
-
-            DB::commit();
-
-            return $this->successResponse(
-                $schedule->fresh()->load(['students', 'group.title', 'group.period', 'examiner1', 'examiner2']),
-                'Examiners assigned successfully'
-            );
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            return $this->errorResponse('Failed to assign examiners: '.$e->getMessage(), 500);
-        }
+        return $this->updateSchedule($request, $request->validated(), $id);
     }
 }

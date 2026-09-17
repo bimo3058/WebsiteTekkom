@@ -1,5 +1,7 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
+@include('manajemenmahasiswa::partials.kegiatan-theme')
+
 <style>
     /* ── Filter Bar ── */
     .filter-section {
@@ -12,9 +14,9 @@
     .filter-chip {
         padding: 7px 16px;
         border-radius: 8px;
-        border: 1px solid #DFE1E7;
-        background: #ffffff;
-        color: #666D80;
+        border: 1px solid var(--c-border);
+        background: var(--c-surface);
+        color: var(--c-fg-muted);
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
@@ -23,21 +25,21 @@
         display: inline-block;
     }
     .filter-chip:hover {
-        border-color: #0B266E;
-        color: #0B266E;
-        background: rgba(11,38,110,0.06);
+        border-color: var(--c-primary);
+        color: var(--c-primary);
+        background: var(--c-primary-subtle);
     }
     .filter-chip.active {
-        background: #0B266E;
-        color: #ffffff !important;
-        border-color: #0B266E;
+        background: var(--c-primary);
+        color: var(--c-surface) !important;
+        border-color: var(--c-primary);
     }
     .filter-select-custom {
         padding: 0 14px;
         border-radius: 8px;
-        border: 1px solid #DFE1E7;
-        background: #ffffff;
-        color: #374151;
+        border: 1px solid var(--c-border);
+        background: var(--c-surface);
+        color: var(--c-fg-sec);
         font-size: 13px;
         font-weight: 600;
         outline: none;
@@ -45,8 +47,8 @@
         height: 38px;
     }
     .filter-select-custom:focus {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
     }
 
     /* ── Search Bar (matching forum) ── */
@@ -59,30 +61,30 @@
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 14px;
     }
     .search-input {
-        background-color: #ffffff;
-        border: 1px solid #DFE1E7;
+        background-color: var(--c-surface);
+        border: 1px solid var(--c-border);
         border-radius: 8px;
         height: 38px;
         padding-left: 36px;
         font-size: 13px;
         font-weight: 500;
         width: 100%;
-        color: #374151;
+        color: var(--c-fg-sec);
     }
     .search-input:focus {
-        background-color: #ffffff;
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11,38,110,0.1);
+        background-color: var(--c-surface);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
         outline: none;
     }
 
     /* ── Kegiatan Cards ── */
     .kegiatan-card {
-        background: #ffffff;
+        background: var(--c-surface);
         border-radius: 12px;
         overflow: hidden;
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -90,17 +92,17 @@
         text-decoration: none !important;
         display: flex;
         flex-direction: column;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
     }
     .kegiatan-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 12px 24px -4px rgba(11, 38, 110, 0.12);
-        border-color: rgba(11,38,110,0.25);
+        box-shadow: 0 12px 24px -4px var(--c-primary-shadow);
+        border-color: var(--c-primary-border);
     }
     .kegiatan-card-image {
         width: 100%;
         aspect-ratio: 16 / 9;
-        background: linear-gradient(135deg, rgba(11,38,110,0.06) 0%, rgba(11,38,110,0.12) 100%);
+        background: linear-gradient(135deg, var(--c-primary-subtle) 0%, var(--c-primary-shadow) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -132,14 +134,14 @@
         font-weight: 700;
         padding: 3px 10px;
         border-radius: 20px;
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
 
     .kegiatan-card-title {
         font-weight: 700;
         font-size: 15px;
-        color: #0D0D12;
+        color: var(--c-fg);
         margin-bottom: 6px;
         line-height: 1.4;
         display: -webkit-box;
@@ -149,7 +151,7 @@
     }
     .kegiatan-card-desc {
         font-size: 13px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         line-height: 1.5;
         margin-bottom: 12px;
         display: -webkit-box;
@@ -163,10 +165,10 @@
         flex-wrap: wrap;
         gap: 12px;
         font-size: 12px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 500;
         padding-top: 10px;
-        border-top: 1px solid #f3f4f6;
+        border-top: 1px solid var(--c-surface-muted);
     }
     .kegiatan-card-meta span {
         display: inline-flex;
@@ -178,7 +180,7 @@
     .empty-state {
         text-align: center;
         padding: 50px 20px;
-        color: #666D80;
+        color: var(--c-fg-muted);
     }
     .empty-state .empty-icon {
         font-size: 48px;
@@ -186,20 +188,20 @@
         opacity: 0.5;
     }
     .empty-state h5 {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 600;
         margin-bottom: 4px;
     }
     .empty-state p {
         font-size: 14px;
-        color: #666D80;
+        color: var(--c-fg-muted);
     }
 </style>
 
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -208,14 +210,14 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Manajemen Kegiatan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Manajemen Kegiatan</h3>
+        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
     </div>
 
     @if($canTambahKegiatan)
         <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
            class="btn d-flex align-items-center gap-2"
-           style="background:#0B266E;color:#fff;font-weight:600;font-size:13px;padding:9px 18px;border-radius:10px;white-space:nowrap;">
+           style="background:var(--c-primary);color:var(--c-surface);font-weight:600;font-size:13px;padding:9px 18px;border-radius:10px;white-space:nowrap;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Tambah Kegiatan
         </a>
@@ -278,7 +280,7 @@
         </a>
         <a href="{{ route('manajemenmahasiswa.kegiatan.index', array_merge(request()->except('page'), ['bidang' => 'prodi'])) }}"
            class="filter-chip {{ request('bidang') == 'prodi' ? 'active' : '' }}"
-           style="{{ request('bidang') == 'prodi' ? 'background: #0B266E; border-color: #0B266E;' : '' }}">
+           style="{{ request('bidang') == 'prodi' ? 'background: var(--c-primary); border-color: var(--c-primary);' : '' }}">
             Prodi
         </a>
         @foreach($bidangList as $bidang)
@@ -316,11 +318,11 @@
                             @elseif($item->bidang)
                                 <span class="badge-bidang">{{ $item->bidang->nama_bidang }}</span>
                             @else
-                                <span class="badge-bidang" style="background: #eef2ff; color: #0B266E;">Prodi</span>
+                                <span class="badge-bidang" style="background: var(--c-primary-subtle); color: var(--c-primary);">Prodi</span>
                             @endif
                             @if($item->kategoris && $item->kategoris->count() > 0)
                                 @foreach($item->kategoris as $kat)
-                                    <span class="badge-bidang" style="background: #FFFBEB; color: #92400e;">{{ $kat->nama_kategori }}</span>
+                                    <span class="badge-bidang">{{ $kat->nama_kategori }}</span>
                                 @endforeach
                             @endif
                         </div>
@@ -357,7 +359,7 @@
     @endif
 @else
     <div class="empty-state">
-        <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
+        <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
         <h5>Belum ada kegiatan</h5>
         <p>Kegiatan yang tersedia akan muncul di sini</p>
     </div>
@@ -365,4 +367,3 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-manajemenmahasiswa::layouts.mahasiswa>
-

@@ -1,4 +1,4 @@
-<div class="sidebar">
+<div data-mobile-sidebar class="sidebar">
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen'])) > 0;
@@ -183,21 +183,13 @@
     <nav class="sb-nav">
         <div x-show="sidebarOpen" class="sb-section-label">Main Menu</div>
 
-        <a href="{{ $mainDashboardUrl }}"
-            class="{{ str_contains($currentRoute, 'dashboard') && !str_contains($currentRoute, 'manajemenmahasiswa') ? 'active' : '' }}">
-            <span class="nav-icon d-inline-flex">
-                {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/home-01.svg'))) !!}
-            </span>
-            <span class="nav-label" style="flex-grow:1;">Dashboard</span>
-        </a>
-
         @if($showDashboardAnalitik)
             <a href="{{ route('manajemenmahasiswa.dashboard') }}"
                 class="{{ $currentRoute === 'manajemenmahasiswa.dashboard' ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
-                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/home-01.svg'))) !!}
                 </span>
-                <span class="nav-label" style="flex-grow:1;">Analitik</span>
+                <span class="nav-label" style="flex-grow:1;">Dashboard</span>
             </a>
         @endif
 
@@ -238,7 +230,7 @@
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
                     @if($pendingVerifCount > 0)
                         <span class="nav-label"
-                            style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $pendingVerifCount }}</span>
+                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $pendingVerifCount }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -255,7 +247,7 @@
                         <span class="nav-label">Verifikasi Pengumuman</span>
                         @if($pendingVerifCount > 0)
                             <span
-                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
+                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
                         @endif
                     </a>
                 </div>
@@ -272,7 +264,7 @@
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
                     @if($staffPendingCount > 0)
                         <span class="nav-label"
-                            style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $staffPendingCount }}</span>
+                            style="background:var(--c-warning, #956321);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $staffPendingCount }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -289,14 +281,15 @@
                         <span class="nav-label">Status Verifikasi</span>
                         @if($staffPendingCount > 0)
                             <span
-                                style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
+                                style="background:var(--c-warning, #956321);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
                         @endif
                     </a>
                 </div>
             </div>
 
         @else
-            {{-- Link tunggal Pengumuman — untuk role lain (mahasiswa, alumni, dosen, dll) --}}
+            {{-- Pengumuman — menu tunggal untuk mahasiswa, alumni, dosen, pengurus:
+                 role ini hanya membaca pengumuman, tidak ada submenu verifikasi. --}}
             <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.pengumuman.*') ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
@@ -313,13 +306,9 @@
             $mahasiswaRoute = $canViewAll ? route('manajemenmahasiswa.direktori.mahasiswa.index') : route('manajemenmahasiswa.direktori.mahasiswa.profil');
             $alumniRoute = $canViewAll ? route('manajemenmahasiswa.direktori.alumni.index') : route('manajemenmahasiswa.direktori.alumni.profil');
 
-            // Halaman "Profil Saya" hanya milik pemegang role mahasiswa/alumni.
-            // Tanpa entri menu tersendiri, halaman ini tidak bisa dijangkau sama sekali:
-            // $canViewAll bernilai true juga untuk mahasiswa, sehingga menu "Mahasiswa"
-            // selalu mengarah ke daftar seluruh mahasiswa, bukan ke profil pribadi.
-            $punyaProfilSendiri = (bool) array_intersect($sidebarRoles, ['mahasiswa', 'alumni']);
-            $isProfilAktif = request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.profil')
-                || request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.profil.cv');
+            // Tidak ada lagi subbab "Profil Saya": halaman itu isinya sama persis dengan
+            // halaman detail mahasiswa. Sekarang mahasiswa mencari namanya di daftar,
+            // lalu tombol Download CV & Edit muncul sendiri di halaman detail miliknya.
         @endphp
         <div class="sidebar-dropdown {{ $isDirektoriActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $isDirektoriActive ? 'active' : '' }}"
@@ -334,14 +323,8 @@
                 </svg>
             </a>
             <div class="sidebar-dropdown-menu">
-                @if($punyaProfilSendiri)
-                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.profil') }}"
-                        class="sub-item {{ $isProfilAktif ? 'active' : '' }}">
-                        <span class="nav-label">Profil Saya</span>
-                    </a>
-                @endif
                 <a href="{{ $mahasiswaRoute }}"
-                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') && !$isProfilAktif ? 'active' : '' }}">
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') ? 'active' : '' }}">
                     <span class="nav-label">Mahasiswa</span>
                 </a>
                 <a href="{{ $alumniRoute }}"
@@ -442,7 +425,7 @@
                     <span class="nav-label" style="flex-grow: 1;">Verifikasi Data</span>
                     @if($verifPendingRiwayat + $verifPendingPrestasi > 0)
                         <span class="nav-label"
-                            style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi }}</span>
+                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -455,7 +438,7 @@
                         <span class="nav-label">Verifikasi Prestasi</span>
                         @if($verifPendingPrestasi > 0)
                             <span
-                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
+                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
                         @endif
                     </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']) }}"
@@ -463,20 +446,65 @@
                         <span class="nav-label">Verifikasi Kegiatan</span>
                         @if($verifPendingRiwayat > 0)
                             <span
-                                style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
+                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
                         @endif
                     </a>
                 </div>
             </div>
         @endif
 
-        <a href="{{ route('manajemenmahasiswa.forum.index') }}"
-            class="{{ request()->routeIs('manajemenmahasiswa.forum.*') ? 'active' : '' }}">
-            <span class="nav-icon d-inline-flex">
-                {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}
-            </span>
-            <span class="nav-label" style="flex-grow:1;">Forum Diskusi</span>
-        </a>
+        @php
+            $forumDropdownActive = request()->routeIs('manajemenmahasiswa.forum.*');
+        @endphp
+        @php
+            $canSeeForumReports = in_array('superadmin', $sidebarRoles) || in_array('admin', $sidebarRoles) || in_array('admin_kemahasiswaan', $sidebarRoles) || in_array('gpm', $sidebarRoles) || in_array('dpm', $sidebarRoles) || in_array('ketua_departemen', $sidebarRoles);
+            $pendingReportsCount = $canSeeForumReports ? \Modules\ManajemenMahasiswa\Models\ForumReport::where('status','pending')->count() : 0;
+        @endphp
+        <div class="sidebar-dropdown {{ $forumDropdownActive ? 'open' : '' }}">
+            <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $forumDropdownActive ? 'active' : '' }}"
+                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
+                <span class="nav-icon d-inline-flex">
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}
+                </span>
+                <span class="nav-label" style="flex-grow: 1;">Forum Diskusi</span>
+                @if($pendingReportsCount > 0)
+                    <span style="background:#ef4444; color:#fff; font-size:9px; font-weight:700; padding:1px 5px; border-radius:20px; margin-right:4px; flex-shrink:0;">{{ $pendingReportsCount }}</span>
+                @endif
+                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </a>
+            <div class="sidebar-dropdown-menu">
+                @php
+                    $forumOnlyActive = request()->routeIs('manajemenmahasiswa.forum.*')
+                        && !request()->routeIs('manajemenmahasiswa.forum.my')
+                        && !request()->routeIs('manajemenmahasiswa.forum.leaderboard')
+                        && !request()->routeIs('manajemenmahasiswa.forum.reports');
+                @endphp
+                <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+                    class="sub-item {{ $forumOnlyActive ? 'active' : '' }}">
+                    <span class="nav-label">Forum</span>
+                </a>
+                <a href="{{ route('manajemenmahasiswa.forum.my') }}"
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.my') ? 'active' : '' }}">
+                    <span class="nav-label">Forum Saya</span>
+                </a>
+                <a href="{{ route('manajemenmahasiswa.forum.leaderboard') }}"
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.leaderboard') ? 'active' : '' }}">
+                    <span class="nav-label">Leaderboard</span>
+                </a>
+                @if($canSeeForumReports)
+                    <a href="{{ route('manajemenmahasiswa.forum.reports') }}"
+                        class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.reports') ? 'active' : '' }}">
+                        <span class="nav-label">Laporan</span>
+                        @if($pendingReportsCount > 0)
+                            <span style="background:#ef4444; color:#fff; font-size:9px; font-weight:700; padding:1px 5px; border-radius:20px; margin-left:auto;">{{ $pendingReportsCount }}</span>
+                        @endif
+                    </a>
+                @endif
+            </div>
+        </div>
 
         @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'dpm', 'ketua_departemen']))
             <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
@@ -490,6 +518,15 @@
     </nav>
 
     <div class="sb-footer">
+        <a href="{{ $mainDashboardUrl }}" class="btn-logout">
+            <span class="nav-icon d-inline-flex">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </span>
+            <span class="nav-label">Kembali ke SITKOM</span>
+        </a>
+
         <a href="{{ route('profile.edit') }}" class="btn-logout">
             <span class="nav-icon d-inline-flex">
                 {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/gear.svg'))) !!}

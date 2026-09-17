@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Database\UniqueConstraintViolationException;
 use App\Models\CvProfile;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\Alumni;
@@ -148,11 +149,14 @@ class CvBuilderController extends Controller
     public function saveStep(Request $request, $step)
     {
         $user = auth()->user();
-        $cvProfile = CvProfile::where('user_id', $user->id)->first();
 
-        if (!$cvProfile) {
-            return response()->json(['success' => false, 'message' => 'Profile not found'], 404);
-        }
+        // POST adalah tempat yang sah untuk membuat baris — bukan loadStep(), yang
+        // sengaja memakai firstOrNew tanpa save() agar GET tidak meninggalkan baris
+        // kosong bagi orang yang cuma mengintip wizard (CV-7/CV-9). Sebelumnya di
+        // sini hanya ada ->first() + 404, padahal tidak ada satu pun kode lain yang
+        // membuat baris cv_profiles, sehingga pengguna baru tidak pernah bisa
+        // menyimpan sama sekali.
+        $cvProfile = CvProfile::firstOrNew(['user_id' => $user->id]);
 
         if ($step == 1) {
             $request->validate([
@@ -201,7 +205,19 @@ class CvBuilderController extends Controller
             $cvProfile->keahlian = $request->keahlian ?? [];
         }
 
-        $cvProfile->save();
+        try {
+            $cvProfile->save();
+        } catch (UniqueConstraintViolationException) {
+            // Dua simpan yang beruntun (klik ganda, atau wizard dibuka di dua tab)
+            // bisa sama-sama membawa instance baru; indeks UNIQUE pada user_id
+            // menolak yang datang belakangan. Yang kalah balapan menempel ke baris
+            // pemenang lalu menuliskan ulang perubahannya — bukan menggagalkan
+            // simpan dan membuang ketikan pengguna.
+            CvProfile::where('user_id', $user->id)
+                ->firstOrFail()
+                ->fill($cvProfile->getDirty())
+                ->save();
+        }
 
         return response()->json(['success' => true]);
     }

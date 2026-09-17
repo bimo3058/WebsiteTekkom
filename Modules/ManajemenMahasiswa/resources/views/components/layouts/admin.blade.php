@@ -17,9 +17,33 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
+        /* Palette SIMENMA admin diselaraskan dengan shell global SITKOM. */
+        :root {
+            --c-primary: #0B266E;
+            --c-primary-hover: #091958;
+            --c-primary-subtle: rgba(11, 38, 110, 0.08);
+            --c-primary-border: #5C78B8;
+            --c-bg: #F6F8FA;
+            --c-card: #FFFFFF;
+            --c-fg: #0D0D12;
+            --c-fg-sec: #353849;
+            --c-fg-muted: #666D80;
+            --c-fg-placeholder: #808897;
+            --c-border: #DFE1E7;
+            --c-border-strong: #C1C7CF;
+            --c-success: #287F6E;
+            --c-success-subtle: #DDF2EE;
+            --c-warning: #956321;
+            --c-warning-subtle: #F9ECCB;
+            --c-error: #DF1C41;
+            --c-error-subtle: #FADAE1;
+            --c-sky: #0C4D6E;
+            --c-sky-subtle: #D1F0F9;
+        }
+
         body {
             margin: 0;
-            background-color: #f5f6fa;
+            background-color: var(--c-bg);
             font-family: 'Inter Tight', sans-serif;
             display: flex;
             min-height: 100vh;
@@ -38,8 +62,8 @@
             height: 100vh;
             position: sticky;
             top: 0;
-            background: #ffffff;
-            border-right: 1px solid #DFE1E7;
+            background: var(--c-card);
+            border-right: 1px solid var(--c-border);
             padding: 0;
             transition: width 0.25s ease;
             z-index: 1000;
@@ -59,7 +83,7 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.2em;
-            color: #94a3b8;
+            color: var(--c-fg-placeholder);
             margin-top: 24px;
             margin-bottom: 12px;
             padding-left: 12px;
@@ -76,7 +100,7 @@
             padding: 7px 10px 7px 14px;
             border-radius: 8px;
             text-decoration: none;
-            color: #353849;
+            color: var(--c-fg-sec);
             font-weight: 500;
             font-size: 13px;
             margin-bottom: 1px;
@@ -91,13 +115,13 @@
         }
 
         .sidebar a:hover {
-            background: #F6F8FA;
-            color: #1A1C1E;
+            background: var(--c-bg);
+            color: var(--c-fg);
         }
 
         .sidebar a.active {
-            background: rgba(11, 38, 110, 0.08);
-            color: #0B266E;
+            background: var(--c-primary-subtle);
+            color: var(--c-primary);
             font-weight: 600;
             box-shadow: none;
         }
@@ -110,7 +134,7 @@
             transform: translateY(-50%);
             width: 3px;
             height: 20px;
-            background: #0B266E;
+            background: var(--c-primary);
             border-radius: 0 3px 3px 0;
         }
         .sidebar-collapsed .sidebar a.active::before {
@@ -118,7 +142,7 @@
         }
         
         .sidebar a svg {
-            color: #666D80;
+            color: var(--c-fg-muted);
             width: 16px;
             height: 16px;
             transition: color 0.12s;
@@ -126,11 +150,11 @@
         }
         
         .sidebar a.active svg {
-            color: #0B266E;
+            color: var(--c-primary);
         }
         
         .sidebar a:hover svg {
-            color: #1A1C1E;
+            color: var(--c-fg);
         }
 
         .btn-logout {
@@ -141,7 +165,7 @@
             padding: 7px 10px 7px 14px;
             border-radius: 8px;
             text-decoration: none;
-            color: #353849;
+            color: var(--c-fg-sec);
             font-weight: 500;
             font-size: 13px;
             margin-bottom: 1px;
@@ -160,18 +184,18 @@
         }
 
         .btn-logout:hover {
-            background: #FEF1F4;
-            color: #DF1C41;
+            background: var(--c-error-subtle);
+            color: var(--c-error);
         }
         .btn-logout svg {
-            color: #666D80;
+            color: var(--c-fg-muted);
             width: 16px;
             height: 16px;
             transition: color 0.12s;
             flex-shrink: 0;
         }
         .btn-logout:hover svg {
-            color: #DF1C41;
+            color: var(--c-error);
         }
 
         .bottom-menu {
@@ -191,7 +215,7 @@
         }
 
         .main-wrapper {
-            background: #fff;
+            background: var(--c-card);
             border-radius: 12px;
             padding: 25px;
             min-height: calc(100vh - 50px);
@@ -243,8 +267,8 @@
             top: 32px;
             width: 24px;
             height: 24px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
+            background: var(--c-card);
+            border: 1px solid var(--c-border);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -252,12 +276,12 @@
             cursor: pointer;
             z-index: 1001;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            color: #6b7280;
+            color: var(--c-fg-muted);
             transition: all 0.2s;
         }
         .sidebar-toggle:hover {
-            background: #f8fafc;
-            color: #4f46e5;
+            background: var(--c-bg);
+            color: var(--c-primary);
         }
 
         /* Global Scrollbar Customization */
@@ -267,17 +291,17 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+            background: var(--c-bg);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: var(--c-border-strong);
             border-radius: 10px;
-            border: 2px solid #f1f5f9;
+            border: 2px solid var(--c-bg);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: var(--c-fg-placeholder);
         }
         /*
         Button pattern untuk modul ini:
@@ -287,6 +311,7 @@
     </style>
 
     @stack('styles')
+    <x-mobile-navigation-assets />
 </head>
 
 <body x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false' }" 
@@ -311,6 +336,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+    <x-mobile-navigation />
 </body>
 
 </html>

@@ -22,7 +22,7 @@
     <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%);z-index:1;transition:background 0.2s;" onmouseover="this.style.background='linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)'" onmouseout="this.style.background='linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%)'"></div>
     <img src="{{ $proker->banner_url }}" alt="{{ $proker->judul }}" style="width:100%;height:340px;object-fit:cover;display:block;">
     <div style="position:absolute;bottom:24px;left:28px;z-index:2;display:flex;align-items:center;gap:12px;">
-        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
+        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--c-surface);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Banner Kegiatan &bull; Klik untuk memperbesar
         </span>
     </div>
@@ -40,7 +40,7 @@
         @elseif($proker->bidang)
             <span class="badge-bidang">{{ $proker->bidang->nama_bidang }}</span>
         @else
-            <span class="badge-bidang" style="background: #eef2ff; color: #0B266E;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
+            <span class="badge-bidang" style="background: var(--c-primary-subtle); color: var(--c-primary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
         @endif
 
         @if($proker->kategoris && $proker->kategoris->count() > 0)
@@ -53,7 +53,7 @@
     </div>
 
     <!-- Title -->
-    <h4 class="fw-bold mb-3" style="color:#0D0D12;">{{ $proker->judul }}</h4>
+    <h4 class="fw-bold mb-3" style="color:var(--c-fg);">{{ $proker->judul }}</h4>
 
     <!-- Meta Grid -->
     <div class="meta-grid">
@@ -122,24 +122,24 @@
     {{-- Panitia Kegiatan --}}
     @if($proker->panitia && $proker->panitia->count() > 0)
     @php $panitiaList = $proker->panitia; $panitiaCount = $panitiaList->count(); @endphp
-    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--c-surface-muted);">
         <div class="meta-item-label" style="margin-bottom: 10px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             PANITIA KEGIATAN
-            <span style="font-size: 10px; font-weight: 600; background: #eef2ff; color: #0B266E; padding: 1px 7px; border-radius: 20px; margin-left: 4px;">{{ $panitiaCount }} orang</span>
+            <span style="font-size: 10px; font-weight: 600; background: var(--c-primary-subtle); color: var(--c-primary); padding: 1px 7px; border-radius: 20px; margin-left: 4px;">{{ $panitiaCount }} orang</span>
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
             @foreach($panitiaList->take(2) as $p)
-                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: #eef2ff; color: #091958; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #5C78B8;">
+                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--c-primary-subtle); color: var(--c-primary-hover); border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--c-primary-border);">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     {{ $p->user->name ?? '-' }}
                     @if($p->pivot->peran)
-                        <span style="font-weight: 700; color: #091958; margin-left: 2px;">- {{ $p->pivot->peran }}</span>
+                        <span style="font-weight: 700; color: var(--c-primary-hover); margin-left: 2px;">- {{ $p->pivot->peran }}</span>
                     @endif
                 </span>
             @endforeach
             @if($panitiaCount > 2)
-                <button type="button" onclick="openPanitiaModal()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#f3f4f6;color:#666D80;border-radius:20px;font-size:12px;font-weight:600;border:1px solid #DFE1E7;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#eef2ff';this.style.color='#091958';this.style.borderColor='#5C78B8'" onmouseout="this.style.background='#f3f4f6';this.style.color='#666D80';this.style.borderColor='#DFE1E7'">
+                <button type="button" onclick="openPanitiaModal()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--c-surface-muted);color:var(--c-fg-muted);border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--c-border);cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='var(--c-primary-subtle)';this.style.color='var(--c-primary-hover)';this.style.borderColor='var(--c-primary-border)'" onmouseout="this.style.background='var(--c-surface-muted)';this.style.color='var(--c-fg-muted)';this.style.borderColor='var(--c-border)'">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     {{ $panitiaCount - 2 }} lainnya
                 </button>
@@ -149,28 +149,28 @@
 
     {{-- Panitia Full Modal --}}
     <div id="panitiaModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;" onclick="if(event.target===this)closePanitiaModal()">
-        <div style="background:#fff;border-radius:20px;padding:0;max-width:480px;width:92%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,0.18);animation:panitiaModalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);">
-            <div style="padding:22px 24px 16px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div style="background:var(--c-surface);border-radius:20px;padding:0;max-width:480px;width:92%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,0.18);animation:panitiaModalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);">
+            <div style="padding:22px 24px 16px;border-bottom:1px solid var(--c-surface-muted);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
                 <div>
-                    <div style="font-size:15px;font-weight:700;color:#0D0D12;display:flex;align-items:center;gap:8px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <div style="font-size:15px;font-weight:700;color:var(--c-fg);display:flex;align-items:center;gap:8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                         Daftar Panitia Kegiatan
                     </div>
-                    <div style="font-size:12px;color:#666D80;margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
+                    <div style="font-size:12px;color:var(--c-fg-muted);margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
                 </div>
-                <button type="button" onclick="closePanitiaModal()" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;color:#666D80;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='#fee2e2';this.style.color='#dc2626'" onmouseout="this.style.background='#f3f4f6';this.style.color='#666D80'">&times;</button>
+                <button type="button" onclick="closePanitiaModal()" style="width:32px;height:32px;border-radius:50%;background:var(--c-surface-muted);border:none;color:var(--c-fg-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='var(--c-error-subtle)';this.style.color='var(--c-error)'" onmouseout="this.style.background='var(--c-surface-muted)';this.style.color='var(--c-fg-muted)'">&times;</button>
             </div>
             <div style="overflow-y:auto;padding:16px 24px 24px;flex:1;">
                 <div style="display:flex;flex-direction:column;gap:10px;">
                     @foreach($panitiaList as $idx => $p)
-                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1px solid #f3f4f6;border-radius:12px;transition:all 0.2s;" onmouseover="this.style.background='#eef2ff';this.style.borderColor='#5C78B8'" onmouseout="this.style.background='#f9fafb';this.style.borderColor='#f3f4f6'">
-                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0B266E,#0B266E);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;">{{ $idx + 1 }}</div>
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--c-surface-subtle);border:1px solid var(--c-surface-muted);border-radius:12px;transition:all 0.2s;" onmouseover="this.style.background='var(--c-primary-subtle)';this.style.borderColor='var(--c-primary-border)'" onmouseout="this.style.background='var(--c-surface-subtle)';this.style.borderColor='var(--c-surface-muted)'">
+                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--c-primary),var(--c-primary));display:flex;align-items:center;justify-content:center;color:var(--c-surface);font-size:13px;font-weight:700;flex-shrink:0;">{{ $idx + 1 }}</div>
                         <div style="flex:1;min-width:0;">
-                            <div style="font-size:13px;font-weight:600;color:#0D0D12;">{{ $p->user->name ?? '-' }}</div>
-                            <div style="font-size:11px;color:#666D80;font-weight:500;margin-top:1px;">{{ $p->student_number ?? '' }}@if($p->pivot->peran) &bull; <span style="color:#0B266E;font-weight:600;">{{ $p->pivot->peran }}</span>@endif</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--c-fg);">{{ $p->user->name ?? '-' }}</div>
+                            <div style="font-size:11px;color:var(--c-fg-muted);font-weight:500;margin-top:1px;">{{ $p->student_number ?? '' }}@if($p->pivot->peran) &bull; <span style="color:var(--c-primary);font-weight:600;">{{ $p->pivot->peran }}</span>@endif</div>
                         </div>
                         @if($p->pivot->peran)
-                        <span style="font-size:10px;font-weight:700;padding:3px 10px;background:#eef2ff;color:#091958;border-radius:20px;white-space:nowrap;border:1px solid #5C78B8;">{{ $p->pivot->peran }}</span>
+                        <span style="font-size:10px;font-weight:700;padding:3px 10px;background:var(--c-primary-subtle);color:var(--c-primary-hover);border-radius:20px;white-space:nowrap;border:1px solid var(--c-primary-border);">{{ $p->pivot->peran }}</span>
                         @endif
                     </div>
                     @endforeach
@@ -314,9 +314,9 @@
     <div class="detail-card">
         <div class="detail-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> Foto & Dokumen Kegiatan</div>
         <div class="empty-luaran">
-            <div class="empty-luaran-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
-            <h6 style="font-weight: 600; color: #666D80; margin-bottom: 4px;">Belum ada file untuk kegiatan ini</h6>
-            <p style="font-size: 13px; color: #666D80; margin: 0;">Foto dan dokumen kegiatan akan ditampilkan di sini setelah diunggah oleh admin</p>
+            <div class="empty-luaran-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
+            <h6 style="font-weight: 600; color: var(--c-fg-muted); margin-bottom: 4px;">Belum ada file untuk kegiatan ini</h6>
+            <p style="font-size: 13px; color: var(--c-fg-muted); margin: 0;">Foto dan dokumen kegiatan akan ditampilkan di sini setelah diunggah oleh admin</p>
         </div>
     </div>
 @endif

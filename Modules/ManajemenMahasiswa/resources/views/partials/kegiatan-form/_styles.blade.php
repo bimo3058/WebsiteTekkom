@@ -1,7 +1,7 @@
 <style>
     /* ── Form Card ── */
     .form-card {
-        background: #ffffff;
+        background: var(--c-surface);
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -10,49 +10,59 @@
     .form-card-title {
         font-weight: 700;
         font-size: 16px;
-        color: #0D0D12;
+        color: var(--c-fg);
         margin-bottom: 20px;
         display: flex;
         align-items: center;
         gap: 8px;
         padding-bottom: 14px;
-        border-bottom: 1px solid #f3f4f6;
+        border-bottom: 1px solid var(--c-surface-muted);
     }
 
     /* ── Custom Form Styles ── */
     .form-label-custom {
         font-weight: 600;
         font-size: 13px;
-        color: #374151;
+        color: var(--c-fg-sec);
         margin-bottom: 6px;
     }
     .form-label-custom .required {
-        color: #dc2626;
+        color: var(--c-error);
     }
     .form-control-custom,
     .form-select-custom {
-        border: 1.5px solid #DFE1E7;
+        border: 1.5px solid var(--c-border);
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
         font-weight: 500;
-        color: #0D0D12;
+        color: var(--c-fg);
         transition: all 0.2s;
-        background: #fff;
+        background: var(--c-surface);
     }
     .form-control-custom:focus,
     .form-select-custom:focus {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
         outline: none;
     }
     .form-control-custom::placeholder {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     textarea.form-control-custom {
         min-height: 140px;
         resize: vertical;
+    }
+    /* Kolom angka (Peserta & Anggaran) tanpa tombol panah naik/turun bawaan browser. */
+    input[type="number"].form-control-custom {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+    input[type="number"].form-control-custom::-webkit-outer-spin-button,
+    input[type="number"].form-control-custom::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
     }
 
     /* ── Searchable Select ── */
@@ -67,8 +77,8 @@
         top: 100%;
         left: 0;
         right: 0;
-        background: #fff;
-        border: 1.5px solid #DFE1E7;
+        background: var(--c-surface);
+        border: 1.5px solid var(--c-border);
         border-top: none;
         border-radius: 0 0 10px 10px;
         max-height: 200px;
@@ -85,17 +95,17 @@
         cursor: pointer;
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--c-fg-sec);
         transition: background 0.15s;
-        border-bottom: 1px solid #f9fafb;
+        border-bottom: 1px solid var(--c-surface-subtle);
     }
     .search-select-option:hover {
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
     .search-select-option .sub-text {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
 
@@ -111,31 +121,31 @@
         align-items: center;
         gap: 8px;
         padding: 10px 16px;
-        border: 1.5px solid #DFE1E7;
+        border: 1.5px solid var(--c-border);
         border-radius: 10px;
-        background: #fff;
+        background: var(--c-surface);
         cursor: pointer;
         transition: all 0.2s;
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--c-fg-sec);
         user-select: none;
     }
     .checkbox-card:hover {
-        border-color: #5C78B8;
-        background: #eef2ff;
+        border-color: var(--c-primary-border);
+        background: var(--c-primary-subtle);
     }
     .checkbox-card input[type="checkbox"] {
         width: 16px;
         height: 16px;
-        accent-color: #0B266E;
+        accent-color: var(--c-primary);
         cursor: pointer;
         flex-shrink: 0;
     }
     .checkbox-card.checked {
-        border-color: #0B266E;
-        background: #eef2ff;
-        color: #091958;
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
+        color: var(--c-primary-hover);
         font-weight: 600;
     }
     .checkbox-card.disabled {
@@ -145,24 +155,24 @@
     }
     .checkbox-hint {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
         margin-top: 6px;
     }
 
     /* ── Banner Preview ── */
     .banner-upload-area {
-        border: 2px dashed #C1C7CF;
+        border: 2px dashed var(--c-border-strong);
         border-radius: 12px;
         padding: 30px;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s;
-        background: #fafafa;
+        background: var(--c-surface-subtle);
     }
     .banner-upload-area:hover {
-        border-color: #0B266E;
-        background: #eef2ff;
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
     }
     .banner-upload-area .upload-icon {
         font-size: 36px;
@@ -170,13 +180,13 @@
         opacity: 0.5;
     }
     .banner-upload-area p {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 13px;
         font-weight: 500;
         margin: 0;
     }
     .banner-upload-area small {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 12px;
     }
     .banner-preview {
@@ -240,7 +250,7 @@
         background: rgba(255,255,255,0.1);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(255,255,255,0.15);
-        color: #fff;
+        color: var(--c-surface);
         font-size: 20px;
         cursor: pointer;
         display: flex;
@@ -262,7 +272,7 @@
         top: 10px;
         left: 10px;
         background: rgba(0,0,0,0.6);
-        color: #fff;
+        color: var(--c-surface);
         font-size: 11px;
         font-weight: 600;
         padding: 4px 10px;
@@ -271,18 +281,18 @@
 
     /* ── Multi File Upload ── */
     .file-upload-area {
-        border: 2px dashed #C1C7CF;
+        border: 2px dashed var(--c-border-strong);
         border-radius: 12px;
         padding: 24px;
         text-align: center;
         cursor: pointer;
         transition: all 0.2s;
-        background: #fafafa;
+        background: var(--c-surface-subtle);
     }
     .file-upload-area:hover,
     .file-upload-area.dragover {
-        border-color: #0B266E;
-        background: #eef2ff;
+        border-color: var(--c-primary);
+        background: var(--c-primary-subtle);
     }
     .file-upload-area .upload-icon {
         font-size: 28px;
@@ -290,13 +300,13 @@
         opacity: 0.5;
     }
     .file-upload-area p {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 13px;
         font-weight: 500;
         margin: 0;
     }
     .file-upload-area small {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-size: 12px;
     }
     .file-preview-grid {
@@ -309,8 +319,8 @@
         position: relative;
         border-radius: 10px;
         overflow: hidden;
-        border: 1px solid #DFE1E7;
-        background: #f9fafb;
+        border: 1px solid var(--c-border);
+        background: var(--c-surface-subtle);
         transition: all 0.2s;
     }
     .file-preview-item img {
@@ -322,14 +332,14 @@
         padding: 8px 10px;
         font-size: 11px;
         font-weight: 600;
-        color: #374151;
+        color: var(--c-fg-sec);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     .file-preview-item .file-size {
         font-size: 10px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     .file-preview-item .btn-remove-file {
@@ -339,8 +349,8 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: rgba(220, 38, 38, 0.85);
-        color: #fff;
+        background: var(--c-error);
+        color: var(--c-surface);
         border: none;
         font-size: 12px;
         cursor: pointer;
@@ -351,7 +361,7 @@
         line-height: 1;
     }
     .file-preview-item .btn-remove-file:hover {
-        background: #dc2626;
+        background: var(--c-error);
         transform: scale(1.1);
     }
     .doc-preview-item {
@@ -359,9 +369,9 @@
         align-items: center;
         gap: 10px;
         padding: 12px 14px;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
         border-radius: 10px;
-        background: #f9fafb;
+        background: var(--c-surface-subtle);
         position: relative;
         margin-bottom: 8px;
     }
@@ -376,21 +386,21 @@
     .doc-preview-item .doc-name {
         font-size: 13px;
         font-weight: 600;
-        color: #374151;
+        color: var(--c-fg-sec);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     .doc-preview-item .doc-size {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
     }
     .doc-preview-item .btn-remove-doc {
         width: 26px;
         height: 26px;
         border-radius: 50%;
-        background: #fee2e2;
-        color: #dc2626;
+        background: var(--c-error-subtle);
+        color: var(--c-error);
         border: none;
         font-size: 13px;
         cursor: pointer;
@@ -401,13 +411,13 @@
         transition: all 0.15s;
     }
     .doc-preview-item .btn-remove-doc:hover {
-        background: #dc2626;
-        color: #fff;
+        background: var(--c-error);
+        color: var(--c-surface);
     }
     .existing-file-label {
         font-size: 12px;
         font-weight: 700;
-        color: #666D80;
+        color: var(--c-fg-muted);
         text-transform: uppercase;
         letter-spacing: 0.3px;
         margin-bottom: 10px;
@@ -425,28 +435,28 @@
         width: 40px;
         height: 40px;
         border-radius: 50%;
-        background: #ffffff;
-        border: 1px solid #DFE1E7;
+        background: var(--c-surface);
+        border: 1px solid var(--c-border);
         display: flex;
         align-items: center;
         justify-content: center;
         text-decoration: none;
-        color: #374151;
+        color: var(--c-fg-sec);
         font-size: 18px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
         transition: all 0.2s;
         flex-shrink: 0;
     }
     .btn-back:hover {
-        background: #f3f4f6;
-        border-color: #C1C7CF;
-        color: #0D0D12;
+        background: var(--c-surface-muted);
+        border-color: var(--c-border-strong);
+        color: var(--c-fg);
     }
 
     /* ── Buttons ── */
     .btn-submit {
-        background: #0B266E;
-        color: #ffffff;
+        background: var(--c-primary);
+        color: var(--c-surface);
         font-weight: 600;
         font-size: 14px;
         padding: 12px 28px;
@@ -456,13 +466,13 @@
         transition: all 0.2s;
     }
     .btn-submit:hover {
-        background: #091958;
+        background: var(--c-primary-hover);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
+        box-shadow: 0 4px 12px var(--c-primary-shadow-strong);
     }
     .btn-cancel {
-        background: #f3f4f6;
-        color: #374151;
+        background: var(--c-surface-muted);
+        color: var(--c-fg-sec);
         font-weight: 600;
         font-size: 14px;
         padding: 12px 28px;
@@ -473,8 +483,8 @@
         transition: all 0.2s;
     }
     .btn-cancel:hover {
-        background: #DFE1E7;
-        color: #0D0D12;
+        background: var(--c-border);
+        color: var(--c-fg);
     }
 
     /* ── Multi-Select Panitia ── */
@@ -487,40 +497,40 @@
         gap: 8px;
         min-height: 44px;
         padding: 8px 12px;
-        border: 1.5px solid #DFE1E7;
+        border: 1.5px solid var(--c-border);
         border-radius: 10px;
-        background: #fff;
+        background: var(--c-surface);
         cursor: text;
         transition: border-color 0.2s, box-shadow 0.2s;
         align-items: center;
     }
     .panitia-chips-container:focus-within {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
     }
     .panitia-chip {
         display: inline-flex;
         align-items: center;
         gap: 6px;
         padding: 4px 10px;
-        background: #eef2ff;
-        color: #091958;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary-hover);
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
-        border: 1px solid #5C78B8;
+        border: 1px solid var(--c-primary-border);
         transition: all 0.15s;
         white-space: nowrap;
     }
     .panitia-chip:hover {
-        background: #eef2ff;
+        background: var(--c-primary-subtle);
     }
     .panitia-chip-remove {
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: #5C78B8;
-        color: #091958;
+        background: var(--c-primary-border);
+        color: var(--c-primary-hover);
         border: none;
         font-size: 11px;
         cursor: pointer;
@@ -533,22 +543,22 @@
         flex-shrink: 0;
     }
     .panitia-chip-remove:hover {
-        background: #dc2626;
-        color: #fff;
+        background: var(--c-error);
+        color: var(--c-surface);
     }
     .panitia-search-input {
         border: none;
         outline: none;
         font-size: 13px;
         font-weight: 500;
-        color: #0D0D12;
+        color: var(--c-fg);
         flex: 1;
         min-width: 120px;
         background: transparent;
         padding: 2px 0;
     }
     .panitia-search-input::placeholder {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     .panitia-dropdown {
@@ -556,8 +566,8 @@
         top: 100%;
         left: 0;
         right: 0;
-        background: #fff;
-        border: 1.5px solid #DFE1E7;
+        background: var(--c-surface);
+        border: 1.5px solid var(--c-border);
         border-top: none;
         border-radius: 0 0 10px 10px;
         max-height: 220px;
@@ -574,31 +584,31 @@
         cursor: pointer;
         font-size: 13px;
         font-weight: 500;
-        color: #374151;
+        color: var(--c-fg-sec);
         transition: background 0.15s;
-        border-bottom: 1px solid #f9fafb;
+        border-bottom: 1px solid var(--c-surface-subtle);
         display: flex;
         align-items: center;
         gap: 8px;
     }
     .panitia-option:hover {
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
     .panitia-option.selected {
-        background: #f0fdf4;
-        color: #16a34a;
+        background: var(--c-success-subtle);
+        color: var(--c-success);
         pointer-events: none;
         opacity: 0.6;
     }
     .panitia-option .sub-text {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     .panitia-option .check-icon {
         margin-left: auto;
-        color: #16a34a;
+        color: var(--c-success);
         font-size: 13px;
         display: none;
     }
@@ -609,14 +619,14 @@
         padding: 14px;
         text-align: center;
         font-size: 13px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 400;
     }
     .panitia-count-badge {
         font-size: 11px;
         font-weight: 600;
-        color: #666D80;
-        background: #f3f4f6;
+        color: var(--c-fg-muted);
+        background: var(--c-surface-muted);
         padding: 2px 8px;
         border-radius: 20px;
         margin-left: 6px;

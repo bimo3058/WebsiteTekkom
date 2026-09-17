@@ -9,30 +9,31 @@
                 padding: 0 !important;
             }
 
+            .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+            .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box-header { background: #fff; border-bottom: 1px solid #DFE1E7; flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
+            .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+            .dash-box-body::-webkit-scrollbar { width: 6px; }
+            .dash-box-body::-webkit-scrollbar-thumb { background: #C1C7CF; border-radius: 10px; }
+            @media (max-width: 767px) {
+                .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
+                .dash-wrap { height: auto !important; padding: 0; }
+                .dash-box { flex: none !important; overflow: visible !important; border-radius: 10px; }
+                .dash-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+                .dash-box-body { overflow-y: visible !important; flex: none !important; padding: 14px; }
+            }
+
             /* ── Page Title ──────────────────────────────────────────────────── */
             .page-title {
-                margin-bottom: 22px;
-            }
-
-            .page-title h1 {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #1e1b4b;
-                margin: 0 0 4px;
-                letter-spacing: -0.02em;
-            }
-
-            .page-title p {
-                font-size: 0.95rem;
-                color: #6b7280;
-                margin: 0;
+                margin-bottom: 20px;
             }
 
             /* ── Cards ───────────────────────────────────────────────────────── */
             .dashboard-card {
                 background: #fff;
                 border-radius: 12px;
-                border: 1px solid #DDE1E8;
+                border: 1px solid #DFE1E7;
                 padding: 22px 26px;
                 margin-bottom: 16px;
                 box-shadow: 0 1px 3px rgba(22, 22, 43, 0.06), 0 1px 2px rgba(22, 22, 43, 0.04);
@@ -41,34 +42,34 @@
             .forum-card {
                 background: #fff;
                 border-radius: 12px;
-                border: 1px solid #DDE1E8;
-                padding: 22px 26px;
-                margin-bottom: 16px;
-                transition: all 0.25s ease;
-                box-shadow: 0 1px 3px rgba(22, 22, 43, 0.06), 0 1px 2px rgba(22, 22, 43, 0.04);
+                border: 1px solid #DFE1E7;
+                padding: 14px 16px;
+                margin-bottom: 10px;
+                transition: border-color 0.15s, box-shadow 0.15s;
+                box-shadow: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
             }
 
             .forum-card:hover {
-                border-color: #C6CBD2;
-                box-shadow: 0 4px 8px -2px rgba(22, 22, 43, 0.06), 0 2px 4px -2px rgba(22, 22, 43, 0.04);
-                transform: translateY(-1px);
+                border-color: #5C78B8;
+                box-shadow: 0 4px 14px rgba(11, 38, 110, 0.07);
             }
 
             .avatar-placeholder {
                 width: 40px;
                 height: 40px;
                 border-radius: 50%;
-                background-color: #e0e7ff;
-                color: #293C79;
+                background: rgba(11, 38, 110, 0.08);
+                color: #0B266E;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-weight: 600;
-                font-size: 14px;
+                font-weight: 700;
+                font-size: 12px;
+                flex-shrink: 0;
             }
 
             .btn-join {
-                background-color: #293C79;
+                background-color: #0B266E;
                 color: white;
                 border: none;
                 border-radius: 8px;
@@ -79,30 +80,33 @@
             }
 
             .btn-join:hover {
-                background-color: #415086;
+                background-color: #091958;
                 transform: translateY(-1px);
             }
 
             .btn-post {
-                background-color: #293C79;
+                background-color: #0B266E;
                 color: white;
-                border: none;
-                border-radius: 12px;
-                padding: 0 24px;
-                height: 44px;
+                border: 1px solid #0B266E;
+                border-radius: 8px;
+                padding: 7px 14px;
+                font-size: 12px;
                 font-weight: 600;
                 display: inline-flex;
                 align-items: center;
-                gap: 8px;
+                gap: 6px;
                 white-space: nowrap;
-                transition: all 0.2s ease;
+                transition: all 0.15s;
+                text-decoration: none;
+                box-shadow: 0 2px 6px rgba(11, 38, 110, 0.3);
+                flex-shrink: 0;
             }
 
             .btn-post:hover {
-                background-color: #415086;
+                background-color: #091958;
+                border-color: #091958;
                 color: white;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(41, 60, 121, 0.3);
+                box-shadow: 0 4px 12px rgba(11, 38, 110, 0.4);
             }
 
             .post-actions .vote-pill {
@@ -183,25 +187,23 @@
             }
 
             .search-input {
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                padding: 12px 18px 12px 46px;
-                font-size: 0.9rem;
-                color: #4b5563;
+                border: 1px solid #DFE1E7;
+                border-radius: 8px;
+                padding: 8px 14px 8px 36px;
+                font-size: 12px;
+                font-weight: 500;
+                color: #353849;
                 outline: none;
-                background: #E7E8F0;
-                height: 44px;
-                transition: all 0.25s ease;
+                background: #fff;
+                transition: border-color 0.15s, box-shadow 0.15s;
+                width: 100%;
             }
 
-            .search-input::placeholder {
-                color: #9ca3af;
-            }
+            .search-input::placeholder { color: #808897; }
 
             .search-input:focus {
-                border-color: #293C79;
-                box-shadow: 0 0 0 3px rgba(41, 60, 121, 0.12);
-                background: #fff;
+                border-color: #0B266E;
+                box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
             }
 
             .search-wrapper {
@@ -240,317 +242,112 @@
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
-                padding: 6px 16px;
-                border-radius: 20px;
-                font-size: 13px;
+                padding: 5px 12px;
+                border-radius: 8px;
+                font-size: 12px;
                 font-weight: 600;
-                border: 1px solid #e5e7eb;
+                border: 1px solid #DFE1E7;
                 background: #fff;
-                color: #6b7280;
+                color: #666D80;
                 cursor: pointer;
-                transition: all 0.2s ease;
+                transition: all 0.15s;
             }
 
             .sort-tab:hover {
-                border-color: #293C79;
-                color: #293C79;
-                background: #E7E8F0;
+                border-color: #0B266E;
+                color: #0B266E;
+                background: rgba(11,38,110,0.04);
             }
 
             .sort-tab.active {
-                background: #293C79;
+                background: #0B266E;
                 color: #fff;
-                border-color: #293C79;
+                border-color: #0B266E;
             }
 
-            .sort-tab svg {
-                width: 14px;
-                height: 14px;
-            }
-
-            .leaderboard-table th {
-                font-weight: 600;
-                font-size: 12px;
-                color: #6b7280;
-                border-bottom: 1px solid #f3f4f6;
-                padding: 10px 14px;
-                background-color: #f9fafb;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
-
-            .leaderboard-scroll-container {
-                max-height: 280px;
-                overflow-y: auto;
-                scrollbar-width: thin;
-                scrollbar-color: #e2e8f0 transparent;
-            }
-
-            .leaderboard-scroll-container::-webkit-scrollbar {
-                width: 6px;
-            }
-
-            .leaderboard-scroll-container::-webkit-scrollbar-track {
-                background: transparent;
-            }
-
-            .leaderboard-scroll-container::-webkit-scrollbar-thumb {
-                background-color: #e2e8f0;
-                border-radius: 20px;
-            }
-
-            .leaderboard-table td {
-                border-bottom: 1px solid #f3f4f6;
-                color: #374151;
-                font-size: 13px;
-                padding: 12px 14px;
-                background-color: transparent;
-            }
+            .sort-tab svg { width: 13px; height: 13px; }
 
             .tag-label {
                 font-size: 11px;
-                font-weight: 600;
-                padding: 4px 12px;
-                border-radius: 20px;
-                display: inline-block;
-            }
-
-            .tag-green {
-                background: #dcfce7;
-                color: #16a34a;
-            }
-
-            .tag-red {
-                background: #fee2e2;
-                color: #dc2626;
-            }
-
-            .tag-gray {
-                background: #f3f4f6;
-                color: #6b7280;
-            }
-
-            .tag-blue {
-                background: #dbeafe;
-                color: #2563eb;
-            }
-
-            .tag-purple {
-                background: #f3e8ff;
-                color: #7c3aed;
-            }
-
-            .xp-progress-bar {
-                height: 8px;
-                background: rgba(255, 255, 255, 0.2);
-                border-radius: 4px;
-                overflow: hidden;
-                margin-top: 6px;
-            }
-
-            .xp-progress-fill {
-                height: 100%;
-                background: #fbbf24;
-                border-radius: 4px;
-                transition: width 0.5s ease;
-            }
-
-            .pinned-badge {
-                background: #fef3c7;
-                color: #d97706;
-                font-size: 10px;
                 font-weight: 700;
-                padding: 2px 8px;
-                border-radius: 4px;
+                padding: 4px 9px;
+                border-radius: 8px;
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
+                letter-spacing: 0.02em;
+            }
+
+            .tag-green  { background: #DDF2EE; color: #287F6E; }
+            .tag-red    { background: #FADAE1; color: #DF1C41; }
+            .tag-gray   { background: #F6F8FA; color: #666D80; }
+            .tag-blue   { background: #D1F0F9; color: #0C4D6E; }
+            .tag-purple { background: rgba(11,38,110,0.08); color: #0B266E; }
+
+            .pinned-badge {
+                background: #F9ECCB;
+                color: #956321;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 4px 8px;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                letter-spacing: 0.02em;
             }
 
             .empty-state {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 64px 20px;
                 text-align: center;
-                padding: 60px 20px;
-                color: #9ca3af;
             }
 
-            .empty-state .icon {
-                font-size: 48px;
-                margin-bottom: 16px;
+            .empty-state .empty-icon {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                background: rgba(11, 38, 110, 0.08);
+                color: #0B266E;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 14px;
+            }
+
+            .empty-state h5 {
+                font-size: 14px;
+                font-weight: 700;
+                color: #0D0D12;
+                margin-bottom: 4px;
+            }
+
+            .empty-state p {
+                font-size: 12px;
+                color: #666D80;
+                margin: 0 0 16px;
             }
 
             .edited-badge {
                 font-size: 11px;
-                color: #9ca3af;
+                color: #808897;
                 font-style: italic;
             }
 
             .personal-pin-badge {
-                background: #dbeafe;
-                color: #2563eb;
-                font-size: 10px;
+                background: rgba(11,38,110,0.08);
+                color: #0B266E;
+                font-size: 11px;
                 font-weight: 700;
-                padding: 2px 8px;
-                border-radius: 4px;
+                padding: 4px 8px;
+                border-radius: 8px;
                 display: inline-flex;
                 align-items: center;
                 gap: 4px;
-            }
-
-            /* ── Admin Report Panel ──────────────────────────────────────────── */
-            .report-panel {
-                background: #fff;
-                border: 1px solid #fecaca;
-                border-radius: 12px;
-                margin-bottom: 20px;
-                overflow: hidden;
-            }
-
-            .report-panel-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                padding: 14px 20px;
-                background: #fef2f2;
-                cursor: pointer;
-                transition: background 0.2s;
-            }
-
-            .report-panel-header:hover {
-                background: #fee2e2;
-            }
-
-            .report-panel-header .chevron-icon {
-                transition: transform 0.3s;
-            }
-
-            .report-panel-header .chevron-icon.rotated {
-                transform: rotate(180deg);
-            }
-
-            .report-panel-header h6 {
-                font-size: 14px;
-                font-weight: 700;
-                color: #991b1b;
-                margin: 0;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .report-panel-header .report-badge {
-                background: #ef4444;
-                color: #fff;
-                font-size: 11px;
-                font-weight: 700;
-                padding: 2px 8px;
-                border-radius: 20px;
-            }
-
-            .report-panel-body {
-                max-height: 0;
-                overflow: hidden;
-                transition: max-height 0.3s ease;
-            }
-
-            .report-panel-body.open {
-                max-height: 2000px;
-            }
-
-            .report-item {
-                padding: 14px 20px;
-                border-top: 1px solid #fecaca;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .report-item:first-child {
-                border-top: none;
-            }
-
-            .report-item-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-start;
-                gap: 12px;
-            }
-
-            .report-thread-title {
-                font-size: 14px;
-                font-weight: 700;
-                color: #111827;
-                text-decoration: none;
-                transition: color 0.2s;
-            }
-
-            .report-thread-title:hover {
-                color: #293C79;
-            }
-
-            .report-reason-text {
-                background: #fef2f2;
-                border: 1px solid #fecaca;
-                border-radius: 6px;
-                padding: 8px 12px;
-                font-size: 12px;
-                color: #991b1b;
-                line-height: 1.4;
-            }
-
-            .report-meta-line {
-                font-size: 11px;
-                color: #6b7280;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .report-actions-row {
-                display: flex;
-                gap: 6px;
-                flex-wrap: wrap;
-            }
-
-            .report-action-btn {
-                padding: 5px 12px;
-                border-radius: 6px;
-                font-size: 11px;
-                font-weight: 600;
-                border: 1px solid #e5e7eb;
-                background: #fff;
-                color: #374151;
-                cursor: pointer;
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                transition: all 0.15s;
-                text-decoration: none;
-            }
-
-            .report-action-btn:hover {
-                border-color: #293C79;
-                color: #293C79;
-            }
-
-            .report-action-btn.danger {
-                border-color: #fecaca;
-                color: #dc2626;
-            }
-
-            .report-action-btn.danger:hover {
-                background: #fef2f2;
-            }
-
-            .report-action-btn.warning {
-                border-color: #fde68a;
-                color: #d97706;
-            }
-
-            .report-action-btn.warning:hover {
-                background: #fffbeb;
+                letter-spacing: 0.02em;
             }
 
             /* Pagination Custom Layout */
@@ -568,56 +365,16 @@
                 margin-bottom: 0;
             }
 
-            /* ── Leaderboard Ranks ───────────────────────────────────────────── */
-            .rank-container {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                width: 28px;
-            }
-
-            .rank-badge {
-                width: 26px;
-                height: 26px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 800;
-                font-size: 12px;
-                color: #fff;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            }
-
-            .rank-1 {
-                background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-                border: 2px solid #fef3c7;
-            }
-
-            .rank-2 {
-                background: linear-gradient(135deg, #cbd5e1 0%, #64748b 100%);
-                border: 2px solid #f1f5f9;
-            }
-
-            .rank-3 {
-                background: linear-gradient(135deg, #f97316 0%, #b45309 100%);
-                border: 2px solid #ffedd5;
-            }
-
-            .rank-text {
-                font-weight: 700;
-                font-size: 13px;
-                color: #94a3b8;
-                width: 26px;
-                text-align: center;
-            }
         </style>
     @endpush
 
-    <div class="page-title">
-        <h4 style="font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin-bottom: 4px;">Forum Diskusi</h4>
-        <p>Wadah komunikasi mahasiswa & alumni</p>
+    <div class="dash-wrap">
+    <div class="dash-box">
+    <div class="dash-box-header">
+        <h1 style="font-size:18px; font-weight:800; color:#0D0D12; margin:0 0 2px; letter-spacing:-0.02em;">Forum Diskusi</h1>
+        <p style="font-size:12px; color:#666D80; font-weight:500; margin:0;">Wadah komunikasi mahasiswa &amp; alumni</p>
     </div>
+    <div class="dash-box-body">
 
     {{-- Flash Message --}}
     @if(session('success'))
@@ -628,371 +385,131 @@
         </div>
     @endif
 
-    <!-- Header Cards -->
-    <div class="row mb-4">
-        <!-- Leaderboard -->
-        <div class="col-md-7 mb-3 mb-md-0">
-            <div class="h-100"
-                style="overflow:hidden; border: 1px solid #DDE1E8; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(22,22,43,0.06), 0 1px 2px rgba(22,22,43,0.04);">
-                <div
-                    style="background: linear-gradient(135deg, #293C79 0%, #415086 50%, #6F7DA4 100%); padding: 16px 20px; border-radius: 12px 12px 0 0;">
-                    <div class="d-flex align-items-center gap-2">
-                        <div
-                            style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                                <path d="M4 22h16" />
-                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-0" style="color: #fff; font-size: 15px; letter-spacing: -0.01em;">
-                                Leaderboard</h6>
-                            <small style="color: rgba(255,255,255,0.7); font-size: 11px;">Top kontributor forum</small>
-                        </div>
-                    </div>
-                </div>
-                <div style="padding: 0;">
-                    <div class="table-responsive leaderboard-scroll-container">
-                        <table class="table table-borderless table-sm mb-0 leaderboard-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 10%; padding-left: 20px;">#</th>
-                                    <th style="width: 40%">User</th>
-                                    <th style="width: 20%">Level</th>
-                                    <th style="width: 30%">Badges</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($leaderboard as $index => $entry)
-                                    <tr
-                                        style="{{ $index < 3 ? 'background:' . ['#fffbeb', '#f8fafc', '#fdf4f0'][$index] . ';' : '' }}">
-                                        <td style="padding-left: 20px; vertical-align: middle;">
-                                            <div class="rank-container">
-                                                @if($index === 0)
-                                                    <div class="rank-badge rank-1" title="Juara 1">1</div>
-                                                @elseif($index === 1)
-                                                    <div class="rank-badge rank-2" title="Juara 2">2</div>
-                                                @elseif($index === 2)
-                                                    <div class="rank-badge rank-3" title="Juara 3">3</div>
-                                                @else
-                                                    <div class="rank-text">{{ $index + 1 }}</div>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold"
-                                                style="color: #1e293b; font-size: 13px;">{{ $entry->name }}</span>
-                                        </td>
-                                        <td>
-                                            <span class="d-inline-flex align-items-center gap-1" style="font-size: 13px;">
-                                                <span title="{{ $entry->tier_name }}">{!! $entry->tier_icon !!}</span>
-                                                <span
-                                                    style="color: #293C79; font-weight: 600;">Lv.{{ $entry->level }}</span>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @foreach($entry->badges->take(3) as $badge)
-                                                @if($badge->image)
-                                                    <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}"
-                                                        style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;"
-                                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                                    <span style="display:none;">{{ $badge->icon }}</span>
-                                                @else
-                                                    <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
-                                                @endif
-                                            @endforeach
-                                            @if($entry->badges->count() > 3)
-                                                <span
-                                                    style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-4" style="color: #94a3b8;">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-                                                stroke-linejoin="round" class="mb-2">
-                                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                                                <path d="M4 22h16" />
-                                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                                            </svg>
-                                            <br>Belum ada data leaderboard
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
+    {{-- User Stats Banner --}}
+    @php
+        $progressPct = $userStats['xp_needed'] > 0
+            ? min(100, round(($userStats['xp_current'] / $userStats['xp_needed']) * 100))
+            : 100;
+    @endphp
+    <div style="background: linear-gradient(135deg, #0B266E 0%, #091958 55%, #1a3a8a 100%); border-radius: 12px; padding: 14px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 0; flex-wrap: wrap; position: relative; overflow: hidden; box-shadow: 0px 2px 8px rgba(11,38,110,0.18);">
 
-                        </table>
-                    </div>
+        {{-- Decorative circles --}}
+        <div style="position:absolute; top:-40px; right:-20px; width:120px; height:120px; background:rgba(255,255,255,0.05); border-radius:50%; pointer-events:none;"></div>
+        <div style="position:absolute; bottom:-50px; right:80px; width:90px; height:90px; background:rgba(255,255,255,0.04); border-radius:50%; pointer-events:none;"></div>
+
+        {{-- Streak --}}
+        <div style="display:flex; align-items:center; gap:10px; padding-right:20px; border-right:1px solid rgba(255,255,255,0.15); flex-shrink:0;">
+            <div style="background:linear-gradient(135deg,#f97316,#dc2626); border-radius:10px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; flex-shrink:0; box-shadow:0 2px 8px rgba(249,115,22,0.4);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                </svg>
+            </div>
+            <div>
+                <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; line-height:1;">Streak</div>
+                <div style="font-size:20px; font-weight:900; color:#fff; line-height:1.15; letter-spacing:-0.02em; margin-top:1px;">
+                    {{ $userStats['current_streak'] }}<span style="font-size:11px; font-weight:600; opacity:0.7; margin-left:2px;">hr</span>
                 </div>
             </div>
         </div>
 
-        <!-- User Stats Card -->
-        <div class="col-md-5">
-            <div class="h-100"
-                style="overflow:hidden; border: 1px solid #DDE1E8; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(22,22,43,0.06), 0 1px 2px rgba(22,22,43,0.04);">
-                {{-- Streak Banner --}}
-                <div
-                    style="background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%); padding: 18px 20px; border-radius: 12px 12px 0 0; position: relative; overflow: hidden;">
-                    {{-- Decorative circles --}}
-                    <div
-                        style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.08); border-radius: 50%;">
-                    </div>
-                    <div
-                        style="position: absolute; bottom: -30px; right: 40px; width: 60px; height: 60px; background: rgba(255,255,255,0.06); border-radius: 50%;">
-                    </div>
+        {{-- Rank --}}
+        <div style="padding:0 20px; border-right:1px solid rgba(255,255,255,0.15); text-align:center; flex-shrink:0;">
+            <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1px;">Rank</div>
+            <div style="font-size:22px; font-weight:900; color:#fbbf24; line-height:1.1; letter-spacing:-0.03em;">#{{ $userStats['rank'] }}</div>
+        </div>
 
-                    <div class="d-flex align-items-center gap-3">
-                        <div
-                            style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"
-                                stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                                <path
-                                    d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <div
-                                style="color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
-                                Streak Harian</div>
-                            <div
-                                style="color: #fff; font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.02em;">
-                                {{ $userStats['current_streak'] }} <span
-                                    style="font-size: 14px; font-weight: 600; opacity: 0.8;">Hari</span></div>
-                        </div>
-                    </div>
-                </div>
+        {{-- Level --}}
+        <div style="padding:0 20px; border-right:1px solid rgba(255,255,255,0.15); text-align:center; flex-shrink:0;">
+            <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:1px;">Level</div>
+            <div style="font-size:18px; font-weight:800; color:#fff; line-height:1.1;">{!! $userStats['tier_icon'] !!} {{ $userStats['level'] }}</div>
+            <div style="font-size:10px; color:rgba(255,255,255,0.55); font-weight:500; margin-top:1px;">{{ $userStats['tier_name'] }}</div>
+        </div>
 
-                {{-- Stats Content --}}
-                <div style="padding: 16px 20px 20px;">
-                    {{-- Rank & Level Grid --}}
-                    <div class="d-flex gap-3 mb-3">
-                        {{-- Rank --}}
-                        <div
-                            style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; text-align: center;">
-                            <div
-                                style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
-                                Rank</div>
-                            <div style="font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.02em;">
-                                #{{ $userStats['rank'] }}</div>
-                        </div>
-                        {{-- Level --}}
-                        <div
-                            style="flex: 1; background: #E7E8F0; border: 1px solid #e9e5ff; border-radius: 10px; padding: 12px 14px; text-align: center;">
-                            <div
-                                style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
-                                Level</div>
-                            <div style="font-size: 22px; font-weight: 800; color: #293C79; letter-spacing: -0.02em;">
-                                <span>{!! $userStats['tier_icon'] !!}</span> {{ $userStats['level'] }}
-                            </div>
-                            <div style="font-size: 11px; color: #415086; font-weight: 600;">
-                                {{ $userStats['tier_name'] }}</div>
-                        </div>
-                    </div>
+        {{-- XP Progress --}}
+        <div style="flex:1; min-width:160px; padding:0 20px; {{ $userStats['badges']->isNotEmpty() ? 'border-right:1px solid rgba(255,255,255,0.15);' : '' }}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                <span style="font-size:9px; font-weight:700; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:0.06em;">XP</span>
+                <span style="font-size:11px; font-weight:700; color:#fbbf24;">{{ number_format($userStats['total_xp']) }} / {{ number_format($userStats['xp_for_next']) }}</span>
+            </div>
+            <div style="height:5px; background:rgba(255,255,255,0.15); border-radius:99px; overflow:hidden;">
+                <div style="height:100%; width:{{ $progressPct }}%; background:linear-gradient(90deg,#fbbf24,#f97316); border-radius:99px; transition:width .5s ease;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                <span style="font-size:9px; color:rgba(255,255,255,0.4);">Lv.{{ $userStats['level'] }}</span>
+                <span style="font-size:9px; color:rgba(255,255,255,0.4);">Lv.{{ $userStats['level'] + 1 }}</span>
+            </div>
+        </div>
 
-                    {{-- XP Progress --}}
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span
-                                style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em;">
-                                <x-manajemenmahasiswa::ui.icon name="flash" size="14" />
-                                Experience
-                            </span>
-                            <span
-                                style="font-size: 12px; font-weight: 700; color: #293C79;">{{ $userStats['total_xp'] }}
-                                / {{ $userStats['xp_for_next'] }} XP</span>
-                        </div>
-                        @php
-                            $progressPct = $userStats['xp_needed'] > 0
-                                ? min(100, round(($userStats['xp_current'] / $userStats['xp_needed']) * 100))
-                                : 100;
-                        @endphp
-                        <div style="height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
-                            <div
-                                style="height: 100%; width: {{ $progressPct }}%; background: linear-gradient(90deg, #293C79, #415086, #6F7DA4); border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
-                            </div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-1">
-                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level
-                                {{ $userStats['level'] }}</span>
-                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level
-                                {{ $userStats['level'] + 1 }}</span>
-                        </div>
-                    </div>
-
-                    {{-- Badges --}}
-                    @if($userStats['badges']->isNotEmpty())
-                        <div class="mt-3">
-                            <div
-                                style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">
-                                <x-manajemenmahasiswa::ui.icon name="star" size="13" />
-                                Badges
-                            </div>
-                            <div class="d-flex align-items-center gap-2 flex-wrap">
-                                @foreach($userStats['badges'] as $badge)
-                                    <div
-                                        style="background: #E7E8F0; border: 1px solid #e9e5ff; border-radius: 8px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
-                                        @if($badge->image)
-                                            <img src="{{ asset($badge->image) }}?v={{ time() }}"
-                                                title="{{ $badge->name }}: {{ $badge->description }}"
-                                                style="width: 20px; height: 20px; object-fit: contain;"
-                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                            <span style="display:none; font-size: 16px;"
-                                                title="{{ $badge->name }}: {{ $badge->description }}">{{ $badge->icon }}</span>
-                                        @else
-                                            <span title="{{ $badge->name }}: {{ $badge->description }}"
-                                                style="font-size: 16px;">{{ $badge->icon }}</span>
-                                        @endif
-                                        <span
-                                            style="font-size: 11px; font-weight: 600; color: #293C79;">{{ $badge->name }}</span>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
+        {{-- Badges --}}
+        @if($userStats['badges']->isNotEmpty())
+            <div style="padding:0 0 0 20px; flex-shrink:0;">
+                <div style="font-size:9px; color:rgba(255,255,255,0.6); font-weight:600; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:5px;">Badges</div>
+                <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                    @foreach($userStats['badges']->take(4) as $badge)
+                        @if($badge->image)
+                            <img src="{{ asset($badge->image) }}" title="{{ $badge->name }}"
+                                style="width:22px; height:22px; object-fit:contain;"
+                                onerror="this.style.display='none';">
+                        @else
+                            <span title="{{ $badge->name }}" style="font-size:18px; line-height:1;">{{ $badge->icon }}</span>
+                        @endif
+                    @endforeach
+                    @if($userStats['badges']->count() > 4)
+                        <span style="font-size:10px; color:rgba(255,255,255,0.5); font-weight:600;">+{{ $userStats['badges']->count() - 4 }}</span>
                     @endif
                 </div>
             </div>
-        </div>
+        @endif
+
     </div>
 
     <!-- Search & Filter Area -->
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
-        {{-- Search Row --}}
-        <div class="mb-3">
-            <div class="search-wrapper w-100">
+        <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'terbaru') }}">
+        @php $currentSort = request('sort', 'terbaru'); @endphp
+
+        {{-- Row 1: Search + Buat Post --}}
+        <div class="d-flex gap-2 mb-2 flex-wrap align-items-center">
+            <div class="search-wrapper" style="flex: 1; min-width: 180px;">
                 <span class="search-icon">
-                    <x-manajemenmahasiswa::ui.icon name="search-01" size="18" />
+                    <x-manajemenmahasiswa::ui.icon name="search-01" size="16" />
                 </span>
-                <input type="text" name="search" class="form-control search-input w-100" placeholder="Search"
+                <input type="text" name="search" class="search-input" placeholder="Cari thread..."
                     value="{{ request('search') }}">
             </div>
+            <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post flex-shrink-0">
+                <x-manajemenmahasiswa::ui.icon name="plus" size="16" />
+                Buat Post
+            </a>
         </div>
 
-        {{-- Sort & Filter Row --}}
-        <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'terbaru') }}">
-        <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-md-center mb-4">
-            
-            {{-- Left: Filter & Action --}}
-            <div class="d-flex gap-2" style="max-width: 100%;">
-                <select name="kategori" class="form-select border-1"
-                    style="border-radius: 12px; height: 40px; width: auto; min-width: 160px; background-color: #fff; border-color: #e5e7eb; flex-shrink: 1;"
-                    onchange="document.getElementById('forumFilterForm').submit()">
-                    <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>
-                        Semua Kategori</option>
-                    @foreach($categories as $key => $label)
-                        <option value="{{ $key }}" {{ request('kategori') == $key ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none d-inline-flex align-items-center justify-content-center gap-1 flex-shrink-0" style="height: 40px; padding: 0 16px; border-radius: 12px;">
-                    <x-manajemenmahasiswa::ui.icon name="plus" size="16" />
-                    Buat Post
-                </a>
-            </div>
-
-            {{-- Right: Sort Tabs --}}
-            <div class="d-flex gap-2 flex-wrap justify-content-md-end">
-                @php $currentSort = request('sort', 'terbaru'); @endphp
-                <button type="button"
-                    class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
-                    onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();"
-                    style="height: 40px;">
-                    <x-manajemenmahasiswa::ui.icon name="clock-02" size="14" /> Terbaru
-                </button>
-                <button type="button"
-                    class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
-                    onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();"
-                    style="height: 40px;">
-                    <x-manajemenmahasiswa::ui.icon name="flash" size="14" /> Hot
-                </button>
-                <button type="button"
-                    class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
-                    onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();"
-                    style="height: 40px;">
-                    <x-manajemenmahasiswa::ui.icon name="chevron-up" size="14" /> Top
-                </button>
-            </div>
-            
+        {{-- Row 2: Category + Sort Tabs --}}
+        <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
+            <select name="kategori" class="form-select flex-shrink-0"
+                style="border-radius: 8px; height: 36px; width: auto; min-width: 148px; background-color: #fff; border-color: #DFE1E7; font-size: 12px; font-weight: 600; color: #353849; padding: 0 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04);"
+                onchange="document.getElementById('forumFilterForm').submit()">
+                <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>
+                    Semua Kategori</option>
+                @foreach($categories as $key => $label)
+                    <option value="{{ $key }}" {{ request('kategori') == $key ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+            <button type="button" class="sort-tab {{ $currentSort === 'terbaru' ? 'active' : '' }}"
+                onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
+                <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" /> Terbaru
+            </button>
+            <button type="button" class="sort-tab {{ $currentSort === 'hot' ? 'active' : '' }}"
+                onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();">
+                <x-manajemenmahasiswa::ui.icon name="flash" size="13" /> Hot
+            </button>
+            <button type="button" class="sort-tab {{ $currentSort === 'top' ? 'active' : '' }}"
+                onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();">
+                <x-manajemenmahasiswa::ui.icon name="chevron-up" size="13" /> Top
+            </button>
         </div>
     </form>
-
-    {{-- Admin Report Panel --}}
-    @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']) && $forumReports->isNotEmpty())
-        <div class="report-panel">
-            <div class="report-panel-header"
-                onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.chevron-icon').classList.toggle('rotated')">
-                <h6>
-                    <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="16" /> Laporan Masuk
-                    <span class="report-badge">{{ $forumReports->count() }}</span>
-                </h6>
-                <x-manajemenmahasiswa::ui.icon name="chevron-down" size="16" class="chevron-icon" />
-            </div>
-            <div class="report-panel-body">
-                @foreach($forumReports as $report)
-                    <div class="report-item">
-                        <div class="report-item-header">
-                            <div>
-                                @if($report->thread)
-                                    <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}"
-                                        class="report-thread-title">
-                                        {{ $report->thread->judul }}
-                                    </a>
-                                @else
-                                    <span class="report-thread-title" style="color:#9ca3af;text-decoration:line-through;">Thread
-                                        telah dihapus</span>
-                                @endif
-                            </div>
-                            <span
-                                style="font-size:11px; color:#9ca3af; white-space:nowrap;">{{ $report->created_at->diffForHumans() }}</span>
-                        </div>
-                        <div class="report-meta-line">
-                            Dilaporkan oleh <strong>{{ $report->reporter->name ?? 'Unknown' }}</strong>
-                            @if($report->thread && $report->thread->author)
-                                &nbsp;• Thread oleh <strong>{{ $report->thread->author->name }}</strong>
-                            @endif
-                        </div>
-                        <div class="report-reason-text"><x-manajemenmahasiswa::ui.icon name="alert-triangle" size="12" /> {{ $report->alasan }}</div>
-                        <div class="report-actions-row">
-                            @if($report->thread)
-                                <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}"
-                                    class="report-action-btn"><x-manajemenmahasiswa::ui.icon name="eye" size="12" /> Lihat</a>
-                                @if(!($report->thread->is_locked ?? false))
-                                    <form method="POST"
-                                        action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}"
-                                        style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="report-action-btn warning"><x-manajemenmahasiswa::ui.icon name="locked-01" size="12" /> Kunci</button>
-                                    </form>
-                                @endif
-                                <form method="POST"
-                                    action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}"
-                                    style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="report-action-btn danger"><x-manajemenmahasiswa::ui.icon name="minus-circle" size="12" /> Hapus Thread</button>
-                                </form>
-                            @endif
-                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}"
-                                style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="report-action-btn"><x-manajemenmahasiswa::ui.icon name="minus" size="12" /> Abaikan</button>
-                            </form>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
 
     <!-- Forum Posts -->
     <div class="forum-cards-container">
@@ -1005,18 +522,16 @@
                         </div>
                         <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
-                                <h6 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h6>
+                                <span style="font-size:16px; font-weight:700; color:#0D0D12;">{{ $thread->author->name ?? 'Unknown' }}</span>
                                 @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $thread->author])
                                 @if(isset($authorTiers[$thread->user_id]))
-                                    <span class="badge rounded-pill"
-                                        style="background: linear-gradient(135deg, #293C79 0%, #415086 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;"
+                                    <span style="background:rgba(11,38,110,0.08); color:#0B266E; font-size:10px; font-weight:700; padding:3px 8px; border-radius:8px; letter-spacing:0.02em;"
                                         title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
                                         {!! $authorTiers[$thread->user_id]['tier_icon'] !!}
                                         Lv.{{ $authorTiers[$thread->user_id]['level'] }}
                                     </span>
                                 @endif
-                                <span class="text-primary fw-medium" style="font-size: 12px;">•
-                                    {{ $thread->created_at->diffForHumans() }}</span>
+                                <span style="font-size:11px; color:#666D80; font-weight:500;">• {{ $thread->created_at->diffForHumans() }}</span>
                                 @if($thread->isEdited())
                                     <span class="edited-badge">(diedit)</span>
                                 @endif
@@ -1128,20 +643,18 @@
                     </div>
                 </div>
 
-                <div class="d-flex gap-3 mb-3">
-                    <div class="flex-grow-1 min-w-0">
-                        <h6 class="fw-bold text-dark mb-2">{{ $thread->judul }}</h6>
-                        <p class="text-dark mb-0" style="font-size: 14px; line-height: 1.5;">
-                            {{ Str::limit($thread->getTextContent() ?: strip_tags($thread->konten), 200) }}
-                        </p>
-                    </div>
+                <div class="mb-3">
+                    <h6 style="font-size:16px; font-weight:700; color:#0D0D12; margin-bottom:6px; line-height:1.3;">{{ $thread->judul }}</h6>
+                    <p style="font-size:14px; color:#666D80; margin:0; line-height:1.6;">
+                        {{ Str::limit($thread->getTextContent() ?: strip_tags($thread->konten), 200) }}
+                    </p>
                 </div>
 
                 @if($thread->getFirstImageUrl())
                     <div class="mt-2 mb-3"
-                        style="width: 100%; max-height: 512px; overflow: hidden; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; display: flex; justify-content: center; align-items: center;">
+                        style="width: 100%; max-height: 300px; overflow: hidden; border-radius: 10px; border: 1px solid #DFE1E7; background: #f8fafc; display: flex; justify-content: center; align-items: center;">
                         <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail"
-                            style="width: 100%; max-height: 512px; object-fit: contain;">
+                            style="width: 100%; max-height: 300px; object-fit: contain;">
                     </div>
                 @endif
 
@@ -1209,14 +722,13 @@
             </div>
         @empty
             <div class="empty-state">
-                <div class="icon">
-                    <x-manajemenmahasiswa::ui.icon name="message-dots-circle" size="48" />
+                <div class="empty-icon">
+                    <x-manajemenmahasiswa::ui.icon name="message-dots-circle" size="28" />
                 </div>
-                <h5 class="fw-bold text-dark">Belum ada diskusi</h5>
+                <h5>Belum ada diskusi</h5>
                 <p>Jadilah yang pertama memulai diskusi!</p>
-                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                    Buat Post Pertama
-                    <x-manajemenmahasiswa::ui.icon name="plus-circle" size="16" />
+                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post">
+                    <x-manajemenmahasiswa::ui.icon name="plus" size="14" /> Buat Post Pertama
                 </a>
             </div>
         @endforelse
@@ -1294,12 +806,16 @@
                     </ol>
                 </div>
                 <div class="modal-footer border-0 pt-0 mt-3">
-                    <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600; background-color: #293C79; border-color: #293C79;">Saya Mengerti & Setuju</button>
+                    <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600; background-color: #0B266E; border-color: #0B266E;">Saya Mengerti & Setuju</button>
                 </div>
             </div>
         </div>
     </div>
     @endif
+
+    </div>{{-- /dash-box-body --}}
+    </div>{{-- /dash-box --}}
+    </div>{{-- /dash-wrap --}}
 
     @push('scripts')
 

@@ -6,6 +6,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use App\Models\Student;
 use App\Models\Lecturer;
@@ -14,6 +15,7 @@ use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
 class PelaksanaanController extends Controller
@@ -23,7 +25,8 @@ class PelaksanaanController extends Controller
 
     public function __construct(
         private RepoMulmedService $repoMulmedService,
-        private SupabaseStorage $supabase
+        private SupabaseStorage $supabase,
+        private PengelolaKegiatanService $pengelolaService
     ) {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -134,12 +137,22 @@ class PelaksanaanController extends Controller
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
 
+        // Lapis kedua di belakang role: kegiatan hanya boleh diubah pemiliknya,
+        // pengelola yang ia tunjuk, atau override (KegiatanPolicy).
+        $bolehUbah = Gate::allows('update', $proker);
+        $pesanBukanPengelola = $canManage && !$bolehUbah
+            ? $this->pengelolaService->pesanTolak($proker)
+            : null;
+        $canManage = $canManage && $bolehUbah;
+        $canArsip  = $canArsip && $bolehUbah;
+        $canDelete = $canDelete && Gate::allows('delete', $proker);
+
         $images    = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'image') : collect();
         $documents = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'document') : collect();
 
         return view('manajemenmahasiswa::pelaksanaan.show', compact(
             'proker', 'isAdmin', 'isPengurus', 'canManage', 'canArsip', 'canDelete',
-            'canViewRestricted', 'images', 'documents'
+            'canViewRestricted', 'images', 'documents', 'pesanBukanPengelola'
         ));
     }
 
@@ -171,6 +184,9 @@ class PelaksanaanController extends Controller
         if (!$canManage) {
             abort(403, 'Akses ditolak.');
         }
+        if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
+            return $tolak;
+        }
 
         $bidangList   = Bidang::orderBy('nama_bidang')->get();
         $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
@@ -200,7 +216,7 @@ class PelaksanaanController extends Controller
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
             'selectedKategoriIds', 'selectedBidangIds',
             'isAdmin', 'isPengurus', 'canManage'
-        ));
+        ) + $this->pengelolaService->dataForm($proker));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -214,6 +230,9 @@ class PelaksanaanController extends Controller
         // Sinkron dengan edit(): kegiatan yang sudah diarsipkan tidak boleh
         // ditulis dari sini, termasuk oleh permintaan PUT langsung.
         if ($tolak = $this->tolakBilaStatusTakSesuai($proker, [Kegiatan::STATUS_DISETUJUI])) {
+            return $tolak;
+        }
+        if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
             return $tolak;
         }
 
@@ -347,6 +366,9 @@ class PelaksanaanController extends Controller
         // Sync dosen pendamping (many-to-many)
         $proker->dosenPendampings()->sync($validated['dosen_pendamping_ids'] ?? []);
 
+        // Daftar pengelola — hanya diproses bila penyimpan berhak mengatur akses
+        $this->pengelolaService->sync($proker, $request);
+
         // Upload banner — simpan ke kolom `banner` di mk_kegiatan (bukan repo_mulmed)
         if ($request->hasFile('banner')) {
             // Hapus banner lama jika ada
@@ -414,6 +436,11 @@ class PelaksanaanController extends Controller
                 ->with('error', 'Hanya kegiatan yang berada di tahap Pelaksanaan yang bisa diunggah ke arsip.');
         }
 
+        // Mengunggah ke arsip = mengubah status kegiatan, jadi butuh hak ubah atas kegiatan ini.
+        if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
+            return $tolak;
+        }
+
         if (!$proker->is_pelaksanaan_updated) {
             return redirect()
                 ->back()
@@ -457,6 +484,10 @@ class PelaksanaanController extends Controller
                 ->with('error', $proker->status === Kegiatan::STATUS_SELESAI
                     ? 'Kegiatan ini sudah diarsipkan, jadi penghapusannya dilakukan dari subbab Laporan & Arsip.'
                     : 'Hanya kegiatan yang berada di tahap Pelaksanaan yang bisa dihapus dari halaman ini.');
+        }
+
+        if ($tolak = $this->tolakBilaBukanPengelola($proker, 'delete')) {
+            return $tolak;
         }
 
         if ($proker->banner) {
@@ -528,6 +559,24 @@ class PelaksanaanController extends Controller
                 ->route('manajemenmahasiswa.pelaksanaan.index')
                 ->with('error', 'Kegiatan ini tidak berada di tahap Pelaksanaan.'),
         };
+    }
+
+    /**
+     * Role saja tidak cukup: kegiatan hanya boleh diubah/dihapus pemiliknya,
+     * pengelola yang ia tunjuk, atau override (lihat KegiatanPolicy).
+     *
+     * @param string $aksi 'update' atau 'delete'
+     * @return RedirectResponse|null null bila boleh
+     */
+    private function tolakBilaBukanPengelola(Kegiatan $proker, string $aksi = 'update'): ?RedirectResponse
+    {
+        if (Gate::allows($aksi, $proker)) {
+            return null;
+        }
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('error', $this->pengelolaService->pesanTolak($proker));
     }
 
     /**

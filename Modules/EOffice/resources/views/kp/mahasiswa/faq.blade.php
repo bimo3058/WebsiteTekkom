@@ -10,12 +10,13 @@
     <style>
         * { font-family: 'Inter Tight', sans-serif; }
         :root {
-            --primary-50:#eef2ff;--primary-100:#e0e7ff;--primary-500:#4f46e5;
+            --primary-50:#EBEDF6;--primary-100:#D0D6E9;--primary-500:#2A3A7C;
             --grey-50:#f9fafb;--grey-100:#f3f4f6;--grey-200:#e5e7eb;
             --grey-400:#9ca3af;--grey-500:#6b7280;--grey-700:#374151;--grey-800:#1f2937;--grey-900:#030712;
         }
         .sikape-card { background:#fff; border:1px solid var(--grey-200); border-radius:12px; }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body style="background:#f9fafb;" x-data="{ sidebarOpen: false, search: '', openItem: null }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -140,5 +141,6 @@
         </main>
     </div>
 </div>
+    <x-mobile-navigation />
 </body>
 </html>

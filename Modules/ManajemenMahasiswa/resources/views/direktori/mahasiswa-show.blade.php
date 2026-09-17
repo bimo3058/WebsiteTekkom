@@ -1,8 +1,10 @@
 <x-dynamic-component :component="$layout">
 
+@include('manajemenmahasiswa::direktori.partials.palette')
+
 <style>
     .profile-header {
-        background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
+        background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-hover) 100%);
         border-radius: 16px;
         padding: 32px;
         color: white;
@@ -54,23 +56,24 @@
         font-weight: 700;
         padding: 1px 5px;
         border-radius: 4px;
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
         letter-spacing: 0.03em;
         margin-left: 6px;
         vertical-align: middle;
     }
     .section-card {
         background: #ffffff;
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--c-border);
         border-radius: 12px;
         padding: 24px;
         margin-bottom: 20px;
+        box-shadow: var(--shadow-card);
     }
     .section-title {
         font-size: 16px;
         font-weight: 700;
-        color: #0D0D12;
+        color: var(--c-fg);
         margin-bottom: 16px;
         display: flex;
         align-items: center;
@@ -86,7 +89,7 @@
     }
     .info-item-label {
         font-size: 12px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -94,9 +97,10 @@
     }
     .info-item-value {
         font-size: 15px;
-        color: #0D0D12;
+        color: var(--c-fg);
         font-weight: 600;
     }
+    /* Warna tiap status ada di partials/palette */
     .status-badge {
         font-size: 11px;
         font-weight: 700;
@@ -104,13 +108,6 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .status-badge.aktif { background: #ECFDF5; color: #059669; }
-    .status-badge.alumni { background: #dbeafe; color: #1e40af; }
-    .status-badge.cuti { background: #FFFBEB; color: #92400e; }
-    .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
-    .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
-    .status-badge.wafat { background: #ede9fe; color: #5b21b6; }
-    .status-badge.mangkir { background: #fff7ed; color: #9a3412; }
 
     .riwayat-table {
         width: 100%;
@@ -122,16 +119,16 @@
         padding: 10px 14px;
         font-size: 12px;
         font-weight: 700;
-        color: #666D80;
+        color: var(--c-fg-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-bottom: 2px solid #DFE1E7;
+        border-bottom: 1px solid var(--c-border);
     }
     .riwayat-table tbody td {
         padding: 12px 14px;
         font-size: 14px;
-        color: #374151;
-        border-bottom: 1px solid #f3f4f6;
+        color: var(--c-fg);
+        border-bottom: 1px solid #F3F4F6;
         vertical-align: middle;
     }
     .riwayat-table tbody tr:hover {
@@ -144,13 +141,13 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .peran-badge.ketua { background: #eef2ff; color: #0B266E; }
-    .peran-badge.anggota { background: #eef2ff; color: #0B266E; }
-    .peran-badge.panitia { background: #f3e8ff; color: #7c3aed; }
-    .peran-badge.peserta { background: #ECFDF5; color: #059669; }
+    .peran-badge.ketua { background: var(--c-primary-subtle); color: var(--c-primary); }
+    .peran-badge.anggota { background: var(--c-primary-subtle); color: var(--c-primary); }
+    .peran-badge.panitia { background: var(--c-sky-subtle); color: var(--c-sky); }
+    .peran-badge.peserta { background: var(--c-success-subtle); color: var(--c-success); }
 
     .btn-primary-custom {
-        background: #0B266E;
+        background: var(--c-primary);
         color: #fff;
         border: none;
         padding: 8px 18px;
@@ -165,13 +162,18 @@
         text-decoration: none !important;
     }
     .btn-primary-custom:hover {
-        background: #091958;
+        background: var(--c-primary-hover);
         color: #fff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
     }
+    /* Tombol sekunder: sama dengan tombol outline "Audit Logs"/"Users" di dashboard global
+       dan tombol Kembali di Detail Alumni. */
     .btn-outline-custom {
-        background: transparent;
-        color: #0B266E;
-        border: 1.5px solid #5C78B8;
+        background: #fff;
+        color: var(--c-fg-sec);
+        border: 1px solid var(--c-border);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
         padding: 8px 18px;
         border-radius: 10px;
         font-size: 13px;
@@ -184,14 +186,38 @@
         text-decoration: none !important;
     }
     .btn-outline-custom:hover {
-        background: #eef2ff;
-        border-color: #0B266E;
-        color: #091958;
+        background: var(--c-bg);
+        border-color: var(--c-border-strong);
+        color: var(--c-fg);
+    }
+    /* Tombol di atas banner navy — warna & hover sama dengan Detail Alumni
+       (.btn-banner-cv / .btn-banner-edit di alumni-show). */
+    .btn-outline-custom.btn-banner-cv {
+        background: #fff;
+        border-color: #fff;
+        color: var(--c-primary);
+        box-shadow: none;
+    }
+    .btn-outline-custom.btn-banner-cv:hover {
+        background: var(--c-grey-0);
+        border-color: #fff;
+        color: var(--c-primary-hover);
+    }
+    .btn-outline-custom.btn-banner-edit {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #fff;
+        box-shadow: none;
+    }
+    .btn-outline-custom.btn-banner-edit:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: #fff;
     }
     .btn-danger-sm {
-        background: #fef2f2;
-        color: #dc2626;
-        border: 1px solid #fecaca;
+        background: var(--c-error-0);
+        color: var(--c-error);
+        border: 1px solid var(--c-error-subtle);
         padding: 4px 10px;
         border-radius: 6px;
         font-size: 11px;
@@ -200,17 +226,18 @@
         transition: all 0.2s;
     }
     .btn-danger-sm:hover {
-        background: #fee2e2;
+        background: var(--c-error-subtle);
     }
     .prestasi-item {
-        background: #FAFAFA;
-        border: 1px solid #DFE1E7;
+        background: var(--c-grey-0);
+        border: 1px solid var(--c-border);
         border-radius: 10px;
         padding: 14px 18px;
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
+    /* Warna tiap tingkat ada di partials/palette */
     .tingkat-badge {
         font-size: 10px;
         font-weight: 700;
@@ -218,23 +245,18 @@
         border-radius: 12px;
         text-transform: uppercase;
     }
-    .tingkat-badge.internasional { background: #FFFBEB; color: #92400e; }
-    .tingkat-badge.nasional { background: #dbeafe; color: #1e40af; }
-    .tingkat-badge.regional { background: #f3e8ff; color: #7c3aed; }
-    .tingkat-badge.universitas { background: #ECFDF5; color: #059669; }
-    .tingkat-badge.prodi { background: #eef2ff; color: #0B266E; }
 
     /* Modal */
     .modal-content { border-radius: 16px; border: none; }
-    .modal-header { border-bottom: 1px solid #f3f4f6; padding: 20px 24px; }
+    .modal-header { border-bottom: 1px solid var(--c-border); padding: 20px 24px; }
     .modal-body { padding: 24px; }
-    .modal-footer { border-top: 1px solid #f3f4f6; padding: 16px 24px; }
+    .modal-footer { border-top: 1px solid var(--c-border); padding: 16px 24px; }
 </style>
 
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -263,7 +285,7 @@
             <h2 style="font-weight: 800; margin-bottom: 4px; font-size: 24px;">{{ $mhs->nama }}</h2>
             <p style="margin: 0; opacity: 0.85; font-size: 15px;">{{ $mhs->nim }} · Angkatan {{ $mhs->angkatan }}</p>
             <div class="mt-2 d-flex gap-2">
-                <span class="status-badge {{ $mhs->status }}" style="background: rgba(255,255,255,0.2); color: white; display: inline-flex; align-items: center; gap: 6px;">
+                <span class="status-badge {{ $mhs->status }}" style="background: rgba(255,255,255,0.2); color: white; box-shadow: none; display: inline-flex; align-items: center; gap: 6px;">
                     <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
                     @switch($mhs->status)
                         @case('aktif') Aktif @break
@@ -280,15 +302,21 @@
         </div>
     </div>
     <div style="position: absolute; top: 20px; right: 24px;" class="d-flex gap-2">
-        @if($canDownloadCv ?? false)
-            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.cv', $mhs->id) }}" target="_blank"
-               class="btn-outline-custom" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
+        {{-- Pemilik profil memakai route /profil/cv yang tanpa {id} — CV-nya sendiri tidak
+             perlu (dan tidak boleh) lewat gerbang pengelola yang menerima id bebas. --}}
+        @if(($canDownloadCv ?? false) || ($isSelf ?? false))
+            <a href="{{ ($canDownloadCv ?? false)
+                    ? route('manajemenmahasiswa.direktori.mahasiswa.cv', $mhs->id)
+                    : route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') }}" target="_blank"
+               class="btn-outline-custom btn-banner-cv">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 Download CV
             </a>
         @endif
-        @if($isAdmin)
-            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="btn-outline-custom" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.3); color: white;">
+        {{-- Admin boleh mengedit siapa pun; mahasiswa hanya barisnya sendiri. Dua-duanya
+             membuka form yang sama, bedanya field Status tidak dirender untuk pemilik. --}}
+        @if($isAdmin || ($isSelf ?? false))
+            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="btn-outline-custom btn-banner-edit">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                 Edit
             </a>
@@ -299,7 +327,7 @@
 <!-- Biodata -->
 <div class="section-card">
     <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         Biodata
     </div>
     <div class="info-grid">
@@ -309,7 +337,7 @@
         </div>
         <div>
             <div class="info-item-label">NIM <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value" style="font-family: monospace; color: #0B266E;">{{ $mhs->nim }}</div>
+            <div class="info-item-value" style="font-family: monospace; color: var(--c-primary);">{{ $mhs->nim }}</div>
         </div>
 
         @if($mhs->user && $mhs->user->email)
@@ -337,7 +365,7 @@
 <!-- Riwayat Akademik -->
 <div class="section-card">
     <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
         Riwayat Akademik
     </div>
     <div class="info-grid">
@@ -366,7 +394,7 @@
             @if($mhs->ipk !== null)
                 <div class="info-item-value">{{ number_format($mhs->ipk, 2) }} / 4.00</div>
             @else
-                <div class="info-item-value" style="color: #9ca3af; font-style: italic;">Belum diisi</div>
+                <div class="info-item-value" style="color: var(--c-fg-placeholder); font-style: italic;">Belum diisi</div>
             @endif
         </div>
         @endif
@@ -376,7 +404,7 @@
 <!-- Prestasi -->
 <div class="section-card">
     <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
         Prestasi / Lomba
     </div>
     @if($mhs->prestasi->count() > 0)
@@ -384,8 +412,8 @@
             @foreach($mhs->prestasi as $p)
                 <div class="prestasi-item">
                     <div>
-                        <div style="font-weight: 600; font-size: 14px; color: #0D0D12;">{{ $p->nama_prestasi }}</div>
-                        <div style="font-size: 12px; color: #666D80;">
+                        <div style="font-weight: 600; font-size: 14px; color: var(--c-fg);">{{ $p->nama_prestasi }}</div>
+                        <div style="font-size: 12px; color: var(--c-fg-muted);">
                             {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') : '' }}
                         </div>
                     </div>
@@ -396,7 +424,7 @@
             @endforeach
         </div>
     @else
-        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada data prestasi.</p>
+        <p style="color: var(--c-fg-muted); font-size: 14px; text-align: center; padding: 20px 0;">Belum ada data prestasi.</p>
     @endif
 </div>
 
@@ -421,15 +449,15 @@
 <div class="section-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="section-title mb-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Kegiatan Internal
-            <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: #eef2ff; color: #0B266E; margin-left: 4px;">{{ $kegiatanInternal->count() }}</span>
+            <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: var(--c-primary-subtle); color: var(--c-primary); margin-left: 4px;">{{ $kegiatanInternal->count() }}</span>
         </div>
     </div>
-    <p style="font-size: 12px; color: #666D80; margin: -8px 0 14px 0;">Kegiatan himpunan &amp; prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia) — hanya kegiatan yang sudah berstatus <strong>Selesai</strong> yang dihitung</p>
+    <p style="font-size: 12px; color: var(--c-fg-muted); margin: -8px 0 14px 0;">Kegiatan himpunan &amp; prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia) — hanya kegiatan yang sudah berstatus <strong>Selesai</strong> yang dihitung</p>
 
     @if($kegiatanInternal->count() > 0)
-        <div style="overflow-x: auto; border-radius: 10px; border: 1px solid #f3f4f6;">
+        <div style="overflow-x: auto; border-radius: 10px; border: 1px solid var(--c-border);">
             <table class="riwayat-table">
                 <thead>
                     <tr>
@@ -453,21 +481,21 @@
                             }
                         @endphp
                         <tr>
-                            <td style="color: #666D80;">{{ $i + 1 }}</td>
+                            <td style="color: var(--c-fg-muted);">{{ $i + 1 }}</td>
                             <td>
                                 @if($hasKegiatan)
                                     <a href="{{ route('manajemenmahasiswa.kegiatan.show', $rw->kegiatan->id) }}"
-                                       style="color: #0B266E; font-weight: 600; text-decoration: none;">
+                                       style="color: var(--c-primary); font-weight: 600; text-decoration: none;">
                                         {{ $rw->kegiatan->judul }}
                                     </a>
                                 @else
-                                    <span style="color: #666D80;">Kegiatan tidak ditemukan</span>
+                                    <span style="color: var(--c-fg-muted);">Kegiatan tidak ditemukan</span>
                                 @endif
                             </td>
                             <td>
-                                <span style="font-size: 14px; color: #374151;">{{ $peranValue }}</span>
+                                <span style="font-size: 14px; color: var(--c-fg);">{{ $peranValue }}</span>
                             </td>
-                            <td style="font-size: 13px; color: #666D80;">
+                            <td style="font-size: 13px; color: var(--c-fg-muted);">
                                 @if($tanggalDisplay)
                                     {{ \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') }}
                                 @else
@@ -480,7 +508,7 @@
             </table>
         </div>
     @else
-        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0; margin: 0;">
+        <p style="color: var(--c-fg-muted); font-size: 14px; text-align: center; padding: 20px 0; margin: 0;">
             Belum ada kegiatan internal.<br>
             <span style="font-size: 12px;">Kegiatan yang masih berjalan atau belum ditandai <strong>Selesai</strong> belum muncul di sini.</span>
         </p>
@@ -491,15 +519,15 @@
 <div class="section-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="section-title mb-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-warning);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             Kegiatan Eksternal
-            <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: #FFFBEB; color: #d97706; margin-left: 4px;">{{ $kegiatanEksternal->count() }}</span>
+            <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: var(--c-warning-subtle); color: var(--c-warning); margin-left: 4px;">{{ $kegiatanEksternal->count() }}</span>
         </div>
     </div>
-    <p style="font-size: 12px; color: #666D80; margin: -8px 0 14px 0;">Kegiatan di luar sistem yang diajukan mahasiswa melalui verifikasi data</p>
+    <p style="font-size: 12px; color: var(--c-fg-muted); margin: -8px 0 14px 0;">Kegiatan di luar sistem yang diajukan mahasiswa melalui verifikasi data</p>
 
     @if($kegiatanEksternal->count() > 0)
-        <div style="overflow-x: auto; border-radius: 10px; border: 1px solid #f3f4f6;">
+        <div style="overflow-x: auto; border-radius: 10px; border: 1px solid var(--c-border);">
             <table class="riwayat-table">
                 <thead>
                     <tr>
@@ -517,14 +545,14 @@
                             $tanggalDisplay = isset($rw->tanggal_kegiatan) && $rw->tanggal_kegiatan ? $rw->tanggal_kegiatan : null;
                         @endphp
                         <tr>
-                            <td style="color: #666D80;">{{ $i + 1 }}</td>
+                            <td style="color: var(--c-fg-muted);">{{ $i + 1 }}</td>
                             <td>
-                                <span style="font-weight: 600; color: #0D0D12;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak ditemukan' }}</span>
+                                <span style="font-weight: 600; color: var(--c-fg);">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak ditemukan' }}</span>
                             </td>
                             <td>
-                                <span style="font-size: 14px; color: #374151;">{{ $peranValue }}</span>
+                                <span style="font-size: 14px; color: var(--c-fg);">{{ $peranValue }}</span>
                             </td>
-                            <td style="font-size: 13px; color: #666D80;">
+                            <td style="font-size: 13px; color: var(--c-fg-muted);">
                                 @if($tanggalDisplay)
                                     {{ \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') }}
                                 @else
@@ -537,7 +565,7 @@
             </table>
         </div>
     @else
-        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada kegiatan eksternal.</p>
+        <p style="color: var(--c-fg-muted); font-size: 14px; text-align: center; padding: 20px 0;">Belum ada kegiatan eksternal.</p>
     @endif
 </div>
 

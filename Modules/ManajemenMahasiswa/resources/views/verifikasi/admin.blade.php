@@ -8,7 +8,7 @@
        cursor pointer maupun efek hover: kartu yang terlihat bisa diklik tapi diam
        justru menyesatkan. */
     .admin-stat-card {
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px;
         padding: 16px 18px; display: flex; align-items: center; gap: 14px;
         position: relative; overflow: hidden;
     }
@@ -18,44 +18,44 @@
     }
     .admin-stat-card .stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 1px; }
     .admin-stat-card .stat-lbl { font-size: .78rem; color: var(--c-fg-muted); font-weight: 500; }
-    .admin-stat-card.pending .stat-icon { background: var(--c-warning-subtle); color: #d97706; }
-    .admin-stat-card.pending .stat-num { color: #d97706; }
+    .admin-stat-card.pending .stat-icon { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .admin-stat-card.pending .stat-num { color: var(--c-warning); }
     .admin-stat-card.approved .stat-icon { background: var(--c-success-subtle); color: var(--c-success); }
     .admin-stat-card.approved .stat-num { color: var(--c-success); }
-    .admin-stat-card.rejected .stat-icon { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
-    .admin-stat-card.rejected .stat-num { color: var(--c-error, #dc2626); }
+    .admin-stat-card.rejected .stat-icon { background: var(--c-error-subtle); color: var(--c-error); }
+    .admin-stat-card.rejected .stat-num { color: var(--c-error); }
 
     /* ── Status & Buttons ── */
     .status-verif {
         display: inline-flex; align-items: center; padding: 3px 9px;
         border-radius: 50px; font-size: .73rem; font-weight: 600;
     }
-    .status-verif.pending { background: #FFFBEB; color: #d97706; }
-    .status-verif.approved { background: #ECFDF5; color: #059669; }
-    .status-verif.rejected { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
+    .status-verif.pending { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .status-verif.approved { background: var(--c-success-subtle); color: var(--c-success); }
+    .status-verif.rejected { background: var(--c-error-subtle); color: var(--c-error); }
 
     .btn-approve {
-        width: 30px; height: 30px; border-radius: 8px; border: 1px solid #bbf7d0;
-        background: #ECFDF5; color: #059669; cursor: pointer; transition: all .15s;
+        width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--c-success-subtle);
+        background: var(--c-success-subtle); color: var(--c-success); cursor: pointer; transition: all .15s;
         display: inline-flex; align-items: center; justify-content: center; padding: 0;
     }
-    .btn-approve:hover { background: #bbf7d0; border-color: #86efac; }
+    .btn-approve:hover { background: var(--c-success); border-color: var(--c-success); color: #fff; }
     .btn-reject {
-        width: 30px; height: 30px; border-radius: 8px; border: 1px solid #fecaca;
-        background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); cursor: pointer; transition: all .15s;
+        width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--c-error-subtle);
+        background: var(--c-error-subtle); color: var(--c-error); cursor: pointer; transition: all .15s;
         display: inline-flex; align-items: center; justify-content: center; padding: 0;
     }
-    .btn-reject:hover { background: #fee2e2; border-color: #fca5a5; }
+    .btn-reject:hover { background: var(--c-error); border-color: var(--c-error); color: #fff; }
 
     /* ── Empty State ── */
     .empty-state { text-align: center; padding: 60px 24px; color: var(--c-fg-muted); }
-    .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: #E5E7EB; }
+    .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: var(--c-border-strong); }
 
     .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
-    .modal-header { border-bottom: 1px solid #f3f4f6; padding: 18px 22px; }
+    .modal-header { border-bottom: 1px solid var(--c-border); padding: 18px 22px; }
     .modal-header .modal-title { font-size: 1rem; font-weight: 700; color: var(--c-fg); }
     .modal-body { padding: 22px; }
-    .modal-footer { border-top: 1px solid #f3f4f6; padding: 14px 22px; }
+    .modal-footer { border-top: 1px solid var(--c-border); padding: 14px 22px; }
 
     /* Kerangka modal Tinjau (.tp-*) tinggal di partials/tinjau-modal-styles.blade.php
        karena dipakai bersama halaman Klaim Reward. */
@@ -64,18 +64,18 @@
         display: inline-flex; align-items: center; padding: 2px 8px;
         border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase;
     }
-    .tingkat-badge.internasional { background: #FFFBEB; color: #92400e; }
-    .tingkat-badge.nasional { background: #dbeafe; color: #1e40af; }
-    .tingkat-badge.regional { background: #f3e8ff; color: #7c3aed; }
-    .tingkat-badge.universitas { background: #ECFDF5; color: #059669; }
-    .tingkat-badge.prodi { background: #eef2ff; color: var(--c-primary); }
+    .tingkat-badge.internasional { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .tingkat-badge.nasional { background: var(--c-primary-subtle); color: var(--c-primary); }
+    .tingkat-badge.regional { background: var(--c-sky-subtle); color: var(--c-sky); }
+    .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
+    .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
 
     /* ── Reward Badge & Aksi ── */
     .claim-badge { font-size: .73rem; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
-    .claim-badge.belum     { background: #f3f4f6; color: var(--c-fg-muted); }
-    .claim-badge.diajukan  { background: #dbeafe; color: #1e40af; }
-    .claim-badge.disetujui { background: #ECFDF5; color: #059669; }
-    .claim-badge.ditolak   { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
+    .claim-badge.belum     { background: var(--c-bg); color: var(--c-fg-muted); }
+    .claim-badge.diajukan  { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
+    .claim-badge.ditolak   { background: var(--c-error-subtle); color: var(--c-error); }
 
     .reward-mini { font-size: .72rem; color: var(--c-fg-muted); margin-top: 4px; max-width: 200px; line-height: 1.4; }
 
@@ -83,33 +83,33 @@
     /* ── Pagination (global style) ── */
     .verif-pagination {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 12px 16px; background: #fff; border-top: 1px solid #e5e7eb;
+        padding: 12px 16px; background: var(--c-card); border-top: 1px solid var(--c-border);
         flex-wrap: wrap; gap: 10px;
     }
 
     /* ── Enhanced Table Visibility ── */
     table thead tr {
-        background: #eef0f4 !important;
-        border-bottom: 2px solid #d1d5db !important;
+        background: var(--c-bg) !important;
+        border-bottom: 2px solid var(--c-border-strong) !important;
     }
     table thead th {
         font-size: 11.5px !important;
         font-weight: 700 !important;
-        color: #374151 !important;
+        color: var(--c-fg-sec) !important;
         text-transform: uppercase;
         letter-spacing: .03em;
         padding-top: 13px !important;
         padding-bottom: 13px !important;
     }
     table tbody tr {
-        border-bottom: 1px solid #e5e7eb !important;
+        border-bottom: 1px solid var(--c-border) !important;
     }
     table tbody tr:nth-child(even) {
-        background: #f9fafb;
+        background: var(--c-card);
     }
     table tbody tr:hover {
-        background: #eef2ff !important;
-        box-shadow: inset 3px 0 0 0 #0B266E;
+        background: var(--c-primary-subtle) !important;
+        box-shadow: inset 3px 0 0 0 var(--c-primary);
     }
     table tbody td {
         font-size: 13px;
@@ -123,7 +123,7 @@
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -131,7 +131,7 @@
 @endif
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -139,7 +139,7 @@
 @endif
 @if($errors->any())
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
         <ul style="margin: 0; padding-left: 18px;">
             @foreach($errors->all() as $err)
                 <li>{{ $err }}</li>
@@ -160,7 +160,7 @@
             <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Review & verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa</p>
         @endif
         @unless($canVerify ?? true)
-            <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:#eef2ff; color:#0B266E; font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
+            <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
             </span>
@@ -168,12 +168,12 @@
     </div>
     @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
         <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
-           style="background:#0B266E; color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
-           onmouseover="this.style.background='#091958'" onmouseout="this.style.background='#0B266E'">
+           style="background:var(--c-primary); color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
+           onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
             Klaim Reward
             @if($pendingPrestasiReward > 0)
-                <span style="background:#fff; color:#0B266E; font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
+                <span style="background:var(--c-card); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
             @endif
         </a>
     @endif
@@ -211,10 +211,10 @@
 </div>
 
 <!-- Main Table Card (Global Style) -->
-<div style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
+<div style="background:var(--c-card); border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
 
     <!-- Table Toolbar -->
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
             <h2 style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0;">
                 @if($tab === 'prestasi') Verifikasi Prestasi @else Verifikasi Riwayat Kegiatan @endif
@@ -241,15 +241,15 @@
                 </svg>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="{{ $searchPlaceholder }}"
-                       style="width:100%; height:34px; padding:0 12px 0 34px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; color:var(--c-fg); font-family:inherit; outline:none; transition:all .15s; box-sizing:border-box; background:#fff;"
-                       onfocus="this.style.borderColor='var(--c-primary)'; this.style.boxShadow='0 0 0 3px rgba(11,38,110,0.08)'"
+                       style="width:100%; height:34px; padding:0 12px 0 34px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; color:var(--c-fg); font-family:inherit; outline:none; transition:all .15s; box-sizing:border-box; background:var(--c-card);"
+                       onfocus="this.style.borderColor='var(--c-primary)'; this.style.boxShadow='0 0 0 3px var(--c-primary-subtle)'"
                        onblur="this.style.borderColor='var(--c-border)'; this.style.boxShadow='none'">
             </div>
 
 
             <!-- Status Filter — pengganti kartu statistik yang dulu bisa diklik -->
             <select name="status"
-                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:#fff; cursor:pointer;"
+                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:var(--c-card); cursor:pointer;"
                     onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Status</option>
                 <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Menunggu Verifikasi</option>
@@ -259,7 +259,7 @@
 
             <!-- Angkatan Filter -->
             <select name="angkatan"
-                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:#fff; cursor:pointer;"
+                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:var(--c-card); cursor:pointer;"
                     onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Angkatan</option>
                 @foreach($angkatanList as $a)
@@ -270,7 +270,7 @@
             @if($tab === 'prestasi')
                 <!-- Tingkat Filter — hanya tab Prestasi; riwayat kegiatan tidak punya kolom tingkat -->
                 <select name="tingkat"
-                        style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:#fff; cursor:pointer;"
+                        style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:var(--c-card); cursor:pointer;"
                         onchange="document.getElementById('filterForm').submit()">
                     <option value="semua">Semua Tingkat</option>
                     @foreach($tingkatList as $t)
@@ -288,7 +288,7 @@
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; min-width:780px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                    <tr style="border-bottom:1px solid var(--c-border); background:var(--c-bg);">
                         <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:160px;">Mahasiswa</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">NIM</th>
@@ -351,14 +351,14 @@
                                     ])),
                                 ]],
                                 'bukti' => ($rw->buktiFiles ?? collect())->map(fn ($b) => [
-                                    'url'      => $b->public_url,
+                                    'url'      => $b->url_akses,
                                     'nama'     => $b->nama_file,
                                     'is_image' => $b->isImage(),
                                 ])->values()->all(),
                             ];
                         @endphp
-                        <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
-                            onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                        <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
+                            onmouseover="this.style.background='var(--c-primary-subtle)'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
                                 <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $rw->student->user->name ?? '-' }}</p>
@@ -404,7 +404,7 @@
             $rCurrentPage = $riwayatData->currentPage();
             $rLastPage = $riwayatData->lastPage();
         @endphp
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#fff; border-top:1px solid #e5e7eb; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--c-card); border-top:1px solid var(--c-border); flex-wrap:wrap; gap:10px;">
             <span style="font-size:12px; color:var(--c-fg-sec);">
                 Showing <strong style="color:var(--c-fg); font-weight:700;">{{ $rFrom }}</strong>
                 to <strong style="color:var(--c-fg); font-weight:700;">{{ $rTo }}</strong>
@@ -417,7 +417,7 @@
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
                 </a>
                 @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
+                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
                 @endif
 
                 @php $range = 2; $start = max(1, $rCurrentPage - $range); $end = min($rLastPage, $rCurrentPage + $range); @endphp
@@ -438,7 +438,7 @@
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
                 </a>
                 @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
+                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
                 @endif
             </div>
             @endif
@@ -446,7 +446,7 @@
     @else
         <div class="empty-state">
             <div class="empty-icon">
-                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;" stroke="currentColor" stroke-width="1.5">
+                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border-strong);" stroke="currentColor" stroke-width="1.5">
                     <rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path>
                 </svg>
             </div>
@@ -465,7 +465,7 @@
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; min-width:960px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                        <tr style="border-bottom:1px solid var(--c-border); background:var(--c-bg);">
                         <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:160px;">Mahasiswa</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">NIM</th>
@@ -528,14 +528,14 @@
                                     ])),
                                 ]],
                                 'bukti' => $p->buktiFiles->map(fn ($b) => [
-                                    'url'      => $b->public_url,
+                                    'url'      => $b->url_akses,
                                     'nama'     => $b->nama_file,
                                     'is_image' => $b->isImage(),
                                 ])->values()->all(),
                             ];
                         @endphp
-                        <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
-                            onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                        <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
+                            onmouseover="this.style.background='var(--c-primary-subtle)'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
                                 <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
@@ -568,7 +568,7 @@
                                         <span style="font-size:11px; color:var(--c-fg-muted);">Belum diajukan</span>
                                     @endif
                                 @else
-                                    <span style="color:#d1d5db;">—</span>
+                                    <span style="color:var(--c-fg-placeholder);">—</span>
                                 @endif
                             </td>
                             <td style="padding:14px 16px; text-align:center;">
@@ -594,7 +594,7 @@
             $pCurrentPage = $prestasiData->currentPage();
             $pLastPage = $prestasiData->lastPage();
         @endphp
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#fff; border-top:1px solid #e5e7eb; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--c-card); border-top:1px solid var(--c-border); flex-wrap:wrap; gap:10px;">
             <span style="font-size:12px; color:var(--c-fg-sec);">
                 Showing <strong style="color:var(--c-fg); font-weight:700;">{{ $pFrom }}</strong>
                 to <strong style="color:var(--c-fg); font-weight:700;">{{ $pTo }}</strong>
@@ -607,7 +607,7 @@
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
                 </a>
                 @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
+                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
                 @endif
 
                 @php $range = 2; $start = max(1, $pCurrentPage - $range); $end = min($pLastPage, $pCurrentPage + $range); @endphp
@@ -628,7 +628,7 @@
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
                 </a>
                 @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
+                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
                 @endif
             </div>
             @endif
@@ -636,7 +636,7 @@
     @else
         <div class="empty-state">
             <div class="empty-icon">
-                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;" stroke="currentColor" stroke-width="1.5">
+                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border-strong);" stroke="currentColor" stroke-width="1.5">
                     <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"></path>
                 </svg>
             </div>
@@ -667,11 +667,11 @@
                 <form method="POST" id="batalVerifForm">
                     @csrf @method('PATCH')
                     <div class="modal-body" style="padding: 28px 24px 20px; text-align: center;">
-                        <div style="width:60px; height:60px; border-radius:50%; background:#FFFBEB; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                        <div style="width:60px; height:60px; border-radius:50%; background:var(--c-warning-subtle); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
                         </div>
-                        <h5 class="fw-bold mb-2" style="color:#1f2937;">Batalkan Verifikasi</h5>
-                        <p style="color:#666D80; font-size:14px; line-height:1.5; margin-bottom:0;">
+                        <h5 class="fw-bold mb-2" style="color:var(--c-fg);">Batalkan Verifikasi</h5>
+                        <p style="color:var(--c-fg-muted); font-size:14px; line-height:1.5; margin-bottom:0;">
                             Kembalikan <strong id="bvNama"></strong> ke daftar menunggu?
                             Keputusan sebelumnya beserta catatannya akan dihapus, dan pengajuan ini perlu diverifikasi ulang.
                         </p>
@@ -680,7 +680,7 @@
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal"
                                 style="border-radius:10px; font-weight:600; padding:10px 20px;">Batal</button>
                         <button type="submit" id="bvConfirmBtn"
-                                style="border-radius:10px; font-weight:600; font-size:14px; padding:10px 20px; border:none; cursor:pointer; color:#fff; background:#d97706;">
+                                style="border-radius:10px; font-weight:600; font-size:14px; padding:10px 20px; border:none; cursor:pointer; color:#fff; background:var(--c-warning);">
                             Ya, Batalkan Verifikasi
                         </button>
                     </div>

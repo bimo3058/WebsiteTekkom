@@ -5,7 +5,7 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Absensi &amp; Nilai</h1>
-            <span class="mp-badge" style="background:#E0E7FF;color:#6366F1;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#6366F1;"></span>Koordinator</span>
+            <span class="mp-badge" style="background:#D0D6E9;color:#5D6DA2;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#5D6DA2;"></span>Koordinator</span>
         </div>
         <p class="mp-page-sub">{{ $praktikum?->nama ?? 'Belum ada praktikum aktif' }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
@@ -54,7 +54,7 @@
                     <th class="mp-th text-center" style="padding:12px 16px;width:90px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">Klp</th>
                     <th class="mp-th text-center" style="padding:12px 16px;width:70px;border-right:1px solid #DFE1E7;">Shift</th>
                     <th class="mp-th text-center" style="padding:12px 16px; width:90px;">Kehadiran</th>
-                    <th class="mp-th text-center" style="padding:12px 16px; min-width:120px; background:#EEF2FF;">Tugas Pendahuluan</th>
+                    <th class="mp-th text-center" style="padding:12px 16px; min-width:120px; background:#EBEDF6;">Tugas Pendahuluan</th>
                     <th class="mp-th text-center" style="padding:12px 16px; min-width:100px; background:#F0FDF4;">Praktikum</th>
                     <th class="mp-th text-center" style="padding:12px 16px; min-width:100px; background:#FEF9C3;">Laporan</th>
                     <th class="mp-th text-center" style="padding:12px 16px; min-width:100px; background:#FFF7ED;">Responsi</th>
@@ -97,7 +97,7 @@
                         @endif
                     </td>
                     {{-- Tugas Pendahuluan --}}
-                    <td style="padding:12px 16px;text-align:center;background:#EEF2FF;font-weight:700;color:#4338CA;font-size:13px;">
+                    <td style="padding:12px 16px;text-align:center;background:#EBEDF6;font-weight:700;color:#4338CA;font-size:13px;">
                         {{ isset($njMap['tugas_pendahuluan']) ? number_format($njMap['tugas_pendahuluan'], 1) : '—' }}
                     </td>
                     {{-- Praktikum --}}
@@ -147,7 +147,7 @@
 @endphp
 
 <div class="sec-head" style="margin-top: 32px;">
-    <span class="sec-bar" style="background:#6366F1;"></span>
+    <span class="sec-bar" style="background:#5D6DA2;"></span>
     <span class="sec-title">Publikasi Nilai</span>
     <span class="sec-rule"></span>
 </div>
@@ -175,7 +175,7 @@
         <div style="flex-shrink:0;">
             <form method="POST" action="{{ route('eoffice.manprak.koor.nilai.approve') }}">
                 @csrf
-                <button type="submit" class="mp-btn primary md" style="background:#6366F1;box-shadow:0 2px 6px rgba(99,102,241,.3);" onmouseover="this.style.background='#4F46E5'" onmouseout="this.style.background='#6366F1'">
+                <button type="submit" class="mp-btn primary md" style="background:#5D6DA2;box-shadow:0 2px 6px rgba(99,102,241,.3);" onmouseover="this.style.background='#2A3A7C'" onmouseout="this.style.background='#5D6DA2'">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                     Publikasi (Setujui Nilai)
                 </button>

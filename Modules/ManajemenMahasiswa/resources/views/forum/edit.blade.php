@@ -4,34 +4,35 @@
         <style>
             /* ── Page Title ──────────────────────────────────────────────────── */
             .page-title { margin-bottom: 22px; display: flex; align-items: center; gap: 16px; }
-            .page-title .back-btn { background: #fff; border: 1px solid #e5e7eb; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #4b5563; text-decoration: none; transition: background 0.2s; }
-            .page-title .back-btn:hover { background: #f3f4f6; }
-            .page-title h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: -0.02em; }
-            .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
+            .page-title .back-btn { background: #fff; border: 1px solid #DFE1E7; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #4b5563; text-decoration: none; transition: background 0.2s; }
+            .page-title .back-btn:hover { background: rgba(11,38,110,0.04); color: #0B266E; }
+            .page-title h1 { font-size: 26px; font-weight: 800; color: #0D0D12; margin: 0 0 2px; letter-spacing: -0.02em; }
+            .page-title p { font-size: 14px; color: #666D80; margin: 0; }
 
             .create-post-card {
-                background: transparent;
+                background: #fff;
+                border: 1px solid #DFE1E7;
                 border-radius: 12px;
-                padding: 30px 0;
-                border: none;
+                padding: 24px;
+                box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5);
                 margin-bottom: 20px;
             }
 
             .form-label {
                 font-weight: 600;
-                color: #1f2937;
-                font-size: 14px;
-                margin-bottom: 8px;
+                color: #0D0D12;
+                font-size: 13px;
+                margin-bottom: 6px;
             }
 
             .custom-input,
             .custom-select,
             .custom-textarea {
-                background-color: #f9fafb;
-                border: 1px solid #e5e7eb;
+                background-color: #fff;
+                border: 1px solid #DFE1E7;
                 border-radius: 8px;
-                padding: 12px 16px;
-                font-size: 14px;
+                padding: 10px 14px;
+                font-size: 13px;
                 width: 100%;
                 transition: all 0.2s;
             }
@@ -40,8 +41,8 @@
             .custom-select:focus,
             .custom-textarea:focus {
                 background-color: #ffffff;
-                border-color: #6F7DA4;
-                box-shadow: 0 0 0 3px rgba(41, 60, 121, 0.1);
+                border-color: #0B266E;
+                box-shadow: 0 0 0 3px rgba(11,38,110,0.1);
                 outline: none;
             }
 
@@ -59,9 +60,9 @@
 
             .btn-action {
                 border-radius: 8px;
-                padding: 10px 24px;
+                padding: 8px 20px;
                 font-weight: 600;
-                font-size: 14px;
+                font-size: 13px;
                 border: none;
                 display: inline-flex;
                 align-items: center;
@@ -69,30 +70,30 @@
                 transition: all 0.2s;
             }
 
-            .btn-post { background-color: #293C79; color: white; }
-            .btn-post:hover { background-color: #415086; }
-            .btn-cancel { background-color: #ef4444; color: white; }
-            .btn-cancel:hover { background-color: #dc2626; }
+            .btn-post { background-color: #0B266E; color: white; }
+            .btn-post:hover { background-color: #091958; }
+            .btn-cancel { background: #fff; color: #374151; border: 1px solid #DFE1E7; }
+            .btn-cancel:hover { background: rgba(11,38,110,0.04); border-color: #5C78B8; color: #0B266E; }
 
             .section-toggle {
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                padding: 10px 16px;
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
+                padding: 8px 14px;
+                background: #fff;
+                border: 1px solid #DFE1E7;
                 border-radius: 8px;
                 cursor: pointer;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 600;
-                color: #374151;
+                color: #353849;
                 transition: all 0.2s;
                 width: 100%;
                 text-align: left;
             }
 
-            .section-toggle:hover { background: #E7E8F0; border-color: #293C79; color: #415086; }
-            .section-toggle.active { background: #E7E8F0; border-color: #293C79; color: #415086; }
+            .section-toggle:hover { background: rgba(11,38,110,0.04); border-color: #0B266E; color: #0B266E; }
+            .section-toggle.active { background: rgba(11,38,110,0.04); border-color: #0B266E; color: #0B266E; }
 
             .section-content {
                 max-height: 0;
@@ -106,23 +107,23 @@
             }
 
             .media-dropzone {
-                border: 2px dashed #d1d5db;
+                border: 2px dashed #DFE1E7;
                 border-radius: 12px;
                 padding: 32px 20px;
                 text-align: center;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                background: #f9fafb;
+                background: #fff;
                 position: relative;
             }
 
             .media-dropzone:hover, .media-dropzone.dragover {
-                border-color: #293C79;
-                background: #E7E8F0;
+                border-color: #0B266E;
+                background: rgba(11,38,110,0.04);
             }
 
-            .media-dropzone .dropzone-text { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 4px; }
-            .media-dropzone .dropzone-hint { font-size: 13px; color: #9ca3af; }
+            .media-dropzone .dropzone-text { font-size: 13px; font-weight: 600; color: #353849; margin-bottom: 4px; }
+            .media-dropzone .dropzone-hint { font-size: 12px; color: #808897; }
             .media-dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
             .media-preview-grid {
@@ -136,7 +137,7 @@
                 position: relative;
                 border-radius: 12px;
                 overflow: hidden;
-                border: 1px solid #e5e7eb;
+                border: 1px solid #DFE1E7;
                 background: #000;
                 display: flex;
                 flex-direction: column;
@@ -191,33 +192,58 @@
 
             .existing-badge {
                 position: absolute; top: 6px; left: 6px;
-                background: rgba(79, 70, 229, 0.85); color: white;
+                background: rgba(11,38,110,0.85); color: white;
                 font-size: 10px; font-weight: 700;
                 padding: 2px 6px; border-radius: 4px; z-index: 2;
             }
 
             .media-counter {
-                font-size: 13px; font-weight: 600;
-                padding: 4px 12px; border-radius: 20px;
+                font-size: 12px; font-weight: 600;
+                padding: 3px 10px; border-radius: 8px;
                 display: inline-block; margin-top: 8px;
             }
-            .media-counter.ok { background: #dcfce7; color: #16a34a; }
-            .media-counter.warn { background: #fef3c7; color: #d97706; }
-            .media-counter.full { background: #fee2e2; color: #dc2626; }
+            .media-counter.ok { background: #DDF2EE; color: #287F6E; }
+            .media-counter.warn { background: #F9ECCB; color: #956321; }
+            .media-counter.full { background: #FADAE1; color: #DF1C41; }
 
+            .main-wrapper {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+
+            .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+            .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box-header { background: #fff; border-bottom: 1px solid #DFE1E7; flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
+            .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+            .dash-box-body::-webkit-scrollbar { width: 6px; }
+            .dash-box-body::-webkit-scrollbar-thumb { background: #C1C7CF; border-radius: 10px; }
+            @media (max-width: 767px) {
+                .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
+                .dash-wrap { height: auto !important; padding: 0; }
+                .dash-box { flex: none !important; overflow: visible !important; border-radius: 10px; }
+                .dash-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+                .dash-box-body { overflow-y: visible !important; flex: none !important; padding: 14px; }
+            }
+            .create-post-card { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
         </style>
     @endpush
 
-    <div class="page-title">
-        <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="back-btn">
-            <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
-        </a>
-        <div>
-            <h1>Edit Thread</h1>
-            <p>Perbarui konten postingan Anda</p>
+    <div class="dash-wrap">
+    <div class="dash-box">
+    <div class="dash-box-header">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="back-btn" style="flex-shrink:0;">
+                <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
+            </a>
+            <div>
+                <h1 style="font-size:18px; font-weight:800; color:#0D0D12; margin:0 0 2px; letter-spacing:-0.02em;">Edit Thread</h1>
+                <p style="font-size:12px; color:#666D80; font-weight:500; margin:0;">Perbarui konten postingan Anda</p>
+            </div>
         </div>
     </div>
-
+    <div class="dash-box-body">
     <div class="create-post-card">
         @if($errors->any())
             <div class="alert alert-danger" style="border-radius: 10px; border: none; font-size: 14px;">
@@ -266,7 +292,7 @@
                     @foreach($categories as $key => $label)
                         <div class="form-check form-check-inline m-0">
                             <input class="form-check-input shadow-none" style="cursor: pointer;" type="checkbox" name="kategori[]" id="kategori_{{ $key }}" value="{{ $key }}" {{ in_array($key, $selectedKategori) ? 'checked' : '' }}>
-                            <label class="form-check-label text-dark" style="cursor: pointer; font-size: 14px;" for="kategori_{{ $key }}">{{ $label }}</label>
+                            <label class="form-check-label text-dark" style="cursor: pointer; font-size: 13px;" for="kategori_{{ $key }}">{{ $label }}</label>
                         </div>
                     @endforeach
                 </div>
@@ -284,19 +310,21 @@
                 <button type="button" class="section-toggle {{ count($existingMedia) > 0 ? 'active' : '' }}" id="toggleMedia" onclick="toggleSection('media')">
                     <x-manajemenmahasiswa::ui.icon name="image-02" size="16" /> Gambar / Video
                     @if(count($existingMedia) > 0)
-                        <span style="background: #6F7DA4; color: white; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 4px;">{{ count($existingMedia) }} file</span>
+                        <span style="background: #0B266E; color: white; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 4px;">{{ count($existingMedia) }} file</span>
                     @endif
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content {{ count($existingMedia) > 0 ? 'open' : '' }}" id="sectionMedia">
                     {{-- Existing media --}}
                     @if(count($existingMedia) > 0)
-                        <label class="form-label mb-2" style="font-size: 13px; color: #6b7280;">Media yang sudah ada (klik ✕ untuk menghapus):</label>
+                        <label class="form-label mb-2" style="font-size: 13px; color: #666D80;">Media yang sudah ada (klik ✕ untuk menghapus):</label>
                         <div class="media-preview-grid mb-3" id="existingMediaGrid">
                             @foreach($existingMedia as $i => $media)
                                 <div class="media-preview-item" id="existing-media-{{ $i }}">
                                     <div class="media-thumb">
-                                        <span class="existing-badge">Existing</span>
+                                        <span class="existing-badge">
+                                            
+                                        </span>
                                         <button type="button" class="remove-media" onclick="removeExistingMedia({{ $i }}, '{{ $media['url'] }}')">✕</button>
                                         @if($media['type'] === 'image')
                                             <img src="{{ $media['url'] }}" alt="Media">
@@ -346,7 +374,7 @@
                     <x-manajemenmahasiswa::ui.icon name="bar-chart-11" size="16" />
                     Poll
                     @if($poll)
-                        <span style="background:#6F7DA4;color:#fff;font-size:11px;padding:1px 8px;border-radius:10px;margin-left:4px;">
+                        <span style="background:#0B266E;color:#fff;font-size:11px;padding:1px 8px;border-radius:10px;margin-left:4px;">
                             {{ $poll->options->count() }} opsi
                         </span>
                     @endif
@@ -356,17 +384,17 @@
                 <div class="section-content {{ $poll ? 'open' : '' }}" id="sectionPoll">
                     <style>
                         .poll-edit-row { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
-                        .poll-edit-input { flex:1;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-weight:500;outline:none;transition:border-color 0.2s; }
-                        .poll-edit-input:focus { border-color:#293C79;box-shadow:0 0 0 3px rgba(41,60,121,0.1); }
+                        .poll-edit-input { flex:1;padding:9px 14px;border:1.5px solid #DFE1E7;border-radius:10px;font-size:13px;font-weight:500;outline:none;transition:border-color 0.2s; }
+                        .poll-edit-input:focus { border-color:#0B266E;box-shadow:0 0 0 3px rgba(11,38,110,0.1); }
                         .poll-edit-remove { width:30px;height:30px;border-radius:50%;border:none;background:#fee2e2;color:#dc2626;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s; }
                         .poll-edit-remove:hover { background:#fca5a5; }
                         .poll-edit-remove:disabled { opacity:0.35;cursor:not-allowed; }
-                        .poll-votes-badge { font-size:11px;font-weight:700;color:#6b7280;background:#f3f4f6;padding:2px 8px;border-radius:20px;white-space:nowrap; }
-                        .poll-add-btn { font-size:13px;font-weight:600;color:#293C79;background:#E7E8F0;border:1.5px dashed #a5b4fc;border-radius:10px;padding:8px 16px;cursor:pointer;width:100%;text-align:center;transition:all 0.2s;margin-top:4px; }
-                        .poll-add-btn:hover { background:#e0e7ff; }
-                        .poll-section-label { font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;margin-top:14px;display:block; }
-                        .poll-close-toggle { display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;background:#fff;width:100%;margin-top:10px;transition:all 0.2s; }
-                        .poll-close-toggle:hover { border-color:#293C79;background:#f5f3ff; }
+                        .poll-votes-badge { font-size:11px;font-weight:700;color:#666D80;background:#F6F8FA;padding:2px 8px;border-radius:20px;white-space:nowrap; }
+                        .poll-add-btn { font-size:13px;font-weight:600;color:#0B266E;background:rgba(11,38,110,0.06);border:1.5px dashed #5C78B8;border-radius:10px;padding:8px 16px;cursor:pointer;width:100%;text-align:center;transition:all 0.2s;margin-top:4px; }
+                        .poll-add-btn:hover { background:rgba(11,38,110,0.1); }
+                        .poll-section-label { font-size:12px;font-weight:600;color:#666D80;margin-bottom:6px;margin-top:14px;display:block; }
+                        .poll-close-toggle { display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #DFE1E7;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;background:#fff;width:100%;margin-top:10px;transition:all 0.2s; }
+                        .poll-close-toggle:hover { border-color:#0B266E;background:rgba(11,38,110,0.04); }
                     </style>
 
                     @if($poll)
@@ -455,6 +483,10 @@
             </div>
         </form>
     </div>
+
+    </div>{{-- /dash-box-body --}}
+    </div>{{-- /dash-box --}}
+    </div>{{-- /dash-wrap --}}
 
     @push('scripts')
         <script>
@@ -671,7 +703,7 @@
                 let cls = 'ok';
                 if (total >= 4) cls = 'warn';
                 if (total >= MAX_FILES) cls = 'full';
-                mediaCounter.innerHTML = `<span class="media-counter ${cls}">${total}/${MAX_FILES} file (${existingKeptCount} existing + ${selectedFiles.length} baru)</span>`;
+                mediaCounter.innerHTML = `<span class="media-counter ${cls}">${total}/${MAX_FILES} file</span>`;
             }
 
             function renderPreviews() {

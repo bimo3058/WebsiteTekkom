@@ -152,7 +152,7 @@
                                 @endforeach
                             </select>
                             <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)"
-                                class="mp-btn destructive sm" style="padding:0 12px;flex-shrink:0;">✕</button>
+                                class="mp-btn destructive sm" style="padding:0 12px;flex-shrink:0;" aria-label="Hapus dosen dari pilihan" title="Hapus dosen dari pilihan"><x-eoffice::manajemen-praktikum.ui.icon name="close" /></button>
                         </div>
                     </template>
 

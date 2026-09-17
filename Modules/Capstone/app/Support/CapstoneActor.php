@@ -6,9 +6,20 @@ use App\Models\Lecturer;
 use App\Models\Student;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
 
 final class CapstoneActor
 {
+    /** Load academic identities without fetching the owning user again. */
+    public static function loadProfiles(User $user, array $profiles = ['student', 'lecturer']): User
+    {
+        foreach ($profiles as $profile) {
+            $user->loadMissing([$profile => fn ($query) => $query->without('user')]);
+        }
+
+        return $user;
+    }
+
     public static function roles(User $user): array
     {
         $roles = [];
@@ -45,7 +56,7 @@ final class CapstoneActor
 
     public static function student(User $user): Student
     {
-        $student = $user->student;
+        $student = self::loadProfiles($user, ['student'])->student;
 
         if (! $student) {
             throw new AuthorizationException('Profil mahasiswa untuk akun SSO ini tidak ditemukan.');
@@ -56,10 +67,29 @@ final class CapstoneActor
 
     public static function lecturer(User $user): Lecturer
     {
-        $lecturer = $user->lecturer;
+        $lecturer = self::loadProfiles($user, ['lecturer'])->lecturer;
 
         if (! $lecturer) {
-            throw new AuthorizationException('Profil dosen untuk akun SSO ini tidak ditemukan.');
+            if (! in_array('dosen', self::roles($user), true)) {
+                throw new AuthorizationException('Akun ini tidak memiliki role dosen.');
+            }
+
+            // Manually assigned academic roles may predate the lecturer row.
+            // Reuse the SSO identifier convention; never claim another user's profile.
+            $lecturer = DB::transaction(function () use ($user) {
+                $account = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+                $existing = Lecturer::without('user')->where('user_id', $account->id)->first();
+                if ($existing) return $existing;
+
+                $raw = $account->sso_data ?? [];
+                $number = trim((string) ($raw['onPremisesSamAccountName'] ?? $raw['employeeId'] ?? explode('@', $account->email)[0]));
+                if ($number === '' || strlen($number) > 100 || Lecturer::where('employee_number', $number)->exists()) {
+                    throw new AuthorizationException('Profil dosen perlu dilengkapi dengan NIP unik melalui User Management.');
+                }
+
+                return Lecturer::create(['user_id' => $account->id, 'employee_number' => $number]);
+            });
+            $user->setRelation('lecturer', $lecturer);
         }
 
         return $lecturer;
@@ -67,6 +97,7 @@ final class CapstoneActor
 
     public static function payload(User $user, ?string $activeRole = null): array
     {
+        self::loadProfiles($user);
         $roles = self::roles($user);
         $activeRole = in_array($activeRole, $roles, true)
             ? $activeRole

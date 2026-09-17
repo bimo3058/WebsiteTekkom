@@ -21,10 +21,15 @@ Route::middleware(['module.active:manajemen_mahasiswa'])
     ->name('manajemenmahasiswa.')
     ->group(function () {
         // ── Layanan Pengaduan (Publik / Magic Link) ──────────────────────
+        // Route ini sengaja tanpa 'auth' (magic link dibuka tanpa login), jadi
+        // throttle adalah satu-satunya rem terhadap brute force token & spam.
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            Route::post('/track/{token}/confirm', [AnonPengaduanController::class, 'confirm'])->name('anon.confirm');
-            Route::post('/track/{token}/store', [AnonPengaduanController::class, 'store'])->name('anon.store');
-            Route::get('/track/{token}', [AnonPengaduanController::class, 'track'])->name('track');
+            Route::post('/track/{token}/confirm', [AnonPengaduanController::class, 'confirm'])
+                ->middleware('throttle:20,1')->name('anon.confirm');
+            Route::post('/track/{token}/store', [AnonPengaduanController::class, 'store'])
+                ->middleware('throttle:5,1')->name('anon.store');
+            Route::get('/track/{token}', [AnonPengaduanController::class, 'track'])
+                ->middleware('throttle:30,1')->name('track');
         });
     });
 
@@ -142,16 +147,21 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            // Jalur Anonim / Konfidensial (Pembuatan Magic Link)
-            Route::get('/anon/generate', [AnonPengaduanController::class, 'generate'])->name('anon.generate');
-
             // Mahasiswa membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
             Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan')->group(function () {
                 Route::get('/jalur', [PengaduanController::class, 'jalur'])->name('jalur');
                 Route::get('/create', [PengaduanController::class, 'create'])->name('create');
-                Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
-                Route::post('/', [PengaduanController::class, 'store'])->name('store');
+                Route::post('/confirm', [PengaduanController::class, 'confirm'])
+                    ->middleware('throttle:20,1')->name('confirm');
+                Route::post('/', [PengaduanController::class, 'store'])
+                    ->middleware('throttle:5,1')->name('store');
+
+                // Jalur Konfidensial (pembuatan Magic Link).
+                // POST, bukan GET: method ini menulis ke database, dan sebagai GET
+                // setiap refresh/prefetch membuat satu baris draft baru.
+                Route::post('/anon/generate', [AnonPengaduanController::class, 'generate'])
+                    ->middleware('throttle:10,1')->name('anon.generate');
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
@@ -197,6 +207,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         // ── Forum Diskusi ──────────────────────────────────────────────────
         Route::prefix('forum')->name('forum.')->group(function () {
             Route::get('/', [ForumController::class, 'index'])->name('index');
+            Route::get('/saya', [ForumController::class, 'myThreads'])->name('my');
+            Route::get('/leaderboard', [ForumController::class, 'leaderboard'])->name('leaderboard');
             Route::get('/create', [ForumController::class, 'create'])->name('create');
             Route::post('/drafts', [ForumController::class, 'saveDraft'])->name('drafts.store');
             Route::delete('/drafts/{id}', [ForumController::class, 'deleteDraft'])->name('drafts.destroy');
@@ -204,6 +216,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
             // Report Management (admin only) — MUST be before /{id} wildcard
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
+                Route::get('/laporan', [ForumController::class, 'forumReports'])->name('reports');
                 Route::delete('/reports/{reportId}/dismiss', [ForumController::class, 'dismissReport'])->name('reports.dismiss');
                 Route::delete('/reports/{reportId}/delete-thread', [ForumController::class, 'deleteReportedThread'])->name('reports.delete_thread');
                 Route::patch('/reports/{reportId}/lock-thread', [ForumController::class, 'lockReportedThread'])->name('reports.lock_thread');
@@ -362,6 +375,11 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
 
                 // Profil sendiri (role mahasiswa dan alumni)
+                //
+                // /profil tidak lagi punya halaman sendiri: isinya sama persis dengan
+                // halaman detail, jadi sekarang ia hanya mendaftarkan pemiliknya dari
+                // SSO bila perlu lalu melempar ke /{id}. Route-nya dipertahankan supaya
+                // tautan & bookmark lama tidak mati.
                 Route::middleware('role:mahasiswa|alumni')->group(function () {
                     Route::get('/profil', [DirektoriMahasiswaController::class, 'profil'])
                         ->name('profil');
@@ -381,14 +399,25 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 // Unduh CV mahasiswa — pengelola & pembina (bukan sesama mahasiswa).
                 // Harus didaftarkan sebelum /{id}/edit tidak masalah karena segmen
                 // keduanya berbeda; /profil/cv sudah terdaftar lebih dulu di atas.
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen|dosen|dosen_koordinator|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit')
+                //
+                // Daftar role sengaja tidak ditulis ulang di sini: CvProfilePolicy
+                // adalah sumber kebenarannya, dipakai juga oleh Policy check di
+                // controller dan oleh flag $canDownloadCv di halaman show — supaya
+                // ketiganya mustahil berbeda seperti sebelumnya.
+                Route::middleware('role:' . implode('|', \App\Policies\CvProfilePolicy::PENGELOLA_CV))
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');
                 });
 
-                // Edit biodata — admin only
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
+                // Edit biodata — admin (semua mahasiswa) + mahasiswa/alumni (dirinya sendiri).
+                //
+                // Gerbang role di sini sengaja longgar; yang menentukan BARIS MILIK SIAPA
+                // adalah KemahasiswaanPolicy::update() yang dipanggil di edit() dan
+                // update(). Tanpa Policy itu, setiap mahasiswa yang lolos gerbang ini bisa
+                // mengetik /{id}/edit milik orang lain. Kolom Status juga hanya ditulis
+                // untuk pengelola — lihat update() di controller.
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|mahasiswa|alumni')->group(function () {
                     Route::get('/{id}/edit', [DirektoriMahasiswaController::class, 'edit'])
                         ->name('edit')->where('id', '[0-9]+');
                     Route::put('/{id}', [DirektoriMahasiswaController::class, 'update'])
@@ -422,7 +451,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('show')->where('id', '[0-9]+');
                 });
 
-
+                // Unduh CV alumni — pengelola & pembina, gerbang yang sama persis
+                // dengan CV mahasiswa. Method generateCv() sudah lama ada tapi tidak
+                // punya route sama sekali (dead code); di sini baru dihidupkan.
+                Route::middleware('role:' . implode('|', \App\Policies\CvProfilePolicy::PENGELOLA_CV))
+                    ->group(function () {
+                    Route::get('/{id}/cv', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'generateCv'])
+                        ->name('cv')->where('id', '[0-9]+');
+                });
 
                 // Edit data alumni — admin only
                 Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
@@ -464,6 +500,19 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
                 ->get('/', [VerifikasiController::class, 'index'])->name('index');
 
+            // Berkas bukti — satu-satunya pintu menuju sertifikat mahasiswa.
+            //
+            // Sebelumnya berkas ditempel langsung memakai URL publik Supabase,
+            // yang tidak pernah menanyakan siapa yang membukanya: sekali
+            // tautannya tersalin keluar, sertifikat beserta nama & NIM di
+            // dalamnya terbuka untuk siapa pun tanpa akun, selamanya. Daftar
+            // rolenya disalin dari route index di atas — termasuk GPM yang
+            // tetap dikecualikan dengan alasan yang sama — dan kepemilikan
+            // berkasnya dicek lagi di controller.
+            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
+                ->get('/bukti/{id}', [VerifikasiController::class, 'bukti'])
+                ->name('bukti.show')->where('id', '[0-9]+');
+
             // Submit pengajuan — mahasiswa, semua pengurus himpunan, admin (alumni TIDAK diizinkan)
             Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan')
                 ->group(function () {
@@ -486,17 +535,17 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Halaman daftar klaim reward prestasi (Request Bu Bellia / B.2) —
-            // verifikator (admin group + DPM) + Ketua Departemen (read-only, tanpa
-            // tinjau/setujui/tolak — selaras Verifikasi Prestasi). GPM dikecualikan,
-            // alasannya sama dengan route index di atas.
+            // admin kemahasiswaan (kelola) + DPM & Ketua Departemen (read-only,
+            // tanpa tinjau/setujui/tolak: keputusan konversi SKS bukan kewenangan
+            // mereka — lihat grup route di bawah). GPM dikecualikan, alasannya
+            // sama dengan route index di atas.
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|ketua_departemen')
                 ->get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
                 ->name('reward.index');
 
-            // Approve/Reject & kelola reward — verifikator (admin group + DPM)
+            // Verifikasi prestasi & riwayat kegiatan — verifikator (admin group + DPM)
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm')
                 ->group(function () {
-                // Dokumen aturan reward (SK FT 774 / aturan terbaru) — admin kelola
                 Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
                     ->name('riwayat.approve')->where('id', '[0-9]+');
                 Route::patch('/riwayat/{id}/reject', [VerifikasiController::class, 'rejectRiwayat'])
@@ -513,8 +562,17 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('riwayat.batal')->where('id', '[0-9]+');
                 Route::patch('/prestasi/{id}/batal-verifikasi', [VerifikasiController::class, 'batalkanVerifikasiPrestasi'])
                     ->name('prestasi.batal')->where('id', '[0-9]+');
+            });
 
-                // Persetujuan reward prestasi — admin/departemen (Request Bu Bellia / B.2)
+            // Keputusan reward prestasi — admin kemahasiswaan saja.
+            //
+            // Lebih sempit dari verifikasi di atas: yang diputus di sini bukan
+            // benar-tidaknya sebuah prestasi, melainkan konversi nilai mata
+            // kuliah (SK FT 774). DPM & Ketua Departemen tetap boleh membuka
+            // halaman Klaim Reward untuk memantau, tetapi tidak menyetujui,
+            // menolak, maupun membatalkan persetujuannya.
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
+                ->group(function () {
                 Route::patch('/prestasi/{id}/reward/setujui', [VerifikasiController::class, 'setujuiReward'])
                     ->name('prestasi.reward.setujui')->where('id', '[0-9]+');
                 Route::patch('/prestasi/{id}/reward/tolak', [VerifikasiController::class, 'tolakReward'])

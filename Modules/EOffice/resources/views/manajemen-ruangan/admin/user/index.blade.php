@@ -9,7 +9,7 @@
             --c-fg-sec: #475569;
             --c-fg-muted: #64748B;
             --c-fg-placeholder: #94A3B8;
-            --c-primary: #4F46E5;
+            --c-primary: #2A3A7C;
         }
     </style>
 
@@ -124,7 +124,7 @@
                                 {{-- Total Pinjam --}}
                                 <td style="padding:14px 16px; text-align:center;">
                                     <div
-                                        style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:24px; padding:0 8px; border-radius:6px; background:rgba(79, 70, 229, 0.08); text-color:#4F46E5; font-size:12px; font-weight:700; border:1px solid rgba(79, 70, 229, 0.2); color: #4F46E5;">
+                                        style="display:inline-flex; align-items:center; justify-content:center; min-width:28px; height:24px; padding:0 8px; border-radius:6px; background:rgba(79, 70, 229, 0.08); text-color:#2A3A7C; font-size:12px; font-weight:700; border:1px solid rgba(79, 70, 229, 0.2); color: #2A3A7C;">
                                         {{ $bookingCounts[$user->id] ?? 0 }}
                                     </div>
                                 </td>
@@ -279,7 +279,7 @@
                 </div>
                 <div class="p-0 overflow-y-auto bg-gray-50/50 flex-1">
                     <div x-show="loadingHistory" class="p-12 flex flex-col items-center justify-center">
-                        <svg class="animate-spin h-8 w-8 text-indigo-600 mb-3" viewBox="0 0 24 24">
+                        <svg class="animate-spin h-8 w-8 text-primary-500 mb-3" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
                             </circle>
                             <path class="opacity-75" fill="currentColor"

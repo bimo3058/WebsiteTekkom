@@ -1,0 +1,540 @@
+{
+  "source": "backup_neon_test_20260915_081548.dump",
+  "targetSchemaSha256": "8a9c311a2bb3bb16180e009bb6f857ad741f64236c0652c04ad10d5027ffd7b5",
+  "tables": {
+    "users": {
+      "sourceRows": 167,
+      "convertedRows": 167
+    },
+    "students": {
+      "sourceRows": 0,
+      "convertedRows": 147
+    },
+    "lecturers": {
+      "sourceRows": 0,
+      "convertedRows": 19
+    },
+    "capstone_periods": {
+      "sourceRows": 2,
+      "convertedRows": 2
+    },
+    "capstone_groups": {
+      "sourceRows": 45,
+      "convertedRows": 45
+    },
+    "capstone_titles": {
+      "sourceRows": 42,
+      "convertedRows": 42
+    },
+    "capstone_group_members": {
+      "sourceRows": 147,
+      "convertedRows": 147
+    },
+    "capstone_group_invitations": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_group_supervisor_proposals": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_supervisions": {
+      "sourceRows": 86,
+      "convertedRows": 86
+    },
+    "capstone_bids": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_document_types": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_documents": {
+      "sourceRows": 126,
+      "convertedRows": 126
+    },
+    "capstone_phase_document_requirements": {
+      "sourceRows": 25,
+      "convertedRows": 25
+    },
+    "capstone_seminar_schedules": {
+      "sourceRows": 2,
+      "convertedRows": 2
+    },
+    "capstone_seminar_evaluations": {
+      "sourceRows": 2,
+      "convertedRows": 2
+    },
+    "capstone_ta_submissions": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_ta_defense_schedules": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_ta_defense_examiners": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_ta_defense_evaluations": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_evaluations": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_expo_events": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_expo_registrations": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_assessment_components": {
+      "sourceRows": 34,
+      "convertedRows": 34
+    },
+    "capstone_assessment_scores": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_peer_review_indicators": {
+      "sourceRows": 0,
+      "convertedRows": 20
+    },
+    "capstone_peer_reviews": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_grade_consistency_checks": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_digital_signatures": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_notifications": {
+      "sourceRows": 213,
+      "convertedRows": 213
+    },
+    "capstone_audit_logs": {
+      "sourceRows": 51,
+      "convertedRows": 51
+    },
+    "capstone_locations": {
+      "sourceRows": 1,
+      "convertedRows": 1
+    },
+    "capstone_assessment_component_templates": {
+      "sourceRows": 28,
+      "convertedRows": 28
+    },
+    "capstone_peer_review_indicator_templates": {
+      "sourceRows": 0,
+      "convertedRows": 10
+    },
+    "capstone_period_assessment_components": {
+      "sourceRows": 52,
+      "convertedRows": 52
+    },
+    "capstone_period_peer_review_indicators": {
+      "sourceRows": 20,
+      "convertedRows": 20
+    },
+    "capstone_join_requests": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_stakeholders": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_stakeholder_title": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_period_registrations": {
+      "sourceRows": 147,
+      "convertedRows": 147
+    },
+    "capstone_student_peer_review_status": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_finalization_audits": {
+      "sourceRows": 43,
+      "convertedRows": 43
+    },
+    "capstone_title_approval_audits": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_title_deletion_audits": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_ta_defense_schedule_student": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_expo_student_documents": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_bimbingan_sempro_scores": {
+      "sourceRows": 24,
+      "convertedRows": 24
+    },
+    "capstone_bimbingan_ta_scores": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_expo_scores": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_milestone_scores": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_nilai_dosen_scores": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    },
+    "capstone_sempro_scores": {
+      "sourceRows": 24,
+      "convertedRows": 24
+    },
+    "capstone_sidang_ta_scores": {
+      "sourceRows": 0,
+      "convertedRows": 0
+    }
+  },
+  "repairs": [
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "19",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "20",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "21",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "22",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "23",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "24",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "25",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "26",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "27",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    },
+    {
+      "table": "capstone_peer_review_indicator_templates",
+      "id": "28",
+      "reason": "Copied corresponding source assessment template to satisfy target FK"
+    }
+  ],
+  "missingAcademicData": [
+    {
+      "sourceUserId": "166",
+      "profile": "students",
+      "fields": [
+        "student_number",
+        "cohort_year"
+      ],
+      "temporaryStudentNumber": "NEON-TEST-STUDENT-166",
+      "cohortYear": 0
+    },
+    {
+      "sourceUserId": "167",
+      "profile": "students",
+      "fields": [
+        "student_number",
+        "cohort_year"
+      ],
+      "temporaryStudentNumber": "NEON-TEST-STUDENT-167",
+      "cohortYear": 0
+    },
+    {
+      "sourceUserId": "1",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-1"
+    },
+    {
+      "sourceUserId": "2",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-2"
+    },
+    {
+      "sourceUserId": "3",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-3"
+    },
+    {
+      "sourceUserId": "4",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-4"
+    },
+    {
+      "sourceUserId": "5",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-5"
+    },
+    {
+      "sourceUserId": "6",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-6"
+    },
+    {
+      "sourceUserId": "7",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-7"
+    },
+    {
+      "sourceUserId": "8",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-8"
+    },
+    {
+      "sourceUserId": "9",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-9"
+    },
+    {
+      "sourceUserId": "10",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-10"
+    },
+    {
+      "sourceUserId": "11",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-11"
+    },
+    {
+      "sourceUserId": "12",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-12"
+    },
+    {
+      "sourceUserId": "13",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-13"
+    },
+    {
+      "sourceUserId": "14",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-14"
+    },
+    {
+      "sourceUserId": "15",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-15"
+    },
+    {
+      "sourceUserId": "16",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-16"
+    },
+    {
+      "sourceUserId": "17",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-17"
+    },
+    {
+      "sourceUserId": "18",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-18"
+    },
+    {
+      "sourceUserId": "19",
+      "profile": "lecturers",
+      "fields": [
+        "employee_number"
+      ],
+      "temporaryEmployeeNumber": "NEON-CAPSTONE-ACTOR-19"
+    }
+  ],
+  "excludedTables": [
+    {
+      "table": "cache",
+      "rows": 338,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "cache_locks",
+      "rows": 0,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "failed_jobs",
+      "rows": 0,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "job_batches",
+      "rows": 0,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "jobs",
+      "rows": 437,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "migrations",
+      "rows": 145,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "password_reset_tokens",
+      "rows": 0,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "peer_review_migration_log",
+      "rows": 0,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "personal_access_tokens",
+      "rows": 1,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "role_user",
+      "rows": 168,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "roles",
+      "rows": 3,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "schedules",
+      "rows": 0,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    },
+    {
+      "table": "sessions",
+      "rows": 11,
+      "reason": "Not part of supplied Capstone target schema; preserved in original dump"
+    }
+  ],
+  "identities": "Source account IDs are retained. Student and lecturer profile IDs use the corresponding source account ID. This is a standalone restore, not a merge into populated tables.",
+  "foreignKeyValuesChecked": 2358,
+  "statusCounts": {
+    "PDC1_ACTIVE": 42,
+    "PDC2_ACTIVE": 1,
+    "FORMING_SOLO": 2
+  },
+  "periods": [
+    {
+      "id": "1",
+      "name": "Capstone TA S1T26"
+    },
+    {
+      "id": "2",
+      "name": "Capstone TA S2T26"
+    }
+  ],
+  "validation": {
+    "sqlLoaded": true,
+    "customDumpRestored": true,
+    "tableCountsMatched": 53,
+    "foreignKeysValidated": 146,
+    "totalRows": 1477,
+    "users": 167,
+    "students": 147,
+    "lecturers": 19,
+    "neonModified": false,
+    "supabaseModified": false
+  }
+}

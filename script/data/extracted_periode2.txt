@@ -1,0 +1,72 @@
+
+        @if($praktikumDipilih->koor_id)
+            <div class="mp-alert info flex-shrink-0" style="margin-top:24px;">
+                Praktikum ini sudah memiliki Koordinator ({{ $praktikumDipilih->koordinator->name }}).
+            </div>
+        @else
+            {{-- ── BUKA PERIODE BARU ────────────────────────────────────────────────────── --}}
+            <div class="sec-head" style="margin-top:24px;">
+                <span class="sec-bar"></span>
+                <span class="sec-title">Buka Periode Pendaftaran Koordinator</span>
+                <span class="sec-rule"></span>
+            </div>
+
+            <div class="mp-card" style="flex-shrink:0;">
+                <div class="mp-card-header">
+                    <span class="mp-card-title">Form Pembukaan Periode</span>
+                </div>
+                <div style="padding:24px;">
+                    @php
+                        $periodeAktif = $periodeList->firstWhere('is_aktif', true);
+                    @endphp
+
+                    @if($periodeAktif && $periodeAktif->isSedangBuka())
+                        <div class="mp-alert warning" style="margin-bottom:16px;">
+                            <div style="font-size:13px;font-weight:600;color:#7C5309;">Periode Koordinator Sedang Dibuka</div>
+                            <div style="font-size:12px;color:#956321;margin-top:4px;">
+                                <strong>{{ $periodeAktif->nama }}</strong>
+                                @if($periodeAktif->ditutup_pada)
+                                    · Ditutup otomatis: {{ $periodeAktif->ditutup_pada->locale('id')->isoFormat('D MMM YYYY, HH:mm') }}
+                                @else
+                                    · Tanpa batas waktu
+                                @endif
+                            </div>
+                            <form method="POST"
+                                action="{{ route('eoffice.manprak.dosen.periode-pendaftaran.tutup', $periodeAktif->id) }}"
+                                style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran koordinator sekarang?')">
+                                @csrf
+                                <button type="submit" class="mp-btn error sm">🔒 Tutup Periode Sekarang</button>
+                            </form>
+                        </div>
+                    @endif
+
+                    <form method="POST" action="{{ route('eoffice.manprak.dosen.periode-pendaftaran.store') }}">
+                        @csrf
+                        <input type="hidden" name="praktikum_id" value="{{ $praktikumDipilih->id }}">
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">
+                                    Nama Periode <span style="color:#666D80;font-weight:400;">(opsional)</span>
+                                </label>
+                                <input type="text" name="nama" class="mp-input w-full"
+                                    placeholder="cth. Pendaftaran Koordinator Gasal 2025/2026" value="{{ old('nama') }}">
+                            </div>
+                            <div style="display:flex;align-items:flex-end;">
+                                <div
+                                    style="font-size:12px;color:#666D80;padding:8px;background:#F6F8FA;border-radius:8px;width:100%;">
+                                    💡 Membuka periode ini akan otomatis menutup periode koordinator aktif sebelumnya untuk praktikum
+                                    ini.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+                            <div>
+                                <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">
+                                    Dibuka Pada
+                                </label>
+                                <input type="datetime-local" name="dibuka_pada" class="mp-input w-full"
+                                    value="{{ old('dibuka_pada', now()->format('Y-m-d\TH:i')) }}">
+                                <p style="font-size:11px;color:#666D80;margin-top:4px;">Kosongkan untuk langsung dibuka saat
+           

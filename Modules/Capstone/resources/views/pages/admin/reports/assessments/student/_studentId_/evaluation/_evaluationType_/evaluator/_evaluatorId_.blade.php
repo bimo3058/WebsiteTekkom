@@ -1,0 +1,8 @@
+@extends('capstone::layouts.app')
+@section('title','Rincian Nilai Evaluator')
+@section('content')
+<div x-data="adminReports('evaluator')" class="space-y-6"><div class="flex flex-wrap items-center justify-between gap-4"><h1 class="text-3xl font-bold">Rincian Nilai Evaluator</h1><x-capstone::button href="/admin/reports" variant="outline">Reports</x-capstone::button></div>
+@include('capstone::pages.admin.shared.toolbar')
+@include('capstone::partials.loading')
+<div x-show="!loading && !error" x-cloak class="space-y-6"><x-capstone::card><div class="px-6 space-y-2"><h2 class="font-semibold" x-text="data.student?.name"></h2><p x-text="data.evaluation_type+' - '+data.evaluator?.name"></p><p class="text-3xl font-semibold" x-text="data.evaluator?.score ?? '-'"></p><p class="text-muted-foreground" x-text="data.evaluator?.status"></p></div></x-capstone::card><div class="overflow-x-auto rounded-xl border bg-card"><table class="w-full text-left text-sm"><thead class="bg-muted/40"><tr><th class="p-4">Kode</th><th class="p-4">Komponen</th><th class="p-4">Bobot</th><th class="p-4">Nilai</th><th class="p-4">Catatan</th><th class="p-4">Tanggal</th></tr></thead><tbody><template x-for="(component,index) in data.evaluator?.components || []" :key="component.component_id || index"><tr class="border-t"><td class="p-4" x-text="component.component_code"></td><td class="p-4" x-text="component.component_name"></td><td class="p-4" x-text="component.weight+'%'"></td><td class="p-4" x-text="component.score ?? '-'"></td><td class="p-4" x-text="component.notes || '-'"></td><td class="p-4" x-text="component.evaluated_at || '-'"></td></tr></template></tbody></table></div></div></div>
+@endsection

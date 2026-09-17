@@ -1,0 +1,1 @@
+<?php $c = file_get_contents("Modules/EOffice/resources/views/manajemen-praktikum/asprak/tugas-pengumpulan.blade.php"); echo "Has question mark diamond: " . substr_count($c, "") . "\n"; echo "Has question mark: " . substr_count($c, "?") . "\n";

@@ -6,8 +6,6 @@ import api from "@/lib/api";
 const queryKeys = {
   admin: {
     dashboard: ["admin", "dashboard"],
-    periods: ["admin", "periods"],
-    groups: ["admin", "groups"],
   },
   dosen: {
     dashboard: (periodId?: string) => ["dosen", "dashboard", periodId],
@@ -24,16 +22,6 @@ const queryKeys = {
 // Fetch functions
 const fetchAdminDashboard = async () => {
   const response = await api.get("/admin/dashboard");
-  return response.data?.data ?? response.data;
-};
-
-const fetchAdminPeriods = async () => {
-  const response = await api.get("/admin/periods");
-  return response.data?.data || [];
-};
-
-const fetchAdminGroups = async () => {
-  const response = await api.get("/admin/groups", { params: { per_page: 5 } });
   return response.data?.data ?? response.data;
 };
 
@@ -65,7 +53,7 @@ const fetchMahasiswaDashboard = async () => {
 };
 
 const fetchMahasiswaWorkflow = async () => {
-  const response = await api.get("/mahasiswa/dashboard/workflow");
+  const response = await api.get("/mahasiswa/workflow");
   return response.data?.data ?? response.data;
 };
 
@@ -87,14 +75,6 @@ export function usePrefetchDashboards() {
       queryClient.prefetchQuery({
         queryKey: queryKeys.admin.dashboard,
         queryFn: fetchAdminDashboard,
-      }),
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.admin.periods,
-        queryFn: fetchAdminPeriods,
-      }),
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.admin.groups,
-        queryFn: fetchAdminGroups,
       }),
     ]);
   }, [queryClient]);

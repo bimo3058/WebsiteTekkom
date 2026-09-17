@@ -51,7 +51,7 @@
                         Tersedia</label>
                     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
                         @php
-                            $opsiFasilitas = ['AC', 'Proyektor', 'Papan Tulis / Whiteboard', 'Sound System', 'Koneksi WiFi', 'PC / Komputer Desktop', 'Kursi Rapat', 'Stop Kontak Ekstra'];
+                            $opsiFasilitas = \Modules\EOffice\Models\Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
                             $currentFasilitas = is_array($ruangan->fasilitas) ? $ruangan->fasilitas : [];
                         @endphp
                         @foreach($opsiFasilitas as $opsi)
@@ -103,9 +103,11 @@
                     <div id="previewContainer" style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;">
                     </div>
 
-                    @error('fotos') <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                    @error('fotos')
+                        <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                     @enderror
-                    @error('fotos.*') <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                    @error('fotos.*')
+                        <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                     @enderror
                 </div>
 

@@ -28,12 +28,17 @@ class PendaftaranKoordinator extends Model
         'alasan_penolakan',
         'transkrip_path',
         'berkas_cerc_path',
+        'berkas_tambahan_path',
+        'jawaban_kuis',
+        'skor_kuis',
         'direview_oleh',
         'direview_pada',
     ];
 
     protected $casts = [
-        'ipk'          => 'float',
+        'ipk' => 'float',
+        'jawaban_kuis' => 'array',
+        'skor_kuis' => 'integer',
         'direview_pada' => 'datetime',
     ];
 

@@ -1,5 +1,7 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
+@include('manajemenmahasiswa::partials.kegiatan-theme')
+
 @include('manajemenmahasiswa::partials.kegiatan-form._styles')
 
 {{--

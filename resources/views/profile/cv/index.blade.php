@@ -108,7 +108,11 @@
 
                     <!-- Footer Navigation -->
                     <div class="mt-6 flex justify-between items-center">
+                        {{-- :disabled saat loading — dua POST beruntun sama-sama membawa
+                             baris baru dan ditolak indeks UNIQUE user_id. --}}
                         <button @click="goToStep(step - 1)" x-show="step > 1"
+                            :disabled="loading"
+                            :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
                             class="btn-secondary text-sm">
                             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
                             Sebelumnya
@@ -116,8 +120,10 @@
                         <div x-show="step === 1"></div>
 
                         <button @click="saveAndNext()" x-show="step < 6"
+                            :disabled="loading"
+                            :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
                             class="btn-primary text-sm shadow-sm">
-                            Simpan & Lanjut
+                            <span x-text="loading ? 'Menyimpan...' : 'Simpan & Lanjut'"></span>
                             <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                         </button>
                     </div>
@@ -259,24 +265,35 @@
                             body: JSON.stringify(this.buildPayload(this.step))
                         });
 
-                        const result = await response.json();
+                        // Galat 500 mengembalikan halaman HTML, bukan JSON — response.json()
+                        // akan melempar dan menutupi status aslinya, jadi diamankan dulu.
+                        let result = {};
+                        try {
+                            result = await response.json();
+                        } catch (_) {
+                            result = {};
+                        }
 
                         if (!response.ok) {
-                            // Handle validation errors (422) or server errors
-                            const msg = result.errors
-                                ? Object.values(result.errors).flat().join(', ')
-                                : (result.message || 'Gagal menyimpan data.');
+                            // Hanya pesan validasi (422) yang layak ditampilkan apa adanya.
+                            // Pesan galat lain berisi teks teknis berbahasa Inggris yang
+                            // tidak berarti apa-apa bagi mahasiswa.
+                            const msg = response.status === 422
+                                ? (result.errors
+                                    ? Object.values(result.errors).flat().join(', ')
+                                    : 'Ada isian yang belum sesuai. Periksa kembali data Anda.')
+                                : 'Gagal menyimpan data. Silakan coba lagi.';
                             throw new Error(msg);
                         }
 
                         if (!result.success) {
-                            throw new Error(result.message || 'Gagal menyimpan data.');
+                            throw new Error('Gagal menyimpan data. Silakan coba lagi.');
                         }
 
                         return true;
                     } catch (err) {
                         this.error = true;
-                        this.errorMsg = err.message || 'Terjadi kesalahan jaringan.';
+                        this.errorMsg = err.message || 'Gagal menyimpan. Periksa koneksi Anda lalu coba lagi.';
                         return false;
                     }
                 },

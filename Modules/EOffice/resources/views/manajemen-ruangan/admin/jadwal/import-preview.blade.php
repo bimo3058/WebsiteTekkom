@@ -172,7 +172,7 @@
                                     </td>
                                     <td style="text-align:center;">
                                         <div
-                                            style="font-size:13px; font-weight:700; color:#3730A3; display:inline-block; padding:2px 8px; background:#EEF2FF; border-radius:6px; border:1px solid #C7D2FE;">
+                                            style="font-size:13px; font-weight:700; color:#3730A3; display:inline-block; padding:2px 8px; background:#EBEDF6; border-radius:6px; border:1px solid #C7D2FE;">
                                             {{ $kelas ?: '-' }}
                                         </div>
                                     </td>
@@ -203,7 +203,7 @@
                                     <td style="text-align:center; min-width: 90px;">
                                         <div style="display: flex; justify-content: center; align-items: center; gap: 4px;">
                                             <button type="button" @click="openEditModal({{ $loop->index }})"
-                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                                                class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-gray-400 hover:text-primary-500 hover:bg-primary-50 transition-colors"
                                                 title="Edit Jadwal">
                                                 <svg width="18" height="18" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24" stroke-width="2">
@@ -457,7 +457,7 @@
             if (msgBox) tr.cells[3].appendChild(msgBox); // kembalikan conflict message box
 
             // Kolom Kelas (cells[4])
-            tr.cells[4].innerHTML = '<div style="font-size:13px; font-weight:700; color:#3730A3; display:inline-block; padding:2px 8px; background:#EEF2FF; border-radius:6px; border:1px solid #C7D2FE;">' + (row.kelas || '-') + '</div>';
+            tr.cells[4].innerHTML = '<div style="font-size:13px; font-weight:700; color:#3730A3; display:inline-block; padding:2px 8px; background:#EBEDF6; border-radius:6px; border:1px solid #C7D2FE;">' + (row.kelas || '-') + '</div>';
 
             let rNama = this.ruanganMap[row.ruangan_id] || '<div style="font-weight:700; color:#B45309; font-size:11px;">Tidak Dikenal</div>';
             tr.cells[5].innerHTML = '<div style="font-weight:700; color:#0D0D12;">' + rNama + '</div>';

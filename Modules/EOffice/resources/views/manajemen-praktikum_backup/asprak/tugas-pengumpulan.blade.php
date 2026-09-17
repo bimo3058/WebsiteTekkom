@@ -204,7 +204,7 @@
                             @endif
                             @if($p->riwayat->isNotEmpty())
                             <div x-data="{ openRiwayat: false }" style="position:relative;">
-                                <button type="button" @click="openRiwayat = !openRiwayat" style="background:none;border:none;padding:0;font-size:10px;color:#6366F1;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:1px;">
+                                <button type="button" @click="openRiwayat = !openRiwayat" style="background:none;border:none;padding:0;font-size:10px;color:#5D6DA2;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:1px;">
                                     Riwayat ({{ $p->riwayat->count() }})
                                     <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
                                 </button>

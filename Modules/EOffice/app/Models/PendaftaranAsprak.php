@@ -24,6 +24,9 @@ class PendaftaranAsprak extends Model
         'cv_path',
         'berkas_cerc_path',
         'transkrip_path',
+        'berkas_tambahan_path',
+        'jawaban_kuis',
+        'skor_kuis',
         'jadwal',
         'status',
         'status_koor',
@@ -34,9 +37,11 @@ class PendaftaranAsprak extends Model
     ];
 
     protected $casts = [
-        'ipk'           => 'float',
-        'jadwal'        => 'array',
-        'direview_pada'  => 'datetime',
+        'ipk' => 'float',
+        'jadwal' => 'array',
+        'jawaban_kuis' => 'array',
+        'skor_kuis' => 'integer',
+        'direview_pada' => 'datetime',
     ];
 
     public function user()

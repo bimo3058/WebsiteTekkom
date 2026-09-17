@@ -52,6 +52,14 @@
             }
             .jalur-card:hover::before { opacity: 1; }
 
+            /* Kartu Konfidensial adalah <button> di dalam <form> (aksi POST),
+               jadi samakan tampilannya dengan kartu <a> di sebelahnya. */
+            .jalur-form { display: flex; }
+            button.jalur-card {
+                font: inherit; text-align: left; width: 100%;
+                -webkit-appearance: none; appearance: none;
+            }
+
             .jalur-icon-wrap {
                 width: 56px; height: 56px; border-radius: 12px;
                 display: flex; align-items: center; justify-content: center;
@@ -110,20 +118,24 @@
             </a>
 
             {{-- ── Konfidensial ────────────────────────────────── --}}
-            <a href="{{ route('manajemenmahasiswa.pengaduan.anon.generate') }}" class="jalur-card konfidensial">
-                <span class="jalur-pill">DILINDUNGI</span>
-                <div class="jalur-icon-wrap">
-                    <x-manajemenmahasiswa::ui.icon name="shield-02" size="28" />
-                </div>
-                <div class="jalur-title">Konfidensial</div>
-                <div class="jalur-desc">
-                    Identitas Anda tidak ditampilkan di sistem. Data tetap tersimpan secara internal untuk memastikan masalah dapat diselesaikan dengan tepat.
-                </div>
-                <div class="jalur-cta">
-                    Pilih jalur ini
-                    <x-manajemenmahasiswa::ui.icon name="arrow-narrow-right" size="16" />
-                </div>
-            </a>
+            {{-- POST, bukan link: aksi ini membuat tiket draft di database. --}}
+            <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.anon.generate') }}" class="jalur-form">
+                @csrf
+                <button type="submit" class="jalur-card konfidensial">
+                    <span class="jalur-pill">DILINDUNGI</span>
+                    <div class="jalur-icon-wrap">
+                        <x-manajemenmahasiswa::ui.icon name="shield-02" size="28" />
+                    </div>
+                    <div class="jalur-title">Konfidensial</div>
+                    <div class="jalur-desc">
+                        Identitas Anda tidak ditampilkan di sistem. Data tetap tersimpan secara internal untuk memastikan masalah dapat diselesaikan dengan tepat.
+                    </div>
+                    <div class="jalur-cta">
+                        Pilih jalur ini
+                        <x-manajemenmahasiswa::ui.icon name="arrow-narrow-right" size="16" />
+                    </div>
+                </button>
+            </form>
 
         </div>
 

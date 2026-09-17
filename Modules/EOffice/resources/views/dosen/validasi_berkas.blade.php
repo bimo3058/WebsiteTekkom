@@ -62,7 +62,7 @@
                         <div class="flex items-center gap-2 w-full sm:w-auto">
                             <div class="relative w-full sm:w-56">
                                 <input type="text" id="searchInput" placeholder="Cari mahasiswa..."
-                                    class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                                     oninput="filterTable()">
                                 <svg class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
@@ -117,7 +117,7 @@
                                             <td class="px-5 py-4 whitespace-nowrap">
                                                 <div class="flex items-center gap-3">
                                                     <div
-                                                        class="h-8 w-8 rounded bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                                                        class="h-8 w-8 rounded bg-primary-100 flex items-center justify-center text-primary-500 font-bold text-xs">
                                                         {{ strtoupper(substr($dok->nama_mahasiswa ?? 'M', 0, 2)) }}
                                                     </div>
                                                     <div>
@@ -130,14 +130,14 @@
                                             <td class="px-5 py-4 whitespace-nowrap">
                                                 <span
                                                     class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold
-                                                {{ $dok->jenis_dokumen == 'Laporan' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                                                {{ $dok->jenis_dokumen == 'Laporan' ? 'bg-primary-100 text-primary-500' : 'bg-primary-100 text-primary-500' }}">
                                                     {{ $dok->jenis_dokumen }}
                                                 </span>
                                             </td>
                                             <td class="px-5 py-4">
                                                 @if($dok->file_path)
                                                     <a href="{{ $dok->file_url }}" target="_blank"
-                                                        class="text-xs text-blue-600 hover:text-blue-800 underline font-medium flex items-center gap-1">
+                                                        class="text-xs text-primary-500 hover:text-primary-500 underline font-medium flex items-center gap-1">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
                                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -219,7 +219,7 @@
                                     <div class="flex justify-between items-start mb-3">
                                         <div class="flex items-center gap-3">
                                             <div
-                                                class="h-9 w-9 rounded bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                                                class="h-9 w-9 rounded bg-primary-100 flex items-center justify-center text-primary-500 font-bold text-xs">
                                                 {{ strtoupper(substr($dok->nama_mahasiswa ?? 'M', 0, 2)) }}
                                             </div>
                                             <div>
@@ -242,7 +242,7 @@
                                     </div>
                                     @if($dok->file_path)
                                         <a href="{{ $dok->file_url }}" target="_blank"
-                                            class="text-xs text-blue-600 underline mb-3 block">
+                                            class="text-xs text-primary-500 underline mb-3 block">
                                             {{ basename($dok->file_path) }}
                                         </a>
                                     @endif

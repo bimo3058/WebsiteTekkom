@@ -1,5 +1,7 @@
 <x-dynamic-component :component="$layout">
 
+@include('manajemenmahasiswa::direktori.partials.palette')
+
 <style>
     /* ── Filter Bar ── */
     .filter-section {
@@ -12,9 +14,9 @@
     .filter-select-custom {
         padding: 0 14px;
         border-radius: 8px;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
         background: #ffffff;
-        color: #374151;
+        color: var(--c-fg-sec);
         font-size: 13px;
         font-weight: 600;
         outline: none;
@@ -22,8 +24,8 @@
         height: 38px;
     }
     .filter-select-custom:focus {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
     }
 
     /* ── Search Bar ── */
@@ -36,23 +38,23 @@
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #666D80;
+        color: var(--c-fg-placeholder);
     }
     .search-input {
         background-color: #ffffff;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
         border-radius: 8px;
         height: 38px;
         padding-left: 36px;
         font-size: 13px;
         font-weight: 500;
         width: 100%;
-        color: #374151;
+        color: var(--c-fg);
     }
     .search-input:focus {
         background-color: #ffffff;
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
         outline: none;
     }
 
@@ -73,19 +75,22 @@
     }
     .btn-search {
         border: none;
-        background: #0B266E;
+        background: var(--c-primary);
         color: #ffffff;
     }
-    .btn-search:hover { background: #091958; color: #ffffff; }
+    .btn-search:hover { background: var(--c-primary-hover); color: #ffffff; }
+    /* Tombol sekunder: sama dengan tombol outline "Audit Logs"/"Users" di dashboard global */
     .btn-reset {
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
         background: #ffffff;
-        color: #666D80;
+        color: var(--c-fg-sec);
         padding: 0 14px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
-    .btn-reset:hover { background: #FAFAFA; border-color: #C1C7CF; color: #374151; }
+    .btn-reset:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-fg); }
 
     /* ── Table ── */
+    /* Latar head, hover baris, dan garis antarbaris mengikuti tabel User Management global */
     .mhs-table {
         width: 100%;
         border-collapse: separate;
@@ -96,10 +101,10 @@
         padding: 12px 16px;
         font-size: 12px;
         font-weight: 700;
-        color: #666D80;
+        color: var(--c-fg-muted);
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-bottom: 2px solid #DFE1E7;
+        border-bottom: 1px solid var(--c-border);
         white-space: nowrap;
     }
     .mhs-table tbody tr {
@@ -111,30 +116,32 @@
     .mhs-table tbody td {
         padding: 14px 16px;
         font-size: 14px;
-        color: #374151;
-        border-bottom: 1px solid #f3f4f6;
+        color: var(--c-fg);
+        border-bottom: 1px solid #F3F4F6;
         vertical-align: middle;
     }
+    /* Avatar inisial netral, sama dengan komponen user-avatar global */
     .mhs-avatar {
         width: 38px;
         height: 38px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #eef2ff, #dbe4f5);
+        background: var(--c-grey-50);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        color: #0B266E;
+        color: var(--c-fg-muted);
         font-size: 14px;
         flex-shrink: 0;
         overflow: hidden;
-        border: 2px solid #eef2ff;
+        border: 2px solid var(--c-border);
     }
     .mhs-avatar img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
+    /* Warna tiap status ada di partials/palette */
     .status-badge {
         font-size: 11px;
         font-weight: 700;
@@ -142,12 +149,6 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .status-badge.aktif { background: #ECFDF5; color: #059669; }
-    .status-badge.cuti { background: #FFFBEB; color: #92400e; }
-    .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
-    .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
-    .status-badge.wafat { background: #ede9fe; color: #5b21b6; }
-    .status-badge.mangkir { background: #fff7ed; color: #9a3412; }
 
     .btn-action {
         padding: 6px 14px;
@@ -163,30 +164,35 @@
         gap: 4px;
     }
     .btn-action-view {
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
     .btn-action-view:hover {
-        background: #eef2ff;
-        color: #091958;
+        background: rgba(11, 38, 110, 0.12);
+        color: var(--c-primary-hover);
     }
+    /* Padding dikurangi 1px untuk menampung border, supaya tingginya sama dengan tombol Detail */
     .btn-action-edit {
-        background: #FFFBEB;
-        color: #92400e;
+        background: #ffffff;
+        border: 1px solid var(--c-border);
+        padding: 5px 13px;
+        color: var(--c-fg-sec);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
     }
     .btn-action-edit:hover {
-        background: #fde68a;
-        color: #78350f;
+        background: var(--c-bg);
+        border-color: var(--c-border-strong);
+        color: var(--c-fg);
     }
 
     /* ── Empty State ── */
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: #666D80;
+        color: var(--c-fg-muted);
     }
     .empty-state h5 {
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 600;
         margin-bottom: 4px;
     }
@@ -201,25 +207,28 @@
     }
     .stat-note {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 500;
         margin: 10px 0 0 2px;
         display: flex;
         align-items: center;
         gap: 5px;
     }
+    /* Border, bayangan, dan efek hover sama dengan kartu statistik dashboard global */
     .stat-card {
         background: #ffffff;
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--c-border);
         border-radius: 12px;
         padding: 18px 20px;
         display: flex;
         align-items: center;
         gap: 14px;
+        box-shadow: var(--shadow-card);
         transition: all 0.2s;
     }
     .stat-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        border-color: var(--c-primary-border);
+        box-shadow: 0 4px 14px rgba(11, 38, 110, 0.07);
     }
     .stat-icon {
         width: 44px;
@@ -233,12 +242,12 @@
     .stat-value {
         font-size: 22px;
         font-weight: 800;
-        color: #0D0D12;
+        color: var(--c-fg);
         line-height: 1;
     }
     .stat-label {
         font-size: 12px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 500;
     }
 
@@ -247,8 +256,8 @@
         font-weight: 700;
         padding: 2px 6px;
         border-radius: 6px;
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
         letter-spacing: 0.05em;
     }
 
@@ -257,7 +266,7 @@
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -271,7 +280,7 @@
 @endphp
 @if($pesanGangguan)
     <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-2" role="alert"
-         style="border-radius: 10px; border: none; background: #fef2f2; color: #991b1b; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         <span>{{ $pesanGangguan }}</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -281,8 +290,8 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Direktori Mahasiswa</h3>
-        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Daftar seluruh mahasiswa yang terdaftar di program studi
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Direktori Mahasiswa</h3>
+        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar seluruh mahasiswa yang terdaftar di program studi
             <span class="sso-badge ms-1">SSO UNDIP</span>
         </p>
     </div>
@@ -292,8 +301,8 @@
 <div class="stat-grid">
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #eef2ff;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                     <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -308,8 +317,8 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #ECFDF5;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-success">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
@@ -322,8 +331,8 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #FFFBEB;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-sky">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -337,8 +346,8 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #fef2f2;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-error">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="15" y1="9" x2="9" y2="15"></line>
                     <line x1="9" y1="9" x2="15" y2="15"></line>
@@ -352,8 +361,8 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #f3f4f6;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#353849" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="16 16 12 20 8 16"></polyline>
                     <line x1="12" y1="12" x2="12" y2="20"></line>
                     <polyline points="8 8 12 4 16 8"></polyline>
@@ -368,8 +377,8 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #ede9fe;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-outline">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                     <line x1="17" y1="11" x2="23" y2="11"></line>
@@ -383,8 +392,8 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #fff7ed;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-warning">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -454,7 +463,7 @@
 
 <!-- Mahasiswa Table -->
 @if($mahasiswa->count() > 0)
-    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #f3f4f6;">
+    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid var(--c-border);">
         <table class="mhs-table">
             <thead>
                 <tr>
@@ -469,7 +478,7 @@
             <tbody>
                 @foreach($mahasiswa as $index => $mhs)
                     <tr>
-                        <td style="color: #666D80; font-weight: 500;">{{ $mahasiswa->firstItem() + $index }}</td>
+                        <td style="color: var(--c-fg-muted); font-weight: 500;">{{ $mahasiswa->firstItem() + $index }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 {{-- Titik indikator online dihapus: nilainya hanya berubah saat
@@ -484,14 +493,14 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <div style="font-weight: 600; color: #0D0D12;">{{ $mhs->nama }}</div>
+                                    <div style="font-weight: 600; color: var(--c-fg);">{{ $mhs->nama }}</div>
                                     @if($mhs->user && $mhs->user->email)
-                                        <div style="font-size: 12px; color: #666D80;">{{ $mhs->user->email }}</div>
+                                        <div style="font-size: 12px; color: var(--c-fg-muted);">{{ $mhs->user->email }}</div>
                                     @endif
                                 </div>
                             </div>
                         </td>
-                        <td style="font-weight: 600; font-family: monospace; color: #0B266E;">{{ $mhs->nim }}</td>
+                        <td style="font-weight: 600; font-family: monospace; color: var(--c-primary);">{{ $mhs->nim }}</td>
                         <td><span style="font-weight: 600;">{{ $mhs->angkatan }}</span></td>
                         <td>
                             <span class="status-badge {{ $mhs->status }}">
@@ -573,7 +582,7 @@
 
             </div>
             {{-- Info teks --}}
-            <div style="font-size: 12px; color: #666D80; font-weight: 500;">
+            <div style="font-size: 12px; color: var(--c-fg-muted); font-weight: 500;">
                 Menampilkan {{ $mahasiswa->firstItem() }}–{{ $mahasiswa->lastItem() }} dari {{ $mahasiswa->total() }} mahasiswa
             </div>
         </div>
@@ -589,26 +598,26 @@
                 border-radius: 8px;
                 font-size: 13px;
                 font-weight: 600;
-                color: #374151;
+                color: var(--c-fg-sec);
                 background: #ffffff;
-                border: 1px solid #DFE1E7;
+                border: 1px solid var(--c-border);
                 text-decoration: none !important;
                 transition: all 0.15s;
                 cursor: pointer;
             }
             .page-btn:hover:not(.disabled):not(.page-btn-active) {
-                background: #F6F8FA;
-                border-color: #0B266E;
-                color: #0B266E;
+                background: var(--c-bg);
+                border-color: var(--c-primary);
+                color: var(--c-primary);
             }
             .page-btn-active {
-                background: #0B266E;
-                border-color: #0B266E;
+                background: var(--c-primary);
+                border-color: var(--c-primary);
                 color: #ffffff !important;
                 cursor: default;
             }
             .page-btn-nav {
-                color: #666D80;
+                color: var(--c-fg-muted);
             }
             .page-btn-nav.disabled {
                 opacity: 0.35;
@@ -617,7 +626,7 @@
             .page-btn-dots {
                 border: none;
                 background: transparent;
-                color: #666D80;
+                color: var(--c-fg-muted);
                 cursor: default;
                 min-width: 24px;
                 padding: 0;
@@ -627,7 +636,7 @@
 @else
     <div class="empty-state">
         <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <line x1="17" y1="11" x2="23" y2="11"></line>
@@ -637,7 +646,7 @@
             {{-- Tabel kosong karena gangguan, BUKAN karena datanya tidak ada.
                  Keterangan lengkapnya sudah tampil sebagai peringatan merah di atas. --}}
             <h5>Data belum bisa ditampilkan</h5>
-            <p style="font-size: 14px; color: #666D80;">
+            <p style="font-size: 14px; color: var(--c-fg-muted);">
                 Silakan baca keterangan di bagian atas halaman. Data mahasiswa tidak terhapus.
             </p>
         @elseif($isFiltered ?? false)
@@ -654,7 +663,7 @@
                 }
             @endphp
             <h5>Tidak ada mahasiswa yang cocok</h5>
-            <p style="font-size: 14px; color: #666D80;">
+            <p style="font-size: 14px; color: var(--c-fg-muted);">
                 Tidak ditemukan hasil untuk {{ implode(' + ', $kriteria) }}.<br>
                 Coba kata kunci lain, atau kosongkan filternya.
             </p>
@@ -664,7 +673,7 @@
             </a>
         @else
             <h5>Belum ada data mahasiswa</h5>
-            <p style="font-size: 14px; color: #666D80;">Data mahasiswa yang terdaftar akan muncul di sini</p>
+            <p style="font-size: 14px; color: var(--c-fg-muted);">Data mahasiswa yang terdaftar akan muncul di sini</p>
         @endif
     </div>
 @endif

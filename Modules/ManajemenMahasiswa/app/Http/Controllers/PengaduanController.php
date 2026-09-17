@@ -5,9 +5,9 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
+use Modules\ManajemenMahasiswa\Http\Requests\PengaduanPayloadRequest;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
-use Modules\ManajemenMahasiswa\Models\PengaduanDelegasi;
+use Modules\ManajemenMahasiswa\Models\PengaduanLog;
 use Modules\ManajemenMahasiswa\Services\PengaduanService;
 
 class PengaduanController extends Controller
@@ -45,14 +45,17 @@ class PengaduanController extends Controller
         'ketua_departemen',
     ];
 
+    /**
+     * Penghapusan dibatasi ke admin & pengelola database saja.
+     *
+     * gpm/dpm/kaprodi/ketua_departemen sengaja DICABUT: mereka bisa menjadi
+     * pihak terlapor, dan tidak boleh mampu menghapus aduan tentang dirinya
+     * sendiri berikut seluruh jejak auditnya. GPM tetap penerima aduan PPKS,
+     * hanya tidak lagi memegang hak hapus.
+     */
     private const DELETE_ROLES = [
-        'gpm',
-        'kaprodi',
-        'dpm',
         'admin',
         'superadmin',
-        'admin_kemahasiswaan',
-        'ketua_departemen',
     ];
 
     public function __construct(private PengaduanService $pengaduanService)
@@ -227,10 +230,13 @@ class PengaduanController extends Controller
         $this->ensureMahasiswa($user);
 
         // Form ini khusus jalur Reguler. Jalur Konfidensial memakai alur
-        // magic link terpisah (anon.generate), jadi arahkan ke sana.
+        // magic link terpisah yang dimulai dari halaman pemilih jalur.
         $jalur = $request->query('jalur');
         if ($jalur === 'konfidensial') {
-            return redirect()->route('manajemenmahasiswa.pengaduan.anon.generate');
+            // anon.generate kini POST (karena menulis draft ke database), jadi
+            // tidak bisa dituju lewat redirect GET. Kembalikan ke pemilih jalur
+            // yang memuat tombol POST-nya.
+            return redirect()->route('manajemenmahasiswa.pengaduan.jalur');
         }
         if ($jalur !== 'reguler') {
             return redirect()->route('manajemenmahasiswa.pengaduan.jalur');
@@ -256,42 +262,32 @@ class PengaduanController extends Controller
     }
 
 
-    public function confirm(Request $request)
+    public function confirm(PengaduanPayloadRequest $request)
     {
-        $user = $request->user();
-
-        $this->ensureMahasiswa($user);
-
-        $validated = $this->validatePengaduanPayload($request);
+        $this->ensureMahasiswa($request->user());
 
         $request->flash();
 
-        $template = $this->normalizeTemplate($validated['template']);
-
         return view('manajemenmahasiswa::pengaduan.confirm', [
             'payload' => [
-                'is_anonim' => (bool)($validated['is_anonim'] ?? false),
-                'kategori' => $validated['kategori'],
-                'template' => $template,
+                'is_anonim' => $request->isAnonim(),
+                'kategori' => $request->validated('kategori'),
+                'template' => $request->normalizedTemplate(),
             ],
         ]);
     }
 
-    public function store(Request $request)
+    public function store(PengaduanPayloadRequest $request)
     {
         $user = $request->user();
 
         $this->ensureMahasiswa($user);
 
-        $validated = $this->validatePengaduanPayload($request);
-
-        $template = $this->normalizeTemplate($validated['template']);
-
         $pengaduan = $this->pengaduanService->create(
             userId: $user->id,
-            kategori: $validated['kategori'],
-            isAnonim: (bool)($validated['is_anonim'] ?? false),
-            template: $template,
+            kategori: $request->validated('kategori'),
+            isAnonim: $request->isAnonim(),
+            template: $request->normalizedTemplate(),
         );
 
         if ($pengaduan->is_anonim) {
@@ -347,6 +343,17 @@ class PengaduanController extends Controller
 
         if ($pengaduan->is_anonim) {
             $pengaduan->setRelation('pelapor', null);
+
+            // Lapis kedua, untuk tiket lama yang terlanjur menyimpan actor pelapor:
+            // panel "Riwayat Tiket" merender "Oleh: {actor->name}" pada SEMUA entri,
+            // sehingga identitas pelapor konfidensial bocor ke staf lewat pintu itu
+            // walaupun blok "Pelapor" sudah bertuliskan "Identitas dilindungi sistem".
+            $pengaduan->logs->each(function ($log) use ($pengaduan) {
+                if ($log->actor_user_id !== null && (int) $log->actor_user_id === (int) $pengaduan->user_id) {
+                    $log->setRelation('actor', null);
+                }
+            });
+
             $template = $pengaduan->data_template;
             if (is_array($template)) {
                 unset($template['angkatan']);
@@ -377,6 +384,15 @@ class PengaduanController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk menghapus pengaduan.');
         }
 
+        // Dicatat SEBELUM dihapus. Log adalah satu-satunya jejak siapa yang
+        // menghapus; dengan SoftDeletes baris log tidak ikut ter-cascade.
+        $this->pengaduanService->logAction(
+            $pengaduan,
+            $user->id,
+            PengaduanLog::ACTION_DIHAPUS,
+            'Dihapus oleh ' . ($user->name ?? ('pengguna #' . $user->id))
+        );
+
         $pengaduan->delete();
 
         return redirect()
@@ -399,6 +415,31 @@ class PengaduanController extends Controller
             'delegated_to' => ['required', 'integer', 'exists:users,id'],
             'notes_admin'  => ['required', 'string', 'min:5', 'max:2000'],
         ]);
+
+        // Dropdown memang hanya berisi dosen, tapi itu validasi sisi klien belaka.
+        // Tanpa cek ini, delegasi ke non-dosen membuat tiket macet permanen:
+        // targetnya tidak akan pernah lolos route respond/reject (role:dosen).
+        $dosen = User::query()
+            ->whereKey($validated['delegated_to'])
+            ->whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
+            ->first();
+
+        if (!$dosen) {
+            return back()
+                ->withErrors(['delegated_to' => 'Tujuan delegasi harus dosen atau dosen koordinator.'])
+                ->withInput();
+        }
+
+        // Rambu konflik kepentingan: jangan pernah mendelegasikan aduan kepada
+        // pihak yang justru disebut sebagai terlapor pada field "Dosen Terkait".
+        $terlapor = (string) data_get($pengaduan->data_template, 'nama_dosen', '');
+        if ($this->namaCocok($terlapor, (string) $dosen->name)) {
+            return back()
+                ->withErrors([
+                    'delegated_to' => 'Dosen ini disebut sebagai pihak terkait di dalam aduan. Pilih dosen lain untuk menghindari konflik kepentingan.',
+                ])
+                ->withInput();
+        }
 
         $this->pengaduanService->delegate(
             $pengaduan,
@@ -528,49 +569,47 @@ class PengaduanController extends Controller
 
     // kategoriMetaAll dihapus: hanya 8 kategori utama yang ditampilkan pada UI.
 
-    private function validatePengaduanPayload(Request $request): array
-    {
-        return $request->validate([
-            'is_anonim' => ['nullable', 'boolean'],
-            'kategori' => ['required', 'string', 'in:' . implode(',', Pengaduan::KATEGORI_LIST)],
-            'template' => ['required', 'array'],
-            'template.judul' => ['required', 'string', 'max:255'],
-            'template.hal_aduan' => ['required', 'string', 'max:1000'],
-            'template.kronologi' => ['required', 'string', 'min:20', 'max:5000'],
-            'template.angkatan' => ['nullable', 'string', 'max:20'],
-            'template.lokasi' => ['nullable', 'string', 'max:255'],
-            'template.waktu_kejadian' => ['nullable', 'date'],
-            // Backward compatibility: older form/key
-            'template.tanggal_kejadian' => ['nullable', 'date'],
-            'template.mata_kuliah' => ['nullable', 'string', 'max:255'],
-            'template.nama_dosen' => ['nullable', 'string', 'max:255'],
-            'template.nama_tendik' => ['nullable', 'string', 'max:255'],
-            'template.frekuensi' => ['nullable', 'string', 'max:100'],
-            'template.link_bukti' => ['nullable', 'url', 'max:2048'],
-        ]);
-    }
+    // Validasi & normalisasi payload pindah ke PengaduanPayloadRequest agar
+    // jalur Reguler dan Konfidensial memakai aturan yang sama persis.
 
-    private function normalizeTemplate(array $template): array
+    /**
+     * Pembandingan nama yang toleran terhadap gelar dan tanda baca, dipakai
+     * untuk mendeteksi konflik kepentingan saat delegasi. "Dr. Budi Santoso,
+     * S.T., M.T." dianggap cocok dengan "Budi Santoso".
+     *
+     * Sengaja butuh minimal dua kata yang sama (atau nama yang identik penuh)
+     * supaya nama depan yang umum tidak memblokir delegasi yang sah.
+     */
+    private function namaCocok(string $a, string $b): bool
     {
-        $normalized = Arr::only($template, [
-            'judul',
-            'hal_aduan',
-            'kronologi',
-            'angkatan',
-            'lokasi',
-            'waktu_kejadian',
-            'tanggal_kejadian',
-            'mata_kuliah',
-            'nama_dosen',
-            'nama_tendik',
-            'frekuensi',
-            'link_bukti',
-        ]);
+        $gelar = [
+            'dr', 'ir', 'drs', 'dra', 'prof', 'phd', 'st', 'mt', 'mkom', 'skom',
+            'spd', 'mpd', 'msi', 'ssi', 'se', 'mm', 'sh', 'mh', 'kom', 'mem',
+        ];
 
-        if (!isset($normalized['waktu_kejadian']) && isset($normalized['tanggal_kejadian'])) {
-            $normalized['waktu_kejadian'] = $normalized['tanggal_kejadian'];
+        $pecah = static function (string $nama) use ($gelar): array {
+            $nama = mb_strtolower($nama);
+            $nama = preg_replace('/[^a-z\s]/', ' ', $nama) ?? '';
+            $kata = preg_split('/\s+/', trim($nama), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+            return array_values(array_diff(
+                array_filter($kata, static fn($k) => mb_strlen($k) >= 3),
+                $gelar
+            ));
+        };
+
+        $kataA = $pecah($a);
+        $kataB = $pecah($b);
+
+        if (empty($kataA) || empty($kataB)) {
+            return false;
         }
 
-        return $normalized;
+        $pendek = count($kataA) <= count($kataB) ? $kataA : $kataB;
+        $panjang = count($kataA) <= count($kataB) ? $kataB : $kataA;
+
+        $semuaCocok = count(array_intersect($pendek, $panjang)) === count($pendek);
+
+        return $semuaCocok && (count($pendek) >= 2 || $kataA === $kataB);
     }
 }

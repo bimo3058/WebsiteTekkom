@@ -12,7 +12,7 @@
 
             .page-title .back-btn {
                 background: #fff;
-                border: 1px solid #e5e7eb;
+                border: 1px solid #DFE1E7;
                 border-radius: 50%;
                 width: 40px;
                 height: 40px;
@@ -25,28 +25,30 @@
             }
 
             .page-title .back-btn:hover {
-                background: #f3f4f6;
+                background: rgba(11,38,110,0.04);
+                color: #0B266E;
             }
 
             .page-title h1 {
-                font-size: 26px;
-                font-weight: 700;
-                color: #111827;
+                font-size: 18px;
+                font-weight: 800;
+                color: #0D0D12;
                 margin: 0 0 2px;
                 letter-spacing: -0.02em;
             }
 
             .page-title p {
-                font-size: 14px;
-                color: #6b7280;
+                font-size: 12px;
+                color: #666D80;
                 margin: 0;
             }
 
             .forum-card {
-                background: transparent;
+                background: #fff;
                 border-radius: 12px;
-                padding: 24px 0;
-                border: none;
+                border: 1px solid #DFE1E7;
+                padding: 20px 24px;
+                box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5);
                 margin-bottom: 20px;
             }
 
@@ -54,8 +56,8 @@
                 width: 48px;
                 height: 48px;
                 border-radius: 50%;
-                background-color: #e0e7ff;
-                color: #293C79;
+                background-color: rgba(11,38,110,0.08);
+                color: #0B266E;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -70,7 +72,7 @@
             }
 
             .btn-join {
-                background-color: #293C79;
+                background-color: #0B266E;
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -81,7 +83,7 @@
             }
 
             .btn-join:hover {
-                background-color: #415086;
+                background-color: #091958;
             }
 
             .post-actions .vote-pill {
@@ -129,7 +131,7 @@
 
             .post-actions .vote-pill span {
                 font-weight: 700;
-                font-size: 14px;
+                font-size: 13px;
                 padding: 0 4px;
                 text-align: center;
                 color: #1e293b;
@@ -148,7 +150,7 @@
                 padding: 6px 14px;
                 border-radius: 20px;
                 color: #4b5563;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 600;
                 display: inline-flex;
                 align-items: center;
@@ -163,41 +165,35 @@
 
             .tag-label {
                 font-size: 11px;
+                font-weight: 700;
+                padding: 4px 9px;
+                border-radius: 8px;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                letter-spacing: 0.02em;
+            }
+
+            .tag-green  { background: #DDF2EE; color: #287F6E; }
+            .tag-red    { background: #FADAE1; color: #DF1C41; }
+            .tag-gray   { background: #F6F8FA; color: #666D80; }
+
+            .thread-content a {
+                font-size: 13px;
                 font-weight: 600;
-                padding: 4px 12px;
-                border-radius: 20px;
-                display: inline-block;
+                color: #0B266E;
+                word-break: break-all;
+                text-decoration: underline;
             }
+            .thread-content a:hover { color: #091958; }
+            .tag-blue   { background: #D1F0F9; color: #0C4D6E; }
 
-            .tag-green {
-                background: #dcfce7;
-                color: #16a34a;
-            }
-
-            .tag-red {
-                background: #fee2e2;
-                color: #dc2626;
-            }
-
-            .tag-gray {
-                background: #f3f4f6;
-                color: #6b7280;
-            }
-
-            .tag-blue {
-                background: #dbeafe;
-                color: #2563eb;
-            }
-
-            .tag-purple {
-                background: #f3e8ff;
-                color: #7c3aed;
-            }
+            .tag-purple { background: rgba(11,38,110,0.08); color: #0B266E; }
 
             .comment-list {
                 margin-top: 24px;
                 padding-top: 24px;
-                border-top: 1px solid #e5e7eb;
+                border-top: 1px solid #DFE1E7;
             }
 
             .comment-item {
@@ -220,25 +216,26 @@
 
             .reply-form textarea:focus {
                 background-color: #ffffff;
-                box-shadow: 0 0 0 2px #e0e7ff;
-                border-color: #293C79;
+                box-shadow: 0 0 0 2px rgba(11,38,110,0.1);
+                border-color: #0B266E;
             }
 
             .btn-post {
-                background-color: #293C79;
+                background-color: #0B266E;
                 color: white;
                 border: none;
                 border-radius: 8px;
-                padding: 8px 24px;
+                padding: 7px 18px;
+                font-size: 13px;
                 font-weight: 600;
                 display: inline-flex;
                 align-items: center;
-                gap: 8px;
+                gap: 6px;
                 transition: background 0.2s, opacity 0.2s;
             }
 
             .btn-post:hover {
-                background-color: #415086;
+                background-color: #091958;
                 color: white;
             }
 
@@ -263,8 +260,8 @@
             }
 
             .best-answer-badge {
-                background: #dcfce7;
-                color: #16a34a;
+                background: #DDF2EE;
+                color: #287F6E;
                 font-size: 11px;
                 font-weight: 700;
                 padding: 2px 8px;
@@ -383,8 +380,8 @@
 
             .inline-reply-form textarea:focus {
                 outline: none;
-                border-color: #6F7DA4;
-                box-shadow: 0 0 0 2px #e0e7ff;
+                border-color: #0B266E;
+                box-shadow: 0 0 0 2px rgba(11,38,110,0.1);
             }
 
             .inline-reply-form .reply-actions {
@@ -410,7 +407,7 @@
             }
 
             .inline-reply-form .btn-reply-submit {
-                background: #6F7DA4;
+                background: #0B266E;
                 border: none;
                 padding: 4px 16px;
                 border-radius: 20px;
@@ -422,7 +419,7 @@
             }
 
             .inline-reply-form .btn-reply-submit:hover {
-                background: #293C79;
+                background: #091958;
             }
 
             .inline-reply-form .btn-reply-submit:disabled {
@@ -439,19 +436,19 @@
 
 
             .personal-pin-badge-show {
-                background: #dbeafe;
-                color: #2563eb;
+                background: rgba(11,38,110,0.08);
+                color: #0B266E;
                 font-size: 11px;
                 font-weight: 700;
                 padding: 2px 8px;
-                border-radius: 4px;
+                border-radius: 8px;
             }
 
             /* YouTube style replies */
             .toggle-replies-btn {
                 background: transparent;
                 border: none;
-                color: #3b82f6;
+                color: #0B266E;
                 font-weight: 600;
                 font-size: 13px;
                 padding: 6px 12px;
@@ -465,7 +462,7 @@
             }
 
             .toggle-replies-btn:hover {
-                background: #eff6ff;
+                background: rgba(11,38,110,0.04);
             }
 
             .toggle-replies-btn svg,
@@ -488,13 +485,48 @@
             }
 
             .reply-mention {
-                color: #3b82f6;
+                color: #0B266E;
                 font-weight: 600;
                 margin-right: 4px;
+            }
+
+            .main-wrapper {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+
+            .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+            .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box-header { background: #fff; border-bottom: 1px solid #DFE1E7; flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
+            .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+            .dash-box-body::-webkit-scrollbar { width: 6px; }
+            .dash-box-body::-webkit-scrollbar-thumb { background: #C1C7CF; border-radius: 10px; }
+            @media (max-width: 767px) {
+                .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
+                .dash-wrap { height: auto !important; padding: 0; }
+                .dash-box { flex: none !important; overflow: visible !important; border-radius: 10px; }
+                .dash-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+                .dash-box-body { overflow-y: visible !important; flex: none !important; padding: 14px; }
             }
         </style>
     @endpush
 
+    <div class="dash-wrap">
+    <div class="dash-box">
+    <div class="dash-box-header">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn" style="flex-shrink:0;">
+                <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
+            </a>
+            <div>
+                <h1 style="font-size:18px; font-weight:800; color:#0D0D12; margin:0 0 2px; letter-spacing:-0.02em;">Detail Forum</h1>
+                <p style="font-size:12px; color:#666D80; font-weight:500; margin:0;">Baca postingan dan ikuti diskusinya</p>
+            </div>
+        </div>
+    </div>
+    <div class="dash-box-body">
     {{-- Flash Message --}}
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -504,16 +536,6 @@
         </div>
     @endif
 
-    <div class="page-title">
-        <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn">
-            <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
-        </a>
-        <div>
-            <h1>Detail Diskusi</h1>
-            <p>Baca postingan dan ikuti diskusinya</p>
-        </div>
-    </div>
-
     <div class="forum-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center gap-3">
@@ -522,23 +544,22 @@
                 </div>
                 <div>
                     <div class="d-flex align-items-center gap-2 flex-wrap">
-                        <h5 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h5>
+                        <span style="font-size:16px; font-weight:700; color:#0D0D12;">{{ $thread->author->name ?? 'Unknown' }}</span>
                         @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $thread->author, 'badgeSize' => '11px'])
                         @if(isset($authorTiers[$thread->user_id]))
-                            <span class="badge rounded-pill"
-                                style="background: linear-gradient(135deg, #293C79 0%, #6F7DA4 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;"
+                            <span style="background:rgba(11,38,110,0.08); color:#0B266E; font-size:10px; font-weight:700; padding:3px 8px; border-radius:8px; letter-spacing:0.02em;"
                                 title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
                                 {!! $authorTiers[$thread->user_id]['tier_icon'] !!}
-                                Lv.{{ $authorTiers[$thread->user_id]['level'] }} —
-                                {{ $authorTiers[$thread->user_id]['tier_name'] }}
+                                Lv.{{ $authorTiers[$thread->user_id]['level'] }}
                             </span>
                         @endif
                     </div>
-                    <span class="text-primary fw-medium" style="font-size: 13px;">•
-                        {{ $thread->created_at->diffForHumans() }}</span>
-                    @if($thread->isEdited())
-                        <span class="edited-badge">(diedit {{ $thread->updated_at->diffForHumans() }})</span>
-                    @endif
+                    <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+                        <span style="font-size:11px; color:#666D80; font-weight:500;">{{ $thread->created_at->diffForHumans() }}</span>
+                        @if($thread->isEdited())
+                            <span style="font-size:11px; color:#808897; font-style:italic;">(diedit {{ $thread->updated_at->diffForHumans() }})</span>
+                        @endif
+                    </div>
                 </div>
             </div>
             <div class="d-flex align-items-center gap-3">
@@ -638,10 +659,9 @@
             </div>
         </div>
 
-        <h4 class="fw-bold text-dark mb-3">{{ $thread->judul }}</h4>
+        <h4 style="font-size: 16px; font-weight: 700; color: #0D0D12; margin-bottom: 10px; letter-spacing: -0.01em; line-height: 1.3;">{{ $thread->judul }}</h4>
 
-        <div class="text-dark"
-            style="font-size: 15px; margin-bottom: 24px; line-height: 1.6; overflow-wrap: break-word;">
+        <div class="thread-content" style="font-size: 14px; color: #374151; margin-bottom: 20px; line-height: 1.7; overflow-wrap: break-word;">
             {!! nl2br(strip_tags($thread->konten, '<a><br>')) !!}
         </div>
 
@@ -657,22 +677,22 @@
             @if(count($mediaUrls) == 1)
                 {{-- Single media: show full width --}}
                 <div class="mt-3 mb-4"
-                    style="width: 100%; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+                    style="width: 100%; border-radius: 10px; border: 1px solid #DFE1E7; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center;">
                     @if($mediaUrls[0]['type'] === 'image')
                         <img src="{{ $mediaUrls[0]['url'] }}" alt="Media"
-                            style="width: 100%; max-height: 600px; object-fit: contain;">
+                            style="width: 100%; max-height: 360px; object-fit: contain;">
                     @else
                         <video src="{{ $mediaUrls[0]['url'] }}" controls
-                            style="width: 100%; max-height: 600px; object-fit: contain;"></video>
+                            style="width: 100%; max-height: 360px; object-fit: contain;"></video>
                     @endif
                 </div>
             @else
                 {{-- Multiple media: carousel --}}
                 <div id="threadMediaCarousel" class="carousel slide mt-3 mb-4" data-bs-ride="carousel"
-                    style="border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; background: #f8fafc;">
+                    style="border-radius: 10px; border: 1px solid #DFE1E7; overflow: hidden; background: #f8fafc;">
                     <div class="carousel-inner">
                         @foreach($mediaUrls as $idx => $media)
-                            <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}" style="height: 500px;">
+                            <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}" style="height: 360px;">
                                 @if($media['type'] === 'image')
                                     <img src="{{ $media['url'] }}" class="d-block w-100 h-100" style="object-fit: contain;"
                                         alt="Media {{ $idx + 1 }}">
@@ -715,7 +735,7 @@
             @endforeach
             @if($thread->is_pinned)
                 <span class="tag-label"
-                    style="background: #fef3c7; color: #d97706; display:inline-flex; align-items:center; gap:4px;">
+                    style="background:#F9ECCB; color:#956321; display:inline-flex; align-items:center; gap:4px;">
                     <x-manajemenmahasiswa::ui.icon name="bookmark" size="12" /> Pinned
                 </span>
             @endif

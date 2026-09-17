@@ -6,12 +6,14 @@ use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use App\Models\Student;
 use App\Models\Lecturer;
 use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
+use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 
 class ProkerController extends Controller
 {
@@ -29,7 +31,8 @@ class ProkerController extends Controller
     ];
 
     public function __construct(
-        private SupabaseStorage $supabase
+        private SupabaseStorage $supabase,
+        private PengelolaKegiatanService $pengelolaService
     ) {}
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -138,6 +141,18 @@ class ProkerController extends Controller
             'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
+        // Lapis kedua di belakang role: proker hanya boleh diubah pemiliknya,
+        // pengelola yang ia tunjuk, atau override (KegiatanPolicy). Tanpa ini ketua
+        // bidang mana pun melihat tombol Edit/Hapus/Ajukan di proker bidang lain.
+        $bolehUbah = Gate::allows('update', $proker);
+        $pesanBukanPengelola = $canEdit && !$bolehUbah
+            ? $this->pengelolaService->pesanTolak($proker)
+            : null;
+        $canEdit      = $canEdit && $bolehUbah;
+        $canAjukan    = $canAjukan && $bolehUbah;
+        $canSeeAjukan = $canSeeAjukan && $bolehUbah;
+        $canDelete    = $canDelete && Gate::allows('delete', $proker);
+
         // Anggaran disembunyikan dari mahasiswa & alumni — konsisten dengan Pelaksanaan & Arsip.
         $canViewRestricted = $roles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
         $isCreator = $proker->user_id === Auth::id();
@@ -148,7 +163,7 @@ class ProkerController extends Controller
 
         return view('manajemenmahasiswa::proker.show', compact(
             'proker', 'isAdmin', 'isPengurus', 'isCreator', 'canAjukan', 'canEdit', 'canDelete',
-            'canSeeAjukan', 'canViewRestricted', 'kelengkapan'
+            'canSeeAjukan', 'canViewRestricted', 'kelengkapan', 'pesanBukanPengelola'
         ));
     }
 
@@ -178,7 +193,7 @@ class ProkerController extends Controller
             'mahasiswaList', 'dosenList',
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
             'selectedKategoriIds', 'selectedBidangIds'
-        ));
+        ) + $this->pengelolaService->dataForm($proker));
     }
 
     public function store(Request $request)
@@ -202,6 +217,7 @@ class ProkerController extends Controller
         ]);
 
         $this->syncRelasiKegiatan($proker, $validated, $request);
+        $this->pengelolaService->sync($proker, $request);
 
         return redirect()
             ->route('manajemenmahasiswa.proker.show', $proker->id)
@@ -221,6 +237,9 @@ class ProkerController extends Controller
         ])->findOrFail($id);
 
         if ($tolak = $this->tolakBilaBukanDraft($proker)) {
+            return $tolak;
+        }
+        if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
             return $tolak;
         }
 
@@ -243,7 +262,7 @@ class ProkerController extends Controller
             'mahasiswaList', 'dosenList',
             'existingPanitia', 'existingPanitiaIds', 'existingDosen',
             'selectedKategoriIds', 'selectedBidangIds'
-        ));
+        ) + $this->pengelolaService->dataForm($proker));
     }
 
     public function update(Request $request, $id)
@@ -251,6 +270,9 @@ class ProkerController extends Controller
         $proker = Kegiatan::findOrFail($id);
 
         if ($tolak = $this->tolakBilaBukanDraft($proker)) {
+            return $tolak;
+        }
+        if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
             return $tolak;
         }
 
@@ -270,6 +292,7 @@ class ProkerController extends Controller
         }
 
         $this->syncRelasiKegiatan($proker, $validated, $request);
+        $this->pengelolaService->sync($proker, $request);
 
         return redirect()
             ->route('manajemenmahasiswa.proker.show', $proker->id)
@@ -297,6 +320,11 @@ class ProkerController extends Controller
         }
 
         $proker = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
+
+        // Mengajukan = mengubah status proker, jadi butuh hak ubah atas proker ini.
+        if ($tolak = $this->tolakBilaBukanPengelola($proker)) {
+            return $tolak;
+        }
 
         // Rencana wajib lengkap sebelum boleh naik ke tahap Pelaksanaan (Subbab 2).
         $kurang = collect($this->cekKelengkapan($proker))
@@ -335,6 +363,10 @@ class ProkerController extends Controller
             return redirect()
                 ->route('manajemenmahasiswa.proker.index')
                 ->with('error', 'Hanya rencana proker berstatus draft yang dapat dihapus.');
+        }
+
+        if ($tolak = $this->tolakBilaBukanPengelola($proker, 'delete')) {
+            return $tolak;
         }
 
         if ($proker->banner) {
@@ -380,6 +412,25 @@ class ProkerController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.proker.show', $proker->id)
             ->with('error', 'Rencana proker ini sudah diajukan, jadi tidak bisa lagi diubah dari halaman Rencana Proker. Perubahan datanya sekarang dilakukan di subbab ' . $lanjutanNya . '.');
+    }
+
+    /**
+     * Role saja tidak cukup: proker hanya boleh diubah/dihapus pemiliknya,
+     * pengelola yang ia tunjuk, atau override (lihat KegiatanPolicy). Tanpa cek
+     * ini ketua bidang mana pun bisa mengubah proker bidang lain lewat URL langsung.
+     *
+     * @param string $aksi 'update' atau 'delete'
+     * @return RedirectResponse|null null bila boleh
+     */
+    private function tolakBilaBukanPengelola(Kegiatan $proker, string $aksi = 'update'): ?RedirectResponse
+    {
+        if (Gate::allows($aksi, $proker)) {
+            return null;
+        }
+
+        return redirect()
+            ->route('manajemenmahasiswa.proker.show', $proker->id)
+            ->with('error', $this->pengelolaService->pesanTolak($proker));
     }
 
     private function validateProker(Request $request): array

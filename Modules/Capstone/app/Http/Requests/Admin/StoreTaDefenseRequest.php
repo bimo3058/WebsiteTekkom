@@ -25,7 +25,7 @@ class StoreTaDefenseRequest extends FormRequest
         return [
             'group_id' => ['required', 'exists:capstone_groups,id'],
             'student_ids' => ['required', 'array', 'min:1'],
-            'student_ids.*' => ['exists:students,id'],
+            'student_ids.*' => ['integer', 'distinct', 'exists:students,id'],
             'period_id' => $this->hasPeriodColumn() ? ['required', 'exists:capstone_periods,id'] : ['nullable'],
             'examiner_1_id' => ['required', 'exists:lecturers,id'],
             'examiner_2_id' => ['required', 'exists:lecturers,id', 'different:examiner_1_id'],

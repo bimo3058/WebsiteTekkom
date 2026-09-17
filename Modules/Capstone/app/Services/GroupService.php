@@ -380,7 +380,7 @@ class GroupService
         $group->refresh();
 
         // Guard: Skip if already finalized, dissolved, or has approved title (solo seeker waiting for leader to finalize)
-        if ($this->stateMachine->isAtLeast($group, self::STATUS_KELOMPOK_FINAL) || $group->status === 'TITLE_APPROVED' || $group->status === self::STATUS_DISSOLVED) {
+        if ($this->stateMachine->isAtLeast($group, 'READY_FOR_FINALIZATION') || $group->status === 'TITLE_APPROVED' || $group->status === self::STATUS_DISSOLVED) {
             return;
         }
 
@@ -454,7 +454,9 @@ class GroupService
 
         if ($preApprovedTitle) {
             $preApprovedTitle->update(['supervisor_approval_status' => 'APPROVED']);
-            $group->update(['title_id' => $preApprovedTitle->id]);
+            // Assignment remains an admin finalization operation.
+            $this->stateMachine->transition($group, 'TITLE_APPROVED');
+            return;
         }
 
         $this->stateMachine->transition($group, self::STATUS_READY_FOR_TITLE_BIDDING);
@@ -600,8 +602,8 @@ class GroupService
         $memberCount = $group->members()->count();
         $minSize = $period?->min_group_size ?? 3;
         $maxSize = $period?->max_group_size ?? 4;
-        $isLocked = $this->stateMachine->isAtLeast($group, 'READY_FOR_FINALIZATION');
-        $isLeader = GroupMember::where('student_id', $user->id)
+        $isLocked = !$period || !$period->is_active || $period->is_finalized || !in_array($group->status, ['FORMING','FORMING_SOLO','WAITING_SUPERVISOR_APPROVAL','READY_FOR_BIDDING','TITLE_APPROVED'], true);
+        $isLeader = GroupMember::where('student_id', \Modules\Capstone\Support\CapstoneActor::student($user)->id)
             ->where('group_id', $group->id)
             ->where('is_leader', true)
             ->exists();
@@ -617,7 +619,7 @@ class GroupService
 
         $canMarkReady = $isLeader
             && in_array($group->status, ['FORMING_SOLO', 'READY_FOR_BIDDING', 'TITLE_APPROVED'])
-            && $period?->is_active
+            && $period?->is_active && !$period->is_finalized
             && $memberCount >= $minSize
             && $memberCount <= $maxSize
             && ($hasAcceptedBid || $hasApprovedProposal);
@@ -626,13 +628,13 @@ class GroupService
             'can_add_member' => $isLeader && ! $isLocked && $memberCount < $maxSize,
             'can_remove_member' => $isLeader && ! $isLocked && $memberCount > 1,
             'can_leave_group' => ! $isLeader && ! $isLocked,
-            'can_delete_group' => $isLeader
+            'can_delete_group' => $isLeader && !$isLocked
                 && in_array($group->status, ['FORMING', 'FORMING_SOLO', 'READY_FOR_BIDDING', 'TITLE_APPROVED'])
                 && $memberCount <= 1,
             'can_mark_ready_for_finalization' => $canMarkReady,
             'can_cancel_ready_for_finalization' => $isLeader
                 && $group->status === 'READY_FOR_FINALIZATION'
-                && (bool) ($period?->is_active),
+                && (bool) ($period?->is_active) && !$period->is_finalized,
         ];
     }
 

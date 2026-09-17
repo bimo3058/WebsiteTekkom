@@ -8,6 +8,7 @@ use App\Models\CvProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Collection;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
@@ -484,11 +485,14 @@ class DirektoriMahasiswaController extends Controller
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
         // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
         $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
-        // Role yang boleh mengunduh CV mahasiswa (sinkron dengan middleware route .cv)
-        $canDownloadCv = $this->hasRole(
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen',
-            'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit'
-        );
+        // Role yang boleh mengunduh CV mahasiswa. Daftarnya diambil dari
+        // CvProfilePolicy, bukan disalin ulang di sini — salinan manual itulah yang
+        // dulu membuat tombol di UI dan gerbang route bisa berbeda isinya.
+        $canDownloadCv = $this->hasRole(...\App\Policies\CvProfilePolicy::PENGELOLA_CV);
+        // Pemilik baris ini sedang melihat dirinya sendiri. Halaman detail merangkap
+        // "Profil Saya" sejak halaman terpisah itu dihapus: yang membedakannya hanya
+        // tombol Download CV + Edit di header.
+        $isSelf = (int) $mhs->user_id === (int) Auth::id();
 
         return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
             'mhs',
@@ -499,18 +503,28 @@ class DirektoriMahasiswaController extends Controller
             'isMahasiswa',
             'isCanSeeIpk',
             'canDownloadCv',
+            'isSelf',
         ))->with('layout', $this->resolveLayout());
     }
 
     // -------------------------------------------------------------------------
-    // Edit — Form edit biodata (Admin only)
+    // Edit — Form edit biodata (Admin: semua mahasiswa; mahasiswa: dirinya sendiri)
     // -------------------------------------------------------------------------
 
     public function edit(int $id)
     {
         $mhs = Kemahasiswaan::with(['user', 'user.student'])->findOrFail($id);
 
-        return view('manajemenmahasiswa::direktori.mahasiswa-edit', compact('mhs'))
+        // Gerbang role di route hanya menyaring "role apa"; ini yang menyaring
+        // "baris siapa". Mahasiswa yang mengetik id orang lain berhenti di sini (403).
+        $this->authorize('update', $mhs);
+
+        // Status adalah keputusan akademik (aktif/cuti/DO/alumni), bukan data yang
+        // boleh ditetapkan sendiri oleh mahasiswa — satu-satunya field yang hilang
+        // dari form versi pemilik.
+        $isAdmin = $this->hasRole(...\Modules\ManajemenMahasiswa\Policies\KemahasiswaanPolicy::PENGELOLA);
+
+        return view('manajemenmahasiswa::direktori.mahasiswa-edit', compact('mhs', 'isAdmin'))
             ->with('layout', $this->resolveLayout());
     }
 
@@ -520,31 +534,47 @@ class DirektoriMahasiswaController extends Controller
 
     public function update(Request $request, int $id)
     {
+        $mhs = Kemahasiswaan::findOrFail($id);
+
+        // Sama seperti edit(): route menyaring role, baris ini menyaring pemilik.
+        $this->authorize('update', $mhs);
+
+        $isAdmin = $this->hasRole(...\Modules\ManajemenMahasiswa\Policies\KemahasiswaanPolicy::PENGELOLA);
+
         // Nama, NIM, dan Angkatan sengaja TIDAK divalidasi maupun disimpan di sini.
         // Ketiganya milik SSO UNDIP dan hanya ditampilkan sebagai teks terkunci di form.
         // Tanpa aturan ini, nilai kiriman apa pun (mis. hasil utak-atik inspect element)
         // akan tetap tertulis ke database dan membuat data direktori beda dengan SSO.
-        $request->validate([
-            'status'      => 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST),
-            'ipk'         => 'nullable|numeric|min:0|max:4',
-            'tahun_lulus' => 'nullable|integer|min:2000|max:2099',
-            'profesi'     => 'nullable|string|max:255',
-            'kontak'      => 'nullable|string|max:15',
+        //
+        // Status, tahun_lulus, dan profesi mengikuti pola yang sama untuk pemilik yang
+        // bukan pengelola: aturannya tidak dipasang DAN kolomnya tidak pernah ikut
+        // ditulis, sehingga kiriman `status=alumni` dari form yang diutak-atik tidak
+        // berefek apa pun — bukan sekadar disembunyikan di tampilan.
+        $rules = [
+            'ipk'           => 'nullable|numeric|min:0|max:4',
+            'kontak'        => 'nullable|string|max:15',
             'email_pribadi' => 'nullable|email|max:100',
-        ], [], [
+        ];
+
+        // Kolom mk_kemahasiswaan yang boleh ditulis request ini.
+        $kolomBolehDitulis = ['ipk'];
+
+        if ($isAdmin) {
+            $rules['status']      = 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST);
+            $rules['tahun_lulus'] = 'nullable|integer|min:2000|max:2099';
+            $rules['profesi']     = 'nullable|string|max:255';
+
+            $kolomBolehDitulis = ['status', 'ipk', 'tahun_lulus', 'profesi'];
+        }
+
+        $request->validate($rules, [], [
             'ipk'           => 'IPK',
             'email_pribadi' => 'email pribadi',
         ]);
 
-        $mhs = Kemahasiswaan::findOrFail($id);
         $oldStatus = $mhs->status;
 
-        $mhs->update($request->only([
-            'status',
-            'ipk',
-            'tahun_lulus',
-            'profesi',
-        ]));
+        $mhs->update($request->only($kolomBolehDitulis));
 
         // ─── Sinkronisasi kontak & email_pribadi ke users + cv_profiles ───────
         // Load user model sekali agar tidak query dua kali
@@ -642,11 +672,19 @@ class DirektoriMahasiswaController extends Controller
 
         return redirect()
             ->route('manajemenmahasiswa.direktori.mahasiswa.show', $id)
-            ->with('success', 'Biodata mahasiswa berhasil diperbarui.');
+            ->with('success', (int) $mhs->user_id === (int) Auth::id()
+                ? 'Data Anda berhasil diperbarui.'
+                : 'Biodata mahasiswa berhasil diperbarui.');
     }
 
     // -------------------------------------------------------------------------
-    // Profil — Halaman profil untuk mahasiswa sendiri
+    // Profil — Jalan pintas ke halaman detail milik sendiri
+    //
+    // Dulu halaman tersendiri ("Profil Saya") dengan isi yang sama persis dengan
+    // halaman detail; yang membedakannya cuma tombol di header. Halaman itu dihapus
+    // dan tombolnya dipindah ke detail, tapi route ini dipertahankan sebagai redirect
+    // supaya bookmark lama tidak berujung 404 — sekaligus tetap menjadi jaring
+    // pengaman bagi mahasiswa yang barisnya belum ada di direktori.
     // -------------------------------------------------------------------------
 
     public function profil()
@@ -702,12 +740,7 @@ class DirektoriMahasiswaController extends Controller
                 ->with('error', 'Data kemahasiswaan Anda belum terdaftar dalam sistem. Silakan hubungi Admin Kemahasiswaan untuk didaftarkan.');
         }
 
-        $riwayatKegiatan = $this->withRetry(fn() => $this->buildMergedRiwayat($user->id));
-
-        return view('manajemenmahasiswa::direktori.mahasiswa-profil', compact(
-            'mhs',
-            'riwayatKegiatan',
-        ))->with('layout', $this->resolveLayout());
+        return redirect()->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id);
     }
 
     // -------------------------------------------------------------------------
@@ -745,6 +778,22 @@ class DirektoriMahasiswaController extends Controller
             'sertifikasi' => [],
             'template' => 'modern'
         ]);
+
+        // Lapis kedua di belakang middleware role: route menentukan role apa yang
+        // boleh memakai aksi ini, Policy menentukan CV milik siapa. Tanpa ini,
+        // siapa pun yang lolos gerbang role bisa mengenumerasi {id} 1..N dan
+        // mengunduh email pribadi, WhatsApp, serta domisili seluruh mahasiswa.
+        $this->authorize('view', $cvProfile);
+
+        // Modul ini belum punya fasilitas audit log, jadi jejaknya dicatat ke log
+        // aplikasi — mengunduh data pribadi orang lain tidak boleh tanpa bekas.
+        if ((int) $user->id !== (int) Auth::id()) {
+            Log::info('Unduh CV mahasiswa', [
+                'pengunduh_id'     => Auth::id(),
+                'pemilik_user_id'  => $user->id,
+                'kemahasiswaan_id' => $id,
+            ]);
+        }
 
         $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
         $data['is_print'] = true;

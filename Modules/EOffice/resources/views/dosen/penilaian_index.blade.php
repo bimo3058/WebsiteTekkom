@@ -13,23 +13,32 @@
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-8">
             <div>
-                <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Penilaian Mahasiswa</h1>
-                <p class="text-sm text-slate-500 max-w-2xl leading-relaxed">
+                <h1 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">Penilaian Mahasiswa</h1>
+                <p class="text-sm text-slate-500 mt-1 leading-relaxed">
                     Daftar mahasiswa bimbingan yang telah menyelesaikan proses Kerja Praktik dan siap dinilai berdasarkan rubrik penilaian Dosen Pembimbing.
                 </p>
             </div>
         </div>
 
-        <!-- Search Bar -->
-        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm mb-6 flex flex-col lg:flex-row gap-4 items-center justify-between">
-            <div class="relative w-full lg:w-96">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                </div>
-                <input type="text" x-model="searchQuery" placeholder="Cari nama mahasiswa atau NIM..."
-                    class="block w-full pl-10 pr-3 py-2 border border-slate-200 rounded-xl text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors outline-none">
+        <!-- Controls: Search & Filter (Mirrors Periode Mockup) -->
+        <div style="margin-bottom:16px; display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+            <!-- Search Input -->
+            <div style="position:relative; flex:1; min-width:260px; max-width:320px;">
+                <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#98A2B3;"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                <input type="text" placeholder="Cari nama mahasiswa atau NIM..." x-model="searchQuery" style="
+                        width:100%;
+                        padding:8px 12px 8px 36px;
+                        border:1px solid #E4E7EC;
+                        border-radius:8px;
+                        font-family:'Inter Tight',sans-serif;
+                        font-size:14px;
+                        outline:none;
+                        transition:border-color 0.2s;
+                    " onfocus="this.style.borderColor='#A8B4FB'" onblur="this.style.borderColor='#E4E7EC'">
             </div>
         </div>
 
@@ -64,11 +73,11 @@
                                 <!-- Mahasiswa -->
                                 <td class="py-4 px-6">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shrink-0 border border-indigo-200">
+                                        <div class="w-10 h-10 rounded-full bg-primary-100 text-primary-500 flex items-center justify-center font-bold text-sm shrink-0 border border-primary-200">
                                             <span>{{ substr($mhs->nama, 0, 1) }}</span>
                                         </div>
                                         <div>
-                                            <p class="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors">{{ $mhs->nama }}</p>
+                                            <p class="text-sm font-bold text-slate-900 group-hover:text-primary-500 transition-colors">{{ $mhs->nama }}</p>
                                             <p class="text-xs text-slate-500 mt-0.5 font-mono">{{ $mhs->nim }}</p>
                                         </div>
                                     </div>
@@ -90,7 +99,7 @@
                                 <!-- Nilai Laporan (Koordinator/Otomatis) -->
                                 <td class="py-4 px-6 text-center align-middle">
                                     @if($mhs->nilai_laporan !== null)
-                                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-700 font-extrabold text-lg border border-blue-100 shadow-sm">
+                                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary-50 text-primary-500 font-extrabold text-lg border border-primary-100 shadow-sm">
                                             {{ $mhs->nilai_laporan }}
                                         </span>
                                     @else
@@ -116,7 +125,7 @@
                                         @if($mhs->nilai_seminar !== null)
                                             bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200
                                         @else
-                                            bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white border border-indigo-100 hover:border-transparent shadow-sm hover:shadow-md hover:shadow-indigo-500/20
+                                            bg-primary-50 text-primary-500 hover:bg-primary-500 hover:text-white border border-primary-100 hover:border-transparent shadow-sm hover:shadow-md hover:shadow-primary-500/20
                                         @endif
                                         ">
                                         @if($mhs->nilai_seminar !== null)
@@ -156,7 +165,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
-                        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-indigo-600 bg-indigo-600 text-white font-medium text-xs">1</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-primary-500 bg-primary-500 text-white font-medium text-xs">1</button>
                         <button class="w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-400 cursor-not-allowed">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
