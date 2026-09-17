@@ -310,8 +310,10 @@ class SoloTitleController extends Controller
             // Delete the bidder group
             $bidderGroup->delete();
 
-            // Update group with title
-            $soloGroup->update(['title_id' => $title->id]);
+            // NOTE: title_id is intentionally NOT set here. Title assignment
+            // is admin-finalization-owned (FinalizationService::allocateStudentProposed).
+            // The approved proposal is surfaced as the display title via
+            // GroupService::buildCanonicalGroupPayload() until then.
 
             // Notify bidder group members
             foreach ($bid->group->members as $member) {
