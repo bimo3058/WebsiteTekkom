@@ -27,6 +27,11 @@ class CapstoneServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                \Modules\Capstone\Console\Commands\RepairDuplicateLeaders::class,
+            ]);
+        }
         $this->loadViewsFrom(module_path('Capstone', 'resources/views'), 'capstone');
         \Illuminate\Support\Facades\Blade::anonymousComponentPath(module_path('Capstone', 'resources/views/components'), 'capstone');
         $this->loadMigrationsFrom(module_path('Capstone', 'database/migrations'));
