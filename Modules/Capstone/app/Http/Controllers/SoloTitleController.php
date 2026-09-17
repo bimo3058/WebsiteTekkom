@@ -296,10 +296,12 @@ class SoloTitleController extends Controller
                 $member->update(['group_id' => $soloGroup->id]);
             }
 
-            // Update solo group - no longer solo
+            // Update solo group - no longer solo; status follows member count
+            $memberCount = $soloGroup->members()->count();
+            $minSize = $soloGroup->period->min_group_size ?? 3;
             $soloGroup->update([
                 'is_solo' => false,
-                'status' => $soloGroup->determineStatus(),
+                'status' => $memberCount >= $minSize ? 'READY_FOR_BIDDING' : 'FORMING',
             ]);
 
             // Update the bid status
