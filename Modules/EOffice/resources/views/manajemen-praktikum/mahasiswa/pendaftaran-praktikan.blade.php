@@ -214,6 +214,7 @@
     </div>
 </div>
 @endif
+@endif
 
 @if($activePraktikum && $classmates->isNotEmpty())
 <div class="sec-head" style="margin-top:24px;">

@@ -19,9 +19,11 @@
     $iconShield = 'M12 2L4 6v6c0 5 3.4 9.5 8 10 4.6-.5 8-5 8-10V6l-8-4z';
     $iconAuditLog = 'M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h11a2 2 0 002-2v-7M7 13h7M7 17h5';
     $iconNotification = 'M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0';
-    $iconBankSoal = 'M6 4h12v16H6zM9 8h6M9 12h6M9 16h4';
-    $iconCapstone = 'M3 17l5-5 4 4 8-8M14 8h6v6';
-    $iconSimenma = 'M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M17 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z';
+    // Akademik icons - lebih spesifik per modul
+    $iconBankSoal = 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'; // Clipboard checklist untuk ujian/soal
+    $iconCapstone = 'M12 14l9-5-9-5-9 5 9 5zM12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zM12 14v6.25'; // Graduation cap untuk capstone/TA
+    $iconSimenma = 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'; // User groups untuk manajemen mahasiswa
+    $iconEoffice = 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'; // Document/folder untuk e-office
     $iconClock = 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 7v5l3 2';
     $iconGear = 'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1A2 2 0 114.4 17l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1A1.7 1.7 0 004.4 7l-.1-.1A2 2 0 117.1 4l.1.1a1.7 1.7 0 001.8.3 1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1A2 2 0 1119.6 7l-.1.1a1.7 1.7 0 00-.3 1.8 1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z';
     $iconMonitor = 'M3 4h18v12H3zM8 20h8M12 16v4';
@@ -119,7 +121,7 @@
                 :active="str_contains($currentRoute, 'capstone')" />
             <x-sidebar-link :href="route('manajemenmahasiswa.dashboard')" :icon="$iconSimenma" label="SIMENMA"
                 :active="str_contains($currentRoute, 'manajemen-mahasiswa')" />
-            <x-sidebar-link :href="route('eoffice.dashboard')" :icon="$iconClock" label="SIPERKOM"
+            <x-sidebar-link :href="route('eoffice.dashboard')" :icon="$iconEoffice" label="SIPERKOM"
                 :active="str_contains($currentRoute, 'eoffice')" />
 
             {{-- SETTING --}}
