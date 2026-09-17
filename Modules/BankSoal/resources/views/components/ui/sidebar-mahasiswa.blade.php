@@ -57,7 +57,7 @@
             </svg>
             <span x-show="sidebarOpen">Help &amp; Center</span>
         </a>
-        <form method="POST" action="{{ route('logout') }}" style="margin:0;" data-no-loader>
+        <form method="POST" action="{{ route('logout') }}" style="margin:0;">
             @csrf
             <button type="submit" class="sb-link sb-link-danger w-full">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"

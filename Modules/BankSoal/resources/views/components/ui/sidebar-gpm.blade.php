@@ -118,7 +118,7 @@
             <svg class="w-4 h-4 flex-shrink-0 text-[#666D80]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconHelp }}"/></svg>
             <span x-show="sidebarOpen" class="whitespace-nowrap overflow-hidden text-ellipsis">Help &amp; Center</span>
         </a>
-        <form method="POST" action="{{ route('logout') }}" class="m-0" data-no-loader>
+        <form method="POST" action="{{ route('logout') }}" class="m-0">
             @csrf
             <button type="submit" class="w-full flex items-center gap-[10px] p-[8px_10px] rounded-lg text-[13px] font-medium text-[#DF1C41] hover:bg-[#FEF1F4] transition-colors" :class="!sidebarOpen ? 'justify-center p-[8px_0]' : ''">
                 <svg class="w-4 h-4 flex-shrink-0 text-[#DF1C41]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconLogout }}"/></svg>

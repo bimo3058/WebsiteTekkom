@@ -78,7 +78,7 @@
 
                 <div class="border-t border-[#F0F1F4] my-1"></div>
 
-                <form method="POST" action="{{ route('logout') }}" data-no-loader>
+                <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button type="submit"
                             class="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#DF1C41] hover:bg-[#FADAE1] transition-colors">
