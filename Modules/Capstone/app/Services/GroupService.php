@@ -499,10 +499,10 @@ class GroupService
      *
      * Must be called inside the caller's DB transaction, after the member row
      * was deleted. It never deletes ACCEPT/REJECT lecturer decisions:
-     * - count < min: auto-cancel PENDING bids with no lecturer decision
-     *   (status=CANCELLED), compact remaining priorities, demote bidding
-     *   statuses back to FORMING, and notify remaining members that an
-     *   approved title is retained but mark-ready is blocked until refill.
+     * - count < min: hard-delete PENDING bids with no lecturer decision
+     *   (deleted rows never block rebidding), compact remaining priorities,
+     *   demote bidding statuses back to FORMING, and notify remaining members
+     *   that an approved title is retained but mark-ready is blocked until refill.
      * - count > max: bids/titles untouched, notify remaining members to trim.
      * Locked statuses (READY_FOR_FINALIZATION and above, TITLE_APPROVED,
      * DISSOLVED) are never demoted here.
@@ -528,7 +528,7 @@ class GroupService
                 ->pluck('id');
             $cancelled = $pendingIds->count();
             if ($cancelled > 0) {
-                Bid::whereIn('id', $pendingIds)->update(['status' => 'CANCELLED']);
+                Bid::whereIn('id', $pendingIds)->delete();
                 $remaining = Bid::where('group_id', $group->id)->orderBy('priority')->get();
                 foreach ($remaining as $index => $bid) {
                     if ((int) $bid->priority !== $index + 1) {
@@ -554,7 +554,7 @@ class GroupService
             if (! empty($userIds)) {
                 $message = $hasAcceptedBid
                     ? "Anggota keluar/dikeluarkan sehingga tersisa {$memberCount}/{$minSize}. Judul yang disetujui dosen tetap dipertahankan, tetapi kelompok belum bisa mark-ready. Tambah anggota hingga minimum."
-                    : "Anggota keluar/dikeluarkan sehingga tersisa {$memberCount}/{$minSize}. Bid PENDING yang dibatalkan otomatis: {$cancelled}. Tambah anggota hingga minimum untuk bidding.";
+                    : "Anggota keluar/dikeluarkan sehingga tersisa {$memberCount}/{$minSize}. Bid PENDING yang dihapus otomatis: {$cancelled}. Tambah anggota hingga minimum untuk bidding.";
                 $this->notificationService->sendToMany(
                     $userIds,
                     'GROUP_SIZE_BELOW_MINIMUM',

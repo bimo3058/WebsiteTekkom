@@ -204,10 +204,15 @@ class FinalizationController extends Controller
 
     /**
      * Manually lock bidding.
+     * Policy: bidding may only be locked after the period is finalized.
      */
     public function lock(Request $request)
     {
         $period = $this->resolvePeriod($request);
+
+        if (!$period->is_finalized) {
+            abort(400, 'Bidding hanya dapat dikunci setelah periode difinalisasi.');
+        }
 
         $this->biddingService->lockBidding($period);
 
@@ -220,5 +225,26 @@ class FinalizationController extends Controller
         ]);
 
         return response()->json(['message' => 'Bidding locked successfully.', 'period' => $period->fresh()]);
+    }
+
+    /**
+     * Manually unlock bidding (e.g. bidding was locked before finalization
+     * under the old policy, or admin needs to reopen bidding).
+     */
+    public function unlock(Request $request)
+    {
+        $period = $this->resolvePeriod($request);
+
+        $this->biddingService->unlockBidding($period);
+
+        AuditLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'BIDDING_UNLOCK',
+            'target_type' => 'Period',
+            'target_id' => $period->id,
+            'payload' => ['unlocked_at' => now()->toISOString()],
+        ]);
+
+        return response()->json(['message' => 'Bidding unlocked successfully.', 'period' => $period->fresh()]);
     }
 }

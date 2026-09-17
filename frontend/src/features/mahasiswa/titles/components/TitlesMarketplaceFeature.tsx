@@ -335,7 +335,7 @@ export function TitlesMarketplaceFeature() {
                 </Alert>
             )}
 
-            {group && memberCount < minGroupSize && (
+            {group && !group.is_solo && memberCount < minGroupSize && (
                 <Alert variant="destructive">
                     <Lock className="h-4 w-4" />
                     <AlertTitle>Bidding Locked</AlertTitle>
@@ -347,22 +347,13 @@ export function TitlesMarketplaceFeature() {
             )}
 
             {group?.is_solo && memberCount < minGroupSize && (
-                <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertTitle>Solo Seeker Mode</AlertTitle>
+                <Alert variant="destructive">
+                    <Lock className="h-4 w-4" />
+                    <AlertTitle>Belum Bisa Bidding Judul Dosen</AlertTitle>
                     <AlertDescription>
-                        Sebagai solo seeker, Anda hanya dapat <Link href="/mahasiswa/propose-title" className="font-medium underline">mengajukan judul sendiri</Link> sampai
-                        anggota mencapai minimal ({minGroupSize}). Setelah itu Anda juga dapat bidding judul dosen.
-                    </AlertDescription>
-                </Alert>
-            )}
-
-            {group?.is_solo && memberCount >= minGroupSize && (
-                <Alert>
-                    <Info className="h-4 w-4" />
-                    <AlertTitle>Solo Ready to Bid</AlertTitle>
-                    <AlertDescription>
-                        Kelompok solo Anda sudah memenuhi minimal anggota dan dapat bidding judul dosen.
+                        Kelompok solo Anda memiliki {memberCount} dari minimal {minGroupSize} anggota. Untuk membuka bidding judul dosen, tambah anggota di{' '}
+                        <Link href="/mahasiswa/group" className="underline font-bold">Grup Saya</Link> hingga mencapai minimal. Sementara itu, Anda tetap dapat{' '}
+                        <Link href="/mahasiswa/propose-title" className="font-medium underline">mengajukan judul sendiri</Link>.
                     </AlertDescription>
                 </Alert>
             )}

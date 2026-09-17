@@ -149,6 +149,9 @@ export function BiddingFeature() {
     const canSubmitBid = biddingFlow?.can_submit_bid ?? localCanSubmit;
     const canReorderBid = biddingFlow?.can_reorder_bid ?? isLeader;
     const canDeleteBid = biddingFlow?.can_delete_bid ?? isLeader;
+    const memberCount = group?.members?.length ?? 0;
+    const minGroupSize = group?.period?.min_group_size ?? 3;
+    const isSoloBelowMin = !!group?.is_solo && memberCount < minGroupSize;
 
     const flowReasonMap: Record<string, string> = {
         NO_GROUP: 'Anda harus memiliki kelompok terlebih dahulu.',
@@ -335,12 +338,24 @@ export function BiddingFeature() {
                 </div>
             </div>
 
-            {!canSubmitBid && biddingFlow?.reason && (
+            {!canSubmitBid && biddingFlow?.reason && !isSoloBelowMin && (
                 <Alert>
                     <Lock className="h-4 w-4" />
                     <AlertTitle>Bidding Terkunci</AlertTitle>
                     <AlertDescription>
                         {flowReasonMap[biddingFlow.reason] || 'Bidding tidak tersedia untuk kondisi kelompok saat ini.'}
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {!canSubmitBid && isSoloBelowMin && (
+                <Alert variant="destructive">
+                    <Lock className="h-4 w-4" />
+                    <AlertTitle>Belum Bisa Bidding Judul Dosen</AlertTitle>
+                    <AlertDescription>
+                        Kelompok solo Anda memiliki {memberCount} dari minimal {minGroupSize} anggota. Untuk membuka bidding judul dosen, tambah anggota di{' '}
+                        <Link href="/mahasiswa/group" className="underline font-bold">Grup Saya</Link> hingga mencapai minimal. Sementara itu, Anda tetap dapat{' '}
+                        <Link href="/mahasiswa/propose-title" className="font-medium underline">mengajukan judul sendiri</Link>.
                     </AlertDescription>
                 </Alert>
             )}
