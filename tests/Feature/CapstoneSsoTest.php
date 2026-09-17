@@ -9,11 +9,13 @@ use App\Models\Student;
 use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 use Modules\Capstone\Database\Seeders\CapstonePermissionsSeeder;
+use Modules\Capstone\Http\Controllers\AuthBridgeController;
 use Modules\Capstone\Models\Period;
 use Tests\TestCase;
 
@@ -307,6 +309,41 @@ class CapstoneSsoTest extends TestCase
         $this->assertSame(0, PersonalAccessToken::where('tokenable_id', $user->id)->where('name', 'capstone-fe')->count());
         $this->assertSame(1, PersonalAccessToken::where('tokenable_id', $user->id)->where('name', 'another-client')->count());
         $this->assertDatabaseHas('capstone_audit_logs', ['user_id' => $user->id, 'action' => 'LOGOUT']);
+    }
+
+    public function test_identity_payload_does_not_query_the_authenticated_user_again(): void
+    {
+        $user = $this->capstoneUser('mahasiswa');
+        $student = Student::create([
+            'user_id' => $user->id, 'student_number' => 'FAST-01', 'cohort_year' => 2024,
+        ]);
+        $lecturer = Lecturer::create([
+            'user_id' => $user->id, 'employee_number' => 'FAST-NIP-01',
+        ]);
+        $request = Request::create('/api/capstone/auth/user');
+        $request->setUserResolver(fn () => $user);
+
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+        try {
+            $payload = (new AuthBridgeController)->me($request)->getData(true)['data'];
+            $queries = DB::getQueryLog();
+
+            $this->assertSame($student->id, $payload['student_id']);
+            $this->assertSame($lecturer->id, $payload['lecturer_id']);
+            $this->assertSame('FAST-01', $payload['nim']);
+            $this->assertSame('FAST-NIP-01', $payload['nip']);
+            $this->assertCount(2, $queries, 'Only the two academic profiles should be fetched.');
+            $this->assertFalse(collect($queries)->contains(
+                fn ($query) => str_contains($query['query'], 'from "users"')
+            ));
+
+            DB::flushQueryLog();
+            (new AuthBridgeController)->me($request);
+            $this->assertCount(0, DB::getQueryLog(), 'Reuse profiles within the same request.');
+        } finally {
+            DB::disableQueryLog();
+        }
     }
 
     private function launchTicket(User $user, string $userAgent): string

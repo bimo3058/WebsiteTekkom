@@ -125,22 +125,7 @@
             cursor: not-allowed;
         }
 
-        /* ── Table loading spinner ── */
-        .tbl-loading {
-            display: none; align-items: center; justify-content: center;
-            gap: 10px; padding: 40px 20px;
-            color: #475569; font-size: 13px;
-        }
-        .tbl-loading.show { display: flex; }
-        .tbl-spinner {
-            width: 22px; height: 22px;
-            border: 3px solid #e2e8f0;
-            border-top-color: rgb(11, 38, 110);
-            border-radius: 50%;
-            animation: tbl-spin 0.7s linear infinite;
-            flex-shrink: 0;
-        }
-        @keyframes tbl-spin { to { transform: rotate(360deg); } }
+
 
         /* ── 3-dot dropdown ── */
         .dots-wrap { 
@@ -288,7 +273,7 @@
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div id="rpsLoading" class="tbl-loading show"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div id="rpsLoading"></div>
         <div class="overflow-x-auto" id="rpsTableContainer" style="opacity: 0.4; transition: opacity 0.2s;">
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-primary text-white border-b border-primary/20">
@@ -509,7 +494,7 @@
             const loadingEl = document.getElementById('rpsLoading');
             const tableEl = document.getElementById('rpsTableContainer');
             
-            if (loadingEl) loadingEl.classList.add('show');
+            if (window.Spinner) window.Spinner.showTable('rpsLoading');
             if (tableEl) tableEl.style.opacity = '0.4';
 
             try {
@@ -534,7 +519,7 @@
                 state.filtered = [];
                 renderTable();
             } finally {
-                if (loadingEl) loadingEl.classList.remove('show');
+                if (window.Spinner) window.Spinner.hideTable('rpsLoading');
                 if (tableEl) tableEl.style.opacity = '1';
             }
         }

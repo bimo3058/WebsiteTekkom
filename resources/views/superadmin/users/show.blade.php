@@ -51,10 +51,6 @@
                     <div style="display:flex; gap:20px; align-items:flex-start;">
                         
                         @php
-                            $colors = ['#EEF2FF','#F0FDF4','#FFFBEB','#FEF2F2','#F5F3FF','#FDF2F9'];
-                            $textColors = ['#4338CA','#15803D','#B45309','#B91C1C','#6D28D9','#BE185D'];
-                            $colorIndex = $user->id % count($colors);
-                            $initials = collect(explode(' ', $user->name))->map(fn($n) => strtoupper(substr($n, 0, 1)))->take(2)->implode('');
                             
                             $identityLabel = 'ID User';
                             $identityValue = $user->external_id;
@@ -68,13 +64,7 @@
                             }
                         @endphp
 
-                        <div style="width:84px; height:84px; border-radius:50%; background:{{ $colors[$colorIndex] }}; display:flex; align-items:center; justify-content:center; border:1.5px solid #F1F5F9; flex-shrink:0; overflow:hidden;">
-                            @if($user->avatar_url)
-                                <img src="{{ $user->avatar_url }}" style="width:100%; height:100%; object-fit:cover;">
-                            @else
-                                <span style="font-size:28px; font-weight:800; color:{{ $textColors[$colorIndex] }};">{{ $initials }}</span>
-                            @endif
-                        </div>
+                        <x-ui.user-avatar :user="$user" size="xl" />
 
                         <div style="flex:1;">
                             <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
@@ -232,5 +222,20 @@
 
     @include('superadmin.users._modal_suspend')
 
+    <script>
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+        }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) { el.classList.add('hidden'); document.body.style.overflow = ''; }
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeModal('modalSuspend');
+            }
+        });
+    </script>
 </x-sidebar>
 </x-app-layout>

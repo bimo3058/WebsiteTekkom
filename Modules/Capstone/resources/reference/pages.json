@@ -1,0 +1,819 @@
+[
+  {
+    "route": "/admin/analytics/progress",
+    "source": "frontend/src/app/admin/analytics/progress/page.tsx",
+    "imports": [
+      "@/features/admin/analytics"
+    ]
+  },
+  {
+    "route": "/admin/assessment-bank/new",
+    "source": "frontend/src/app/admin/assessment-bank/new/page.tsx",
+    "imports": [
+      "next/navigation",
+      "react-hook-form",
+      "@hookform/resolvers/zod",
+      "@/lib/validations/assessment",
+      "@/features/admin/assessment-bank"
+    ]
+  },
+  {
+    "route": "/admin/assessment-bank",
+    "source": "frontend/src/app/admin/assessment-bank/page.tsx",
+    "imports": [
+      "@/features/admin/assessment-bank"
+    ]
+  },
+  {
+    "route": "/admin/assessment-bank/[id]/edit",
+    "source": "frontend/src/app/admin/assessment-bank/[id]/edit/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "react-hook-form",
+      "@hookform/resolvers/zod",
+      "@tanstack/react-query",
+      "lucide-react",
+      "sonner",
+      "@/lib/api",
+      "@/lib/validations/assessment",
+      "@/features/admin/assessment-bank"
+    ]
+  },
+  {
+    "route": "/admin/assessments",
+    "source": "frontend/src/app/admin/assessments/page.tsx",
+    "imports": [
+      "@/features/admin/assessments"
+    ]
+  },
+  {
+    "route": "/admin/audit-logs",
+    "source": "frontend/src/app/admin/audit-logs/page.tsx",
+    "imports": [
+      "@/features/admin/audit-logs"
+    ]
+  },
+  {
+    "route": "/admin/dashboard",
+    "source": "frontend/src/app/admin/dashboard/page.tsx",
+    "imports": [
+      "@/features/admin/dashboard"
+    ]
+  },
+  {
+    "route": "/admin/document-requirements",
+    "source": "frontend/src/app/admin/document-requirements/page.tsx",
+    "imports": [
+      "@/features/admin/document-requirements"
+    ]
+  },
+  {
+    "route": "/admin/document-requirements/[phase]",
+    "source": "frontend/src/app/admin/document-requirements/[phase]/page.tsx",
+    "imports": [
+      "next/navigation",
+      "@/features/admin/document-requirements"
+    ]
+  },
+  {
+    "route": "/admin/document-types",
+    "source": "frontend/src/app/admin/document-types/page.tsx",
+    "imports": [
+      "@/features/admin/document-types"
+    ]
+  },
+  {
+    "route": "/admin/document-uploads",
+    "source": "frontend/src/app/admin/document-uploads/page.tsx",
+    "imports": [
+      "@/features/admin/document-uploads"
+    ]
+  },
+  {
+    "route": "/admin/evaluation-setup/grade-configuration",
+    "source": "frontend/src/app/admin/evaluation-setup/grade-configuration/page.tsx",
+    "imports": [
+      "@/features/admin/grade-configuration"
+    ]
+  },
+  {
+    "route": "/admin/evaluation-summary/[scheduleId]",
+    "source": "frontend/src/app/admin/evaluation-summary/[scheduleId]/page.tsx",
+    "imports": [
+      "@/features/admin/evaluation-summary",
+      "@/hooks/use-params"
+    ]
+  },
+  {
+    "route": "/admin/expo",
+    "source": "frontend/src/app/admin/expo/page.tsx",
+    "imports": [
+      "@/features/admin/expo"
+    ]
+  },
+  {
+    "route": "/admin/finalization",
+    "source": "frontend/src/app/admin/finalization/page.tsx",
+    "imports": [
+      "next/dynamic"
+    ]
+  },
+  {
+    "route": "/admin/groups",
+    "source": "frontend/src/app/admin/groups/page.tsx",
+    "imports": [
+      "@/features/admin/groups"
+    ]
+  },
+  {
+    "route": "/admin/groups/[id]",
+    "source": "frontend/src/app/admin/groups/[id]/page.tsx",
+    "imports": [
+      "next/dynamic"
+    ]
+  },
+  {
+    "route": "/admin/locations",
+    "source": "frontend/src/app/admin/locations/page.tsx",
+    "imports": [
+      "@/features/admin/locations"
+    ]
+  },
+  {
+    "route": "/admin/peer-review",
+    "source": "frontend/src/app/admin/peer-review/page.tsx",
+    "imports": [
+      "react",
+      "@/lib/api",
+      "@/components/ui/button",
+      "@/components/ui/card",
+      "@/components/ui/badge",
+      "lucide-react",
+      "sonner",
+      "next/navigation",
+      "@/components/ui/select",
+      "@/components/ui/table",
+      "@/components/ui/input",
+      "@/components/ui/dropdown-menu",
+      "@/lib/normalizers"
+    ]
+  },
+  {
+    "route": "/admin/peer-review/[id]/edit",
+    "source": "frontend/src/app/admin/peer-review/[id]/edit/page.tsx",
+    "imports": [
+      "react",
+      "@/lib/api",
+      "@/components/ui/button",
+      "@/components/ui/card",
+      "@/components/ui/checkbox",
+      "@/components/ui/badge",
+      "lucide-react",
+      "sonner",
+      "next/navigation",
+      "@/components/ui/select",
+      "@/components/ui/table",
+      "@/components/ui/input",
+      "@/lib/normalizers",
+      "@/lib/error-utils"
+    ]
+  },
+  {
+    "route": "/admin/peer-review-dashboard",
+    "source": "frontend/src/app/admin/peer-review-dashboard/page.tsx",
+    "imports": [
+      "@/features/admin/peer-review-dashboard"
+    ]
+  },
+  {
+    "route": "/admin/period-assessment-config",
+    "source": "frontend/src/app/admin/period-assessment-config/page.tsx",
+    "imports": [
+      "react",
+      "@/lib/api",
+      "@/components/ui/button",
+      "@/components/ui/card",
+      "@/components/ui/badge",
+      "lucide-react",
+      "sonner",
+      "next/navigation",
+      "@/components/ui/select",
+      "@/components/ui/table",
+      "@/components/ui/input",
+      "@/components/ui/dropdown-menu",
+      "@/lib/normalizers"
+    ]
+  },
+  {
+    "route": "/admin/period-assessment-config/[id]/edit",
+    "source": "frontend/src/app/admin/period-assessment-config/[id]/edit/page.tsx",
+    "imports": [
+      "react",
+      "@/lib/api",
+      "@/components/ui/button",
+      "@/components/ui/card",
+      "@/components/ui/checkbox",
+      "@/components/ui/badge",
+      "lucide-react",
+      "sonner",
+      "next/navigation",
+      "@/components/ui/select",
+      "@/components/ui/table",
+      "@/components/ui/input",
+      "@/lib/normalizers",
+      "@/lib/error-utils"
+    ]
+  },
+  {
+    "route": "/admin/periods/new",
+    "source": "frontend/src/app/admin/periods/new/page.tsx",
+    "imports": [
+      "next/navigation",
+      "react-hook-form",
+      "@hookform/resolvers/zod",
+      "@/lib/validations/period",
+      "@/features/admin/periods",
+      "../components/PeriodWizardLayout",
+      "../components/steps/BasicInfoStep",
+      "../components/steps/EvaluationSetupStep",
+      "../components/steps/PhaseDatesStep",
+      "../components/steps/GroupConfigStep",
+      "../components/steps/ReviewStep"
+    ]
+  },
+  {
+    "route": "/admin/periods",
+    "source": "frontend/src/app/admin/periods/page.tsx",
+    "imports": [
+      "@/features/admin/periods"
+    ]
+  },
+  {
+    "route": "/admin/periods/[id]/edit",
+    "source": "frontend/src/app/admin/periods/[id]/edit/page.tsx",
+    "imports": [
+      "next/dynamic"
+    ]
+  },
+  {
+    "route": "/admin/reports/assessments",
+    "source": "frontend/src/app/admin/reports/assessments/page.tsx",
+    "imports": [
+      "next/navigation",
+      "next/link",
+      "@/features/admin/reports/hooks/use-reports",
+      "@/features/admin/reports/components/AssessmentTable",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/label",
+      "@/components/ui/select",
+      "lucide-react"
+    ]
+  },
+  {
+    "route": "/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/evaluator/[evaluatorId]",
+    "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/evaluator/[evaluatorId]/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "next/link",
+      "@/lib/api",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/badge",
+      "@/components/ui/progress",
+      "lucide-react",
+      "sonner",
+      "@/components/ui/table",
+      "@/components/ui/collapsible",
+      "@/hooks/use-params"
+    ]
+  },
+  {
+    "route": "/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]",
+    "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/evaluation/[evaluationType]/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "next/link",
+      "@/lib/api",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/badge",
+      "@/components/ui/progress",
+      "lucide-react",
+      "sonner",
+      "@/components/ui/table",
+      "@/components/ui/collapsible",
+      "@/hooks/use-params"
+    ]
+  },
+  {
+    "route": "/admin/reports/assessments/student/[studentId]",
+    "source": "frontend/src/app/admin/reports/assessments/student/[studentId]/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "next/link",
+      "next/navigation",
+      "@/lib/api",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/badge",
+      "@/components/ui/progress",
+      "lucide-react",
+      "sonner",
+      "@/hooks/use-params",
+      "@/types/guards"
+    ]
+  },
+  {
+    "route": "/admin/reports/final-grades",
+    "source": "frontend/src/app/admin/reports/final-grades/page.tsx",
+    "imports": [
+      "next/navigation",
+      "next/link",
+      "react",
+      "@/features/admin/reports/hooks/use-reports",
+      "@/features/admin/reports/components/FinalGradeTable",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/label",
+      "@/components/ui/select",
+      "lucide-react",
+      "@/lib/api"
+    ]
+  },
+  {
+    "route": "/admin/reports/grade-consistency",
+    "source": "frontend/src/app/admin/reports/grade-consistency/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "next/link",
+      "@/lib/api",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/badge",
+      "@/components/ui/input",
+      "@/components/ui/label",
+      "@/components/ui/select",
+      "@/components/ui/table",
+      "lucide-react",
+      "sonner",
+      "@/lib/utils"
+    ]
+  },
+  {
+    "route": "/admin/reports/groups",
+    "source": "frontend/src/app/admin/reports/groups/page.tsx",
+    "imports": [
+      "next/navigation",
+      "next/link",
+      "@/features/admin/reports/hooks/use-reports",
+      "@/features/admin/reports/components/GroupTable",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/label",
+      "@/components/ui/select",
+      "lucide-react"
+    ]
+  },
+  {
+    "route": "/admin/reports",
+    "source": "frontend/src/app/admin/reports/page.tsx",
+    "imports": [
+      "next/dynamic"
+    ]
+  },
+  {
+    "route": "/admin/reports/pdc1",
+    "source": "frontend/src/app/admin/reports/pdc1/page.tsx",
+    "imports": [
+      "next/navigation",
+      "../components/PhaseReportPage"
+    ]
+  },
+  {
+    "route": "/admin/reports/pdc2",
+    "source": "frontend/src/app/admin/reports/pdc2/page.tsx",
+    "imports": [
+      "next/navigation",
+      "../components/PhaseReportPage"
+    ]
+  },
+  {
+    "route": "/admin/reports/peer-reviews",
+    "source": "frontend/src/app/admin/reports/peer-reviews/page.tsx",
+    "imports": [
+      "next/navigation",
+      "next/link",
+      "react",
+      "@/features/admin/reports/hooks/use-reports",
+      "@/features/admin/reports/components/PeerReviewTable",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/label",
+      "@/components/ui/select",
+      "lucide-react",
+      "@/lib/api"
+    ]
+  },
+  {
+    "route": "/admin/reports/ta",
+    "source": "frontend/src/app/admin/reports/ta/page.tsx",
+    "imports": [
+      "next/navigation",
+      "../components/PhaseReportPage"
+    ]
+  },
+  {
+    "route": "/admin/schedule",
+    "source": "frontend/src/app/admin/schedule/page.tsx",
+    "imports": [
+      "@/features/admin/schedule"
+    ]
+  },
+  {
+    "route": "/admin/sempro",
+    "source": "frontend/src/app/admin/sempro/page.tsx",
+    "imports": [
+      "@/features/admin/sempro"
+    ]
+  },
+  {
+    "route": "/admin/settings",
+    "source": "frontend/src/app/admin/settings/page.tsx",
+    "imports": [
+      "@/features/admin/settings"
+    ]
+  },
+  {
+    "route": "/admin/ta-defense",
+    "source": "frontend/src/app/admin/ta-defense/page.tsx",
+    "imports": [
+      "@/features/admin/ta-defense"
+    ]
+  },
+  {
+    "route": "/admin/titles",
+    "source": "frontend/src/app/admin/titles/page.tsx",
+    "imports": [
+      "react",
+      "@/lib/api",
+      "@/components/ui/card",
+      "@/components/ui/badge",
+      "@/components/ui/input",
+      "lucide-react",
+      "@/components/ui/loading",
+      "@/components/ui/select"
+    ]
+  },
+  {
+    "route": "/admin/users/new",
+    "source": "frontend/src/app/admin/users/new/page.tsx",
+    "imports": [
+      "next/navigation"
+    ]
+  },
+  {
+    "route": "/admin/users",
+    "source": "frontend/src/app/admin/users/page.tsx",
+    "imports": [
+      "@/features/admin/users"
+    ]
+  },
+  {
+    "route": "/admin/users/[id]/edit",
+    "source": "frontend/src/app/admin/users/[id]/edit/page.tsx",
+    "imports": [
+      "next/navigation"
+    ]
+  },
+  {
+    "route": "/admin/users/[id]",
+    "source": "frontend/src/app/admin/users/[id]/page.tsx",
+    "imports": [
+      "next/navigation"
+    ]
+  },
+  {
+    "route": "/auth/exchange",
+    "source": "frontend/src/app/auth/exchange/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "axios",
+      "@/lib/api",
+      "@/lib/single-flight",
+      "@/lib/sso"
+    ]
+  },
+  {
+    "route": "/dosen/bids",
+    "source": "frontend/src/app/dosen/bids/page.tsx",
+    "imports": [
+      "@/features/dosen/bids"
+    ]
+  },
+  {
+    "route": "/dosen/bimbingan",
+    "source": "frontend/src/app/dosen/bimbingan/page.tsx",
+    "imports": [
+      "@/features/dosen/bimbingan"
+    ]
+  },
+  {
+    "route": "/dosen/dashboard",
+    "source": "frontend/src/app/dosen/dashboard/page.tsx",
+    "imports": [
+      "@/features/dosen/dashboard"
+    ]
+  },
+  {
+    "route": "/dosen/evaluation",
+    "source": "frontend/src/app/dosen/evaluation/page.tsx",
+    "imports": [
+      "@/features/dosen/evaluation"
+    ]
+  },
+  {
+    "route": "/dosen/evaluation/[id]",
+    "source": "frontend/src/app/dosen/evaluation/[id]/page.tsx",
+    "imports": [
+      "next/navigation",
+      "@/features/dosen/evaluation-detail"
+    ]
+  },
+  {
+    "route": "/dosen/requests",
+    "source": "frontend/src/app/dosen/requests/page.tsx",
+    "imports": [
+      "@/features/dosen/requests"
+    ]
+  },
+  {
+    "route": "/dosen/schedule",
+    "source": "frontend/src/app/dosen/schedule/page.tsx",
+    "imports": [
+      "@/features/dosen/schedule"
+    ]
+  },
+  {
+    "route": "/dosen/supervised-groups",
+    "source": "frontend/src/app/dosen/supervised-groups/page.tsx",
+    "imports": [
+      "@/features/dosen/supervised-groups"
+    ]
+  },
+  {
+    "route": "/dosen/supervisor-evaluation",
+    "source": "frontend/src/app/dosen/supervisor-evaluation/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/badge",
+      "@/components/ui/tabs",
+      "@/components/ui/select",
+      "@/components/ui/input",
+      "lucide-react",
+      "@/components/ui/loading",
+      "@/lib/api",
+      "sonner",
+      "date-fns",
+      "date-fns/locale",
+      "@/types/guards",
+      "@/lib/utils"
+    ]
+  },
+  {
+    "route": "/dosen/supervisor-evaluation/[groupId]",
+    "source": "frontend/src/app/dosen/supervisor-evaluation/[groupId]/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "@/components/ui/card",
+      "@/components/ui/button",
+      "@/components/ui/input",
+      "@/components/ui/label",
+      "@/components/ui/textarea",
+      "@/components/ui/badge",
+      "@/components/ui/separator",
+      "@/components/ui/loading",
+      "lucide-react",
+      "@/lib/api",
+      "@/lib/utils",
+      "sonner",
+      "@/hooks/use-params",
+      "@/lib/error-utils"
+    ]
+  },
+  {
+    "route": "/dosen/ta-evaluation/[id]",
+    "source": "frontend/src/app/dosen/ta-evaluation/[id]/page.tsx",
+    "imports": [
+      "next/navigation",
+      "@/features/dosen/ta-evaluation"
+    ]
+  },
+  {
+    "route": "/dosen/ta-review",
+    "source": "frontend/src/app/dosen/ta-review/page.tsx",
+    "imports": [
+      "@/features/dosen/ta-review"
+    ]
+  },
+  {
+    "route": "/dosen/title-approvals",
+    "source": "frontend/src/app/dosen/title-approvals/page.tsx",
+    "imports": [
+      "@/features/dosen/title-approvals"
+    ]
+  },
+  {
+    "route": "/dosen/titles",
+    "source": "frontend/src/app/dosen/titles/page.tsx",
+    "imports": [
+      "@/features/dosen/titles"
+    ]
+  },
+  {
+    "route": "/dosen/titles/[id]",
+    "source": "frontend/src/app/dosen/titles/[id]/page.tsx",
+    "imports": [
+      "next/navigation",
+      "@/features/dosen/title-detail"
+    ]
+  },
+  {
+    "route": "/login",
+    "source": "frontend/src/app/login/page.tsx",
+    "imports": [
+      "react",
+      "@/lib/sso"
+    ]
+  },
+  {
+    "route": "/mahasiswa/bidding",
+    "source": "frontend/src/app/mahasiswa/bidding/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/bidding"
+    ]
+  },
+  {
+    "route": "/mahasiswa/dashboard",
+    "source": "frontend/src/app/mahasiswa/dashboard/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/dashboard"
+    ]
+  },
+  {
+    "route": "/mahasiswa/documents",
+    "source": "frontend/src/app/mahasiswa/documents/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/documents"
+    ]
+  },
+  {
+    "route": "/mahasiswa/expo",
+    "source": "frontend/src/app/mahasiswa/expo/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/expo"
+    ]
+  },
+  {
+    "route": "/mahasiswa/expo/[expoId]",
+    "source": "frontend/src/app/mahasiswa/expo/[expoId]/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/expo-detail"
+    ]
+  },
+  {
+    "route": "/mahasiswa/grades",
+    "source": "frontend/src/app/mahasiswa/grades/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/grades"
+    ]
+  },
+  {
+    "route": "/mahasiswa/group",
+    "source": "frontend/src/app/mahasiswa/group/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/group"
+    ]
+  },
+  {
+    "route": "/mahasiswa/peer-review",
+    "source": "frontend/src/app/mahasiswa/peer-review/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/peer-review"
+    ]
+  },
+  {
+    "route": "/mahasiswa/propose-title",
+    "source": "frontend/src/app/mahasiswa/propose-title/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/propose-title"
+    ]
+  },
+  {
+    "route": "/mahasiswa/registration",
+    "source": "frontend/src/app/mahasiswa/registration/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/registration"
+    ]
+  },
+  {
+    "route": "/mahasiswa/schedule",
+    "source": "frontend/src/app/mahasiswa/schedule/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/schedule"
+    ]
+  },
+  {
+    "route": "/mahasiswa/ta-defense",
+    "source": "frontend/src/app/mahasiswa/ta-defense/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation"
+    ]
+  },
+  {
+    "route": "/mahasiswa/ta-submission",
+    "source": "frontend/src/app/mahasiswa/ta-submission/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/ta-submission"
+    ]
+  },
+  {
+    "route": "/mahasiswa/titles",
+    "source": "frontend/src/app/mahasiswa/titles/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/titles"
+    ]
+  },
+  {
+    "route": "/mahasiswa/titles/[id]",
+    "source": "frontend/src/app/mahasiswa/titles/[id]/page.tsx",
+    "imports": [
+      "@/features/mahasiswa/title-detail"
+    ]
+  },
+  {
+    "route": "/notifications",
+    "source": "frontend/src/app/notifications/page.tsx",
+    "imports": [
+      "react",
+      "next/navigation",
+      "@/lib/api",
+      "@/components/ui/card",
+      "@/components/ui/badge",
+      "@/components/ui/button",
+      "lucide-react",
+      "sonner",
+      "date-fns",
+      "date-fns/locale"
+    ]
+  },
+  {
+    "route": "/",
+    "source": "frontend/src/app/page.tsx",
+    "imports": [
+      "react",
+      "next/dynamic",
+      "@/context/AuthContext",
+      "next/navigation",
+      "@/components/layout/Navbar",
+      "@/components/home/HeroSection",
+      "@/components/home/CapstoneSection",
+      "@/components/home/TugasAkhirSection",
+      "@/components/home/SiklusSection",
+      "@/components/home/CTASection",
+      "@/components/layout/Footer"
+    ]
+  },
+  {
+    "route": "/profile",
+    "source": "frontend/src/app/profile/page.tsx",
+    "imports": [
+      "lucide-react",
+      "next/navigation",
+      "@/components/layout/DashboardLayout",
+      "@/components/ui/avatar",
+      "@/components/ui/badge",
+      "@/components/ui/button",
+      "@/components/ui/card",
+      "@/context/AuthContext"
+    ]
+  },
+  {
+    "route": "/unauthorized",
+    "source": "frontend/src/app/unauthorized/page.tsx",
+    "imports": [
+      "next/link"
+    ]
+  }
+]

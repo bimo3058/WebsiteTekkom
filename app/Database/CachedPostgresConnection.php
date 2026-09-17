@@ -14,12 +14,14 @@ use Throwable;
  *
  * Only SELECT queries from HTTP GET/HEAD requests are cached. Transactions,
  * locking reads, volatile SQL functions, console jobs, and write-returning SQL
- * always hit PostgreSQL. Every successful write advances a global generation,
- * which makes all previously cached results unreachable immediately.
+ * always hit PostgreSQL. Writes advance a global generation after commit,
+ * making previously cached results unreachable. Transactional writes are batched.
  */
 class CachedPostgresConnection extends PostgresConnection
 {
     private const VERSION_KEY = 'database:query-cache:version';
+
+    private bool $pendingCacheInvalidation = false;
 
     public function select($query, $bindings = [], $useReadPdo = true)
     {
@@ -50,6 +52,8 @@ class CachedPostgresConnection extends PostgresConnection
                 return $cached['rows'];
             }
         } catch (Throwable) {
+            $this->markCacheUnavailable();
+
             return parent::select($query, $bindings, $useReadPdo);
         }
 
@@ -67,6 +71,7 @@ class CachedPostgresConnection extends PostgresConnection
             }
         } catch (Throwable) {
             // A valid database response must survive Redis/cache failures.
+            $this->markCacheUnavailable();
         }
 
         return $rows;
@@ -124,6 +129,12 @@ class CachedPostgresConnection extends PostgresConnection
 
     public function invalidateQueryCache(): void
     {
+        if ($this->transactionLevel() > 0) {
+            $this->pendingCacheInvalidation = true;
+
+            return;
+        }
+
         $store = $this->cacheStore();
         if (! $store) {
             return;
@@ -138,7 +149,24 @@ class CachedPostgresConnection extends PostgresConnection
             }
         } catch (Throwable) {
             // Database writes must never fail because Redis is unavailable.
+            $this->markCacheUnavailable();
         }
+    }
+
+    protected function fireConnectionEvent($event)
+    {
+        // Laravel's transaction() commits PDO directly, so handle both that
+        // path and explicit commit() here. Nested commits must not publish yet.
+        if ($this->transactionLevel() === 0 && in_array($event, ['committed', 'rollingBack'], true)) {
+            $invalidate = $event === 'committed' && $this->pendingCacheInvalidation;
+            $this->pendingCacheInvalidation = false;
+
+            if ($invalidate) {
+                $this->invalidateQueryCache();
+            }
+        }
+
+        return parent::fireConnectionEvent($event);
     }
 
     private function shouldCache(string $query): bool
@@ -240,7 +268,16 @@ class CachedPostgresConnection extends PostgresConnection
 
     private function cacheStore(): ?Repository
     {
+        if (! (bool) config('database.query_cache.enabled', true)) {
+            return null;
+        }
+
         $storeName = (string) config('database.query_cache.store', 'redis');
+
+        $request = app()->bound('request') ? app('request') : null;
+        if ($request instanceof Request && $request->attributes->get('db_query_cache_unavailable')) {
+            return null;
+        }
 
         // A database-backed cache would recursively query this connection.
         if ($storeName === 'database') {
@@ -250,7 +287,18 @@ class CachedPostgresConnection extends PostgresConnection
         try {
             return Cache::store($storeName);
         } catch (Throwable) {
+            $this->markCacheUnavailable();
+
             return null;
+        }
+    }
+
+    private function markCacheUnavailable(): void
+    {
+        $request = app()->bound('request') ? app('request') : null;
+        if ($request instanceof Request) {
+            // Retry next request, instead of paying a Redis timeout per query.
+            $request->attributes->set('db_query_cache_unavailable', true);
         }
     }
 

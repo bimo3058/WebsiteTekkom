@@ -8,25 +8,13 @@ use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PhaseDocumentRequirement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class PhaseDocumentRequirementController extends Controller
 {
     use ApiResponseTrait;
 
     const PHASES = ['PDC1', 'SEMPRO', 'PDC2', 'EXPO', 'TA', 'SIDANG'];
-
-    /**
-     * Check if period is finalized and return error if true.
-     */
-    private function checkPeriodNotFinalized(int $periodId): ?\Illuminate\Http\JsonResponse
-    {
-        $period = Period::find($periodId);
-        if ($period && $period->is_finalized) {
-            return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
-        }
-
-        return null;
-    }
 
     public function index(Request $request)
     {
@@ -69,15 +57,12 @@ class PhaseDocumentRequirementController extends Controller
             return $this->validationErrorResponse($validator->errors());
         }
 
-        // Check if period is finalized
-        $errorResponse = $this->checkPeriodNotFinalized($request->period_id);
-        if ($errorResponse) {
-            return $errorResponse;
-        }
-
-        $requirement = PhaseDocumentRequirement::create($request->all());
-
-        return $this->createdResponse($requirement, 'Document requirement created successfully');
+        $data = $validator->validated();
+        return DB::transaction(function () use ($data) {
+            $period = Period::whereKey($data['period_id'])->lockForUpdate()->firstOrFail();
+            if ($period->is_finalized) return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
+            return $this->createdResponse(PhaseDocumentRequirement::create($data), 'Document requirement created successfully');
+        });
     }
 
     public function update(Request $request, string $id)
@@ -90,6 +75,7 @@ class PhaseDocumentRequirementController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
+            'period_id' => 'prohibited',
             'phase' => 'sometimes|string|in:'.implode(',', self::PHASES),
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
@@ -100,9 +86,14 @@ class PhaseDocumentRequirementController extends Controller
             return $this->validationErrorResponse($validator->errors());
         }
 
-        $requirement->update($request->all());
+        return DB::transaction(function () use ($requirement, $validator) {
+            $period = Period::whereKey($requirement->period_id)->lockForUpdate()->firstOrFail();
+            if ($period->is_finalized) return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
+            $requirement = PhaseDocumentRequirement::whereKey($requirement->id)->lockForUpdate()->firstOrFail();
+            $requirement->update($validator->validated());
 
-        return $this->successResponse($requirement, 'Document requirement updated successfully');
+            return $this->successResponse($requirement, 'Document requirement updated successfully');
+        });
     }
 
     public function destroy(string $id)
@@ -114,16 +105,21 @@ class PhaseDocumentRequirementController extends Controller
             return $this->errorResponse('Cannot delete document requirements for a finalized period.', 403);
         }
 
-        $requirement->delete();
+        return DB::transaction(function () use ($requirement) {
+            $period = Period::whereKey($requirement->period_id)->lockForUpdate()->firstOrFail();
+            if ($period->is_finalized) return $this->errorResponse('Cannot delete document requirements for a finalized period.', 403);
+            PhaseDocumentRequirement::whereKey($requirement->id)->lockForUpdate()->firstOrFail()->delete();
 
-        return $this->successResponse(null, 'Document requirement deleted successfully');
+            return $this->successResponse(null, 'Document requirement deleted successfully');
+        });
     }
 
     public function bulkUpdate(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'period_id' => 'required|exists:capstone_periods,id',
-            'requirements' => 'required|array',
+            'phase' => 'nullable|string|in:'.implode(',', self::PHASES),
+            'requirements' => 'present|array',
             'requirements.*.phase' => 'required|string|in:'.implode(',', self::PHASES),
             'requirements.*.name' => 'required|string|max:255',
             'requirements.*.description' => 'nullable|string',
@@ -134,29 +130,31 @@ class PhaseDocumentRequirementController extends Controller
             return $this->validationErrorResponse($validator->errors());
         }
 
-        // Check if period is finalized
-        $errorResponse = $this->checkPeriodNotFinalized($request->period_id);
-        if ($errorResponse) {
-            return $errorResponse;
+        $data = $validator->validated();
+        if (! empty($data['phase']) && collect($data['requirements'])->contains(fn ($item) => $item['phase'] !== $data['phase'])) {
+            return $this->errorResponse('All requirements must belong to the selected phase.', 422);
         }
 
-        $periodId = $request->period_id;
-        $phases = $request->requirements;
-
-        PhaseDocumentRequirement::where('period_id', $periodId)->delete();
-
-        $created = [];
-        foreach ($phases as $req) {
-            $created[] = PhaseDocumentRequirement::create([
-                'period_id' => $periodId,
-                'phase' => $req['phase'],
-                'name' => $req['name'],
-                'description' => $req['description'] ?? null,
-                'is_required' => $req['is_required'] ?? false,
-            ]);
-        }
-
-        return $this->successResponse($created, 'Document requirements updated successfully');
+        return DB::transaction(function () use ($data) {
+            $period = Period::whereKey($data['period_id'])->lockForUpdate()->firstOrFail();
+            if ($period->is_finalized) {
+                return $this->errorResponse('Cannot modify document requirements for a finalized period.', 403);
+            }
+            $query = PhaseDocumentRequirement::where('period_id', $period->id);
+            if (! empty($data['phase'])) $query->where('phase', $data['phase']);
+            $query->delete();
+            $created = [];
+            foreach ($data['requirements'] as $req) {
+                $created[] = PhaseDocumentRequirement::create([
+                    'period_id' => $period->id,
+                    'phase' => $req['phase'],
+                    'name' => $req['name'],
+                    'description' => $req['description'] ?? null,
+                    'is_required' => $req['is_required'] ?? false,
+                ]);
+            }
+            return $this->successResponse($created, 'Document requirements updated successfully');
+        });
     }
 
     /**

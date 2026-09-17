@@ -286,6 +286,7 @@ class BursaIdeController extends Controller
         DB::beginTransaction();
         try {
             $this->groupService->handleJoinGroup($joinRequest->requester, $group);
+            $joinRequest->update(['status' => 'ACCEPTED']);
 
             DB::commit();
 

@@ -27,6 +27,7 @@
             font-family: 'Inter Tight', system-ui, -apple-system, sans-serif !important;
         }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 
 <body class="antialiased bg-[#ECEFF3]">
@@ -42,7 +43,7 @@
         </div>
 
         <!-- Sidebar wrapper — no rounded, flush left, bg white (matches sidebar) -->
-        <div class="flex-shrink-0 relative z-20 bg-white border-r border-[#DFE1E6]"
+        <div data-mobile-sidebar-holder class="flex-shrink-0 relative z-20 bg-white border-r border-[#DFE1E6]"
             :class="sidebarOpen ? 'w-[260px]' : 'w-[72px]'" style="transition: width 0.3s;">
             <x-eoffice::ui.sidebar-dosen />
         </div>
@@ -129,6 +130,7 @@
     </div>
 
     @stack('scripts')
+    <x-mobile-navigation />
 </body>
 
 </html>

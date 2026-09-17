@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="">
+    <title>Expo Events | SICATA</title>
+    <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["mahasiswa"],"active_role":"mahasiswa","nim":null,"nip":"TEST-NIP"},"role":"mahasiswa","path":"\/mahasiswa\/expo","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+</head>
+<body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
+    <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
+<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+    <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
+        <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
+        <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
+                    <path  d="m15 18-6-6 6-6"  />
+    </svg>
+</button>
+    </div>
+    </div>
+    <nav aria-label="Capstone navigation" class="min-h-0 flex-1 overflow-y-auto p-2 space-y-1">
+        <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">Menu</div>
+                                <a href="http://localhost:8000/capstone/mahasiswa/dashboard" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " title="Dashboard"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <rect  width="7"  height="9"  x="3"  y="3"  rx="1"  />
+                    <rect  width="7"  height="5"  x="14"  y="3"  rx="1"  />
+                    <rect  width="7"  height="9"  x="14"  y="12"  rx="1"  />
+                    <rect  width="7"  height="5"  x="3"  y="16"  rx="1"  />
+    </svg>
+<span x-show="!collapsed">Dashboard</span></a>
+                                                                <a  href="http://localhost:8000/capstone/mahasiswa/registration"  class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent  " title="Registration"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+    </svg>
+<span x-show="!collapsed">Registration</span></a>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Group &amp; Titles"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"  />
+                    <path  d="M16 3.128a4 4 0 0 1 0 7.744"  />
+                    <path  d="M22 21v-2a4 4 0 0 0-3-3.87"  />
+                    <circle  cx="9"  cy="7"  r="4"  />
+    </svg>
+<span x-show="!collapsed">Group &amp; Titles</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/group"  title="My Group" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">My Group</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/titles"  title="Titles Marketplace" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Titles Marketplace</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/propose-title"  title="Propose Title" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Propose Title</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/bidding"  title="Title Bids" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Title Bids</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Progress &amp; Docs"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"  />
+                    <path  d="M14 2v5a1 1 0 0 0 1 1h5"  />
+                    <path  d="M10 9H8"  />
+                    <path  d="M16 13H8"  />
+                    <path  d="M16 17H8"  />
+    </svg>
+<span x-show="!collapsed">Progress &amp; Docs</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/documents"  title="Documents" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Documents</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/ta-submission"  title="TA Submission" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">TA Submission</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: true }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Schedules"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+    </svg>
+<span x-show="!collapsed">Schedules</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/schedule"  title="My Schedule" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">My Schedule</a>
+                                                                                            <a  aria-disabled="true" tabindex="-1"  title="Available when your group is ready for Expo" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent pointer-events-none opacity-50 bg-sidebar-accent font-medium">Daftar Expo</a>
+                                                    </div>
+                    </div>
+                                                                                                    <div x-data="{ expanded: false }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Evaluations"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"  />
+                    <path  d="M22 10v6"  />
+                    <path  d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"  />
+    </svg>
+<span x-show="!collapsed">Evaluations</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                                                                                            <a  aria-disabled="true" tabindex="-1"  title="Available after Expo registration" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent pointer-events-none opacity-50 ">Peer Review</a>
+                                                                                            <a  href="http://localhost:8000/capstone/mahasiswa/grades"  title="My Grades" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">My Grades</a>
+                                                    </div>
+                    </div>
+                                            <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">System</div>
+        <a href="http://localhost:8000/capstone/notifications" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="!collapsed">Notifications</span><span x-show="unread > 0 && !collapsed" x-text="unread" class="ml-auto rounded-full bg-primary px-1.5 text-xs text-white"></span></a>
+    </nav>
+    <div class="p-2 border-t">
+                <form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm text-destructive hover:bg-sidebar-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+<span x-show="!collapsed">Logout</span></button></form>
+    </div>
+</aside>
+    <main class="flex h-screen w-full min-w-0 flex-col overflow-hidden">
+        <div class="flex-1 overflow-y-auto p-4 bg-white">
+            <div class="border-grey-100 shadow-small min-h-full overflow-hidden rounded-xl border">
+                <header class="sticky top-0 z-30 flex items-center justify-between gap-4 px-3 sm:px-6 py-4 border-b border-grey-100 bg-white">
+    <button type="button" @click="mobileSidebar = !mobileSidebar" aria-label="Open menu" class="md:hidden"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M4 5h16"  />
+                    <path  d="M4 12h16"  />
+                    <path  d="M4 19h16"  />
+    </svg>
+</button>
+    <nav aria-label="breadcrumb"><ol class="flex flex-wrap items-center gap-2 text-sm"><li class="text-grey-400">SICATA</li><li class="text-grey-300">/</li><li class="text-grey-600 font-medium">Expo</li></ol></nav>
+    <div class="flex items-center gap-2">
+        <button type="button" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+</button>
+        <a href="http://localhost:8000/capstone/notifications" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Notifications"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
+                    <path  d="M10.268 21a2 2 0 0 0 3.464 0"  />
+                    <path  d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"  />
+    </svg>
+<span x-show="unread > 0" class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-error-100"></span></a>
+        <div x-data="{ open:false }" class="relative" @click.outside="open=false" @keydown.escape.window="open=false">
+            <button type="button" @click="open=!open" :aria-expanded="open" class="flex items-center gap-3 h-10 px-2 hover:bg-grey-25 rounded-md">
+                <span class="h-8 w-8 flex items-center justify-center rounded-full bg-grey-100 text-grey-500 text-sm font-semibold">TA</span>
+                <span class="flex-col items-start text-left hidden sm:flex"><span class="text-sm font-semibold text-grey-600 leading-tight">Test Administrator</span><span class="text-xs text-grey-400 leading-tight">Mahasiswa</span></span>
+            </button>
+            <div x-show="open" x-cloak class="absolute right-0 mt-2 w-56 rounded-md border bg-popover p-1 shadow-md z-50">
+                <div class="px-2 py-1.5 text-sm"><p class="font-semibold">Test Administrator</p><p class="text-xs text-muted-foreground">test@example.test</p></div><hr class="my-1">
+                <a href="http://localhost:8000/capstone/profile" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"  />
+                    <circle  cx="12"  cy="7"  r="4"  />
+    </svg>
+Profile</a>
+                                <hr class="my-1"><form method="POST" action="http://localhost:8000/capstone/logout"><input type="hidden" name="_token" value="" autocomplete="off"><button class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-error-100 hover:bg-accent"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m16 17 5-5-5-5"  />
+                    <path  d="M21 12H9"  />
+                    <path  d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"  />
+    </svg>
+Logout</button></form>
+            </div>
+        </div>
+    </div>
+</header>
+                <div class="px-3 sm:px-6 pt-6 pb-6"><div x-data="capstoneExpo" class="space-y-6">
+    <div><h1 class="text-3xl font-bold tracking-tight">Expo Events</h1><p class="text-muted-foreground">Register your group for an available expo event.</p></div>
+    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span class="sr-only">Loading</span></div>
+<div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
+    <div x-show="!loading && !error" x-cloak>
+        <div x-show="!events.length" class="text-center py-12 border rounded-lg border-dashed"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground">
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+                    <path  d="M8 14h.01"  />
+                    <path  d="M12 14h.01"  />
+                    <path  d="M16 14h.01"  />
+                    <path  d="M8 18h.01"  />
+                    <path  d="M12 18h.01"  />
+                    <path  d="M16 18h.01"  />
+    </svg>
+<h2 class="text-xl font-bold mb-2">No Expo Events Available</h2><p class="text-muted-foreground">No expo events are currently open for registration.</p></div>
+        <div class="grid gap-4 md:grid-cols-2"><template x-for="event in events" :key="event.id"><section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm" :class="event.is_registered ? 'border-primary' : full(event) ? 'opacity-60' : ''">
+<div class="px-6 pb-3 flex items-center justify-between gap-2"><h2 class="text-lg font-semibold" x-text="event.name"></h2><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 border-transparent bg-primary text-primary-foreground bg-green-600" x-show="event.is_registered"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-3 w-3 mr-1">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+Registered</span>
+<span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 border-transparent bg-destructive text-white" x-show="!event.is_registered && full(event)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-3 w-3 mr-1">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+Full</span>
+<span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground" x-show="!event.is_registered && !full(event)" x-text="(event.capacity-event.registrations_count)+' slots left'"></span>
+</div>
+            <div class="px-6 space-y-3">
+                <div class="flex items-center gap-2 text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted-foreground">
+                    <path  d="M8 2v4"  />
+                    <path  d="M16 2v4"  />
+                    <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
+                    <path  d="M3 10h18"  />
+                    <path  d="M8 14h.01"  />
+                    <path  d="M12 14h.01"  />
+                    <path  d="M16 14h.01"  />
+                    <path  d="M8 18h.01"  />
+                    <path  d="M12 18h.01"  />
+                    <path  d="M16 18h.01"  />
+    </svg>
+<span x-text="date(event.date)"></span></div><div class="flex items-center gap-2 text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted-foreground">
+                    <path  d="M12 6v6l4 2"  />
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<span x-text="event.start_time.slice(0,5)+' – '+event.end_time.slice(0,5)"></span></div><div class="flex items-center gap-2 text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted-foreground">
+                    <path  d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"  />
+                    <circle  cx="12"  cy="10"  r="3"  />
+    </svg>
+<span x-text="event.room"></span></div><div class="flex items-center gap-2 text-sm"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-muted-foreground">
+                    <path  d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"  />
+                    <path  d="M16 3.128a4 4 0 0 1 0 7.744"  />
+                    <path  d="M22 21v-2a4 4 0 0 0-3-3.87"  />
+                    <circle  cx="9"  cy="7"  r="4"  />
+    </svg>
+<span x-text="event.registrations_count+'/'+event.capacity+' registered'"></span></div>
+                <div class="w-full bg-muted rounded-full h-2"><div class="h-2 rounded-full transition-all" :class="full(event)?'bg-destructive':'bg-primary'" :style="{width:Math.min(100,event.capacity ? event.registrations_count/event.capacity*100 : 0)+'%'}"></div></div>
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3 w-full mt-2" type="button" x-show="!event.is_registered && !full(event)" :disabled="saving || !event.can_register" :title="event.registration_reason" @click="confirm(event,'register')">Daftar Expo</button>
+                <div x-show="event.is_registered" class="space-y-2"><p class="text-sm text-green-600 font-medium text-center">✓ Your group is registered for this event</p><a :href="url('/mahasiswa/expo/'+event.id)" class="w-full h-9 rounded-md bg-primary text-primary-foreground inline-flex justify-center items-center text-sm font-medium"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mr-2 h-4 w-4">
+                    <path  d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"  />
+                    <circle  cx="12"  cy="12"  r="3"  />
+    </svg>
+Lihat Detail</a><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3 w-full" type="button" :disabled="saving" @click="confirm(event,'withdraw')">Undurkan dari Expo</button>
+</div>
+            </div>
+</section>
+</template></div>
+    </div>
+    <dialog id="expo-confirm" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg font-semibold" x-text="action==='register' ? 'Register your group for this expo event?' : 'Withdraw your group from this expo event?'"></h2><p class="text-sm text-muted-foreground mt-2" x-text="selected?.name"></p><div class="flex justify-end gap-2 mt-6"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="$el.closest('dialog').close()">Cancel</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="submit" :disabled="saving"><span x-text="saving ? 'Processing...' : 'Confirm'"></span></button>
+</div>
+</dialog>
+</div>
+</div>
+            </div>
+        </div>
+    </main>
+</div>
+<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+</div>
+</body>
+</html>

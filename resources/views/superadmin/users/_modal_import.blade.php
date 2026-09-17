@@ -218,8 +218,7 @@ function renderDuplicateList(duplicates) {
 
     container.innerHTML = duplicates.map(u => {
         const initials = u.name ? u.name.charAt(0).toUpperCase() : '?';
-        const isSa     = u.roles.includes('superadmin');
-        const avatarBg = isSa ? 'bg-[rgba(11,38,110,0.06)] text-[var(--c-primary)]' : 'bg-[#F8F9FA] text-[#6C757D]';
+        const avatarBg = 'bg-[#F3F4F6] text-[#6B7280] border border-[#E5E7EB]';
 
         const rolesHtml = u.roles.length
             ? u.roles.map(r => {

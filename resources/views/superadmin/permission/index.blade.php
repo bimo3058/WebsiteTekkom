@@ -86,6 +86,12 @@
     $roles = $rolesQuery->orderBy($sortBy, $sortDir)->paginate($perPage)->withQueryString();
 
     $dbModules = \App\Models\SystemModule::all();
+
+    // Overview metrics
+    $totalRoles = \App\Models\Role::count();
+    $activeRoles = \App\Models\Role::has('users')->count();
+    $totalPermissions = \App\Models\Permission::count();
+    $usersWithRoles = \App\Models\User::has('roles')->count();
 @endphp
 
 <div class="rp-wrap">
@@ -103,6 +109,61 @@
 
     {{-- ── BODY ── --}}
     <div class="rp-box-body">
+
+        {{-- ── Overview Cards ── --}}
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 8px;">
+            {{-- Total Roles --}}
+            <div style="background: #fff; border: 2px solid #E2E8F0; border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#5E53F4'" onmouseout="this.style.borderColor='#E2E8F0'">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <div style="width: 38px; height: 38px; background: #F8F7FF; border: 1.5px solid #E0DEFF; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" fill="none" stroke="#5E53F4" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                            <path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/>
+                        </svg>
+                    </div>
+                    <span style="font-size: 28px; font-weight: 800; color: #1E293B; letter-spacing: -0.02em;">{{ $totalRoles }}</span>
+                </div>
+                <p style="font-size: 11px; font-weight: 600; color: #64748B; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">Total Roles</p>
+            </div>
+
+            {{-- Active Roles --}}
+            <div style="background: #fff; border: 2px solid #E2E8F0; border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#5E53F4'" onmouseout="this.style.borderColor='#E2E8F0'">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <div style="width: 38px; height: 38px; background: #F8F7FF; border: 1.5px solid #E0DEFF; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" fill="none" stroke="#5E53F4" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                            <circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>
+                        </svg>
+                    </div>
+                    <span style="font-size: 28px; font-weight: 800; color: #1E293B; letter-spacing: -0.02em;">{{ $activeRoles }}</span>
+                </div>
+                <p style="font-size: 11px; font-weight: 600; color: #64748B; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">Active Roles</p>
+            </div>
+
+            {{-- Total Permissions --}}
+            <div style="background: #fff; border: 2px solid #E2E8F0; border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#5E53F4'" onmouseout="this.style.borderColor='#E2E8F0'">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <div style="width: 38px; height: 38px; background: #F8F7FF; border: 1.5px solid #E0DEFF; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" fill="none" stroke="#5E53F4" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                        </svg>
+                    </div>
+                    <span style="font-size: 28px; font-weight: 800; color: #1E293B; letter-spacing: -0.02em;">{{ $totalPermissions }}</span>
+                </div>
+                <p style="font-size: 11px; font-weight: 600; color: #64748B; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">Total Permissions</p>
+            </div>
+
+            {{-- Users with Roles --}}
+            <div style="background: #fff; border: 2px solid #E2E8F0; border-radius: 14px; padding: 18px 20px; transition: border-color 0.2s;" onmouseover="this.style.borderColor='#5E53F4'" onmouseout="this.style.borderColor='#E2E8F0'">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                    <div style="width: 38px; height: 38px; background: #F8F7FF; border: 1.5px solid #E0DEFF; border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="18" height="18" fill="none" stroke="#5E53F4" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                            <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                        </svg>
+                    </div>
+                    <span style="font-size: 28px; font-weight: 800; color: #1E293B; letter-spacing: -0.02em;">{{ $usersWithRoles }}</span>
+                </div>
+                <p style="font-size: 11px; font-weight: 600; color: #64748B; margin: 0; text-transform: uppercase; letter-spacing: 0.05em;">Users with Roles</p>
+            </div>
+        </div>
 
         {{-- ── Table Card ── --}}
         <div style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
@@ -204,10 +265,9 @@
                                 <input type="checkbox" id="rpSelectAll" style="width:14px;height:14px;cursor:pointer;accent-color:var(--c-primary);">
                             </th>
                             <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;width:40px;">No</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Nama Role</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Modul</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Permissions</th>
-                            <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Status</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Role Details</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Access Overview</th>
+                            <th style="padding:10px 12px;text-align:left;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Users</th>
                             <th style="padding:10px 12px;text-align:center;font-size:10.5px;font-weight:700;color:var(--c-fg-muted);text-transform:uppercase;letter-spacing:.06em;">Action</th>
                         </tr>
                     </thead>
@@ -218,59 +278,137 @@
                             $modCount  = $dbModules->count();
                             $rowNum    = ($roles->currentPage()-1) * $roles->perPage() + $i + 1;
                             $isActive  = $role->users_count > 0;
+
+                            // Group permissions by module
+                            $permsByModule = $role->permissions->groupBy(function($perm) {
+                                return explode('.', $perm->name)[0] ?? 'general';
+                            });
+                            $moduleCount = $permsByModule->count();
+
+                            // Calculate percentage for user progress bar
+                            // Get max from the paginated collection instead of querying DB
+                            $maxUsers = $roles->max('users_count') ?: 1;
+                            $userPercent = $maxUsers > 0 ? ($role->users_count / $maxUsers) * 100 : 0;
                         @endphp
                         <tr class="rp-tr" style="border-bottom:1px solid #F3F4F6;">
-                            <td style="padding:10px 12px 10px 16px;">
+                            <td style="padding:14px 12px 14px 16px;">
                                 <input type="checkbox" class="rp-cb" value="{{ $role->id }}"
                                        style="width:14px;height:14px;cursor:pointer;accent-color:var(--c-primary);">
                             </td>
-                            <td style="padding:10px 12px;font-size:12px;font-weight:600;color:var(--c-fg-muted);">{{ $rowNum }}</td>
+                            <td style="padding:14px 12px;font-size:12px;font-weight:600;color:var(--c-fg-muted);">{{ $rowNum }}</td>
 
-                            {{-- Nama Role --}}
-                            <td style="padding:10px 12px;">
-                                <a href="{{ route('superadmin.permissions.show') . '?role=' . $role->name }}" style="text-decoration:none;">
-                                    <x-ui.role-badge :role="$role->name" size="xs" />
-                                </a>
+                            {{-- Role Details --}}
+                            <td style="padding:14px 12px;">
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                                    <a href="{{ route('superadmin.permissions.show') . '?role=' . $role->name }}" style="text-decoration:none;">
+                                        <x-ui.role-badge :role="$role->name" size="xs" />
+                                    </a>
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <x-ui.status-badge :status="$isActive ? 'active' : 'nonaktif'" />
+                                        <span style="font-size:10px; color:var(--c-fg-muted); font-weight:500;">
+                                            Created {{ \Carbon\Carbon::parse($role->created_at)->diffForHumans() }}
+                                        </span>
+                                    </div>
+                                </div>
                             </td>
 
-                            <td style="padding:10px 12px;font-size:12px;font-weight:600;color:var(--c-fg-sec);">{{ $modCount }} Modul</td>
-                            <td style="padding:10px 12px;font-size:12px;font-weight:600;color:var(--c-fg-sec);">{{ $permCount }} Permissions</td>
+                            {{-- Access Overview --}}
+                            <td style="padding:14px 12px;">
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    {{-- Module & Permission Counts --}}
+                                    <div style="display:flex; align-items:center; gap:12px;">
+                                        <div style="display:flex; align-items:center; gap:4px;">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color:#64748B;">
+                                                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                                            </svg>
+                                            <span style="font-size:11px; font-weight:600; color:var(--c-fg);">{{ $moduleCount }}</span>
+                                            <span style="font-size:10px; color:var(--c-fg-muted);">modules</span>
+                                        </div>
+                                        <div style="display:flex; align-items:center; gap:4px;">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color:#64748B;">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+                                            </svg>
+                                            <span style="font-size:11px; font-weight:600; color:var(--c-fg);">{{ $permCount }}</span>
+                                            <span style="font-size:10px; color:var(--c-fg-muted);">permissions</span>
+                                        </div>
+                                    </div>
 
-                            <td style="padding:10px 12px;">
-                                <x-ui.status-badge :status="$isActive ? 'active' : 'nonaktif'" />
+                                    {{-- Module Tags --}}
+                                    @if($moduleCount > 0)
+                                    <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                                        @foreach($permsByModule->take(4) as $moduleName => $perms)
+                                        <span style="display:inline-flex; align-items:center; gap:3px; padding:3px 7px; background:#F1F5F9; border-radius:6px; font-size:9px; font-weight:600; color:#475569; text-transform:capitalize;">
+                                            {{ $moduleName }}
+                                            <span style="background:#CBD5E1; color:#1E293B; padding:1px 4px; border-radius:4px; font-size:8px;">{{ $perms->count() }}</span>
+                                        </span>
+                                        @endforeach
+                                        @if($moduleCount > 4)
+                                        <span style="display:inline-flex; align-items:center; padding:3px 7px; background:#E0E7FF; border-radius:6px; font-size:9px; font-weight:600; color:#4F46E5;">
+                                            +{{ $moduleCount - 4 }} more
+                                        </span>
+                                        @endif
+                                    </div>
+                                    @endif
+                                </div>
+                            </td>
+
+                            {{-- Users with Progress Bar --}}
+                            <td style="padding:14px 12px;">
+                                <div style="display:flex; flex-direction:column; gap:6px;">
+                                    <div style="display:flex; align-items:center; gap:8px;">
+                                        <span style="font-size:16px; font-weight:700; color:var(--c-fg);">{{ $role->users_count }}</span>
+                                        <span style="font-size:10px; color:var(--c-fg-muted); font-weight:500;">users</span>
+                                    </div>
+                                    {{-- Progress bar --}}
+                                    <div style="width:100%; max-width:120px; height:6px; background:#F1F5F9; border-radius:10px; overflow:hidden;">
+                                        <div style="height:100%; background:#5E53F4; border-radius:10px; width:{{ $userPercent }}%; transition:width 0.3s ease;"></div>
+                                    </div>
+                                    @if($role->users_count > 0)
+                                    <a href="{{ route('superadmin.users.index', ['role' => $role->name]) }}"
+                                       style="font-size:10px; color:var(--c-primary); text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:3px;"
+                                       onmouseover="this.style.textDecoration='underline'"
+                                       onmouseout="this.style.textDecoration='none'">
+                                        View users
+                                        <svg width="10" height="10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                                        </svg>
+                                    </a>
+                                    @endif
+                                </div>
                             </td>
 
                             {{-- Action --}}
-                            <td style="padding:10px 12px;text-align:center;">
+                            <td style="padding:14px 12px;text-align:center;">
                                 <div class="relative" x-data="{ open:false }">
                                     <button type="button" @click="open=!open" @click.outside="open=false"
-                                            style="width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--c-border);border-radius:7px;background:#fff;cursor:pointer;transition:background .15s;"
-                                            onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24" style="color:var(--c-fg-muted);">
+                                            style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--c-border);border-radius:8px;background:#fff;cursor:pointer;transition:all .15s;"
+                                            onmouseover="this.style.background='var(--c-bg)'; this.style.borderColor='var(--c-primary)'"
+                                            onmouseout="this.style.background='#fff'; this.style.borderColor='var(--c-border)'">
+                                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24" style="color:var(--c-fg-muted);">
                                             <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
                                         </svg>
                                     </button>
                                     <div x-show="open"
                                          x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                                         class="absolute right-0 top-[calc(100%+5px)] bg-white rounded-xl py-1 z-50 min-w-[160px]"
+                                         class="absolute right-0 top-[calc(100%+5px)] bg-white rounded-xl py-1 z-50 min-w-[180px]"
                                          style="border:1px solid var(--c-border);box-shadow:0 8px 24px rgba(0,0,0,.1);display:none;">
                                         <a href="{{ route('superadmin.permissions.show') . '?role=' . $role->name }}"
                                            @click="open=false"
-                                           style="display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:11px;font-weight:500;color:var(--c-fg-sec);text-decoration:none;transition:background .12s;"
+                                           style="display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11.5px;font-weight:600;color:var(--c-fg-sec);text-decoration:none;transition:background .12s;"
                                            onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='transparent'">
-                                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round">
                                                 <path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/>
                                             </svg>
                                             Edit Permissions
                                         </a>
                                         <a href="{{ route('superadmin.users.index', ['role' => $role->name]) }}"
                                            @click="open=false"
-                                           style="display:flex;align-items:center;gap:8px;padding:7px 12px;font-size:11px;font-weight:500;color:var(--c-fg-sec);text-decoration:none;transition:background .12s;"
+                                           style="display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11.5px;font-weight:600;color:var(--c-fg-sec);text-decoration:none;transition:background .12s;"
                                            onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='transparent'">
-                                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
                                                 <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
                                             </svg>
-                                            Lihat User
+                                            View Users ({{ $role->users_count }})
                                         </a>
                                     </div>
                                 </div>
@@ -278,7 +416,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" style="padding:60px 24px;text-align:center;">
+                            <td colspan="6" style="padding:60px 24px;text-align:center;">
                                 <div style="display:flex;flex-direction:column;align-items:center;gap:8px;">
                                     <svg width="36" height="36" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;">
                                         <path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"

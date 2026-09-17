@@ -9,6 +9,9 @@
         </div>
         <p class="mp-page-sub">Kelola data praktikan per praktikum · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
+    <a class="mp-btn secondary md" href="{{ route('eoffice.manprak.admin.pendaftaran-praktikan.index') }}">
+        <x-eoffice::manajemen-praktikum.ui.icon name="file" /> Pendaftaran &amp; Dokumen IRS
+    </a>
 </div>
 
 {{-- Pilih Praktikum --}}

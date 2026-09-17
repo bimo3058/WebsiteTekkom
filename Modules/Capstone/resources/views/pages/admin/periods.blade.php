@@ -1,0 +1,12 @@
+@extends('capstone::layouts.app')
+@section('title','Periods')
+@section('content')
+<div class="min-h-screen" x-data="capstoneTable({endpoint:'/admin/periods'})"><div class="mx-auto max-w-7xl space-y-6">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><h1 class="text-xl font-bold text-gray-900">Periode Capstone &amp; TA</h1><x-capstone::button href="/admin/periods/new" class="cursor-pointer gap-2"><x-capstone::icon name="Plus" />Periode Baru</x-capstone::button></div>
+    <x-capstone::data-table title="Period Table" search-placeholder="Cari periode..." :columns="[0=>'', 'name'=>'Nama Periode','start_date'=>'Durasi',1=>'Konfigurasi Group','is_active'=>'Status',2=>'Action']" empty-title="Tidak ada periode ditemukan" empty-description="Coba ubah filter atau buat periode baru" icon="CalendarDays" :grouped="true">
+        <x-slot:filters><select x-model="filters.is_active" @change="page=1" class="h-10 rounded-md border px-3 text-sm" aria-label="Status"><option value="all">Semua Status</option><option value="true">Aktif</option><option value="false">Nonaktif</option></select></x-slot:filters>
+        <template x-for="item in visible" :key="item.id"><tbody><tr class="border-b transition-colors hover:bg-muted/50"><td class="p-2"><x-capstone::button variant="ghost" size="icon" @click="expanded=expanded===item.id ? null : item.id" aria-label="Expand period"><x-capstone::icon name="ChevronDown" /></x-capstone::button></td><td class="p-2 font-medium text-gray-900" x-text="item.name"></td><td class="p-2 text-gray-600" x-text="date(item.start_date)+' — '+date(item.end_date)"></td><td class="p-2 text-sm text-gray-600" x-text="item.min_group_size==null && item.max_group_size==null ? 'Belum dikonfigurasi' : `${item.min_group_size}-${item.max_group_size} anggota · ${item.max_supervisor_load || '—'}/dosen`"></td><td class="p-2"><button type="button" @click="toggle(item)" class="inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium" :class="item.is_active ? 'border-green-600 text-green-800' : 'border-gray-600 text-gray-600'" x-text="item.is_active ? 'Aktif' : 'Nonaktif'"></button></td><td class="p-2">@include('capstone::partials.row-actions',['editPath'=>'/admin/periods/{id}/edit'])</td></tr><tr x-show="expanded===item.id" class="bg-gray-50/30"><td colspan="6">@include('capstone::pages.admin.periods.expanded')</td></tr></tbody></template>
+    </x-capstone::data-table>
+    @include('capstone::partials.delete-dialog',['deleteTitle'=>'Hapus Periode'])
+</div></div>
+@endsection

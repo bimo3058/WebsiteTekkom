@@ -6,8 +6,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: rgb(11, 38, 110);
@@ -458,22 +456,7 @@
             .filter-group select { flex: 1; }
         }
 
-        /* ── Table loading spinner ── */
-        .tbl-loading {
-            display: none; align-items: center; justify-content: center;
-            gap: 10px; padding: 40px 20px;
-            color: var(--slate-600); font-size: 13px;
-        }
-        .tbl-loading.show { display: flex; }
-        .tbl-spinner {
-            width: 22px; height: 22px;
-            border: 3px solid var(--slate-200);
-            border-top-color: rgb(11, 38, 110);
-            border-radius: 50%;
-            animation: tbl-spin 0.7s linear infinite;
-            flex-shrink: 0;
-        }
-        @keyframes tbl-spin { to { transform: rotate(360deg); } }
+
     </style>
     @endpush
 
@@ -516,7 +499,7 @@
             </div>
         </div>
 
-        <div class="tbl-loading" id="mkCplSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div id="mkCplSpinner"></div>
         <div class="table-wrapper" id="mkCplWrapper">
             <table>
                 <thead>
@@ -573,7 +556,7 @@
             </div>
         </div>
 
-        <div class="tbl-loading" id="dosenMkSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div id="dosenMkSpinner"></div>
         <div class="table-wrapper" id="dosenMkWrapper">
             <table>
                 <thead>
@@ -658,20 +641,16 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const PAGE_SIZE = 5;
         const TABLE_STATE_STORAGE_KEY = 'banksoal.admin.kontrol-umum.pemetaan.state';
-        const csrfToken = '{{ csrf_token() }}';
-        const BASE_API = '{{ url("/bank-soal/admin/api/pemetaan") }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         let mkCplTomSelect = null;
         let dosenMkTomSelect = null;
 
         const mappingConfig = {
-
             mkCpl: {
-                listApi: `${BASE_API}/mk-cpl`,
+                listApi: '{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.index") }}',
                 searchId: 'mkCplSearch',
                 sortId: 'mkCplSortDirection',
                 tableBodyId: 'mkCplTableBody',
@@ -682,7 +661,7 @@
                 filterText: (item) => `${item.mk_nama} ${item.mk_kode} ${(item.cpl_codes || []).join(' ')}`,
             },
             dosenMk: {
-                listApi: `${BASE_API}/dosen-mk`,
+                listApi: '{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.index") }}',
                 searchId: 'dosenMkSearch',
                 sortId: 'dosenMkSortDirection',
                 tableBodyId: 'dosenMkTableBody',
@@ -745,19 +724,18 @@
         const ROW_KEY = { mkCpl: 'mk_id', dosenMk: 'mk_id' };
         // edit URL builders
         const EDIT_URL = {
-
-            mkCpl:   (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-cpl') }}/${id}/edit`,
-            dosenMk: (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-dosen') }}/${id}/edit`,
+            mkCpl:   (id) => `{{ route('banksoal.admin.kontrol-umum.pemetaan.mk-cpl.edit', ['mk_id' => '__ID__']) }}`.replace('__ID__', id),
+            dosenMk: (id) => `{{ route('banksoal.admin.kontrol-umum.pemetaan.mk-dosen.edit', ['mk_id' => '__ID__']) }}`.replace('__ID__', id),
         };
         // delete-all API URLs
         const DEL_ALL_URL = {
-            mkCpl:   (id) => `${BASE_API}/mk-cpl/${id}/all`,
-            dosenMk: (id) => `${BASE_API}/dosen-mk/${id}/all`,
+            mkCpl:   (id) => '{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.destroy-all", ["mk_id" => "__ID__"]) }}'.replace('__ID__', id),
+            dosenMk: (id) => '{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.destroy-all", ["mk_id" => "__ID__"]) }}'.replace('__ID__', id),
         };
         // bulk delete API URLs
         const BULK_DEL_URL = {
-            mkCpl:   `${BASE_API}/mk-cpl/bulk`,
-            dosenMk: `${BASE_API}/dosen-mk/bulk`,
+            mkCpl:   '{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.bulk-destroy") }}',
+            dosenMk: '{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.bulk-destroy") }}',
         };
         // bulk body key
         const BULK_KEY = { mkCpl: 'mk_ids', dosenMk: 'mk_ids' };
@@ -848,7 +826,7 @@
 
         async function loadOptions() {
             try {
-                const response = await fetch(`${BASE_API}/options`, {
+                const response = await fetch('{{ route("banksoal.api.v1.admin.pemetaan.options") }}', {
                     headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
                 });
                 const result = await readApiResponse(response);
@@ -901,7 +879,7 @@
         async function loadList(key, keepPage = false) {
             const spinnerId = { cpmkCpl: 'cpmkCplSpinner', mkCpl: 'mkCplSpinner', dosenMk: 'dosenMkSpinner' }[key];
             const wrapperId = { cpmkCpl: 'cpmkCplWrapper', mkCpl: 'mkCplWrapper', dosenMk: 'dosenMkWrapper' }[key];
-            if (spinnerId) { document.getElementById(spinnerId).classList.add('show'); }
+            if (spinnerId && window.Spinner) { window.Spinner.showTable(spinnerId); }
             if (wrapperId) { document.getElementById(wrapperId).style.opacity = '0.4'; }
             try {
                 const response = await fetch(mappingConfig[key].listApi, {
@@ -917,7 +895,7 @@
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data pemetaan'));
             } finally {
-                if (spinnerId) { document.getElementById(spinnerId).classList.remove('show'); }
+                if (spinnerId && window.Spinner) { window.Spinner.hideTable(spinnerId); }
                 if (wrapperId) { document.getElementById(wrapperId).style.opacity = '1'; }
             }
         }
@@ -1254,7 +1232,7 @@
                 cpl_ids: cplIds,
             };
 
-            await createMapping(`${BASE_API}/mk-cpl`, payload, 'modalMkCpl', 'mkCpl', {
+            await createMapping('{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.store") }}', payload, 'modalMkCpl', 'mkCpl', {
                 mk_id: 'mapMkIdForCpl',
                 cpl_ids: 'mapCplIdsForMk',
                 'cpl_ids.0': 'mapCplIdsForMk',
@@ -1273,7 +1251,7 @@
                 user_ids: userIds,
             };
 
-            await createMapping(`${BASE_API}/dosen-mk`, payload, 'modalDosenMk', 'dosenMk', {
+            await createMapping('{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.store") }}', payload, 'modalDosenMk', 'dosenMk', {
                 mk_id: 'mapMkIdForDosen',
                 user_ids: 'mapDosenIdsForMk',
                 'user_ids.0': 'mapDosenIdsForMk',
@@ -1314,11 +1292,11 @@
 
 
         async function deleteMkCpl(mkId, cplId) {
-            await deleteMapping(`${BASE_API}/mk-cpl`, { mk_id: mkId, cpl_id: cplId }, 'mkCpl', 'Pemetaan MK ke CPL');
+            await deleteMapping('{{ route("banksoal.api.v1.admin.pemetaan.mk-cpl.destroy") }}', { mk_id: mkId, cpl_id: cplId }, 'mkCpl', 'Pemetaan MK ke CPL');
         }
 
         async function deleteDosenMk(id) {
-            await deleteMapping(`${BASE_API}/dosen-mk/${id}`, null, 'dosenMk', 'Pemetaan Dosen ke MK');
+            await deleteMapping('{{ route("banksoal.api.v1.admin.pemetaan.dosen-mk.destroy", ["id" => "__ID__"]) }}'.replace('__ID__', id), null, 'dosenMk', 'Pemetaan Dosen ke MK');
         }
 
         async function deleteMapping(url, payload, listKey, label) {

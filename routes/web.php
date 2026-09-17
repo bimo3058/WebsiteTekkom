@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\MicrosoftController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserStatusController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -19,27 +20,25 @@ Route::get('/error/{code}', function ($code) {
 Route::middleware('web')->group(function () {
     Route::get('/sso/password', [MicrosoftController::class, 'showPasswordForm'])->name('sso.password');
     Route::post('/sso/password', [MicrosoftController::class, 'verifyPassword'])->name('sso.verify');
-    Route::get('/auth/microsoft/switch', [MicrosoftController::class, 'switchAccount'])->name('microsoft.switch');
+    Route::get('/auth/microsoft/switch', [MicrosoftController::class, 'switchAccount'])->middleware('guest')->name('microsoft.switch');
     Route::post('/logout-and-switch', function () {
         if (auth()->check()) {
             $user = auth()->user();
 
-            \App\Models\UserAuditLog::create([
-                'user_id' => $user->id,
-                'action' => 'logout',
-                'source' => 'sso_switch',
-            ]);
+            try {
+                \App\Models\UserAuditLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'logout',
+                    'source' => 'sso_switch',
+                ]);
+            } catch (\Throwable $exception) {
+                \Illuminate\Support\Facades\Log::warning('SSO switch audit failed', ['exception' => get_class($exception)]);
+            }
 
             $user->clearUserCache();
-            auth()->logout();
         }
 
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
-
-        session()->forget(['sso_pending_user_id', 'sso_verified']);
-
-        return redirect()->route('microsoft.switch');
+        return app(\App\Services\MicrosoftSsoSession::class)->logout(request(), switchAccount: true);
     })->name('logout.switch');
 });
 
@@ -62,10 +61,15 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
 
+    Route::post('/user/heartbeat', [UserStatusController::class, 'heartbeat'])->name('user.heartbeat');
     Route::middleware('role:superadmin')->prefix('superadmin')->name('superadmin.')->group(function () {
 
         Route::get('/dashboard', [SuperAdminController::class, 'index'])
             ->name('dashboard');
+        Route::get('/notifications', [\App\Http\Controllers\SuperAdminNotificationController::class, 'index'])
+            ->name('notifications.index');
+        Route::patch('/notifications/{id}/read', [\App\Http\Controllers\SuperAdminNotificationController::class, 'markAsRead'])
+            ->name('notifications.read');
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
@@ -153,6 +157,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile/notifications', [\App\Http\Controllers\SuperAdminNotificationController::class, 'update'])
+        ->middleware('role:superadmin')->name('profile.notifications.update');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
     Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

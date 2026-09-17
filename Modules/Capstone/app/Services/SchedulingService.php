@@ -243,6 +243,15 @@ class SchedulingService
         }
     }
 
+    /** Create the examiner assignments and pending evaluation rows together. */
+    public function createTaDefenseEvaluations(TaDefenseSchedule $schedule, array $studentIds): void
+    {
+        foreach ([$schedule->examiner_1_id, $schedule->examiner_2_id] as $index => $examinerId) {
+            TaDefenseExaminer::firstOrCreate(['schedule_id'=>$schedule->id,'examiner_id'=>$examinerId], ['role'=>'EXAMINER_'.($index+1)]);
+            TaDefenseEvaluation::firstOrCreate(['schedule_id'=>$schedule->id,'examiner_id'=>$examinerId], ['status'=>'PENDING']);
+        }
+    }
+
     // ══════════════════════════════════════════
     // Transactional Evaluation Submission
     // ══════════════════════════════════════════

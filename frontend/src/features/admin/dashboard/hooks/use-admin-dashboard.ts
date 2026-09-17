@@ -5,8 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import type {
     AdminDashboardResponse,
-    AdminGroupsResponse,
-    AdminPeriodsResponse,
     AdminDashboardData,
     AdminDashboardGroupItem,
 } from '@/features/admin/dashboard/types';
@@ -18,42 +16,19 @@ const fetchDashboard = async (): Promise<AdminDashboardResponse> => {
     return response.data?.data ?? response.data;
 };
 
-const fetchPeriods = async (): Promise<AdminPeriodsResponse> => {
-    const response = await api.get('/admin/periods');
-    return response.data?.data ?? response.data;
-};
-
-const fetchGroups = async (): Promise<AdminGroupsResponse> => {
-    const response = await api.get('/admin/groups', { params: { per_page: 5 } });
-    return response.data?.data ?? response.data;
-};
-
 export function useAdminDashboard() {
     const { data: dashboardData, isLoading: isDashboardLoading } = useQuery({
         queryKey: QUERY_KEY,
         queryFn: fetchDashboard,
     });
 
-    const { data: periodsData, isLoading: isPeriodsLoading } = useQuery({
-        queryKey: ['admin', 'periods'],
-        queryFn: fetchPeriods,
-    });
-
-    const { data: groupsData, isLoading: isGroupsLoading } = useQuery({
-        queryKey: ['admin', 'groups'],
-        queryFn: fetchGroups,
-    });
-
     const data = useMemo<AdminDashboardData | null>(() => {
-        if (!dashboardData || !periodsData || !groupsData) return null;
+        if (!dashboardData) return null;
 
-        const periods = (periodsData?.data ?? periodsData ?? []) as unknown[];
-        const groups = (groupsData?.data ?? groupsData ?? []) as AdminDashboardGroupItem[];
+        const groups = dashboardData.recent_groups ?? [];
 
         const totalUsers = dashboardData?.total_users ?? 0;
-        const pendingFinalization = (Array.isArray(groups) ? groups : []).filter(
-            (g: AdminDashboardGroupItem) => g.status === 'READY_FOR_FINALIZATION'
-        ).length;
+        const pendingFinalization = dashboardData.pending_finalization ?? 0;
 
         const recentGroups = (Array.isArray(groups) ? groups.slice(0, 5) : []).map(
             (g: AdminDashboardGroupItem) => ({
@@ -78,14 +53,14 @@ export function useAdminDashboard() {
 
         return {
             totalUsers,
-            totalPeriods: periods.length,
-            totalGroups: Array.isArray(groups) ? groups.length : 0,
+            totalPeriods: dashboardData.total_periods ?? 0,
+            totalGroups: dashboardData.total_groups ?? 0,
             pendingFinalization,
             recentGroups,
         };
-    }, [dashboardData, periodsData, groupsData]);
+    }, [dashboardData]);
 
-    const isLoading = isDashboardLoading || isPeriodsLoading || isGroupsLoading;
+    const isLoading = isDashboardLoading;
 
     return { data, isLoading };
 }

@@ -92,7 +92,7 @@
             <div class="dash-box-body">
                 @include('superadmin.dashboard._stats')
                 @include('superadmin.dashboard._chart')
-                @include('superadmin.dashboard._import')
+                <!-- @include('superadmin.dashboard._import') -->
                 @include('superadmin.dashboard._modules')
                 @include('superadmin.dashboard._activity')
             </div>
@@ -101,7 +101,7 @@
     </div>
 
 {{-- Modals diletakkan di luar wrap agar overlay-nya menutupi layar penuh --}}
-@include('superadmin.users._modal_import')
+<!-- @include('superadmin.users._modal_import') -->
 
 <script>
 function openModal(id) {

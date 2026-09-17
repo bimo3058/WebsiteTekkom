@@ -19,12 +19,14 @@
 
         {{-- Vite CSS --}}
         {{-- {{ module_vite('build-capstone', 'resources/assets/sass/app.scss') }} --}}
-    </head>
+        <x-mobile-navigation-assets />
+</head>
 
     <body>
         {{ $slot }}
 
         {{-- Vite JS --}}
         {{-- {{ module_vite('build-capstone', 'resources/assets/js/app.js') }} --}}
-    </body>
+        <x-mobile-navigation />
+</body>
 </html>

@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\AcademicRoleSynchronizer;
 use App\Services\AuditLogger;
 use App\Services\SsoAccountResolver;
+use App\Services\MicrosoftSsoSession;
 use App\Services\SupabaseStorage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
@@ -27,24 +28,32 @@ class MicrosoftController extends Controller
     // ─────────────────────────────────────────────────────────────────────────
     public function redirect()
     {
-        return Socialite::driver('azure')
-            ->scopes(['User.Read'])
-            ->redirect();
-    }
-
-    public function switchAccount()
-    {
+        app(MicrosoftSsoSession::class)->tenant();
+        request()->session()->forget('auth.after_microsoft_logout');
         return Socialite::driver('azure')
             ->scopes(['User.Read'])
             ->with(['prompt' => 'select_account'])
             ->redirect();
     }
 
+    public function switchAccount()
+    {
+        return $this->redirect();
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     public function callback()
     {
+        if (!request()->has('code') && !request()->has('error')) {
+            $next = request()->session()->pull('auth.after_microsoft_logout');
+            return redirect()->route($next === 'switch' ? 'microsoft.switch' : 'login');
+        }
         try {
+            $ssoSession = app(MicrosoftSsoSession::class);
+            $ssoSession->tenant();
+            $authenticatedAt = now()->timestamp;
             $microsoftUser = Socialite::driver('azure')->user();
+            $sessionMetadata = $ssoSession->metadata($authenticatedAt);
 
             $email = strtolower(trim((string) $microsoftUser->getEmail()));
             $allowedDomains = [
@@ -57,6 +66,12 @@ class MicrosoftController extends Controller
                 ->contains(fn ($domain) => str_ends_with($email, $domain));
 
             if (! $isAllowed) {
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "Percobaan login dari domain tidak diizinkan: {$email}",
+                    userId: null
+                );
                 return redirect()->route('login')->withErrors([
                     'email' => 'Akses hanya untuk civitas akademika UNDIP.',
                 ]);
@@ -77,6 +92,12 @@ class MicrosoftController extends Controller
             );
 
             if ($resolution['ambiguous']) {
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "Akun ambigu terdeteksi untuk email: {$email}",
+                    userId: null
+                );
                 return redirect()->route('login')->withErrors([
                     'email' => 'Ada lebih dari satu akun impor dengan identitas yang sama. Hubungi Administrator agar akun dapat ditautkan dengan aman.',
                 ]);
@@ -127,6 +148,13 @@ class MicrosoftController extends Controller
                     $message .= ' Alasan: '.$user->suspension_reason;
                 }
 
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "Percobaan login user tersuspend: {$user->name} ({$user->email})",
+                    userId: $user->id
+                );
+
                 return redirect()->route('login')->withErrors(['email' => $message]);
             }
 
@@ -147,6 +175,12 @@ class MicrosoftController extends Controller
             $roleNames = $userRoles->pluck('name')->map(fn ($role) => strtolower($role));
 
             if ($roleNames->isEmpty()) {
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "User login tanpa role: {$user->name} ({$user->email})",
+                    userId: $user->id
+                );
                 return redirect()->route('login')->withErrors([
                     'email' => 'Akun belum memiliki akses (Role). Silakan hubungi Administrator.',
                 ]);
@@ -155,6 +189,8 @@ class MicrosoftController extends Controller
             // 6. Create the Redis-backed Laravel session.
             Auth::login($user, remember: false);
             request()->session()->regenerate();
+            request()->session()->forget(['auth.local_password', 'sso_pending_user_id', 'sso_verified']);
+            request()->session()->put(MicrosoftSsoSession::KEY, $sessionMetadata);
 
             $user->cacheUserData();
 
@@ -189,16 +225,16 @@ class MicrosoftController extends Controller
                 return redirect()->intended(route('dashboard'));
             }
 
-            Auth::logout();
+            $ssoSession->clear(request());
 
             return redirect()->route('login')->withErrors([
                 'email' => 'Role tidak dikenali. Hubungi Administrator.',
             ]);
 
         } catch (\Exception $e) {
+            app(MicrosoftSsoSession::class)->clear(request());
             Log::error('Microsoft SSO Error', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
+                'exception' => get_class($e),
             ]);
 
             return redirect()->route('login')

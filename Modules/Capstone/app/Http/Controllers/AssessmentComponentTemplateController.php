@@ -14,7 +14,7 @@ class AssessmentComponentTemplateController extends Controller
      */
     public function index()
     {
-        $templates = AssessmentComponentTemplate::where('is_active', true)
+        $templates = AssessmentComponentTemplate::query()
             ->orderBy('sort_order')
             ->orderBy('code')
             ->get();
@@ -28,10 +28,11 @@ class AssessmentComponentTemplateController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'code' => 'required|string|max:50|unique:assessment_component_templates',
+            'code' => 'required|string|max:50|unique:capstone_assessment_component_templates',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'weight' => 'required|numeric|min:0|max:100',
+            'is_active' => 'sometimes|boolean',
             'sort_order' => 'nullable|integer',
         ]);
 
@@ -60,7 +61,7 @@ class AssessmentComponentTemplateController extends Controller
         $template = AssessmentComponentTemplate::findOrFail($id);
 
         $data = $request->validate([
-            'code' => 'sometimes|string|max:50|unique:assessment_component_templates,code,'.$id,
+            'code' => 'sometimes|string|max:50|unique:capstone_assessment_component_templates,code,'.$id,
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'weight' => 'sometimes|numeric|min:0|max:100',

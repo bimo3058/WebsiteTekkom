@@ -6,7 +6,7 @@
     $active = $active ?? 'home';
 @endphp
 
-<aside class="sidebar">
+<aside data-mobile-sidebar class="sidebar">
     <div class="sidebar-brand">
         <div class="brand-icon"><i class="fas fa-university"></i></div>
         <div class="brand-text">

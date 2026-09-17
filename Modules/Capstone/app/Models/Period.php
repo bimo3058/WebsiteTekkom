@@ -100,6 +100,12 @@ class Period extends Model
         return $this->is_active && ! $this->is_finalized;
     }
 
+    public function supervisorLoadLimit(int $default = 8): int
+    {
+        $attributes = $this->getAttributes();
+        return (int) ($attributes['max_supervisor_load'] ?? $attributes['max_supervise_load'] ?? $default);
+    }
+
     public function groups()
     {
         return $this->hasMany(Group::class);

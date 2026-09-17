@@ -35,7 +35,7 @@ class PeriodPeerReviewIndicator extends Model
     {
         return [
             'id' => $this->id,
-            'code' => $this->template->code,
+            'code' => $this->template->code ?? null,
             'name' => $this->template->name,
             'description' => $this->template->description,
             'weight' => $this->template->weight,

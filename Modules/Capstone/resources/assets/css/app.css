@@ -1,0 +1,23 @@
+@import './theme.css';
+
+[x-cloak] { display: none !important; }
+dialog::backdrop { background: rgb(0 0 0 / 50%); }
+dialog[open] { animation: capstone-dialog-in .15s ease-out; }
+@keyframes capstone-dialog-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
+.capstone-loader { display: inline-block; width: 2rem; height: 2rem; border: 3px solid var(--border); border-top-color: currentColor; border-radius: 50%; animation: capstone-spin .8s linear infinite; }
+.capstone-progress { position: fixed; inset: 0 0 auto; height: 3px; z-index: 80; overflow: hidden; pointer-events: none; background: var(--muted); }
+.capstone-progress-bar { display: block; width: 40%; height: 100%; background: var(--primary); animation: capstone-progress 1.2s ease-in-out infinite; }
+.capstone-notices { z-index: 70; max-width: calc(100vw - 2.5rem); pointer-events: none; }
+.capstone-notice { pointer-events: auto; animation: capstone-notice-in .2s ease-out; }
+.capstone-success-icon { animation: capstone-check-in .3s ease-out; }
+.capstone-success-icon svg polyline, .capstone-success-icon svg path { stroke-dasharray: 24; stroke-dashoffset: 0; animation: capstone-check-draw .4s ease-out; }
+@keyframes capstone-spin { to { transform: rotate(360deg); } }
+@keyframes capstone-progress { from { transform: translateX(-100%); } to { transform: translateX(350%); } }
+@keyframes capstone-notice-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes capstone-check-in { from { transform: scale(.65); } to { transform: scale(1); } }
+@keyframes capstone-check-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+@media (prefers-reduced-motion: reduce) {
+    .capstone-loader, .capstone-progress-bar, .capstone-notice, .capstone-success-icon, .capstone-success-icon svg * { animation: none !important; }
+    .capstone-progress-bar { width: 100%; opacity: .65; }
+}

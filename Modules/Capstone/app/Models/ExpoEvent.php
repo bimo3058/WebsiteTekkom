@@ -49,7 +49,7 @@ class ExpoEvent extends Model
      */
     public function hasCapacity(): bool
     {
-        return $this->registrations()->count() < $this->capacity;
+        return $this->registered_count < $this->capacity;
     }
 
     /**
@@ -57,6 +57,6 @@ class ExpoEvent extends Model
      */
     public function getRegisteredCountAttribute(): int
     {
-        return $this->registrations()->count();
+        return $this->registrations()->where('status', 'REGISTERED')->count();
     }
 }

@@ -44,6 +44,7 @@
         .ql-toolbar { width: 100%; max-width: 21cm; background: #f9fafb; border-color: #d1d5db !important; border-radius: 4px 4px 0 0 !important; }
         .ql-container { border-color: #d1d5db !important; border-radius: 0 0 4px 4px !important; }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body class="bg-[#F6F8FA] text-[#0D0D12] antialiased">
 <div class="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
@@ -121,5 +122,6 @@
         return true;
     }
 </script>
+    <x-mobile-navigation />
 </body>
 </html>

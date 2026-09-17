@@ -1,0 +1,8 @@
+@extends('capstone::layouts.app')
+@section('title','Detail Penilaian')
+@section('content')
+<div x-data="adminReports('evaluation')" class="space-y-6"><div class="flex flex-wrap items-center justify-between gap-4"><h1 class="text-3xl font-bold">Detail Penilaian</h1><x-capstone::button href="/admin/reports" variant="outline">Reports</x-capstone::button></div>
+@include('capstone::pages.admin.shared.toolbar')
+@include('capstone::partials.loading')
+<div x-show="!loading && !error" x-cloak class="space-y-6"><x-capstone::card><div class="space-y-3 px-6"><h2 class="text-xl font-semibold" x-text="data.student?.name"></h2><p class="text-muted-foreground" x-text="data.student?.nim+' - '+data.student?.group_name"></p><h3 x-text="data.evaluation_type"></h3><p class="text-3xl font-semibold" x-text="data.overall?.score ?? '-'"></p><span class="text-sm" x-text="data.overall?.status"></span></div></x-capstone::card><x-capstone::card title="Evaluator"><div class="px-6 space-y-3"><template x-for="(evaluator,index) in data.evaluators || []" :key="evaluator.evaluator_id || index"><div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4"><div><strong x-text="evaluator.name"></strong><p class="text-sm text-muted-foreground" x-text="evaluator.role"></p></div><span x-text="evaluator.score ?? '-'"></span><span x-text="evaluator.status"></span><a x-show="evaluator.evaluator_id" :href="link('/admin/reports/assessments/student/'+data.student?.id+'/evaluation/'+data.evaluation_type+'/evaluator/'+evaluator.evaluator_id)" class="text-primary underline">Rincian komponen</a></div></template><p x-show="!data.evaluators?.length" class="text-muted-foreground">Belum ada penilaian evaluator.</p></div></x-capstone::card></div></div>
+@endsection

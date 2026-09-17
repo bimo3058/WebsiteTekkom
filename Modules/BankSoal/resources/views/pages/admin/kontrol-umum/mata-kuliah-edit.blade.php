@@ -209,7 +209,7 @@
     @push('scripts')
     <script>
         const UPDATE_URL = '{{ route("banksoal.api.v1.admin.mata-kuliah.update", $mataKuliah->id) }}';
-        const csrfToken = '{{ csrf_token() }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         function incrementSKS() {
             const input = document.getElementById('sks');

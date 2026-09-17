@@ -6,8 +6,10 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>Dashboard Dosen — E-Office SIPERKOM</title>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+@include('eoffice::dashboard._styles')
+    <x-mobile-navigation-assets />
 </head>
-<body class="h-full overflow-hidden bg-[#F6F8FA] text-[#0D0D12] antialiased" style="font-family:'Inter Tight',system-ui,sans-serif;">
+<body class="eo-dashboard h-full overflow-hidden bg-[#F6F8FA] text-[#0D0D12] antialiased" style="font-family:'Inter Tight',system-ui,sans-serif;">
 
 @php
     $user         = auth()->user();
@@ -30,119 +32,23 @@
     $kpList         = $kpList ?? collect();
 @endphp
 
-<div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: localStorage.getItem('eo_sb') !== '0' }"
-     x-init="$watch('sidebarOpen', v => localStorage.setItem('eo_sb', v ? '1' : '0'))">
-
+<div class="eo-dashboard-shell flex h-screen overflow-hidden" x-data="{ sidebarOpen: false, isMobile: window.innerWidth < 768 }"
+     :class="{ 'eo-sidebar-open': sidebarOpen }"
+     x-init="(() => { try { sidebarOpen = window.innerWidth >= 768 &amp;&amp; localStorage.getItem('eo_sb') !== '0'; } catch { sidebarOpen = window.innerWidth >= 768; } $watch('sidebarOpen', v => { if (window.innerWidth >= 768) { try { localStorage.setItem('eo_sb', v ? '1' : '0'); } catch {} } }); })()"
+     @resize.window.debounce.150ms="if (isMobile !== (window.innerWidth < 768)) { isMobile = window.innerWidth < 768; try { sidebarOpen = !isMobile &amp;&amp; localStorage.getItem('eo_sb') !== '0'; } catch { sidebarOpen = !isMobile; } }"
+     @keydown.escape.window="if (isMobile &amp;&amp; sidebarOpen) { sidebarOpen = false; $refs.eoMenuButton.focus(); }">
+    <button type="button" class="eo-sidebar-backdrop" x-show="sidebarOpen" x-cloak @click="sidebarOpen = false" aria-label="Tutup menu navigasi"></button>
     @include('eoffice::dashboard._sidebar')
 
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <main class="eo-dashboard-main" :inert="isMobile &amp;&amp; sidebarOpen">
 
-        {{-- Topbar --}}
-        <div class="flex items-center justify-between px-6 bg-white border-b border-[#DFE1E7] flex-shrink-0" style="height:56px;">
-            <div class="flex items-center gap-3 min-w-0">
-                <div>
-                    <div class="font-bold text-[15px] text-[#0D0D12] leading-[1.2]">Dashboard</div>
-                    <div class="text-[11px] text-[#666D80]">Modul E-Office · SIPERKOM UNDIP</div>
-                </div>
-                <span class="text-[11px] font-semibold px-[9px] py-[3px] rounded-full whitespace-nowrap"
-                      style="background:#F0E6FA; color:#9B59B6;">Dosen</span>
-            </div>
-            <div class="flex items-center gap-2">
-                <div class="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg border border-[#DFE1E7] bg-white cursor-pointer transition-colors hover:bg-[#F6F8FA]">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                    </svg>
-                </div>
-            </div>
-        </div>
-
-        {{-- Content --}}
-        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-[18px]">
-
-            {{-- Welcome banner --}}
-            <div class="flex items-center justify-between rounded-[14px] px-6 py-5 text-white flex-shrink-0"
-                 style="background:linear-gradient(120deg,#6B21A8 0%,#9B59B6 100%);">
-                <div>
-                    <div class="text-[18px] font-bold tracking-tight">Selamat Datang, {{ $name }}!</div>
-                    <div class="text-[12px] opacity-75 mt-1">
-                        {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel ?? 'Semester Genap 2025/2026' }}
-                    </div>
-                </div>
-                <div class="flex gap-3 flex-shrink-0">
-                    <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.15);">
-                        <div class="text-[20px] font-bold">{{ $totalDiampu }}</div>
-                        <div class="text-[10px] opacity-75 mt-[2px]">Praktikum Diampu</div>
-                    </div>
-                    <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.15);">
-                        <div class="text-[20px] font-bold">{{ $kpList->count() }}</div>
-                        <div class="text-[10px] opacity-75 mt-[2px]">Bimbingan KP</div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Stat cards --}}
-            <div class="grid grid-cols-4 gap-[14px] flex-shrink-0">
-                @php
-                $stats = [
-                    ['lbl'=>'Praktikum Diampu',  'val'=>$totalDiampu,    'sub'=>'total semester ini',  'ibg'=>'#F0E6FA','ic'=>'#9B59B6'],
-                    ['lbl'=>'Praktikum Aktif',   'val'=>$totalAktif,     'sub'=>'sedang berjalan',     'ibg'=>'#DDF2EE','ic'=>'#40C4AA'],
-                    ['lbl'=>'Total Mahasiswa',   'val'=>$totalMahasiswa, 'sub'=>'semua praktikum',     'ibg'=>'#D1F0F9','ic'=>'#106A97'],
-                    ['lbl'=>'Bimbingan KP',      'val'=>$kpList->count(),'sub'=>'mahasiswa bimbingan', 'ibg'=>'#F9ECCB','ic'=>'#D39C3D'],
-                ];
-                @endphp
-                @foreach($stats as $s)
-                <div class="flex flex-col gap-[10px] bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)]">
-                    <div class="flex items-start justify-between">
-                        <span class="text-[12px] font-medium text-[#666D80] leading-[1.4]">{{ $s['lbl'] }}</span>
-                        <div class="flex items-center justify-center w-[34px] h-[34px] rounded-[9px] flex-shrink-0"
-                             style="background:{{ $s['ibg'] }};"></div>
-                    </div>
-                    <div class="text-[28px] font-bold text-[#0D0D12] leading-none tracking-tight">{{ $s['val'] }}</div>
-                    <span class="text-[11px] text-[#666D80]">{{ $s['sub'] }}</span>
-                </div>
-                @endforeach
-            </div>
-
-            {{-- Akses Cepat --}}
-            <div class="grid grid-cols-2 gap-[14px] flex-shrink-0">
-                <a href="{{ route('eoffice.manprak.dosen.dashboard') }}"
-                   class="block bg-white border border-[#DFE1E7] rounded-[14px] p-5 no-underline shadow-[0_1px_2px_rgba(228,229,231,.24)] hover:shadow-[0_4px_14px_rgba(22,22,43,.08)] hover:border-[#C1C7CF] transition-all">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center" style="background:#F0E6FA;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9B59B6" stroke-width="1.8" stroke-linecap="round">
-                                <path d="{{ $iPraktikum }}"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="text-[14px] font-bold text-[#0D0D12]">Manajemen Praktikum</div>
-                            <div class="text-[11px] text-[#666D80]">Kelola praktikum yang Anda ampu</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between mt-3">
-                        <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full" style="background:#F0E6FA; color:#9B59B6;">{{ $totalAktif }} aktif</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </div>
-                </a>
-
-                <a href="{{ route('eoffice.kp.dosen.dashboard') }}"
-                   class="block bg-white border border-[#DFE1E7] rounded-[14px] p-5 no-underline shadow-[0_1px_2px_rgba(228,229,231,.24)] hover:shadow-[0_4px_14px_rgba(22,22,43,.08)] hover:border-[#C1C7CF] transition-all">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="w-[38px] h-[38px] rounded-[10px] flex items-center justify-center" style="background:#F9ECCB;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D39C3D" stroke-width="1.8" stroke-linecap="round">
-                                <path d="{{ $iKP }}"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <div class="text-[14px] font-bold text-[#0D0D12]">Kerja Praktik (KP)</div>
-                            <div class="text-[11px] text-[#666D80]">Pantau bimbingan KP mahasiswa</div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between mt-3">
-                        <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full" style="background:#F9ECCB; color:#D39C3D;">{{ $kpList->count() }} bimbingan</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </div>
-                </a>
-            </div>
+        @include('eoffice::dashboard._topbar')
+        <div class="eo-dashboard-wrap">
+            <section class="eo-dashboard-box" aria-labelledby="eo-dashboard-title">
+                @include('eoffice::dashboard._header', ['dashboardRole' => 'dosen'])
+                <div class="eo-dashboard-content">
+                    @include('eoffice::dashboard._summary', ['dashboardRole' => 'dosen'])
+                    @include('eoffice::dashboard._services', ['dashboardRole' => 'dosen'])
 
             {{-- Daftar Praktikum --}}
             <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-1 min-h-0">
@@ -168,6 +74,7 @@
                     </div>
                 </div>
                 @else
+                <div class="eo-table-scroll"><div class="eo-table-wide">
                 <div class="flex px-5 py-2 bg-[#FAFBFC] border-b border-[#DFE1E7] flex-shrink-0">
                     <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:90px;">Kode</div>
                     <div class="flex-1 text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]">Nama Praktikum</div>
@@ -197,12 +104,16 @@
                     </div>
                     @endforeach
                 </div>
+                </div></div>
                 @endif
             </div>
 
-        </div>{{-- /content --}}
-    </div>{{-- /main --}}
+                </div>{{-- /content --}}
+            </section>
+        </div>
+    </main>
 </div>
 
+    <x-mobile-navigation />
 </body>
 </html>

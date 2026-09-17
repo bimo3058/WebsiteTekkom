@@ -33,6 +33,11 @@ class Title extends Model
         'is_reserved' => 'boolean',
     ];
 
+    public function period()
+    {
+        return $this->belongsTo(Period::class);
+    }
+
     public function lecturer()
     {
         return $this->belongsTo(Lecturer::class, 'lecturer_id');

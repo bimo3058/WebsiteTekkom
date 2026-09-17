@@ -6,6 +6,10 @@ export interface AdminDashboardGroupItem {
 
 export interface AdminDashboardResponse {
     total_users?: number;
+    total_periods?: number;
+    total_groups?: number;
+    pending_finalization?: number;
+    recent_groups?: AdminDashboardGroupItem[];
 }
 
 export interface AdminPeriodsResponse {

@@ -493,7 +493,9 @@
                             </td>
                             <td style="padding:14px 16px; text-align:center;">
                                 <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                                    @if($p->status_dosen === 'disetujui')
+                                    @if($p->status === 'approved')
+                                        <span class="mp-badge success sm">Disetujui Admin</span>
+                                    @elseif($p->status_dosen === 'disetujui')
                                         <span class="mp-badge success sm"><span class="dot"></span>Disetujui</span>
                                     @elseif($p->status_dosen === 'ditolak')
                                         <span class="mp-badge error sm"><span class="dot"></span>Ditolak</span>
@@ -515,7 +517,7 @@
 
                             <td style="padding:14px 16px;">
                                 <div class="flex items-center gap-2">
-                                    @if($p->status_dosen === 'menunggu')
+                                    @if($p->status === 'pending' && $p->status_dosen === 'menunggu')
                                         <form action="{{ route('eoffice.manprak.dosen.pendaftaran-koor.approve', $p->id) }}"
                                             method="POST">
                                             @csrf

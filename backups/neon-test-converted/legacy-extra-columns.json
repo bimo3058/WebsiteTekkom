@@ -1,0 +1,1215 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "2",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "3",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "4",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "5",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "6",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "7",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "8",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "9",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "10",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "11",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "12",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "13",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "14",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "15",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "16",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "17",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "18",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "19",
+      "role": "dosen",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "20",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120038",
+      "is_active": "t"
+    },
+    {
+      "id": "21",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140171",
+      "is_active": "t"
+    },
+    {
+      "id": "22",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140143",
+      "is_active": "t"
+    },
+    {
+      "id": "23",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130100",
+      "is_active": "t"
+    },
+    {
+      "id": "24",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120012",
+      "is_active": "t"
+    },
+    {
+      "id": "25",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120020",
+      "is_active": "t"
+    },
+    {
+      "id": "26",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130107",
+      "is_active": "t"
+    },
+    {
+      "id": "27",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120022",
+      "is_active": "t"
+    },
+    {
+      "id": "28",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140048",
+      "is_active": "t"
+    },
+    {
+      "id": "29",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140056",
+      "is_active": "t"
+    },
+    {
+      "id": "30",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140176",
+      "is_active": "t"
+    },
+    {
+      "id": "31",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140136",
+      "is_active": "t"
+    },
+    {
+      "id": "32",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140141",
+      "is_active": "t"
+    },
+    {
+      "id": "33",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140146",
+      "is_active": "t"
+    },
+    {
+      "id": "34",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120014",
+      "is_active": "t"
+    },
+    {
+      "id": "35",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120010",
+      "is_active": "t"
+    },
+    {
+      "id": "36",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120018",
+      "is_active": "t"
+    },
+    {
+      "id": "37",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120007",
+      "is_active": "t"
+    },
+    {
+      "id": "38",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120027",
+      "is_active": "t"
+    },
+    {
+      "id": "39",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130096",
+      "is_active": "t"
+    },
+    {
+      "id": "40",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140058",
+      "is_active": "t"
+    },
+    {
+      "id": "41",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130101",
+      "is_active": "t"
+    },
+    {
+      "id": "42",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140165",
+      "is_active": "t"
+    },
+    {
+      "id": "43",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140157",
+      "is_active": "t"
+    },
+    {
+      "id": "44",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140130",
+      "is_active": "t"
+    },
+    {
+      "id": "45",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140045",
+      "is_active": "t"
+    },
+    {
+      "id": "46",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120004",
+      "is_active": "t"
+    },
+    {
+      "id": "47",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140116",
+      "is_active": "t"
+    },
+    {
+      "id": "48",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130085",
+      "is_active": "t"
+    },
+    {
+      "id": "49",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130073",
+      "is_active": "t"
+    },
+    {
+      "id": "50",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130065",
+      "is_active": "t"
+    },
+    {
+      "id": "51",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130062",
+      "is_active": "t"
+    },
+    {
+      "id": "52",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140138",
+      "is_active": "t"
+    },
+    {
+      "id": "53",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130088",
+      "is_active": "t"
+    },
+    {
+      "id": "54",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130080",
+      "is_active": "t"
+    },
+    {
+      "id": "55",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140114",
+      "is_active": "t"
+    },
+    {
+      "id": "56",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120024",
+      "is_active": "t"
+    },
+    {
+      "id": "57",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120031",
+      "is_active": "t"
+    },
+    {
+      "id": "59",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140181",
+      "is_active": "t"
+    },
+    {
+      "id": "60",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140167",
+      "is_active": "t"
+    },
+    {
+      "id": "61",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130053",
+      "is_active": "t"
+    },
+    {
+      "id": "62",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130067",
+      "is_active": "t"
+    },
+    {
+      "id": "63",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120032",
+      "is_active": "t"
+    },
+    {
+      "id": "64",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120021",
+      "is_active": "t"
+    },
+    {
+      "id": "65",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120033",
+      "is_active": "t"
+    },
+    {
+      "id": "66",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140159",
+      "is_active": "t"
+    },
+    {
+      "id": "67",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120036",
+      "is_active": "t"
+    },
+    {
+      "id": "68",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130057",
+      "is_active": "t"
+    },
+    {
+      "id": "69",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130060",
+      "is_active": "t"
+    },
+    {
+      "id": "70",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120034",
+      "is_active": "t"
+    },
+    {
+      "id": "71",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120035",
+      "is_active": "t"
+    },
+    {
+      "id": "72",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120023",
+      "is_active": "t"
+    },
+    {
+      "id": "73",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130061",
+      "is_active": "t"
+    },
+    {
+      "id": "74",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140108",
+      "is_active": "t"
+    },
+    {
+      "id": "75",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140160",
+      "is_active": "t"
+    },
+    {
+      "id": "76",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140184",
+      "is_active": "t"
+    },
+    {
+      "id": "77",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140150",
+      "is_active": "t"
+    },
+    {
+      "id": "78",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130087",
+      "is_active": "t"
+    },
+    {
+      "id": "79",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130076",
+      "is_active": "t"
+    },
+    {
+      "id": "80",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120001",
+      "is_active": "t"
+    },
+    {
+      "id": "81",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130072",
+      "is_active": "t"
+    },
+    {
+      "id": "82",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130051",
+      "is_active": "t"
+    },
+    {
+      "id": "83",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120011",
+      "is_active": "t"
+    },
+    {
+      "id": "84",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120002",
+      "is_active": "t"
+    },
+    {
+      "id": "85",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140145",
+      "is_active": "t"
+    },
+    {
+      "id": "86",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130094",
+      "is_active": "t"
+    },
+    {
+      "id": "87",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120013",
+      "is_active": "t"
+    },
+    {
+      "id": "88",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120040",
+      "is_active": "t"
+    },
+    {
+      "id": "89",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140117",
+      "is_active": "t"
+    },
+    {
+      "id": "90",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120006",
+      "is_active": "t"
+    },
+    {
+      "id": "91",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130091",
+      "is_active": "t"
+    },
+    {
+      "id": "92",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130054",
+      "is_active": "t"
+    },
+    {
+      "id": "93",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120005",
+      "is_active": "t"
+    },
+    {
+      "id": "94",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140154",
+      "is_active": "t"
+    },
+    {
+      "id": "95",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140173",
+      "is_active": "t"
+    },
+    {
+      "id": "96",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120028",
+      "is_active": "t"
+    },
+    {
+      "id": "97",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140133",
+      "is_active": "t"
+    },
+    {
+      "id": "98",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140151",
+      "is_active": "t"
+    },
+    {
+      "id": "99",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140043",
+      "is_active": "t"
+    },
+    {
+      "id": "100",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130111",
+      "is_active": "t"
+    },
+    {
+      "id": "101",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130075",
+      "is_active": "t"
+    },
+    {
+      "id": "102",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140144",
+      "is_active": "t"
+    },
+    {
+      "id": "103",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140153",
+      "is_active": "t"
+    },
+    {
+      "id": "104",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130071",
+      "is_active": "t"
+    },
+    {
+      "id": "105",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140168",
+      "is_active": "t"
+    },
+    {
+      "id": "106",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140139",
+      "is_active": "t"
+    },
+    {
+      "id": "107",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120030",
+      "is_active": "t"
+    },
+    {
+      "id": "108",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140142",
+      "is_active": "t"
+    },
+    {
+      "id": "109",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130049",
+      "is_active": "t"
+    },
+    {
+      "id": "110",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120009",
+      "is_active": "t"
+    },
+    {
+      "id": "111",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120037",
+      "is_active": "t"
+    },
+    {
+      "id": "112",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130069",
+      "is_active": "t"
+    },
+    {
+      "id": "113",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130068",
+      "is_active": "t"
+    },
+    {
+      "id": "114",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130086",
+      "is_active": "t"
+    },
+    {
+      "id": "115",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120029",
+      "is_active": "t"
+    },
+    {
+      "id": "116",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140121",
+      "is_active": "t"
+    },
+    {
+      "id": "117",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140132",
+      "is_active": "t"
+    },
+    {
+      "id": "118",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140126",
+      "is_active": "t"
+    },
+    {
+      "id": "119",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140135",
+      "is_active": "t"
+    },
+    {
+      "id": "120",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140180",
+      "is_active": "t"
+    },
+    {
+      "id": "121",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130099",
+      "is_active": "t"
+    },
+    {
+      "id": "122",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120015",
+      "is_active": "t"
+    },
+    {
+      "id": "123",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120041",
+      "is_active": "t"
+    },
+    {
+      "id": "124",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130084",
+      "is_active": "t"
+    },
+    {
+      "id": "125",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130098",
+      "is_active": "t"
+    },
+    {
+      "id": "126",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140113",
+      "is_active": "t"
+    },
+    {
+      "id": "127",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140178",
+      "is_active": "t"
+    },
+    {
+      "id": "128",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130079",
+      "is_active": "t"
+    },
+    {
+      "id": "129",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140125",
+      "is_active": "t"
+    },
+    {
+      "id": "130",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130078",
+      "is_active": "t"
+    },
+    {
+      "id": "131",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140123",
+      "is_active": "t"
+    },
+    {
+      "id": "132",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140044",
+      "is_active": "t"
+    },
+    {
+      "id": "133",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130104",
+      "is_active": "t"
+    },
+    {
+      "id": "134",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130089",
+      "is_active": "t"
+    },
+    {
+      "id": "135",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140055",
+      "is_active": "t"
+    },
+    {
+      "id": "136",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140166",
+      "is_active": "t"
+    },
+    {
+      "id": "137",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120025",
+      "is_active": "t"
+    },
+    {
+      "id": "138",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120008",
+      "is_active": "t"
+    },
+    {
+      "id": "139",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120026",
+      "is_active": "t"
+    },
+    {
+      "id": "140",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130092",
+      "is_active": "t"
+    },
+    {
+      "id": "141",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130109",
+      "is_active": "t"
+    },
+    {
+      "id": "142",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130102",
+      "is_active": "t"
+    },
+    {
+      "id": "143",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140155",
+      "is_active": "t"
+    },
+    {
+      "id": "144",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140149",
+      "is_active": "t"
+    },
+    {
+      "id": "145",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140156",
+      "is_active": "t"
+    },
+    {
+      "id": "146",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120017",
+      "is_active": "t"
+    },
+    {
+      "id": "147",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120039",
+      "is_active": "t"
+    },
+    {
+      "id": "148",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140137",
+      "is_active": "t"
+    },
+    {
+      "id": "149",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140148",
+      "is_active": "t"
+    },
+    {
+      "id": "150",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130081",
+      "is_active": "t"
+    },
+    {
+      "id": "152",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140124",
+      "is_active": "t"
+    },
+    {
+      "id": "153",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120121140163",
+      "is_active": "t"
+    },
+    {
+      "id": "154",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130083",
+      "is_active": "t"
+    },
+    {
+      "id": "155",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120121140097",
+      "is_active": "t"
+    },
+    {
+      "id": "156",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140122",
+      "is_active": "t"
+    },
+    {
+      "id": "157",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140046",
+      "is_active": "t"
+    },
+    {
+      "id": "158",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140120",
+      "is_active": "t"
+    },
+    {
+      "id": "159",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140110",
+      "is_active": "t"
+    },
+    {
+      "id": "160",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140112",
+      "is_active": "t"
+    },
+    {
+      "id": "161",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140162",
+      "is_active": "t"
+    },
+    {
+      "id": "162",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130093",
+      "is_active": "t"
+    },
+    {
+      "id": "163",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123120016",
+      "is_active": "t"
+    },
+    {
+      "id": "164",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120122140154",
+      "is_active": "t"
+    },
+    {
+      "id": "165",
+      "role": "admin",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "151",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123130082",
+      "is_active": "t"
+    },
+    {
+      "id": "58",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": "21120123140175",
+      "is_active": "t"
+    },
+    {
+      "id": "166",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    },
+    {
+      "id": "167",
+      "role": "mahasiswa",
+      "nip": null,
+      "nim": null,
+      "is_active": "t"
+    }
+  ],
+  "capstone_peer_review_indicator_templates": [
+    {
+      "id": "19",
+      "code": "PEER-1"
+    },
+    {
+      "id": "20",
+      "code": "PEER-2"
+    },
+    {
+      "id": "21",
+      "code": "PEER-3"
+    },
+    {
+      "id": "22",
+      "code": "PEER-4"
+    },
+    {
+      "id": "23",
+      "code": "PEER-5"
+    },
+    {
+      "id": "24",
+      "code": "PEER-6"
+    },
+    {
+      "id": "25",
+      "code": "PEER-7"
+    },
+    {
+      "id": "26",
+      "code": "PEER-8"
+    },
+    {
+      "id": "27",
+      "code": "PEER-9"
+    },
+    {
+      "id": "28",
+      "code": "PEER-10"
+    }
+  ]
+}

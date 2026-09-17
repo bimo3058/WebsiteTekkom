@@ -1,0 +1,7 @@
+<div x-data="{menu:false}" @click.outside="menu=false" @keydown.escape.window="menu=false" class="relative text-center">
+<x-capstone::button variant="ghost" size="icon" class="h-8 w-8" @click="menu=!menu" aria-label="Actions" ::aria-expanded="menu"><x-capstone::icon name="Ellipsis" class="h-4 w-4 text-gray-500" /></x-capstone::button>
+<div x-show="menu" x-cloak class="absolute right-0 z-20 min-w-32 rounded-md border bg-popover p-1 shadow-md text-left">
+    @if(isset($detailPath))<x-capstone::feature-link :href="$detailPath" ::href="url('{{ $detailPath }}'.replace('{id}',item.id))" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><x-capstone::icon name="Eye" />Detail</x-capstone::feature-link>@endif
+    @if($canEdit ?? true)@if(isset($editPath))<x-capstone::feature-link :href="$editPath" ::href="url('{{ $editPath }}'.replace('{id}',item.id))" class="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent"><x-capstone::icon name="Edit" />Edit</x-capstone::feature-link>@else<button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent" @click="menu=false;edit(item)"><x-capstone::icon name="Edit" />Edit</button>@endif @endif
+    @if($canDelete ?? true)<button type="button" class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-red-600 hover:bg-accent" @click="menu=false;confirmDelete(item)"><x-capstone::icon name="Trash2" />Hapus</button>@endif
+</div></div>

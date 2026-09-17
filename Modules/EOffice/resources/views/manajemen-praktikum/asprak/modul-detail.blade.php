@@ -14,7 +14,7 @@
         </p>
     </div>
     <div class="mp-page-actions">
-        <a href="{{ route('eoffice.manprak.asprak.modul.index') }}" class="mp-btn secondary md" style="text-decoration:none;">← Kembali</a>
+        <a href="{{ route('eoffice.manprak.asprak.modul.index') }}" class="mp-btn secondary md" style="text-decoration:none;"><x-eoffice::manajemen-praktikum.ui.icon name="arrow-left" /> Kembali</a>
     </div>
 </div>
 
@@ -140,7 +140,7 @@
                 <span class="mp-card-title">Materi Modul</span>
                 <div class="right">
                     <a href="{{ route('eoffice.manprak.asprak.materi.index') }}"
-                       class="mp-btn ghost sm" style="text-decoration:none;">Kelola Materi →</a>
+                       class="mp-btn ghost sm" style="text-decoration:none;">Kelola Materi <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /></a>
                 </div>
             </div>
             @forelse($modul->materi as $materi)
@@ -171,7 +171,7 @@
                 <span class="mp-card-title">Tugas Modul</span>
                 <div class="right">
                     <a href="{{ route('eoffice.manprak.asprak.tugas.index') }}"
-                       class="mp-btn ghost sm" style="text-decoration:none;">Kelola Tugas →</a>
+                       class="mp-btn ghost sm" style="text-decoration:none;">Kelola Tugas <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /></a>
                 </div>
             </div>
             @forelse($modul->tugas as $tugas)
@@ -211,7 +211,7 @@
                 <span class="mp-card-title">Rekap Absensi</span>
                 <div class="right">
                     <a href="{{ route('eoffice.manprak.asprak.absensi.show', $modul->id) }}"
-                       class="mp-btn ghost sm" style="text-decoration:none;">Kelola Absensi →</a>
+                       class="mp-btn ghost sm" style="text-decoration:none;">Kelola Absensi <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" /></a>
                 </div>
             </div>
             @php

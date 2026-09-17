@@ -68,7 +68,34 @@ class AuditLogger
                     'created_at'   => $now,
                 ]);
             }
+
+            // 3. Push to SuperAdmin Notifications if relevant
+            self::pushToSuperAdminNotifications($module, $action, $description, $userId, $now);
         });
+    }
+
+    private static function pushToSuperAdminNotifications(string $module, string $action, string $description, ?int $userId, $now): void
+    {
+        $worthy = false;
+        $severity = 'info';
+
+        if ($module === 'auth' && $action === 'AUTH_FAILED') {
+            $worthy = true;
+            $severity = 'warning';
+        } elseif ($module === 'user_management' && in_array($action, ['SUSPEND', 'UNSUSPEND', 'FORCE_LOGOUT', 'NO_ACCESS'])) {
+            $worthy = true;
+            $severity = 'warning';
+        }
+
+        if (!$worthy) return;
+
+        app(\App\Services\NotificationService::class)->notify(
+            type: "{$module}_{$action}",
+            title: "Aktivitas {$module}: {$action}",
+            message: $description,
+            severity: $severity,
+            context: ['user_id' => $userId]
+        );
     }
 
     // ── Shortcut helpers ──────────────────────────────────────────────────────

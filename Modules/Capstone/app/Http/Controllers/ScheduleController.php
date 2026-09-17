@@ -86,10 +86,12 @@ class ScheduleController extends Controller
             ? ['BIMBINGAN']
             : ['SEMPRO', 'SIDANG', 'EXPO'];
 
-        $request->validate([
+        $validated = $request->validate([
             'group_id' => 'required|exists:capstone_groups,id',
             'type' => ['required', 'string', 'in:'.implode(',', $allowedTypes)],
             'date' => 'required|date',
+            'start_time' => 'required|date_format:H:i,H:i:s',
+            'end_time' => 'required|date_format:H:i,H:i:s|after:start_time',
             'room' => 'required|string',
             'mode' => 'nullable|string|in:online,offline',
             'notes' => 'nullable|string|max:1000',
@@ -105,7 +107,7 @@ class ScheduleController extends Controller
             );
         }
 
-        $schedule = Schedule::create($request->all());
+        $schedule = Schedule::create($validated);
 
         return response()->json(['message' => 'Schedule created successfully', 'data' => $schedule], 201);
     }
@@ -137,16 +139,24 @@ class ScheduleController extends Controller
             ? ['BIMBINGAN']
             : ['SEMPRO', 'SIDANG', 'EXPO'];
 
-        $request->validate([
+        $schedule = Schedule::findOrFail($id);
+        // Check the existing record as well as its proposed destination. A
+        // lecturer cannot move someone else's schedule into their own group.
+        if ($role === 'dosen') {
+            abort_unless($schedule->type === 'BIMBINGAN' && Group::whereKey($schedule->group_id)
+                ->supervisedBy(CapstoneActor::lecturer($user)->id)->exists(), 403);
+        }
+
+        $validated = $request->validate([
             'group_id' => 'exists:capstone_groups,id',
             'type' => ['string', 'in:'.implode(',', $allowedTypes)],
             'date' => 'date',
+            'start_time' => 'required_with:end_time|date_format:H:i,H:i:s',
+            'end_time' => 'required_with:start_time|date_format:H:i,H:i:s|after:start_time',
             'room' => 'string',
             'mode' => 'nullable|string|in:online,offline',
             'notes' => 'nullable|string|max:1000',
         ]);
-
-        $schedule = Schedule::findOrFail($id);
 
         if ($role === 'dosen') {
             $targetGroupId = (int) $request->input('group_id', $schedule->group_id);
@@ -158,7 +168,7 @@ class ScheduleController extends Controller
                 'Anda bukan dosen pembimbing kelompok ini.'
             );
         }
-        $schedule->update($request->all());
+        $schedule->update($validated);
 
         return response()->json(['message' => 'Schedule updated successfully', 'data' => $schedule]);
     }
@@ -180,7 +190,7 @@ class ScheduleController extends Controller
         $schedule = Schedule::findOrFail($id);
         if ($role === 'dosen') {
             abort_unless(
-                Group::whereKey($schedule->group_id)
+                $schedule->type === 'BIMBINGAN' && Group::whereKey($schedule->group_id)
                     ->supervisedBy(CapstoneActor::lecturer($user)->id)
                     ->exists(),
                 403,

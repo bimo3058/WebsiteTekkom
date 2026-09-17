@@ -6,7 +6,7 @@
     $iconHelp = 'M12 21a9 9 0 100-18 9 9 0 000 18zM9.5 9.5a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17h.01';
 @endphp
 
-<aside x-data="{ get open() { return sidebarOpen }, set open(val) { sidebarOpen = val } }"
+<aside data-mobile-sidebar x-data="{ get open() { return sidebarOpen }, set open(val) { sidebarOpen = val } }"
     :class="sidebarOpen ? 'is-open' : 'is-collapsed'"
     class="sitkom-sidebar relative z-20 font-sans">
 
@@ -57,7 +57,7 @@
             </svg>
             <span x-show="sidebarOpen">Help &amp; Center</span>
         </a>
-        <form method="POST" action="{{ route('logout') }}" style="margin:0;" data-no-loader>
+        <form method="POST" action="{{ route('logout') }}" style="margin:0;">
             @csrf
             <button type="submit" class="sb-link sb-link-danger w-full">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"

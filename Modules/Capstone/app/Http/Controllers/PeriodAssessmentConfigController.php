@@ -85,31 +85,36 @@ class PeriodAssessmentConfigController extends Controller
     {
         $request->validate([
             'type' => 'required|string|in:SEMPRO,SIDANG_TA,EXPO,BIMBINGAN_SEMPRO,BIMBINGAN_TA,NILAI_DOSEN,MILESTONE',
-            'template_ids' => 'required|array',
-            'template_ids.*' => 'exists:assessment_component_templates,id',
+            'template_ids' => 'present|array',
+            'template_ids.*' => 'integer|distinct|exists:capstone_assessment_component_templates,id',
         ]);
 
         $type = $request->type;
 
         return DB::transaction(function () use ($periodId, $type, $request) {
+            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
+            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
             $created = [];
 
             if ($this->hasPeriodAssessmentTable()) {
+                $current = PeriodAssessmentComponent::where('period_id', $periodId)->where('type', $type)->orderBy('sort_order')->pluck('template_id')->map(fn($id)=>(int)$id)->all();
+                if ($current !== array_map('intval', $request->template_ids)) abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat diubah setelah kelompok terbentuk.');
                 // New schema path
                 PeriodAssessmentComponent::where('period_id', $periodId)
                     ->where('type', $type)
+                    ->whereNotIn('template_id', $request->template_ids)
                     ->delete();
 
                 foreach ($request->template_ids as $i => $templateId) {
-                    $created[] = PeriodAssessmentComponent::create([
+                    $created[] = PeriodAssessmentComponent::updateOrCreate([
                         'period_id' => $periodId,
                         'template_id' => $templateId,
                         'type' => $type,
-                        'sort_order' => $i,
-                    ]);
+                    ], ['sort_order' => $i]);
                 }
             } else {
                 // Legacy schema fallback
+                abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat diubah setelah kelompok terbentuk.');
                 AssessmentComponent::where('period_id', $periodId)
                     ->where('type', $type)
                     ->delete();
@@ -147,12 +152,15 @@ class PeriodAssessmentConfigController extends Controller
     public function copy(Request $request, $periodId)
     {
         $request->validate([
-            'source_period_id' => 'required|exists:capstone_periods,id|different:period_id',
+            'source_period_id' => 'required|integer|exists:capstone_periods,id|not_in:'.$periodId,
         ]);
 
         $sourcePeriodId = $request->source_period_id;
 
         return DB::transaction(function () use ($periodId, $sourcePeriodId) {
+            $period = Period::whereKey($periodId)->lockForUpdate()->firstOrFail();
+            abort_if($period->is_finalized, 403, 'Periode final tidak dapat diubah.');
+            abort_if(\Modules\Capstone\Models\Group::where('period_id', $periodId)->exists(), 403, 'Konfigurasi evaluasi tidak dapat disalin setelah kelompok terbentuk.');
             if ($this->hasPeriodAssessmentTable()) {
                 // Get all components from source period (new schema)
                 $sourceComponents = PeriodAssessmentComponent::where('period_id', $sourcePeriodId)
@@ -164,17 +172,18 @@ class PeriodAssessmentConfigController extends Controller
                 }
 
                 // Delete existing config for this period (all types)
-                PeriodAssessmentComponent::where('period_id', $periodId)->delete();
+                $sourceKeys = $sourceComponents->map(fn ($c) => $c->type.':'.$c->template_id);
+                $removeIds = PeriodAssessmentComponent::where('period_id', $periodId)->get()->filter(fn ($c) => !$sourceKeys->contains($c->type.':'.$c->template_id))->pluck('id');
+                PeriodAssessmentComponent::whereIn('id', $removeIds)->delete();
 
                 // Copy config
                 $created = [];
                 foreach ($sourceComponents as $component) {
-                    $created[] = PeriodAssessmentComponent::create([
+                    $created[] = PeriodAssessmentComponent::updateOrCreate([
                         'period_id' => $periodId,
                         'template_id' => $component->template_id,
                         'type' => $component->type,
-                        'sort_order' => $component->sort_order,
-                    ]);
+                    ], ['sort_order' => $component->sort_order]);
                 }
 
                 return $this->createdResponse([

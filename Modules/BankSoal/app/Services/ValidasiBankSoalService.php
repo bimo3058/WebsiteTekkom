@@ -91,18 +91,18 @@ class ValidasiBankSoalService
 
     public function simpanReview($data)
     {
+        $statusReview = $this->normalizeStatusReview($data['status_review'] ?? '');
+
         $reviewId = DB::table('bs_review')->insertGetId([
             'pertanyaan_id' => $data['pertanyaan_id'],
             'gpm_user_id'   => auth()->id() ?? 1,
-            'status_review' => $data['status_review'],
+            'status_review' => $statusReview,
             'catatan'       => $data['catatan'] ?? 'Soal telah disetujui tanpa catatan.',
             'created_at'    => now(),
             'updated_at'    => now()
         ]);
 
-        $statusPertanyaan = ($data['status_review'] === 'Sesuai') 
-            ? Pertanyaan::STATUS_DISETUJUI 
-            : Pertanyaan::STATUS_REVISI;
+        $statusPertanyaan = $this->mapStatusPertanyaan($statusReview);
 
         DB::table('bs_pertanyaan')
             ->where('id', $data['pertanyaan_id'])
@@ -113,21 +113,50 @@ class ValidasiBankSoalService
 
     public function updateReview($id, $data)
     {
-        DB::table('bs_review')->where('pertanyaan_id', $id)->update([
-            'status_review' => $data['status_review'],
-            'catatan'       => $data['catatan'],
-            'updated_at'    => now()
+        $statusReview = $this->normalizeStatusReview($data['status_review'] ?? '');
+
+        DB::table('bs_review')->insert([
+            'pertanyaan_id' => $id,
+            'gpm_user_id'   => auth()->id() ?? 1,
+            'status_review' => $statusReview,
+            'catatan'       => $data['catatan'] ?? null,
+            'created_at'    => now(),
+            'updated_at'    => now(),
         ]);
 
-        $statusPertanyaan = ($data['status_review'] === 'Sesuai') 
-            ? Pertanyaan::STATUS_DISETUJUI 
-            : Pertanyaan::STATUS_REVISI;
+        $statusPertanyaan = $this->mapStatusPertanyaan($statusReview);
 
         DB::table('bs_pertanyaan')
             ->where('id', $id)
             ->update(['status' => $statusPertanyaan, 'updated_at' => now()]);
-            
+
         return true;
+    }
+
+    private function normalizeStatusReview(?string $status): string
+    {
+        $normalized = strtolower(trim((string) $status));
+
+        if ($normalized === 'sesuai') {
+            return 'Sesuai';
+        }
+
+        if (str_contains($normalized, 'kurang')) {
+            return 'Kurang Sesuai';
+        }
+
+        if (str_contains($normalized, 'revisi')) {
+            return 'Revisi';
+        }
+
+        return 'Revisi';
+    }
+
+    private function mapStatusPertanyaan(string $statusReview): string
+    {
+        return strtolower($statusReview) === 'sesuai'
+            ? Pertanyaan::STATUS_DISETUJUI
+            : Pertanyaan::STATUS_REVISI;
     }
     /**
      * Buat pola pencarian case-insensitive yang portabel.

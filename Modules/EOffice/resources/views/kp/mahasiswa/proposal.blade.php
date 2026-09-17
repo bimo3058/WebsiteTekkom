@@ -42,6 +42,7 @@
         .step-item.completed .step-circle { background: white; color: var(--primary-500); border: 2px solid var(--primary-500); }
         .step-item.pending .step-circle { background: white; color: var(--grey-400); border: 2px solid var(--grey-200); }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body class="bg-grey-50" style="background:#f9fafb;" x-data="{ sidebarOpen: false }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -584,5 +585,6 @@ ${f.kegiatan ? `<h3 style="font-size:12pt;font-weight:bold;margin-top:16pt;margi
     }
 }
 </script>
+    <x-mobile-navigation />
 </body>
 </html>

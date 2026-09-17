@@ -16,13 +16,14 @@ export function useMahasiswaDashboard(): UseMahasiswaDashboardReturn {
   const { data, isLoading: loading, refetch } = useQuery<MahasiswaDashboardData>({
     queryKey: QUERY_KEY,
     queryFn: async () => {
-      // Start all independent requests immediately. The old flow waited for the
-      // registration round-trip before starting the other three requests.
-      const [periodRes, statsRes, groupRes, scheduleRes] = await Promise.allSettled([
+      // Workflow has its own endpoint; start it with the other dashboard reads
+      // instead of waiting for every other response before requesting it.
+      const [periodRes, statsRes, groupRes, scheduleRes, workflowRes] = await Promise.allSettled([
         api.get("/mahasiswa/my-period"),
         api.get("/mahasiswa/dashboard"),
         api.get("/mahasiswa/group"),
         api.get("/mahasiswa/all-schedules"),
+        api.get("/mahasiswa/workflow"),
       ]);
 
       if (periodRes.status === "rejected") throw periodRes.reason;
@@ -81,15 +82,8 @@ export function useMahasiswaDashboard(): UseMahasiswaDashboardReturn {
         );
       }
 
-      // Only fetch workflow separately if not provided by /mahasiswa/dashboard
-      if (!statsData?.workflow?.phases) {
-        try {
-          const workflowRes = await api.get("/mahasiswa/workflow");
-          // API returns { status, code, data: { phases, current_phase, is_graduated } }
-          workflowData = workflowRes.data?.data || workflowRes.data;
-        } catch {
-          // workflow not available yet
-        }
+      if (!statsData?.workflow?.phases && workflowRes.status === "fulfilled") {
+        workflowData = workflowRes.value.data?.data ?? workflowRes.value.data;
       }
 
       return {

@@ -59,6 +59,7 @@
                         <input type="radio" name="tipe_soal" value="essay" id="radioEssay" {{ old('tipe_soal') == 'essay' ? 'checked' : '' }} class="w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
                         Essay
                     </label>
+
                 </div>
             </div>
 
@@ -70,7 +71,7 @@
                 <p class="mt-2 text-xs text-slate-500">Anda dapat menambahkan format teks rata-kiri/kanan, list, tabel, dan gambar menggunakan menu di atas.</p>
             </div>
 
-            <div id="opsiContainerWrapper" class="border-t border-slate-200 px-6 py-5 {{ old('tipe_soal', 'pilihan_ganda') == 'essay' ? 'hidden' : '' }}">
+            <div id="opsiContainerWrapper" class="border-t border-slate-200 px-6 py-5 {{ old('tipe_soal', 'pilihan_ganda') == 'pilihan_ganda' ? '' : 'hidden' }}">
                 <div class="mb-3 flex items-center justify-between"><label class="text-sm font-semibold text-slate-700">Opsi Jawaban & Kunci</label><button type="button" id="addOptionBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">+ Tambah Opsi</button></div>
                 <div id="optionsContainer" class="space-y-3">
                     @for($i = 0; $i < max(count(old('jawaban', []) ?: [0, 1, 2]), 3); $i++)
@@ -265,7 +266,7 @@
                 const optIndex = container.children.length;
                 const letter = String.fromCharCode(65 + optIndex);
                 const label = document.createElement('label');
-                div.className = 'option-item flex items-start gap-3 rounded-lg border border-slate-200 p-4';
+                label.className = 'option-item flex items-start gap-3 rounded-lg border border-slate-200 p-4';
                 label.innerHTML = `<input type="radio" name="jawaban_benar" value="${optIndex}" class="mt-1 h-4 w-4 text-green-600 focus:ring-green-500" required><div class="flex-1"><span class="option-title mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Pilihan ${letter}</span><input type="text" name="jawaban[${optIndex}][teks]" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none" required></div><button type="button" class="remove-btn text-red-500 hover:text-red-600" aria-label="Hapus opsi"><i class="fas fa-times-circle"></i></button>`;
                 container.appendChild(label);
                 updateStyles();
@@ -283,7 +284,7 @@
             const wrapper = document.getElementById('opsiContainerWrapper');
             const requiredInputs = wrapper.querySelectorAll('input[required]');
             
-            if (tipe === 'essay') {
+            if (tipe !== 'pilihan_ganda') {
                 wrapper.classList.add('hidden');
                 // Remove required attribute from multiple choice inputs when essay is selected
                 requiredInputs.forEach(input => {

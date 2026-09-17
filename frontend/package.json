@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev --turbopack",
-    "dev:debug": "NODE_OPTIONS='--inspect' next dev --turbopack",
+    "dev": "next dev --webpack",
+    "dev:turbopack": "next dev --turbopack",
+    "dev:debug": "NODE_OPTIONS='--inspect' next dev --webpack",
     "dev:clean": "rm -rf .next && bun dev",
     "build": "next build",
     "build:analyze": "ANALYZE=true next build",

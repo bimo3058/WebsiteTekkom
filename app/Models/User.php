@@ -54,6 +54,7 @@ class User extends Authenticatable
             'last_synced_from_sso' => 'datetime',
             'suspended_at' => 'datetime',
             'is_online' => 'boolean',
+            'notification_preferences' => 'array',
         ];
     }
 
@@ -69,10 +70,6 @@ class User extends Authenticatable
     protected static function boot()
     {
         parent::boot();
-
-        static::created(function ($user) {
-            $user->syncPermissionsFromRoles();
-        });
     }
 
     /*
@@ -80,6 +77,27 @@ class User extends Authenticatable
     | ACCESSOR
     |--------------------------------------------------------------------------
     */
+
+    protected function password(): Attribute
+    {
+        return Attribute::make(
+            get: function ($value) {
+                // Auth cache payloads omit credentials; load the hash only when needed.
+                if (! array_key_exists('password', $this->attributes)
+                    && $this->exists && $this->getKey() !== null) {
+                    $value = $this->newQuery()
+                        ->whereKey($this->getKey())
+                        ->toBase()
+                        ->value('password');
+
+                    $this->attributes['password'] = $value;
+                    $this->syncOriginalAttribute('password');
+                }
+
+                return $value;
+            },
+        );
+    }
 
     protected function avatarUrl(): Attribute
     {

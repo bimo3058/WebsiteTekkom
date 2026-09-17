@@ -9,13 +9,6 @@
     if (isset($new_registrations)) $new_registrations->loadMissing('roles');
     if (isset($recent_logs))       $recent_logs->loadMissing('user.roles');
 
-    $avatarGradients = [
-        'linear-gradient(135deg,#D39C3D,#956321)',
-        'linear-gradient(135deg,#5C78B8,#0B266E)',
-        'linear-gradient(135deg,#40C4AA,#287F6E)',
-        'linear-gradient(135deg,#ED8296,#95122B)',
-    ];
-
     $online_users = \App\Models\User::where('is_online', \Illuminate\Support\Facades\DB::raw('true'))
         ->with('roles')->latest('last_login')->take(5)->get();
 @endphp
@@ -44,12 +37,11 @@
             @forelse($online_users as $i => $onlineUser)
                 @php
                     $role = $onlineUser->roles->first()->name ?? 'user';
-                    $grad = $avatarGradients[$onlineUser->id % count($avatarGradients)];
                 @endphp
                 <tr>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);font-size:13px;">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <x-ui.user-avatar :user="$onlineUser" size="sm" :gradient="$grad" />
+                            <x-ui.user-avatar :user="$onlineUser" size="sm" />
                             <div>
                                 <div style="font-size:13px;font-weight:600;color:var(--c-fg);line-height:1.2;">{{ $onlineUser->name }}</div>
                                 <div style="font-size:11px;color:var(--c-fg-muted);margin-top:2px;">{{ $onlineUser->nim ?? $onlineUser->id }}</div>
@@ -93,12 +85,11 @@
             @forelse($new_registrations->take(5) as $newUser)
                 @php
                     $role = $newUser->roles->first()->name ?? 'user';
-                    $grad = $avatarGradients[$newUser->id % count($avatarGradients)];
                 @endphp
                 <tr>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <x-ui.user-avatar :user="$newUser" size="sm" :gradient="$grad" />
+                            <x-ui.user-avatar :user="$newUser" size="sm" />
                             <div>
                                 <div style="font-size:13px;font-weight:600;color:var(--c-fg);line-height:1.2;">{{ $newUser->name }}</div>
                                 <div style="font-size:11px;color:var(--c-fg-muted);margin-top:2px;">{{ $newUser->nim ?? $newUser->id }}</div>
@@ -144,7 +135,6 @@
                 @php
                     $role         = $log->user?->roles->first()->name ?? 'system';
                     $uid          = $log->user?->id ?? 0;
-                    $grad         = $avatarGradients[$uid % count($avatarGradients)];
                     $name         = $log->user?->name ?? 'System';
                     $actionVariant = match(strtoupper($log->action)) {
                         'CREATE' => 'action-create',
@@ -158,7 +148,7 @@
                 <tr>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <x-ui.user-avatar :user="$log->user" size="sm" :gradient="$grad" />
+                            <x-ui.user-avatar :user="$log->user" size="sm" />
                             <div>
                                 <div style="font-size:13px;font-weight:600;color:var(--c-fg);line-height:1.2;">{{ $name }}</div>
                                 <div style="font-size:11px;color:var(--c-fg-muted);margin-top:2px;">{{ $log->user?->nim ?? $uid }}</div>

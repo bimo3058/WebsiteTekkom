@@ -1,7 +1,7 @@
 {{-- resources/views/superadmin/audit-logs/_table.blade.php --}}
 
 {{-- Main Table Card --}}
-<div style="background:#fff; border:1px solid var(--c-border); border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
+<div class="audit-table-card" style="background:#fff; border:1px solid var(--c-border); border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
 
     {{-- Table Toolbar --}}
     <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:12px; flex-wrap:wrap; background:#FAFAFA;">

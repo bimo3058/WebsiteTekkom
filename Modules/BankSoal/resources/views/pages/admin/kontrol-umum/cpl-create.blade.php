@@ -241,7 +241,7 @@
     <script>
         const API_URL = '{{ route("banksoal.api.v1.admin.cpl.store") }}';
         const IMPORT_URL = '{{ route("banksoal.api.v1.admin.cpl.import") }}';
-        const csrfToken = '{{ csrf_token() }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         function handleFileSelect(input) {
             if (input.files && input.files[0]) {

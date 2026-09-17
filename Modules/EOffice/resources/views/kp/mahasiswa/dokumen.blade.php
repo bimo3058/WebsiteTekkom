@@ -53,6 +53,7 @@
             border-radius: 12px;
         }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 
 <body style="background:#f9fafb;" x-data="{ sidebarOpen: false, globalUploading: false }">
@@ -668,6 +669,7 @@
         </div>
     </div>
 
+    <x-mobile-navigation />
 </body>
 
 </html>

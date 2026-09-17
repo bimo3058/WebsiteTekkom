@@ -22,6 +22,7 @@
                     <select multiple class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2 px-3 shadow-sm h-32" name="jenis_soal[]">
                         <option value="Pilihan Ganda">Pilihan Ganda</option>
                         <option value="Essay">Essay</option>
+                        <option value="Take-Home">Take-Home Test</option>
                         <option value="Benar/Salah">Benar/Salah</option>
                         <option value="Isian Singkat">Isian Singkat</option>
                         <option value="Menjodohkan">Menjodohkan</option>

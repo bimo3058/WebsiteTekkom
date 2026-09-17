@@ -1,4 +1,4 @@
-<aside class="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col h-full font-inter">
+<aside data-mobile-sidebar class="w-64 flex-shrink-0 bg-white border-r border-slate-200 flex flex-col h-full font-inter">
     <!-- Logo Area -->
     <div class="h-20 flex items-center px-6">
         <div class="flex items-center gap-3">

@@ -74,7 +74,7 @@ export function AdminDashboardFeature() {
                                 variant="primary"
                             />
                             <StatsCard
-                                title="Active Periods"
+                                title="Total Periods"
                                 value={data.totalPeriods}
                                 icon={Calendar}
                             />

@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Services\MataKuliahService;
 use Modules\BankSoal\Services\PertanyaanService;
 use Modules\BankSoal\Services\KompreService;
+use Modules\BankSoal\Services\BlindReviewService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class BankSoalController extends Controller
@@ -16,7 +17,8 @@ class BankSoalController extends Controller
     public function __construct(
         protected MataKuliahService $mataKuliahService,
         protected PertanyaanService $pertanyaanService,
-        protected KompreService $kompreService
+        protected KompreService $kompreService,
+        protected BlindReviewService $blindReviewService
     ) {}
 
     public function index(Request $request)
@@ -115,7 +117,9 @@ class BankSoalController extends Controller
             'jenis_soal' => 'nullable|array',
             'cpl_id' => 'nullable',
             'cpmk_id' => 'nullable',
-            'bobot_total' => 'nullable|numeric'
+            'bobot_total' => 'nullable|numeric',
+            'require_blind_review' => 'nullable|in:0,1',
+            'required_reviewers' => 'nullable|integer|min:1|max:3',
         ]);
 
         $query = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl', 'cpmk', 'jawaban'])
@@ -124,7 +128,11 @@ class BankSoalController extends Controller
         if ($request->filled('jenis_soal')) {
             // Mapping from checkboxes "Pilihan Ganda" / "Essay" to DB values "pilihan_ganda" / "essay"
             $tipe_soal_map = collect($request->jenis_soal)->map(function ($tipe) {
-                return $tipe === 'Pilihan Ganda' ? 'pilihan_ganda' : 'essay';
+                return match ($tipe) {
+                    'Pilihan Ganda' => 'pilihan_ganda',
+                    'Take-Home' => 'take_home',
+                    default => 'essay',
+                };
             })->toArray();
             
             $query->whereIn('tipe_soal', $tipe_soal_map);
@@ -151,10 +159,26 @@ class BankSoalController extends Controller
         $mataKuliah = \Modules\BankSoal\Models\MataKuliah::find($request->mk_id);
 
         if ($request->ajax() || $request->wantsJson()) {
+            $blindReviewRound = null;
+
+            if ($request->input('require_blind_review') === '1' && $soals->isNotEmpty()) {
+                $blindReviewRound = $this->blindReviewService->createRoundForQuestions(
+                    (int) $request->mk_id,
+                    $soals->pluck('id')->all(),
+                    (int) auth()->id(),
+                    (int) ($request->input('required_reviewers', 1))
+                );
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => $soals->isEmpty() ? 'Tidak ada soal yang sesuai dengan kriteria ekstraksi. Anda masih bisa melanjutkan ke konfirmasi.' : 'Soal berhasil ditarik.',
                 'mataKuliah' => $mataKuliah,
+                'blind_review' => [
+                    'enabled' => $request->input('require_blind_review') === '1',
+                    'round_id' => $blindReviewRound?->id,
+                    'status' => $blindReviewRound?->status,
+                ],
                 'soals' => $soals->map(function ($soal) {
                     // Sertakan cpmk_id jika ada relasi CPMK
                     return [
@@ -174,25 +198,83 @@ class BankSoalController extends Controller
     public function cetakUjian(Request $request)
     {
         $request->validate([
-            'soal_ids' => 'required|array',
-            'mk_id' => 'required',
-            'agenda' => 'nullable',
+            'soal_ids'     => 'required|array',
+            'mk_id'        => 'required',
+            'agenda'       => 'nullable',
             'tahun_ajaran' => 'nullable',
-            'semester' => 'nullable',
+            'semester'     => 'nullable',
             'hari_tanggal' => 'nullable',
-            'jam_mulai' => 'nullable',
-            'jam_selesai' => 'nullable',
-            'ruang_ujian' => 'nullable',
-            'sifat_ujian' => 'nullable',
+            'jam_mulai'    => 'nullable',
+            'jam_selesai'  => 'nullable',
+            'ruang_ujian'  => 'nullable',
+            'sifat_ujian'  => 'nullable',
         ]);
 
+        $soalIds    = array_map('intval', $request->soal_ids);
+        $mataKuliah = \Modules\BankSoal\Models\MataKuliah::find($request->mk_id);
+        $user       = auth()->user();
+
+        // Buat blind review hanya jika dosen mengaktifkannya
+        if ($request->input('require_blind_review') === '1') {
+            $round = $this->blindReviewService->createRoundForQuestions(
+                (int) $request->mk_id,
+                $soalIds,
+                (int) $user->id,
+                1,
+                true,
+                [
+                    'agenda'       => $request->agenda,
+                    'tahun_ajaran' => $request->tahun_ajaran,
+                    'semester'     => $request->semester,
+                    'hari_tanggal' => $request->hari_tanggal,
+                    'jam_mulai'    => $request->jam_mulai,
+                    'jam_selesai'  => $request->jam_selesai,
+                    'ruang_ujian'  => $request->ruang_ujian,
+                    'sifat_ujian'  => $request->sifat_ujian,
+                ]
+            );
+
+            if ($round !== null) {
+                return redirect()->route('banksoal.soal.dosen.blind-review.index')
+                    ->with('info', 'Soal ujian berhasil disiapkan untuk blind review. Dosen pengampu lain telah dinotifikasi dan memiliki 2 hari untuk menyelesaikan review. Setelah semua disetujui (atau batas waktu tercapai), soal siap dicetak.');
+            }
+        }
+
+        // Blind review tidak diaktifkan → langsung cetak
         $soals = \Modules\BankSoal\Models\Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])
-            ->whereIn('id', $request->soal_ids)
-            // Memastikan urutan tetap sesuai yang dikirim request
-            ->orderByRaw('ARRAY_POSITION(ARRAY[' . implode(',', $request->soal_ids) . ']::integer[], id)')
+            ->whereIn('id', $soalIds)
+            ->orderByRaw('ARRAY_POSITION(ARRAY[' . implode(',', $soalIds) . ']::integer[], id)')
+            ->get();
+
+        return view('banksoal::pages.bank-soal.Dosen.print-ujian', compact('soals', 'mataKuliah', 'request'));
+    }
+
+    /**
+     * Tampilkan print view setelah blind review selesai/approved.
+     */
+    public function cetakUjianApproved(Request $request)
+    {
+        $request->validate([
+            'soal_ids' => 'required|array',
+            'mk_id'    => 'required',
+            'round_id' => 'nullable|exists:bs_blind_review_rounds,id',
+        ]);
+
+        $soalIds = array_map('intval', $request->soal_ids);
+        $soals   = \Modules\BankSoal\Models\Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])
+            ->whereIn('id', $soalIds)
+            ->orderByRaw('ARRAY_POSITION(ARRAY[' . implode(',', $soalIds) . ']::integer[], id)')
             ->get();
 
         $mataKuliah = \Modules\BankSoal\Models\MataKuliah::find($request->mk_id);
+
+        // Ambil data ujian yang disimpan saat round dibuat
+        if ($request->round_id) {
+            $round = \Modules\BankSoal\Models\BlindReviewRound::find($request->round_id);
+            $meta  = $round?->ujian_meta ?? [];
+            // Inject ke request agar view bisa baca seperti biasa
+            $request->merge($meta);
+        }
 
         return view('banksoal::pages.bank-soal.Dosen.print-ujian', compact('soals', 'mataKuliah', 'request'));
     }
@@ -340,10 +422,10 @@ class BankSoalController extends Controller
             'cpmk_id' => 'nullable|exists:bs_cpmk,id',
             'soal' => 'required|string',
             'kesulitan' => 'required|in:easy,intermediate,advanced',
-            'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay',
+            'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay,take_home',
         ];
 
-        if ($request->input('tipe_soal') !== 'essay') {
+        if ($request->input('tipe_soal') === 'pilihan_ganda') {
             $rules['jawaban'] = 'required|array|min:2';
             $rules['jawaban.*.teks'] = 'required|string';
             $rules['jawaban_benar'] = 'required';
@@ -373,7 +455,7 @@ class BankSoalController extends Controller
 
             // Mapping form jawaban ke expected params: [{ opsi, deskripsi, is_benar }, ...]
             $jawabanData = [];
-            if ($dataSoal['tipe_soal'] !== 'essay' && $request->has('jawaban')) {
+            if ($dataSoal['tipe_soal'] === 'pilihan_ganda' && $request->has('jawaban')) {
                 $abjad = range('A', 'Z');
                 foreach ($request->jawaban as $idx => $jawab) {
                     $jawabanData[] = [
@@ -424,10 +506,10 @@ class BankSoalController extends Controller
             'cpmk_id' => 'nullable|exists:bs_cpmk,id',
             'soal' => 'required|string',
             'kesulitan' => 'required|in:easy,intermediate,advanced',
-            'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay',
+            'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay,take_home',
         ];
 
-        if ($request->input('tipe_soal') !== 'essay') {
+        if ($request->input('tipe_soal') === 'pilihan_ganda') {
             $rules['jawaban'] = 'required|array|min:2';
             $rules['jawaban.*.teks'] = 'required|string';
             $rules['jawaban_benar'] = 'required';
@@ -462,7 +544,7 @@ class BankSoalController extends Controller
             }
 
             $jawabanData = [];
-            if ($dataSoal['tipe_soal'] !== 'essay' && $request->has('jawaban')) {
+            if ($dataSoal['tipe_soal'] === 'pilihan_ganda' && $request->has('jawaban')) {
                 $abjad = range('A', 'Z');
                 foreach ($request->jawaban as $idx => $jawab) {
                     $jawabanData[] = [

@@ -1,0 +1,53 @@
+<?php
+
+namespace Modules\Capstone\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Modules\Capstone\Models\{Group, PhaseDocumentRequirement, StudentPeerReviewStatus};
+use Modules\Capstone\Services\{GroupService, NotificationService};
+use Modules\Capstone\Support\BladeFeatureAccess;
+
+class BladeMonitoringController extends Controller
+{
+    public function progress(Request $request, GroupService $service)
+    {
+        $request->validate(['period_id'=>'nullable|integer|exists:capstone_periods,id']);
+        $groups = Group::with(['period', 'title', 'members.student', 'supervisor1', 'supervisor2', 'documents'])
+            ->when($request->filled('period_id'), fn($q)=>$q->where('period_id', $request->integer('period_id')))->latest()->get();
+        $requirements = PhaseDocumentRequirement::whereIn('period_id', $groups->pluck('period_id')->unique())->get()->groupBy('period_id');
+        return response()->json(['data'=>$groups->map(fn($group)=>$service->transformGroupForProgress($group, $group->documents, $requirements->get($group->period_id, collect())))]);
+    }
+
+    public function peerReviews(Request $request)
+    {
+        $request->validate(['period_id'=>'nullable|integer|exists:capstone_periods,id']);
+        $groups = Group::with(['period', 'members.student.user'])
+            ->whereIn('status', BladeFeatureAccess::PEER_REVIEW_STATUSES)
+            ->when($request->filled('period_id'), fn($q)=>$q->where('period_id', $request->integer('period_id')))->get();
+        $states = StudentPeerReviewStatus::whereIn('group_id', $groups->modelKeys())->get()->groupBy('group_id');
+        return response()->json(['data'=>$groups->map(function($group) use ($states) {
+            $groupStates = $states->get($group->id, collect())->keyBy('student_id');
+            $members = $group->members->map(function($member) use ($groupStates) {
+                $state = $groupStates->get($member->student_id);
+                return ['student_id'=>$member->student_id, 'student_name'=>$member->student?->user?->name,
+                    'student_nim'=>$member->student?->student_number, 'has_completed'=>(bool)$state?->has_completed_peer_review,
+                    'ta_status'=>$state?->ta_status ?? 'TA_BLOCKED'];
+            });
+            $completed = $members->where('has_completed', true)->count();
+            return ['group_id'=>$group->id, 'group_code'=>$group->code ?? 'Group '.$group->id, 'period_name'=>$group->period?->name,
+                'total_members'=>$members->count(), 'completed_count'=>$completed,
+                'completion_percentage'=>$members->count()?round($completed/$members->count()*100):0, 'members'=>$members];
+        })]);
+    }
+
+    public function remind(Group $group, NotificationService $notifications)
+    {
+        abort_unless(in_array($group->status, BladeFeatureAccess::PEER_REVIEW_STATUSES, true), 422, 'Peer review belum dibuka untuk kelompok ini.');
+        $completed = StudentPeerReviewStatus::where('group_id', $group->id)->where('has_completed_peer_review', true)->pluck('student_id');
+        $users = $group->members()->whereNotIn('student_id', $completed)->with('student')->get()
+            ->pluck('student.user_id')->filter()->unique()->all();
+        $notifications->sendToMany($users, 'PEER_REVIEW_REMINDER', 'Pengingat Peer Review', 'Lengkapi peer review kelompok Anda.', 'Group', $group->id);
+        return response()->json(['message'=>'Pengingat dikirim.', 'count'=>count($users)]);
+    }
+}

@@ -2,9 +2,13 @@ class RpsCpmkRows {
     constructor(form) {
         console.log("RpsCpmkRows constructor initialized. Form element:", form);
         this.form = form;
-        this.rowContainer = form?.querySelector("[data-cpmk-rows]") || document.querySelector("[data-cpmk-rows]");
+        // Collect ALL [data-cpmk-rows] containers inside the form (supports both upload + generator panels)
+        const allContainers = form ? Array.from(form.querySelectorAll("[data-cpmk-rows]")) : Array.from(document.querySelectorAll("[data-cpmk-rows]"));
+        this.rowContainers = allContainers; // all containers
+        this.rowContainer = allContainers[0] || null; // primary (for addRow / template fallback)
         this.template = form?.querySelector("#cpmkRowTemplate") || document.querySelector("#cpmkRowTemplate");
         this.addButton = form?.querySelector("#addCpmkRowBtn") || document.querySelector("#addCpmkRowBtn");
+        this.addButtonGenerator = form?.querySelector("#addCpmkRowBtnGenerator") || document.querySelector("#addCpmkRowBtnGenerator");
         this.mkSelect = form?.querySelector("#mkSelect") || document.querySelector("#mkSelect");
         this.dosenSelect = form?.querySelector("#dosenSelect") || document.querySelector("#dosenSelect");
         this.dosenTs = null;
@@ -13,16 +17,17 @@ class RpsCpmkRows {
         this.cplOptions = [];
         this.dosenOptions = [];
 
-        console.log("RpsCpmkRows elements - rowContainer:", this.rowContainer, "template:", this.template, "addButton:", this.addButton, "mkSelect:", this.mkSelect, "dosenSelect:", this.dosenSelect);
+        console.log("RpsCpmkRows rowContainers:", this.rowContainers, "template:", this.template);
         console.log("RpsCpmkRows config - routeCpl:", this.routeCpl, "routeDosen:", this.routeDosen);
 
         let maxIndex = -1;
-        const existingRows = this.rowContainer ? this.rowContainer.querySelectorAll("[data-cpmk-row]") : [];
-        existingRows.forEach(row => {
-            const idx = parseInt(row.dataset.rowIndex, 10);
-            if (!isNaN(idx) && idx > maxIndex) {
-                maxIndex = idx;
-            }
+        this.rowContainers.forEach(container => {
+            container.querySelectorAll("[data-cpmk-row]").forEach(row => {
+                const idx = parseInt(row.dataset.rowIndex, 10);
+                if (!isNaN(idx) && idx > maxIndex) {
+                    maxIndex = idx;
+                }
+            });
         });
         this.rowCounter = maxIndex + 1;
     }
@@ -36,7 +41,7 @@ class RpsCpmkRows {
 
         this.bindEvents();
 
-        if (this.rowContainer && this.template) {
+        if (this.rowContainers.length > 0 && this.template) {
             this.ensureAtLeastOneRow();
             this.refreshAllPreviews();
             this.updateCpmkFormState();
@@ -50,7 +55,14 @@ class RpsCpmkRows {
 
     bindEvents() {
         if (this.addButton) {
-            this.addButton.addEventListener("click", () => this.addRow());
+            this.addButton.addEventListener("click", () => this.addRow(this.rowContainers[0]));
+        }
+
+        if (this.addButtonGenerator) {
+            this.addButtonGenerator.addEventListener("click", () => {
+                const genContainer = this.form?.querySelector("#cpmkRowsGenerator") || document.querySelector("#cpmkRowsGenerator");
+                this.addRow(genContainer || this.rowContainers[0]);
+            });
         }
 
         if (this.mkSelect) {
@@ -59,8 +71,8 @@ class RpsCpmkRows {
             });
         }
 
-        if (this.rowContainer) {
-            this.rowContainer.addEventListener("click", (event) => {
+        this.rowContainers.forEach(container => {
+            container.addEventListener("click", (event) => {
                 const removeButton = event.target.closest("[data-remove-cpmk-row]");
                 if (!removeButton) {
                     return;
@@ -70,7 +82,7 @@ class RpsCpmkRows {
                 this.removeRow(row);
             });
 
-            this.rowContainer.addEventListener("input", (event) => {
+            container.addEventListener("input", (event) => {
                 const row = event.target.closest("[data-cpmk-row]");
                 if (row) {
                     this.updatePreview(row);
@@ -78,19 +90,20 @@ class RpsCpmkRows {
                 }
             });
 
-            this.rowContainer.addEventListener("change", (event) => {
+            container.addEventListener("change", (event) => {
                 const row = event.target.closest("[data-cpmk-row]");
                 if (row) {
                     this.updatePreview(row);
                     this.updateCpmkFormState();
                 }
             });
-        }
+        });
     }
 
     ensureAtLeastOneRow() {
+        // Only add a default row if the active (primary) container has no rows
         if (
-            this.rowContainer.querySelectorAll("[data-cpmk-row]").length === 0
+            this.rowContainer && this.rowContainer.querySelectorAll("[data-cpmk-row]").length === 0
         ) {
             this.addRow();
         }
@@ -150,9 +163,10 @@ class RpsCpmkRows {
             (option) => option.value,
         );
 
-        if (this.dosenSelect.dataset.selectedDosenIds) {
+        const selectedDosenData = this.dosenSelect.dataset.selectedDosenIds || this.form?.dataset?.selectedDosenIds;
+        if (selectedDosenData) {
             try {
-                const preselected = JSON.parse(this.dosenSelect.dataset.selectedDosenIds);
+                const preselected = JSON.parse(selectedDosenData);
                 if (Array.isArray(preselected)) {
                     selectedValues = [...new Set([...selectedValues, ...preselected.map(String)])];
                 }
@@ -161,7 +175,7 @@ class RpsCpmkRows {
             }
         }
 
-        const isEditPage = this.dosenSelect.hasAttribute('data-selected-dosen-ids');
+        const isEditPage = !!selectedDosenData || this.dosenSelect.hasAttribute('data-selected-dosen-ids') || (this.form && (this.form.hasAttribute('data-edit-mode') || this.form.dataset.editMode === "1"));
 
         console.log("renderDosenOptions starting. Options count:", this.dosenOptions.length);
 
@@ -170,7 +184,6 @@ class RpsCpmkRows {
             if (window.TomSelect) {
                 const existingTs = this.dosenSelect.tomselect || this.dosenTs;
                 if (existingTs) {
-                    console.log("renderDosenOptions: destroying existing TomSelect instance.");
                     try {
                         existingTs.destroy();
                     } catch (e) {
@@ -196,19 +209,85 @@ class RpsCpmkRows {
             this.dosenSelect.appendChild(option);
         });
 
-        // Initialize TomSelect on dosen select for better UX (search + remove button)
+        // Initialize TomSelect with "X Terpilih" summary and auto-sorting of checked items to top
         try {
             if (window.TomSelect) {
-                console.log("renderDosenOptions: initializing TomSelect");
                 this.dosenTs = new TomSelect(this.dosenSelect, {
                     plugins: { remove_button: { title: "Hapus dosen ini" } },
                     maxOptions: 100,
                     searchField: ["text"],
                     persist: false,
                     hideSelected: false,
+                    render: {
+                        item: function(data, escape) {
+                            return `<div class="item summary-item" data-value="${escape(data.value)}">${escape(data.text)}</div>`;
+                        },
+                        option: function(data, escape) {
+                            return `<div class="option py-1.5 px-3">${escape(data.text)}</div>`;
+                        }
+                    }
                 });
-            } else {
-                console.warn("renderDosenOptions: window.TomSelect is not defined!");
+
+                const updateDisplayAndSort = () => {
+                    if (!this.dosenTs) return;
+                    const count = this.dosenTs.items.length;
+
+                    // 1. Re-sort options in dropdown so selected items move to the top
+                    const allOptions = Object.values(this.dosenTs.options);
+                    allOptions.forEach(opt => {
+                        opt.$is_selected = this.dosenTs.items.includes(String(opt.value));
+                    });
+                    allOptions.sort((a, b) => {
+                        if (a.$is_selected && !b.$is_selected) return -1;
+                        if (!a.$is_selected && b.$is_selected) return 1;
+                        return (a.$order || 0) - (b.$order || 0);
+                    });
+
+                    // 2. Format items inside control box to show "X Terpilih"
+                    const control = this.dosenTs.control;
+                    if (control) {
+                        const itemEls = control.querySelectorAll('.item');
+                        itemEls.forEach((el, index) => {
+                            // Find the remove button injected by TomSelect remove_button plugin
+                            const removeBtn = el.querySelector('.remove');
+                            if (index === 0) {
+                                // Update only the text node, preserve the remove button element
+                                const textNode = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                                if (textNode) {
+                                    textNode.textContent = `${count} Terpilih`;
+                                } else {
+                                    // No text node yet — prepend one
+                                    el.insertBefore(document.createTextNode(`${count} Terpilih`), el.firstChild);
+                                }
+                                el.style.display = 'inline-flex';
+                                el.style.alignItems = 'center';
+                                el.style.backgroundColor = '#f1f5f9';
+                                el.style.color = '#0b266e';
+                                el.style.fontWeight = '600';
+                                el.style.border = '1px solid #cbd5e1';
+                                el.style.borderRadius = '6px';
+                                el.style.padding = '2px 8px';
+                                el.style.fontSize = '12px';
+                                if (removeBtn) removeBtn.style.display = '';
+                            } else {
+                                el.style.display = 'none';
+                                if (removeBtn) removeBtn.style.display = 'none';
+                            }
+                        });
+                    }
+                };
+
+                this.dosenTs.on('change', () => {
+                    updateDisplayAndSort();
+                    if (this.dosenTs) {
+                        this.dosenTs.refreshOptions(false);
+                    }
+                });
+
+                this.dosenTs.on('item_add', updateDisplayAndSort);
+                this.dosenTs.on('item_remove', updateDisplayAndSort);
+
+                updateDisplayAndSort();
             }
         } catch (err) {
             console.warn("TomSelect init failed for dosenSelect:", err);
@@ -220,14 +299,13 @@ class RpsCpmkRows {
             return;
         }
 
-        // Set loading placeholder
-        if (this.rowContainer) {
-            const selects = this.rowContainer.querySelectorAll("[data-cpmk-cpl-select]");
-            selects.forEach(select => {
+        // Set loading placeholder in ALL containers
+        this.rowContainers.forEach(container => {
+            container.querySelectorAll("[data-cpmk-cpl-select]").forEach(select => {
                 select.innerHTML = '<option value="">Memuat CPL</option>';
                 select.disabled = true;
             });
-        }
+        });
 
         const mkId = this.mkSelect?.value || "";
         const url = mkId
@@ -250,9 +328,10 @@ class RpsCpmkRows {
     }
 
     renderAllCplSelects() {
-        if (!this.rowContainer) return;
-        const rows = this.rowContainer.querySelectorAll("[data-cpmk-row]");
-        rows.forEach((row) => this.renderCplSelect(row));
+        if (!this.rowContainers || this.rowContainers.length === 0) return;
+        this.rowContainers.forEach(container => {
+            container.querySelectorAll("[data-cpmk-row]").forEach(row => this.renderCplSelect(row));
+        });
         this.updateCpmkFormState();
     }
 
@@ -293,8 +372,9 @@ class RpsCpmkRows {
         }
     }
 
-    addRow(initialValues = {}) {
-        if (!this.rowContainer || !this.template) {
+    addRow(targetContainer = null, initialValues = {}) {
+        const container = targetContainer || this.rowContainer;
+        if (!container || !this.template) {
             return;
         }
         const index = this.rowCounter++;
@@ -310,7 +390,7 @@ class RpsCpmkRows {
             return;
         }
 
-        this.rowContainer.appendChild(row);
+        container.appendChild(row);
         this.applyInitialValues(row, initialValues);
         this.renderCplSelect(row);
         this.updatePreview(row);
@@ -348,11 +428,15 @@ class RpsCpmkRows {
     }
 
     removeRow(row) {
-        if (!row || !this.rowContainer) {
+        if (!row) {
             return;
         }
 
-        const rows = this.rowContainer.querySelectorAll("[data-cpmk-row]");
+        // Find which container this row belongs to
+        const container = row.closest("[data-cpmk-rows]");
+        if (!container) return;
+
+        const rows = container.querySelectorAll("[data-cpmk-row]");
         if (rows.length === 1) {
             row.querySelectorAll("input, select").forEach((element) => {
                 if (element.tagName === "SELECT") {
@@ -375,9 +459,9 @@ class RpsCpmkRows {
     }
 
     refreshAllPreviews() {
-        if (!this.rowContainer) return;
-        const rows = this.rowContainer.querySelectorAll("[data-cpmk-row]");
-        rows.forEach((row) => this.updatePreview(row));
+        this.rowContainers.forEach(container => {
+            container.querySelectorAll("[data-cpmk-row]").forEach(row => this.updatePreview(row));
+        });
     }
 
     updatePreview(row) {
@@ -455,10 +539,15 @@ class RpsCpmkRows {
         const creationMethod = creationMethodEl ? creationMethodEl.value : 'upload';
 
         const isUploadActive = (creationMethod === 'upload');
+        const isEditMode = !!(this.form && (this.form.hasAttribute('data-edit-mode') || this.form.dataset.editMode === "1"));
         const hasMk = !!(this.mkSelect?.value);
 
         let allRequiredFilled = true;
-        const rows = this.rowContainer ? this.rowContainer.querySelectorAll("[data-cpmk-row]") : [];
+        // Collect rows from ALL containers
+        const rows = [];
+        this.rowContainers.forEach(container => {
+            container.querySelectorAll("[data-cpmk-row]").forEach(r => rows.push(r));
+        });
 
         rows.forEach(row => {
             const cplSelect = row.querySelector("[data-cpmk-cpl-select]");
@@ -468,35 +557,37 @@ class RpsCpmkRows {
             const konteksInput = row.querySelector('input[name*="[konteks]"]');
             const removeBtn = row.querySelector("[data-remove-cpmk-row]");
 
-            if (!isUploadActive || !hasMk) {
+            if ((!isUploadActive && !isEditMode) || !hasMk) {
                 if (cplSelect) {
                     cplSelect.disabled = true;
-                    cplSelect.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
+                    cplSelect.title = (!isUploadActive && !isEditMode) ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (kodeInput) {
                     kodeInput.disabled = true;
-                    kodeInput.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
+                    kodeInput.title = (!isUploadActive && !isEditMode) ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (kkoSelect) {
                     kkoSelect.disabled = true;
-                    kkoSelect.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
+                    kkoSelect.title = (!isUploadActive && !isEditMode) ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (objekInput) {
                     objekInput.disabled = true;
-                    objekInput.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
+                    objekInput.title = (!isUploadActive && !isEditMode) ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (konteksInput) {
                     konteksInput.disabled = true;
-                    konteksInput.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
+                    konteksInput.title = (!isUploadActive && !isEditMode) ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (removeBtn) {
                     removeBtn.disabled = true;
-                    removeBtn.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
+                    removeBtn.title = (!isUploadActive && !isEditMode) ? "" : "Pilih Mata Kuliah terlebih dahulu";
                     removeBtn.style.opacity = "0.5";
                     removeBtn.style.cursor = "not-allowed";
                 }
                 allRequiredFilled = false;
             } else {
+                const isCplSelected = cplSelect ? !!cplSelect.value : false;
+
                 if (cplSelect) {
                     cplSelect.disabled = !this.cplOptions.length;
                     cplSelect.title = cplSelect.disabled
@@ -504,26 +595,31 @@ class RpsCpmkRows {
                         : "Pilih CPL";
                 }
                 if (kodeInput) {
-                    kodeInput.disabled = false;
-                    kodeInput.title = "";
+                    kodeInput.disabled = !isCplSelected;
+                    kodeInput.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
                 }
                 if (kkoSelect) {
-                    kkoSelect.disabled = false;
-                    kkoSelect.title = "";
+                    kkoSelect.disabled = !isCplSelected;
+                    kkoSelect.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
                 }
                 if (objekInput) {
-                    objekInput.disabled = false;
-                    objekInput.title = "";
+                    objekInput.disabled = !isCplSelected;
+                    objekInput.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
                 }
                 if (konteksInput) {
-                    konteksInput.disabled = false;
-                    konteksInput.title = "";
+                    konteksInput.disabled = !isCplSelected;
+                    konteksInput.title = !isCplSelected ? "Pilih CPL terlebih dahulu" : "";
                 }
                 if (removeBtn) {
-                    removeBtn.disabled = false;
-                    removeBtn.title = "Hapus baris CPMK ini";
-                    removeBtn.style.opacity = "";
-                    removeBtn.style.cursor = "";
+                    if (rows.length < 2) {
+                        removeBtn.style.display = "none";
+                    } else {
+                        removeBtn.style.display = ""; // default display
+                        removeBtn.disabled = false;
+                        removeBtn.title = "Hapus baris CPMK ini";
+                        removeBtn.style.opacity = "";
+                        removeBtn.style.cursor = "";
+                    }
                 }
 
                 // Check required values
@@ -538,21 +634,22 @@ class RpsCpmkRows {
             }
         });
 
-        if (this.addButton) {
-            if (!isUploadActive) {
-                this.addButton.disabled = true;
-                this.addButton.title = "";
+        const buttonsToUpdate = [this.addButton, this.addButtonGenerator].filter(Boolean);
+        buttonsToUpdate.forEach(btn => {
+            if (!isUploadActive && !isEditMode) {
+                btn.disabled = true;
+                btn.title = "";
             } else if (!hasMk) {
-                this.addButton.title = "Pilih Mata Kuliah terlebih dahulu";
-                this.addButton.disabled = true;
+                btn.title = "Pilih Mata Kuliah terlebih dahulu";
+                btn.disabled = true;
             } else if (!allRequiredFilled) {
-                this.addButton.title = "Lengkapi seluruh kolom CPMK yang ada terlebih dahulu";
-                this.addButton.disabled = true;
+                btn.title = "Lengkapi seluruh kolom CPMK yang ada terlebih dahulu";
+                btn.disabled = true;
             } else {
-                this.addButton.title = "Tambah baris CPMK baru";
-                this.addButton.disabled = false;
+                btn.title = "Tambah baris CPMK baru";
+                btn.disabled = false;
             }
-        }
+        });
     }
 }
 

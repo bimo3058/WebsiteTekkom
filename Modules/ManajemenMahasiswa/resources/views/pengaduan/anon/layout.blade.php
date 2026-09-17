@@ -62,6 +62,7 @@
         }
     </style>
     @stack('styles')
+    <x-mobile-navigation-assets />
 </head>
 <body>
 
@@ -82,5 +83,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     @stack('scripts')
+    <x-mobile-navigation />
 </body>
 </html>

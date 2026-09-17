@@ -22,30 +22,17 @@
     </div>
 </div>
 @else
-<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:24px;">
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap:24px;">
     @foreach($praktikumDenganPeriode as $p)
         @php
             $pAsprak = $periodeAktif[$p->id]['asprak'] ?? null;
             $pKoor   = $periodeAktif[$p->id]['koor']   ?? null;
             
-            $existingAsprak = \Modules\EOffice\Models\PendaftaranAsprak::where('user_id', auth()->id())
-                ->where('praktikum_id', $p->id)
-                ->orderByDesc('created_at')
-                ->first();
-            $existingKoor = \Modules\EOffice\Models\PendaftaranKoordinator::where('user_id', auth()->id())
-                ->where('praktikum_id', $p->id)
-                ->orderByDesc('created_at')
-                ->first();
-                
-            $isAsprakDiPraktikumIni = \Modules\EOffice\Models\AsprakPraktikum::where('user_id', auth()->id())
-                ->where('praktikum_id', $p->id)
-                ->where('role', 'asprak')
-                ->exists();
-
-            $isKoorDiPraktikumIni = \Modules\EOffice\Models\AsprakPraktikum::where('user_id', auth()->id())
-                ->where('praktikum_id', $p->id)
-                ->where('role', 'koor')
-                ->exists();
+            $existingAsprak = $pendaftaranAsprakByPraktikum->get($p->id);
+            $existingKoor = $pendaftaranKoorByPraktikum->get($p->id);
+            $roles = $rolesByPraktikum->get($p->id, collect());
+            $isAsprakDiPraktikumIni = $roles->contains('role', 'asprak');
+            $isKoorDiPraktikumIni = $roles->contains('role', 'koor');
         @endphp
 
         {{-- KARTU ASISTEN PRAKTIKUM --}}

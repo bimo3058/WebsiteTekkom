@@ -494,9 +494,9 @@
 
     @push('scripts')
     <script>
-        const API_URL = '{{ url("/bank-soal/admin/api/mata-kuliah") }}';
+        const API_URL = '{{ route("banksoal.api.v1.admin.mata-kuliah.index") }}';
         const IMPORT_URL = '{{ route("banksoal.api.v1.admin.mata-kuliah.import") }}';
-        const csrfToken = '{{ csrf_token() }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         // SKS Counter Logic
         function incrementSKS() {

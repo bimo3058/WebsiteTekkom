@@ -7,23 +7,11 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                 <h1 class="mp-page-title">Pendaftaran</h1>
             </div>
-            <p class="mp-page-sub">Kelola seleksi pendaftaran Koordinator dan Asisten Praktikum · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+            <p class="mp-page-sub">Kelola seleksi pendaftaran Koordinator, Asisten Praktikum, dan Praktikan · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
         </div>
     </div>
 
-    {{-- Tab Bar --}}
-    <div class="flex items-center gap-3 flex-shrink-0 w-fit">
-        <a href="{{ route('eoffice.manprak.admin.pendaftaran-koor.index') }}"
-                class="px-4 py-2 rounded-[10px] border-[1.5px] cursor-pointer text-[13px] font-bold transition-all flex items-center justify-center gap-2 border-[#0B266E] bg-[#0B266E]/5 text-[#0B266E]" style="text-decoration: none;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Koordinator Praktikum
-        </a>
-        <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}"
-                class="px-4 py-2 rounded-[10px] border-[1.5px] cursor-pointer text-[13px] font-bold transition-all flex items-center justify-center gap-2 border-[#DFE1E7] text-[#666D80] hover:text-[#353849] hover:bg-black/5" style="text-decoration: none;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Asisten Praktikum
-        </a>
-    </div>
+    @include('eoffice::manajemen-praktikum.admin.partials.registration-tabs', ['activeRegistrationTab' => 'koor'])
 </div>
 
 <div id="daftar-pendaftaran" class="mp-card">
@@ -103,7 +91,7 @@
         <div style="min-width: max-content;">
         {{-- Header Tabel --}}
         <div class="grid gap-3 px-5 py-3 bg-[#FAFAFA] border-b border-[#DFE1E7]"
-             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 160px 100px 100px;">
+             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 160px 100px 190px;">
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">No</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Nama Mahasiswa</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Email</div>
@@ -124,7 +112,7 @@
             $avColor = $avColors[crc32($p->user?->email ?? '') % count($avColors)];
         @endphp
         <div class="grid gap-3 px-5 py-4 border-b border-[#F6F8FA] hover:bg-[#FAFAFA] transition-colors items-center"
-             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 160px 100px 100px;">
+             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 160px 100px 190px;">
             {{-- No --}}
             <div class="text-[12px] font-semibold text-[#666D80]">
                 {{ $loop->iteration + ($pendaftaran->firstItem() ?? 1) - 1 }}
@@ -171,7 +159,10 @@
                 <span class="mp-badge warning sm"><span class="dot"></span>Menunggu</span>
                 @endif
             </div>
-            <div class="text-center flex justify-center gap-2">
+            <div class="text-center flex flex-col items-center justify-center gap-2">
+                <a class="mp-btn secondary sm" href="{{ route('eoffice.manprak.admin.pendaftaran.show', ['type' => 'koor', 'id' => $p->id]) }}">
+                    <x-eoffice::manajemen-praktikum.ui.icon name="file" /> Detail &amp; Dokumen
+                </a>
                 @if($p->status === 'pending' && $p->status_dosen === 'disetujui')
                 <div class="flex gap-2 justify-center" x-data="{ alasan: '' }">
                     <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-koor.approve', $p->id) }}">
@@ -189,7 +180,9 @@
                     </form>
                 </div>
                 @elseif($p->status === 'pending' && $p->status_dosen === 'menunggu')
-                <span class="text-[11px] text-[#666D80]">Tunggu Dosen Pengampu</span>
+                <span class="text-[11px] text-[#666D80]">Override tersedia di detail</span>
+                @elseif($p->status === 'rejected' && $p->status_dosen === 'ditolak')
+                <span class="text-[11px] text-[#666D80]">Override tersedia di detail</span>
                 @else
                 <span class="text-[11px] text-[#666D80]">Selesai</span>
                 @endif

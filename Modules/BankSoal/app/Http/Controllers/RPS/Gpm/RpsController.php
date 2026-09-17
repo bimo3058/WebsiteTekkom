@@ -279,8 +279,9 @@ class RpsController extends Controller
             ->limit(10)
             ->get();
 
-        $totalBobot = $parameters->sum('bobot');
-        return compact('rps', 'parameters', 'existingReview', 'history', 'selectedCpls', 'cplCpmkMappings', 'draftCpmkItems', 'dosenPengampu', 'totalBobot');
+        $totalBobot  = $parameters->sum('bobot');
+        $skorMinimum = (int) (DB::table('bs_pengaturan')->where('kunci', 'standar_skor_minimum')->value('nilai') ?? 60);
+        return compact('rps', 'parameters', 'existingReview', 'history', 'selectedCpls', 'cplCpmkMappings', 'draftCpmkItems', 'dosenPengampu', 'totalBobot', 'skorMinimum');
     }
 
     public function previewDokumen(int $rpsId)
@@ -422,39 +423,29 @@ class RpsController extends Controller
             $rps->save();
 
             if ($action === 'setuju' && $oldStatus !== 'disetujui') {
-                DB::table('bs_cpl_cpmk')->where('mk_id', $rps->mk_id)->delete();
-
+                // Sync CPL & MK mapping langsung ke kolom bs_cpmk.cpl_id dan bs_cpmk.mk_id
+                // (bs_cpl_cpmk sudah dihapus — CPMK kini menyimpan relasi secara langsung)
                 $stagedMappings = DB::table('bs_rps_cpmk')
                     ->where('rps_id', $rpsId)
                     ->whereNotNull('cpl_id')
                     ->whereNotNull('cpmk_id')
                     ->get(['cpl_id', 'cpmk_id']);
 
-                foreach ($stagedMappings as $mapping) {
-                    DB::table('bs_cpl_cpmk')->updateOrInsert(
-                        [
-                            'cpl_id' => $mapping->cpl_id,
-                            'cpmk_id' => $mapping->cpmk_id,
-                        ],
-                        [
-                            'mk_id' => $rps->mk_id,
-                        ]
-                    );
-                }
-
-                if ($stagedMappings->isEmpty()) {
-                    foreach ($rps->cpls as $cpl) {
-                        foreach ($rps->cpmks as $cpmk) {
-                            DB::table('bs_cpl_cpmk')->updateOrInsert(
-                                [
-                                    'cpl_id' => $cpl->id,
-                                    'cpmk_id' => $cpmk->id,
-                                ],
-                                [
-                                    'mk_id' => $rps->mk_id,
-                                ]
-                            );
-                        }
+                if ($stagedMappings->isNotEmpty()) {
+                    foreach ($stagedMappings as $mapping) {
+                        DB::table('bs_cpmk')
+                            ->where('id', $mapping->cpmk_id)
+                            ->update([
+                                'cpl_id' => $mapping->cpl_id,
+                                'mk_id'  => $rps->mk_id,
+                            ]);
+                    }
+                } else {
+                    // Fallback: update semua CPMK milik RPS ini dengan MK
+                    foreach ($rps->cpmks as $cpmk) {
+                        DB::table('bs_cpmk')
+                            ->where('id', $cpmk->id)
+                            ->update(['mk_id' => $rps->mk_id]);
                     }
                 }
             }

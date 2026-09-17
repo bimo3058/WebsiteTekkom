@@ -54,6 +54,8 @@
             </p>
         </div>
 
+        @include('superadmin.dashboard._module-access', ['access' => $moduleAccess[$moduleKey]])
+
         <div style="padding-top:10px;border-top:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;margin-top:auto;">
             <span style="font-size:11px;color:var(--c-fg-muted);font-variant-numeric:tabular-nums;">v{{ $module['version'] ?? '1.0' }}</span>
             <a href="{{ route('superadmin.modules') }}"

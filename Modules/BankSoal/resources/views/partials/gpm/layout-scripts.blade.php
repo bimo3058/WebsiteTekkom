@@ -38,13 +38,38 @@
     function toggleModal(modalId, shouldOpen) {
         const modal = document.getElementById(modalId);
         if (!modal) return;
-        modal.classList.toggle('hidden', !shouldOpen);
-        modal.setAttribute('aria-hidden', String(!shouldOpen));
+
+        const panel = modal.querySelector('.modal-panel') || modal.lastElementChild;
+
         if (shouldOpen) {
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
             document.body.classList.add('overflow-hidden');
-        } else {
-            document.body.classList.remove('overflow-hidden');
+
+            requestAnimationFrame(() => {
+                modal.classList.remove('opacity-0');
+                modal.classList.add('opacity-100');
+                if (panel) {
+                    panel.classList.remove('opacity-0', 'translate-y-4', 'scale-95');
+                    panel.classList.add('opacity-100', 'translate-y-0', 'scale-100');
+                }
+            });
+
+            return;
         }
+
+        modal.classList.remove('opacity-100');
+        modal.classList.add('opacity-0');
+        if (panel) {
+            panel.classList.remove('opacity-100', 'translate-y-0', 'scale-100');
+            panel.classList.add('opacity-0', 'translate-y-4', 'scale-95');
+        }
+
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+        }, 180);
     }
 
     function initModals() {

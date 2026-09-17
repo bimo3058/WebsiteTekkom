@@ -1,8 +1,8 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\Capstone\Support\CapstoneActor;
@@ -12,7 +12,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         $requestedRole = $request->string('role')->toString();
-        $query = User::query();
+        $query = User::query()->select(['id', 'name', 'email', 'created_at']);
 
         if ($request->has('role')) {
             $roles = match ($request->role) {
@@ -33,9 +33,14 @@ class UserController extends Controller
             });
         }
 
-        return $query->with(['roles', 'student', 'lecturer'])
+        return $query->with([
+            'roles:id,name',
+            'student' => fn ($query) => $query->without('user')->select(['id', 'user_id']),
+            'lecturer' => fn ($query) => $query->without('user')->select(['id', 'user_id']),
+        ])
             ->orderBy('name')
-            ->paginate(100)
+            ->orderBy('id')
+            ->paginate(min(max($request->integer('per_page', 100), 1), 100))
             ->through(fn (User $user) => [
                 // Academic selectors in CTMS submit students.id/lecturers.id.
                 // Keep user_id alongside it for audit/account screens.

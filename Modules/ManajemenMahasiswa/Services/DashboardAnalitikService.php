@@ -981,10 +981,9 @@ class DashboardAnalitikService
                 ->toArray();
 
             // Mahasiswa berstatus alumni yang belum tersinkron ke mk_alumni
-            $alumniUserIds = Alumni::whereNotNull('user_id')->pluck('user_id')->all();
             $belumSinkron  = Kemahasiswaan::alumni()
                 ->whereNotNull('user_id')
-                ->when(!empty($alumniUserIds), fn ($q) => $q->whereNotIn('user_id', $alumniUserIds))
+                ->whereNotIn('user_id', Alumni::select('user_id')->whereNotNull('user_id'))
                 ->count();
 
             return [

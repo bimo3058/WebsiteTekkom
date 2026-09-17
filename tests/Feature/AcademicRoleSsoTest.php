@@ -426,7 +426,8 @@ class AcademicRoleSsoTest extends TestCase
             ->with('azure')
             ->andReturn($provider);
 
-        return $this->get('/auth/microsoft/callback');
+        config(['services.azure.tenant' => '11111111-1111-1111-1111-111111111111']);
+        return $this->get('/auth/microsoft/callback?code=test-code');
     }
 
     private function createCapstoneViewPermission(): void

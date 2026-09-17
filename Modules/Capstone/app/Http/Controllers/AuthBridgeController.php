@@ -39,7 +39,7 @@ class AuthBridgeController extends Controller
             return response()->json(['message' => 'Token tidak cocok dengan sesi browser.'], 401);
         }
 
-        $user = User::with(['student', 'lecturer', 'roles'])->findOrFail($payload['user_id']);
+        $user = CapstoneActor::loadProfiles(User::with('roles')->findOrFail($payload['user_id']));
 
         $primaryRole = CapstoneActor::role($user);
         if (! $primaryRole) {
@@ -85,7 +85,7 @@ class AuthBridgeController extends Controller
 
     public function me(Request $request)
     {
-        $user = $request->user()->loadMissing(['student', 'lecturer', 'roles']);
+        $user = $request->user();
 
         return response()->json([
             'data' => CapstoneActor::payload(
@@ -101,7 +101,7 @@ class AuthBridgeController extends Controller
             'role' => ['required', 'string', 'in:admin,dosen,mahasiswa'],
         ]);
 
-        $user = $request->user()->loadMissing(['student', 'lecturer', 'roles']);
+        $user = CapstoneActor::loadProfiles($request->user());
         $role = CapstoneActor::role($user, $validated['role']);
 
         if ($role !== $validated['role']) {

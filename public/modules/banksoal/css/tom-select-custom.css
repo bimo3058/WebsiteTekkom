@@ -1,0 +1,249 @@
+/* 
+ * Custom TomSelect Styling 
+ * Menyesuaikan tampilan multiselect agar mirip dengan desain referensi
+ */
+
+/* ==========================================================================
+   1. Main Control (Input Box)
+   ========================================================================== */
+.ts-control {
+    border: 1px solid #cbd5e1; /* border-slate-300 */
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 0.5rem 2rem 0.5rem 0.75rem; /* padding-right 2rem for chevron */
+    font-size: 0.875rem; /* text-sm */
+    color: #334155; /* text-slate-700 */
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+    transition: all 0.2s ease-in-out;
+    min-height: 2.5rem;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin; /* Firefox */
+    gap: 0.375rem;
+    position: relative; /* for chevron absolute positioning */
+}
+
+/* Hide scrollbar or make it minimal */
+.ts-control::-webkit-scrollbar {
+    height: 4px;
+}
+.ts-control::-webkit-scrollbar-track {
+    background: transparent;
+}
+.ts-control::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* Fix double border issue when TomSelect wrapper inherits form-control or field-control classes */
+.ts-wrapper.form-control,
+.ts-wrapper.field-control {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Add Chevron Arrow to all TomSelect dropdowns */
+.ts-control::after {
+    content: "";
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0.9rem;
+    height: 0.9rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    transition: transform 0.2s ease;
+}
+
+/* Rotate Chevron when dropdown is open */
+.ts-wrapper.dropdown-active .ts-control::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Native Select Styling to match TomSelect (adds chevron arrow) */
+select.field-control {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E");
+    background-size: 0.9em;
+    background-position: calc(100% - 0.75rem) center;
+    background-repeat: no-repeat;
+    padding-right: 2.5rem;
+}
+select.field-control::-ms-expand {
+    display: none;
+}
+
+.ts-control.focus {
+    border-color: #3b82f6; /* border-blue-500 */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); /* ring-blue-500/15 */
+}
+
+/* ==========================================================================
+   2. Selected Items (Chips/Tags)
+   ========================================================================== */
+.ts-control > .item {
+    background-color: #f0f9ff !important; /* bg-sky-50 */
+    color: #0369a1 !important; /* text-sky-700 */
+    border: 1px solid #bae6fd !important; /* border-sky-200 */
+    border-radius: 0.375rem !important; /* rounded-md */
+    padding: 0.125rem 0.375rem 0.125rem 0.5rem !important;
+    font-size: 0.8125rem !important;
+    font-weight: 500 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    margin: 0 !important;
+}
+
+/* Remove button on the chip (the 'x') */
+.ts-control > .item .remove {
+    color: #38bdf8 !important; /* text-sky-400 */
+    border-left: none !important;
+    padding: 0 0.125rem !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+}
+
+.ts-control > .item .remove:hover {
+    color: #0284c7 !important; /* hover:text-sky-600 */
+    background: transparent !important;
+}
+
+/* Remove the divider line TomSelect adds by default before the 'x' */
+.ts-control > .item .remove::before {
+    display: none !important;
+}
+
+/* ==========================================================================
+   3. Dropdown Menu
+   ========================================================================== */
+.ts-dropdown {
+    border: 1px solid #e2e8f0; /* border-slate-200 */
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* shadow-lg */
+    margin-top: 0.25rem;
+    padding: 0.25rem 0;
+    overflow: hidden;
+    z-index: 50;
+}
+
+.ts-dropdown .ts-dropdown-content {
+    max-height: 250px;
+}
+
+/* ==========================================================================
+   4. Dropdown Options (with Fake Checkbox)
+   ========================================================================== */
+.ts-dropdown .option {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    color: #1e293b; /* text-slate-800 */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.15s ease;
+    position: relative;
+}
+
+/* Hover state */
+.ts-dropdown .option:hover,
+.ts-dropdown .option.active {
+    background-color: #f8fafc; /* bg-slate-50 */
+    color: #0f172a; /* text-slate-900 */
+}
+
+/* 
+ * FAKING THE CHECKBOX IN THE DROPDOWN
+ * To match the reference image without needing to change JS plugin settings.
+ */
+
+/* Base Checkbox Style (Unchecked) */
+.ts-dropdown.multi .option::before {
+    content: "";
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid #cbd5e1; /* border-slate-300 */
+    border-radius: 0.25rem;
+    margin-right: 0.75rem;
+    background-color: #ffffff;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+/* Hover state for checkbox */
+.ts-dropdown.multi .option:hover::before {
+    border-color: #94a3b8;
+}
+
+/* Checked State Checkbox */
+.ts-dropdown.multi .option.selected::before {
+    background-color: #2563eb; /* bg-blue-600 */
+    border-color: #2563eb;
+    /* Custom SVG Checkmark */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3E%3Cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/%3E%3C/svg%3E");
+    background-size: 100% 100%;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* Ensure selected option in dropdown doesn't have a grey background just because it's selected */
+.ts-dropdown.multi .option.selected {
+    background-color: #ffffff;
+    font-weight: 500;
+}
+.ts-dropdown.multi .option.selected:hover,
+.ts-dropdown.multi .option.selected.active {
+    background-color: #f8fafc;
+}
+
+/* ==========================================================================
+   5. Clear Button / Plugins
+   ========================================================================== */
+.ts-control .clear-button {
+    color: #94a3b8 !important;
+    transition: color 0.2s;
+}
+.ts-control .clear-button:hover {
+    color: #ef4444 !important; /* hover red */
+}
+
+/* ==========================================================================
+   6. Dosen Multiselect Custom Display (Summary Only & Clean Input)
+   ========================================================================== */
+#dosenSelect + .ts-wrapper .ts-control .item {
+    display: none !important;
+}
+#dosenSelect + .ts-wrapper .ts-control .item:first-of-type {
+    display: inline-flex !important;
+    background-color: #f1f5f9 !important;
+    color: #0b266e !important;
+    font-weight: 600 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 6px !important;
+    padding: 2px 8px !important;
+}
+#dosenSelect + .ts-wrapper .ts-control .item .remove {
+    display: none !important;
+}
+#dosenSelect + .ts-wrapper.has-items .ts-control > input::placeholder,
+#dosenSelect + .ts-wrapper.has-items .ts-control > input {
+    color: transparent !important;
+    width: 0 !important;
+    min-width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}

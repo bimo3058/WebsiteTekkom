@@ -137,7 +137,7 @@
     @push('scripts')
     <script>
         const UPDATE_URL = '{{ route("banksoal.api.v1.admin.cpl.update", $cpl->id) }}';
-        const csrfToken = '{{ csrf_token() }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
         async function handleFormSubmit(e) {
             e.preventDefault();

@@ -46,12 +46,25 @@
 
         .audit-box-body {
             flex: 1;
+            min-height: 0;
+            min-width: 0;
             overflow-y: auto;
+            scrollbar-gutter: stable;
             padding: 20px 24px;
             display: flex;
             flex-direction: column;
             gap: 16px;
             background: #FAFAFA;
+        }
+
+        .audit-box-body > * {
+            flex-shrink: 0;
+            min-width: 0;
+            width: 100%;
+        }
+
+        .audit-table-card > * {
+            flex-shrink: 0;
         }
 
         /* ── Mobile: scroll natively ── */

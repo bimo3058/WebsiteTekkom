@@ -686,9 +686,10 @@ class RpsController extends Controller
     /**
      * Fetch CPL berdasarkan relasi di bs_mata_kuliah_cpl junction table
      */
-    public function getCplByMk(int $mkId = null): JsonResponse
+    public function getCplByMk(Request $request, int $mkId = null): JsonResponse
     {
         try {
+            $mkId = $mkId ?: ($request->input('mk_id') ? (int) $request->input('mk_id') : null);
             $query = Cpl::orderBy('kode');
             
             if ($mkId) {
@@ -716,19 +717,17 @@ class RpsController extends Controller
 
     public function getCpmkByCpl(Request $request): JsonResponse
     {
-        // Handle both single and array cpl_id parameters
-        // Laravel automatically converts cpl_id[]=1&cpl_id[]=2 to array
-        $cplIds = $request->input('cpl_id'); // Gunakan input() untuk handle array
+        $cplIds = $request->input('cpl_id');
         $mkId = $request->integer('mk_id') ?: null;
 
         $mapToResponse = function ($items) {
             return $items->map(function ($cpmk) {
                 return [
-                    'id' => $cpmk->id,
-                    'kode' => $cpmk->kode,
+                    'id'        => $cpmk->id,
+                    'kode'      => $cpmk->kode,
                     'deskripsi' => $cpmk->deskripsi,
-                    'cpl_id' => $cpmk->cpl_id ?? null,
-                    'mk_id' => $cpmk->mk_id ?? null,
+                    'cpl_id'    => $cpmk->cpl_id ?? null,
+                    'mk_id'     => $cpmk->mk_id ?? null,
                 ];
             });
         };
@@ -737,48 +736,24 @@ class RpsController extends Controller
             $query = Cpmk::query()->orderBy('kode');
 
             if ($mkId) {
-                $query->where(function ($subQuery) use ($mkId) {
-                    $subQuery->where('mk_id', $mkId)
-                        ->orWhereIn('id', function ($legacyQuery) use ($mkId) {
-                            $legacyQuery->select('cpmk_id')
-                                ->from('bs_cpl_cpmk')
-                                ->where('mk_id', $mkId);
-                        });
-                });
+                $query->where('mk_id', $mkId);
             }
 
             // Jika cpl_id tidak disediakan, return CPMK sesuai filter MK atau semua data.
             if (!$cplIds) {
-                return response()->json($mapToResponse($query->distinct()->get()));
+                return response()->json($mapToResponse($query->get()));
             }
 
-            // Ensure cplIds is an array
             $cplIds = is_array($cplIds) ? $cplIds : [$cplIds];
-
-            // Filter out empty values
-            $cplIds = array_filter($cplIds);
+            $cplIds = array_values(array_filter($cplIds));
 
             if (empty($cplIds)) {
-                return response()->json($mapToResponse($query->distinct()->get()));
+                return response()->json($mapToResponse($query->get()));
             }
 
-            \Log::info('getCpmkByCpl Request', ['cplIds' => $cplIds]);
+            $query->whereIn('cpl_id', $cplIds);
 
-            // Query CPMK dari kolom langsung, dengan fallback ke junction table untuk data lama.
-            $query->where(function ($subQuery) use ($cplIds) {
-                $subQuery->whereIn('cpl_id', $cplIds)
-                    ->orWhereIn('id', function ($legacyQuery) use ($cplIds) {
-                        $legacyQuery->select('cpmk_id')
-                            ->from('bs_cpl_cpmk')
-                            ->whereIn('cpl_id', $cplIds);
-                    });
-            });
-
-            $cpmks = $mapToResponse($query->distinct()->get());
-
-            \Log::info('getCpmkByCpl Response', ['count' => count($cpmks), 'cpmks' => $cpmks]);
-
-            return response()->json($cpmks);
+            return response()->json($mapToResponse($query->get()));
         } catch (\Exception $e) {
             \Log::error('getCpmkByCpl Error', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Error fetching CPMK: ' . $e->getMessage()], 500);
@@ -1555,7 +1530,8 @@ class RpsController extends Controller
 
             return back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
-    }public function destroy(int $rpsId, Request $request): RedirectResponse|JsonResponse
+    }
+    public function destroy(int $rpsId, Request $request): RedirectResponse|JsonResponse
     {
         $user = Auth::user()->load('lecturer');
         $rps = RpsDetail::with('dosens')->findOrFail($rpsId);

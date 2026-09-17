@@ -1,0 +1,259 @@
+{
+  "admin": [
+    {
+      "title": "Master Data",
+      "icon": "Settings",
+      "items": [
+        {
+          "title": "Periods",
+          "url": "/admin/periods",
+          "icon": "CalendarIcon"
+        },
+        {
+          "title": "Users",
+          "url": "/admin/users",
+          "icon": "Users"
+        },
+        {
+          "title": "Groups",
+          "url": "/admin/groups",
+          "icon": "Users"
+        },
+        {
+          "title": "Locations",
+          "url": "/admin/locations",
+          "icon": "MapPin"
+        },
+        {
+          "title": "Document Requirements",
+          "url": "/admin/document-requirements",
+          "icon": "FileText"
+        }
+      ]
+    },
+    {
+      "title": "Evaluation Setup",
+      "icon": "ListChecks",
+      "items": [
+        {
+          "title": "Assessment Bank",
+          "url": "/admin/assessment-bank",
+          "icon": "Library"
+        },
+        {
+          "title": "Tipe Penilaian",
+          "url": "/admin/period-assessment-config",
+          "icon": "ListChecks"
+        },
+        {
+          "title": "Peer Review",
+          "url": "/admin/peer-review",
+          "icon": "Star"
+        },
+        {
+          "title": "Grade Config",
+          "url": "/admin/evaluation-setup/grade-configuration",
+          "icon": "GraduationCap"
+        }
+      ]
+    },
+    {
+      "title": "Management",
+      "icon": "Settings",
+      "items": [
+        {
+          "title": "Finalization",
+          "url": "/admin/finalization",
+          "icon": "ShieldCheck"
+        },
+        {
+          "title": "Schedule",
+          "url": "/admin/schedule",
+          "icon": "CalendarIcon"
+        },
+        {
+          "title": "Sidang Proposal",
+          "url": "/admin/sempro",
+          "icon": "ClipboardCheck"
+        },
+        {
+          "title": "Expo Events",
+          "url": "/admin/expo",
+          "icon": "Presentation"
+        },
+        {
+          "title": "TA Defense",
+          "url": "/admin/ta-defense",
+          "icon": "GraduationCap"
+        }
+      ]
+    },
+    {
+      "title": "Analytics",
+      "icon": "BarChart3",
+      "items": [
+        {
+          "title": "Progress",
+          "url": "/admin/analytics/progress",
+          "icon": "TrendingUp"
+        },
+        {
+          "title": "Peer Review Dashboard",
+          "url": "/admin/peer-review-dashboard",
+          "icon": "Users"
+        },
+        {
+          "title": "Reports",
+          "url": "/admin/reports",
+          "icon": "BarChart3"
+        },
+        {
+          "title": "Document Uploads",
+          "url": "/admin/document-uploads",
+          "icon": "FileText"
+        }
+      ]
+    }
+  ],
+  "mahasiswa": [
+    {
+      "title": "Registration",
+      "url": "/mahasiswa/registration",
+      "icon": "CalendarIcon"
+    },
+    {
+      "title": "Group & Titles",
+      "icon": "Users",
+      "items": [
+        {
+          "title": "My Group",
+          "url": "/mahasiswa/group",
+          "icon": "Users"
+        },
+        {
+          "title": "Titles Marketplace",
+          "url": "/mahasiswa/titles",
+          "icon": "BookOpen"
+        },
+        {
+          "title": "Propose Title",
+          "url": "/mahasiswa/propose-title",
+          "icon": "PenLine"
+        },
+        {
+          "title": "Title Bids",
+          "url": "/mahasiswa/bidding",
+          "icon": "Gavel"
+        }
+      ]
+    },
+    {
+      "title": "Progress & Docs",
+      "icon": "FileText",
+      "items": [
+        {
+          "title": "Documents",
+          "url": "/mahasiswa/documents",
+          "icon": "FileText"
+        },
+        {
+          "title": "TA Submission",
+          "url": "/mahasiswa/ta-submission",
+          "icon": "FileCheck"
+        }
+      ]
+    },
+    {
+      "title": "Schedules",
+      "icon": "CalendarIcon",
+      "items": [
+        {
+          "title": "My Schedule",
+          "url": "/mahasiswa/schedule",
+          "icon": "ClipboardCheck"
+        },
+        {
+          "title": "Daftar Expo",
+          "url": "/mahasiswa/expo",
+          "icon": "Presentation"
+        }
+      ]
+    },
+    {
+      "title": "Evaluations",
+      "icon": "GraduationCap",
+      "items": [
+        {
+          "title": "Peer Review",
+          "url": "/mahasiswa/peer-review",
+          "icon": "Star"
+        },
+        {
+          "title": "My Grades",
+          "url": "/mahasiswa/grades",
+          "icon": "GraduationCap"
+        }
+      ]
+    }
+  ],
+  "dosen": [
+    {
+      "title": "Titles & Bids",
+      "icon": "BookOpen",
+      "items": [
+        {
+          "title": "My Titles",
+          "url": "/dosen/titles",
+          "icon": "BookOpen"
+        },
+        {
+          "title": "Title Approvals",
+          "url": "/dosen/title-approvals",
+          "icon": "ClipboardCheck"
+        },
+        {
+          "title": "Bid Review",
+          "url": "/dosen/bids",
+          "icon": "Gavel"
+        }
+      ]
+    },
+    {
+      "title": "Mentoring",
+      "icon": "Users",
+      "items": [
+        {
+          "title": "Supervised Groups",
+          "url": "/dosen/supervised-groups",
+          "icon": "Users"
+        },
+        {
+          "title": "Bimbingan",
+          "url": "/dosen/bimbingan",
+          "icon": "FileText"
+        }
+      ]
+    },
+    {
+      "title": "Schedule & Review",
+      "icon": "FileCheck",
+      "items": [
+        {
+          "title": "My Schedule",
+          "url": "/dosen/schedule",
+          "icon": "CalendarIcon"
+        },
+        {
+          "title": "Evaluate Students",
+          "url": "/dosen/evaluation",
+          "icon": "GraduationCap"
+        },
+        {
+          "title": "Supervisor Evaluation",
+          "url": "/dosen/supervisor-evaluation",
+          "icon": "Star"
+        }
+      ]
+    }
+  ]
+}

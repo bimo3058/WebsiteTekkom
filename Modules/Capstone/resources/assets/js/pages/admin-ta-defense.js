@@ -1,0 +1,32 @@
+import {api,rows,notify,date,url} from '../api.js';
+import {localDateKey} from '../calendar.js';
+
+async function allRows(path){
+    const items=[];let page=1,last=1;
+    do{const data=await api(path+(path.includes('?')?'&':'?')+`per_page=200&page=${page}`);items.push(...rows(data));last=Number(data.last_page ?? data.pagination?.last_page ?? data.meta?.last_page ?? data.data?.last_page ?? 1);page++;}while(page<=last);
+    return items;
+}
+export function adminTaDefensePage(){return {
+    loading:true,error:'',schedules:[],periods:[],lecturers:[],locations:[],eligible:[],selectedPeriod:'all',statusFilter:'ALL',search:'',sortKey:'date',sortDirection:1,page:1,perPage:10,expanded:[],editing:null,form:{student_ids:[]},errors:{},formError:'',eligibleLoading:false,saving:false,cancelling:null,requestId:0,date,url,today:localDateKey(new Date()),
+    async init(){await this.load();},
+    async load(){const request=++this.requestId;this.loading=true;this.error='';try{const results=await Promise.all([allRows('/admin/ta-defense-schedules?period_id='+encodeURIComponent(this.selectedPeriod)),this.periods.length?this.periods:api('/admin/periods').then(rows),this.lecturers.length?this.lecturers:allRows('/admin/users?role=dosen'),this.locations.length?this.locations:api('/locations').then(rows)]);if(request!==this.requestId)return;[this.schedules,this.periods,this.lecturers,this.locations]=results;}catch(e){if(request===this.requestId)this.error=e.message;}finally{if(request===this.requestId)this.loading=false;}},
+    students(schedule){return schedule.students?.length?schedule.students:(schedule.student?[schedule.student]:[]);},
+    location(schedule){return this.locations.find(l=>Number(l.id)===Number(schedule.location_id))?.name || schedule.room || '—';},
+    get filtered(){const query=this.search.trim().toLowerCase();return this.schedules.filter(s=>(this.statusFilter==='ALL'||s.status===this.statusFilter)&&(!query||[...this.students(s).flatMap(m=>[m.name,m.nim]),s.group?.id,s.group?.code,this.location(s)].some(v=>String(v || '').toLowerCase().includes(query)))).sort((a,b)=>{const value=s=>this.sortKey==='name'?(this.students(s)[0]?.name || ''):(s[this.sortKey] || '');return String(value(a)).localeCompare(String(value(b)))*this.sortDirection;});},
+    get totalPages(){return Math.max(1,Math.ceil(this.filtered.length/Number(this.perPage)));},
+    get currentPage(){return Math.min(this.page,this.totalPages);},
+    get visible(){return this.filtered.slice((this.currentPage-1)*Number(this.perPage),this.currentPage*Number(this.perPage));},
+    sort(key){this.sortDirection=this.sortKey===key?-this.sortDirection:1;this.sortKey=key;},
+    toggle(id){this.expanded=this.expanded.includes(id)?this.expanded.filter(value=>value!==id):[...this.expanded,id];},
+    statusLabel:status=>({SCHEDULED:'Scheduled',DONE:'Completed',CANCELLED:'Cancelled'})[status] || status,
+    get selectedGroup(){return this.eligible.find(g=>String(g.id)===String(this.form.group_id));},
+    get members(){return this.selectedGroup?.members || [];},
+    get supervisorIds(){return (this.selectedGroup?.supervisors || []).map(s=>Number(s.id));},
+    async open(schedule=null){if(schedule&&schedule.status!=='SCHEDULED')return;this.editing=schedule;this.errors={};this.formError='';this.form=schedule?{period_id:String(schedule.period_id || schedule.period?.id || schedule.group?.period?.id || ''),group_id:String(schedule.group_id),student_ids:this.students(schedule).map(s=>String(s.id)),date:localDateKey(schedule.date),start_time:schedule.start_time?.slice(0,5) || '',end_time:schedule.end_time?.slice(0,5) || '',location_id:String(schedule.location_id || ''),examiner_1_id:String(schedule.examiner_1_id || ''),examiner_2_id:String(schedule.examiner_2_id || ''),notes:schedule.notes || ''}:{period_id:String(this.periods.find(p=>p.is_active)?.id || (this.selectedPeriod!=='all'?this.selectedPeriod:'')),group_id:'',student_ids:[],date:'',start_time:'',end_time:'',location_id:'',examiner_1_id:'',examiner_2_id:'',notes:''};document.getElementById('admin-ta-form').showModal();await this.loadEligible();},
+    async loadEligible(){const period=this.form.period_id;this.eligible=[];if(!period)return;this.eligibleLoading=true;this.formError='';try{const data=rows(await api('/admin/ta-defense-schedules/eligible-students?period_id='+encodeURIComponent(period)+(this.editing?'&current_schedule_id='+this.editing.id:'')));if(period===this.form.period_id)this.eligible=data;}catch(e){this.formError=e.message;}finally{this.eligibleLoading=false;}},
+    async periodChanged(){this.form.group_id='';this.form.student_ids=[];await this.loadEligible();},
+    async save(){if(this.saving||this.eligibleLoading)return;this.formError='';const first=Number(this.form.examiner_1_id),second=Number(this.form.examiner_2_id);if(first===second){this.formError='Examiner 1 and Examiner 2 cannot be the same';return;}if(this.supervisorIds.includes(first)||this.supervisorIds.includes(second)){this.formError='Examiners cannot be supervisors of this group';return;}if(!this.form.student_ids.length){this.formError='Select at least one student';return;}this.saving=true;this.errors={};try{const body={student_ids:this.form.student_ids.map(Number),date:this.form.date,start_time:this.form.start_time,end_time:this.form.end_time,location_id:Number(this.form.location_id),examiner_1_id:first,examiner_2_id:second,notes:this.form.notes || null};if(!this.editing){body.group_id=Number(this.form.group_id);body.period_id=Number(this.form.period_id);}await api('/admin/ta-defense-schedules'+(this.editing?'/'+this.editing.id:''),{method:this.editing?'PUT':'POST',body});document.getElementById('admin-ta-form').close();notify(this.editing?'TA Defense schedule updated':'TA Defense schedule created');await this.load();}catch(e){this.errors=e.errors || {};this.formError=e.message;}finally{this.saving=false;}},
+    confirmCancel(schedule){if(schedule.status!=='SCHEDULED')return;this.cancelling=schedule;document.getElementById('admin-ta-cancel').showModal();},
+    async cancel(){if(this.saving||!this.cancelling)return;this.saving=true;try{await api(`/admin/ta-defense-schedules/${this.cancelling.id}/cancel`,{method:'PUT'});document.getElementById('admin-ta-cancel').close();notify('Schedule cancelled');await this.load();}catch(e){notify(e.message,true);}finally{this.saving=false;}}
+};}
+export function registerAdminTaDefense(Alpine){Alpine.data('capstoneAdminTaDefense',adminTaDefensePage);}

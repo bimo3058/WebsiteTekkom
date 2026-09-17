@@ -1,0 +1,1 @@
+<?php require dirname(__DIR__)."/vendor/autoload.php"; $app = require_once dirname(__DIR__)."/bootstrap/app.php"; $app->make("Illuminate\Contracts\Console\Kernel")->bootstrap(); var_dump(Schema::getColumnListing("users"));

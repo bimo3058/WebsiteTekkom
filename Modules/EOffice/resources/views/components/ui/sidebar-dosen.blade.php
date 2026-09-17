@@ -1,4 +1,4 @@
-<aside class="h-full bg-white flex flex-col justify-between overflow-hidden"
+<aside data-mobile-sidebar class="h-full bg-white flex flex-col justify-between overflow-hidden"
     :class="sidebarOpen ? 'w-[260px]' : 'w-[72px]'" style="transition: width 0.3s;">
 
     <!-- Top Section: Logo & Nav -->

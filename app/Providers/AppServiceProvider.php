@@ -130,14 +130,20 @@ class AppServiceProvider extends ServiceProvider
             });
         }
 
-        view()->composer(['superadmin.*'], function ($view) {
+        view()->composer(['superadmin.*', 'components.sidebar', 'layouts.app'], function ($view) {
             if (Auth::check()) {
-                $activeImport = ImportStatus::where('user_id', Auth::id())
+                $user = Auth::user();
+                $activeImport = ImportStatus::where('user_id', $user->id)
                     ->whereIn('status', ['pending', 'processing'])
                     ->latest()
                     ->first();
 
-                $view->with('activeImportId', $activeImport?->id);
+                $view->with([
+                    'activeImportId' => $activeImport?->id,
+                    'notificationCount' => $user->hasRole('superadmin')
+                        ? app(\App\Services\SuperAdminNotifications::class)->countRecent($user)
+                        : 0,
+                ]);
             }
         });
 

@@ -12,8 +12,21 @@
                 <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
                     <i class="fas fa-exclamation-triangle text-xs"></i>
                 </div>
-                <div>
-                    <p class="text-sm font-semibold text-amber-900">Peringatan: Anda belum mengupload RPS Mata Kuliah {{ implode(', ', $mkTanpaRps) }}.</p>
+                <div x-data="{
+                    items: {{ json_encode($mkTanpaRps) }},
+                    limit: 5,
+                    get visibleItems() { return this.items.slice(0, this.limit); },
+                    get remaining() { return this.items.length - this.limit; }
+                }">
+                    <p class="text-sm font-semibold text-amber-900">
+                        Peringatan: Anda belum mengupload RPS Mata Kuliah 
+                        <template x-for="(mk, index) in visibleItems" :key="index">
+                            <span>
+                                <span x-text="mk"></span><span x-show="index < visibleItems.length - 1 || remaining > 0">, </span>
+                            </span>
+                        </template>
+                        <button type="button" x-show="remaining > 0" @click="limit += 5" class="text-amber-700 hover:text-amber-900 underline font-bold cursor-pointer" x-text="'+' + remaining"></button><span x-show="remaining <= 0">.</span>
+                    </p>
                     <p class="text-xs text-amber-800">Segera upload RPS sebelum Anda bisa mengelola bank soal untuk mata kuliah tersebut.</p>
                 </div>
             </div>
@@ -72,10 +85,18 @@
                 <p class="mt-2 text-[10px] uppercase tracking-wider text-slate-500">Academic Year</p>
                 <p class="text-sm font-bold text-slate-900">Semester Berjalan</p>
                 <p class="mt-2 text-[10px] uppercase tracking-wider text-slate-500">Active Courses</p>
-                <div class="mt-1.5 flex justify-center gap-1.5 flex-wrap">
-                    @foreach($mataKuliah as $mk)
-                        <span class="rounded-lg bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{{ $mk->kode }}</span>
-                    @endforeach
+                <div class="mt-1.5 flex justify-center gap-1.5 flex-wrap" x-data="{
+                    mks: {{ json_encode($mataKuliah->map(fn($mk) => $mk->kode)) }},
+                    limit: 5,
+                    get visible() { return this.mks.slice(0, this.limit); },
+                    get rem() { return this.mks.length - this.limit; }
+                }">
+                    <template x-for="kode in visible" :key="kode">
+                        <span class="rounded-lg bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary" x-text="kode"></span>
+                    </template>
+                    
+                    <button x-show="rem > 0" @click="limit += 5" class="rounded-lg bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-300 cursor-pointer" x-text="'+' + rem"></button>
+                    
                     @if($mataKuliah->isEmpty())
                         <span class="text-xs text-slate-400">Belum ada mata kuliah</span>
                     @endif

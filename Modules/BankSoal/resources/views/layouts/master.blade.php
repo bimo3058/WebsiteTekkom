@@ -13,6 +13,7 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-mobile-navigation-assets />
 </head>
 <body class="font-sans antialiased text-slate-800 bg-slate-50">
     <div class="flex h-screen overflow-hidden bg-slate-50">
@@ -33,5 +34,6 @@
             </main>
         </div>
     </div>
+    <x-mobile-navigation />
 </body>
 </html>

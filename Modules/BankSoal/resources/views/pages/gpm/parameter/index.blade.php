@@ -6,7 +6,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: #0B266E;
@@ -173,7 +172,6 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const API_SKOR_URL = '{{ route("banksoal.soal.gpm.parameter.skor.update") }}';
         const csrfToken = '{{ csrf_token() }}';

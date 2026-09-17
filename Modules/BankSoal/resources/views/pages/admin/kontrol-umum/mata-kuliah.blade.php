@@ -6,7 +6,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: rgb(11, 38, 110);
@@ -383,21 +382,6 @@
         .dots-menu .menu-delete:not(:disabled) { color: var(--danger-red); }
         .dots-menu .menu-delete:hover:not(:disabled) { background: #fef2f2; }
 
-        /* ── Table loading ── */
-        .tbl-loading {
-            display: none; align-items: center; justify-content: center;
-            gap: 10px; padding: 48px 20px; color: var(--slate-400);
-            font-size: 14px;
-        }
-        .tbl-loading.show { display: flex; }
-        .tbl-spinner {
-            width: 24px; height: 24px;
-            border: 3px solid var(--slate-200);
-            border-top-color: var(--primary-blue);
-            border-radius: 50%;
-            animation: tbl-spin 0.7s linear infinite; flex-shrink: 0;
-        }
-        @keyframes tbl-spin { to { transform: rotate(360deg); } }
 
         .empty-state {
             text-align: center;
@@ -729,10 +713,7 @@
     </div>
 
     <div class="table-section">
-        <div class="tbl-loading" id="tblLoading">
-            <div class="tbl-spinner"></div>
-            Memuat data...
-        </div>
+        <div id="tblLoading"></div>
         <div class="table-wrapper" id="tblWrapper" style="display:none;">
             <table>
                 <thead>
@@ -797,7 +778,7 @@
     </div>
 
     <div class="table-section">
-        <div class="tbl-loading" id="cplLoading"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div id="cplLoading"></div>
         <div class="table-wrapper" id="cplTableWrapper" style="display:none;">
             <table>
                 <thead>
@@ -826,12 +807,11 @@
     <!-- Modals removed as we now use standalone pages -->
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
-        const API_URL = '{{ url("/bank-soal/admin/api/mata-kuliah") }}';
-        const EDIT_MK_URL = '{{ url("/bank-soal/admin/kontrol-umum/mata-kuliah") }}';
-        const EDIT_CPL_URL = '{{ url("/bank-soal/admin/kontrol-umum/cpl") }}';
-        const csrfToken = '{{ csrf_token() }}';
+        const API_URL = '{{ route("banksoal.api.v1.admin.mata-kuliah.index") }}';
+        const EDIT_MK_URL_TEMPLATE = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah.edit", ["id" => "__ID__"]) }}';
+        const EDIT_CPL_URL_TEMPLATE = '{{ route("banksoal.admin.kontrol-umum.cpl.edit", ["id" => "__ID__"]) }}';
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         const PAGE_SIZE = 10;
         const TABLE_STATE_STORAGE_KEY = 'banksoal.admin.kontrol-umum.mata-kuliah.state';
 
@@ -989,7 +969,7 @@
         });
 
         async function loadAllMataKuliah(keepPage = false) {
-            document.getElementById('tblLoading').classList.add('show');
+            if (window.Spinner) window.Spinner.showTable('tblLoading');
             document.getElementById('tblWrapper').style.display = 'none';
             document.getElementById('emptyState').style.display = 'none';
             try {
@@ -1010,7 +990,7 @@
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data mata kuliah'));
             } finally {
-                document.getElementById('tblLoading').classList.remove('show');
+                if (window.Spinner) window.Spinner.hideTable('tblLoading');
                 document.getElementById('tblWrapper').style.display = 'block';
             }
         }
@@ -1145,7 +1125,7 @@
                         <div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_MK_URL}/${mk.id}/edit" onclick="saveMataKuliahTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_MK_URL_TEMPLATE.replace('__ID__', mk.id)}" onclick="saveMataKuliahTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteMataKuliah(${mk.id})">${ICON_DEL} Hapus</button>
                             </div>
                         </div>
@@ -1419,13 +1399,13 @@
             window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'warning', message: message } }));
         }
 
-        const API_URL_CPL = '{{ url("/bank-soal/admin/api/cpl") }}';
+        const API_URL_CPL = '{{ route("banksoal.api.v1.admin.cpl.index") }}';
         let allCpl = [];
         let filteredCpl = [];
         let searchTimeoutCpl;
 
         async function loadAllCpl(keepPage = false) {
-            document.getElementById('cplLoading').classList.add('show');
+            if (window.Spinner) window.Spinner.showTable('cplLoading');
             document.getElementById('cplTableWrapper').style.display = 'none';
             document.getElementById('cplEmptyState').style.display = 'none';
             try {
@@ -1443,7 +1423,7 @@
                 console.error('loadAllCpl Error:', error);
                 showError('Gagal memuat data CPL: ' + error.message);
             } finally {
-                document.getElementById('cplLoading').classList.remove('show');
+                if (window.Spinner) window.Spinner.hideTable('cplLoading');
                 document.getElementById('cplTableWrapper').style.display = 'block';
             }
         }
@@ -1500,7 +1480,7 @@
                         <div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_CPL_URL}/${cpl.id}/edit" onclick="saveCplTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_CPL_URL_TEMPLATE.replace('__ID__', cpl.id)}" onclick="saveCplTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteCpl(${cpl.id}, '${escapeHtml(cpl.kode)}')">${ICON_DEL} Hapus</button>
                             </div>
                         </div>

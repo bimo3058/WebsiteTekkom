@@ -59,9 +59,17 @@
     // 5. Filter & Paginate Users Berdasarkan Role & Search
     $search        = request('search','');
     $perPagePerm   = (int) request('per_page', 10);
-    
+
     // Gunakan $activeRole yang sudah didefinisikan di atas
-    $filteredUsers = $users->filter(fn($u) => $u->roles->pluck('name')->contains($activeRole))
+    $filteredUsers = $users->filter(function($u) use ($activeRole) {
+        if ($activeRole === 'Unassigned') {
+            // Unassigned: Tidak punya role ATAU tidak punya permission sama sekali (direct & role-based)
+            $hasRoles = $u->roles->isNotEmpty();
+            $hasPerms = $u->permissions->isNotEmpty() || $u->roles->flatMap->permissions->isNotEmpty();
+            return !$hasRoles || !$hasPerms;
+        }
+        return $u->roles->pluck('name')->contains($activeRole);
+    })
         ->when($search, fn($c) => $c->filter(fn($u) => str_contains(strtolower($u->name), strtolower($search)) || str_contains(strtolower($u->email), strtolower($search))))
         ->values();
 
@@ -137,6 +145,18 @@
                         x-transition:leave-start="opacity-100 scale-100"
                         x-transition:leave-end="opacity-0 scale-95"
                         style="position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid #D0D1D5;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:999;padding:4px 0;display:none;max-height:240px;overflow-y:auto;">
+
+                        <a href="{{ url()->current() }}?role=Unassigned&per_page={{ $perPagePerm }}"
+                           style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;font-weight:{{ $activeRole==='Unassigned' ? '700' : '600' }};color:{{ $activeRole==='Unassigned' ? '#0F172A' : '#475569' }};background:{{ $activeRole==='Unassigned' ? '#F8FAFC' : 'transparent' }};text-decoration:none;font-family:'Inter Tight',sans-serif;transition:background .1s;"
+                           onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='{{ $activeRole==='Unassigned' ? '#F8FAFC' : 'transparent' }}'">
+                            <span style="width:7px;height:7px;border-radius:50%;background:#94A3B8;flex-shrink:0;"></span>
+                            Unassigned
+                            @if($activeRole==='Unassigned')
+                                <svg style="width:11px;height:11px;margin-left:auto;flex-shrink:0;" fill="none" stroke="#94A3B8" viewBox="0 0 24 24" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                            @endif
+                        </a>
+                        <div style="height:1px; background:var(--c-border); margin:4px 0;"></div>
+
                         @foreach($roleList as $slug => $data)
                             <a href="{{ url()->current() }}?role={{ $slug }}&per_page={{ $perPagePerm }}"
                             style="display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:12px;font-weight:{{ $activeRole===$slug ? '700' : '600' }};color:{{ $activeRole===$slug ? '#0F172A' : '#475569' }};background:{{ $activeRole===$slug ? '#F8FAFC' : 'transparent' }};text-decoration:none;font-family:'Inter Tight',sans-serif;transition:background .1s;"

@@ -63,7 +63,7 @@
     </div>
 
     {{-- Kolom Header Tabel --}}
-    <div class="mp-card-body p-0">
+    <div class="mp-card-body p-0 mp-data-scroll">
         <div class="grid gap-4 px-5 py-3 bg-[#FAFAFA] border-b border-[#DFE1E7]"
              style="grid-template-columns: 120px 80px 1fr 60px 90px;">
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase">Kode Mata Kuliah</div>

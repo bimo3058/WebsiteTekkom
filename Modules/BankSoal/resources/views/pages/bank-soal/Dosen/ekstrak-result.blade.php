@@ -14,6 +14,7 @@
         body { font-family: 'Times New Roman', Times, serif; background-color: #f1f5f9; padding: 2rem 0; }
         .document-container { max-width: 21cm; margin: 0 auto; background: white; padding: 2.5cm; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body>
     <div class="text-center no-print mb-6 space-x-4">
@@ -148,5 +149,6 @@
             @endforeach
         </div>
     </div>
+    <x-mobile-navigation />
 </body>
 </html>

@@ -92,7 +92,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(snapshot);
       setActiveRole(snapshotRole);
       setIsLoading(false);
-      void prefetchRoleDashboard(snapshotRole);
     }
 
     api.get("/auth/user")
@@ -111,7 +110,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setActiveRole(selectedRole);
         writeUserSnapshot(userData);
         window.sessionStorage.setItem(SSO_ROLE_KEY, selectedRole);
-        void prefetchRoleDashboard(selectedRole);
       })
       .catch(() => {
         if (!cancelled) {
@@ -127,7 +125,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [isExchangeRoute, prefetchRoleDashboard]);
+  }, [isExchangeRoute]);
 
   const login = useCallback((userData: User, roles: string[]) => {
     const userWithRoles = { ...userData, roles };
