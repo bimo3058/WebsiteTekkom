@@ -41,7 +41,9 @@ export function TitleDetailFeature() {
     }, [params.id]);
 
     const hasGroup = !!group;
-    const canBid = hasGroup && !group?.title_id && group?.status === 'READY_FOR_BIDDING';
+    const minGroupSize = group?.period?.min_group_size ?? 3;
+    const memberCount = group?.members?.length ?? 0;
+    const canBid = hasGroup && !group?.title_id && ['READY_FOR_BIDDING', 'FORMING_SOLO', 'FORMING', 'WAITING_SUPERVISOR_APPROVAL'].includes(group?.status ?? '') && (!group?.is_solo || memberCount >= minGroupSize) && memberCount >= minGroupSize;
 
     const handleBid = async () => {
         if (!title || !canBid) return;

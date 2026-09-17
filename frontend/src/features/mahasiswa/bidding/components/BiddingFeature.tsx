@@ -153,7 +153,7 @@ export function BiddingFeature() {
     const flowReasonMap: Record<string, string> = {
         NO_GROUP: 'Anda harus memiliki kelompok terlebih dahulu.',
         LEADER_ONLY: 'Hanya ketua kelompok yang dapat mengelola bidding.',
-        SOLO_GROUP_CANNOT_BID: 'Kelompok solo tidak dapat bidding judul dosen.',
+        SOLO_GROUP_CANNOT_BID: 'Solo seeker dapat bidding judul dosen setelah jumlah anggota memenuhi batas minimal.',
         INSUFFICIENT_MEMBERS: 'Jumlah anggota kelompok belum memenuhi minimal untuk bidding.',
         INVALID_GROUP_STATUS: 'Status kelompok saat ini tidak memungkinkan bidding.',
         ACTIVE_PROPOSAL_EXISTS: 'Kelompok Anda memiliki proposal aktif. Bidding dinonaktifkan.',

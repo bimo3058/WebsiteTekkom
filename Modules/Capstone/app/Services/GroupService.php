@@ -14,6 +14,7 @@ use Modules\Capstone\Concerns\RequiresActivePeriod;
 use Modules\Capstone\Exceptions\ConflictRuleException;
 use Modules\Capstone\Exceptions\DomainRuleException;
 use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupInvitation;
 use Modules\Capstone\Models\GroupMember;
@@ -462,6 +463,150 @@ class GroupService
         $this->stateMachine->transition($group, self::STATUS_READY_FOR_TITLE_BIDDING);
 
         Log::info('group.readiness.transitioned', ['group_id' => $group->id, 'status' => self::STATUS_READY_FOR_TITLE_BIDDING]);
+    }
+
+    /**
+     * Size limits for a group (single source of truth for min/max fallbacks).
+     *
+     * @return array{0:int,1:int} [minSize, maxSize]
+     */
+    public function groupSizeLimits(Group $group): array
+    {
+        if (! $group->relationLoaded('period')) {
+            $group->load('period');
+        }
+        $period = $group->period;
+        $minSize = $group->group_mode === 'INDIVIDUAL' ? 1 : (int) ($period?->min_group_size ?? 3);
+        $maxSize = (int) ($period?->max_group_size ?? 4);
+
+        return [$minSize, $maxSize];
+    }
+
+    /**
+     * Throw when a group is outside the period min/max size for finalization.
+     */
+    public function assertGroupSizeForFinalization(Group $group): void
+    {
+        $memberCount = GroupMember::where('group_id', $group->id)->count();
+        [$minSize, $maxSize] = $this->groupSizeLimits($group);
+        if ($memberCount < $minSize || $memberCount > $maxSize) {
+            throw new DomainRuleException("Jumlah anggota harus antara {$minSize}-{$maxSize} orang (saat ini: {$memberCount}). Tambah/kurangi anggota hingga memenuhi batas sebelum finalisasi.");
+        }
+    }
+
+    /**
+     * Handle a membership shrink (kick/leave) for bidding groups.
+     *
+     * Must be called inside the caller's DB transaction, after the member row
+     * was deleted. It never deletes ACCEPT/REJECT lecturer decisions:
+     * - count < min: auto-cancel PENDING bids with no lecturer decision
+     *   (status=CANCELLED), compact remaining priorities, demote bidding
+     *   statuses back to FORMING, and notify remaining members that an
+     *   approved title is retained but mark-ready is blocked until refill.
+     * - count > max: bids/titles untouched, notify remaining members to trim.
+     * Locked statuses (READY_FOR_FINALIZATION and above, TITLE_APPROVED,
+     * DISSOLVED) are never demoted here.
+     *
+     * @return array{member_count:int,min_size:int,max_size:int,undersized:bool,oversized:bool,cancelled_bids:int,has_accepted_bid:bool}
+     */
+    public function handleMembershipShrink(Group $group): array
+    {
+        $group->refresh();
+        $memberCount = GroupMember::where('group_id', $group->id)->count();
+        [$minSize, $maxSize] = $this->groupSizeLimits($group);
+        $undersized = $memberCount < $minSize;
+        $oversized = $memberCount > $maxSize;
+        $cancelled = 0;
+        $hasAcceptedBid = Bid::where('group_id', $group->id)
+            ->where('lecturer_recommendation', 'ACCEPT')
+            ->exists();
+
+        if ($undersized) {
+            $pendingIds = Bid::where('group_id', $group->id)
+                ->where('status', 'PENDING')
+                ->whereNull('lecturer_recommendation')
+                ->pluck('id');
+            $cancelled = $pendingIds->count();
+            if ($cancelled > 0) {
+                Bid::whereIn('id', $pendingIds)->update(['status' => 'CANCELLED']);
+                $remaining = Bid::where('group_id', $group->id)->orderBy('priority')->get();
+                foreach ($remaining as $index => $bid) {
+                    if ((int) $bid->priority !== $index + 1) {
+                        $bid->update(['priority' => $index + 1]);
+                    }
+                }
+            }
+
+            if (in_array($group->status, ['READY_FOR_BIDDING', 'WAITING_SUPERVISOR_APPROVAL'], true)) {
+                $revertStatus = ($group->is_solo && $memberCount === 1)
+                    ? self::STATUS_FORMING_SOLO
+                    : self::STATUS_FORMING;
+                $group->update(['status' => $revertStatus]);
+            }
+
+            $userIds = GroupMember::where('group_id', $group->id)
+                ->with('student')
+                ->get()
+                ->map(fn ($member) => $member->student?->user_id)
+                ->filter()
+                ->values()
+                ->all();
+            if (! empty($userIds)) {
+                $message = $hasAcceptedBid
+                    ? "Anggota keluar/dikeluarkan sehingga tersisa {$memberCount}/{$minSize}. Judul yang disetujui dosen tetap dipertahankan, tetapi kelompok belum bisa mark-ready. Tambah anggota hingga minimum."
+                    : "Anggota keluar/dikeluarkan sehingga tersisa {$memberCount}/{$minSize}. Bid PENDING yang dibatalkan otomatis: {$cancelled}. Tambah anggota hingga minimum untuk bidding.";
+                $this->notificationService->sendToMany(
+                    $userIds,
+                    'GROUP_SIZE_BELOW_MINIMUM',
+                    'Ukuran Kelompok Di Bawah Minimum',
+                    $message,
+                    'Group',
+                    $group->id
+                );
+            }
+
+            Log::info('group.membership.shrink_below_min', [
+                'group_id' => $group->id,
+                'member_count' => $memberCount,
+                'min_size' => $minSize,
+                'cancelled_bids' => $cancelled,
+                'accepted_bid_retained' => $hasAcceptedBid,
+            ]);
+        } elseif ($oversized) {
+            $userIds = GroupMember::where('group_id', $group->id)
+                ->with('student')
+                ->get()
+                ->map(fn ($member) => $member->student?->user_id)
+                ->filter()
+                ->values()
+                ->all();
+            if (! empty($userIds)) {
+                $this->notificationService->sendToMany(
+                    $userIds,
+                    'GROUP_SIZE_ABOVE_MAXIMUM',
+                    'Ukuran Kelompok Melebihi Maksimum',
+                    "Jumlah anggota saat ini {$memberCount} melebihi batas maksimum {$maxSize}. Judul/bid tetap dipertahankan, tetapi finalisasi diblokir. Kurangi anggota hingga maksimum.",
+                    'Group',
+                    $group->id
+                );
+            }
+
+            Log::info('group.membership.above_max', [
+                'group_id' => $group->id,
+                'member_count' => $memberCount,
+                'max_size' => $maxSize,
+            ]);
+        }
+
+        return [
+            'member_count' => $memberCount,
+            'min_size' => $minSize,
+            'max_size' => $maxSize,
+            'undersized' => $undersized,
+            'oversized' => $oversized,
+            'cancelled_bids' => $cancelled,
+            'has_accepted_bid' => $hasAcceptedBid,
+        ];
     }
 
     /**
@@ -993,6 +1138,7 @@ class GroupService
                 Log::info('group.lifecycle.dissolved', ['group_id' => $group->id]);
             } else {
                 $this->evaluateGroupReadiness($group);
+                $this->handleMembershipShrink($group);
             }
 
             Notification::create([
@@ -1045,6 +1191,7 @@ class GroupService
                 $groupDissolved = true;
             } else {
                 $this->evaluateGroupReadiness($group);
+                $this->handleMembershipShrink($group);
             }
         });
 

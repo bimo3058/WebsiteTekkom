@@ -510,19 +510,15 @@ class GroupController extends Controller
         try {
             $member->delete();
 
-            // If members drop below min size, revert to FORMING
-            $memberCount = GroupMember::where('group_id', $group->id)->count();
-            $minSize = $group->period->min_group_size ?? 2;
-
-            if ($memberCount < $minSize && $group->status === 'READY_FOR_BIDDING') {
-                $this->stateMachine->transition($group, 'FORMING');
-            }
+            // Shrink policy: auto-cancel PENDING bids below min (ACCEPT kept,
+            // title retained), demote bidding statuses, notify members.
+            $shrink = $this->groupService->handleMembershipShrink($group);
 
             DB::commit();
 
             $group = Group::with('members.student')->find($leaderMembership->group_id);
 
-            return response()->json(['message' => 'Member removed', 'group' => $group]);
+            return response()->json(['message' => 'Member removed', 'group' => $group, 'membership_shrink' => $shrink]);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -558,16 +554,11 @@ class GroupController extends Controller
         try {
             $membership->delete();
 
-            $memberCount = GroupMember::where('group_id', $group->id)->count();
-            $minSize = $group->period->min_group_size ?? 2;
-
-            if ($memberCount < $minSize && $group->status === 'READY_FOR_BIDDING') {
-                $this->stateMachine->transition($group, 'FORMING');
-            }
+            $shrink = $this->groupService->handleMembershipShrink($group);
 
             DB::commit();
 
-            return response()->json(['message' => 'You have left the group.']);
+            return response()->json(['message' => 'You have left the group.', 'membership_shrink' => $shrink]);
         } catch (\Exception $e) {
             DB::rollBack();
 

@@ -178,7 +178,8 @@ export function TitlesMarketplaceFeature() {
 
     // --- Actions ---
     const handleBid = async (titleId: number) => {
-        const canBid = !!group && !group.title_id && group.status === 'READY_FOR_BIDDING' && group.members.length >= 3;
+        const minSize = registeredPeriod ? (registeredPeriod as unknown as { min_group_size?: number }).min_group_size ?? 3 : 3;
+        const canBid = !!group && !group.title_id && ['READY_FOR_BIDDING', 'FORMING_SOLO', 'FORMING', 'WAITING_SUPERVISOR_APPROVAL'].includes(group.status) && (!group.is_solo || group.members.length >= minSize) && group.members.length >= minSize;
         if (!canBid) return;
 
         setBiddingId(titleId);
@@ -283,8 +284,9 @@ export function TitlesMarketplaceFeature() {
     }, [studentIdeas, search, filterSpecs]);
 
     const memberCount = group?.members?.length || 0;
+    const minGroupSize = (registeredPeriod as unknown as { min_group_size?: number } | null)?.min_group_size ?? 3;
     const hasMultipleMembers = memberCount > 1;
-    const canBidOnLecturer = !!group && !group.title_id && memberCount >= 3;
+    const canBidOnLecturer = !!group && !group.title_id && memberCount >= minGroupSize;
 
     const bursaReasonMap: Record<string, string> = {
         NO_GROUP: 'Anda belum memiliki kelompok.',
@@ -333,24 +335,34 @@ export function TitlesMarketplaceFeature() {
                 </Alert>
             )}
 
-            {group && !group?.is_solo && memberCount < 3 && (
+            {group && memberCount < minGroupSize && (
                 <Alert variant="destructive">
                     <Lock className="h-4 w-4" />
                     <AlertTitle>Bidding Locked</AlertTitle>
                     <AlertDescription>
-                        Kelompok Anda memiliki {memberCount} anggota. **Minimal 3 anggota** diperlukan untuk melakukan bidding pada judul dari Dosen.
+                        Kelompok Anda memiliki {memberCount} anggota. **Minimal {minGroupSize} anggota** diperlukan untuk melakukan bidding pada judul dari Dosen.
                         Silakan tambahkan anggota di menu <Link href="/mahasiswa/group" className="underline font-bold">Grup Saya</Link>.
                     </AlertDescription>
                 </Alert>
             )}
 
-            {group?.is_solo && (
+            {group?.is_solo && memberCount < minGroupSize && (
                 <Alert>
                     <Info className="h-4 w-4" />
                     <AlertTitle>Solo Seeker Mode</AlertTitle>
                     <AlertDescription>
-                        Sebagai solo seeker, Anda hanya dapat <Link href="/mahasiswa/propose-title" className="font-medium underline">mengajukan judul sendiri</Link>.
-                        Jika ingin bidding pada judul dosen, silakan <Link href="/mahasiswa/group" className="font-medium underline">bubarkan grup</Link> dan buat grup normal.
+                        Sebagai solo seeker, Anda hanya dapat <Link href="/mahasiswa/propose-title" className="font-medium underline">mengajukan judul sendiri</Link> sampai
+                        anggota mencapai minimal ({minGroupSize}). Setelah itu Anda juga dapat bidding judul dosen.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {group?.is_solo && memberCount >= minGroupSize && (
+                <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Solo Ready to Bid</AlertTitle>
+                    <AlertDescription>
+                        Kelompok solo Anda sudah memenuhi minimal anggota dan dapat bidding judul dosen.
                     </AlertDescription>
                 </Alert>
             )}

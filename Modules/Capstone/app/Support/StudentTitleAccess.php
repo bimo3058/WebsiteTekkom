@@ -49,8 +49,12 @@ final class StudentTitleAccess
     {
         $group = $member?->group;
         $reason = !$group ? 'NO_GROUP' : (!$member->is_leader ? 'LEADER_ONLY' : self::periodReason($group));
-        if (!$reason && ($group->is_solo || $group->status==='FORMING_SOLO')) $reason = 'SOLO_GROUP_CANNOT_BID';
-        if (!$reason && !in_array($group->status, ['FORMING','READY_FOR_BIDDING','WAITING_SUPERVISOR_APPROVAL'])) $reason = 'INVALID_GROUP_STATUS';
+        $isSolo = (bool) ($group?->is_solo || $group?->status === 'FORMING_SOLO');
+        $memberCount = $group ? $group->members()->count() : 0;
+        $minSize = $group?->period->min_group_size ?? 3;
+        if (!$reason && $isSolo && $memberCount < $minSize) $reason = 'INSUFFICIENT_MEMBERS';
+        if (!$reason && !$isSolo && !in_array($group->status, ['FORMING','READY_FOR_BIDDING','WAITING_SUPERVISOR_APPROVAL'])) $reason = 'INVALID_GROUP_STATUS';
+        if (!$reason && $isSolo && !in_array($group->status, ['FORMING_SOLO','FORMING','READY_FOR_BIDDING','WAITING_SUPERVISOR_APPROVAL'])) $reason = 'INVALID_GROUP_STATUS';
         if (!$reason && $group->title_id) $reason = 'TITLE_ALREADY_ASSIGNED';
         if (!$reason && $group->period->isBiddingLocked()) $reason = 'BIDDING_LOCKED';
         $canManage = $reason===null;
