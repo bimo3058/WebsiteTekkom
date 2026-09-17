@@ -349,6 +349,7 @@ Route::prefix('capstone')->group(function () {
             Route::post('/join-requests/{id}/reject', [BursaIdeController::class, 'rejectRequest']);
 
             Route::get('/solo-titles', [SoloTitleController::class, 'index']);
+            Route::get('/solo-titles/incoming-bids', [SoloTitleController::class, 'incomingBids']);
             Route::post('/solo-titles/{id}/bid', [SoloTitleController::class, 'store']);
             Route::put('/solo-titles/{id}/accept', [SoloTitleController::class, 'acceptBidder']);
             Route::put('/solo-titles/{id}/reject', [SoloTitleController::class, 'rejectBidder']);
