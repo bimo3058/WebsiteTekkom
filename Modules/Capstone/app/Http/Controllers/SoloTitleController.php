@@ -17,6 +17,13 @@ class SoloTitleController extends Controller
     use ApiResponseTrait, RequiresActivePeriod;
 
     /**
+     * Group statuses whose approved titles stay open for recruitment.
+     * Covers solo seekers AND merged (ex-solo) groups that fell below
+     * minimum members. Locked/finalized groups are excluded.
+     */
+    private const RECRUITABLE_STATUSES = ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL', 'TITLE_APPROVED', 'READY_FOR_BIDDING'];
+
+    /**
      * List solo seeker titles in marketplace.
      * These are student-proposed titles that have been APPROVED and are open for recruitment.
      */
@@ -48,7 +55,7 @@ class SoloTitleController extends Controller
             ->where('supervisor_approval_status', 'APPROVED')
             ->where('status', 'open')
             ->whereHas('proposedByGroup', function ($q) {
-                $q->where('is_solo', true);
+                $q->whereIn('status', self::RECRUITABLE_STATUSES);
             });
 
         if ($period) {
@@ -92,7 +99,6 @@ class SoloTitleController extends Controller
 
         $ownGroupIds = GroupMember::where('student_id', $studentId)
             ->where('is_leader', true)
-            ->whereHas('group', fn ($q) => $q->where('is_solo', true))
             ->pluck('group_id');
 
         if ($ownGroupIds->isEmpty()) {
@@ -133,8 +139,8 @@ class SoloTitleController extends Controller
         $soloGroup = $title->proposedByGroup;
         $soloGroup?->loadMissing('period');
 
-        if (! $soloGroup || ! $soloGroup->is_solo) {
-            return $this->errorResponse('Judul ini bukan dari solo seeker.', 400);
+        if (! $soloGroup || ! in_array($soloGroup->status, self::RECRUITABLE_STATUSES, true)) {
+            return $this->errorResponse('Kelompok pemilik judul tidak sedang membuka rekrutmen.', 400);
         }
 
         // 2. Resolve bidder group. Group leaders bid with their group;
@@ -261,10 +267,6 @@ class SoloTitleController extends Controller
 
         $this->ensurePeriodIsActive($soloGroup);
 
-        if (! $soloGroup->is_solo) {
-            return $this->errorResponse('Anda bukan kelompok solo seeker.', 400);
-        }
-
         // 2. Verify ownership of the title
         $title = Title::find($titleId);
         if (! $title || $title->proposed_by_group_id !== $soloGroup->id) {
@@ -362,10 +364,6 @@ class SoloTitleController extends Controller
         $soloGroup = Group::find($membership->group_id);
 
         $this->ensurePeriodIsActive($soloGroup);
-
-        if (! $soloGroup->is_solo) {
-            return $this->errorResponse('Anda bukan kelompok solo seeker.', 400);
-        }
 
         // 2. Verify ownership
         $title = Title::find($titleId);
