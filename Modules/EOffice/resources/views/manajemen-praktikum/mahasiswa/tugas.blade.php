@@ -92,6 +92,15 @@
                             $pengumpulan = $t ? $t->pengumpulan : null;
                             $sudahKumpul = !is_null($pengumpulan);
                             $statusTugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
+                            $submittedFiles = collect($pengumpulan?->files ?? [])->map(function ($file) {
+                                $path = is_array($file) ? ($file['path'] ?? '') : $file;
+                                return [
+                                    'path' => $path,
+                                    'name' => is_array($file) && isset($file['original_name'])
+                                        ? $file['original_name']
+                                        : pathinfo($path, PATHINFO_BASENAME),
+                                ];
+                            })->filter(fn ($file) => $file['path'])->values();
 
                             $isLate = false;
                             if ($sudahKumpul && $pengumpulan->riwayat) {
@@ -121,6 +130,8 @@
                                             <span class="mp-badge error sm"><span class="dot"></span>Perlu Revisi</span>
                                         @elseif($statusTugas === 'belum_dicek')
                                             <span class="mp-badge warning sm"><span class="dot"></span>Menunggu Penilaian</span>
+                                        @elseif($statusTugas === 'draft')
+                                            <span class="mp-badge neutral sm"><span class="dot"></span>Pengiriman Dibatalkan</span>
                                         @elseif($lewatMutlak)
                                             <span class="mp-badge error sm"><span class="dot"></span>Waktu Habis</span>
                                         @elseif($lewat)
@@ -193,7 +204,8 @@
 
                                         <div style="border-top:1px solid #DFE1E7; margin:16px 0;"></div>                                        
                                         <div x-data="{
-                                            isEditing: false,
+                                            isEditing: {{ $statusTugas === 'draft' ? 'true' : 'false' }},
+                                            retainedFiles: @js($submittedFiles),
                                             files: [],
                                             init() {
                                                 // addInput is the trigger; fileInput is the real named input
@@ -201,7 +213,7 @@
                                             addFiles(event) {
                                                 const newFiles = Array.from(event.target.files);
                                                 
-                                                if (this.files.length + newFiles.length > 3) {
+                                                if (this.retainedFiles.length + this.files.length + newFiles.length > 3) {
                                                     alert('Maksimal 3 file diperbolehkan.');
                                                     event.target.value = '';
                                                     return;
@@ -233,12 +245,15 @@
                                                 this.files.forEach(f => dt.items.add(f));
                                                 this.$refs.fileInput.files = dt.files;
                                                 this.$refs.addInput.value = '';
+                                            },
+                                            removeRetainedFile(index) {
+                                                this.retainedFiles.splice(index, 1);
                                             }
                                         }">
                                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                                                 <h3 style="font-size:14px; font-weight:700; color:#353849;">Pengumpulan Tugas</h3>
                                                 @if($sudahKumpul && $pengumpulan)
-                                                    <span style="font-size:12px; font-weight:500; color:#666D80;">Dikumpulkan pada: {{ \Carbon\Carbon::parse($pengumpulan->updated_at)->locale('id')->isoFormat('D MMMM YYYY, HH:mm') }} WIB</span>
+                                                    <span style="font-size:12px; font-weight:500; color:#666D80;">{{ $statusTugas === 'draft' ? 'Dibatalkan pada' : 'Dikumpulkan pada' }}: {{ \Carbon\Carbon::parse($pengumpulan->updated_at)->format('d/m/Y, H:i') }}</span>
                                                 @endif
                                             </div>
 
@@ -266,9 +281,15 @@
                                                     
                                                     @if(!$lewatMutlak && !in_array($statusTugas, ['acc']))
                                                         <div style="display:flex; justify-content:flex-end; margin-top:12px;">
-                                                            <button type="button" @click="isEditing = true" class="mp-btn secondary" style="width:200px; padding: 8px 16px; font-size:13px; height:30px; border-radius:8px; text-align:center; justify-content:center; color:#DF1C41; border-color:#DF1C41;">
-                                                                Batalkan Pengiriman
-                                                            </button>
+                                                            @if($statusTugas === 'belum_dicek')
+                                                                <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.batalkan', $t->id) }}">
+                                                                    @csrf
+                                                                    @method('PATCH')
+                                                                    <button type="submit" class="mp-btn secondary" style="width:200px; padding:8px 16px; font-size:13px; height:30px; border-radius:8px; justify-content:center; color:#DF1C41; border-color:#DF1C41;">
+                                                                        Batalkan Pengiriman
+                                                                    </button>
+                                                                </form>
+                                                            @endif
                                                         </div>
                                                     @endif
                                                 </div>
@@ -276,32 +297,15 @@
                                                 {{-- Edit mode: existing files + new upload area --}}
                                                 @if(!$lewatMutlak && !in_array($statusTugas, ['acc']))
                                                     <div x-show="isEditing" x-cloak class="mb-4">
-                                                        {{-- Existing files (greyed out) --}}
-                                                        <div style="font-size:11px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">File yang sudah dikirim</div>
-                                                        <div style="display:flex;flex-direction:column;gap:6px; margin-bottom:16px;">
-                                                            @foreach($pengumpulan->files as $pPathObj)
-                                                                @php 
-                                                                    $pPath = is_array($pPathObj) && isset($pPathObj['path']) ? $pPathObj['path'] : $pPathObj;
-                                                                    $pName = is_array($pPathObj) && isset($pPathObj['original_name']) ? $pPathObj['original_name'] : pathinfo($pPath, PATHINFO_BASENAME);
-                                                                @endphp
-                                                                <div style="display:flex; align-items:center; padding:9px 14px; border:1px solid #EEF0F5; border-radius:8px; background:#F9FAFB;">
-                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px;">
-                                                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-                                                                        <polyline points="13 2 13 9 20 9"></polyline>
-                                                                    </svg>
-                                                                    <span style="font-size:12px; color:#808897; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ $pName }}</span>
-                                                                </div>
-                                                            @endforeach
-                                                        </div>
-
-                                                        {{-- New files upload --}}
-                                                        <div style="font-size:11px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Unggah file pengganti</div>
-                                                        <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kumpul', $t->id) }}" enctype="multipart/form-data">
+                                                        <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kirim-ulang', $t->id) }}" enctype="multipart/form-data">
                                                             @csrf
-                                                            <input type="file" name="file[]" multiple x-ref="fileInput" style="display:none;" required>
+                                                            <input type="file" name="file[]" multiple x-ref="fileInput" style="display:none;">
                                                             <input type="file" multiple @change="addFiles" x-ref="addInput" style="display:none;">
-                                                            
-                                                            <button type="button" @click="$refs.addInput.click()"
+
+                                                            <label style="display:block;font-size:13px;font-weight:600;color:#353849;margin-bottom:8px;">
+                                                                Berkas Lampiran <span style="color:#DF1C41;">*</span>
+                                                            </label>
+                                                            <button type="button" @click="$refs.addInput.click()" title="Pilih berkas lampiran"
                                                                 style="display:flex; width:100%; align-items:center; justify-content:center; gap:8px; border:1px dashed #A4ABB8; background:#fff; color:#0B266E; padding:12px 20px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s;"
                                                                 onmouseover="this.style.background='#F9FAFB'; this.style.borderColor='#0B266E';"
                                                                 onmouseout="this.style.background='#fff'; this.style.borderColor='#A4ABB8';">
@@ -313,8 +317,24 @@
                                                             </button>
 
                                                             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:12px;">
-                                                                <span style="font-size:11px; color:#666D80;">Maksimal 3 file per pengumpulan.</span>
+                                                                <span style="font-size:11px; color:#666D80;">Batas akumulasi maksimal lampiran adalah 3 file per tugas.</span>
                                                                 <span style="font-size:11px; color:#666D80;">Maks. 5MB per file</span>
+                                                            </div>
+
+                                                            <div x-show="retainedFiles.length > 0" style="font-size:13px;font-weight:600;color:#353849;margin:16px 0 8px;">Berkas Saat Ini:</div>
+                                                            <div x-show="retainedFiles.length > 0" style="display:flex;flex-direction:column;gap:6px; margin-bottom:6px;">
+                                                                <template x-for="(file, index) in retainedFiles" :key="file.path">
+                                                                    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #DFE1E7; border-radius:8px; background:#F9FAFB;">
+                                                                        <input type="hidden" name="retained_files[]" :value="file.path">
+                                                                        <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                                                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                                                                            <span x-text="file.name" style="font-size:13px;font-weight:500;color:#353849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></span>
+                                                                        </div>
+                                                                        <button type="button" @click="removeRetainedFile(index)" aria-label="Hapus berkas" style="color:#DF1C41;background:none;border:none;padding:4px;cursor:pointer;display:flex;border-radius:4px;">
+                                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                                        </button>
+                                                                    </div>
+                                                                </template>
                                                             </div>
 
                                                             <div x-show="files.length > 0" class="flex flex-col gap-2" style="margin-bottom:12px;">
@@ -339,11 +359,8 @@
 
                                                             {{-- Action Buttons --}}
                                                             <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:4px; flex-wrap:wrap;">
-                                                                <button type="button" @click="isEditing = false; files = []; $refs.addInput.value = '';" class="mp-btn secondary" style="border-radius:8px; font-size:13px; justify-content:center;">
-                                                                    Batalkan Perubahan
-                                                                </button>
-                                                                <button type="submit" class="mp-btn primary md" x-bind:disabled="files.length === 0" style="width:150px; border-radius:8px; font-size:13px; justify-content:center;">
-                                                                    Kumpulkan Kembali
+                                                                <button type="submit" class="mp-btn primary md" x-bind:disabled="retainedFiles.length + files.length === 0" style="width:150px; border-radius:8px; font-size:13px; justify-content:center;">
+                                                                    Kirim Kembali
                                                                 </button>
                                                             </div>
                                                         </form>

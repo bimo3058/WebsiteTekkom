@@ -383,6 +383,12 @@
 
                 addFiles(e, type) {
                     let selectedFiles = Array.from(e.target.files);
+                    const oversizedFile = selectedFiles.find(file => file.size > 5 * 1024 * 1024);
+                    if (oversizedFile) {
+                        alert('File ' + oversizedFile.name + ' melebihi batas 5MB.');
+                        e.target.value = '';
+                        return;
+                    }
                     let currentFiles = type === 'edit' ? this.editFiles : this.createFiles;
                     let existingFileCount = type === 'edit' ? this.editModal.existingFiles.filter(f => !f.deleted).length : 0;
                     let totalFiles = currentFiles.length + selectedFiles.length + existingFileCount;

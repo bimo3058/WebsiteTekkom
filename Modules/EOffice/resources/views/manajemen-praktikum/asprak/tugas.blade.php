@@ -265,17 +265,19 @@
                                                                 const dt = new DataTransfer();
                                                                 this.filesArr.forEach(f => dt.items.add(f));
                                                                 this.$refs.fileInput.files = dt.files;
+                                                                this.$refs.filePicker.value = '';
                                                             }
                                                          }">
                                                 <label
                                                     style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Berkas
                                                     Lampiran <span style="color:#A4ABB8;">(opsional)</span></label>
 
-                                                <input type="file" name="files[]" multiple x-ref="fileInput"
+                                                <input type="file" multiple x-ref="filePicker" accept="*/*"
                                                     @change="handleFiles($event.target.files)" style="display:none;">
+                                                <input type="file" name="files[]" multiple x-ref="fileInput" style="display:none;">
                                                 <input type="hidden" name="is_published" value="1">
 
-                                                <button type="button" @click="$refs.fileInput.click()"
+                                                <button type="button" @click="$refs.filePicker.click()" title="Pilih berkas lampiran"
                                                     style="width: 100%; border: 1px dashed var(--c-border); border-radius: 8px; padding: 14px; background: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 500; color: #293C79; cursor: pointer; transition: background 0.15s;"
                                                     onmouseover="this.style.background='#F6F8FA'"
                                                     onmouseout="this.style.background='#fff'">

@@ -156,8 +156,10 @@ class TugasController extends Controller
     public function kirimUlang(Request $request, string $tugasId)
     {
         $request->validate([
-            'file'    => 'required|array|max:3',
+            'file'    => 'nullable|array|max:3',
             'file.*'  => 'required|file|max:5120',
+            'retained_files' => 'nullable|array|max:3',
+            'retained_files.*' => 'required|string',
             'catatan' => 'nullable|string|max:500',
         ]);
 
@@ -176,12 +178,36 @@ class TugasController extends Controller
 
         $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
             ->where('daftar_praktikan_id', $daftarPraktikan->id)
-            ->where('status_pengumpulan', PengumpulanTugas::STATUS_REVISI)
+            ->whereIn('status_pengumpulan', [
+                PengumpulanTugas::STATUS_REVISI,
+                PengumpulanTugas::STATUS_DRAFT,
+            ])
             ->firstOrFail();
-            
-        $paths = [];
+
+        $existingFiles = collect($pengumpulan->files)
+            ->mapWithKeys(function ($file) {
+                $path = is_array($file) ? ($file['path'] ?? null) : $file;
+                return $path ? [$path => $file] : [];
+            });
+
+        // Never trust paths posted by the browser: only retain files already owned by this submission.
+        $paths = collect($request->input('retained_files', []))
+            ->unique()
+            ->map(fn ($path) => $existingFiles->get($path))
+            ->filter()
+            ->values()
+            ->all();
+
+        $newFiles = $request->file('file', []);
+        if (count($paths) + count($newFiles) === 0) {
+            return back()->withErrors(['file' => 'Pilih minimal satu berkas untuk dikirim kembali.']);
+        }
+        if (count($paths) + count($newFiles) > 3) {
+            return back()->withErrors(['file' => 'Maksimal 3 berkas per pengumpulan.']);
+        }
+
         $failedCount = 0;
-        foreach ($request->file('file') as $f) {
+        foreach ($newFiles as $f) {
             $uploaded = $this->supabase->upload(
                 $f,
                 'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
@@ -196,6 +222,10 @@ class TugasController extends Controller
                 $failedCount++;
             }
         }
+        if (count($paths) === 0) {
+            return back()->withErrors(['file' => 'Semua berkas baru gagal diunggah. Silakan coba kembali.']);
+        }
+
         $path = json_encode($paths);
 
         $pengumpulan->update([
@@ -213,7 +243,35 @@ class TugasController extends Controller
             'is_revision' => true,
         ]);
 
-        return back()->with('success', 'Tugas revisi berhasil dikirim ulang.');
+        if ($failedCount > 0) {
+            return back()->with('warning', 'Tugas dikirim kembali, namun ' . $failedCount . ' file baru gagal diunggah.');
+        }
+
+        return back()->with('success', 'Tugas berhasil dikirim kembali.');
+    }
+
+    public function batalkan(Request $request, string $tugasId)
+    {
+        $user = auth()->user();
+        $tugas = Tugas::with('modul')->findOrFail($tugasId);
+
+        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)
+            ->where('praktikum_id', $tugas->modul->praktikum_id)
+            ->firstOrFail();
+
+        $tenggatMutlak = $tugas->deadline_acc ?? $tugas->deadline;
+        if ($tenggatMutlak && now()->gt($tenggatMutlak)) {
+            return back()->with('error', 'Tidak dapat membatalkan pengiriman setelah tenggat waktu.');
+        }
+
+        $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
+            ->where('daftar_praktikan_id', $daftarPraktikan->id)
+            ->where('status_pengumpulan', PengumpulanTugas::STATUS_BELUM_DICEK)
+            ->firstOrFail();
+
+        $pengumpulan->update(['status_pengumpulan' => PengumpulanTugas::STATUS_DRAFT]);
+
+        return back()->with('success', 'Pengiriman dibatalkan. Berkas tetap tersimpan dan dapat diperbarui.');
     }
 
     public function hapus(Request $request, string $tugasId)

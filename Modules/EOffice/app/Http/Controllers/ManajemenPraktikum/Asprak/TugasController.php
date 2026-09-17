@@ -5,6 +5,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak;
 use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Validation\ValidationException;
 use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\Modul;
@@ -96,6 +97,7 @@ class TugasController extends Controller
         $filePath = null;
         if ($request->hasFile('files')) {
             $paths = [];
+            $uploadFailed = false;
             foreach ($request->file('files') as $file) {
                 $uploadedPath = $this->supabase->upload($file, 'tugas-praktikum', 'eoffice');
                 if ($uploadedPath) {
@@ -103,7 +105,17 @@ class TugasController extends Controller
                         'path' => $uploadedPath,
                         'original_name' => $file->getClientOriginalName()
                     ];
+                } else {
+                    $uploadFailed = true;
                 }
+            }
+            if ($uploadFailed) {
+                foreach ($paths as $uploadedFile) {
+                    $this->supabase->delete($uploadedFile['path'], 'eoffice');
+                }
+                throw ValidationException::withMessages([
+                    'files' => 'Berkas gagal diunggah ke penyimpanan. Tugas belum disimpan.',
+                ]);
             }
             $filePath = json_encode($paths);
         }
@@ -156,18 +168,23 @@ class TugasController extends Controller
             $oldFiles = $tugas->file_path ? [$tugas->file_path] : [];
         }
 
+        $deleted = $request->input('hapus_file', []);
+        $deletedIndexes = is_string($deleted) ? json_decode($deleted, true) : $deleted;
+        $deletedIndexes = is_array($deletedIndexes) ? array_unique($deletedIndexes) : [];
+        $remainingCount = count(array_diff_key($oldFiles, array_flip($deletedIndexes)));
+        if ($remainingCount + count($request->file('files', [])) > 3) {
+            throw ValidationException::withMessages([
+                'files' => 'Batas akumulasi maksimal lampiran adalah 3 file per tugas.',
+            ]);
+        }
+
+        $oldPathsToDelete = [];
         if ($request->has('hapus_file')) {
-            $deleted = $request->input('hapus_file');
-            $deletedIndexes = is_string($deleted) ? json_decode($deleted, true) : (is_array($deleted) ? $deleted : []);
             if (is_array($deletedIndexes)) {
                 foreach ($deletedIndexes as $idx) {
                     if (isset($oldFiles[$idx])) {
                         $f = $oldFiles[$idx];
-                        $p = is_array($f) && isset($f['path']) ? $f['path'] : $f;
-                        try {
-                            $this->supabase->delete($p, 'eoffice');
-                        } catch (\Throwable $e) {
-                        }
+                        $oldPathsToDelete[] = is_array($f) && isset($f['path']) ? $f['path'] : $f;
                         unset($oldFiles[$idx]);
                     }
                 }
@@ -176,16 +193,30 @@ class TugasController extends Controller
         $finalPaths = $oldFiles;
 
         if ($request->hasFile('files')) {
+            $uploadedPaths = [];
+            $uploadFailed = false;
             foreach ($request->file('files') as $file) {
                 if (count($finalPaths) < 3) {
                     $uploadedPath = $this->supabase->upload($file, 'tugas-praktikum', 'eoffice');
                     if ($uploadedPath) {
-                        $finalPaths[] = [
+                        $uploadedFile = [
                             'path' => $uploadedPath,
                             'original_name' => $file->getClientOriginalName()
                         ];
+                        $finalPaths[] = $uploadedFile;
+                        $uploadedPaths[] = $uploadedFile;
+                    } else {
+                        $uploadFailed = true;
                     }
                 }
+            }
+            if ($uploadFailed) {
+                foreach ($uploadedPaths as $uploadedFile) {
+                    $this->supabase->delete($uploadedFile['path'], 'eoffice');
+                }
+                throw ValidationException::withMessages([
+                    'files' => 'Berkas gagal diunggah ke penyimpanan. Perubahan tugas belum disimpan.',
+                ]);
             }
         }
 
@@ -195,6 +226,14 @@ class TugasController extends Controller
             ...$request->only(['jenis_tugas', 'judul', 'deskripsi', 'deadline', 'deadline_acc', 'is_published']),
             'file_path' => $filePath,
         ]);
+
+        foreach ($oldPathsToDelete as $oldPath) {
+            try {
+                $this->supabase->delete($oldPath, 'eoffice');
+            } catch (\Throwable) {
+                // The database already points to the latest valid files.
+            }
+        }
 
         // Auto-create/update pengumpulan_tugas if jenis_tugas changed or scores exist in nilai_jenis_tugas
         $this->syncExistingNilaiJenisToPengumpulan($tugas);
@@ -240,6 +279,7 @@ class TugasController extends Controller
 
         // Ambil data pengumpulan tugas untuk tugas_id ini
         $pengumpulan = PengumpulanTugas::where('tugas_id', $id)
+            ->where('status_pengumpulan', '!=', PengumpulanTugas::STATUS_DRAFT)
             ->with(['riwayat'])
             ->get()
             ->keyBy('daftar_praktikan_id');
@@ -304,7 +344,7 @@ class TugasController extends Controller
     {
         $request->validate([
             'catatan_revisi' => 'required|string',
-            'file_revisi' => 'nullable|file|mimes:pdf,docx,doc,zip,rar|max:10240',
+            'file_revisi' => 'nullable|file|max:5120',
         ]);
 
         $pengumpulan = PengumpulanTugas::with('tugas.modul')->findOrFail($id);

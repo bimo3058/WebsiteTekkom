@@ -236,7 +236,7 @@
                             <div>
                                 <label
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
-                                    Lampiran (File PDF)
+                                    Lampiran
                                 </label>
 
                                 <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
@@ -249,7 +249,7 @@
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
-                                        Tambah File PDF
+                                        Tambah Berkas
                                     </button>
                                     <div
                                         style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#9CA3AF;">
@@ -257,7 +257,7 @@
                                         <span>Maks. 5MB per file</span>
                                     </div>
                                 </div>
-                                <input type="file" x-ref="fileInput" style="display:none" multiple accept=".pdf"
+                                <input type="file" x-ref="fileInput" style="display:none" multiple accept="*/*"
                                     @change="addFiles($event, 'create')">
                                 <input type="file" id="hidden-lampiran" name="lampiran[]" multiple style="display:none">
 
@@ -354,7 +354,7 @@
                             <div>
                                 <label
                                     style="display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:#374151;">
-                                    Lampiran Baru (File PDF)
+                                    Lampiran Baru
                                     <br><span style="font-size:11px; font-weight:400; color:#6B7280;">Mengunggah file baru
                                         akan menimpa semua lampiran lama pengumuman ini.</span>
                                 </label>
@@ -369,7 +369,7 @@
                                             <line x1="12" y1="5" x2="12" y2="19"></line>
                                             <line x1="5" y1="12" x2="19" y2="12"></line>
                                         </svg>
-                                        Tambah File PDF
+                                        Tambah Berkas
                                     </button>
                                     <div
                                         style="display:flex; justify-content:space-between; align-items:center; font-size:11px; color:#9CA3AF;">
@@ -377,7 +377,7 @@
                                         <span>Maks. 5MB per file</span>
                                     </div>
                                 </div>
-                                <input type="file" x-ref="fileInputEdit" style="display:none" multiple accept=".pdf"
+                                <input type="file" x-ref="fileInputEdit" style="display:none" multiple accept="*/*"
                                     @change="addFiles($event, 'edit')">
                                 <input type="file" id="hidden-lampiran-edit" name="lampiran[]" multiple
                                     style="display:none">
@@ -438,6 +438,12 @@
                 },
                 addFiles(e, type) {
                     let selectedFiles = Array.from(e.target.files);
+                    const oversizedFile = selectedFiles.find(file => file.size > 5 * 1024 * 1024);
+                    if (oversizedFile) {
+                        alert('File ' + oversizedFile.name + ' melebihi batas 5MB.');
+                        e.target.value = '';
+                        return;
+                    }
                     let currentFiles = type === 'edit' ? this.editFiles : this.files;
                     let totalFiles = currentFiles.length + selectedFiles.length;
 

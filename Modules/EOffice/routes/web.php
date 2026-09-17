@@ -476,6 +476,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('tugas.kumpul');
                 Route::post('tugas/{id}/kirim-ulang', [MhsTugasController::class, 'kirimUlang'])
                     ->name('tugas.kirim-ulang');
+                Route::patch('tugas/{id}/batalkan', [MhsTugasController::class, 'batalkan'])
+                    ->name('tugas.batalkan');
                 Route::delete('tugas/{id}/hapus', [MhsTugasController::class, 'hapus'])
                     ->name('tugas.hapus');
 
