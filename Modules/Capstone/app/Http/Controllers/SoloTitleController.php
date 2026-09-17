@@ -148,11 +148,14 @@ class SoloTitleController extends Controller
         // vessel so they can join the solo seeker as individuals.
         $membership = GroupMember::where('student_id', $student->id)
             ->where('is_leader', true)
+            ->whereHas('group', fn ($q) => $q->where('period_id', $soloGroup->period_id))
             ->first();
 
         $isGhost = false;
         if (! $membership) {
-            $anyMembership = GroupMember::where('student_id', $student->id)->first();
+            $anyMembership = GroupMember::where('student_id', $student->id)
+                ->whereHas('group', fn ($q) => $q->where('period_id', $soloGroup->period_id))
+                ->first();
             if ($anyMembership) {
                 return $this->unauthorizedResponse('Hanya pemimpin kelompok yang dapat mengajukan bid.');
             }
@@ -175,15 +178,16 @@ class SoloTitleController extends Controller
             $group = Group::with('period', 'members')->find($membership->group_id);
         }
 
-        $this->ensurePeriodIsActive($group);
+        // The merged group lives in the title's period, so its limits govern.
+        $this->ensurePeriodIsActive($soloGroup);
 
-        $period = $group->period;
+        $period = $soloGroup->period;
 
         // 3. Check merge quota - total members after merge should not exceed max
         $soloMembers = $soloGroup->members()->count();
         $bidderMembers = $group->members()->count();
         $totalAfterMerge = $soloMembers + $bidderMembers;
-        $maxSize = $period->max_group_size ?? 4;
+        $maxSize = $period?->max_group_size ?? 4;
 
         if ($totalAfterMerge > $maxSize) {
             return $this->errorResponse("Total anggota setelah merge ({$totalAfterMerge}) akan melebihi batas maksimal ({$maxSize}). Kurangi anggota kelompok Anda atau cari judul lain.", 400);
