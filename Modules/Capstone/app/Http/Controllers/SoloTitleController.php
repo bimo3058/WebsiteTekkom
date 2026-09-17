@@ -81,6 +81,36 @@ class SoloTitleController extends Controller
     }
 
     /**
+     * List incoming PENDING bids on the current leader's own solo title(s).
+     * This is the owner inbox: without it the solo seeker cannot discover
+     * bid_id values needed by acceptBidder()/rejectBidder().
+     */
+    public function incomingBids(Request $request)
+    {
+        $user = Auth::user();
+        $studentId = CapstoneActor::student($user)->id;
+
+        $ownGroupIds = GroupMember::where('student_id', $studentId)
+            ->where('is_leader', true)
+            ->whereHas('group', fn ($q) => $q->where('is_solo', true))
+            ->pluck('group_id');
+
+        if ($ownGroupIds->isEmpty()) {
+            return $this->successResponse([]);
+        }
+
+        $bids = \Modules\Capstone\Models\Bid::with(['group.members.student', 'title'])
+            ->where('status', 'PENDING')
+            ->whereHas('title', fn ($q) => $q->where('title_source', 'STUDENT')
+                ->where('supervisor_approval_status', 'APPROVED')
+                ->whereIn('proposed_by_group_id', $ownGroupIds))
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return $this->successResponse($bids);
+    }
+
+    /**
      * Submit bid to a solo seeker's title.
      * This allows a group to apply to join/merge with the solo seeker's group.
      */
@@ -243,7 +273,7 @@ class SoloTitleController extends Controller
 
         // 3. Get the bid
         $bid = \Modules\Capstone\Models\Bid::with('group.members')->find($bidId);
-        if (! $bid || $bid->title_id !== $titleId) {
+        if (! $bid || (int) $bid->title_id !== (int) $titleId) {
             return $this->notFoundResponse('Bid tidak ditemukan.');
         }
 
@@ -340,7 +370,7 @@ class SoloTitleController extends Controller
 
         // 3. Get and reject the bid
         $bid = \Modules\Capstone\Models\Bid::find($bidId);
-        if (! $bid || $bid->title_id !== $titleId) {
+        if (! $bid || (int) $bid->title_id !== (int) $titleId) {
             return $this->notFoundResponse('Bid tidak ditemukan.');
         }
 
