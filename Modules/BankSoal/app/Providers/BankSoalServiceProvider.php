@@ -67,7 +67,9 @@ class BankSoalServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([
+            \Modules\BankSoal\Console\Commands\AutoApproveBlindReview::class,
+        ]);
     }
 
     /**

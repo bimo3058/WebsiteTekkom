@@ -1,10 +1,11 @@
 <x-banksoal::layouts.gpm-master>
     @section('breadcrumbs')
-    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
-    <span class="mx-2 text-slate-300">/</span>
-    <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}" class="text-slate-500 hover:text-primary transition-colors">Validasi RPS</a>
-    <span class="mx-2 text-slate-300">/</span>
-    <span class="text-slate-800 font-semibold">Review RPS</span>
+        <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
+        <span class="mx-2 text-slate-300">/</span>
+        <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}"
+            class="text-slate-500 hover:text-primary transition-colors">Validasi RPS</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold">Review RPS</span>
     @endsection
     @php
         $skorMinimum = \Illuminate\Support\Facades\DB::table('bs_pengaturan')->where('kunci', 'standar_skor_minimum')->value('nilai') ?? 60;
@@ -12,7 +13,9 @@
     <x-banksoal::notification.alerts />
     <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Periksa kelengkapan dokumen RPS">
         <x-slot:actions>
-            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" onclick="window.history.back()">
+            <button type="button"
+                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300 cursor-pointer transition-all shadow-sm hover:shadow-md"
+                onclick="window.history.back()">
                 <i class="fas fa-arrow-left"></i> Kembali
             </button>
         </x-slot:actions>
@@ -22,14 +25,17 @@
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="mb-2 text-[11px] font-semibold uppercase tracking-wider text-primary">Mata Kuliah</div>
             <div class="text-lg font-bold text-slate-900">{{ $rps->mk_nama }}</div>
-            <div class="mt-2 text-sm text-slate-600">{{ $rps->kode }} &middot; Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
+            <div class="mt-2 text-sm text-slate-600">{{ $rps->kode }} &middot; Semester {{ $rps->semester }}
+                {{ $rps->tahun_ajaran }}
+            </div>
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-primary">Dosen Pengampu</div>
             <div class="flex flex-wrap gap-2">
                 @forelse($dosenPengampu as $dosen)
-                    <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
+                    <span
+                        class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary border border-primary/20">
                         {{ $dosen->name }}
                     </span>
                 @empty
@@ -39,7 +45,8 @@
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-primary">CPL / CPMK Terkoneksi</div>
+            <div class="mb-3 text-[11px] font-semibold uppercase tracking-wider text-primary">CPL / CPMK Terkoneksi
+            </div>
             <div class="space-y-3 max-h-40 overflow-y-auto pr-1">
                 @if($cplCpmkMappings->isNotEmpty())
                     @forelse($cplCpmkMappings as $cplId => $rows)
@@ -64,7 +71,8 @@
                             <div class="text-sm font-semibold text-slate-900 mb-2">CPL Terpilih</div>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($selectedCpls as $cpl)
-                                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 border border-slate-200">
+                                    <span
+                                        class="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-700 border border-slate-200">
                                         {{ $cpl->kode }}
                                     </span>
                                 @endforeach
@@ -110,7 +118,8 @@
 
     <div id="statusBanner" class="mb-6 rounded-2xl border p-4 {{ $statusClass }}">
         <div class="flex items-start gap-3">
-            <div id="statusIcon" class="flex h-8 w-8 items-center justify-center rounded-full font-semibold {{ $iconClass }}">!</div>
+            <div id="statusIcon"
+                class="flex h-8 w-8 items-center justify-center rounded-full font-semibold {{ $iconClass }}">!</div>
             <div class="text-sm">
                 <p class="font-semibold">Status: <span id="statusText">{{ ucfirst($rps->status) }}</span></p>
                 <p class="text-xs">
@@ -150,33 +159,33 @@
 
     <div class="grid grid-cols-1 gap-6 md:grid-cols-5">
         <div class="md:col-span-3">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:h-[700px] h-[500px] flex flex-col">
+            <div
+                class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:h-[700px] h-[500px] flex flex-col">
                 <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
                     <div class="text-xs font-semibold text-slate-600 flex items-center gap-2">
                         <i class="fas fa-file-pdf text-rose-500"></i> {{ basename($rps->dokumen) }}
                     </div>
                     <div class="flex items-center gap-2">
                         @if(!empty($fileUrl))
-                            <a href="{{ $fileUrl }}" target="_blank" class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors" title="Buka PDF di tab baru">
+                            <a href="{{ $fileUrl }}" target="_blank"
+                                class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+                                title="Buka PDF di tab baru">
                                 <i class="fas fa-external-link-alt text-xs"></i>
                             </a>
                         @endif
                         @if(!empty($downloadUrl))
-                            <a href="{{ $downloadUrl }}" class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors" title="Unduh berkas PDF">
+                            <a href="{{ $downloadUrl }}"
+                                class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors"
+                                title="Unduh berkas PDF">
                                 <i class="fas fa-download text-xs"></i>
                             </a>
                         @endif
                     </div>
                 </div>
-                <div class="flex-1 bg-slate-100 relative"> 
+                <div class="flex-1 bg-slate-100 relative">
                     @if(!empty($fileUrl))
-                        <iframe
-                            id="pdfFrame"
-                            src="{{ $fileUrl }}"
-                            loading="eager"
-                            title="PDF Preview RPS"
-                            class="absolute inset-0 w-full h-full border-0" 
-                            onload="handleIframeLoad()"
+                        <iframe id="pdfFrame" src="{{ $fileUrl }}" loading="eager" title="PDF Preview RPS"
+                            class="absolute inset-0 w-full h-full border-0" onload="handleIframeLoad()"
                             onerror="handleIframeError()">
                         </iframe>
                     @else
@@ -205,35 +214,57 @@
                     <div class="flex-1 overflow-y-auto pr-4 md:max-h-[380px] max-h-[320px]">
                         @forelse($parameters as $index => $param)
                             <div class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                                <p class="text-sm font-semibold text-slate-700">{{ $index + 1 }}. {{ $param->aspek }} <span class="text-primary">({{ $param->bobot }} poin)</span></p>
+                                <p class="text-sm font-semibold text-slate-700">{{ $index + 1 }}. {{ $param->aspek }} <span
+                                        class="text-primary">({{ $param->bobot }} poin)</span></p>
                                 <div class="mt-3 flex gap-6 text-sm text-slate-600">
-                                    <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-primary transition-colors">
-                                        <input type="radio" name="parameter_{{ $param->id }}" value="1" data-bobot="{{ $param->bobot }}" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary" onchange="hitungSkor()" required> Sesuai
+                                    <label
+                                        class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-primary transition-colors">
+                                        <input type="radio" name="parameter_{{ $param->id }}" value="1"
+                                            data-bobot="{{ $param->bobot }}"
+                                            class="w-4 h-4 text-primary border-slate-300 focus:ring-primary"
+                                            onchange="hitungSkor()" required> Sesuai
                                     </label>
-                                    <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-rose-600 transition-colors">
-                                        <input type="radio" name="parameter_{{ $param->id }}" value="0" data-bobot="{{ $param->bobot }}" class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500" onchange="hitungSkor()" required> Tidak Sesuai
+                                    <label
+                                        class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-rose-600 transition-colors">
+                                        <input type="radio" name="parameter_{{ $param->id }}" value="0"
+                                            data-bobot="{{ $param->bobot }}"
+                                            class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500"
+                                            onchange="hitungSkor()" required> Tidak Sesuai
                                     </label>
                                 </div>
                             </div>
                         @empty
-                            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">Tidak ada parameter penilaian yang tersedia</div>
+                            <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                                Tidak ada parameter penilaian yang tersedia</div>
                         @endforelse
                     </div>
 
                     <div class="mt-4 border-y border-dashed border-slate-200 py-3 flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-500">Skor Evaluasi</span>
-                        <span class="text-lg font-bold text-primary" id="nilaiAkhir">{{ isset($existingReview) ? $existingReview->nilai_akhir : '0' }}/{{ $totalBobot }}</span>
+                        <span class="text-lg font-bold text-primary"
+                            id="nilaiAkhir">{{ isset($existingReview) ? $existingReview->nilai_akhir : '0' }}/{{ $totalBobot }}</span>
                     </div>
 
                     <div class="mt-4">
                         <label for="catatan" class="text-xs font-semibold text-slate-600">Catatan Revisi</label>
-                        <textarea id="catatan" name="catatan" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" rows="4" placeholder="Masukkan detail perbaikan jika diperlukan...">{{ isset($existingReview) ? $existingReview->catatan : '' }}</textarea>
+                        <textarea id="catatan" name="catatan"
+                            class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" rows="4"
+                            placeholder="Masukkan detail perbaikan jika diperlukan...">{{ isset($existingReview) ? $existingReview->catatan : '' }}</textarea>
                     </div>
 
                     <div class="mt-4 flex gap-3">
-                        <button type="button" class="flex-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" id="btnKembalikan">Kembalikan</button>
-                        <button type="button" class="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed" id="btnSetujui">Setujui RPS</button>
+                        <button type="button"
+                            class="flex-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-100 hover:text-rose-800 hover:border-rose-300 cursor-pointer transition-all shadow-sm hover:shadow-md disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-200 disabled:cursor-not-allowed disabled:shadow-none"
+                            id="btnKembalikan">Revisi</button>
+                        <button type="button"
+                            class="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-[#081e59] disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm hover:shadow-md"
+                            id="btnSetujui">Setujui RPS</button>
                     </div>
+                    <p id="warningSkorRendah"
+                        class="mt-2.5 text-center text-[11px] font-medium text-rose-600 italic hidden">
+                        *Nilai evaluasi di bawah standar minimal ({{ $skorMinimum }}), Silahkan kembalikan ke dosen
+                        untuk direvisi.
+                    </p>
                 </form>
             </div>
 
@@ -242,15 +273,19 @@
                 <div class="space-y-3">
                     @forelse($history as $item)
                         <div class="relative pl-4">
-                            <span class="absolute left-0 top-1.5 h-2 w-2 rounded-full {{ $loop->first ? 'bg-primary' : 'bg-amber-400' }}"></span>
+                            <span
+                                class="absolute left-0 top-1.5 h-2 w-2 rounded-full {{ $loop->first ? 'bg-primary' : 'bg-amber-400' }}"></span>
                             <p class="text-xs font-semibold text-slate-700">{{ ucfirst($item->action) }}</p>
-                            <p class="text-[11px] text-slate-500">{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y - H:i') }}</p>
+                            <p class="text-[11px] text-slate-500">
+                                {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y - H:i') }}
+                            </p>
                             @if($item->description)
                                 <p class="text-[11px] text-slate-500">{{ $item->description }}</p>
                             @endif
                         </div>
                     @empty
-                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">Belum ada riwayat aktivitas</div>
+                        <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600">Belum ada
+                            riwayat aktivitas</div>
                     @endforelse
                 </div>
             </div>
@@ -297,7 +332,7 @@
                 });
 
                 nilaiAkhirEl.textContent = totalNilai + '/{{ $totalBobot }}';
-                
+
                 const MIN_SCORE = {{ $skorMinimum }};
                 if (totalNilai >= MIN_SCORE) {
                     nilaiAkhirEl.classList.remove('text-slate-300', 'text-rose-600');
@@ -316,14 +351,17 @@
             window.updateButtonState = function (score) {
                 const MIN_SCORE = {{ $skorMinimum }};
                 const btnSetujui = document.getElementById('btnSetujui');
+                const warningSkorRendah = document.getElementById('warningSkorRendah');
                 if (!btnSetujui) return;
 
                 if (score < MIN_SCORE) {
                     btnSetujui.disabled = true;
                     btnSetujui.setAttribute('title', 'Nilai di bawah standar, ajukan revisi terlebih dahulu');
+                    if (warningSkorRendah) warningSkorRendah.classList.remove('hidden');
                 } else {
                     btnSetujui.disabled = false;
                     btnSetujui.setAttribute('title', '');
+                    if (warningSkorRendah) warningSkorRendah.classList.add('hidden');
                 }
             };
 
@@ -361,7 +399,7 @@
             }
 
             if (btnKembalikan) {
-                btnKembalikan.addEventListener('click', function (e) {
+                btnKembalikan.addEventListener('click', async function (e) {
                     e.preventDefault();
 
                     if (!validateParametersNotEmpty()) {
@@ -375,21 +413,57 @@
                         return;
                     }
 
-                    actionInput.value = 'revisi';
-                    submitForm();
+                    const confirm = await Swal.fire({
+                        title: 'Kembalikan RPS?',
+                        text: "RPS ini akan dikembalikan ke dosen untuk direvisi sesuai catatan Anda.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#e11d48',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Kembalikan',
+                        cancelButtonText: 'Batal'
+                    });
+
+                    if (confirm.isConfirmed) {
+                        const originalText = btnKembalikan.innerHTML;
+                        btnKembalikan.disabled = true;
+                        btnKembalikan.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+                        if (btnSetujui) btnSetujui.disabled = true;
+
+                        actionInput.value = 'revisi';
+                        submitForm(btnKembalikan, originalText);
+                    }
                 });
             }
 
             if (btnSetujui) {
-                btnSetujui.addEventListener('click', function (e) {
+                btnSetujui.addEventListener('click', async function (e) {
                     e.preventDefault();
 
                     if (!validateParametersNotEmpty()) {
                         return;
                     }
 
-                    actionInput.value = 'setuju';
-                    submitForm();
+                    const confirm = await Swal.fire({
+                        title: 'Setujui RPS?',
+                        text: "RPS yang disetujui dapat digunakan dosen untuk mengelola bank soal.",
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonColor: '#0ea5e9',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Setujui',
+                        cancelButtonText: 'Batal'
+                    });
+
+                    if (confirm.isConfirmed) {
+                        const originalText = btnSetujui.innerHTML;
+                        btnSetujui.disabled = true;
+                        btnSetujui.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memproses...';
+                        if (btnKembalikan) btnKembalikan.disabled = true;
+
+                        actionInput.value = 'setuju';
+                        submitForm(btnSetujui, originalText);
+                    }
                 });
 
                 btnSetujui.addEventListener('mousedown', function (e) {
@@ -400,7 +474,7 @@
                 });
             }
 
-            function submitForm() {
+            function submitForm(activeBtn = null, originalText = null) {
                 const formData = new FormData(form);
 
                 fetch('{{ route("banksoal.rps.gpm.validasi-rps.store") }}', {
@@ -412,26 +486,42 @@
                     body: formData,
                     credentials: 'same-origin'
                 })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(data => {
-                            throw new Error(data.message || 'Terjadi kesalahan');
-                        });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    const message = data.message + ' (Skor: ' + data.nilai_akhir + '/{{ $totalBobot }})';
-                    showToast(message, 'success');
-                    updateStatusBanner(data.status);
-                    setTimeout(() => {
-                        window.location.href = data.redirect;
-                    }, 1500);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showToast(error.message || 'Gagal menyimpan validasi', 'error');
-                });
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Terjadi kesalahan');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        const message = data.message + ' (Skor: ' + data.nilai_akhir + '/{{ $totalBobot }})';
+                        showToast(message, 'success');
+                        updateStatusBanner(data.status);
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 1500);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        showToast(error.message || 'Gagal menyimpan validasi', 'error');
+                        
+                        // Kembalikan state tombol jika error
+                        if (activeBtn && originalText) {
+                            activeBtn.disabled = false;
+                            activeBtn.innerHTML = originalText;
+                            
+                            // Enable tombol lawannya dan evaluasi state ulang
+                            if (activeBtn.id === 'btnKembalikan') {
+                                const total = form.querySelectorAll('input[type="radio"]:checked');
+                                let val = 0;
+                                total.forEach(i => { if(i.value === '1') val += parseInt(i.getAttribute('data-bobot')) || 0; });
+                                updateButtonState(val);
+                            } else {
+                                if (btnKembalikan) btnKembalikan.disabled = false;
+                            }
+                        }
+                    });
             }
 
             function updateStatusBanner(status) {

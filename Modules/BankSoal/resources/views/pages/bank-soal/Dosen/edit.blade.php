@@ -56,6 +56,7 @@
                             <input type="radio" name="tipe_soal" value="essay" {{ old('tipe_soal', $soal->tipe_soal) == 'essay' ? 'checked' : '' }} class="w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
                             Essay
                         </label>
+
                     </div>
                 </div>
             </div>
@@ -65,7 +66,7 @@
                 <div id="editor" class="bg-white">{!! old('soal', $soal->soal) !!}</div>
                 <p class="mt-2 text-xs text-slate-500">Anda dapat menambahkan format teks rata-kiri/kanan, list, tabel, dan gambar menggunakan menu di atas.</p>
             </div>
-            <div id="opsiContainerWrapper" class="border-t border-slate-200 px-6 py-5 {{ old('tipe_soal', $soal->tipe_soal ?? 'pilihan_ganda') == 'essay' ? 'hidden' : '' }}">
+            <div id="opsiContainerWrapper" class="border-t border-slate-200 px-6 py-5 {{ old('tipe_soal', $soal->tipe_soal ?? 'pilihan_ganda') == 'pilihan_ganda' ? '' : 'hidden' }}">
                 <div class="mb-3 flex items-center justify-between"><label class="text-sm font-semibold text-slate-700">Pilihan Jawaban</label><button type="button" id="addOptionBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"><i class="fas fa-plus mr-1"></i> Tambah Opsi</button></div>
                 <div id="optionsContainer" class="space-y-3">
                     @php $oldJawaban = old('jawaban', $soal->jawaban->toArray()); $oldJawabanBenar = old('jawaban_benar', $soal->jawaban->search(fn($j) => $j['is_benar'])); @endphp
@@ -246,7 +247,7 @@
             const wrapper = document.getElementById('opsiContainerWrapper');
             const requiredInputs = wrapper.querySelectorAll('input[required]');
             
-            if (tipe === 'essay') {
+            if (tipe !== 'pilihan_ganda') {
                 wrapper.classList.add('hidden');
                 // Remove required attribute from multiple choice inputs when essay is selected
                 requiredInputs.forEach(input => {
