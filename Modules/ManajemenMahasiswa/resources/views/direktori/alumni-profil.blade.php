@@ -233,7 +233,8 @@
                         @error('status_karir') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    <div id="karir-detail-fields">
+                    <div class="col-md-6" id="field-bidang-industri">
                         <label class="form-label">Bidang Industri</label>
                         <select name="bidang_industri" class="form-select form-select-custom @error('bidang_industri') is-invalid @enderror">
                             <option value="">— Pilih Bidang —</option>
@@ -245,26 +246,26 @@
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label">Perusahaan / Instansi / Nama Usaha</label>
+                        <label class="form-label" id="label-perusahaan">Perusahaan / Instansi / Nama Usaha</label>
                         <input type="text" name="perusahaan" value="{{ old('perusahaan', $alumni->perusahaan) }}"
                                class="form-control form-control-custom @error('perusahaan') is-invalid @enderror"
-                               placeholder="Contoh: PT Teknologi Indonesia">
+                               placeholder="Contoh: PT Teknologi Indonesia" id="input-perusahaan">
                         @error('perusahaan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label">Jabatan / Posisi</label>
+                        <label class="form-label" id="label-jabatan">Jabatan / Posisi</label>
                         <input type="text" name="jabatan" value="{{ old('jabatan', $alumni->jabatan) }}"
                                class="form-control form-control-custom @error('jabatan') is-invalid @enderror"
-                               placeholder="Contoh: Software Engineer">
+                               placeholder="Contoh: Software Engineer" id="input-jabatan">
                         @error('jabatan') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-6" id="field-tahun-mulai">
                         <label class="form-label">Tahun Mulai Bekerja / Usaha</label>
                         <input type="number" name="tahun_mulai_bekerja" value="{{ old('tahun_mulai_bekerja', $alumni->tahun_mulai_bekerja) }}"
                                class="form-control form-control-custom @error('tahun_mulai_bekerja') is-invalid @enderror"
-                               placeholder="Contoh: 2023" min="2000" max="{{ date('Y') + 1 }}">
+                               placeholder="Contoh: 2023" min="2000" max="{{ date('Y') }}">
                         @error('tahun_mulai_bekerja') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -274,6 +275,7 @@
                                class="form-control form-control-custom @error('linkedin') is-invalid @enderror"
                                placeholder="https://linkedin.com/in/username">
                         @error('linkedin') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
                     </div>
                 </div>
 
@@ -287,4 +289,60 @@
     </div>
 </div>
 
+{{-- Context-aware form: show/hide & relabel career fields berdasarkan status_karir --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const statusSelect  = document.querySelector('[name="status_karir"]');
+    const karirFields   = document.getElementById('karir-detail-fields');
+    const fieldBidang   = document.getElementById('field-bidang-industri');
+    const fieldTahun    = document.getElementById('field-tahun-mulai');
+    const labelPerusahaan = document.getElementById('label-perusahaan');
+    const labelJabatan    = document.getElementById('label-jabatan');
+    const inputPerusahaan = document.getElementById('input-perusahaan');
+    const inputJabatan    = document.getElementById('input-jabatan');
+
+    function toggleKarirFields() {
+        if (!statusSelect || !karirFields) return;
+        const status = statusSelect.value;
+
+        // Jika belum diisi atau belum_bekerja → sembunyikan semua field karir
+        if (status === 'belum_bekerja' || status === '') {
+            karirFields.style.display = 'none';
+            return;
+        }
+
+        karirFields.style.display = '';
+
+        if (status === 'studi_lanjut') {
+            // Studi lanjut: sembunyikan bidang industri & tahun mulai bekerja, relabel
+            if (fieldBidang)  fieldBidang.style.display  = 'none';
+            if (fieldTahun)   fieldTahun.style.display   = 'none';
+            if (labelPerusahaan) labelPerusahaan.textContent = 'Universitas / Institusi';
+            if (labelJabatan)    labelJabatan.textContent    = 'Program Studi Lanjut';
+            if (inputPerusahaan) inputPerusahaan.placeholder = 'Contoh: Universitas Indonesia';
+            if (inputJabatan)    inputJabatan.placeholder    = 'Contoh: S2 Ilmu Komputer';
+        } else if (status === 'wirausaha') {
+            if (fieldBidang) fieldBidang.style.display = '';
+            if (fieldTahun)  fieldTahun.style.display  = '';
+            if (labelPerusahaan) labelPerusahaan.textContent = 'Nama Usaha';
+            if (labelJabatan)    labelJabatan.textContent    = 'Posisi / Jabatan';
+            if (inputPerusahaan) inputPerusahaan.placeholder = 'Contoh: CV Teknologi Nusantara';
+            if (inputJabatan)    inputJabatan.placeholder    = 'Contoh: Founder & CEO';
+        } else {
+            // bekerja (default)
+            if (fieldBidang) fieldBidang.style.display = '';
+            if (fieldTahun)  fieldTahun.style.display  = '';
+            if (labelPerusahaan) labelPerusahaan.textContent = 'Perusahaan / Instansi';
+            if (labelJabatan)    labelJabatan.textContent    = 'Jabatan / Posisi';
+            if (inputPerusahaan) inputPerusahaan.placeholder = 'Contoh: PT Teknologi Indonesia';
+            if (inputJabatan)    inputJabatan.placeholder    = 'Contoh: Software Engineer';
+        }
+    }
+
+    statusSelect.addEventListener('change', toggleKarirFields);
+    toggleKarirFields(); // Run on page load to set initial state
+});
+</script>
+
 </x-dynamic-component>
+

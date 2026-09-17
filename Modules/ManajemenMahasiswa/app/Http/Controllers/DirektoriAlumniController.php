@@ -356,7 +356,7 @@ class DirektoriAlumniController extends Controller
             // Sync gagal — lanjutkan
         }
 
-        $filters = $request->only(['angkatan', 'tahun_lulus', 'status_karir', 'bidang_industri', 'search']);
+        $filters = $request->only(['tahun_lulus', 'status_karir', 'bidang_industri', 'search']);
         $filters = array_filter($filters, fn($v) => $v !== 'semua' && $v !== null && $v !== '');
 
         try {
@@ -512,7 +512,7 @@ class DirektoriAlumniController extends Controller
             'perusahaan' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
             'bidang_industri' => 'nullable|string|in:' . implode(',', array_keys(Alumni::BIDANG_INDUSTRI_LIST)),
-            'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . (date('Y') + 1),
+            'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . date('Y'),
             'linkedin' => 'nullable|url|max:255',
         ]);
 
@@ -564,8 +564,8 @@ class DirektoriAlumniController extends Controller
             'status_karir' => 'nullable|string|in:' . implode(',', Alumni::STATUS_LIST),
             'perusahaan' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
-            'bidang_industri' => 'nullable|string',
-            'tahun_mulai_bekerja' => 'nullable|integer',
+            'bidang_industri' => 'nullable|string|in:' . implode(',', array_keys(Alumni::BIDANG_INDUSTRI_LIST)),
+            'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . date('Y'),
             'linkedin' => 'nullable|url|max:255',
             'personal_email' => 'nullable|email|max:255',
         ]);

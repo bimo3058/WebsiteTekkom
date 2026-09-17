@@ -122,10 +122,12 @@ class Alumni extends Model
 
     public function scopeSearch(Builder $query, string $keyword): Builder
     {
-        return $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$keyword}%"))
-                     ->orWhere('perusahaan', 'like', "%{$keyword}%")
-                     ->orWhere('jabatan', 'like', "%{$keyword}%")
-                     ->orWhere('nim', 'like', "%{$keyword}%");
+        return $query->where(function ($q) use ($keyword) {
+            $q->whereHas('user', fn($sub) => $sub->where('name', 'ilike', "%{$keyword}%"))
+              ->orWhere('perusahaan', 'ilike', "%{$keyword}%")
+              ->orWhere('jabatan', 'ilike', "%{$keyword}%")
+              ->orWhere('nim', 'ilike', "%{$keyword}%");
+        });
     }
 
     // -------------------------------------------------------------------------

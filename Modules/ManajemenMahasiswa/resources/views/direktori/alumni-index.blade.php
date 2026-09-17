@@ -291,12 +291,12 @@
                    placeholder="Cari nama, NIM, atau instansi alumni..." value="{{ request('search') }}">
         </div>
         <div class="d-flex gap-3">
-            <select name="angkatan" class="form-select border-1 filter-select-custom"
+            <select name="tahun_lulus" class="form-select border-1 filter-select-custom"
                     style="min-width: 160px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Angkatan</option>
-                @foreach($angkatanList as $ank)
-                    <option value="{{ $ank }}" {{ request('angkatan') == $ank ? 'selected' : '' }}>
-                        Angkatan {{ $ank }}
+                <option value="semua">Semua Tahun Lulus</option>
+                @foreach($tahunLulusList as $tl)
+                    <option value="{{ $tl }}" {{ request('tahun_lulus') == $tl ? 'selected' : '' }}>
+                        Lulus {{ $tl }}
                     </option>
                 @endforeach
             </select>

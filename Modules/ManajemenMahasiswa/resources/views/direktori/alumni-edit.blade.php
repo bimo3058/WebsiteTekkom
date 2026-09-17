@@ -254,18 +254,18 @@
                 @error('bidang_industri') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-12">
-                <label class="form-label">Perusahaan / Instansi / Usaha</label>
-                <input type="text" name="perusahaan" class="form-control @error('perusahaan') is-invalid @enderror" value="{{ old('perusahaan', $alumni->perusahaan) }}">
+                <label class="form-label" id="label-perusahaan">Perusahaan / Instansi / Usaha</label>
+                <input type="text" name="perusahaan" class="form-control @error('perusahaan') is-invalid @enderror" value="{{ old('perusahaan', $alumni->perusahaan) }}" id="input-perusahaan">
                 @error('perusahaan') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6">
-                <label class="form-label">Jabatan / Posisi</label>
-                <input type="text" name="jabatan" class="form-control @error('jabatan') is-invalid @enderror" value="{{ old('jabatan', $alumni->jabatan) }}">
+                <label class="form-label" id="label-jabatan">Jabatan / Posisi</label>
+                <input type="text" name="jabatan" class="form-control @error('jabatan') is-invalid @enderror" value="{{ old('jabatan', $alumni->jabatan) }}" id="input-jabatan">
                 @error('jabatan') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6">
                 <label class="form-label">Tahun Mulai Bekerja</label>
-                <input type="number" name="tahun_mulai_bekerja" class="form-control @error('tahun_mulai_bekerja') is-invalid @enderror" value="{{ old('tahun_mulai_bekerja', $alumni->tahun_mulai_bekerja) }}" min="2000" max="{{ date('Y') + 1 }}">
+                <input type="number" name="tahun_mulai_bekerja" class="form-control @error('tahun_mulai_bekerja') is-invalid @enderror" value="{{ old('tahun_mulai_bekerja', $alumni->tahun_mulai_bekerja) }}" min="2000" max="{{ date('Y') }}">
                 @error('tahun_mulai_bekerja') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-12">
@@ -350,6 +350,38 @@ document.addEventListener('alpine:init', () => {
             }
         };
     });
+});
+</script>
+
+{{-- Context-aware admin edit: relabel career fields berdasarkan status_karir (no hiding) --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const statusSelect    = document.querySelector('[name="status_karir"]');
+    const labelPerusahaan = document.getElementById('label-perusahaan');
+    const labelJabatan    = document.getElementById('label-jabatan');
+    const inputPerusahaan = document.getElementById('input-perusahaan');
+    const inputJabatan    = document.getElementById('input-jabatan');
+
+    function relabelKarirFields() {
+        if (!statusSelect) return;
+        const status = statusSelect.value;
+
+        if (status === 'studi_lanjut') {
+            if (labelPerusahaan) labelPerusahaan.textContent = 'Universitas / Institusi';
+            if (labelJabatan)    labelJabatan.textContent    = 'Program Studi Lanjut';
+        } else if (status === 'wirausaha') {
+            if (labelPerusahaan) labelPerusahaan.textContent = 'Nama Usaha';
+            if (labelJabatan)    labelJabatan.textContent    = 'Posisi / Jabatan';
+        } else {
+            if (labelPerusahaan) labelPerusahaan.textContent = 'Perusahaan / Instansi / Usaha';
+            if (labelJabatan)    labelJabatan.textContent    = 'Jabatan / Posisi';
+        }
+    }
+
+    if (statusSelect) {
+        statusSelect.addEventListener('change', relabelKarirFields);
+        relabelKarirFields(); // Run on page load
+    }
 });
 </script>
 </x-dynamic-component>
