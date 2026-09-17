@@ -11,7 +11,7 @@
     }
     .status-draft     { background: var(--c-surface-muted); color: var(--c-fg-muted); }
     .status-diajukan  { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .status-disetujui { background: var(--c-success-subtle); color: var(--c-success); }
+    .status-disetujui { background: var(--c-primary-subtle); color: var(--c-primary); }
     .status-ditolak   { background: var(--c-error-subtle); color: var(--c-error); }
 
 
@@ -96,9 +96,7 @@
         <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar rencana proker dari 8 bidang himpunan &amp; prodi</p>
     </div>
     @if($canManage)
-        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="btn d-flex align-items-center gap-2"
-           style="background:var(--c-primary);color:var(--c-surface);font-weight:600;font-size:14px;padding:9px 18px;border-radius:8px;transition:all .15s;"
-           onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
+        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Buat Proker
         </a>
@@ -108,22 +106,21 @@
 
 {{-- Filter --}}
 <form method="GET" action="{{ route('manajemenmahasiswa.proker.index') }}" id="filterForm">
-    <div class="d-flex gap-3 align-items-center mb-3">
-        <div class="search-wrapper w-100">
-            <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <input type="text" name="search" class="form-control search-input"
+    <div class="mk-kegiatan-filter-row">
+        <div class="mk-kegiatan-search w-100">
+            <span class="mk-kegiatan-search__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <input type="text" name="search" class="mk-kegiatan-search__input"
                    placeholder="Cari judul atau deskripsi rencana proker..." value="{{ request('search') }}">
         </div>
     </div>
-    <div class="filter-section">
+    <div class="mk-kegiatan-filter-bar">
         <a href="{{ route('manajemenmahasiswa.proker.index', request()->except(['bidang','page'])) }}"
-           class="filter-chip {{ !request('bidang')||request('bidang')==='semua'?'active':'' }}">Semua</a>
+           class="mk-kegiatan-filter-chip {{ !request('bidang')||request('bidang')==='semua'?'active':'' }}">Semua</a>
         <a href="{{ route('manajemenmahasiswa.proker.index', array_merge(request()->except('page'),['bidang'=>'prodi'])) }}"
-           class="filter-chip {{ request('bidang')==='prodi'?'active':'' }}"
-           style="{{ request('bidang')==='prodi'?'background:var(--c-primary);border-color:var(--c-primary);':'' }}">Prodi</a>
+           class="mk-kegiatan-filter-chip {{ request('bidang')==='prodi'?'active':'' }}">Prodi</a>
         @foreach($bidangList as $bidang)
             <a href="{{ route('manajemenmahasiswa.proker.index', array_merge(request()->except('page'),['bidang'=>$bidang->id])) }}"
-               class="filter-chip {{ request('bidang')==$bidang->id?'active':'' }}">{{ $bidang->nama_bidang }}</a>
+               class="mk-kegiatan-filter-chip {{ request('bidang')==$bidang->id?'active':'' }}">{{ $bidang->nama_bidang }}</a>
         @endforeach
     </div>
 </form>
@@ -184,7 +181,7 @@
         @endforeach
     </div>
     @if($prokerList->hasPages())
-        <div class="mt-4 d-flex justify-content-center">{{ $prokerList->withQueryString()->links() }}</div>
+        @include('manajemenmahasiswa::partials.kegiatan-pagination', ['paginator' => $prokerList])
     @endif
 @else
     <div class="empty-state">
@@ -192,8 +189,7 @@
         <h5>Belum ada rencana proker</h5>
         <p>Rencana program kerja yang dibuat akan muncul di sini</p>
         @if($canManage)
-            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="btn mt-2"
-               style="background:var(--c-primary);color:var(--c-surface);border-radius:8px;font-weight:600;font-size:14px;">+ Buat Proker Pertama</a>
+            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form mt-2">+ Buat Proker Pertama</a>
         @endif
     </div>
 @endif

@@ -34,8 +34,10 @@
     .filter-chip.active .tab-badge { background: #fff; color: #0B266E; }
     .tab-badge.zero { background: #f3f4f6; color: #666D80; }
 
-    .filter-select-custom { padding: 0 14px; border-radius: 8px; border: 1px solid #DFE1E7; background: #fff; color: #374151; font-size: .82rem; font-weight: 600; outline: none; height: 34px; transition: all .2s; }
+    .filter-select-custom { padding: 0 14px; border-radius: 8px; border: 1px solid #DFE1E7; background: #fff; color: #374151; font-size: .82rem; font-weight: 600; outline: none; height: 34px; min-width: 122px; flex: 0 0 auto; transition: all .2s; }
+    .filter-select-custom[name="angkatan"] { min-width: 142px; }
     .filter-select-custom:focus { border-color: #0B266E; box-shadow: 0 0 0 3px rgba(11,38,110,.1); }
+    .filter-controls { flex-wrap: wrap; flex-shrink: 0; }
     .search-wrapper { position: relative; flex-grow: 1; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #666D80; }
     .search-input { background-color: #fff; border: 1px solid #DFE1E7; border-radius: 8px; height: 34px; padding-left: 36px; font-size: .85rem; font-weight: 500; width: 100%; color: #374151; }
@@ -84,8 +86,23 @@
     .modal-body { padding: 22px; }
     .modal-footer { border-top: 1px solid #f3f4f6; padding: 14px 22px; }
 
-    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; color: #666D80; text-decoration: none; margin-bottom: 10px; transition: color .15s; }
-    .back-link:hover { color: #0B266E; }
+    .detail-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        color: #353849;
+        background: #fff;
+        border: 1px solid #DFE1E7;
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+        text-decoration: none;
+        transition: all .2s;
+    }
+    .detail-back:hover { background: #F6F8FA; color: #0D0D12; }
 
     /* Kolom data di sini memuat kuota, mata kuliah, dan penjelasan SK,
        jadi butuh lebih lega daripada halaman Verifikasi Prestasi */
@@ -112,11 +129,12 @@
 
 <!-- Page Header -->
 <div style="margin-bottom:24px;">
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}" class="back-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        Kembali ke Verifikasi Prestasi
-    </a>
-    <h4 style="font-size:1.45rem; font-weight:700; color:#0D0D12; margin-bottom:2px; letter-spacing:-.02em;">Klaim Reward Prestasi</h4>
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
+        <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Verifikasi Prestasi">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h4 style="font-size:1.45rem; font-weight:700; color:#0D0D12; margin:0; letter-spacing:-.02em;">Klaim Reward Prestasi</h4>
+    </div>
     @if($canReview)
         <p style="font-size:.82rem; color:#666D80; margin:0;">Tinjau & setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
     @else
@@ -167,7 +185,7 @@
             <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
             <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari nama, NIM, prestasi, tingkat..." value="{{ request('search') }}">
         </div>
-        <div class="d-flex gap-3">
+        <div class="d-flex gap-3 filter-controls">
             <!-- Status Klaim — pengganti kartu statistik yang dulu bisa diklik -->
             <select name="reward" class="form-select border-1 filter-select-custom" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua" {{ $reward === 'semua' ? 'selected' : '' }}>Semua Status</option>

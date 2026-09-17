@@ -84,12 +84,14 @@
             .jalur-card.konfidensial .jalur-pill { background: #f1f5f9; color: #64748b; }
 
             .back-link {
-                margin-top: 32px; font-size: 13px; font-weight: 600;
-                color: #9ca3af; text-decoration: none;
-                display: inline-flex; align-items: center; gap: 6px;
-                transition: color 0.2s;
+                margin-top: 32px; width: auto; min-width: 0; height: 32px; padding: 0 12px; gap: 8px;
+                border-radius: 8px; background: #fff; border: 1px solid #DFE1E7;
+                color: #353849; text-decoration: none;
+                display: inline-flex; align-items: center; justify-content: center;
+                box-shadow: 0 1px 2px rgba(0,0,0,.05); transition: all .2s;
             }
-            .back-link:hover { color: #374151; }
+            .back-link:hover { background: #F6F8FA; color: #0D0D12; }
+            .back-link-label { color: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; }
         </style>
     @endpush
 
@@ -139,9 +141,9 @@
 
         </div>
 
-        <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="back-link">
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="back-link" title="Kembali" aria-label="Kembali ke Layanan Pengaduan">
             <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" />
-            Kembali ke Layanan Pengaduan
+            <span class="back-link-label">Kembali</span>
         </a>
     </div>
 

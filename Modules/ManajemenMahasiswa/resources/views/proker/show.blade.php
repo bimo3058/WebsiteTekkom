@@ -6,9 +6,7 @@
 @include('manajemenmahasiswa::partials.kegiatan-detail._styles')
 
 <style>
-/* Khusus Rencana Proker: tombol ajukan & modal */
-.btn-ajukan{background:linear-gradient(135deg,var(--c-primary),var(--c-primary));color:var(--c-surface);font-weight:600;padding:10px 24px;border-radius:10px;border:none;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
-.btn-ajukan:hover{background:linear-gradient(135deg,var(--c-primary-hover),var(--c-primary-hover));transform:translateY(-1px)}
+/* Khusus Rencana Proker: modal. Tombol memakai komponen bersama kegiatan. */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center}
 .modal-box{background:var(--c-surface);border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.15)}
 </style>
@@ -33,7 +31,7 @@
 {{-- Header --}}
 <div class="d-flex justify-content-between align-items-start">
     <div class="detail-header">
-        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn-back">&larr;</a>
+        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-back" aria-label="Kembali"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg></a>
         <div>
             <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Detail Rencana Proker</h3>
             <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">
@@ -57,8 +55,7 @@
         <div class="d-flex gap-2 flex-wrap align-items-start justify-content-end">
             @if($canEdit && $proker->status === 'draft')
                 <a href="{{ route('manajemenmahasiswa.proker.edit', $proker->id) }}"
-                   class="btn d-flex align-items-center gap-2"
-                   style="background: var(--c-primary); color: var(--c-surface); font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
+                   class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                         <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -67,8 +64,7 @@
                 </a>
             @endif
             @if($canDelete && $proker->status === 'draft')
-                <button type="button" class="btn d-flex align-items-center gap-2"
-                        style="background: var(--c-error-subtle); color: var(--c-error); font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; border: none;"
+                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--compact d-flex align-items-center gap-2"
                         onclick="document.getElementById('deleteModal').style.display='flex'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="3 6 5 6 21 6"></polyline>
@@ -81,23 +77,21 @@
             @if($proker->status === 'draft' && $canSeeAjukan)
                 @if($canAjukan)
                     @if($rencanaLengkap)
-                        <button type="button" class="btn-ajukan" style="height:38px;padding:0 20px;font-size:13px;"
+                        <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2"
                                 onclick="document.getElementById('ajukanModal').style.display='flex'">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                             Ajukan Proker
                         </button>
                     @else
-                        <button type="button" disabled
-                            title="Lengkapi dulu: {{ $kelengkapanKurang->implode(', ') }}"
-                            style="height:38px;padding:0 20px;font-size:13px;font-weight:600;border-radius:10px;border:none;display:inline-flex;align-items:center;gap:8px;background:var(--c-border);color:var(--c-fg-muted);cursor:not-allowed;">
+                        <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--disabled mk-kegiatan-btn--compact d-flex align-items-center gap-2" disabled
+                                title="Lengkapi dulu: {{ $kelengkapanKurang->implode(', ') }}">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                             Ajukan Proker
                         </button>
                     @endif
                 @else
-                    <button type="button" disabled
-                        title="Hanya Ketua / Ketua Bidang / Ketua Unit yang dapat mengajukan proker"
-                        style="height:38px;padding:0 20px;font-size:13px;font-weight:600;border-radius:10px;border:none;display:inline-flex;align-items:center;gap:8px;background:var(--c-border);color:var(--c-fg-muted);cursor:not-allowed;">
+                    <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--disabled mk-kegiatan-btn--compact d-flex align-items-center gap-2" disabled
+                            title="Hanya Ketua / Ketua Bidang / Ketua Unit yang dapat mengajukan proker">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                         Ajukan Proker
                     </button>
@@ -125,7 +119,7 @@
             <div style="font-size:14px;color:var(--c-primary);font-weight:500;">Cek kesesuaian data dengan realisasi di halaman Pelaksanaan Kegiatan.</div>
         </div>
         <a href="{{ route('manajemenmahasiswa.pelaksanaan.show', $proker->id) }}"
-           class="btn" style="background:var(--c-primary);color:var(--c-surface);font-weight:600;padding:10px 22px;border-radius:8px;font-size:14px;white-space:nowrap;">
+           class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form">
             Lihat di Pelaksanaan &rarr;
         </a>
     </div>
@@ -140,7 +134,7 @@
             <div style="font-size:14px;color:var(--c-success);font-weight:500;">Laporan akhir kegiatan ini ada di halaman Laporan &amp; Arsip.</div>
         </div>
         <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
-           class="btn" style="background:var(--c-success);color:var(--c-surface);font-weight:600;padding:10px 22px;border-radius:8px;font-size:14px;white-space:nowrap;">
+           class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form">
             Lihat di Arsip &rarr;
         </a>
     </div>
@@ -157,10 +151,10 @@
         <h5 class="fw-bold mb-2">Ajukan Proker?</h5>
         <p style="color:var(--c-fg-muted);font-size:14px;">Rencana proker "<strong>{{ $proker->judul }}</strong>" akan diajukan dan masuk ke tahap <strong>Pelaksanaan Kegiatan</strong>.</p>
         <div class="d-flex gap-2 justify-content-center mt-3">
-            <button type="button" class="btn" style="background:var(--c-surface-muted);color:var(--c-fg-sec);font-weight:600;border-radius:10px;" onclick="document.getElementById('ajukanModal').style.display='none'">Batal</button>
+            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--modal" onclick="document.getElementById('ajukanModal').style.display='none'">Batal</button>
             <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" style="margin:0;">
                 @csrf @method('PATCH')
-                <button type="submit" class="btn-ajukan" style="border-radius:10px;">Ajukan</button>
+                <button type="submit" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--modal">Ajukan</button>
             </form>
         </div>
     </div>
@@ -174,10 +168,10 @@
         <h5 class="fw-bold mb-2">Hapus Proker?</h5>
         <p style="color:var(--c-fg-muted);font-size:14px;">Data proker "<strong>{{ $proker->judul }}</strong>" akan dihapus permanen.</p>
         <div class="d-flex gap-2 justify-content-center mt-3">
-            <button class="btn" style="background:var(--c-surface-muted);color:var(--c-fg-sec);font-weight:600;border-radius:10px;" onclick="document.getElementById('deleteModal').style.display='none'">Batal</button>
+            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--modal" onclick="document.getElementById('deleteModal').style.display='none'">Batal</button>
             <form action="{{ route('manajemenmahasiswa.proker.destroy', $proker->id) }}" method="POST">
                 @csrf @method('DELETE')
-                <button type="submit" class="btn btn-danger" style="border-radius:10px;font-weight:600;">Hapus</button>
+                <button type="submit" class="mk-kegiatan-btn mk-kegiatan-btn--danger-solid mk-kegiatan-btn--modal">Hapus</button>
             </form>
         </div>
     </div>

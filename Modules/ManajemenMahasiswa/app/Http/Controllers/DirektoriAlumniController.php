@@ -561,8 +561,6 @@ class DirektoriAlumniController extends Controller
     public function update(Request $request, int $id)
     {
         $validated = $request->validate([
-            'nim' => 'required|string|max:30',
-            'angkatan' => 'required|integer|min:2000|max:2099',
             'tahun_lulus' => 'required|integer|min:2000|max:2099',
             'program_studi' => 'nullable|string|max:255',
             'ipk' => 'nullable|numeric|min:0|max:4',

@@ -143,8 +143,9 @@ function renderPengelola() {
         chip.appendChild(document.createTextNode(p.nama + ' '));
         const lepas = document.createElement('button');
         lepas.type = 'button';
-        lepas.className = 'panitia-chip-remove';
-        lepas.title = 'Hapus';
+        lepas.className = 'panitia-chip-remove mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm';
+        lepas.title = 'Hapus pengelola';
+        lepas.setAttribute('aria-label', 'Hapus pengelola ' + p.nama);
         lepas.textContent = '×';
         lepas.addEventListener('click', e => { e.stopPropagation(); hapusPengelola(String(p.id)); });
         chip.appendChild(lepas);

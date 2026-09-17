@@ -349,9 +349,9 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: var(--c-error);
-        color: var(--c-surface);
-        border: none;
+        background: var(--c-error-subtle);
+        color: var(--c-error);
+        border: 1px solid transparent;
         font-size: 12px;
         cursor: pointer;
         display: flex;
@@ -362,6 +362,7 @@
     }
     .file-preview-item .btn-remove-file:hover {
         background: var(--c-error);
+        color: var(--c-surface);
         transform: scale(1.1);
     }
     .doc-preview-item {
@@ -401,7 +402,7 @@
         border-radius: 50%;
         background: var(--c-error-subtle);
         color: var(--c-error);
-        border: none;
+        border: 1px solid transparent;
         font-size: 13px;
         cursor: pointer;
         display: flex;
@@ -432,8 +433,8 @@
         margin-bottom: 24px;
     }
     .btn-back {
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         background: var(--c-surface);
         border: 1px solid var(--c-border);
@@ -448,9 +449,9 @@
         flex-shrink: 0;
     }
     .btn-back:hover {
-        background: var(--c-surface-muted);
-        border-color: var(--c-border-strong);
-        color: var(--c-fg);
+        background: var(--c-primary-subtle);
+        border-color: var(--c-primary);
+        color: var(--c-primary);
     }
 
     /* ── Buttons ── */
@@ -459,7 +460,8 @@
         color: var(--c-surface);
         font-weight: 600;
         font-size: 14px;
-        padding: 12px 28px;
+        min-height: 40px;
+        padding: 0 18px;
         border-radius: 10px;
         border: none;
         cursor: pointer;
@@ -471,20 +473,22 @@
         box-shadow: 0 4px 12px var(--c-primary-shadow-strong);
     }
     .btn-cancel {
-        background: var(--c-surface-muted);
+        background: var(--c-surface);
         color: var(--c-fg-sec);
         font-weight: 600;
         font-size: 14px;
-        padding: 12px 28px;
+        min-height: 40px;
+        padding: 0 18px;
         border-radius: 10px;
-        border: none;
+        border: 1px solid var(--c-border);
         cursor: pointer;
         text-decoration: none;
         transition: all 0.2s;
     }
     .btn-cancel:hover {
-        background: var(--c-border);
-        color: var(--c-fg);
+        background: var(--c-primary-subtle);
+        border-color: var(--c-primary);
+        color: var(--c-primary);
     }
 
     /* ── Multi-Select Panitia ── */
@@ -529,9 +533,9 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: var(--c-primary-border);
-        color: var(--c-primary-hover);
-        border: none;
+        background: var(--c-error-subtle);
+        color: var(--c-error);
+        border: 1px solid transparent;
         font-size: 11px;
         cursor: pointer;
         display: inline-flex;

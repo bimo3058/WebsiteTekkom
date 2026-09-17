@@ -339,9 +339,9 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: var(--c-error);
-        color: var(--c-surface);
-        border: none;
+        background: var(--c-error-subtle);
+        color: var(--c-error);
+        border: 1px solid transparent;
         font-size: 12px;
         cursor: pointer;
         display: flex;
@@ -352,6 +352,7 @@
     }
     .file-preview-item .btn-remove-file:hover {
         background: var(--c-error);
+        color: var(--c-surface);
         transform: scale(1.1);
     }
     .doc-preview-item {
@@ -391,7 +392,7 @@
         border-radius: 50%;
         background: var(--c-error-subtle);
         color: var(--c-error);
-        border: none;
+        border: 1px solid transparent;
         font-size: 13px;
         cursor: pointer;
         display: flex;
@@ -413,9 +414,11 @@
         margin-bottom: 24px;
     }
     .btn-back {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 8px;
         background: var(--c-surface);
         border: 1px solid var(--c-border);
         display: flex;
@@ -423,15 +426,15 @@
         justify-content: center;
         text-decoration: none;
         color: var(--c-fg-sec);
-        font-size: 18px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
         transition: all 0.2s;
         flex-shrink: 0;
     }
     .btn-back:hover {
-        background: var(--c-surface-muted);
-        border-color: var(--c-border-strong);
+        background: var(--c-bg);
+        border-color: var(--c-border);
         color: var(--c-fg);
+        transform: none;
     }
 
     /* ── Buttons ── */
@@ -440,7 +443,8 @@
         color: var(--c-surface);
         font-weight: 600;
         font-size: 14px;
-        padding: 12px 28px;
+        min-height: 40px;
+        padding: 0 18px;
         border-radius: 10px;
         border: none;
         cursor: pointer;
@@ -452,20 +456,22 @@
         box-shadow: 0 4px 12px var(--c-primary-shadow-strong);
     }
     .btn-cancel {
-        background: var(--c-surface-muted);
+        background: var(--c-surface);
         color: var(--c-fg-sec);
         font-weight: 600;
         font-size: 14px;
-        padding: 12px 28px;
+        min-height: 40px;
+        padding: 0 18px;
         border-radius: 10px;
-        border: none;
+        border: 1px solid var(--c-border);
         cursor: pointer;
         text-decoration: none;
         transition: all 0.2s;
     }
     .btn-cancel:hover {
-        background: var(--c-border);
-        color: var(--c-fg);
+        background: var(--c-primary-subtle);
+        border-color: var(--c-primary);
+        color: var(--c-primary);
     }
 
     /* ── Multi-Select Panitia ── */
@@ -510,9 +516,9 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: var(--c-primary-border);
-        color: var(--c-primary-hover);
-        border: none;
+        background: var(--c-error-subtle);
+        color: var(--c-error);
+        border: 1px solid transparent;
         font-size: 11px;
         cursor: pointer;
         display: inline-flex;
@@ -616,8 +622,8 @@
 
 <!-- Header -->
 <div class="detail-header">
-    <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back">
-        &larr;
+    <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-back" aria-label="Kembali">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
     </a>
     <div>
         <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Tambah Kegiatan Baru</h3>
@@ -916,8 +922,8 @@
 
     <!-- Action Buttons -->
     <div class="d-flex gap-3 justify-content-end mt-2">
-        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-cancel">Batal</a>
-        <button type="submit" class="btn-submit">
+        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-cancel mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--form">Batal</a>
+        <button type="submit" class="btn-submit mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Simpan Kegiatan
         </button>
     </div>
@@ -1044,7 +1050,7 @@ function renderFotoPreviews() {
         const reader = new FileReader();
         reader.onload = function(e) {
             item.innerHTML = `
-                <button type="button" class="btn-remove-file" onclick="removeFoto(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <button type="button" class="btn-remove-file mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeFoto(${i})" title="Hapus foto" aria-label="Hapus foto ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 <img src="${e.target.result}" alt="${file.name}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                 <div class="file-info">${file.name}<br><span class="file-size">${formatFileSize(file.size)}</span></div>
             `;
@@ -1094,7 +1100,7 @@ function renderDokumenPreviews() {
                 <div class="doc-name">${file.name}</div>
                 <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
             </div>
-            <button type="button" class="btn-remove-doc" onclick="removeDokumen(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="btn-remove-doc mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         list.appendChild(item);
     });
@@ -1228,7 +1234,7 @@ function renderPanitiaChips() {
         chip.className = 'panitia-chip';
         chip.innerHTML = `
             ${name}
-            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="panitia-chip-remove mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removePanitia('${id}')" title="Hapus panitia" aria-label="Hapus panitia ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         container.insertBefore(chip, searchInput);
     });
@@ -1363,7 +1369,7 @@ function renderDosenChips() {
         chip.className = 'panitia-chip';
         chip.innerHTML = `
             ${name}
-            <button type="button" class="panitia-chip-remove" onclick="removeDosen('${id}')" title="Hapus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="panitia-chip-remove mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeDosen('${id}')" title="Hapus dosen" aria-label="Hapus dosen ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         container.insertBefore(chip, searchInput);
     });

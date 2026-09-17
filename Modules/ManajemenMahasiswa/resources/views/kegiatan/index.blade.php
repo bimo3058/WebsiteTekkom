@@ -216,8 +216,7 @@
 
     @if($canTambahKegiatan)
         <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
-           class="btn d-flex align-items-center gap-2"
-           style="background:var(--c-primary);color:var(--c-surface);font-weight:600;font-size:13px;padding:9px 18px;border-radius:10px;white-space:nowrap;">
+           class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Tambah Kegiatan
         </a>
@@ -226,18 +225,18 @@
 
 <!-- Search & Filter Area (matching forum layout) -->
 <form method="GET" action="{{ route('manajemenmahasiswa.kegiatan.index') }}" id="filterForm">
-    <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
-        <div class="search-wrapper w-100 me-0 me-md-2">
-            <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
-            <input type="text" name="search" class="form-control search-input w-100"
+    <div class="mk-kegiatan-filter-row">
+        <div class="mk-kegiatan-search w-100">
+            <span class="mk-kegiatan-search__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+            <input type="text" name="search" class="mk-kegiatan-search__input"
                    placeholder="Cari judul atau deskripsi kegiatan..." value="{{ request('search') }}">
         </div>
 
-        <div class="d-flex gap-3">
+        <div class="mk-kegiatan-filter-controls">
             {{-- Filter kategori: badge kategori tampil di tiap kartu, jadi user wajar
                  mencari cara menyaringnya. Sebelumnya daftar kategori dikirim ke
                  halaman ini tapi tidak pernah dirender maupun dipakai menyaring. --}}
-            <select name="kategori" class="form-select border-1 filter-select-custom"
+            <select name="kategori" class="mk-kegiatan-filter-select"
                     style="min-width: 180px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Kategori</option>
                 @foreach($kategoriList as $kat)
@@ -247,7 +246,7 @@
                 @endforeach
             </select>
 
-            <select name="tahun" class="form-select border-1 filter-select-custom"
+            <select name="tahun" class="mk-kegiatan-filter-select"
                     style="min-width: 160px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Tahun</option>
                 @foreach($tahunList as $t)
@@ -273,19 +272,18 @@
     <input type="hidden" name="bidang" value="{{ request('bidang') }}">
 
     <!-- Bidang Filter Chips -->
-    <div class="filter-section">
+    <div class="mk-kegiatan-filter-bar">
         <a href="{{ route('manajemenmahasiswa.kegiatan.index', request()->except(['bidang', 'page'])) }}"
-           class="filter-chip {{ !request('bidang') || request('bidang') == 'semua' ? 'active' : '' }}">
+           class="mk-kegiatan-filter-chip {{ !request('bidang') || request('bidang') == 'semua' ? 'active' : '' }}">
             Semua
         </a>
         <a href="{{ route('manajemenmahasiswa.kegiatan.index', array_merge(request()->except('page'), ['bidang' => 'prodi'])) }}"
-           class="filter-chip {{ request('bidang') == 'prodi' ? 'active' : '' }}"
-           style="{{ request('bidang') == 'prodi' ? 'background: var(--c-primary); border-color: var(--c-primary);' : '' }}">
+           class="mk-kegiatan-filter-chip {{ request('bidang') == 'prodi' ? 'active' : '' }}">
             Prodi
         </a>
         @foreach($bidangList as $bidang)
             <a href="{{ route('manajemenmahasiswa.kegiatan.index', array_merge(request()->except('page'), ['bidang' => $bidang->id])) }}"
-               class="filter-chip {{ request('bidang') == $bidang->id ? 'active' : '' }}">
+               class="mk-kegiatan-filter-chip {{ request('bidang') == $bidang->id ? 'active' : '' }}">
                 {{ $bidang->nama_bidang }}
             </a>
         @endforeach
@@ -303,7 +301,7 @@
                         @if($item->banner)
                             <img src="{{ $item->banner_url }}" alt="{{ $item->judul }}">
                         @else
-                            <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
+                            <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary-border)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1 2-2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
                         @endif
                     </div>
 
@@ -353,9 +351,7 @@
 
     <!-- Pagination -->
     @if($kegiatan->hasPages())
-        <div class="mt-4 d-flex justify-content-center">
-            {{ $kegiatan->withQueryString()->links() }}
-        </div>
+        @include('manajemenmahasiswa::partials.kegiatan-pagination', ['paginator' => $kegiatan])
     @endif
 @else
     <div class="empty-state">
