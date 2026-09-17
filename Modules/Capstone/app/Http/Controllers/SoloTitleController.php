@@ -291,9 +291,10 @@ class SoloTitleController extends Controller
         // 5. Execute merge
         DB::beginTransaction();
         try {
-            // Move all members from bidder group to solo group
+            // Move all members from bidder group to solo group.
+            // Hard rule: the title owner remains the sole leader.
             foreach ($bidderGroup->members as $member) {
-                $member->update(['group_id' => $soloGroup->id]);
+                $member->update(['group_id' => $soloGroup->id, 'is_leader' => false]);
             }
 
             // Update solo group - no longer solo; status follows member count
