@@ -30,7 +30,7 @@
         <!-- Add Modal Alpine Component -->
         <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 
                 <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -116,10 +116,11 @@
                                                 open: false,
                                                 get selectedName() {
                                                     const map = {
-                                                        'Event / Kegiatan': 'Event / Kegiatan Mahasiswa',
-                                                        'Rapat Internal': 'Rapat Internal Dosen',
+                                                        'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                        'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                        'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                        'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
                                                         'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                        'Maintenance / Perbaikan': 'Maintenance / Perbaikan',
                                                         'Lainnya': 'Lainnya...'
                                                     };
                                                     return map[kategoriType] || 'Pilih Kategori...';
@@ -141,12 +142,13 @@
                                             </button>
                                             
                                             <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-hidden" style="display: none;">
+                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto" style="display: none;">
                                                 <div class="p-1">
-                                                    <button type="button" @click="selectItem('Event / Kegiatan')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Event / Kegiatan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Event / Kegiatan'}">Event / Kegiatan Mahasiswa</button>
-                                                    <button type="button" @click="selectItem('Rapat Internal')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Rapat Internal', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Rapat Internal'}">Rapat Internal Dosen</button>
+                                                    <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                                    <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                                    <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                                    <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
                                                     <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
-                                                    <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan</button>
                                                     <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
                                                 </div>
                                             </div>
@@ -253,10 +255,11 @@
                             selectedVal: '{{ request('kategori') }}', 
                             get selectedName() {
                                 const map = {
-                                    'Event / Kegiatan': 'Event / Kegiatan Mahasiswa',
-                                    'Rapat Internal': 'Rapat Internal Dosen',
+                                    'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                    'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                    'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                    'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
                                     'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                    'Maintenance / Perbaikan': 'Maintenance / Perbaikan',
                                     'Lainnya': 'Lainnya...'
                                 };
                                 return map[this.selectedVal] || 'Semua Kategori';
@@ -282,10 +285,11 @@
                             class="absolute right-0 top-full mt-1 w-[220px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
                             <div class="p-1">
                                 <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-slate-700 hover:bg-slate-50': selectedVal != ''}">Semua Kategori</button>
-                                <button type="button" @click="selectItem('Event / Kegiatan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Event / Kegiatan', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Event / Kegiatan'}">Event / Kegiatan Mahasiswa</button>
-                                <button type="button" @click="selectItem('Rapat Internal')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Rapat Internal', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Rapat Internal'}">Rapat Internal Dosen</button>
+                                <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Pindah Kelas', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Maintenance / Perbaikan', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Sterilisasi Ruangan', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Penutupan Khusus', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
                                 <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Ujian / Evaluasi', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
-                                <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Maintenance / Perbaikan', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan</button>
                                 <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Lainnya', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Lainnya'}">Lainnya...</button>
                             </div>
                         </div>
@@ -532,10 +536,11 @@
                                                                         open: false,
                                                                         get selectedName() {
                                                                             const map = {
-                                                                                'Event / Kegiatan': 'Event / Kegiatan Mahasiswa',
-                                                                                'Rapat Internal': 'Rapat Internal Dosen',
+                                                                                'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                                                'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                                                'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                                                'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
                                                                                 'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                                                'Maintenance / Perbaikan': 'Maintenance / Perbaikan',
                                                                                 'Lainnya': 'Lainnya...'
                                                                             };
                                                                             return map[kategoriType] || 'Pilih Kategori...';
@@ -557,12 +562,13 @@
                                                                     </button>
                                                                     
                                                                     <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                                                        class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] overflow-hidden" style="display: none;">
+                                                                        class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto" style="display: none;">
                                                                         <div class="p-1 flex flex-col">
-                                                                            <button type="button" @click="selectItem('Event / Kegiatan')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Event / Kegiatan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Event / Kegiatan'}">Event / Kegiatan Mahasiswa</button>
-                                                                            <button type="button" @click="selectItem('Rapat Internal')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Rapat Internal', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Rapat Internal'}">Rapat Internal Dosen</button>
+                                                                            <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                                                            <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                                                            <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                                                            <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
                                                                             <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
-                                                                            <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan</button>
                                                                             <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
                                                                         </div>
                                                                     </div>

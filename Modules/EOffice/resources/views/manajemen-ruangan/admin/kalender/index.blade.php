@@ -56,9 +56,20 @@
                 $selesai += 1;
             }
 
-            $bg = $j->tipe_jadwal === 'rutin' ? '#DBEAFE' : '#FEE2E2';
-            $border = $j->tipe_jadwal === 'rutin' ? '#60A5FA' : '#FCA5A5';
-            $text = $j->tipe_jadwal === 'rutin' ? '#1E40AF' : '#991B1B';
+            $tipeKategori = $j->kategori ?? '';
+            if ($j->tipe_jadwal === 'rutin' || $tipeKategori === 'Jadwal Akademik (Kuliah)' || $tipeKategori === 'Pindah Kelas' || $tipeKategori === 'Pindah / Pengganti Kelas') {
+                $bg = '#DBEAFE';
+                $border = '#60A5FA';
+                $text = '#1E40AF';
+            } elseif ($tipeKategori === 'Ujian / Evaluasi (UTS/UAS)' || $tipeKategori === 'Lainnya...') {
+                $bg = '#EDE9FE';
+                $border = '#C4B5FD';
+                $text = '#5B21B6';
+            } else {
+                $bg = '#FEE2E2';
+                $border = '#F87171';
+                $text = '#991B1B';
+            }
             $eventName = $j->mata_kuliah ? trim($j->mata_kuliah . ' ' . $j->kelas) : ($j->keterangan ?: $j->kategori);
             $payload = [
                 'id' => 'it_' . $j->id,
@@ -66,7 +77,7 @@
                 'pengguna' => 'Admin Sistem',
                 'tujuan' => $eventName,
                 'waktu' => substr($j->jam_mulai, 0, 5) . ' - ' . substr($j->jam_selesai, 0, 5),
-                'type' => $j->tipe_jadwal === 'rutin' ? 'Jadwal Mingguan' : 'Agenda Internal',
+                'type' => $j->tipe_jadwal === 'rutin' ? 'Jadwal Akademik (Kuliah)' : ($j->kategori ?? 'Agenda Internal'),
                 'telepon' => '-',
                 'label' => $eventName,
                 'bg' => $bg,
@@ -922,10 +933,11 @@
                                             open: false,
                                             get selectedName() {
                                                 const map = {
-                                                    'Event / Kegiatan': 'Event / Kegiatan Mahasiswa',
-                                                    'Rapat Internal': 'Rapat Internal Dosen',
+                                                    'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                    'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                    'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                    'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
                                                     'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                    'Maintenance / Perbaikan': 'Maintenance / Perbaikan',
                                                     'Lainnya': 'Lainnya...'
                                                 };
                                                 return map[kategoriType] || 'Pilih Kategori...';
@@ -961,22 +973,26 @@
                                             class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-y-auto max-h-48"
                                             style="display: none;">
                                             <div class="p-1">
-                                                <button type="button" @click="selectItem('Event / Kegiatan')"
+                                                <button type="button" @click="selectItem('Pindah Kelas')"
                                                     class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Event / Kegiatan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Event / Kegiatan'}">Event
-                                                    / Kegiatan Mahasiswa</button>
-                                                <button type="button" @click="selectItem('Rapat Internal')"
+                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah
+                                                    / Pengganti Kelas</button>
+                                                <button type="button" @click="selectItem('Maintenance / Perbaikan')"
                                                     class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Rapat Internal', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Rapat Internal'}">Rapat
-                                                    Internal Dosen</button>
+                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance
+                                                    / Perbaikan Ruangan</button>
+                                                <button type="button" @click="selectItem('Sterilisasi Ruangan')"
+                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi
+                                                    / Persiapan Ruangan</button>
+                                                <button type="button" @click="selectItem('Penutupan Khusus')"
+                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan
+                                                    Khusus / Libur Nasional</button>
                                                 <button type="button" @click="selectItem('Ujian / Evaluasi')"
                                                     class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
                                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian
                                                     / Evaluasi (UTS/UAS)</button>
-                                                <button type="button" @click="selectItem('Maintenance / Perbaikan')"
-                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance
-                                                    / Perbaikan</button>
                                                 <button type="button" @click="selectItem('Lainnya')"
                                                     class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
                                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>

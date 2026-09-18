@@ -46,6 +46,7 @@
                     $slotMap[$tgl][$j->ruangan_id][$h] = [
                         'id' => 'it_' . $j->id,
                         'status' => 'internal',
+                        'type' => $j->kategori ?? 'Agenda Internal',
                         'tujuan' => $j->keterangan ?? ''
                     ];
                 }
@@ -63,6 +64,7 @@
                             $slotMap[$tgl][$j->ruangan_id][$h] = [
                                 'id' => 'it_' . $j->id,
                                 'status' => 'internal',
+                                'type' => $j->kategori ?? 'Jadwal Akademik (Kuliah)',
                                 'tujuan' => $j->keterangan ?? ''
                             ];
                         }
@@ -296,6 +298,7 @@
                             $slotStatus = $slotData['status'];
                             $tujuan = $slotData['tujuan'];
                             $pengguna = $slotData['pengguna'] ?? '';
+                            $type = $slotData['type'] ?? '';
                             $id = $slotData['id'] ?? null;
 
                             $isPastDay = $day->isPast() && !$day->isToday();
@@ -324,7 +327,7 @@
                             else
                                 $fKey = 'tersedia';
 
-                            $hourStatuses[$jam] = ['st' => $fKey, 'tujuan' => $tujuan, 'id' => $id, 'pengguna' => $pengguna];
+                            $hourStatuses[$jam] = ['st' => $fKey, 'tujuan' => $tujuan, 'id' => $id, 'pengguna' => $pengguna, 'type' => $type];
                         }
                         $skipCount = 0;
                         foreach ($jamList as $hIndex => $jam) {
@@ -354,7 +357,11 @@
                                     }
                                 }
                             }
-                            $cellMatrix[$dateStr][$rId][$jam] = ['skip' => false, 'rowspan' => $rowspan];
+                            $cellMatrix[$dateStr][$rId][$jam] = [
+                                'skip' => false, 
+                                'rowspan' => $rowspan,
+                                'type' => $stObj['type'] ?? ''
+                            ];
                             $skipCount = $rowspan - 1;
                         }
                     }
@@ -474,8 +481,17 @@
                                                     $tanggalDisplay = $day->translatedFormat('l, d M Y');
                                                     $onClick = "openDetailModal('Terpakai', '-', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'terpakai', '')";
                                                 } elseif ($slotStatus === 'internal') {
-                                                    $bg = '#DBEAFE';
-                                                    $border = '#60A5FA';
+                                                    $tipeKategori = $cData['type'] ?? '';
+                                                    if ($tipeKategori === 'Jadwal Akademik (Kuliah)' || $tipeKategori === 'Pindah Kelas' || $tipeKategori === 'Pindah / Pengganti Kelas') {
+                                                        $bg = '#DBEAFE';
+                                                        $border = '#60A5FA';
+                                                    } elseif ($tipeKategori === 'Ujian / Evaluasi (UTS/UAS)' || $tipeKategori === 'Lainnya...') {
+                                                        $bg = '#EDE9FE';
+                                                        $border = '#C4B5FD';
+                                                    } else {
+                                                        $bg = '#FEE2E2';
+                                                        $border = '#F87171';
+                                                    }
                                                     $label = $cleanTujuan;
                                                     $cursor = 'pointer';
                                                     $href = null;
@@ -483,16 +499,19 @@
                                                     $jamDisplay = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00 - ' . str_pad($jam + $cData['rowspan'], 2, '0', STR_PAD_LEFT) . ':00';
                                                     $tanggalDisplay = $day->translatedFormat('l, d M Y');
 
-                                                    // Parse Kelas if present (e.g. "Sistem Basis Data-A")
-                                                    $matkul = $label;
-                                                    $kelas = '-';
-                                                    if (strpos($label, '-') !== false) {
-                                                        $parts = explode('-', $label);
-                                                        $kelas = trim(array_pop($parts));
-                                                        $matkul = trim(implode('-', $parts));
+                                                    if ($tipeKategori === 'Jadwal Akademik (Kuliah)' || $tipeKategori === 'Pindah Kelas' || $tipeKategori === 'Pindah / Pengganti Kelas') {
+                                                        // Parse Kelas if present (e.g. "Sistem Basis Data-A")
+                                                        $matkul = $label;
+                                                        $kelas = '-';
+                                                        if (strpos($label, '-') !== false) {
+                                                            $parts = explode('-', $label);
+                                                            $kelas = trim(array_pop($parts));
+                                                            $matkul = trim(implode('-', $parts));
+                                                        }
+                                                        $onClick = "openDetailModal('" . addslashes($matkul) . "', '" . addslashes($kelas) . "', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'internal', '')";
+                                                    } else {
+                                                        $onClick = "openDetailModal('" . addslashes($label) . "', '-', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'internal', '')";
                                                     }
-
-                                                    $onClick = "openDetailModal('" . addslashes($matkul) . "', '" . addslashes($kelas) . "', '{$roomName}', '{$tanggalDisplay}', '{$jamDisplay}', 'internal', '')";
                                                 } elseif ($slotStatus === 'menunggu' && $isOwnBooking) {
                                                     // Booking milik user sendiri: kuning, detail lengkap
                                                     $bg = '#FEF9C3';
@@ -557,8 +576,15 @@
                                                             $tColor = '#9CA3AF';
                                                         elseif ($slotStatus === 'disetujui')
                                                             $tColor = '#5B21B6';
-                                                        elseif ($slotStatus === 'internal')
-                                                            $tColor = '#1E40AF';
+                                                        elseif ($slotStatus === 'internal') {
+                                                            if ($tipeKategori === 'Jadwal Akademik (Kuliah)' || $tipeKategori === 'Pindah Kelas' || $tipeKategori === 'Pindah / Pengganti Kelas') {
+                                                                $tColor = '#1E40AF';
+                                                            } elseif ($tipeKategori === 'Ujian / Evaluasi (UTS/UAS)' || $tipeKategori === 'Lainnya...') {
+                                                                $tColor = '#5B21B6';
+                                                            } else {
+                                                                $tColor = '#991B1B';
+                                                            }
+                                                        }
                                                         elseif ($slotStatus === 'menunggu')
                                                             $tColor = '#B45309';
                                                         else
