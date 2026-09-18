@@ -39,6 +39,16 @@
             }
             .btn-back:hover { background: #E7E8F0; color: #374151; border-color: #293C79; }
 
+            .detail-back {
+                width: auto; min-width: 0; height: 32px; padding: 0 12px; gap: 8px;
+                display: inline-flex; align-items: center; justify-content: center;
+                border-radius: 8px; background: #fff; border: 1px solid #DFE1E7;
+                color: #353849; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                text-decoration: none; transition: all .2s;
+            }
+            .detail-back:hover { background: #F6F8FA; color: #0D0D12; }
+            .detail-back-label { color: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; }
+
             /* ── Form Controls ── */
             .form-control-custom, .form-select-custom {
                 background-color: #f9fafb; border: 1px solid #DDE1E8;
@@ -82,14 +92,15 @@
     @endphp
 
     {{-- ── Header ── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
+            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+            <span class="detail-back-label">Kembali</span>
+        </a>
         <div class="page-title">
             <h4>Buat Pengaduan</h4>
             <p>Isi form di bawah ini dengan detail yang jelas dan valid.</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">
-            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" /> Kembali
-        </a>
     </div>
 
     {{-- Jalur Indicator Banner --}}

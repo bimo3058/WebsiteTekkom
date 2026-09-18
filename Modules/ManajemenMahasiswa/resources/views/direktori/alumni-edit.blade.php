@@ -97,9 +97,9 @@
 
 <!-- Back Button -->
 <div class="mb-3">
-    <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="btn-back" style="font-size: 12px; padding: 6px 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        Batal
+    <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="detail-back" title="Kembali" aria-label="Kembali">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        <span class="detail-back-label">Kembali</span>
     </a>
 </div>
 
@@ -150,21 +150,17 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             Informasi Akademik
         </div>
+        {{-- NIM dan Angkatan dikunci dengan `disabled` (bukan sekadar `readonly`) agar
+             benar-benar tidak ikut terkirim saat form disimpan. Sisi server juga sudah
+             berhenti menerima kedua field ini. --}}
         <div class="row g-3 mb-4">
             <div class="col-md-6">
                 <label class="form-label">NIM</label>
-                <input type="text" name="nim" class="form-control @error('nim') is-invalid @enderror" value="{{ old('nim', $alumni->nim) }}" required>
-                @error('nim') <div class="invalid-feedback">{{ $message }}</div> @enderror
-            </div>
-            <div class="col-md-6">
-                <label class="form-label">Program Studi</label>
-                <input type="text" name="program_studi" class="form-control @error('program_studi') is-invalid @enderror" value="{{ old('program_studi', $alumni->program_studi) }}">
-                @error('program_studi') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <input type="text" class="form-control" value="{{ $alumni->nim }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Angkatan</label>
-                <input type="number" name="angkatan" class="form-control @error('angkatan') is-invalid @enderror" value="{{ old('angkatan', $alumni->angkatan) }}" required min="2000" max="2099">
-                @error('angkatan') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <input type="number" class="form-control" value="{{ $alumni->angkatan }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
             </div>
             <div class="col-md-6">
                 <label class="form-label">Tahun Lulus</label>

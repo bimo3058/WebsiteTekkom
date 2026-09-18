@@ -4,15 +4,17 @@
             <div class="py-6" x-data="cvWizard()">
                 <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div class="mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                        <a href="{{ route('profile.edit') }}"
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
+                            style="border-color: var(--c-border);" title="Kembali" aria-label="Kembali ke Profil">
+                            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                        </a>
                         <div>
                             <h2 class="page-title" style="font-size: 1.5rem;">CV Builder</h2>
                             <p class="page-subtitle">Lengkapi data Anda untuk menghasilkan CV profesional.</p>
                         </div>
-                        <a href="{{ route('profile.edit') }}"
-                            class="btn-secondary text-sm">
-                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                            Kembali ke Profil
-                        </a>
+                        </div>
                     </div>
 
                     <!-- Stepper Header -->

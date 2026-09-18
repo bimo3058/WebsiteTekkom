@@ -27,7 +27,7 @@
 
     /* Status */
     .status-badge { display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700; }
-    .status-disetujui { background:var(--c-success-subtle);color:var(--c-success); }
+    .status-disetujui { background:var(--c-primary-subtle);color:var(--c-primary); }
     .status-berlangsung { background:var(--c-sky-subtle);color:var(--c-sky); }
     .status-selesai { background:var(--c-surface-muted);color:var(--c-fg-sec); }
     .empty-state { text-align:center;padding:50px 20px;color:var(--c-fg-muted); }
@@ -50,14 +50,14 @@
 
 {{-- Filter --}}
 <form method="GET" action="{{ route('manajemenmahasiswa.pelaksanaan.index') }}" id="filterForm">
-    <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
-        <div class="search-wrapper w-100 me-0 me-md-2">
-            <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <input type="text" name="search" class="form-control search-input"
+    <div class="mk-kegiatan-filter-row">
+        <div class="mk-kegiatan-search w-100">
+            <span class="mk-kegiatan-search__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <input type="text" name="search" class="mk-kegiatan-search__input"
                    placeholder="Cari judul atau deskripsi kegiatan..." value="{{ request('search') }}">
         </div>
-        <div class="d-flex gap-2">
-            <select name="tahun" class="filter-select-custom" style="min-width:170px;" onchange="document.getElementById('filterForm').submit()">
+        <div class="mk-kegiatan-filter-controls">
+            <select name="tahun" class="mk-kegiatan-filter-select" style="min-width:170px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Tahun</option>
                 @foreach($tahunList as $t)
                     <option value="{{ $t }}" {{ request('tahun')==$t?'selected':'' }}>{{ $t }}</option>
@@ -74,15 +74,14 @@
             </select>
         </div>
     </div>
-    <div class="filter-section">
+    <div class="mk-kegiatan-filter-bar">
         <a href="{{ route('manajemenmahasiswa.pelaksanaan.index', request()->except(['bidang','page'])) }}"
-           class="filter-chip {{ !request('bidang')||request('bidang')==='semua'?'active':'' }}">Semua</a>
+           class="mk-kegiatan-filter-chip {{ !request('bidang')||request('bidang')==='semua'?'active':'' }}">Semua</a>
         <a href="{{ route('manajemenmahasiswa.pelaksanaan.index', array_merge(request()->except('page'),['bidang'=>'prodi'])) }}"
-           class="filter-chip {{ request('bidang')==='prodi'?'active':'' }}"
-           style="{{ request('bidang')==='prodi'?'background:var(--c-primary);border-color:var(--c-primary);':'' }}">Prodi</a>
+           class="mk-kegiatan-filter-chip {{ request('bidang')==='prodi'?'active':'' }}">Prodi</a>
         @foreach($bidangList as $bidang)
             <a href="{{ route('manajemenmahasiswa.pelaksanaan.index', array_merge(request()->except('page'),['bidang'=>$bidang->id])) }}"
-               class="filter-chip {{ request('bidang')==$bidang->id?'active':'' }}">{{ $bidang->nama_bidang }}</a>
+               class="mk-kegiatan-filter-chip {{ request('bidang')==$bidang->id?'active':'' }}">{{ $bidang->nama_bidang }}</a>
         @endforeach
     </div>
 </form>
@@ -126,15 +125,14 @@
         @endforeach
     </div>
     @if($pelaksanaanList->hasPages())
-        <div class="mt-4 d-flex justify-content-center">{{ $pelaksanaanList->withQueryString()->links() }}</div>
+        @include('manajemenmahasiswa::partials.kegiatan-pagination', ['paginator' => $pelaksanaanList])
     @endif
 @else
     <div class="empty-state">
         <div style="font-size:48px;margin-bottom:12px;opacity:0.5;">&#127939;</div>
         <h5>Belum ada proker yang siap dilaksanakan</h5>
         <p>Proker yang sudah disetujui admin akan muncul di sini</p>
-        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn mt-2"
-           style="background:var(--c-primary);color:var(--c-surface);border-radius:8px;font-weight:600;font-size:14px;">
+        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form mt-2">
             Lihat Rencana Proker
         </a>
     </div>

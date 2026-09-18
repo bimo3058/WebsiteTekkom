@@ -36,6 +36,16 @@
             }
             .btn-back:hover { background: #E7E8F0; color: #374151; border-color: #293C79; }
 
+            .detail-back {
+                width: auto; min-width: 0; height: 32px; padding: 0 12px; gap: 8px;
+                display: inline-flex; align-items: center; justify-content: center;
+                border-radius: 8px; background: #fff; border: 1px solid #DFE1E7;
+                color: #353849; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                text-decoration: none; transition: all .2s;
+            }
+            .detail-back:hover { background: #F6F8FA; color: #0D0D12; }
+            .detail-back-label { color: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; }
+
             /* ── Tags (Forum pattern) ── */
             .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
             .tag-label {
@@ -100,14 +110,15 @@
     @endphp
 
     {{-- ── Header ── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{{ $backUrl }}" class="detail-back" title="Kembali" aria-label="Ubah Pengaduan">
+            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+            <span class="detail-back-label">Kembali</span>
+        </a>
         <div class="page-title">
             <h4>Konfirmasi Pengaduan</h4>
             <p>Periksa kembali data sebelum dikirim.</p>
         </div>
-        <a href="{{ $backUrl }}" class="btn-back">
-            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" /> Ubah
-        </a>
     </div>
 
     <div class="alert border-0" style="background-color: #fef3c7; color: #92400e; border-radius: 12px; font-weight: 600; font-size: 14px;">
@@ -195,7 +206,10 @@
             @endforeach
 
             <div class="d-flex justify-content-end gap-3 mt-3 pt-3" style="border-top: 1px solid #f3f4f6;">
-                <a href="{{ $backUrl }}" class="btn-back">Kembali</a>
+                <a href="{{ $backUrl }}" class="detail-back" title="Kembali" aria-label="Kembali">
+                    <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+                    <span class="detail-back-label">Kembali</span>
+                </a>
                 <button type="submit" class="btn-post">
                     <x-manajemenmahasiswa::ui.icon name="check" size="16" /> Kirim Pengaduan
                 </button>

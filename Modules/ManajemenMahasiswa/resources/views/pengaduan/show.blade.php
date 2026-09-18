@@ -18,6 +18,16 @@
             }
             .btn-back:hover { background: #f3f4f6; color: #111827; }
 
+            .detail-back {
+                width: auto; min-width: 0; height: 32px; padding: 0 12px; gap: 8px;
+                display: inline-flex; align-items: center; justify-content: center;
+                border-radius: 8px; background: #fff; border: 1px solid #DFE1E7;
+                color: #353849; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                text-decoration: none; transition: all .2s;
+            }
+            .detail-back:hover { background: #F6F8FA; color: #0D0D12; }
+            .detail-back-label { color: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; }
+
             /* ── Base Card ────────────────────────────────────────── */
             .detail-card {
                 background: #ffffff; border-radius: 12px; padding: 24px 28px;
@@ -217,9 +227,9 @@
         {{-- ── Header ─────────────────────────────────────── --}}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div class="d-flex align-items-center gap-3">
-                <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-back">
+                <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="detail-back" title="Kembali" aria-label="Kembali">
                     <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
-                    Kembali
+                    <span class="detail-back-label">Kembali</span>
                 </a>
                 <span class="badge bg-light text-dark border fw-bold" style="font-family: monospace; font-size: 13px; padding: 6px 12px; border-radius: 8px;">
                     #{{ $pengaduan->id }}
@@ -316,9 +326,9 @@
         {{-- ── Ticket Page Header ─────────────────────────── --}}
         <div class="ticket-page-header">
             <div class="d-flex align-items-center gap-3">
-                <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-back">
+                <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="detail-back" title="Kembali" aria-label="Kembali ke Daftar">
                     <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
-                    Kembali ke Daftar
+                    <span class="detail-back-label">Kembali</span>
                 </a>
                 <span class="badge bg-light text-dark border fw-bold" style="font-family: monospace; font-size: 13px; padding: 6px 12px; border-radius: 8px;">
                     #{{ $pengaduan->id }}

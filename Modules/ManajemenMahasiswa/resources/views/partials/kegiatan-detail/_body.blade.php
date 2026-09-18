@@ -139,7 +139,7 @@
                 </span>
             @endforeach
             @if($panitiaCount > 2)
-                <button type="button" onclick="openPanitiaModal()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:var(--c-surface-muted);color:var(--c-fg-muted);border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--c-border);cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='var(--c-primary-subtle)';this.style.color='var(--c-primary-hover)';this.style.borderColor='var(--c-primary-border)'" onmouseout="this.style.background='var(--c-surface-muted)';this.style.color='var(--c-fg-muted)';this.style.borderColor='var(--c-border)'">
+                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--pill" onclick="openPanitiaModal()">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     {{ $panitiaCount - 2 }} lainnya
                 </button>
@@ -158,7 +158,7 @@
                     </div>
                     <div style="font-size:12px;color:var(--c-fg-muted);margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
                 </div>
-                <button type="button" onclick="closePanitiaModal()" style="width:32px;height:32px;border-radius:50%;background:var(--c-surface-muted);border:none;color:var(--c-fg-muted);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='var(--c-error-subtle)';this.style.color='var(--c-error)'" onmouseout="this.style.background='var(--c-surface-muted)';this.style.color='var(--c-fg-muted)'">&times;</button>
+                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="closePanitiaModal()" aria-label="Tutup daftar panitia">&times;</button>
             </div>
             <div style="overflow-y:auto;padding:16px 24px 24px;flex:1;">
                 <div style="display:flex;flex-direction:column;gap:10px;">

@@ -27,8 +27,8 @@
 <!-- Header with back button -->
 <div class="d-flex justify-content-between align-items-start">
     <div class="detail-header">
-        <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}" class="btn-back">
-            &larr;
+        <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-back" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
         </a>
         <div>
             <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Detail Pelaksanaan Kegiatan</h3>
@@ -39,8 +39,7 @@
     <div class="d-flex gap-2">
         @if($canManage && $proker->status !== 'selesai')
             <a href="{{ route('manajemenmahasiswa.pelaksanaan.edit', $proker->id) }}"
-               class="btn d-flex align-items-center gap-2"
-               style="background: var(--c-primary); color: var(--c-surface); font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
+               class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -49,8 +48,7 @@
             </a>
         @endif
         @if($canDelete && $proker->status !== 'selesai')
-            <button type="button" class="btn d-flex align-items-center gap-2"
-                    style="background: var(--c-error-subtle); color: var(--c-error); font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; border: none;"
+            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--compact d-flex align-items-center gap-2"
                     onclick="document.getElementById('deleteModal').style.display='flex'">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -62,16 +60,14 @@
         @if($proker->status !== 'selesai')
             @if($canArsip)
                 @if($proker->is_pelaksanaan_updated && $proker->banner)
-                    <button type="button" class="btn"
-                            onclick="document.getElementById('arsipModal').style.display='flex'"
-                            style="background:linear-gradient(135deg,var(--c-primary),var(--c-primary));color:var(--c-surface);font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px var(--c-primary-border);">
+                    <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2"
+                            onclick="document.getElementById('arsipModal').style.display='flex'">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         Unggah ke Arsip
                     </button>
                 @else
-                    <button type="button" disabled
-                        title="{{ !$proker->is_pelaksanaan_updated ? 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip' : 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip' }}"
-                        style="background:var(--c-border);color:var(--c-fg-muted);font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:not-allowed;">
+                    <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--disabled mk-kegiatan-btn--compact d-flex align-items-center gap-2" disabled
+                            title="{{ !$proker->is_pelaksanaan_updated ? 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip' : 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip' }}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         Unggah ke Arsip
                     </button>
@@ -81,7 +77,7 @@
         @endif
         @if($proker->status === 'selesai')
             <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
-               class="btn" style="background:var(--c-primary);color:var(--c-surface);font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;height:38px;display:inline-flex;align-items:center;">
+               class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact">
                 Lihat di Arsip &rarr;
             </a>
         @endif
@@ -111,15 +107,13 @@
             Semua data kegiatan <strong>{{ $proker->judul }}</strong> akan tersinkron ke subbab Laporan &amp; Arsip dan ditandai sebagai <strong>Selesai</strong>.
         </p>
         <div class="d-flex gap-3 justify-content-center">
-            <button type="button"
-                    onclick="document.getElementById('arsipModal').style.display='none'"
-                    style="padding: 10px 24px; border-radius: 10px; border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-fg-sec); font-weight: 600; font-size: 14px; cursor: pointer;">
+            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--modal"
+                    onclick="document.getElementById('arsipModal').style.display='none'">
                 Batal
             </button>
             <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST">
                 @csrf
-                <button type="submit"
-                        style="padding: 10px 24px; border-radius: 10px; border: none; background: var(--c-primary); color: var(--c-surface); font-weight: 600; font-size: 14px; cursor: pointer;">
+                <button type="submit" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--modal">
                     Unggah
                 </button>
             </form>
@@ -145,16 +139,14 @@
             Kegiatan <strong>{{ $proker->judul }}</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
         </p>
         <div class="d-flex gap-3 justify-content-center">
-            <button type="button"
-                    onclick="document.getElementById('deleteModal').style.display='none'"
-                    style="padding: 10px 24px; border-radius: 10px; border: 1px solid var(--c-border); background: var(--c-surface); color: var(--c-fg-sec); font-weight: 600; font-size: 14px; cursor: pointer;">
+            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--modal"
+                    onclick="document.getElementById('deleteModal').style.display='none'">
                 Batal
             </button>
             <form action="{{ route('manajemenmahasiswa.pelaksanaan.destroy', $proker->id) }}" method="POST">
                 @csrf
                 @method('DELETE')
-                <button type="submit"
-                        style="padding: 10px 24px; border-radius: 10px; border: none; background: var(--c-error); color: var(--c-surface); font-weight: 600; font-size: 14px; cursor: pointer;">
+                <button type="submit" class="mk-kegiatan-btn mk-kegiatan-btn--danger-solid mk-kegiatan-btn--modal">
                     Ya, Hapus
                 </button>
             </form>

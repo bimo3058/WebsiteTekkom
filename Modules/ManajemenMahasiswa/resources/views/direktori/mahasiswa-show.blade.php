@@ -3,64 +3,116 @@
 @include('manajemenmahasiswa::direktori.partials.palette')
 
 <style>
-    .profile-header {
-        background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-hover) 100%);
-        border-radius: 16px;
-        padding: 32px;
-        color: white;
-        position: relative;
+    /* ── Card profil: susunan disamakan dengan halaman Detail User di User Management
+       global (superadmin/users/show) — toolbar di atas, avatar kiri, grid label:nilai. ── */
+    .detail-box {
+        background: #fff;
+        border: 1px solid var(--c-border);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         overflow: hidden;
-        margin-bottom: 24px;
+        margin-bottom: 20px;
     }
-    .profile-header::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -20%;
-        width: 300px;
-        height: 300px;
-        background: rgba(255,255,255,0.05);
-        border-radius: 50%;
+    .detail-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--c-border);
     }
-    .profile-avatar {
-        width: 72px;
-        height: 72px;
+    .detail-toolbar-left { display: flex; align-items: center; gap: 16px; }
+    .detail-toolbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
+    .detail-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        color: var(--c-fg-sec);
+        background: #fff;
+        border: 1px solid var(--c-border);
+        border-radius: 8px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.05);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .detail-back:hover { background: var(--c-bg); color: var(--c-fg); }
+    .detail-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: var(--c-fg);
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+    .btn-detail {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        font-size: 11px;
+        font-weight: 700;
+        border-radius: 8px;
+        text-decoration: none !important;
+        transition: all 0.2s;
+    }
+    .btn-detail-outline { color: var(--c-fg-sec); background: #fff; border: 1px solid var(--c-border); }
+    .btn-detail-outline:hover { background: var(--c-bg); color: var(--c-fg); }
+    .btn-detail-solid { color: #fff; background: var(--c-primary); border: 1px solid var(--c-primary); }
+    .btn-detail-solid:hover { background: var(--c-primary-hover); color: #fff; }
+    .detail-profile { padding: 20px; display: flex; gap: 20px; align-items: flex-start; }
+    /* Avatar inisial netral, sama dengan komponen user-avatar global ukuran xl */
+    .detail-avatar {
+        width: 84px;
+        height: 84px;
         border-radius: 50%;
-        background: rgba(255,255,255,0.2);
+        background: #F3F4F6;
+        border: 1.5px solid #E5E7EB;
+        color: #6B7280;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-weight: 800;
         font-size: 28px;
-        color: white;
-        border: 3px solid rgba(255,255,255,0.3);
+        font-weight: 700;
         flex-shrink: 0;
         overflow: hidden;
     }
-    .profile-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .sso-source {
-        font-size: 10px;
+    .detail-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .detail-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+    .detail-name { font-size: 20px; font-weight: 800; color: var(--c-fg); margin: 0; letter-spacing: -0.02em; }
+    .detail-sub { font-size: 14px; font-weight: 500; color: var(--c-fg-muted); margin: 0 0 16px 0; }
+    /* Badge outline berdot; warnanya tetap dari palette status, hanya latar dibuat transparan */
+    .badge-outline {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 5px;
+        padding: 2px 10px !important;
+        border-radius: 99px !important;
+        font-size: 10px !important;
         font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 6px;
-        background: rgba(255,255,255,0.2);
-        color: rgba(255,255,255,0.9);
-        letter-spacing: 0.05em;
+        background: transparent !important;
+        border: 1px solid currentColor;
+        box-shadow: none !important;
     }
-    .sso-tag {
-        font-size: 9px;
-        font-weight: 700;
-        padding: 1px 5px;
-        border-radius: 4px;
-        background: var(--c-primary-subtle);
-        color: var(--c-primary);
-        letter-spacing: 0.03em;
-        margin-left: 6px;
-        vertical-align: middle;
+    .badge-outline .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 40px;
+        max-width: 900px;
+    }
+    .detail-row { display: flex; align-items: center; min-width: 0; }
+    .detail-label { width: 170px; font-size: 13px; color: #94A3B8; flex-shrink: 0; font-weight: 500; }
+    .detail-value { font-size: 13px; font-weight: 600; color: #334155; min-width: 0; overflow-wrap: anywhere; }
+    .detail-value.empty { color: var(--c-fg-placeholder); font-style: italic; font-weight: 400; }
+    @media (max-width: 768px) {
+        .detail-profile { flex-direction: column; }
+        .detail-grid { grid-template-columns: 1fr; }
+        .detail-label { width: 130px; }
     }
     .section-card {
         background: #ffffff;
@@ -78,27 +130,6 @@
         display: flex;
         align-items: center;
         gap: 8px;
-    }
-    .info-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 18px 44px;
-    }
-    .info-grid > div {
-        min-width: 140px;
-    }
-    .info-item-label {
-        font-size: 12px;
-        color: var(--c-fg-muted);
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        margin-bottom: 4px;
-    }
-    .info-item-value {
-        font-size: 15px;
-        color: var(--c-fg);
-        font-weight: 600;
     }
     /* Warna tiap status ada di partials/palette */
     .status-badge {
@@ -190,30 +221,6 @@
         border-color: var(--c-border-strong);
         color: var(--c-fg);
     }
-    /* Tombol di atas banner navy — warna & hover sama dengan Detail Alumni
-       (.btn-banner-cv / .btn-banner-edit di alumni-show). */
-    .btn-outline-custom.btn-banner-cv {
-        background: #fff;
-        border-color: #fff;
-        color: var(--c-primary);
-        box-shadow: none;
-    }
-    .btn-outline-custom.btn-banner-cv:hover {
-        background: var(--c-grey-0);
-        border-color: #fff;
-        color: var(--c-primary-hover);
-    }
-    .btn-outline-custom.btn-banner-edit {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(255, 255, 255, 0.3);
-        color: #fff;
-        box-shadow: none;
-    }
-    .btn-outline-custom.btn-banner-edit:hover {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.3);
-        color: #fff;
-    }
     .btn-danger-sm {
         background: var(--c-error-0);
         color: var(--c-error);
@@ -263,141 +270,110 @@
     </div>
 @endif
 
-<!-- Back Button -->
-<div class="mb-3">
-    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="btn-outline-custom" style="font-size: 12px; padding: 6px 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        Kembali
-    </a>
-</div>
+@php
+    $statusLabel = match ($mhs->status) {
+        'aktif'        => 'Aktif',
+        'alumni'       => 'Lulus',
+        'cuti'         => 'Cuti',
+        'drop_out'     => 'Drop Out',
+        'pindah_studi' => 'Pindah Studi',
+        'wafat'        => 'Wafat',
+        'mangkir'      => 'Mangkir',
+        default        => ucfirst($mhs->status),
+    };
+@endphp
 
-<!-- Profile Header -->
-<div class="profile-header">
-    <div class="d-flex align-items-center gap-4">
-        <div class="profile-avatar">
+<!-- Card Profil (susunan mengikuti Detail User di User Management global) -->
+<div class="detail-box">
+    {{-- ── Toolbar ── --}}
+    <div class="detail-toolbar">
+        <div class="detail-toolbar-left">
+            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="detail-back" title="Kembali" aria-label="Kembali">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+            </a>
+            <h1 class="detail-title">Detail Mahasiswa</h1>
+        </div>
+        <div class="detail-toolbar-right">
+            {{-- Pemilik profil memakai route /profil/cv yang tanpa {id} — CV-nya sendiri tidak
+                 perlu (dan tidak boleh) lewat gerbang pengelola yang menerima id bebas. --}}
+            @if(($canDownloadCv ?? false) || ($isSelf ?? false))
+                <a href="{{ ($canDownloadCv ?? false)
+                        ? route('manajemenmahasiswa.direktori.mahasiswa.cv', $mhs->id)
+                        : route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') }}" target="_blank"
+                   class="btn-detail btn-detail-outline">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Download CV
+                </a>
+            @endif
+            {{-- Admin boleh mengedit siapa pun; mahasiswa hanya barisnya sendiri. Dua-duanya
+                 membuka form yang sama, bedanya field Status tidak dirender untuk pemilik. --}}
+            @if($isAdmin || ($isSelf ?? false))
+                <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="btn-detail btn-detail-solid">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    Edit
+                </a>
+            @endif
+        </div>
+    </div>
+
+    {{-- ── Profil ── --}}
+    <div class="detail-profile">
+        <div class="detail-avatar">
             @if($mhs->user && $mhs->user->avatar_url)
                 <img src="{{ $mhs->user->avatar_url }}" alt="{{ $mhs->nama }}">
             @else
                 {{ strtoupper(substr($mhs->nama, 0, 1)) }}
             @endif
         </div>
-        <div>
-            <h2 style="font-weight: 800; margin-bottom: 4px; font-size: 24px;">{{ $mhs->nama }}</h2>
-            <p style="margin: 0; opacity: 0.85; font-size: 15px;">{{ $mhs->nim }} · Angkatan {{ $mhs->angkatan }}</p>
-            <div class="mt-2 d-flex gap-2">
-                <span class="status-badge {{ $mhs->status }}" style="background: rgba(255,255,255,0.2); color: white; box-shadow: none; display: inline-flex; align-items: center; gap: 6px;">
-                    <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
-                    @switch($mhs->status)
-                        @case('aktif') Aktif @break
-                        @case('alumni') Lulus @break
-                        @case('cuti') Cuti @break
-                        @case('drop_out') Drop Out @break
-                        @case('pindah_studi') Pindah Studi @break
-                        @case('wafat') Wafat @break
-                        @case('mangkir') Mangkir @break
-                        @default {{ ucfirst($mhs->status) }}
-                    @endswitch
+
+        <div style="flex: 1; min-width: 0;">
+            <div class="detail-name-row">
+                <h2 class="detail-name">{{ $mhs->nama }}</h2>
+                <span class="status-badge {{ $mhs->status }} badge-outline">
+                    <span class="dot"></span> {{ $statusLabel }}
                 </span>
             </div>
-        </div>
-    </div>
-    <div style="position: absolute; top: 20px; right: 24px;" class="d-flex gap-2">
-        {{-- Pemilik profil memakai route /profil/cv yang tanpa {id} — CV-nya sendiri tidak
-             perlu (dan tidak boleh) lewat gerbang pengelola yang menerima id bebas. --}}
-        @if(($canDownloadCv ?? false) || ($isSelf ?? false))
-            <a href="{{ ($canDownloadCv ?? false)
-                    ? route('manajemenmahasiswa.direktori.mahasiswa.cv', $mhs->id)
-                    : route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') }}" target="_blank"
-               class="btn-outline-custom btn-banner-cv">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                Download CV
-            </a>
-        @endif
-        {{-- Admin boleh mengedit siapa pun; mahasiswa hanya barisnya sendiri. Dua-duanya
-             membuka form yang sama, bedanya field Status tidak dirender untuk pemilik. --}}
-        @if($isAdmin || ($isSelf ?? false))
-            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="btn-outline-custom btn-banner-edit">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                Edit
-            </a>
-        @endif
-    </div>
-</div>
+            <p class="detail-sub">NIM: {{ $mhs->nim }}</p>
 
-<!-- Biodata -->
-<div class="section-card">
-    <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        Biodata
-    </div>
-    <div class="info-grid">
-        <div>
-            <div class="info-item-label">Nama Lengkap <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value">{{ $mhs->nama }}</div>
+            <div class="detail-grid">
+                @if($mhs->user && $mhs->user->email)
+                <div class="detail-row">
+                    <span class="detail-label">Email UNDIP</span>
+                    <span class="detail-value">{{ $mhs->user->email }}</span>
+                </div>
+                @endif
+                @if($mhs->user && $mhs->user->personal_email)
+                <div class="detail-row">
+                    <span class="detail-label">Email Pribadi</span>
+                    <span class="detail-value">{{ $mhs->user->personal_email }}</span>
+                </div>
+                @endif
+                @if($mhs->kontak)
+                <div class="detail-row">
+                    <span class="detail-label">Nomor WhatsApp/Telepon</span>
+                    <span class="detail-value">{{ $mhs->kontak }}</span>
+                </div>
+                @endif
+                <div class="detail-row">
+                    <span class="detail-label">Angkatan</span>
+                    <span class="detail-value">{{ $mhs->angkatan }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status Saat Ini</span>
+                    <span class="status-badge {{ $mhs->status }}">{{ $statusLabel }}</span>
+                </div>
+                @if($isCanSeeIpk)
+                <div class="detail-row">
+                    <span class="detail-label">IPK</span>
+                    @if($mhs->ipk !== null)
+                        <span class="detail-value">{{ number_format($mhs->ipk, 2) }} / 4.00</span>
+                    @else
+                        <span class="detail-value empty">Belum diisi</span>
+                    @endif
+                </div>
+                @endif
+            </div>
         </div>
-        <div>
-            <div class="info-item-label">NIM <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value" style="font-family: monospace; color: var(--c-primary);">{{ $mhs->nim }}</div>
-        </div>
-
-        @if($mhs->user && $mhs->user->email)
-        <div>
-            <div class="info-item-label">Email UNDIP <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value" style="max-width: 360px; overflow-wrap: anywhere;">{{ $mhs->user->email }}</div>
-        </div>
-        @endif
-        @if($mhs->user && $mhs->user->personal_email)
-        <div>
-            <div class="info-item-label">Email Pribadi</div>
-            <div class="info-item-value" style="max-width: 360px; overflow-wrap: anywhere;">{{ $mhs->user->personal_email }}</div>
-        </div>
-        @endif
-
-        @if($mhs->kontak)
-        <div>
-            <div class="info-item-label">Kontak</div>
-            <div class="info-item-value">{{ $mhs->kontak }}</div>
-        </div>
-        @endif
-    </div>
-</div>
-
-<!-- Riwayat Akademik -->
-<div class="section-card">
-    <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
-        Riwayat Akademik
-    </div>
-    <div class="info-grid">
-        <div>
-            <div class="info-item-label">Angkatan Masuk <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value">{{ $mhs->angkatan }}</div>
-        </div>
-        <div>
-            <div class="info-item-label">Status Saat Ini</div>
-            <div><span class="status-badge {{ $mhs->status }}">
-                @switch($mhs->status)
-                    @case('aktif') Aktif @break
-                    @case('alumni') Lulus @break
-                    @case('cuti') Cuti @break
-                    @case('drop_out') Drop Out @break
-                    @case('pindah_studi') Pindah Studi @break
-                    @case('wafat') Wafat @break
-                    @case('mangkir') Mangkir @break
-                    @default {{ ucfirst($mhs->status) }}
-                @endswitch
-            </span></div>
-        </div>
-        @if($isCanSeeIpk)
-        <div>
-            <div class="info-item-label">IPK</div>
-            @if($mhs->ipk !== null)
-                <div class="info-item-value">{{ number_format($mhs->ipk, 2) }} / 4.00</div>
-            @else
-                <div class="info-item-value" style="color: var(--c-fg-placeholder); font-style: italic;">Belum diisi</div>
-            @endif
-        </div>
-        @endif
     </div>
 </div>
 
@@ -451,10 +427,9 @@
         <div class="section-title mb-0">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-primary);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Kegiatan Internal
-            <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: var(--c-primary-subtle); color: var(--c-primary); margin-left: 4px;">{{ $kegiatanInternal->count() }}</span>
         </div>
     </div>
-    <p style="font-size: 12px; color: var(--c-fg-muted); margin: -8px 0 14px 0;">Kegiatan himpunan &amp; prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia) — hanya kegiatan yang sudah berstatus <strong>Selesai</strong> yang dihitung</p>
+    <p style="font-size: 12px; color: var(--c-fg-muted); margin: -8px 0 14px 0;">Kegiatan himpunan &amp; prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia)</p>
 
     @if($kegiatanInternal->count() > 0)
         <div style="overflow-x: auto; border-radius: 10px; border: 1px solid var(--c-border);">
@@ -521,7 +496,6 @@
         <div class="section-title mb-0">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="color: var(--c-warning);" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             Kegiatan Eksternal
-            <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: var(--c-warning-subtle); color: var(--c-warning); margin-left: 4px;">{{ $kegiatanEksternal->count() }}</span>
         </div>
     </div>
     <p style="font-size: 12px; color: var(--c-fg-muted); margin: -8px 0 14px 0;">Kegiatan di luar sistem yang diajukan mahasiswa melalui verifikasi data</p>

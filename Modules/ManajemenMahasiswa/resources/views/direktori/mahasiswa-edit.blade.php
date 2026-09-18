@@ -3,28 +3,29 @@
 @include('manajemenmahasiswa::direktori.partials.palette')
 
 <style>
-    .form-card {
+    /* Samakan shell card dengan form Edit Alumni. */
+    .edit-card {
         background: #ffffff;
         border: 1px solid var(--c-border);
-        border-radius: 16px;
+        border-radius: 14px;
         padding: 32px;
-        max-width: 720px;
+        width: 100%;
         box-shadow: var(--shadow-card);
     }
-    .form-title {
-        font-size: 20px;
-        font-weight: 800;
-        color: var(--c-fg);
-        margin-bottom: 4px;
-    }
-    .form-subtitle {
-        font-size: 14px;
-        color: var(--c-fg-muted);
-        margin-bottom: 28px;
+    .section-divider {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--c-primary);
+        margin-bottom: 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--c-primary-subtle);
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     .form-label-custom {
         font-size: 13px;
-        font-weight: 700;
+        font-weight: 600;
         color: var(--c-fg-sec);
         margin-bottom: 6px;
     }
@@ -34,6 +35,7 @@
         padding: 10px 14px;
         font-size: 14px;
         color: var(--c-fg);
+        background: #ffffff;
         transition: all 0.2s;
     }
     .form-control-custom:focus {
@@ -46,6 +48,7 @@
         padding: 10px 14px;
         font-size: 14px;
         color: var(--c-fg);
+        background: #ffffff;
         transition: all 0.2s;
     }
     .form-select-custom:focus {
@@ -95,24 +98,13 @@
         border-color: var(--c-border-strong);
         color: var(--c-fg);
     }
-    .sso-tag {
-        font-size: 9px;
-        font-weight: 700;
-        padding: 1px 5px;
-        border-radius: 4px;
-        background: var(--c-primary-subtle);
-        color: var(--c-primary);
-        letter-spacing: 0.03em;
-        margin-left: 6px;
-        vertical-align: middle;
-    }
 </style>
 
 <!-- Back Button -->
 <div class="mb-3">
-    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="btn-outline-custom" style="font-size: 12px; padding: 6px 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        Kembali
+    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="detail-back" title="Kembali" aria-label="Kembali">
+        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        <span class="detail-back-label">Kembali</span>
     </a>
 </div>
 
@@ -127,20 +119,27 @@
     </div>
 @endif
 
-<div class="form-card">
-    <div class="form-title">{{ ($isAdmin ?? false) ? 'Edit Biodata Mahasiswa' : 'Edit Data Saya' }}</div>
-    <div class="form-subtitle">
+<div class="edit-card">
+    <div class="mb-4">
+        <h5 class="fw-bold mb-1" style="font-size: 20px; color: var(--c-fg);">{{ ($isAdmin ?? false) ? 'Edit Biodata Mahasiswa' : 'Edit Data Saya' }}</h5>
+        <p class="mb-0" style="font-size: 14px; color: var(--c-fg-muted);">
         @if($isAdmin ?? false)
             Perbarui informasi biodata mahasiswa: {{ $mhs->nama }}
         @else
             Perbarui data diri Anda pada direktori mahasiswa.
         @endif
+        </p>
     </div>
 
     <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.update', $mhs->id) }}"
           id="formEditBiodata" data-status-awal="{{ $mhs->status }}">
         @csrf
         @method('PUT')
+
+        <div class="section-divider">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Informasi Akademik
+        </div>
 
         <div class="row g-3">
             @php
@@ -174,21 +173,21 @@
                  sudah berhenti menerima ketiga field ini. --}}
             <!-- Nama -->
             <div class="col-12">
-                <label class="form-label-custom">Nama Lengkap <span class="sso-tag">SSO</span></label>
+                <label class="form-label-custom">Nama Lengkap</label>
                 <input type="text" class="form-control form-control-custom"
                        value="{{ $mhs->nama }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
             </div>
 
             <!-- NIM -->
             <div class="col-md-6">
-                <label class="form-label-custom">NIM <span class="sso-tag">SSO</span></label>
+                <label class="form-label-custom">NIM</label>
                 <input type="text" class="form-control form-control-custom"
                        value="{{ $mhs->nim }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
             </div>
 
             <!-- Angkatan -->
             <div class="col-md-6">
-                <label class="form-label-custom">Angkatan <span class="sso-tag">SSO</span></label>
+                <label class="form-label-custom">Angkatan</label>
                 <input type="number" class="form-control form-control-custom"
                        value="{{ $mhs->angkatan }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
             </div>
@@ -301,7 +300,7 @@
         </div>
 
         <!-- Submit -->
-        <div class="d-flex gap-3 mt-4 pt-3" style="border-top: 1px solid var(--c-border);">
+        <div class="d-flex justify-content-end gap-3 mt-4 pt-3" style="border-top: 1px solid var(--c-border);">
             <button type="submit" class="btn-primary-custom">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                 Simpan Perubahan
