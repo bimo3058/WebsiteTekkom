@@ -38,7 +38,7 @@
                             <div x-ref="slider" @scroll.passive="checkScroll" class="gallery-slider" style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%;">
                                 @foreach($room->fotos as $foto)
                                     <div style="flex: 0 0 100%; width: 100%; height: 100%; position: relative; scroll-snap-align: start;">
-                                        <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover">
+                                        <img src="{{ $foto->foto_url ?? app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto, 'eoffice') }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover">
                                         @if($room->fotos->count() > 1)
                                             <div class="absolute top-3 left-3 bg-black/50 text-white text-[10px] font-bold px-2 py-1 rounded backdrop-blur-sm">
                                                 {{ $loop->iteration }} / {{ $room->fotos->count() }}

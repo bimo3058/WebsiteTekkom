@@ -6,12 +6,8 @@
 </div>
 
 @php
-    $moduleIcons = [
-        'bank_soal'           => 'M6 4h12v16H6zM9 8h6M9 12h6M9 16h4',
-        'capstone'            => 'M3 17l5-5 4 4 8-8M14 8h6v6',
-        'manajemen_mahasiswa' => 'M9 11a3.5 3.5 0 100-7 3.5 3.5 0 000 7zM2.5 20a6.5 6.5 0 0113 0M17 11.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z',
-        'eoffice'             => 'M12 21a9 9 0 100-18 9 9 0 000 18zM12 7v5l3 2',
-    ];
+    use App\Helpers\IconHelper;
+
     $moduleTags = [
         'bank_soal'           => ['label' => 'SIBASO',   'bg' => '#F9ECCB', 'color' => '#956321'],
         'capstone'            => ['label' => 'SICATA',   'bg' => '#D1F0F9', 'color' => '#0C4D6E'],
@@ -24,7 +20,7 @@
     @foreach($modules as $moduleKey => $module)
     @php
         $isActive = $module['is_active'];
-        $icon     = $moduleIcons[$moduleKey] ?? $moduleIcons['bank_soal'];
+        $icon     = IconHelper::getModuleIconPath($module['icon'] ?? 'clipboard-check');
         $tag      = $moduleTags[$moduleKey] ?? ['label' => strtoupper($moduleKey), 'bg' => 'var(--c-bg)', 'color' => 'var(--c-fg-muted)'];
     @endphp
     <div style="background:#fff;border:1px solid var(--c-border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;"

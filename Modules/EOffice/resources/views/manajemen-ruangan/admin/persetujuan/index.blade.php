@@ -4,7 +4,7 @@
         <div>
             <h1 class="mp-page-title">Persetujuan</h1>
             <p class="mp-page-sub">Kelola dan verifikasi seluruh permohonan peminjaman ruangan yang diajukan oleh
-                pengguna / mahasiswa.</p>
+                pengguna.</p>
         </div>
     </div>
 
@@ -12,7 +12,7 @@
         <div class="mp-card-body">
             <div
                 class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
-                <h2 class="text-base font-bold text-gray-900 tracking-tight">Antrean Pengajuan & Jadwal Berjalan</h2>
+                <h2 class="text-base font-bold text-gray-900 tracking-tight">Antrean Peminjaman & Jadwal Berjalan</h2>
 
                 <form action="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" method="GET"
                     class="flex flex-wrap items-center gap-2.5">
@@ -32,18 +32,41 @@
 
                     {{-- Filter Ruangan (No Title Label) --}}
                     <div
-                        class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-xs shadow-sm">
-                        <select name="ruangan_id"
-                            class="px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat w-full max-w-[140px] sm:max-w-[180px] truncate"
-                            style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;"
-                            onchange="this.form.submit()">
-                            <option value="">Semua Ruangan</option>
-                            @foreach($ruangans as $ruangan)
-                                <option value="{{ $ruangan->id }}" {{ request('ruangan_id') == $ruangan->id ? 'selected' : '' }}>
-                                    {{ $ruangan->nama }}
-                                </option>
-                            @endforeach
-                        </select>
+                        class="flex items-center rounded-md border border-slate-200 bg-white overflow-visible text-xs shadow-sm">
+                        <div x-data="{ 
+                            open: false, 
+                            selectedId: '{{ request('ruangan_id') }}', 
+                            selectedName: '{{ request('ruangan_id') ? addslashes($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
+                            selectItem(id, name) { 
+                                this.selectedId = id; 
+                                this.selectedName = name; 
+                                $refs.ruanganInput.value = id;
+                                $refs.ruanganInput.form.submit();
+                            } 
+                        }" class="relative w-[140px] sm:w-[180px]" @click.away="open = false">
+                            
+                            <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
+
+                            <button type="button" @click="open = !open" 
+                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-md cursor-pointer">
+                                <span x-text="selectedName" class="truncate pr-2"></span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
+                                class="absolute left-0 top-full mt-1 w-full min-w-[160px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48" style="display: none;">
+                                <div class="py-1">
+                                    <button type="button" @click="selectItem('', 'Semua Ruangan')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50': selectedId != ''}">Semua Ruangan</button>
+                                    @foreach($ruangans as $ruangan)
+                                        <button type="button" @click="selectItem('{{ $ruangan->id }}', '{{ addslashes($ruangan->nama) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors mt-0.5 cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $ruangan->id }}', 'text-gray-700 hover:bg-gray-50': selectedId != '{{ $ruangan->id }}'}">
+                                            {{ $ruangan->nama }}
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -52,7 +75,7 @@
                 <table class="mp-table" style="table-layout: auto; width: 100%;">
                     <thead>
                         <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
-                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Pengaju</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Peminjam</th>
                             <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan & Kegiatan</th>
                             <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu</th>
                             <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Status</th>
@@ -80,9 +103,9 @@
                                             }
                                         @endphp
                                         @if($isDosen)
-                                            <span class="truncate max-w-[140px]" title="{{ $fullName }}">{{ $fullName }}</span>
+                                            <div class="truncate max-w-[160px]" title="{{ $fullName }}">{{ $fullName }}</div>
                                         @else
-                                            <span title="{{ $fullName }}">{{ $displayName }}</span>
+                                            <div title="{{ $fullName }}">{{ $displayName }}</div>
                                         @endif
                                         @if($pinjam->created_by && $pinjam->created_by !== $pinjam->user_id)
                                             <span
@@ -101,14 +124,13 @@
                                         @endif{{ $pinjam->nomor_telepon ?: '-' }}
                                     </div>
                                 </td>
-                                <td>
-                                    <div style="max-width: 220px;">
-                                        <div class="text-[13px] font-medium text-[#111827] truncate" title="{{ $pinjam->ruangan->nama ?? 'Dihapus' }}">
-                                            {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
-                                        </div>
-                                        <div class="text-[11px] text-gray-500 truncate mt-0.5" title="{{ $pinjam->tujuan }}">
-                                            {{ $pinjam->tujuan }}
-                                        </div>
+                                <td class="max-w-[200px]">
+                                    <div class="text-[13px] font-medium text-[#111827] truncate" title="{{ $pinjam->ruangan->nama ?? 'Dihapus' }}">
+                                        {{ $pinjam->ruangan->nama ?? 'Dihapus' }}
+                                    </div>
+                                    <div class="text-[11px] text-gray-500 truncate mt-0.5" title="{{ $pinjam->tujuan }}">
+                                        {{ $pinjam->tujuan }}
+                                    </div>
                                         @if($pinjam->berkas_pendukung)
                                             <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
                                                 target="_blank"
@@ -151,8 +173,8 @@
                                 </td>
                                 <td style="text-align: center;">
                                     <button
-                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}', '{{ addslashes($pinjam->ruangan->nama ?? 'Ruangan Dihapus') }}', '{{ addslashes($pinjam->tujuan) }}', '{{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}', '{{ $berkasUrl }}')"
-                                        class="h-8 px-4 rounded-md bg-white border border-gray-200 text-[#0B266E] text-[12px] font-bold hover:bg-gray-50 shadow-sm transition-colors">
+                                        @click="openAction({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? "User") }}', '{{ addslashes($pinjam->user->student->student_number ?? $pinjam->user->external_id ?? "-") }}', '{{ addslashes($pinjam->nomor_telepon ?? $pinjam->user->whatsapp ?? "-") }}', '{{ $pinjam->status }}', '{{ $pinjam->ruangan_id }}', '{{ $pinjam->tanggal_pinjam }}', '{{ substr($pinjam->jam_mulai, 0, 5) }}', '{{ substr($pinjam->jam_selesai, 0, 5) }}', '{{ addslashes($pinjam->ruangan->nama ?? 'Ruangan Dihapus') }}', '{{ addslashes($pinjam->tujuan) }}', '{{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y') }}', '{{ $berkasUrl }}')"
+                                        class="h-8 px-4 rounded-md bg-white border border-gray-200 text-[#0B266E] text-[12px] font-bold hover:bg-gray-50 shadow-sm transition-colors cursor-pointer">
                                         Kelola
                                     </button>
                                 </td>
@@ -171,16 +193,35 @@
                 class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
                 <div class="flex items-center gap-4">
                     <div
-                        class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
-                        <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per
+                        class="flex items-center border border-slate-200 rounded-md bg-white overflow-visible text-[13px] shadow-sm">
+                        <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50 shrink-0">Per
                             halaman</span>
-                        <select aria-label="Per halaman" onchange="window.location.href=this.value"
-                            class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat"
-                            style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
-                            <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                            <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                            <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                        </select>
+                        <div x-data="{ 
+                            open: false, 
+                            value: '{{ request('per_page', 10) }}', 
+                            select(val, url) { 
+                                this.value = val; 
+                                window.location.href = url; 
+                            } 
+                        }" class="relative w-[65px]" @click.away="open = false">
+                            
+                            <button type="button" @click="open = !open" 
+                                class="w-full flex items-center justify-between px-2.5 py-1.5 text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-r-md cursor-pointer">
+                                <span x-text="value"></span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
+                                class="absolute left-0 bottom-full mb-1 w-full min-w-[70px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
+                                <div class="py-1">
+                                    <button type="button" @click="select('10', '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '10'}">10</button>
+                                    <button type="button" @click="select('25', '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '25'}">25</button>
+                                    <button type="button" @click="select('50', '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '50'}">50</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <p class="text-xs font-medium text-slate-600">
                         Menampilkan <span class="font-bold text-slate-800">{{ $peminjamans->firstItem() ?? 0 }}</span>
@@ -199,7 +240,7 @@
                         </button>
                     @else
                         <a href="{{ $peminjamans->previousPageUrl() }}"
-                            class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                            class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
@@ -211,17 +252,17 @@
                         @foreach ($peminjamans->getUrlRange(max(1, $peminjamans->currentPage() - 2), min($peminjamans->lastPage(), $peminjamans->currentPage() + 2)) as $page => $url)
                             @if ($page == $peminjamans->currentPage())
                                 <span
-                                    class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
+                                    class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</span>
                             @else
                                 <a href="{{ $url }}"
-                                    class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</a>
+                                    class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</a>
                             @endif
                         @endforeach
                     </div>
 
                     @if ($peminjamans->hasMorePages())
                         <a href="{{ $peminjamans->nextPageUrl() }}"
-                            class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                            class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
@@ -251,9 +292,9 @@
 
                     <div
                         class="px-6 py-4 border-b border-gray-100 flex-shrink-0 flex justify-between items-center bg-white z-10">
-                        <h3 class="font-bold text-gray-900 text-lg tracking-tight">Verifikasi & Kelola Pengajuan</h3>
+                        <h3 class="font-bold text-gray-900 text-lg tracking-tight">Verifikasi Peminjaman</h3>
                         <button type="button" @click="closeModal()"
-                            class="text-gray-400 hover:text-gray-600 transition-colors">
+                            class="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
                             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
@@ -266,7 +307,7 @@
                         <input type="hidden" name="status" x-model="selectedAction">
 
                         <div class="px-6 py-6 flex-1 overflow-y-auto bg-slate-50/30">
-                            <p class="text-sm text-gray-600 mb-4">Tentukan penanganan pengajuan dari <span
+                            <p class="text-sm text-gray-600 mb-4">Tentukan penanganan peminjaman dari <span
                                     class="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded"
                                     x-text="selectedName"></span>.</p>
 
@@ -274,7 +315,23 @@
                             <div class="mb-5 p-4 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
                                 <h4
                                     class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
-                                    Informasi Pengajuan</h4>
+                                    Informasi Peminjam</h4>
+                                <div class="grid grid-cols-[80px_1fr] gap-x-2 gap-y-2 text-[13px] mb-3 border-b border-slate-100 pb-3">
+                                    <div class="text-slate-500 font-medium">Nama</div>
+                                    <div class="text-slate-800 font-bold" x-text="selectedName"></div>
+
+                                    <div class="text-slate-500 font-medium">NIM/NIP</div>
+                                    <div class="text-slate-800 font-medium" x-text="selectedNim"></div>
+
+                                    <div class="text-slate-500 font-medium">No. Telp</div>
+                                    <div class="text-slate-800 font-medium">
+                                        <span x-text="selectedTelp"></span>
+                                    </div>
+                                </div>
+
+                                <h4
+                                    class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-3">
+                                    Informasi Peminjaman</h4>
                                 <div class="grid grid-cols-[80px_1fr] gap-x-2 gap-y-2 text-[13px]">
                                     <div class="text-slate-500 font-medium">Ruangan</div>
                                     <div class="text-slate-800 font-bold" x-text="selectedRuanganName"></div>
@@ -282,7 +339,7 @@
                                     <div class="text-slate-500 font-medium">Waktu</div>
                                     <div class="text-slate-800 font-bold">
                                         <span x-text="selectedFormatTanggal"></span> <span
-                                            class="bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded text-xs ml-1 font-semibold border border-indigo-100"
+                                            class="bg-blue-50 text-[#0B266E] px-1.5 py-0.5 rounded text-xs ml-1 font-semibold border border-blue-200"
                                             x-text="selectedJamMulai + ' - ' + selectedJamSelesai + ' WIB'"></span>
                                     </div>
 
@@ -399,14 +456,45 @@
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Pindahkan Ke Ruangan <span class="text-red-500">*</span></label>
-                                            <select name="override_ruangan_id" x-model="currentRoom"
-                                                class="mp-input w-full bg-white text-gray-800 text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E]"
-                                                :required="selectedAction === 'edit'">
-                                                <option value="">Pilih Ruangan...</option>
-                                                @foreach($ruangans as $ruangan)
-                                                    <option value="{{ $ruangan->id }}">{{ $ruangan->nama }}</option>
-                                                @endforeach
-                                            </select>
+                                            <div x-data="{ 
+                                                    open: false,
+                                                    get selectedName() {
+                                                        const room = [
+                                                            @foreach($ruangans as $ruangan)
+                                                                {id: '{{ $ruangan->id }}', name: '{{ addslashes($ruangan->nama) }}'},
+                                                            @endforeach
+                                                        ].find(r => r.id == currentRoom);
+                                                        return room ? room.name : 'Pilih Ruangan...';
+                                                    },
+                                                    selectItem(id) { 
+                                                        currentRoom = id;
+                                                        this.open = false; 
+                                                    } 
+                                                }" class="relative w-full" @click.away="open = false">
+                                                
+                                                <input type="hidden" name="override_ruangan_id" :value="currentRoom" :required="selectedAction === 'edit'">
+
+                                                <button type="button" @click="open = !open" 
+                                                    class="mp-input w-full bg-white text-[13px] font-semibold border-slate-200 rounded-lg focus:ring-1 focus:ring-[#0B266E] flex items-center justify-between transition-colors h-[42px] px-3 cursor-pointer">
+                                                    <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !currentRoom, 'text-gray-800': currentRoom}"></span>
+                                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                    class="absolute left-0 bottom-full mb-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto" style="display: none;">
+                                                    <div class="p-1">
+                                                        <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentRoom == '', 'text-gray-700 hover:bg-gray-50': currentRoom != ''}">Pilih Ruangan...</button>
+                                                        
+                                                        @foreach($ruangans as $ruangan)
+                                                            <button type="button" @click="selectItem('{{ $ruangan->id }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentRoom == '{{ $ruangan->id }}', 'text-gray-700 hover:bg-gray-50': currentRoom != '{{ $ruangan->id }}'}">
+                                                                {{ $ruangan->nama }}
+                                                            </button>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div>
                                             <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Ubah Kegiatan <span class="text-red-500">*</span></label>
@@ -491,6 +579,8 @@
                 modalTindakan: false,
                 selectedId: null,
                 selectedName: '',
+                selectedNim: '',
+                selectedTelp: '',
                 selectedStatus: '',
                 selectedAction: '',
 
@@ -554,9 +644,11 @@
                     }
                 },
 
-                openAction(id, name, status, ruanganId, tanggal, jamMulai, jamSelesai, ruanganName, kegiatan, formatTanggal, berkasUrl) {
+                openAction(id, name, nim, telp, status, ruanganId, tanggal, jamMulai, jamSelesai, ruanganName, kegiatan, formatTanggal, berkasUrl) {
                     this.selectedId = id;
                     this.selectedName = name;
+                    this.selectedNim = nim;
+                    this.selectedTelp = telp;
                     this.selectedStatus = status;
                     this.selectedAction = '';
 

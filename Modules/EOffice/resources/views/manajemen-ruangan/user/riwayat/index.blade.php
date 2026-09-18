@@ -92,7 +92,7 @@
                                     </td>
                                     <td style="text-align: right;">
                                         @if($riwayat->berkas_pendukung)
-                                            <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($riwayat->berkas_pendukung) }}"
+                                            <a href="{{ $riwayat->berkas_url ?? app(\App\Services\SupabaseStorage::class)->getPublicUrl($riwayat->berkas_pendukung, 'eoffice') }}"
                                                 target="_blank"
                                                 class="inline-flex items-center justify-end gap-1.5 text-[12px] font-medium text-primary-500 hover:text-primary-500 transition-colors">
                                                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
