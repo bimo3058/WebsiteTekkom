@@ -485,7 +485,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Pengumuman (lihat)
                 Route::get('pengumuman', [MhsPengumumanController::class, 'index'])
                     ->name('pengumuman.index');
-                
+
                 // Daftar Praktikan (Classmates)
                 Route::get('daftar-praktikan', [MhsDaftarPraktikanController::class, 'index'])
                     ->name('daftar-praktikan.index');

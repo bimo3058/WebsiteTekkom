@@ -71,32 +71,84 @@
                 @if($viewMode !== 'akademik')
                     <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.index') }}" method="GET"
                         class="flex gap-2">
-                        <select name="tipe" onchange="this.form.submit()" class="mp-input !py-2 !text-xs !bg-white">
-                            <option value="semua" {{ $tipe === 'semua' ? 'selected' : '' }}>Semua Tipe Jadwal</option>
-                            <option value="rutin" {{ $tipe === 'rutin' ? 'selected' : '' }}>Rutin (Mingguan)</option>
-                            <option value="spesifik" {{ $tipe === 'spesifik' ? 'selected' : '' }}>Spesifik (Acara)</option>
-                        </select>
+                        <div x-data="{ 
+                            open: false, 
+                            selectedVal: '{{ $tipe }}', 
+                            get selectedName() {
+                                const map = {
+                                    'semua': 'Semua Tipe Jadwal',
+                                    'rutin': 'Rutin (Mingguan)',
+                                    'spesifik': 'Spesifik (Acara)'
+                                };
+                                return map[this.selectedVal] || 'Semua Tipe Jadwal';
+                            },
+                            selectItem(val) { 
+                                this.selectedVal = val; 
+                                $refs.tipeInput.value = val;
+                                $refs.tipeInput.form.submit();
+                            } 
+                        }" class="relative w-48" @click.away="open = false">
+                            
+                            <input type="hidden" name="tipe" x-ref="tipeInput" :value="selectedVal">
+
+                            <button type="button" @click="open = !open" 
+                                class="w-full flex items-center justify-between mp-input !py-2 !text-xs !bg-white focus:outline-none transition-colors">
+                                <span x-text="selectedName" class="truncate pr-2"></span>
+                                <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+                            
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
+                                <div class="p-1">
+                                    <button type="button" @click="selectItem('semua')" class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'semua', 'text-gray-700 hover:bg-gray-50': selectedVal != 'semua'}">Semua Tipe Jadwal</button>
+                                    <button type="button" @click="selectItem('rutin')" class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors mt-0.5" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'rutin', 'text-gray-700 hover:bg-gray-50': selectedVal != 'rutin'}">Rutin (Mingguan)</button>
+                                    <button type="button" @click="selectItem('spesifik')" class="w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors mt-0.5" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'spesifik', 'text-gray-700 hover:bg-gray-50': selectedVal != 'spesifik'}">Spesifik (Acara)</button>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                 @endif
 
                 @if($viewMode === 'akademik')
-                    <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.reset') }}" method="POST"
-                        class="inline-block"
-                        onsubmit="return confirm('PERINGATAN BAHAYA!\nApakah Anda yakin ingin MENGHAPUS SELURUH jadwal akademik di sistem secara massal? Aksi ini lazimnya hanya dilakukan pada saat reset pergantian semester. Tindakan ini tidak dapat dikembalikan.');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit"
-                            class="mp-btn md font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200"
-                            style="gap: 6px;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round">
-                                <path d="M3 6h18"></path>
-                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                </path>
-                            </svg>
-                            Hapus Semua
-                        </button>
-                    </form>
+                    <div class="inline-block" x-data="{ showDeleteAllModal: false }">
+                        <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.reset') }}" method="POST" class="m-0">
+                            @csrf
+                            @method('DELETE')
+                            <button type="button" @click="showDeleteAllModal = true"
+                                class="mp-btn md font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200"
+                                style="gap: 6px;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <path d="M3 6h18"></path>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                    </path>
+                                </svg>
+                                Hapus Semua
+                            </button>
+
+                            {{-- Decision Modal --}}
+                            <div x-show="showDeleteAllModal" x-cloak style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4 text-left whitespace-normal">
+                                <div x-show="showDeleteAllModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" @click="showDeleteAllModal = false"></div>
+                                
+                                <div x-show="showDeleteAllModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden z-10 text-center p-6">
+                                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-50 mb-4">
+                                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-base font-bold text-slate-800 mb-2">PERINGATAN BAHAYA!</h3>
+                                    <p class="text-xs text-slate-500 mb-6 leading-relaxed">Apakah Anda yakin ingin <strong class="text-red-600">MENGHAPUS SELURUH</strong> jadwal akademik di sistem secara massal? Aksi ini lazimnya hanya dilakukan pada saat reset pergantian semester. Tindakan ini tidak dapat dikembalikan.</p>
+                                    
+                                    <div class="flex justify-center gap-3">
+                                        <button type="button" @click="showDeleteAllModal = false" class="mp-btn secondary px-4 py-2">Batal</button>
+                                        <button type="submit" class="mp-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-transparent" style="border:none;">Eksekusi Hapus</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
                     <button @click="showImportModal = true" class="mp-btn secondary md font-semibold" style="gap: 6px;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-green-600"
@@ -143,33 +195,66 @@
                     x-transition:leave="transition ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative">
+                    class="inline-flex flex-col w-full px-4 pt-5 pb-4 overflow-visible text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative max-h-[90vh]">
 
-                    <div>
-                        <div class="flex items-center justify-between mb-5">
-                            <h3 class="text-[18px] font-bold text-gray-900 font-['Inter_Tight']" id="modal-title">Tambah
-                                Jadwal Baru</h3>
-                            <button @click="showModal = false" class="text-gray-400 hover:text-gray-500">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
-                        </div>
+                    <div class="flex items-center justify-between mb-5 shrink-0">
+                        <h3 class="text-[18px] font-bold text-gray-900 font-['Inter_Tight']" id="modal-title">Tambah
+                            Jadwal Baru</h3>
+                        <button type="button" @click="showModal = false" class="text-gray-400 hover:text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
 
-                        <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.store') }}" method="POST">
-                            @csrf
-                            <div class="space-y-4">
-                                <div>
+                    <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.store') }}" method="POST" class="flex flex-col flex-1 min-h-0">
+                        @csrf
+                        <div class="space-y-4 overflow-y-auto overflow-x-hidden pr-2 -mr-2 pb-2 flex-1 whitespace-normal">
+                            <div>
                                     <label
                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Pilih
                                         Ruangan</label>
-                                    <select name="ruangan_id" required class="mp-input text-[14px]" x-model="ruanganId" @change="triggerCheck()">
-                                        <option value="" disabled selected>-- Pilih Ruangan Kelas --</option>
-                                        @foreach($ruangans as $r)
-                                            <option value="{{ $r->id }}">{{ $r->nama }} - Lt. {{ $r->lantai }}</option>
-                                        @endforeach
-                                    </select>
+                                    <div x-data="{ 
+                                            open: false,
+                                            get selectedName() {
+                                                const room = [
+                                                    @foreach($ruangans as $r)
+                                                        {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                    @endforeach
+                                                ].find(r => r.id == ruanganId);
+                                                return room ? room.name : '-- Pilih Ruangan Kelas --';
+                                            },
+                                            selectItem(id) { 
+                                                ruanganId = id;
+                                                this.open = false; 
+                                                triggerCheck();
+                                            } 
+                                        }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" @click.away="open = false">
+                                        
+                                        <input type="hidden" name="ruangan_id" :value="ruanganId" required>
+
+                                        <button type="button" @click="open = !open" 
+                                            class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                            <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !ruanganId, 'text-gray-800': ruanganId}"></span>
+                                            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                            </svg>
+                                        </button>
+                                        
+                                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto overflow-x-hidden" style="display: none;">
+                                            <div class="p-1 flex flex-col">
+                                                <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">-- Pilih Ruangan Kelas --</button>
+                                                
+                                                @foreach($ruangans as $r)
+                                                    <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
+                                                        {{ $r->nama }} - Lt. {{ $r->lantai }}
+                                                    </button>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <input type="hidden" name="tipe_jadwal" value="rutin">
                                 <input type="hidden" name="kategori" value="Jadwal Akademik (Kuliah)">
@@ -201,15 +286,45 @@
                                         <label
                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari
                                             Pertemuan</label>
-                                        <select name="hari" required class="mp-input text-[14px]" x-model="currentDay" @change="triggerCheck()">
-                                            <option value="1">Senin</option>
-                                            <option value="2">Selasa</option>
-                                            <option value="3">Rabu</option>
-                                            <option value="4">Kamis</option>
-                                            <option value="5">Jumat</option>
-                                            <option value="6">Sabtu</option>
-                                            <option value="7">Minggu</option>
-                                        </select>
+                                        <div x-data="{ 
+                                                open: false,
+                                                get selectedName() {
+                                                    const map = {
+                                                        '1': 'Senin', '2': 'Selasa', '3': 'Rabu',
+                                                        '4': 'Kamis', '5': 'Jumat', '6': 'Sabtu', '7': 'Minggu'
+                                                    };
+                                                    return map[currentDay] || 'Pilih Hari...';
+                                                },
+                                                selectItem(val) { 
+                                                    currentDay = val;
+                                                    this.open = false; 
+                                                    triggerCheck();
+                                                } 
+                                            }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" @click.away="open = false">
+                                            
+                                            <input type="hidden" name="hari" :value="currentDay" required>
+
+                                            <button type="button" @click="open = !open" 
+                                                class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                                <span x-text="selectedName" class="truncate text-gray-800"></span>
+                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </button>
+                                            
+                                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto overflow-x-hidden" style="display: none;">
+                                                <div class="p-1 flex flex-col">
+                                                    <button type="button" @click="selectItem('1')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '1', 'text-gray-700 hover:bg-gray-50': currentDay != '1'}">Senin</button>
+                                                    <button type="button" @click="selectItem('2')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '2', 'text-gray-700 hover:bg-gray-50': currentDay != '2'}">Selasa</button>
+                                                    <button type="button" @click="selectItem('3')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '3', 'text-gray-700 hover:bg-gray-50': currentDay != '3'}">Rabu</button>
+                                                    <button type="button" @click="selectItem('4')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '4', 'text-gray-700 hover:bg-gray-50': currentDay != '4'}">Kamis</button>
+                                                    <button type="button" @click="selectItem('5')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '5', 'text-gray-700 hover:bg-gray-50': currentDay != '5'}">Jumat</button>
+                                                    <button type="button" @click="selectItem('6')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '6', 'text-gray-700 hover:bg-gray-50': currentDay != '6'}">Sabtu</button>
+                                                    <button type="button" @click="selectItem('7')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '7', 'text-gray-700 hover:bg-gray-50': currentDay != '7'}">Minggu</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2">
                                         <div>
@@ -255,13 +370,12 @@
                                 </div>
                             </div>
 
-                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100 shrink-0">
                                 <button type="button" @click="showModal = false; resetForm()"
                                     class="mp-btn secondary md">Batal</button>
                                 <button type="submit" class="mp-btn primary md" :disabled="conflictError !== '' || isCheckingOut">Simpan Konfigurasi</button>
                             </div>
                         </form>
-                    </div>
                 </div>
             </div>
         </div>
@@ -435,42 +549,91 @@
                                             <label
                                                 class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
                                                 Hari</label>
-                                            <select name="hari"
-                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors">
-                                                <option value="">Semua Hari</option>
-                                                <option value="1" {{ request('hari') == '1' ? 'selected' : '' }}>Senin
-                                                </option>
-                                                <option value="2" {{ request('hari') == '2' ? 'selected' : '' }}>Selasa
-                                                </option>
-                                                <option value="3" {{ request('hari') == '3' ? 'selected' : '' }}>Rabu</option>
-                                                <option value="4" {{ request('hari') == '4' ? 'selected' : '' }}>Kamis
-                                                </option>
-                                                <option value="5" {{ request('hari') == '5' ? 'selected' : '' }}>Jumat
-                                                </option>
-                                                <option value="6" {{ request('hari') == '6' ? 'selected' : '' }}>Sabtu
-                                                </option>
-                                            </select>
+                                            <div x-data="{ 
+                                                    open: false, 
+                                                    selectedVal: '{{ request('hari') }}', 
+                                                    get selectedName() {
+                                                        const map = {
+                                                            '1': 'Senin', '2': 'Selasa', '3': 'Rabu',
+                                                            '4': 'Kamis', '5': 'Jumat', '6': 'Sabtu', '7': 'Minggu'
+                                                        };
+                                                        return map[this.selectedVal] || 'Semua Hari';
+                                                    },
+                                                    selectItem(val) { 
+                                                        this.selectedVal = val; 
+                                                        this.open = false; 
+                                                    } 
+                                                }" class="relative w-full" @click.away="open = false">
+                                                
+                                                <input type="hidden" name="hari" :value="selectedVal">
+
+                                                <button type="button" @click="open = !open" 
+                                                    class="w-full flex items-center justify-between px-3 py-2 text-[13px] bg-gray-50 hover:bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors h-[42px]">
+                                                    <span x-text="selectedName" class="truncate text-gray-800"></span>
+                                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-hidden" style="display: none;">
+                                                    <div class="p-1 max-h-48 overflow-y-auto">
+                                                        <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50': selectedVal != ''}">Semua Hari</button>
+                                                        <button type="button" @click="selectItem('1')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '1', 'text-gray-700 hover:bg-gray-50': selectedVal != '1'}">Senin</button>
+                                                        <button type="button" @click="selectItem('2')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '2', 'text-gray-700 hover:bg-gray-50': selectedVal != '2'}">Selasa</button>
+                                                        <button type="button" @click="selectItem('3')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '3', 'text-gray-700 hover:bg-gray-50': selectedVal != '3'}">Rabu</button>
+                                                        <button type="button" @click="selectItem('4')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '4', 'text-gray-700 hover:bg-gray-50': selectedVal != '4'}">Kamis</button>
+                                                        <button type="button" @click="selectItem('5')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '5', 'text-gray-700 hover:bg-gray-50': selectedVal != '5'}">Jumat</button>
+                                                        <button type="button" @click="selectItem('6')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '6', 'text-gray-700 hover:bg-gray-50': selectedVal != '6'}">Sabtu</button>
+                                                        <button type="button" @click="selectItem('7')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '7', 'text-gray-700 hover:bg-gray-50': selectedVal != '7'}">Minggu</button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div>
                                             <label
                                                 class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
                                                 Ruangan</label>
-                                            <select name="ruangan_id"
-                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors">
-                                                <option value="">Semua Ruangan</option>
-                                                @foreach($ruangans as $r)
-                                                    <option value="{{ $r->id }}" {{ request('ruangan_id') == $r->id ? 'selected' : '' }}>
-                                                        {{ $r->nama }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
+                                            <div x-data="{ 
+                                                    open: false, 
+                                                    selectedVal: '{{ request('ruangan_id') }}', 
+                                                    selectedName: '{{ request('ruangan_id') ? addslashes($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
+                                                    selectItem(id, name) { 
+                                                        this.selectedVal = id; 
+                                                        this.selectedName = name;
+                                                        this.open = false; 
+                                                    } 
+                                                }" class="relative w-full" @click.away="open = false">
+                                                
+                                                <input type="hidden" name="ruangan_id" :value="selectedVal">
+
+                                                <button type="button" @click="open = !open" 
+                                                    class="w-full flex items-center justify-between px-3 py-2 text-[13px] bg-gray-50 hover:bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors h-[42px]">
+                                                    <span x-text="selectedName" class="truncate text-gray-800"></span>
+                                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-hidden" style="display: none;">
+                                                    <div class="p-1 max-h-48 overflow-y-auto">
+                                                        <button type="button" @click="selectItem('', 'Semua Ruangan')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50': selectedVal != ''}">Semua Ruangan</button>
+                                                        @foreach($ruangans as $r)
+                                                            <button type="button" @click="selectItem('{{ $r->id }}', '{{ addslashes($r->nama) }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': selectedVal != '{{ $r->id }}'}">
+                                                                {{ $r->nama }}
+                                                            </button>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="flex gap-2 pt-3 border-t border-gray-100 mt-2">
                                             <button type="submit"
-                                                class="flex-1 bg-primary-500 hover:bg-primary-500 text-white font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Terapkan</button>
+                                                class="mp-btn primary md flex-1 justify-center text-center">Terapkan</button>
                                             @if(request('search') || request('hari') || request('ruangan_id'))
                                                 <a href="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}"
-                                                    class="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Reset</a>
+                                                    class="mp-btn secondary md flex-1 justify-center text-center">Reset</a>
                                             @endif
                                         </div>
                                     </div>
@@ -505,14 +668,47 @@
                                             <h3 class="text-[13px] font-bold text-gray-800">Urutkan Berdasarkan</h3>
                                         </div>
                                         <div>
-                                            <select name="sort" onchange="this.form.submit()"
-                                                class="w-full px-3 py-3 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors cursor-pointer">
-                                                <option value="waktu" {{ request('sort', 'waktu') === 'waktu' ? 'selected' : '' }}>Hari & Waktu Terawal</option>
-                                                <option value="matkul_asc" {{ request('sort') === 'matkul_asc' ? 'selected' : '' }}>Mata Kuliah (A-Z)</option>
-                                                <option value="matkul_desc" {{ request('sort') === 'matkul_desc' ? 'selected' : '' }}>Mata Kuliah (Z-A)</option>
-                                                <option value="ruangan" {{ request('sort') === 'ruangan' ? 'selected' : '' }}>Ruangan (A-Z)</option>
-                                                <option value="terbaru" {{ request('sort') === 'terbaru' ? 'selected' : '' }}>Waktu Ditambahkan</option>
-                                            </select>
+                                            <div x-data="{ 
+                                                    open: false, 
+                                                    selectedVal: '{{ request('sort', 'waktu') }}', 
+                                                    get selectedName() {
+                                                        const map = {
+                                                            'waktu': 'Hari & Waktu Terawal',
+                                                            'matkul_asc': 'Mata Kuliah (A-Z)',
+                                                            'matkul_desc': 'Mata Kuliah (Z-A)',
+                                                            'ruangan': 'Ruangan (A-Z)',
+                                                            'terbaru': 'Waktu Ditambahkan'
+                                                        };
+                                                        return map[this.selectedVal] || 'Hari & Waktu Terawal';
+                                                    },
+                                                    selectItem(val) { 
+                                                        this.selectedVal = val; 
+                                                        $refs.sortInput.value = val;
+                                                        $refs.sortInput.form.submit();
+                                                    } 
+                                                }" class="relative w-full" @click.away="open = false">
+                                                
+                                                <input type="hidden" name="sort" x-ref="sortInput" :value="selectedVal">
+
+                                                <button type="button" @click="open = !open" 
+                                                    class="w-full flex items-center justify-between px-3 py-3 text-[13px] bg-gray-50 hover:bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-primary-400 focus:bg-white transition-colors h-[46px]">
+                                                    <span x-text="selectedName" class="truncate text-gray-800 font-medium"></span>
+                                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-hidden" style="display: none;">
+                                                    <div class="p-1 max-h-48 overflow-y-auto">
+                                                        <button type="button" @click="selectItem('waktu')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'waktu', 'text-gray-700 hover:bg-gray-50': selectedVal != 'waktu'}">Hari & Waktu Terawal</button>
+                                                        <button type="button" @click="selectItem('matkul_asc')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'matkul_asc', 'text-gray-700 hover:bg-gray-50': selectedVal != 'matkul_asc'}">Mata Kuliah (A-Z)</button>
+                                                        <button type="button" @click="selectItem('matkul_desc')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'matkul_desc', 'text-gray-700 hover:bg-gray-50': selectedVal != 'matkul_desc'}">Mata Kuliah (Z-A)</button>
+                                                        <button type="button" @click="selectItem('ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'ruangan', 'text-gray-700 hover:bg-gray-50': selectedVal != 'ruangan'}">Ruangan (A-Z)</button>
+                                                        <button type="button" @click="selectItem('terbaru')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'terbaru', 'text-gray-700 hover:bg-gray-50': selectedVal != 'terbaru'}">Waktu Ditambahkan</button>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -585,6 +781,7 @@
                                         x-data="{ 
                                             showDropdown: false, 
                                             showEditModal: false, 
+                                            showDeleteModal: false,
                                             formType: '{{ $j->tipe_jadwal }}', 
                                             kategoriType: '{{ $j->kategori }}',
                                             ruanganId: '{{ $j->ruangan_id }}',
@@ -635,49 +832,95 @@
                                                 this.conflictError = '';
                                             }
                                         }">
-                                        <div class="relative inline-block" x-data="{ showDropdown: false }">
-                                            <button type="button" @click="showDropdown = !showDropdown" @click.outside="showDropdown = false"
-                                                class="w-7 h-7 flex items-center justify-center rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:border-gray-300 transition-all cursor-pointer">
-                                                <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
-                                                    <circle cx="5" cy="12" r="2"></circle>
-                                                    <circle cx="12" cy="12" r="2"></circle>
-                                                    <circle cx="19" cy="12" r="2"></circle>
+                                        <div class="relative inline-flex flex-col items-center justify-center w-full" x-data="{ showDropdown: false }" :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
+                                            <button type="button" @click="showDropdown = !showDropdown"
+                                                @click.away="showDropdown = false"
+                                                class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
                                                 </svg>
                                             </button>
 
                                             <div x-show="showDropdown" style="display:none;"
                                                 x-transition:enter="transition ease-out duration-100"
-                                                x-transition:enter-start="opacity-0 scale-95"
-                                                x-transition:enter-end="opacity-100 scale-100"
-                                                class="absolute right-0 top-full mt-1.5 bg-white border border-gray-200 rounded-[10px] shadow-[0_8px_24px_rgba(0,0,0,.1)] min-w-[160px] z-[40] overflow-hidden p-1.5">
-                                                
-                                                <button type="button"
-                                                    @click="showEditModal = true; showDropdown = false"
-                                                    class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-gray-600 hover:bg-gray-100 transition-colors border-0 bg-transparent cursor-pointer text-left">
-                                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z"></path>
+                                                x-transition:enter-start="transform opacity-0 scale-95"
+                                                x-transition:enter-end="transform opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="transform opacity-100 scale-100"
+                                                x-transition:leave-end="transform opacity-0 scale-95"
+                                                class="origin-top-right absolute right-5 top-0 mt-8 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]">
+
+                                                <button type="button" @click="showEditModal = true; showDropdown = false"
+                                                    class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
+                                                    <svg class="w-[14px] h-[14px] text-gray-600" fill="none"
+                                                        stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
+                                                        </path>
                                                     </svg>
                                                     Edit Jadwal
                                                 </button>
-                                                
-                                                <div class="h-[1px] bg-gray-100 my-1 mx-1.5"></div>
-                                                
+
                                                 <form
                                                     action="{{ route('eoffice.peminjaman.admin.jadwal-internal.destroy', $j->id) }}"
                                                     method="POST"
-                                                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus blokir jadwal ini?');"
-                                                    style="margin:0;">
+                                                    id="deleteForm-{{ $j->id }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit"
-                                                        class="w-full flex items-center gap-2 px-2.5 py-[7px] rounded-md text-[13px] font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border-0 bg-transparent cursor-pointer text-left">
-                                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                    <button type="button" @click="showDeleteModal = true; showDropdown = false"
+                                                        class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
+                                                        <svg class="w-[14px] h-[14px] text-red-600" fill="none"
+                                                            stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                            </path>
                                                         </svg>
                                                         Hapus Jadwal
                                                     </button>
                                                 </form>
+                                            </div>
+                                        </div>
+
+                                        <!-- DELETE MODAL -->
+                                        <div x-show="showDeleteModal" style="display: none;"
+                                            class="fixed inset-0 z-[100] overflow-y-auto text-left whitespace-normal"
+                                            aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                                <div x-show="showDeleteModal"
+                                                    x-transition:enter="transition ease-out duration-300"
+                                                    x-transition:enter-start="opacity-0"
+                                                    x-transition:enter-end="opacity-100"
+                                                    x-transition:leave="transition ease-in duration-200"
+                                                    x-transition:leave-start="opacity-100"
+                                                    x-transition:leave-end="opacity-0"
+                                                    class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-md"
+                                                    aria-hidden="true" @click="showDeleteModal = false"></div>
+                                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen"
+                                                    aria-hidden="true">&#8203;</span>
+
+                                                <div x-show="showDeleteModal"
+                                                    x-transition:enter="transition ease-out duration-300"
+                                                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                                    x-transition:leave="transition ease-in duration-200"
+                                                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                                    class="inline-block px-4 pt-5 pb-4 overflow-hidden text-center align-bottom transition-all transform bg-white rounded-2xl shadow-2xl sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6 relative">
+                                                    
+                                                    <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-50 mb-4">
+                                                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                        </svg>
+                                                    </div>
+                                                    <h3 class="text-base font-bold text-slate-800 mb-2">Hapus Jadwal?</h3>
+                                                    <p class="text-xs text-slate-500 mb-6 leading-relaxed">Apakah Anda yakin ingin menghapus blokir jadwal ini? Tindakan ini tidak dapat dikembalikan.</p>
+                                                    
+                                                    <div class="flex justify-center gap-3">
+                                                        <button type="button" @click="showDeleteModal = false" class="mp-btn secondary px-4 py-2">Batal</button>
+                                                        <button type="button" @click="document.getElementById('deleteForm-{{ $j->id }}').submit()" class="mp-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-transparent" style="border:none;">Hapus Jadwal</button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -707,12 +950,12 @@
                                                     x-transition:leave="transition ease-in duration-200"
                                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                                                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                                    class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative">
+                                                    class="inline-flex flex-col w-full px-4 pt-5 pb-4 overflow-visible text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative max-h-[90vh]">
 
-                                                    <div class="flex items-center justify-between mb-5">
+                                                    <div class="flex items-center justify-between mb-5 shrink-0">
                                                         <h3 class="text-[18px] font-bold text-gray-900" id="modal-title">
-                                                            Edit
-                                                            Jadwal Internal</h3>
+                                                        Edit
+                                                        Jadwal Internal</h3>
                                                         <button type="button" @click="showEditModal = false; resetEditForm()"
                                                             class="text-gray-400 hover:text-gray-500">
                                                             <svg class="w-5 h-5" fill="none" stroke="currentColor"
@@ -725,22 +968,53 @@
 
                                                     <form
                                                         action="{{ route('eoffice.peminjaman.admin.jadwal-internal.update', $j->id) }}"
-                                                        method="POST">
+                                                        method="POST" class="flex flex-col flex-1 min-h-0">
                                                         @csrf
                                                         @method('PUT')
-                                                        <div class="space-y-4">
+                                                        <div class="space-y-4 overflow-y-auto overflow-x-hidden pr-2 -mr-2 pb-2 flex-1 whitespace-normal">
                                                             <div>
                                                                 <label
-                                                                    class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Tipe
+                                                                    class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Pilih
                                                                     Ruangan</label>
-                                                                <select name="ruangan_id" required
-                                                                    class="mp-input text-[14px]" x-model="ruanganId" @change="triggerCheck()">
-                                                                    @foreach($ruangans as $r)
-                                                                        <option value="{{ $r->id }}" {{ $r->id == $j->ruangan_id ? 'selected' : '' }}>{{ $r->nama }} - Lt.
-                                                                            {{ $r->lantai }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
+                                                                <div x-data="{ 
+                                                                        open: false,
+                                                                        get selectedName() {
+                                                                            const room = [
+                                                                                @foreach($ruangans as $r)
+                                                                                    {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                                                @endforeach
+                                                                            ].find(r => r.id == ruanganId);
+                                                                            return room ? room.name : '-- Pilih Ruangan Kelas --';
+                                                                        },
+                                                                        selectItem(id) { 
+                                                                            ruanganId = id;
+                                                                            this.open = false; 
+                                                                            triggerCheck();
+                                                                        } 
+                                                                    }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" @click.away="open = false">
+                                                                    
+                                                                    <input type="hidden" name="ruangan_id" :value="ruanganId" required>
+
+                                                                    <button type="button" @click="open = !open" 
+                                                                        class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                                                        <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !ruanganId, 'text-gray-800': ruanganId}"></span>
+                                                                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                                        </svg>
+                                                                    </button>
+                                                                    
+                                                                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                                        class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden" style="display: none;">
+                                                                        <div class="p-1 flex flex-col">
+                                                                            <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">-- Pilih Ruangan Kelas --</button>
+                                                                            @foreach($ruangans as $r)
+                                                                                <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
+                                                                                    {{ $r->nama }} - Lt. {{ $r->lantai }}
+                                                                                </button>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                             <input type="hidden" name="tipe_jadwal" value="rutin">
                                                             <input type="hidden" name="kategori"
@@ -779,16 +1053,45 @@
                                                                     <label
                                                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari
                                                                         Pertemuan</label>
-                                                                    <select name="hari" required
-                                                                        class="mp-input text-[14px]" x-model="currentDay" @change="triggerCheck()">
-                                                                        <option value="1" {{ $j->hari == 1 ? 'selected' : '' }}>Senin</option>
-                                                                        <option value="2" {{ $j->hari == 2 ? 'selected' : '' }}>Selasa</option>
-                                                                        <option value="3" {{ $j->hari == 3 ? 'selected' : '' }}>Rabu</option>
-                                                                        <option value="4" {{ $j->hari == 4 ? 'selected' : '' }}>Kamis</option>
-                                                                        <option value="5" {{ $j->hari == 5 ? 'selected' : '' }}>Jumat</option>
-                                                                        <option value="6" {{ $j->hari == 6 ? 'selected' : '' }}>Sabtu</option>
-                                                                        <option value="7" {{ $j->hari == 7 ? 'selected' : '' }}>Minggu</option>
-                                                                    </select>
+                                                                    <div x-data="{ 
+                                                                            open: false,
+                                                                            get selectedName() {
+                                                                                const map = {
+                                                                                    '1': 'Senin', '2': 'Selasa', '3': 'Rabu',
+                                                                                    '4': 'Kamis', '5': 'Jumat', '6': 'Sabtu', '7': 'Minggu'
+                                                                                };
+                                                                                return map[currentDay] || 'Pilih Hari...';
+                                                                            },
+                                                                            selectItem(val) { 
+                                                                                currentDay = val;
+                                                                                this.open = false; 
+                                                                                triggerCheck();
+                                                                            } 
+                                                                        }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" @click.away="open = false">
+                                                                        
+                                                                        <input type="hidden" name="hari" :value="currentDay" required>
+
+                                                                        <button type="button" @click="open = !open" 
+                                                                            class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                                                            <span x-text="selectedName" class="truncate text-gray-800"></span>
+                                                                            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                                            </svg>
+                                                                        </button>
+                                                                        
+                                                                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden" style="display: none;">
+                                                                            <div class="p-1 flex flex-col">
+                                                                                <button type="button" @click="selectItem('1')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '1', 'text-gray-700 hover:bg-gray-50': currentDay != '1'}">Senin</button>
+                                                                                <button type="button" @click="selectItem('2')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '2', 'text-gray-700 hover:bg-gray-50': currentDay != '2'}">Selasa</button>
+                                                                                <button type="button" @click="selectItem('3')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '3', 'text-gray-700 hover:bg-gray-50': currentDay != '3'}">Rabu</button>
+                                                                                <button type="button" @click="selectItem('4')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '4', 'text-gray-700 hover:bg-gray-50': currentDay != '4'}">Kamis</button>
+                                                                                <button type="button" @click="selectItem('5')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '5', 'text-gray-700 hover:bg-gray-50': currentDay != '5'}">Jumat</button>
+                                                                                <button type="button" @click="selectItem('6')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '6', 'text-gray-700 hover:bg-gray-50': currentDay != '6'}">Sabtu</button>
+                                                                                <button type="button" @click="selectItem('7')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': currentDay == '7', 'text-gray-700 hover:bg-gray-50': currentDay != '7'}">Minggu</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
                                                                 </div>
                                                                 <div class="grid grid-cols-2 gap-2">
                                                                     <div>
@@ -839,14 +1142,14 @@
                                                         </div>
 
                                                         <div
-                                                            class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                                                            class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100 shrink-0">
                                                             <button type="button" @click="showEditModal = false; resetEditForm()"
                                                                 class="mp-btn secondary md">Batal</button>
-                                                            <button type="submit" class="mp-btn primary md" :disabled="conflictError !== '' || isCheckingOut">Simpan
+                                                            <button type="submit" class="mp-btn primary md"
+                                                                :disabled="conflictError !== '' || isCheckingOut">Simpan
                                                                 Perubahan</button>
                                                         </div>
                                                     </form>
-                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -877,12 +1180,29 @@
     <div class="flex items-center gap-4">
         <div class="flex items-center border border-slate-200 rounded-md bg-white overflow-hidden text-[13px] shadow-sm">
             <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50">Per halaman</span>
-            <select aria-label="Per halaman" onchange="window.location.href=this.value" class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat" style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
-                <!-- Catatan: Pastikan Controller kamu menerima request('per_page') kalau ingin angkanya berfungsi dinamis, kalau backendnya statis 10, select ini tetap akan berubah halamannya saja -->
-                <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-            </select>
+            <div x-data="{ 
+                open: false, 
+                selectedVal: '{{ request('per_page', 10) }}',
+                selectItem(val, url) {
+                    this.selectedVal = val;
+                    this.open = false;
+                    window.location.href = url;
+                }
+            }" class="relative" @click.away="open = false">
+                <button type="button" @click="open = !open" class="flex items-center justify-between px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-md shadow-sm gap-2 min-w-[60px] transition-colors">
+                    <span x-text="selectedVal"></span>
+                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                
+                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                    class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
+                    <div class="p-1">
+                        <button type="button" @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')" class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
+                        <button type="button" @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')" class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
+                        <button type="button" @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')" class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
+                    </div>
+                </div>
+            </div>
         </div>
         <p class="text-xs font-medium text-slate-600">
             Menampilkan <span class="font-bold text-slate-800">{{ $jadwals->firstItem() ?? 0 }}</span> 

@@ -44,6 +44,12 @@
             scrollbar-color: var(--c-border-strong) transparent;
         }
 
+        @media (max-width: 767px) {
+            .mp-box-body {
+                padding-bottom: 80px;
+            }
+        }
+
         .mp-box-body::-webkit-scrollbar {
             width: 5px;
         }
@@ -627,22 +633,28 @@
         x-init="$watch('sidebarOpen', v => localStorage.setItem('mr_sb', v ? '1' : '0'))">
 
         {{-- SIDEBAR --}}
-        <aside data-mobile-sidebar
+        <aside
             class="flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
             :class="sidebarOpen ? '' : '!w-[64px]'">
 
-            <div class="relative px-[14px] h-[60px] flex items-center border-b border-[#DFE1E7] flex-shrink-0 transition-all duration-200" :class="sidebarOpen ? 'gap-[8px]' : 'justify-center'">
+            <div class="relative px-[14px] h-[60px] flex items-center border-b border-[#DFE1E7] flex-shrink-0 transition-all duration-200"
+                :class="sidebarOpen ? 'gap-[8px]' : 'justify-center'">
                 <div class="flex items-center justify-center w-[32px] h-[32px] flex-shrink-0">
-                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" class="w-full h-full object-contain drop-shadow-sm">
+                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP"
+                        class="w-full h-full object-contain drop-shadow-sm">
                 </div>
                 <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen" x-transition.opacity.duration.200ms>
-                    <div class="font-bold text-[14px] text-[#0D0D12] leading-[1.2] whitespace-nowrap tracking-[-0.01em]">SIPERKOM</div>
-                    <div class="text-[9px] font-medium text-[#808897] whitespace-nowrap mt-[2px]">Manajemen Ruangan</div>
+                    <div
+                        class="font-bold text-[14px] text-[#0D0D12] leading-[1.2] whitespace-nowrap tracking-[-0.01em]">
+                        SIPERKOM</div>
+                    <div class="text-[9px] font-medium text-[#808897] whitespace-nowrap mt-[2px]">Manajemen Ruangan
+                    </div>
                 </div>
-                
+
                 {{-- Floating collapse button --}}
                 <button @click="sidebarOpen = !sidebarOpen"
-                    class="absolute right-[-14px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[28px] h-[28px] rounded-[7px] bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.05)] cursor-pointer z-30 text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors" title="Toggle Sidebar">
+                    class="absolute right-[-14px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[28px] h-[28px] rounded-[7px] bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.05)] cursor-pointer z-30 text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors"
+                    title="Toggle Sidebar">
                     <svg class="transition-transform duration-[240ms]" :class="sidebarOpen ? '' : 'rotate-180'"
                         width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -670,14 +682,16 @@
                                         class="group relative flex items-center gap-[9px] pl-[14px] pr-[10px] py-[7px] rounded-[8px] mb-[2px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap {{ $active ? 'bg-[#EEF2FF] text-[#0B266E] font-semibold' : 'text-[#475569] font-medium hover:bg-[#F8FAFC]' }}"
                                         :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
                                         @if($active)
-                                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></div>
+                                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]"
+                                                x-show="sidebarOpen"></div>
                                         @endif
                                         <svg class="w-[16px] h-[16px] flex-shrink-0 transition-colors {{ $active ? 'text-[#0B266E]' : 'text-[#94A3B8]' }}"
                                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                                             stroke-linecap="round" stroke-linejoin="round">
                                             <path d="{{ $item['icon'] }}" />
                                         </svg>
-                                        <span class="text-[13px] flex-1 overflow-hidden text-ellipsis" x-show="sidebarOpen">{{ $item['label'] }}</span>
+                                        <span class="text-[13px] flex-1 overflow-hidden text-ellipsis"
+                                            x-show="sidebarOpen">{{ $item['label'] }}</span>
                                     </a>
                                 @endforeach
                             @endforeach
@@ -700,13 +714,15 @@
                 </a>
             </nav>
 
-            <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0" :class="sidebarOpen ? '' : '!px-[10px]'">
+            <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0"
+                :class="sidebarOpen ? '' : '!px-[10px]'">
                 <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg overflow-hidden transition-colors hover:bg-[#F6F8FA]"
                     :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
                     <div class="flex items-center justify-center w-[30px] h-[30px] rounded-full flex-shrink-0 text-white text-[11px] font-bold"
                         style="background:linear-gradient(135deg,#1F2937,#111827);">{{ $initials }}</div>
                     <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen">
-                        <div class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">
+                        <div
+                            class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">
                             {{ $name }}
                         </div>
                         <div class="text-[10px] text-[#666D80] whitespace-nowrap overflow-hidden text-ellipsis">
@@ -731,13 +747,49 @@
         {{-- MAIN AREA --}}
         <div class="flex-1 flex flex-col overflow-hidden">
             {{-- Topbar --}}
-            <div class="flex items-center justify-between px-6 bg-white border-b border-[#DFE1E7] flex-shrink-0"
-                style="height:56px;">
+            <div
+                class="flex items-center justify-between px-[14px] md:pl-[28px] md:pr-8 bg-white border-b border-[#DFE1E7] flex-shrink-0 h-[52px] md:h-[60px] transition-all">
                 <div class="flex items-center gap-3 min-w-0">
                     <div>
-                        <div class="font-bold text-[15px] text-[#0D0D12] leading-[1.2]">{{ $pageTitle ?? 'Dashboard' }}
+                        <div class="font-bold text-[14px] md:text-[15px] text-[#0D0D12] leading-[1.2] truncate">
+                            {{ $pageTitle ?? 'Dashboard' }}
                         </div>
-                        <div class="text-[11px] text-[#666D80]">Manajemen Ruangan · SIPERKOM</div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 md:gap-5">
+                    {{-- ── Right Actions ── --}}
+                    <div class="flex items-center gap-2 md:gap-4">
+                        {{-- Notification Bell --}}
+                        <div
+                            class="relative flex items-center justify-center cursor-pointer transition-colors hover:bg-gray-50 rounded-[10px] border border-[#DFE1E7] bg-white text-[#666D80] w-[30px] h-[30px] md:w-[36px] md:h-[36px]">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9" />
+                                <path d="M10 21a2 2 0 004 0" />
+                            </svg>
+                            @php
+                                $notifCount = class_exists('\Modules\EOffice\Models\Notifikasi') ? \Modules\EOffice\Models\Notifikasi::where('user_id', $user->id)->where('is_read', false)->count() : 0;
+                            @endphp
+                            @if($notifCount > 0)
+                                <span
+                                    class="absolute rounded-full w-[6px] h-[6px] bg-[#DF1C41] border-[1.5px] border-white top-1 right-1 md:top-2 md:right-2"></span>
+                            @endif
+                        </div>
+
+                        {{-- Separator --}}
+                        <div class="hidden md:block w-px h-[24px] bg-[#DFE1E7]"></div>
+
+                        {{-- User Profile --}}
+                        <div class="flex items-center gap-1.5 md:gap-2.5">
+                            <div class="flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden rounded-full w-[30px] h-[30px] text-[10px] md:w-[36px] md:h-[36px] md:text-[13px]"
+                                style="background: linear-gradient(135deg, #1F2937, #111827);">
+                                {{ $initials }}
+                            </div>
+                            <div class="hidden md:flex flex-col min-w-[100px]">
+                                <span class="text-[13px] font-semibold text-[#0D0D12] truncate">{{ $name }}</span>
+                                <span class="text-[11px] text-[#666D80] truncate">{{ $user?->email ?? '' }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -798,7 +850,6 @@
             </div>
         </div>
     </div>
-    <x-mobile-navigation />
 </body>
 
 </html>
