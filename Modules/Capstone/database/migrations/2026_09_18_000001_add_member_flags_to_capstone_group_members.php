@@ -14,14 +14,24 @@ use Illuminate\Support\Facades\Schema;
  * references deleted_at) and flagging a student fails on update. This migration
  * supplies the missing columns.
  */
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
+        // Idempotent: columns already added by 2026_08_08_000001. Only add when missing.
         Schema::table('capstone_group_members', function (Blueprint $table) {
-            $table->string('status')->nullable();
-            $table->unsignedBigInteger('removed_by')->nullable();
-            $table->text('removal_reason')->nullable();
-            $table->softDeletes();
+            if (! Schema::hasColumn('capstone_group_members', 'status')) {
+                $table->string('status')->nullable();
+            }
+            if (! Schema::hasColumn('capstone_group_members', 'removed_by')) {
+                $table->unsignedBigInteger('removed_by')->nullable();
+            }
+            if (! Schema::hasColumn('capstone_group_members', 'removal_reason')) {
+                $table->text('removal_reason')->nullable();
+            }
+            if (! Schema::hasColumn('capstone_group_members', 'deleted_at')) {
+                $table->softDeletes();
+            }
         });
     }
 
