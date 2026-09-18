@@ -2,13 +2,119 @@
 @section('title','User Management')
 @section('content')
 <div x-data="adminUsers" class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-4"><div><h1 class="text-3xl font-bold tracking-tight">User Management</h1><p class="mt-1 text-muted-foreground">Manage user accounts and access roles.</p></div><x-capstone::button href="/admin/users/new"><x-capstone::icon name="UserPlus" class="h-4 w-4" />Tambah User</x-capstone::button></div>
-    <div class="flex flex-wrap gap-2 border-b pb-3" role="group" aria-label="Filter role">@foreach(['all'=>'Semua User','mahasiswa'=>'Mahasiswa','dosen'=>'Dosen','admin'=>'Admin'] as $key=>$label)<button type="button" @click="role='{{ $key }}';filter()" :aria-pressed="role==='{{ $key }}'" :class="role==='{{ $key }}'?'bg-primary text-primary-foreground':'hover:bg-muted text-muted-foreground'" class="rounded-md px-4 py-2 text-sm font-medium">{{ $label }}</button>@endforeach</div>
-    <div class="flex flex-wrap items-center gap-3"><x-capstone::input type="search" x-model="search" @input.debounce.300ms="filter()" placeholder="Cari nama, email, NIM atau NIP..." aria-label="Cari users" class="min-w-48 flex-1" /><select x-model="status" @change="filter()" aria-label="Status akun" class="h-9 rounded-md border bg-background px-3 text-sm"><option value="all">Semua Status</option><option value="active">Aktif</option><option value="suspended">Ditangguhkan</option></select><x-capstone::button variant="destructive" x-show="selectedIds.length" @click="confirmDelete(items.filter(u=>selectedIds.includes(u.id)))" ::disabled="loading || saving"><span x-text="'Hapus '+selectedIds.length+' user'"></span></x-capstone::button></div>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h1 class="text-xl font-bold tracking-tight text-slate-900">User Management</h1>
+        <x-capstone::button href="/admin/users/new" class="bg-[#2f3d8a] text-white hover:bg-[#2f3d8a]/90"><x-capstone::icon name="UserPlus" size="16" /> Tambah User</x-capstone::button>
+    </div>
+
     @include('capstone::partials.loading')
-    <div x-show="!loading && !error" x-cloak class="space-y-4"><div class="overflow-x-auto rounded-xl border"><table class="w-full min-w-[820px] text-left text-sm"><thead class="border-b bg-muted/30"><tr><th class="w-12 p-4"><input type="checkbox" :checked="selectedAll" @change="toggleAll($event.target.checked)" aria-label="Pilih semua user pada halaman ini" class="accent-primary"></th><th class="p-4"><button type="button" @click="sort('name')">Nama <span x-show="sortKey==='name'" x-text="sortDirection==='asc'?'↑':'↓'"></span></button></th><th class="p-4">NIM / NIP</th><th class="p-4">Access Role</th><th class="p-4">Status</th><th class="p-4"><button type="button" @click="sort('created_at')">Tanggal Daftar <span x-show="sortKey==='created_at'" x-text="sortDirection==='asc'?'↑':'↓'"></span></button></th><th class="p-4 text-right">Action</th></tr></thead><tbody><template x-for="user in items" :key="user.id"><tr class="border-b last:border-0 hover:bg-muted/20">
-        <td class="p-4"><input type="checkbox" :disabled="!user.can_delete" :checked="selectedIds.includes(user.id)" @change="toggleUser(user.id,$event.target.checked)" :aria-label="'Pilih '+user.name" class="accent-primary"></td><td class="p-4"><a :href="userUrl(user)" class="flex items-center gap-3"><span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-semibold text-primary" x-text="initials(user)"></span><span><span class="block font-medium hover:underline" x-text="user.name"></span><span class="mt-1 block text-xs text-muted-foreground" x-text="user.email"></span></span></a></td><td class="p-4" x-text="[user.nim,user.nip].filter(Boolean).join(' / ')||'-'"></td><td class="p-4"><div class="flex flex-wrap gap-1"><template x-for="slug in user.roles" :key="slug"><span class="rounded-full border px-2 py-0.5 text-xs capitalize" :class="slug==='admin'?'bg-violet-50 text-violet-700':slug==='dosen'?'bg-blue-50 text-blue-700':'bg-green-50 text-green-700'" x-text="slug"></span></template></div></td><td class="p-4"><span class="rounded-full px-2 py-1 text-xs" :class="user.status==='active'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'" x-text="user.status==='active'?'Aktif':'Ditangguhkan'"></span></td><td class="p-4 text-xs" x-text="date(user.created_at)"></td><td class="p-4"><div class="flex justify-end gap-2"><a :href="userUrl(user)" class="rounded border px-2 py-1 text-xs">Detail</a><a x-show="user.can_edit" :href="userUrl(user,true)" class="rounded border px-2 py-1 text-xs">Edit</a><button type="button" x-show="user.can_delete" @click="confirmDelete([user])" class="rounded border border-red-200 px-2 py-1 text-xs text-red-600">Hapus</button></div></td>
-    </tr></template></tbody></table><p x-show="!items.length" class="p-12 text-center text-muted-foreground">Tidak ada user yang sesuai dengan filter.</p></div><div class="flex flex-wrap items-center justify-between gap-3 text-sm"><span class="text-muted-foreground" x-text="(pagination.total||0)+' user'"></span><div class="flex items-center gap-3"><select x-model.number="pageSize" @change="filter()" aria-label="Baris per halaman" class="rounded border bg-background p-1"><option>10</option><option>25</option><option>50</option><option>100</option></select><x-capstone::button variant="outline" size="sm" @click="page--;load()" ::disabled="page<=1 || loading">Sebelumnya</x-capstone::button><span x-text="page+' / '+pageCount"></span><x-capstone::button variant="outline" size="sm" @click="page++;load()" ::disabled="page>=pageCount || loading">Berikutnya</x-capstone::button></div></div></div>
-    @include('capstone::pages.admin.users.delete-dialog')
+
+    <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
+
+    <div x-show="!loading && !error" x-cloak class="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
+            <h2 class="text-sm font-bold text-slate-900">User Table</h2>
+            <div class="flex items-center gap-2">
+                <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
+                    <x-capstone::icon name="Search" size="15" />
+                    <input x-model.debounce.300ms="search" @input="filter()" type="search" placeholder="Search" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Search users">
+                </label>
+                <span x-data="{open:false}" @click.outside="open=false" @keydown.escape.window="open=false" class="relative">
+                    <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">
+                        <x-capstone::icon name="ListFilter" size="15" /> Filter
+                    </button>
+                    <span x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
+                        <label class="mb-2 block text-xs font-medium text-slate-500">Role
+                            <select x-model="role" @change="filter()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
+                                <option value="all">Semua role</option>
+                                <option value="mahasiswa">Mahasiswa</option>
+                                <option value="dosen">Dosen</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </label>
+                        <label class="block text-xs font-medium text-slate-500">Status
+                            <select x-model="status" @change="filter()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
+                                <option value="all">Semua status</option>
+                                <option value="active">Aktif</option>
+                                <option value="suspended">Ditangguhkan</option>
+                            </select>
+                        </label>
+                    </span>
+                </span>
+                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
+                    <x-capstone::icon name="ArrowUpDown" size="15" />
+                    <select @change="applySort($event.target.value)" class="max-w-24 bg-transparent outline-none" aria-label="Sort users">
+                        <option value="name">Sort by</option>
+                        <option value="name">Nama</option>
+                        <option value="date">Tanggal Daftar</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[820px] text-left text-[13px]">
+                <thead class="border-b border-slate-100 bg-slate-50/60 text-xs text-slate-500">
+                    <tr>
+                        <th class="px-4 py-2.5 font-medium">No</th>
+                        <th class="px-4 py-2.5 font-medium">Nama User</th>
+                        <th class="px-4 py-2.5 font-medium">Email</th>
+                        <th class="px-4 py-2.5 font-medium">Access Role</th>
+                        <th class="px-4 py-2.5 font-medium">Tanggal Daftar</th>
+                        <th class="px-4 py-2.5 text-right font-medium">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <template x-for="(user,idx) in items" :key="user.id">
+                        <tr class="hover:bg-slate-50/60">
+                            <td class="px-4 py-3 text-slate-500" x-text="(userPage-1)*Number(pageSize)+idx+1"></td>
+                            <td class="px-4 py-3">
+                                <a :href="userUrl(user)" class="inline-flex items-center gap-2.5">
+                                    <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-bold text-slate-500" x-text="initials(user)"></span>
+                                    <span class="font-medium text-slate-800 hover:underline" x-text="user.name"></span>
+                                </a>
+                            </td>
+                            <td class="px-4 py-3 text-slate-700" x-text="user.email"></td>
+                            <td class="px-4 py-3">
+                                <span class="flex flex-wrap gap-1">
+                                    <template x-for="slug in user.roles" :key="slug">
+                                        <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize" :class="rolePillClass(slug)" x-text="roleLabel(slug)"></span>
+                                    </template>
+                                </span>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-700" x-text="usDate(user.created_at)"></td>
+                            <td class="px-4 py-3 text-right">
+                                <span x-data="{menu:false}" @click.outside="menu=false" @keydown.escape.window="menu=false" class="relative inline-block text-left">
+                                    <button type="button" @click="menu=!menu" :aria-expanded="menu" aria-label="Aksi user" class="rounded px-1 font-bold tracking-widest text-slate-400 hover:bg-slate-100 hover:text-slate-700">...</button>
+                                    <span x-show="menu" x-cloak class="absolute right-0 z-20 min-w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" :class="idx>=items.length-2 ? 'bottom-full mb-1' : 'top-full mt-1'">
+                                        <a :href="userUrl(user)" @click="menu=false" class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-100"><x-capstone::icon name="Eye" size="15" />Lihat Detail</a>
+                                    </span>
+                                </span>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="!items.length && !loading"><td colspan="6" class="px-4 py-10 text-center text-sm text-slate-400">Tidak ada user yang sesuai dengan filter.</td></tr>
+                    <tr x-show="loading"><td colspan="6" class="px-4 py-10 text-center text-sm text-slate-400">Memuat...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-3 text-[13px]">
+            <div class="flex items-center gap-2 text-slate-500">
+                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per page
+                    <select x-model.number="pageSize" @change="filter()" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>10</option><option>25</option><option>50</option></select>
+                </label>
+                <span x-text="'Showing '+userFrom+' to '+userTo+' of, '+userTotal+' results'"></span>
+            </div>
+            <div class="flex items-center gap-1">
+                <button type="button" @click="page=Math.max(1,userPage-1);load()" :disabled="userPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
+                <template x-for="(p,i) in userPageList" :key="i+'-'+p">
+                    <button type="button" x-show="p!=='…'" @click="page=p;load()" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===userPage ? 'border-[#2f3d8a] bg-[#2f3d8a] text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
+                    <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
+                </template>
+                <button type="button" @click="page=Math.min(userLastPage,userPage+1);load()" :disabled="userPage>=userLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection

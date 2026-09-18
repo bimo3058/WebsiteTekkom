@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\Capstone\Http\Controllers\Admin\AuditLogController;
+use Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
+use Modules\Capstone\Http\Controllers\Admin\BladeUserController;
 use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\StakeholderController;
@@ -10,7 +12,9 @@ use Modules\Capstone\Http\Controllers\AssessmentComponentTemplateController;
 use Modules\Capstone\Http\Controllers\AssessmentScoreController;
 use Modules\Capstone\Http\Controllers\AuthBridgeController;
 use Modules\Capstone\Http\Controllers\BidController;
+use Modules\Capstone\Http\Controllers\BladePeriodController;
 use Modules\Capstone\Http\Controllers\BursaIdeController;
+use Modules\Capstone\Http\Controllers\CalendarController;
 use Modules\Capstone\Http\Controllers\DashboardController;
 use Modules\Capstone\Http\Controllers\DigitalSignatureController;
 use Modules\Capstone\Http\Controllers\DocumentController;
@@ -18,11 +22,13 @@ use Modules\Capstone\Http\Controllers\DocumentTypeController;
 use Modules\Capstone\Http\Controllers\EvaluationController;
 use Modules\Capstone\Http\Controllers\ExpoController;
 use Modules\Capstone\Http\Controllers\ExpoEventController;
+use Modules\Capstone\Http\Controllers\ExpoStudentController;
 use Modules\Capstone\Http\Controllers\FileController;
 use Modules\Capstone\Http\Controllers\FinalizationController;
 use Modules\Capstone\Http\Controllers\GradeConfigurationController;
 use Modules\Capstone\Http\Controllers\GradeConsistencyController;
 use Modules\Capstone\Http\Controllers\GroupController;
+use Modules\Capstone\Http\Controllers\IndividualTaController;
 use Modules\Capstone\Http\Controllers\LocationController;
 use Modules\Capstone\Http\Controllers\NotificationController;
 use Modules\Capstone\Http\Controllers\PeerReviewController;
@@ -85,17 +91,20 @@ Route::prefix('capstone')->group(function () {
 
         // â”€â”€ Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         Route::middleware(['capstone.role:admin'])->prefix('admin')->group(function () {
-            Route::get('/analytics/group-progress', [\Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController::class, 'progress'])->middleware('permission:capstone.groups.view');
-            Route::get('/peer-review-dashboard/groups', [\Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController::class, 'peerReviews'])->middleware('permission:capstone.groups.view');
-            Route::post('/peer-review-dashboard/send-reminder/{group}', [\Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController::class, 'remind'])->middleware(['permission:capstone.groups.manage', 'throttle:10,1']);
-            Route::get('/period-wizard/options', [\Modules\Capstone\Http\Controllers\BladePeriodController::class, 'options']);
-            Route::get('/period-wizard/{period}', [\Modules\Capstone\Http\Controllers\BladePeriodController::class, 'show']);
-            Route::post('/period-wizard', [\Modules\Capstone\Http\Controllers\BladePeriodController::class, 'store']);
-            Route::put('/period-wizard/{period}', [\Modules\Capstone\Http\Controllers\BladePeriodController::class, 'update']);
+            Route::get('/analytics/group-progress', [BladeMonitoringController::class, 'progress'])->middleware('permission:capstone.groups.view');
+            Route::get('/peer-review-dashboard/groups', [BladeMonitoringController::class, 'peerReviews'])->middleware('permission:capstone.groups.view');
+            Route::post('/peer-review-dashboard/send-reminder/{group}', [BladeMonitoringController::class, 'remind'])->middleware(['permission:capstone.groups.manage', 'throttle:10,1']);
+            Route::post('/groups/{group}/message', [BladeMonitoringController::class, 'message'])->middleware(['permission:capstone.groups.manage', 'throttle:10,1']);
+            Route::post('/groups/{group}/members/{memberId}/flag', [BladeMonitoringController::class, 'flagMember'])->middleware('permission:capstone.groups.manage');
+            Route::post('/groups/{group}/members/{memberId}/unflag', [BladeMonitoringController::class, 'unflagMember'])->middleware('permission:capstone.groups.manage');
+            Route::get('/period-wizard/options', [BladePeriodController::class, 'options']);
+            Route::get('/period-wizard/{period}', [BladePeriodController::class, 'show']);
+            Route::post('/period-wizard', [BladePeriodController::class, 'store']);
+            Route::put('/period-wizard/{period}', [BladePeriodController::class, 'update']);
             Route::get('/dashboard', [DashboardController::class, 'admin']);
             Route::apiResource('periods', PeriodController::class);
             Route::get('/users', [UserController::class, 'index']);
-            Route::apiResource('user-management', \Modules\Capstone\Http\Controllers\Admin\BladeUserController::class)->parameters(['user-management'=>'user']);
+            Route::apiResource('user-management', BladeUserController::class)->parameters(['user-management' => 'user'])->except(['update', 'destroy']);
             Route::apiResource('expo-events', ExpoEventController::class);
             Route::put('/expo-events/{expoEvent}/publish', [ExpoEventController::class, 'publish']);
             Route::apiResource('document-types', DocumentTypeController::class);
@@ -105,7 +114,7 @@ Route::prefix('capstone')->group(function () {
             Route::get('/groups/{group}', [GroupController::class, 'show'])
                 ->middleware('permission:capstone.groups.view');
             Route::get('/schedules', [ScheduleController::class, 'index']);
-            Route::get('/all-schedules', [\Modules\Capstone\Http\Controllers\CalendarController::class, 'index']);
+            Route::get('/all-schedules', [CalendarController::class, 'index']);
 
             Route::get('/ta-defense-schedules/eligible-students', [TaDefenseScheduleController::class, 'eligibleStudents']);
             Route::put('/ta-defense-schedules/{id}/cancel', [TaDefenseScheduleController::class, 'cancel']);
@@ -253,7 +262,7 @@ Route::prefix('capstone')->group(function () {
                 Route::get('/students', [GroupController::class, 'supervisedStudents']);
             });
             Route::get('/schedules', [ScheduleController::class, 'index']);
-            Route::get('/all-schedules', [\Modules\Capstone\Http\Controllers\CalendarController::class, 'index']);
+            Route::get('/all-schedules', [CalendarController::class, 'index']);
 
             // Title approvals
             Route::get('/title-approvals', [TitleApprovalController::class, 'index']);
@@ -327,7 +336,7 @@ Route::prefix('capstone')->group(function () {
             Route::get('/workflow', [DocumentController::class, 'workflow']);
 
             Route::get('/schedules', [ScheduleController::class, 'index']);
-            Route::get('/all-schedules', [\Modules\Capstone\Http\Controllers\CalendarController::class, 'index']);
+            Route::get('/all-schedules', [CalendarController::class, 'index']);
             Route::get('/seminar-schedules', [SeminarDashboardController::class, 'studentSchedules']);
             Route::get('/ta-defense', [TaDefenseController::class, 'myDefense']);
 
@@ -335,9 +344,9 @@ Route::prefix('capstone')->group(function () {
             Route::get('/expo-events', [ExpoEventController::class, 'studentEvents']);
             Route::post('/expo-events/{expoEvent}/register', [ExpoEventController::class, 'register']);
             Route::post('/expo-events/{expoEvent}/withdraw', [ExpoEventController::class, 'withdraw']);
-            Route::get('/expo-events/{expoEvent}/detail', [\Modules\Capstone\Http\Controllers\ExpoStudentController::class, 'detail']);
-            Route::post('/expo-events/{expoEvent}/evaluation', [\Modules\Capstone\Http\Controllers\ExpoStudentController::class, 'evaluate']);
-            Route::post('/expo-events/{expoEvent}/document', [\Modules\Capstone\Http\Controllers\ExpoStudentController::class, 'document']);
+            Route::get('/expo-events/{expoEvent}/detail', [ExpoStudentController::class, 'detail']);
+            Route::post('/expo-events/{expoEvent}/evaluation', [ExpoStudentController::class, 'evaluate']);
+            Route::post('/expo-events/{expoEvent}/document', [ExpoStudentController::class, 'document']);
 
             Route::get('/my-period', [RegistrationController::class, 'myPeriod']);
             Route::get('/periods/{periodId}/check-registration', [RegistrationController::class, 'check']);
@@ -372,8 +381,8 @@ Route::prefix('capstone')->group(function () {
             Route::post('/peer-review', [PeerReviewController::class, 'store']);
 
             // TA submissions
-            Route::get('/ta-detailed-status', [\Modules\Capstone\Http\Controllers\IndividualTaController::class, 'status']);
-            Route::post('/ta-documents/upload', [\Modules\Capstone\Http\Controllers\IndividualTaController::class, 'upload']);
+            Route::get('/ta-detailed-status', [IndividualTaController::class, 'status']);
+            Route::post('/ta-documents/upload', [IndividualTaController::class, 'upload']);
             Route::get('/ta', [TaSubmissionController::class, 'index']);
             Route::post('/ta/upload', [TaSubmissionController::class, 'upload']);
             Route::put('/ta/revise', [TaSubmissionController::class, 'revise']);
