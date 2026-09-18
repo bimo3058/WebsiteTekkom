@@ -69,7 +69,13 @@
             if (countElem) countElem.textContent = visibleCount;
         }
     }">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-200">
+                <h2 class="text-lg font-semibold text-slate-900">Daftar Bank Soal</h2>
+                <p class="mt-1 text-sm text-slate-500">Paket soal yang perlu diperiksa dan divalidasi oleh GPM.</p>
+            </div>
+
+            <div class="mx-4 mt-4 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div class="relative flex-1">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +136,6 @@
             </div>
         </div>
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-6 pt-4 border-b border-slate-200">
             <nav class="flex gap-6 text-sm font-semibold">
                 <a href="#" class="pb-3 border-b-2 border-primary text-primary flex items-center">
@@ -145,18 +150,18 @@
         </div>
 
         <div class="overflow-x-auto" data-tab-panel="menunggu">
-            <table class="w-full" id="table-menunggu">
-                <thead class="bg-primary text-white border-b border-primary/20">
+            <table class="min-w-full text-sm" id="table-menunggu">
+                <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-200">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jumlah Soal</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Diajukan</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                        <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
+                        <th class="px-6 py-4 text-left">Mata Kuliah</th>
+                        <th class="px-6 py-4 text-left">Dosen Pengampu</th>
+                        <th class="px-6 py-4 text-left">Jumlah Soal</th>
+                        <th class="px-6 py-4 text-left">Tanggal Diajukan</th>
+                        <th class="px-6 py-4 text-left">Status</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-200 bg-white">
                     @forelse($paket_soal as $paket)
                         <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="px-6 py-4">
@@ -198,7 +203,7 @@
         </div>
 
         @if($all_paket_soal->count() > 0)
-            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div class="px-6 py-4 border-t border-slate-200 bg-white flex items-center justify-between">
                 <span class="text-xs text-slate-500">Menampilkan <span id="count-menunggu">{{ $all_paket_soal->count() }}</span> mata kuliah</span>
             </div>
         @endif
