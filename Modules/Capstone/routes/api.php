@@ -138,6 +138,25 @@ Route::prefix('capstone')->group(function () {
             Route::post('/finalization/finalize-period', [FinalizationController::class, 'finalizePeriod']);
             Route::post('/finalization/lock', [FinalizationController::class, 'lock']);
             Route::post('/finalization/unlock', [FinalizationController::class, 'unlock']);
+            // Finalization dashboard contract
+            Route::get('/finalization/dashboard', [FinalizationController::class, 'dashboard']);
+            Route::get('/finalization/lecturers', [FinalizationController::class, 'lecturers']);
+            Route::get('/finalization/simulate', [FinalizationController::class, 'simulate']);
+            Route::get('/finalization/available-titles', [FinalizationController::class, 'availableTitles']);
+            Route::get('/finalization/available-groups', [FinalizationController::class, 'availableGroups']);
+            Route::get('/finalization/export', [FinalizationController::class, 'export']);
+            Route::post('/finalization/set-supervisor', [FinalizationController::class, 'setSupervisor']);
+            Route::post('/finalization/batch-set-supervisor', [FinalizationController::class, 'batchSetSupervisor']);
+            Route::post('/finalization/execute', [FinalizationController::class, 'execute']);
+            Route::post('/finalization/rollback', [FinalizationController::class, 'rollback']);
+            Route::post('/finalization/cancel-kelompok-final', [FinalizationController::class, 'cancelKelompokFinal']);
+            Route::post('/finalization/assign-title', [FinalizationController::class, 'assignTitle']);
+            Route::post('/finalization/promote-to-ready', [FinalizationController::class, 'promoteToReady']);
+            Route::post('/finalization/create-manual-group', [FinalizationController::class, 'createManualGroup']);
+            Route::post('/finalization/add-to-existing-group', [FinalizationController::class, 'addToExistingGroup']);
+            Route::post('/finalization/reopen', [FinalizationController::class, 'reopen']);
+            Route::post('/finalization/auto-fix', [FinalizationController::class, 'autoFix']);
+            Route::post('/finalization/force-ready', [FinalizationController::class, 'forceReady']);
 
             // SEMPRO
             Route::get('/sempro/schedules', [SemproController::class, 'index']);
