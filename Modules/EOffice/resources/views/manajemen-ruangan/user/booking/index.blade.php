@@ -51,7 +51,7 @@
                     <a href="{{ $detailUrl }}"
                         class="block w-full aspect-video relative border-b border-gray-100 overflow-hidden group bg-gradient-to-br from-blue-50 to-blue-100">
                         @if($room->fotos->count() > 0)
-                            <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($room->fotos->first()->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                            <img src="{{ $room->fotos->first()->foto_url ?? app(\App\Services\SupabaseStorage::class)->getPublicUrl($room->fotos->first()->path_foto, 'eoffice') }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @else
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
                                 <svg class="w-12 h-12 text-blue-300 mb-1 group-hover:text-blue-400 transition-colors"
