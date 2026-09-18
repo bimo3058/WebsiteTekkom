@@ -40,6 +40,14 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             ->middleware('role:admin_banksoal|superadmin|dosen|gpm')
             ->name('banksoal.dashboard');
 
+        Route::get('/gpm/notifications', [DashboardController::class, 'gpmNotifications'])
+            ->middleware(['role:gpm', GpmSessionCheck::class])
+            ->name('banksoal.gpm.notifications');
+
+        Route::get('/dosen/notifications', [DashboardController::class, 'dosenNotifications'])
+            ->middleware('role:dosen')
+            ->name('banksoal.dosen.notifications');
+
         # Role Switcher
         Route::get('/switch-role/{role}', [DashboardController::class, 'switchRole'])
             ->name('banksoal.switch-role')

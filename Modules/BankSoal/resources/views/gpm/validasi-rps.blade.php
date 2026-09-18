@@ -174,7 +174,13 @@
         </div>
 
         <div data-tab-panel="menunggu">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">Menunggu Validasi</h2>
+                    <p class="mt-1 text-sm text-slate-500">Daftar RPS yang menunggu pemeriksaan dan validasi oleh GPM.</p>
+                </div>
+
+            <div class="mx-4 mt-4 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
                  x-data="{
                      searchQuery: '',
                      selectedSemester: '',
@@ -277,19 +283,18 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full" id="table-menunggu">
-                        <thead class="bg-primary text-white border-b border-primary/20">
+                    <table class="min-w-full text-sm" id="table-menunggu">
+                        <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Diajukan</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left">Tanggal Diajukan</th>
+                                <th class="px-6 py-4 text-left">Status</th>
+                                <th class="px-6 py-4 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-200 bg-white">
                             @forelse($rpsDiajukan as $rps)
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="px-6 py-4">
@@ -333,16 +338,22 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="mt-4 flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <span class="text-xs text-slate-500">Menampilkan {{ $rpsDiajukan->count() }} dari {{ $rpsDiajukan->total() }} entri</span>
                 {{ $rpsDiajukan->links('banksoal::components.ui.laravel-pagination') }}
+            </div>
             </div>
         </div>
 
         <div class="hidden" data-tab-panel="revisi">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">Menunggu Revisi</h2>
+                    <p class="mt-1 text-sm text-slate-500">Daftar RPS yang perlu diperbaiki berdasarkan catatan hasil review.</p>
+                </div>
+
+            <div class="mx-4 mt-4 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
                  x-data="{
                      searchQuery: '',
                      selectedSemester: '',
@@ -445,19 +456,18 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full" id="table-revisi">
-                        <thead class="bg-primary text-white border-b border-primary/20">
+                    <table class="min-w-full text-sm" id="table-revisi">
+                        <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Review</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left">Tanggal Review</th>
+                                <th class="px-6 py-4 text-left">Status</th>
+                                <th class="px-6 py-4 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-200 bg-white">
                             @forelse($rpsRevisi as $rps)
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="px-6 py-4">
@@ -501,16 +511,22 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="mt-4 flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <span class="text-xs text-slate-500">Menampilkan {{ $rpsRevisi->count() }} dari {{ $rpsRevisi->total() }} entri</span>
                 {{ $rpsRevisi->links('banksoal::components.ui.laravel-pagination') }}
+            </div>
             </div>
         </div>
 
         <div class="hidden" data-tab-panel="disetujui">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-5 border-b border-slate-200">
+                    <h2 class="text-lg font-semibold text-slate-900">Riwayat Pengajuan RPS</h2>
+                    <p class="mt-1 text-sm text-slate-500">Daftar RPS yang telah selesai divalidasi dan disetujui oleh GPM.</p>
+                </div>
+
+            <div class="mx-4 mt-4 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
                  x-data="{
                      searchQuery: '',
                      selectedSemester: '',
@@ -613,19 +629,18 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full" id="table-disetujui">
-                        <thead class="bg-primary text-white border-b border-primary/20">
+                    <table class="min-w-full text-sm" id="table-disetujui">
+                        <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-200">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Disetujui</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left">Tanggal Disetujui</th>
+                                <th class="px-6 py-4 text-left">Status</th>
+                                <th class="px-6 py-4 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-200 bg-white">
                             @forelse($rpsDisetujui as $rps)
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="px-6 py-4">
@@ -669,11 +684,11 @@
                         </tbody>
                     </table>
                 </div>
-            </div>
 
-            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="mt-4 flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <span class="text-xs text-slate-500">Menampilkan {{ $rpsDisetujui->count() }} dari {{ $rpsDisetujui->total() }} entri</span>
                 {{ $rpsDisetujui->links('banksoal::components.ui.laravel-pagination') }}
+            </div>
             </div>
         </div>
     </div>
