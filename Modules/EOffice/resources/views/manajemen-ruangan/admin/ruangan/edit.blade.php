@@ -84,7 +84,7 @@
                             @foreach($ruangan->fotos as $foto)
                                 <div class="gallery-item" data-id="{{ $foto->id }}"
                                     style="position: relative; cursor: grab; width: 120px; height: 90px; border-radius: 6px; overflow: hidden; border: 2px solid #DFE1E7;">
-                                    <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto) }}"
+                                    <img src="{{ $foto->foto_url ?? app(\App\Services\SupabaseStorage::class)->getPublicUrl($foto->path_foto, 'eoffice') }}"
                                         style="width: 100%; height: 100%; object-fit: cover;" draggable="false">
                                     <button type="button" onclick="deleteFoto({{ $foto->id }})"
                                         style="position: absolute; top: 4px; right: 4px; background: rgba(223, 28, 65, 0.9); color: white; border: none; border-radius: 4px; width: 22px; height: 22px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;">&times;</button>

@@ -115,8 +115,9 @@ class DashboardAnnouncementService
 
         foreach ($rpsReviewed as $review) {
             $rps = $review->rps;
+            $matkulNama = $rps && $rps->mata_kuliah ? $rps->mata_kuliah->nama : 'RPS';
             $items->push([
-                'title' => "📝 RPS Telah Ditinjau GPM — {$rps->mata_kuliah?->nama ?? 'RPS'}",
+                'title' => "📝 RPS Telah Ditinjau GPM — {$matkulNama}",
                 'body' => "RPS Anda telah ditinjau oleh GPM. Silakan periksa catatan review dan lakukan revisi jika diperlukan.",
                 'date' => $review->created_at->diffForHumans(),
                 'module' => 'bank_soal',
@@ -138,8 +139,9 @@ class DashboardAnnouncementService
             ->get();
 
         foreach ($rpsRevision as $rps) {
+            $matkulNama = $rps && $rps->mata_kuliah ? $rps->mata_kuliah->nama : 'RPS';
             $items->push([
-                'title' => "🔄 RPS Perlu Direvisi — {$rps->mata_kuliah?->nama ?? 'RPS'}",
+                'title' => "🔄 RPS Perlu Direvisi — {$matkulNama}",
                 'body' => "RPS Anda memerlukan revisi. Silakan periksa catatan dari GPM dan lakukan perbaikan.",
                 'date' => $rps->updated_at->diffForHumans(),
                 'module' => 'bank_soal',
@@ -165,15 +167,17 @@ class DashboardAnnouncementService
             ->get();
 
         foreach ($rpsPendingReview as $rps) {
-            $dosenName = $rps->dosen->first()?->name ?? 'Dosen';
+            $firstDosen = $rps->dosen->first();
+            $dosenName = $firstDosen ? $firstDosen->name : 'Dosen';
+            $matkulNama = $rps && $rps->mata_kuliah ? $rps->mata_kuliah->nama : 'RPS';
             $items->push([
-                'title' => "📋 Permintaan Review RPS — {$rps->mata_kuliah?->nama ?? 'RPS'}",
+                'title' => "📋 Permintaan Review RPS — {$matkulNama}",
                 'body' => "RPS dari {$dosenName} menunggu review. Silakan tinjau dan berikan feedback.",
-                'date' => $rps->submitted_at?->diffForHumans() ?? 'Baru saja',
+                'date' => $rps->submitted_at ? $rps->submitted_at->diffForHumans() : 'Baru saja',
                 'module' => 'bank_soal',
                 'pinned' => true,
                 'url' => route('banksoal.rps.gpm.review', $rps->id),
-                '_ts' => $rps->submitted_at?->timestamp ?? now()->timestamp,
+                '_ts' => $rps->submitted_at ? $rps->submitted_at->timestamp : now()->timestamp,
                 'badge' => 'bank_soal',
             ]);
         }
@@ -187,14 +191,15 @@ class DashboardAnnouncementService
 
         foreach ($rpsOverdue as $rps) {
             $daysPending = now()->diffInDays($rps->submitted_at);
+            $matkulNama = $rps && $rps->mata_kuliah ? $rps->mata_kuliah->nama : 'RPS';
             $items->push([
-                'title' => "⏰ RPS Belum Direview — {$rps->mata_kuliah?->nama ?? 'RPS'}",
+                'title' => "⏰ RPS Belum Direview — {$matkulNama}",
                 'body' => "RPS ini telah menunggu review selama {$daysPending} hari. Prioritaskan untuk segera ditinjau.",
-                'date' => $rps->submitted_at?->diffForHumans() ?? '',
+                'date' => $rps->submitted_at ? $rps->submitted_at->diffForHumans() : '',
                 'module' => 'bank_soal',
                 'pinned' => true,
                 'url' => route('banksoal.rps.gpm.review', $rps->id),
-                '_ts' => $rps->submitted_at?->timestamp ?? now()->timestamp,
+                '_ts' => $rps->submitted_at ? $rps->submitted_at->timestamp : now()->timestamp,
                 'badge' => 'bank_soal',
             ]);
         }

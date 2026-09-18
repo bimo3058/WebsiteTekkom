@@ -64,7 +64,7 @@
                                         </td>
                                         <td>
                                             @if($booking->berkas_pendukung)
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($booking->berkas_pendukung) }}"
+                                                <a href="{{ $booking->berkas_url ?? app(\App\Services\SupabaseStorage::class)->getPublicUrl($booking->berkas_pendukung, 'eoffice') }}"
                                                     target="_blank"
                                                     class="inline-flex items-center gap-1.5 text-[12px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
                                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">

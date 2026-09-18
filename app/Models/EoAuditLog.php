@@ -11,4 +11,24 @@ class EoAuditLog extends Model
     protected $casts    = ['old_data' => 'array', 'new_data' => 'array', 'created_at' => 'datetime'];
 
     public function user() { return $this->belongsTo(User::class)->withTrashed(); }
+
+    public function getModelAttribute(): ?string
+    {
+        return $this->subject_type;
+    }
+
+    public function getModelIdAttribute(): ?string
+    {
+        return (string) $this->subject_id;
+    }
+
+    public function getNewValuesAttribute(): ?array
+    {
+        return $this->new_data;
+    }
+
+    public function getOldValuesAttribute(): ?array
+    {
+        return $this->old_data;
+    }
 }
