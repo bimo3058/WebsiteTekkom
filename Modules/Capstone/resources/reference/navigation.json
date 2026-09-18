@@ -32,7 +32,7 @@
       ]
     },
     {
-      "title": "Evaluation Setup",
+      "title": "Period Setup",
       "icon": "ListChecks",
       "items": [
         {
@@ -54,6 +54,11 @@
           "title": "Document Requirements",
           "url": "/admin/document-requirements",
           "icon": "FileText"
+        },
+        {
+          "title": "Finalization",
+          "url": "/admin/finalization",
+          "icon": "ShieldCheck"
         }
       ]
     },
@@ -61,11 +66,6 @@
       "title": "Management",
       "icon": "Settings",
       "items": [
-        {
-          "title": "Finalization",
-          "url": "/admin/finalization",
-          "icon": "ShieldCheck"
-        },
         {
           "title": "Schedule",
           "url": "/admin/schedule",

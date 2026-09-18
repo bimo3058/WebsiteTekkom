@@ -5,14 +5,19 @@
     <meta name="csrf-token" content="">
     <title>Document Requirements | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1789736787">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/document-requirements","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1789736787"></script>
+    <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
+<script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
 <body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div x-show="pendingRequests > 0" x-cloak class="capstone-progress" role="status" aria-label="Sedang memproses permintaan">
+    <span class="capstone-progress-bar" aria-hidden="true"></span>
+</div>
 <div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
     <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+<aside data-mobile-sidebar class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
     <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
         <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
         <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
@@ -30,7 +35,7 @@
                     <rect  width="7"  height="5"  x="3"  y="16"  rx="1"  />
     </svg>
 <span x-show="!collapsed">Dashboard</span></a>
-                                                                                    <div x-data="{ expanded: true }">
+                                                                                    <div x-data="{ expanded: false }">
                         <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Master Data"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
                     <circle  cx="12"  cy="12"  r="3"  />
@@ -40,30 +45,31 @@
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/users"  title="Users" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Users</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/groups"  title="Groups" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Groups</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/locations"  title="Locations" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Locations</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">Document Requirements</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
                                                     </div>
                     </div>
-                                                                                                    <div x-data="{ expanded: false }">
-                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Evaluation Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                                                                                                    <div x-data="{ expanded: true }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Period Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M13 5h8"  />
                     <path  d="M13 12h8"  />
                     <path  d="M13 19h8"  />
                     <path  d="m3 17 2 2 4-4"  />
                     <path  d="m3 7 2 2 4-4"  />
     </svg>
-<span x-show="!collapsed">Evaluation Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+<span x-show="!collapsed">Period Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
                     <path  d="m9 18 6-6-6-6"  />
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/period-assessment-config"  title="Tipe Penilaian" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Tipe Penilaian</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/peer-review"  title="Peer Review" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Peer Review</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">Document Requirements</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -76,7 +82,6 @@
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/schedule"  title="Schedule" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Schedule</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/sempro"  title="Sidang Proposal" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Sidang Proposal</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
@@ -168,7 +173,7 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="px-3 sm:px-6 pt-6 pb-6"><div class="space-y-6" x-data="documentRequirements">
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div class="space-y-6" x-data="documentRequirements">
     <div class="flex flex-wrap items-start justify-between gap-4"><h1 class="text-[32px] font-semibold text-grey-600 leading-tight">Document Requirements</h1><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="$refs.defaults.showModal()" :disabled="!editable"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mr-2 h-4 w-4">
                     <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
                     <circle  cx="12"  cy="12"  r="3"  />
@@ -191,10 +196,10 @@ Gunakan konfigurasi bawaan</button>
 Filter</button>
 <div x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-52 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"><div class="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase">Status</div><button type="button" @click="status='all';page=1;open=false" class="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent">All Phases</button><button type="button" @click="status='configured';page=1;open=false" class="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent">Configured</button><button type="button" @click="status='unconfigured';page=1;open=false" class="w-full rounded-sm px-2 py-1.5 text-left text-sm hover:bg-accent">Not Configured</button></div></div></div></div></div></div>
     
-    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
-                    <circle  cx="12"  cy="12"  r="10"  />
-    </svg>
-<span class="sr-only">Loading</span></div>
+    <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
 <div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
     <div x-show="!loading && !error && !filtered.length" x-cloak class="flex flex-col items-center justify-center py-16 px-4 text-center"><div class="mb-4 rounded-full bg-gray-100 p-4"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-8 w-8 text-gray-400">
                     <path  d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"  />
@@ -238,8 +243,33 @@ Filter</button>
         </div>
     </main>
 </div>
-<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
-    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+<div aria-live="polite" aria-relevant="additions" class="capstone-notices fixed bottom-5 right-5 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id">
+        <div role="status" class="capstone-notice bg-popover text-popover-foreground flex items-start gap-3 rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300' : 'border-green-200'">
+            <template x-if="!notice.error">
+                <span class="capstone-success-icon flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+                </span>
+            </template>
+            <template x-if="notice.error">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+                </span>
+            </template>
+            <span class="min-w-0 flex-1 break-words pt-0.5" x-text="notice.message"></span>
+            <button type="button" class="text-muted-foreground shrink-0 rounded p-1 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Tutup notifikasi" @click="notices=notices.filter(item=>item.id!==notice.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+            </button>
+        </div>
+    </template>
 </div>
-</body>
+    </body>
 </html>

@@ -5,14 +5,19 @@
     <meta name="csrf-token" content="">
     <title>Titles Marketplace | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1789736787">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["mahasiswa"],"active_role":"mahasiswa","nim":null,"nip":"TEST-NIP"},"role":"mahasiswa","path":"\/mahasiswa\/titles\/index","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1789736787"></script>
+    <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
+<script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
 <body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div x-show="pendingRequests > 0" x-cloak class="capstone-progress" role="status" aria-label="Sedang memproses permintaan">
+    <span class="capstone-progress-bar" aria-hidden="true"></span>
+</div>
 <div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
     <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+<aside data-mobile-sidebar class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
     <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
         <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
         <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
@@ -163,10 +168,10 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="px-3 sm:px-6 pt-6 pb-6"><div x-data="studentMarketplace" class="space-y-6"><div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
-                    <circle  cx="12"  cy="12"  r="10"  />
-    </svg>
-<span class="sr-only">Loading</span></div>
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div x-data="studentMarketplace" class="space-y-6"><div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
 <div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
 <div x-show="!loading && !error" x-cloak class="space-y-6"><div class="flex flex-col md:flex-row md:items-center justify-between gap-4"><div><h1 class="text-3xl font-bold tracking-tight">Titles Marketplace</h1><p class="text-muted-foreground">Temukan topik skripsi atau bergabung dengan ide mahasiswa lain.</p></div><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground text-sm px-3 py-1">Period: <span x-text="period?.name"></span></span>
 </div>
@@ -182,20 +187,31 @@ Logout</button></form>
     </svg>
 <div><h3 class="font-medium leading-none tracking-tight mb-1">No Group Yet</h3><div class="text-sm leading-relaxed">Anda harus <a  href="http://localhost:8000/capstone/mahasiswa/group"  class="underline font-medium">membuat kelompok</a>
  terlebih dahulu sebelum bisa melakukan bidding.</div></div></div>
+<div role="alert" class="relative w-full rounded-lg border px-4 py-3 text-sm grid grid-cols-[auto_1fr] items-start gap-x-3" x-show="group && !isLeader"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 mt-0.5">
+                    <rect  width="18"  height="11"  x="3"  y="11"  rx="2"  ry="2"  />
+                    <path  d="M7 11V7a5 5 0 0 1 10 0v4"  />
+    </svg>
+<div><h3 class="font-medium leading-none tracking-tight mb-1">Leader Only</h3><div class="text-sm leading-relaxed">Hanya ketua kelompok yang dapat bidding judul dosen. Minta ketua kelompok Anda untuk melakukan bidding.</div></div></div>
 <div role="alert" class="relative w-full rounded-lg border px-4 py-3 text-sm grid grid-cols-[auto_1fr] items-start gap-x-3 text-destructive border-destructive/50" x-show="group && !group.is_solo && members.length < minMembers"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 mt-0.5">
                     <rect  width="18"  height="11"  x="3"  y="11"  rx="2"  ry="2"  />
                     <path  d="M7 11V7a5 5 0 0 1 10 0v4"  />
     </svg>
 <div><h3 class="font-medium leading-none tracking-tight mb-1">Bidding Locked</h3><div class="text-sm leading-relaxed">Kelompok Anda memiliki <span x-text="members.length"></span> anggota. Minimal <span x-text="minMembers"></span> anggota diperlukan untuk bidding judul dosen. Tambahkan anggota di <a  href="http://localhost:8000/capstone/mahasiswa/group"  class="underline font-bold">Grup Saya</a>
 .</div></div></div>
-<div role="alert" class="relative w-full rounded-lg border px-4 py-3 text-sm grid grid-cols-[auto_1fr] items-start gap-x-3" x-show="group?.is_solo"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 mt-0.5">
-                    <circle  cx="12"  cy="12"  r="10"  />
-                    <path  d="M12 16v-4"  />
-                    <path  d="M12 8h.01"  />
+<div role="alert" class="relative w-full rounded-lg border px-4 py-3 text-sm grid grid-cols-[auto_1fr] items-start gap-x-3 text-destructive border-destructive/50" x-show="group?.is_solo && members.length < minMembers"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 mt-0.5">
+                    <rect  width="18"  height="11"  x="3"  y="11"  rx="2"  ry="2"  />
+                    <path  d="M7 11V7a5 5 0 0 1 10 0v4"  />
     </svg>
-<div><h3 class="font-medium leading-none tracking-tight mb-1">Solo Seeker Mode</h3><div class="text-sm leading-relaxed">Sebagai solo seeker, Anda hanya dapat <a  href="http://localhost:8000/capstone/mahasiswa/propose-title"  class="underline font-medium">mengajukan judul sendiri</a>
-. Jika ingin bidding judul dosen, silakan <a  href="http://localhost:8000/capstone/mahasiswa/group"  class="underline font-medium">bubarkan grup</a>
- dan buat grup normal.</div></div></div>
+<div><h3 class="font-medium leading-none tracking-tight mb-1">Belum Bisa Bidding Judul Dosen</h3><div class="text-sm leading-relaxed">Kelompok solo Anda memiliki <span x-text="members.length"></span> dari minimal <span x-text="minMembers"></span> anggota. Untuk membuka bidding judul dosen, tambah anggota di <a  href="http://localhost:8000/capstone/mahasiswa/group"  class="underline font-bold">Grup Saya</a>
+ hingga mencapai minimal. Sementara itu, Anda tetap dapat <a  href="http://localhost:8000/capstone/mahasiswa/propose-title"  class="underline font-medium">mengajukan judul sendiri</a>
+.</div></div></div>
+<div role="alert" class="relative w-full rounded-lg border px-4 py-3 text-sm grid grid-cols-[auto_1fr] items-start gap-x-3 text-destructive border-destructive/50" x-show="group && (group.title_id || group.status==='READY_FOR_FINALIZATION')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 mt-0.5">
+                    <rect  width="18"  height="11"  x="3"  y="11"  rx="2"  ry="2"  />
+                    <path  d="M7 11V7a5 5 0 0 1 10 0v4"  />
+    </svg>
+<div><h3 class="font-medium leading-none tracking-tight mb-1">Bidding Dinonaktifkan</h3><div class="text-sm leading-relaxed">Kelompok Anda sudah memiliki judul yang disetujui dan terkunci untuk finalisasi, sehingga tombol bidding judul dosen dinonaktifkan. Kelola kelompok Anda di <a  href="http://localhost:8000/capstone/mahasiswa/group"  class="underline font-bold">Grup Saya</a>
+ atau pantau di <a  href="http://localhost:8000/capstone/mahasiswa/propose-title"  class="underline font-medium">Lihat Proposal</a>
+.</div></div></div>
 <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center"><div class="relative flex-1 w-full"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground">
                     <path  d="m21 21-4.34-4.34"  />
                     <circle  cx="11"  cy="11"  r="8"  />
@@ -262,8 +278,33 @@ No student-proposed ideas found yet.</div><div class="grid gap-4 md:grid-cols-2"
         </div>
     </main>
 </div>
-<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
-    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+<div aria-live="polite" aria-relevant="additions" class="capstone-notices fixed bottom-5 right-5 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id">
+        <div role="status" class="capstone-notice bg-popover text-popover-foreground flex items-start gap-3 rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300' : 'border-green-200'">
+            <template x-if="!notice.error">
+                <span class="capstone-success-icon flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+                </span>
+            </template>
+            <template x-if="notice.error">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+                </span>
+            </template>
+            <span class="min-w-0 flex-1 break-words pt-0.5" x-text="notice.message"></span>
+            <button type="button" class="text-muted-foreground shrink-0 rounded p-1 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Tutup notifikasi" @click="notices=notices.filter(item=>item.id!==notice.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+            </button>
+        </div>
+    </template>
 </div>
-</body>
+    </body>
 </html>
