@@ -14,7 +14,7 @@
     <div>
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
             <h1 style="font-size:22px; font-weight:700; color:var(--c-fg); letter-spacing:-0.02em; line-height:1.2;">Dashboard</h1>
-            <span style="font-size:10px; font-weight:600; color:var(--c-primary); background:rgba(94,83,244,0.09); border:1px solid rgba(94,83,244,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Superadmin</span>
+            <span style="font-size:10px; font-weight:600; color:var(--c-primary); background:var(--c-primary-subtle); border:1px solid var(--c-primary-border); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">{{ auth()->user()->hasRole('superadmin') ? 'Superadmin' : 'Admin E-Office' }}</span>
         </div>
         <p style="font-size:12px; color:var(--c-fg-muted);">
             Selamat datang, <span style="color:var(--c-fg); font-weight:600;">{{ $firstName }}</span>
@@ -76,11 +76,11 @@
 {{-- ═══════════════════════════════════════════════
      MIDDLE ROW: Daftar Praktikum & Pendaftaran
 ═══════════════════════════════════════════════ --}}
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:24px; flex-shrink:0;">
+<div class="mp-content-grid">
 
     {{-- Panel Daftar Praktikum --}}
     <div style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04);">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--c-border);">
+        <div class="mp-dashboard-panel-heading" style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--c-border);">
             <div style="font-size:15px; font-weight:700; color:var(--c-fg);">Daftar Praktikum</div>
             <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}"
                style="font-size:12px; font-weight:600; color:var(--c-primary); text-decoration:none;">Lihat Semua &rarr;</a>
@@ -116,7 +116,7 @@
         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--c-border);">
             <div style="font-size:15px; font-weight:700; color:var(--c-fg);">Pendaftaran</div>
         </div>
-        <div style="display:grid; grid-template-columns:1.5fr 1fr auto; gap:16px; padding:12px 20px; border-bottom:1px solid var(--c-border); background:#FAFAFA;">
+        <div class="mp-registration-columns" style="display:grid; grid-template-columns:1.5fr 1fr auto; gap:16px; padding:12px 20px; border-bottom:1px solid var(--c-border); background:#FAFAFA;">
             <div style="font-size:12px; font-weight:600; color:var(--c-fg-sec);">Nama Praktikum</div>
             <div style="font-size:12px; font-weight:600; color:var(--c-fg-sec);">Masa Pendaftaran</div>
             <div style="font-size:12px; font-weight:600; color:var(--c-fg-sec); text-align:right;">Jenis Pendaftaran</div>
@@ -126,24 +126,25 @@
             if(isset($periodeBuka)) {
                 foreach($periodeBuka as $periode) {
                     $isKoor = $periode->jenis === 'koor';
+                    $isPraktikan = $periode->jenis === 'praktikan';
                     $mulai = \Carbon\Carbon::parse($periode->dibuka_pada)->locale('id')->isoFormat('D MMMM YYYY');
                     $selesai = \Carbon\Carbon::parse($periode->ditutup_pada)->locale('id')->isoFormat('D MMMM YYYY');
                     $listPendaftaran[] = [
                         'nama' => $periode->praktikum?->nama ?? 'Praktikum', 
                         'masa' => $mulai . ' - ' . $selesai,
-                        'jenis' => $isKoor ? 'Koordinator Praktikum' : 'Asisten Praktikum',
-                        'bg' => $isKoor ? 'rgba(94,83,244,0.1)' : '#DDF2EE',
-                        'text' => $isKoor ? 'var(--c-primary)' : '#287F6E',
-                        'border' => $isKoor ? 'rgba(94,83,244,0.2)' : '#40C4AA'
+                        'jenis' => $isKoor ? 'Koordinator Praktikum' : ($isPraktikan ? 'Praktikan' : 'Asisten Praktikum'),
+                        'bg' => $isKoor ? 'rgba(94,83,244,0.1)' : ($isPraktikan ? '#FFF7E6' : '#DDF2EE'),
+                        'text' => $isKoor ? 'var(--c-primary)' : ($isPraktikan ? '#956321' : '#287F6E'),
+                        'border' => $isKoor ? 'rgba(94,83,244,0.2)' : ($isPraktikan ? '#D39C3D' : '#40C4AA')
                     ];
                 }
             }
         @endphp
         @forelse(array_slice($listPendaftaran, 0, 5) as $pend)
-        <div style="display:grid; grid-template-columns:1.5fr 1fr auto; gap:16px; padding:14px 20px; border-bottom:1px solid var(--c-border); align-items:center;">
-            <div style="font-size:13px; font-weight:600; color:var(--c-fg);">{{ $pend['nama'] }}</div>
-            <div style="font-size:13px; color:var(--c-fg-muted);">{{ $pend['masa'] }}</div>
-            <div style="text-align:right;">
+        <div class="mp-registration-record" style="display:grid; grid-template-columns:1.5fr 1fr auto; gap:16px; padding:14px 20px; border-bottom:1px solid var(--c-border); align-items:center;">
+            <div data-label="Praktikum" style="font-size:13px; font-weight:600; color:var(--c-fg);">{{ $pend['nama'] }}</div>
+            <div data-label="Masa pendaftaran" style="font-size:13px; color:var(--c-fg-muted);">{{ $pend['masa'] }}</div>
+            <div data-label="Jenis pendaftaran" style="text-align:right;">
                 <span style="display:inline-block; font-size:11px; font-weight:600; background:{{ $pend['bg'] }}; color:{{ $pend['text'] }}; border:1px solid {{ $pend['border'] }}; padding:2px 8px; border-radius:6px;">{{ $pend['jenis'] }}</span>
             </div>
         </div>
@@ -164,7 +165,7 @@
      BOTTOM ROW: Daftar Dosen
 ═══════════════════════════════════════════════ --}}
 <div id="daftar-dosen" style="margin-top:24px; background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:visible; box-shadow:0 1px 3px rgba(0,0,0,.04); flex-shrink:0;">
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--c-border);">
+    <div class="mp-dashboard-panel-heading" style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--c-border);">
         <div style="font-size:15px; font-weight:700; color:var(--c-fg);">Daftar Dosen</div>
         
         <form id="dosen_filter_form" method="GET" action="{{ url()->current() }}#daftar-dosen" style="display:flex; gap:10px; margin:0;">
@@ -175,6 +176,7 @@
         </form>
     </div>
     
+    <div class="mp-data-scroll">
     <div class="grid gap-4 px-5 py-3 bg-[#FAFAFA] border-b border-[#DFE1E7]"
          style="grid-template-columns: 50px 2fr 1.5fr 150px 130px;">
         <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase">No</div>
@@ -226,6 +228,7 @@
     <div style="padding:32px; text-align:center; font-size:13px; color:var(--c-fg-muted);">Belum ada data dosen.</div>
     @endforelse
 
+    </div>{{-- /mp-data-scroll --}}
     {{-- Pagination Custom Fungsional --}}
     @if($dosenPaginator->hasPages() || $dosenPaginator->total() > 0)
     <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 20px; border-top:1px solid var(--c-border);">

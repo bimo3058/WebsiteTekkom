@@ -63,51 +63,7 @@ class PersetujuanController extends Controller
         // System Event: Auto-kill expired dangling pending requests
         \Modules\EOffice\Models\Peminjaman::autoExpirePending();
 
-        $now = now();
-        $date = $now->format('Y-m-d');
-        $time = $now->format('H:i:s');
-
-        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
-            ->where('status', '!=', 'menunggu')
-            ->where(function ($q) use ($date, $time) {
-                $q->where('status', '!=', 'disetujui')
-                    ->orWhere(function ($q2) use ($date, $time) {
-                        $q2->where('status', 'disetujui')
-                            ->whereRaw("(tanggal_pinjam < ? OR (tanggal_pinjam = ? AND jam_selesai <= ?))", [$date, $date, $time]);
-                    });
-            });
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('ruangan_id')) {
-            $query->where('ruangan_id', $request->ruangan_id);
-        }
-
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $query->whereBetween('tanggal_pinjam', [$request->start_date, $request->end_date]);
-        } elseif ($request->filled('start_date')) {
-            $query->where('tanggal_pinjam', '>=', $request->start_date);
-        } elseif ($request->filled('end_date')) {
-            $query->where('tanggal_pinjam', '<=', $request->end_date);
-        }
-
-        if ($request->filled('search')) {
-            $search = strtolower($request->search);
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('user', function ($sq) use ($search) {
-                    $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
-                })->orWhereHas('ruangan', function ($sq) use ($search) {
-                    $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
-                })->orWhereRaw('LOWER(tujuan) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(nomor_telepon) LIKE ?', ["%{$search}%"]);
-            });
-        }
-
-        $peminjamans = $query->orderBy('waktu_approval', 'desc')
-            ->orderBy('created_at', 'desc')
+        $peminjamans = $this->getRiwayatQuery($request)
             ->paginate((int) $request->input('per_page', 10))->withQueryString();
 
         $ruangans = \Modules\EOffice\Models\Ruangan::orderBy('nama', 'asc')->get();
@@ -395,5 +351,95 @@ class PersetujuanController extends Controller
         }
 
         return response()->json(['conflict' => false]);
+    }
+
+    /**
+     * Soft delete arsip peminjaman (hanya superadmin)
+     */
+    public function destroy($id)
+    {
+        $peminjaman = Peminjaman::findOrFail($id);
+
+        $peminjaman->delete();
+
+        return redirect()->back()->with('success', 'Data arsip peminjaman berhasil dihapus.');
+    }
+
+    /**
+     * Export riwayat peminjaman ke PDF
+     */
+    public function exportPdf(Request $request)
+    {
+        $peminjamans = $this->getRiwayatQuery($request)->get();
+        $ruangans = \Modules\EOffice\Models\Ruangan::orderBy('nama', 'asc')->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('eoffice::manajemen-ruangan.admin.persetujuan.riwayat-pdf', compact('peminjamans', 'ruangans', 'request'));
+        $pdf->setPaper('a4', 'landscape');
+
+        return $pdf->download('Riwayat_Peminjaman_Ruangan_' . now()->format('Y-m-d_His') . '.pdf');
+    }
+
+    /**
+     * Export riwayat peminjaman ke Excel
+     */
+    public function exportExcel(Request $request)
+    {
+        $peminjamans = $this->getRiwayatQuery($request)->get();
+
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \Modules\EOffice\Exports\RiwayatPeminjamanExport($peminjamans),
+            'Riwayat_Peminjaman_Ruangan_' . now()->format('Y-m-d_His') . '.xlsx'
+        );
+    }
+
+    /**
+     * Query builder untuk riwayat peminjaman (dipakai di riwayat(), exportPdf(), exportExcel())
+     */
+    protected function getRiwayatQuery(Request $request)
+    {
+        $now = now();
+        $date = $now->format('Y-m-d');
+        $time = $now->format('H:i:s');
+
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
+            ->where('status', '!=', 'menunggu')
+            ->where(function ($q) use ($date, $time) {
+                $q->where('status', '!=', 'disetujui')
+                    ->orWhere(function ($q2) use ($date, $time) {
+                        $q2->where('status', 'disetujui')
+                            ->whereRaw("(tanggal_pinjam < ? OR (tanggal_pinjam = ? AND jam_selesai <= ?))", [$date, $date, $time]);
+                    });
+            });
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('ruangan_id')) {
+            $query->where('ruangan_id', $request->ruangan_id);
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_pinjam', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
+            $query->where('tanggal_pinjam', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->where('tanggal_pinjam', '<=', $request->end_date);
+        }
+
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
+                })->orWhereHas('ruangan', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
+                })->orWhereRaw('LOWER(tujuan) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(nomor_telepon) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        return $query->orderBy('waktu_approval', 'desc')->orderBy('created_at', 'desc');
     }
 }

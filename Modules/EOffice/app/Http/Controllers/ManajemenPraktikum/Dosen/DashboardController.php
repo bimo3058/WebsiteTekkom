@@ -91,15 +91,6 @@ class DashboardController extends Controller
             return back()->with('error', "Mahasiswa dengan NIM {$request->nim} tidak ditemukan.");
         }
 
-        // Pastikan mahasiswa sudah terdaftar di praktikum ini
-        $terdaftar = DaftarPraktikan::where('praktikum_id', $praktikum->id)
-            ->where('user_id', $targetUser->id)
-            ->exists();
-
-        if (!$terdaftar) {
-            return back()->with('error', 'Mahasiswa ini tidak terdaftar di praktikum tersebut.');
-        }
-
         $this->koorService->assign($praktikum, $targetUser);
 
         return back()->with('success', "Mahasiswa {$targetUser->name} berhasil ditunjuk sebagai koordinator dan otomatis aktif sebagai asprak.");
@@ -111,20 +102,22 @@ class DashboardController extends Controller
         $praktikumId = $request->get('praktikum_id');
         $user = auth()->user();
 
-        if (strlen($q) < 2) return response()->json([]);
+        if (strlen($q) < 2)
+            return response()->json([]);
 
         // Pastikan dosen mengampu praktikum ini
         $valid = Praktikum::where('id', $praktikumId)
             ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->exists();
-        if (!$valid) return response()->json([]);
+        if (!$valid)
+            return response()->json([]);
 
         // Mencari semua mahasiswa di sistem (User yang punya relasi student)
         $praktikan = \App\Models\User::with(['student'])
             ->whereHas('student') // Pastikan dia adalah mahasiswa
-            ->where(function($query) use ($q) {
+            ->where(function ($query) use ($q) {
                 $query->where('name', 'ilike', "%{$q}%")
-                      ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'ilike', "%{$q}%"));
+                    ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'ilike', "%{$q}%"));
             })
             ->take(10)
             ->get();

@@ -1,0 +1,96 @@
+<template x-teleport="body">
+        <div x-show="showMainModal" style="display:none;" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="showMainModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-[#0D0D12]/40 backdrop-blur-sm transition-opacity" aria-hidden="true" @click="closeMainModal()"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div x-show="showMainModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative inline-block align-bottom bg-white rounded-[16px] text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-[850px] w-full flex flex-col max-h-[90vh]">
+                
+                {{-- Modal Header --}}
+                <div class="px-6 py-4 border-b border-[#DFE1E7] flex-shrink-0 bg-white shadow-[0_2px_5px_rgba(0,0,0,0.02)] relative z-10">
+                    <div style="font-weight:700; font-size:16px; color:#0D0D12; margin-bottom:16px;">Kelola Kelompok & Shift</div>
+
+
+                    <form action="{{ route('eoffice.manprak.koor.praktikan.settings') }}" method="POST" onsubmit="return confirm('PENTING: Menyimpan pengaturan baru akan MENGHAPUS manual plotting sebelumnya dan mendistribusikan ulang (reset) semua anggota. Yakin ingin melanjutkan?');">
+                        @csrf
+                        <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
+                        <div style="display:flex; gap:16px; align-items:flex-end;">
+                            <div style="flex:1;">
+                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jumlah Kelompok</label>
+                                <input type="number" name="jumlah_kelompok" value="{{ $praktikum->jumlah_kelompok ?? 1 }}" min="1" class="mp-input" style="width:100%; height:38px;">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jumlah Shift</label>
+                                <input type="number" name="jumlah_shift" value="{{ $praktikum->jumlah_shift ?? 1 }}" min="1" class="mp-input" style="width:100%; height:38px;">
+                            </div>
+                            <div style="flex:1.5;">
+                                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Metode Pembagian</label>
+                                <x-eoffice::manajemen-praktikum.ui.select name="method" :options="[['value' => 'urutan_sistem', 'label' => 'Berurutan'], ['value' => 'acak', 'label' => 'Acak']]" selected="urutan_sistem" />
+                            </div>
+                            <div style="flex:1.5;">
+                                <button type="submit" class="mp-btn primary md" style="width:100%; background:#0B266E; height:38px; display:flex; align-items:center; justify-content:center; gap:6px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                    Simpan Pengaturan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                {{-- Modal Body (Scrollable) --}}
+                <div style="padding:24px; overflow-y:auto; flex:1;">
+                    
+                    {{-- Bottom Section: Daftar Kelompok (Manual Plot) --}}
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:16px;">
+                        <div>
+                            <div style="font-weight:700; font-size:15px; color:#0D0D12;">Assign Manual Anggota Kelompok</div>
+                            <div style="font-size:12px; color:#666D80; margin-top:2px;">Klik ikon pensil pada kelompok untuk mengubah anggota.</div>
+                        </div>
+                        <div style="font-size:12px; font-weight:600; padding:6px 12px; background:#FEF2F2; color:#DC2626; border-radius:6px; border:1px solid #FECACA;" x-show="unassignedCount > 0">
+                            <span x-text="unassignedCount"></span> Praktikan belum dapat kelompok!
+                        </div>
+                        <div style="font-size:12px; font-weight:600; padding:6px 12px; background:#ECFDF5; color:#059669; border-radius:6px; border:1px solid #A7F3D0;" x-show="unassignedCount === 0">
+                            Semua praktikan sudah terdistribusi
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(240px, 1fr)); gap:16px;">
+                        @for($i=1; $i<=($praktikum->jumlah_kelompok ?? 0); $i++)
+                            @php 
+                                $groupsPerShift = max(1, ($praktikum->jumlah_kelompok ?? 1) / ($praktikum->jumlah_shift ?? 1));
+                                $defShift = (int) ceil($i / $groupsPerShift);
+                                if($defShift > ($praktikum->jumlah_shift ?? 1)) $defShift = $praktikum->jumlah_shift;
+                                $jmlAnggota = $praktikansSemua->where('kelompok', $i)->count();
+                            @endphp
+                            <div style="border:1px solid #DFE1E7; border-radius:10px; padding:16px; background:#FFF; display:flex; justify-content:space-between; align-items:center; transition:border 0.2s;" onmouseover="this.style.borderColor='#A4ABB8'" onmouseout="this.style.borderColor='#DFE1E7'">
+                                <div>
+                                    <div style="font-weight:700; color:#0D0D12; font-size:14px; margin-bottom:4px;">Kelompok {{ $i }}</div>
+                                    <div style="font-size:12px; color:#666D80;">Shift {{ $defShift }} <span style="margin:0 4px;">â€¢</span> <strong>{{ $jmlAnggota }}</strong> Anggota</div>
+                                </div>
+                                <button @click="openEditModal('{{ $i }}', '{{ $defShift }}')" style="background:#F0F1F4; border:none; padding:8px; border-radius:6px; cursor:pointer; color:#0B266E;" title="Edit Anggota Kelompok {{ $i }}">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                </button>
+                            </div>
+                        @endfor
+                    </div>
+                    
+                    {{-- Tombol Kosongkan Plotting diletakkan di paling bawah --}}
+                    <div style="margin-top:40px; padding-top:24px; border-top:1px dashed #DFE1E7;">
+                        <form action="{{ route('eoffice.manprak.koor.praktikan.reset-plot') }}" method="POST" onsubmit="return confirm('YAKIN INGIN MENGOSONGKAN SELURUH ANGGOTA DARI SEMUA KELOMPOK? Data mahasiswa tidak akan hilang, hanya pembagian kelompoknya saja yang direset menjadi kosong.');">
+                            @csrf
+                            <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
+                            <button type="submit" style="width:100%; background:#FFF0F0; color:#D32F2F; border:1px solid #FFCDD2; padding:12px 0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.2s;" onmouseover="this.style.background='#FFE4E4'" onmouseout="this.style.background='#FFF0F0'">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                Hapus Kelompok & Shift
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+    {{-- MODAL SUB: EDIT ANGGOTA KELOMPOK                      --}}
+    {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+    

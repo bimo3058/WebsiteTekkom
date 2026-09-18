@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\PengumpulanTugas;
 use Modules\EOffice\Models\Tugas;
+use Modules\EOffice\Models\Modul;
 
 class TugasController extends Controller
 {
@@ -47,25 +48,30 @@ class TugasController extends Controller
             ]);
         }
 
-        $tugasList = Tugas::whereHas('modul', fn($q) => $q->where('praktikum_id', $daftarPraktikan->praktikum_id))
-            ->where('is_published', true)
-            ->with(['modul'])
-            ->orderBy('deadline')
+        $modulList = Modul::with(['tugas' => function($q) {
+                $q->where('is_published', true)->orderBy('deadline');
+            }, 'modulAsprak.asprak.user'])
+            ->where('praktikum_id', $daftarPraktikan->praktikum_id)
+            ->orderBy('urutan')
             ->get()
-            ->map(function ($tugas) use ($daftarPraktikan) {
-                $pengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
-                    ->where('daftar_praktikan_id', $daftarPraktikan->id)
-                    ->with('riwayat')
-                    ->first();
-
-                $tugas->pengumpulan  = $pengumpulan;
-                $tugas->sudah_kumpul = !is_null($pengumpulan);
-                $tugas->status_tugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
-                return $tugas;
+            ->map(function ($modul) use ($daftarPraktikan) {
+                $tugasList = $modul->tugas->map(function ($tugas) use ($daftarPraktikan) {
+                    $pengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
+                        ->where('daftar_praktikan_id', $daftarPraktikan->id)
+                        ->with('riwayat')
+                        ->first();
+                    $tugas->pengumpulan = $pengumpulan;
+                    return $tugas;
+                });
+                return collect([
+                    'modul'         => $modul,
+                    'tugas'         => $tugasList,
+                    'asprak'        => $modul->modulAsprak->map(fn($ma) => $ma->asprak?->user?->name)->filter()->values(),
+                ]);
             });
 
         return view('eoffice::manajemen-praktikum.mahasiswa.tugas', compact(
-            'tugasList',
+            'modulList',
             'daftarPraktikan',
             'semuaPraktikan'
         ));
@@ -74,7 +80,8 @@ class TugasController extends Controller
     public function kumpul(Request $request, string $tugasId)
     {
         $request->validate([
-            'file'    => 'required|file|max:10240|mimes:pdf,docx,doc,zip,rar',
+            'file'    => 'required|array|max:3',
+            'file.*'  => 'required|file|max:5120',
             'catatan' => 'nullable|string|max:500',
         ]);
 
@@ -99,11 +106,24 @@ class TugasController extends Controller
             return back()->with('error', 'Tugas sudah dikumpulkan dan tidak dalam status revisi.');
         }
 
-        $path = $this->supabase->upload(
-            $request->file('file'),
-            'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
-            'eoffice'
-        );
+        $paths = [];
+        $failedCount = 0;
+        foreach ($request->file('file') as $f) {
+            $uploaded = $this->supabase->upload(
+                $f,
+                'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
+                'eoffice'
+            );
+            if ($uploaded) {
+                $paths[] = [
+                    'path' => $uploaded,
+                    'original_name' => $f->getClientOriginalName()
+                ];
+            } else {
+                $failedCount++;
+            }
+        }
+        $path = json_encode($paths);
 
         $pengumpulan = PengumpulanTugas::updateOrCreate(
             [
@@ -127,13 +147,17 @@ class TugasController extends Controller
             'is_revision' => false,
         ]);
 
+        if ($failedCount > 0) {
+            return back()->with('warning', 'Tugas dikumpulkan, namun ' . $failedCount . ' file gagal diunggah karena format tidak didukung.');
+        }
         return back()->with('success', 'Tugas berhasil dikumpulkan!');
     }
 
     public function kirimUlang(Request $request, string $tugasId)
     {
         $request->validate([
-            'file'    => 'required|file|max:10240|mimes:pdf,docx,doc,zip,rar',
+            'file'    => 'required|array|max:3',
+            'file.*'  => 'required|file|max:5120',
             'catatan' => 'nullable|string|max:500',
         ]);
 
@@ -155,11 +179,24 @@ class TugasController extends Controller
             ->where('status_pengumpulan', PengumpulanTugas::STATUS_REVISI)
             ->firstOrFail();
             
-        $path  = $this->supabase->upload(
-            $request->file('file'),
-            'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
-            'eoffice'
-        );
+        $paths = [];
+        $failedCount = 0;
+        foreach ($request->file('file') as $f) {
+            $uploaded = $this->supabase->upload(
+                $f,
+                'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
+                'eoffice'
+            );
+            if ($uploaded) {
+                $paths[] = [
+                    'path' => $uploaded,
+                    'original_name' => $f->getClientOriginalName()
+                ];
+            } else {
+                $failedCount++;
+            }
+        }
+        $path = json_encode($paths);
 
         $pengumpulan->update([
             'file_path'          => $path,
@@ -177,5 +214,39 @@ class TugasController extends Controller
         ]);
 
         return back()->with('success', 'Tugas revisi berhasil dikirim ulang.');
+    }
+
+    public function hapus(Request $request, string $tugasId)
+    {
+        $user  = auth()->user();
+        $tugas = Tugas::with('modul')->findOrFail($tugasId);
+
+        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)
+            ->where('praktikum_id', $tugas->modul->praktikum_id)
+            ->firstOrFail();
+
+        $tenggatMutlak = $tugas->deadline_acc ?? $tugas->deadline;
+        if ($tenggatMutlak && now()->gt($tenggatMutlak)) {
+            return back()->with('error', 'Tidak dapat menghapus pengiriman setelah tenggat waktu.');
+        }
+
+        $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
+            ->where('daftar_praktikan_id', $daftarPraktikan->id)
+            ->first();
+
+        if (!$pengumpulan) {
+            return back()->with('error', 'Tidak ada pengiriman yang ditemukan.');
+        }
+
+        // Hanya bisa hapus jika belum di-ACC
+        if (in_array($pengumpulan->status_pengumpulan, [PengumpulanTugas::STATUS_ACC])) {
+            return back()->with('error', 'Pengiriman yang sudah di-ACC tidak dapat dihapus.');
+        }
+
+        // Hapus semua riwayat dan record utama
+        $pengumpulan->riwayat()->delete();
+        $pengumpulan->delete();
+
+        return back()->with('success', 'Pengiriman tugas berhasil dihapus.');
     }
 }

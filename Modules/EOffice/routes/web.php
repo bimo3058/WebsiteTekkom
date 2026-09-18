@@ -16,6 +16,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DosenController as
 
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranAsprakController as AdminPendaftaranAsprakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranKoorController as AdminPendaftaranKoorController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PeriodePraktikanController as AdminPeriodePraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolRoleController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\MatkulPraktikumController;
@@ -27,6 +28,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumDetailCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\AsprakController as DosenAsprakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\DaftarPraktikanController as DosenDaftarPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\DashboardController as DosenManprakDashboard;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PraktikumController as DosenPraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\ModulController as DosenModulController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\NilaiController as DosenNilaiController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PendaftaranKoorController as DosenPendaftaranKoorController;
@@ -40,6 +42,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\DashboardCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\ModulController as KoorModulController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\NilaiController as KoorNilaiController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranAsprakController as KoorPendaftaranAsprakController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranPraktikanController as KoorPendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PengumumanController as KoorPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PeriodePendaftaranController as KoorPeriodePendaftaranController;
 
@@ -51,14 +54,18 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\ModulController a
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\PengumumanController as AsprakPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\DaftarPraktikanController as AsprakDaftarPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\TugasController as AsprakTugasController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\PraktikumController as AsprakPraktikumController;
 
 // ── ManajemenPraktikum Mahasiswa ─────────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DaftarAsprakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DashboardController as MhsManprakDashboard;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\ModulController as MhsModulController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\NilaiController as MhsNilaiController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PengumumanController as MhsPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\TugasController as MhsTugasController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PraktikumController as MhsPraktikumController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DaftarPraktikanController as MhsDaftarPraktikanController;
 
 Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
@@ -81,6 +88,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 Route::get('/dashboard', [AdminManprakDashboard::class, 'index'])
                     ->name('dashboard');
+                Route::get('pendaftaran-praktikan', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'index'])->name('pendaftaran-praktikan.index');
+                Route::get('pendaftaran/{type}/{id}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'show'])->whereIn('type', ['koor', 'asprak', 'praktikan'])->whereNumber('id')->name('pendaftaran.show');
+                Route::get('pendaftaran/{type}/{id}/dokumen/{document}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\RegistrationReviewController::class, 'document'])->whereIn('type', ['koor', 'asprak', 'praktikan'])->whereNumber('id')->name('pendaftaran.document');
 
                 Route::get('praktikum/{id}/detail', [PraktikumDetailController::class, 'show'])  // ← TAMBAH INI DULU
                     ->name('praktikum.detail');
@@ -88,6 +98,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // CRUD Praktikum
                 Route::resource('praktikum', PraktikumController::class)
                     ->names('praktikum');
+                Route::patch('praktikum/{id}/toggle-active', [PraktikumController::class, 'toggleActive'])
+                    ->name('praktikum.toggle-active');
+                Route::post('praktikum/bulk-toggle-active', [PraktikumController::class, 'bulkToggleActive'])
+                    ->name('praktikum.bulk-toggle-active');
                 Route::patch('praktikum/{id}/toggle-active', [PraktikumController::class, 'toggleActive'])
                     ->name('praktikum.toggle-active');
                 Route::post('praktikum/bulk-toggle-active', [PraktikumController::class, 'bulkToggleActive'])
@@ -127,6 +141,16 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('pendaftaran-koor/{id}/reject', [AdminPendaftaranKoorController::class, 'reject'])
                     ->name('pendaftaran-koor.reject');
 
+                // Periode pendaftaran praktikan
+                Route::get('periode-praktikan', [AdminPeriodePraktikanController::class, 'index'])
+                    ->name('periode-praktikan.index');
+                Route::post('periode-praktikan', [AdminPeriodePraktikanController::class, 'store'])
+                    ->name('periode-praktikan.store');
+                Route::post('periode-praktikan/{id}/tutup', [AdminPeriodePraktikanController::class, 'tutup'])
+                    ->name('periode-praktikan.tutup');
+                Route::delete('periode-praktikan/{id}', [AdminPeriodePraktikanController::class, 'destroy'])
+                    ->name('periode-praktikan.destroy');
+
 
                 // Mata Kuliah Praktikum (CRUD)
                 Route::get('matkul-praktikum', [MatkulPraktikumController::class, 'index'])
@@ -153,6 +177,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('kelola-role.revokeAll');
                 Route::post('kelola-role/restore/{id}', [KelolRoleController::class, 'restoreRole'])
                     ->name('kelola-role.restore');
+                Route::post('kelola-role/revoke-all/{praktikumId}', [KelolRoleController::class, 'revokeAll'])
+                    ->name('kelola-role.revokeAll');
+                Route::post('kelola-role/restore/{id}', [KelolRoleController::class, 'restoreRole'])
+                    ->name('kelola-role.restore');
             });
 
         // ── DOSEN ────────────────────────────────────────────────────────────
@@ -162,6 +190,11 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 Route::get('/dashboard', [DosenManprakDashboard::class, 'index'])
                     ->name('dashboard');
+
+                Route::get('/praktikum', [DosenPraktikumController::class, 'index'])
+                    ->name('praktikum.index');
+                Route::get('/praktikum/{id}', [DosenPraktikumController::class, 'show'])
+                    ->name('praktikum.show');
 
                 // Tunjuk koordinator dari NIM
                 Route::post('tunjuk-koor', [DosenManprakDashboard::class, 'tunjukKoor'])
@@ -206,6 +239,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.index');
                 Route::post('nilai/{praktikumId}/approve', [DosenNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+                Route::post('nilai/{praktikumId}/unapprove', [DosenNilaiController::class, 'unapprove'])
+                    ->name('nilai.unapprove');
+                Route::post('nilai/{praktikumId}/unapprove', [DosenNilaiController::class, 'unapprove'])
+                    ->name('nilai.unapprove');
                 Route::get('nilai/{praktikumId}/export-csv', [DosenNilaiController::class, 'exportCsv'])
                     ->name('nilai.export-csv');
 
@@ -230,6 +267,17 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('dashboard');
                 Route::post('/switch-praktikum', [KoorManprakDashboard::class, 'switchPraktikum'])
                     ->name('switch-praktikum');
+
+                // Praktikum
+                Route::get('praktikum', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PraktikumController::class, 'index'])
+                    ->name('praktikum.index');
+                Route::get('praktikum/{id}', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PraktikumController::class, 'show'])
+                    ->name('praktikum.show');
+                Route::post('praktikum/{id}/cover', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PraktikumController::class, 'updateCover'])
+                    ->name('praktikum.cover.update');
+                Route::delete('praktikum/{id}/cover', [\Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PraktikumController::class, 'deleteCover'])
+                    ->name('praktikum.cover.destroy');
+
 
                 // Daftar Praktikan (lihat + export + import kelompok/shift)
                 Route::get('praktikan', [KoorManprakDashboard::class, 'praktikan'])
@@ -281,6 +329,16 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::delete('pendaftaran-asprak/{id}', [KoorPendaftaranAsprakController::class, 'destroy'])
                     ->name('pendaftaran-asprak.destroy');
 
+                // Pendaftaran praktikan (verifikasi IRS)
+                Route::get('pendaftaran-praktikan', [KoorPendaftaranPraktikanController::class, 'index'])
+                    ->name('pendaftaran-praktikan.index');
+                Route::post('pendaftaran-praktikan/{id}/approve', [KoorPendaftaranPraktikanController::class, 'approve'])
+                    ->name('pendaftaran-praktikan.approve');
+                Route::post('pendaftaran-praktikan/{id}/reject', [KoorPendaftaranPraktikanController::class, 'reject'])
+                    ->name('pendaftaran-praktikan.reject');
+                Route::post('pendaftaran-praktikan/{id}/reject-irs-default', [KoorPendaftaranPraktikanController::class, 'rejectIrsDefault'])
+                    ->name('pendaftaran-praktikan.reject-irs-default');
+
 
                 Route::get('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'index'])
                     ->name('periode-pendaftaran.index');
@@ -306,6 +364,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.approve');
                 Route::get('nilai/export-csv', [KoorNilaiController::class, 'exportCsv'])
                     ->name('nilai.export-csv');
+                Route::post('nilai/bobot/{id}', [KoorNilaiController::class, 'updateBobot'])
+                    ->name('nilai.bobot.update');
             });
 
         // ── KOORDINATOR — Periode Pendaftaran ────────────────────────────────
@@ -332,9 +392,16 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/dashboard', [AsprakManprakDashboard::class, 'index'])
                     ->name('dashboard');
 
+                Route::get('praktikum', [AsprakPraktikumController::class, 'index'])
+                    ->name('praktikum.index');
+                Route::get('praktikum/{id}', [AsprakPraktikumController::class, 'show'])
+                    ->name('praktikum.show');
+
                 // Absensi & Nilai (CRUD)
                 Route::get('absensi', [AbsensiController::class, 'index'])
                     ->name('absensi.index');
+                Route::get('absensi/export-csv', [AbsensiController::class, 'exportCsv'])
+                    ->name('absensi.export-csv');
                 Route::get('absensi/{modulId}', [AbsensiController::class, 'show'])
                     ->name('absensi.show');
                 Route::post('absensi/{modulId}', [AbsensiController::class, 'store'])
@@ -393,6 +460,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pengumuman.index');
                 Route::post('pengumuman', [AsprakPengumumanController::class, 'store'])
                     ->name('pengumuman.store');
+                Route::put('pengumuman/{id}', [AsprakPengumumanController::class, 'update'])
+                    ->name('pengumuman.update');
                 Route::delete('pengumuman/{id}', [AsprakPengumumanController::class, 'destroy'])
                     ->name('pengumuman.destroy');
 
@@ -409,10 +478,17 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/dashboard', [MhsManprakDashboard::class, 'index'])
                     ->name('dashboard');
 
+                // Praktikum (Card list)
+                Route::get('praktikum', [MhsPraktikumController::class, 'index'])
+                    ->name('praktikum.index');
 
                 // Pengumuman (lihat)
                 Route::get('pengumuman', [MhsPengumumanController::class, 'index'])
                     ->name('pengumuman.index');
+
+                // Daftar Praktikan (Classmates)
+                Route::get('daftar-praktikan', [MhsDaftarPraktikanController::class, 'index'])
+                    ->name('daftar-praktikan.index');
 
                 // Tugas (lihat + kumpul + kirim ulang setelah revisi)
                 Route::get('tugas', [MhsTugasController::class, 'index'])
@@ -421,6 +497,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('tugas.kumpul');
                 Route::post('tugas/{id}/kirim-ulang', [MhsTugasController::class, 'kirimUlang'])
                     ->name('tugas.kirim-ulang');
+                Route::delete('tugas/{id}/hapus', [MhsTugasController::class, 'hapus'])
+                    ->name('tugas.hapus');
 
                 // Nilai (lihat jika sudah dipublikasikan)
                 Route::get('nilai', [MhsNilaiController::class, 'index'])
@@ -437,6 +515,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('daftar-asprak.store');
                 Route::post('daftar-koor', [DaftarAsprakController::class, 'daftarKoor'])
                     ->name('daftar-koor.store');
+
+                // Pendaftaran sebagai praktikan
+                Route::get('pendaftaran-praktikan', [PendaftaranPraktikanController::class, 'index'])
+                    ->name('pendaftaran-praktikan.index');
+                Route::post('pendaftaran-praktikan', [PendaftaranPraktikanController::class, 'store'])
+                    ->name('pendaftaran-praktikan.store');
 
 
             });
@@ -603,11 +687,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Persetujuan Peminjaman & Riwayat...
                 Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');
                 Route::get('/riwayat-peminjaman', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'riwayat'])->name('riwayat.index');
-                Route::get('/riwayat-peminjaman/export-excel', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportExcel'])->name('riwayat.export-excel');
-                Route::get('/riwayat-peminjaman/export-pdf', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportPdf'])->name('riwayat.export-pdf');
+                Route::get('/riwayat/export-pdf', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportPdf'])->name('riwayat.export-pdf');
+                Route::get('/riwayat/export-excel', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportExcel'])->name('riwayat.export-excel');
                 Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
                 Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
                 Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');
+                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])->name('riwayat.destroy');
 
                 // Jadwal Akademik (Filter dari tabel Internal)
                 Route::get('jadwal-akademik', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'index'])->name('jadwal-akademik.index');

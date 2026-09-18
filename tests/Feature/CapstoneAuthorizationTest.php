@@ -128,7 +128,7 @@ class CapstoneAuthorizationTest extends TestCase
 
     public function test_admin_capstone_and_superadmin_can_read_all_groups_and_details(): void
     {
-        $admin = $this->roleUser('admin_capstone', ['capstone.groups.view']);
+        $admin = $this->roleUser('admin_capstone', ['capstone.view']);
         $superadmin = $this->roleUser('superadmin', ['capstone.groups.view']);
         [, $firstStudent] = $this->actor('mahasiswa');
         [, $secondStudent] = $this->actor('mahasiswa');
@@ -253,10 +253,81 @@ class CapstoneAuthorizationTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_admin_dashboard_counts_all_groups_but_only_loads_five_labels(): void
+    {
+        $admin = $this->roleUser('admin_capstone', ['capstone.view']);
+        $period = $this->period();
+        $archived = $this->period();
+        $archived->delete();
+        $groups = [];
+        for ($i = 0; $i < 8; $i++) {
+            $groups[] = Group::withoutEvents(fn () => Group::create([
+                'period_id' => $period->id,
+                'code' => 'FAST-'.$i,
+                'status' => $i < 6 ? 'READY_FOR_FINALIZATION' : 'FORMING',
+            ]));
+        }
+
+        Sanctum::actingAs($admin, ['capstone:access']);
+        $response = $this->withHeader('X-Capstone-Role', 'admin')
+            ->getJson('/api/capstone/admin/dashboard?_fresh=1')
+            ->assertOk()
+            ->assertJsonPath('total_groups', 8)
+            ->assertJsonPath('pending_finalization', 6)
+            ->assertJsonPath('total_periods', 1)
+            ->assertJsonCount(5, 'recent_groups')
+            ->assertJsonPath('recent_groups.0.id', $groups[7]->id);
+
+        $this->assertEqualsCanonicalizing(
+            ['id', 'code', 'status'], array_keys($response->json('recent_groups.0'))
+        );
+    }
+
+    public function test_dashboard_does_not_expose_group_summaries_without_group_permission(): void
+    {
+        $admin = $this->roleUser('admin_capstone');
+        $period = $this->period();
+        Group::withoutEvents(fn () => Group::create([
+            'period_id' => $period->id, 'status' => 'READY_FOR_FINALIZATION',
+        ]));
+
+        Sanctum::actingAs($admin, ['capstone:access']);
+        $this->withHeader('X-Capstone-Role', 'admin')
+            ->getJson('/api/capstone/admin/dashboard?_fresh=1')
+            ->assertOk()
+            ->assertJsonPath('total_groups', 0)
+            ->assertJsonPath('pending_finalization', 0)
+            ->assertJsonCount(0, 'recent_groups');
+    }
+
+    public function test_admin_user_selector_keeps_academic_ids_with_bounded_pagination(): void
+    {
+        $admin = $this->roleUser('admin_capstone');
+        $this->actor('mahasiswa');
+        $this->actor('mahasiswa');
+
+        Sanctum::actingAs($admin, ['capstone:access']);
+        $response = $this->withHeader('X-Capstone-Role', 'admin')
+            ->getJson('/api/capstone/admin/users?role=mahasiswa&per_page=1&_fresh=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('total', 2)
+            ->assertJsonPath('per_page', 1);
+
+        $row = $response->json('data.0');
+        $this->assertSame($row['student_id'], $row['id']);
+        $this->assertNotNull($row['student_id']);
+        $this->assertArrayNotHasKey('sso_data', $row);
+        $this->assertArrayNotHasKey('password', $row);
+        $this->withHeader('X-Capstone-Role', 'admin')
+            ->getJson('/api/capstone/admin/users?per_page=1000&_fresh=1')
+            ->assertOk()->assertJsonPath('per_page', 100);
+    }
+
     /** @return array{User, Student|Lecturer} */
     private function actor(string $roleName): array
     {
-        $permissions = $roleName === 'dosen' ? ['capstone.documents.review'] : [];
+        $permissions = $roleName === 'dosen' ? ['capstone.edit'] : [];
         $user = $this->roleUser($roleName, $permissions);
 
         $profile = $roleName === 'mahasiswa'

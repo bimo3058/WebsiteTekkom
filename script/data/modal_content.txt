@@ -1,0 +1,165 @@
+<form action="{{ route('eoffice.manprak.koor.praktikan.reset-plot') }}" method="POST" onsubmit="return confirm('YAKIN INGIN MENGOSONGKAN SELURUH ANGGOTA DARI SEMUA KELOMPOK? Data mahasiswa tidak akan hilang, hanya pembagian kelompoknya saja yang direset menjadi kosong.');">
+                            @csrf
+                            <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
+                            <button type="submit" style="width:100%; background:#FFF0F0; color:#D32F2F; border:1px solid #FFCDD2; padding:12px 0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.2s;" onmouseover="this.style.background='#FFE4E4'" onmouseout="this.style.background='#FFF0F0'">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                Hapus Kelompok & Shift
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </template>
+
+    {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+    {{-- MODAL SUB: EDIT ANGGOTA KELOMPOK                      --}}
+    {{-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ --}}
+    <template x-teleport="body">
+        <div x-show="showEditModal" style="display:none;" class="fixed inset-0 z-[60] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                <div x-show="showEditModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="fixed inset-0 bg-[#0D0D12]/40 backdrop-blur-sm transition-opacity" aria-hidden="true" @click="closeEditModal()"></div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+                <div x-show="showEditModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" class="relative inline-block align-bottom bg-white rounded-[16px] text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full flex flex-col max-h-[90vh]">
+                
+                {{-- Header --}}
+                <div class="px-6 py-4 border-b border-[#DFE1E7] flex-shrink-0 bg-white">
+                    <div style="font-weight:700; font-size:16px; color:#0D0D12;" x-text="'Pilih Anggota Kelompok ' + activeKelompok"></div>
+                    <div style="font-size:12px; color:#666D80; margin-top:2px;" x-text="'Shift ' + activeShift"></div>
+                </div>
+
+                {{-- Filter --}}
+                <div style="padding:16px 24px; border-bottom:1px solid #DFE1E7;">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Cari Anggota (Hanya yg kosong atau yg sdh masuk kelompok ini)</label>
+                    <input type="text" x-model="searchQuery" placeholder="Ketik nama atau NIM..." class="mp-input" style="width:100%;">
+                </div>
+                
+                {{-- Daftar Mahasiswa --}}
+                <div style="flex:1; overflow-y:auto; padding:8px 24px;">
+                    <div style="font-size:12px; color:#A4ABB8; margin:8px 0; font-weight:600;">DAFTAR MAHASISWA (<span x-text="filteredPraktikans.length"></span>)</div>
+                    <template x-for="p in filteredPraktikans" :key="p.id">
+                        <label style="display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#F0F1F4'" onmouseout="this.style.background='transparent'">
+                            <input type="checkbox" :value="p.id" x-model="selectedMembers" style="width:18px; height:18px; cursor:pointer;">
+                            <div class="mp-av yellow" style="width:32px;height:32px;font-size:12px;" x-text="p.inisial"></div>
+                            <div style="flex:1;">
+                                <div style="font-weight:600; color:#0D0D12; font-size:13px;" x-text="p.nama"></div>
+                                <div style="font-size:12px; color:#666D80; " x-text="p.nim"></div>
+                            </div>
+                            <div x-show="p.kel === activeKelompok" style="font-size:11px; background:#ECFDF5; color:#059669; padding:2px 8px; border-radius:4px; font-weight:600;">Anggota</div>
+                            <div x-show="p.kel === null || p.kel === ''" style="font-size:11px; background:#FEF2F2; color:#DC2626; padding:2px 8px; border-radius:4px; font-weight:600;">Kosong</div>
+                        </label>
+                    </template>
+                    <div x-show="filteredPraktikans.length === 0" style="padding:32px; text-align:center; color:#666D80; font-size:13px;">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        Semua mahasiswa sudah dimasukkan ke kelompok lain, atau pencarian tidak ditemukan.
+                    </div>
+                </div>
+
+                {{-- Footer --}}
+                <div style="padding:16px 24px; border-top:1px solid #DFE1E7; display:flex; justify-content:space-between; align-items:center; background:#F9FAFB; border-radius:0 0 12px 12px;">
+                    <div style="font-size:13px; font-weight:600; color:#0D0D12;">
+                        Terpilih: <span style="color:#0B266E;" x-text="selectedMembers.length"></span> orang
+                    </div>
+                    <div style="display:flex; gap:8px;">
+                        <button @click="closeEditModal()" type="button" class="mp-btn secondary sm">Batal</button>
+                        <button @click="saveMembers()" :disabled="isSaving" type="button" class="mp-btn primary sm" style="min-width: 90px; justify-content: center; background:#0B266E; border-color:#0B266E;">
+                            <span x-show="!isSaving">Simpan</span>
+                            <span x-show="isSaving">Menyimpan...</span>
+                        </button>
+                    </div>
+            </div>
+        </div>
+    </template>
+
+</div>
+
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('manajemenKelompok', () => ({
+            showMainModal: false,
+            showEditModal: false,
+            activeKelompok: '',
+            activeShift: '',
+            searchQuery: '',
+            isSaving: false,
+            selectedMembers: [],
+            allPraktikans: @json($praktikansSemuaJSON),
+            
+            get unassignedCount() {
+                return this.allPraktikans.filter(p => p.kel === null || p.kel === '').length;
+            },
+
+            get filteredPraktikans() {
+                let q = this.searchQuery.toLowerCase();
+                // Tampilkan hanya yg kosong ATAU miliki kelompok ini
+                return this.allPraktikans.filter(p => {
+                    let isEligible = (p.kel === this.activeKelompok) || (p.kel === null || p.kel === '');
+                    if(!isEligible) return false;
+                    
+                    if(q === '') return true;
+                    return p.nama.toLowerCase().includes(q) || p.nim.toLowerCase().includes(q);
+                });
+            },
+
+            openMainModal() {
+                this.showMainModal = true;
+            },
+            closeMainModal() {
+                this.showMainModal = false;
+            },
+            
+            openEditModal(kel, shift) {
+                this.activeKelompok = kel.toString();
+                this.activeShift = shift.toString();
+                this.searchQuery = '';
+                
+                // Pre-fill checkboxes based on current members of this group
+                this.selectedMembers = this.allPraktikans
+                    .filter(p => p.kel === this.activeKelompok)
+                    .map(p => p.id);
+                    
+                this.showEditModal = true;
+            },
+            closeEditModal() {
+                this.showEditModal = false;
+            },
+            
+            saveMembers() {
+                this.isSaving = true;
+                let formData = new FormData();
+                formData.append('_token', '{{ csrf_token() }}');
+                formData.append('praktikum_id', '{{ $praktikum->id }}');
+                formData.append('kelompok', this.activeKelompok);
+                formData.append('shift', this.activeShift);
+                
+                this.selectedMembers.forEach(id => {
+                    formData.append('members[]', id);
+                });
+                
+                fetch('{{ route('eoffice.manprak.koor.praktikan.save-group-members') }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(res => {
+                    if(res.success) {
+                        window.location.reload();
+                    } else {
+                        alert('Gagal menyimpan. Pastikan data valid.');
+                        this.isSaving = false;
+                    }
+                })
+                .catch(() => {
+                    alert('Terjadi kesalahan jaringan.');
+                    this.isSaving = false;
+                });
+            }
+        }))
+    })
+</script>
+
+@endif
+
+</x-eoffice::manajemen-praktikum.layout>

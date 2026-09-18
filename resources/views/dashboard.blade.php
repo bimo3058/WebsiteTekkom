@@ -1,446 +1,539 @@
 {{-- resources/views/dashboard.blade.php --}}
-
-
 <x-app-layout>
-<div class="min-h-screen bg-[#F6F8FA]">
 
-    {{-- ── TOPBAR ────────────────────────────────────────────────────────── --}}
-    <header x-data="{ open: false }" class="sticky top-0 z-40 h-14 bg-white border-b border-[#DFE1E7] flex items-center px-6 justify-between">
-
-        {{-- Kiri: Logo + nama app --}}
-        <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
-                <img src="{{ asset('images/UNDIPOfficial.png') }}"
-                    class="w-full h-full object-cover"
-                    alt="logo">
-            </div>
-            <div class="flex flex-col leading-tight">
-                <span class="text-[14px] font-bold text-[#0D0D12] tracking-tight">SITKOM</span>
-                <span class="text-[10px] text-gray-500">Sistem Informasi Teknik Komputer</span>
-            </div>
-        </div>
-
-        {{-- Kanan: Avatar + Dropdown --}}
-        <div class="relative">
-            <button @click="open = !open"
-                    class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-[#F6F8FA] transition-colors">
-
-                <div class="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden"
-                     style="background:linear-gradient(135deg,#3C518B,#0B266E)">
-                    @if(auth()->user()->avatar_url)
-                        <img src="{{ auth()->user()->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
-                    @else
-                        <span class="text-white font-bold text-[11px] uppercase">
-                            {{ substr(auth()->user()->name, 0, 2) }}
-                        </span>
-                    @endif
-                </div>
-
-                <div class="text-left hidden sm:block">
-                    <p class="text-[12px] font-semibold text-[#0D0D12] leading-tight">{{ auth()->user()->name }}</p>
-                    <p class="text-[10px] text-[#A4ABB8] leading-tight">
-                        {{ ucfirst(auth()->user()->roles->first()->name ?? 'User') }}
-                    </p>
-                </div>
-
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2"
-                     stroke-linecap="round" stroke-linejoin="round"
-                     :style="open ? 'transform:rotate(180deg)' : ''"
-                     style="transition:transform 0.2s;flex-shrink:0">
-                    <polyline points="6 9 12 15 18 9"/>
-                </svg>
-            </button>
-
-            {{-- Dropdown --}}
-            <div x-show="open"
-                 x-transition:enter="transition ease-out duration-100"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-75"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 @click.outside="open = false"
-                 class="absolute right-0 mt-1 w-52 bg-white rounded-xl border border-[#DFE1E7] shadow-[0_12px_20px_-4px_rgba(22,22,43,0.08)] py-1 z-50"
-                 style="display:none">
-
-                <div class="px-3 py-2.5 border-b border-[#F0F1F4]">
-                    <p class="text-[12px] font-semibold text-[#0D0D12] truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-[11px] text-[#A4ABB8] truncate">{{ auth()->user()->email }}</p>
-                </div>
-
-                <a href="{{ route('profile.edit') }}"
-                   class="flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#353849] hover:bg-[#F6F8FA] transition-colors">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-                    </svg>
-                    Profil Saya
-                </a>
-
-                <div class="border-t border-[#F0F1F4] my-1"></div>
-
-                <form method="POST" action="{{ route('logout') }}" data-no-loader>
-                    @csrf
-                    <button type="submit"
-                            class="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#DF1C41] hover:bg-[#FADAE1] transition-colors">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                        </svg>
-                        Keluar
-                    </button>
-                </form>
-            </div>
-        </div>
-    </header>
-
-    {{-- ── BODY ─────────────────────────────────────────────────────────── --}}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 sm:pb-8">
-
-        {{-- Greeting --}}
-        <div class="mb-7">
-            <h1 class="text-[20px] font-bold text-[#0D0D12] tracking-tight leading-tight">
-                Selamat datang, <span class="text-[#0B266E]">{{ explode(' ', auth()->user()->name)[0] }}</span>
-            </h1>
-            <p class="text-[#808897] text-[13px] mt-1">Pilih modul yang ingin kamu akses hari ini.</p>
-        </div>
-
-{{-- ── MODULE CARDS ─────────────────────────────────────────────── --}}
-        @php
-            $moduleColors = [
-                'blue'   => ['icon_bg' => '#E8EDF7', 'icon_color' => '#0B266E', 'hover_border' => '#8FA3D1'],
-                'purple' => ['icon_bg' => '#E8EDF7', 'icon_color' => '#3C518B', 'hover_border' => '#5C78B8'],
-                'green'  => ['icon_bg' => '#DDF2EE', 'icon_color' => '#287F6E', 'hover_border' => '#40C4AA'],
-                'orange' => ['icon_bg' => '#F9ECCB', 'icon_color' => '#956321', 'hover_border' => '#D39C3D'],
-            ];
-
-            $moduleIcons = [
-                'quiz'        => '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9h6m-6 4h6"/>',
-                'school'      => '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 7h20v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z M12 12v1"/>',
-                'groups'      => '<path d="M17 20.6622V19.5C17 17.2909 15.2091 15.5 13 15.5H11C8.79086 15.5 7 17.2909 7 19.5V20.6622M17 20.6622C19.989 18.9331 22 15.7014 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 15.7014 4.01099 18.9331 7 20.6622M17 20.6622C15.5291 21.513 13.8214 22 12 22C10.1786 22 8.47087 21.513 7 20.6622M15 9C15 10.6569 13.6569 12 12 12C10.3431 12 9 10.6569 9 9C9 7.34315 10.3431 6 12 6C13.6569 6 15 7.34315 15 9Z"/>',
-                'description' => '<path d="M22 10V17C22 18.6569 20.6569 20 19 20H5C3.34315 20 2 18.6569 2 17V10M22 10C22 8.34315 20.6569 7 19 7H16M22 10L14.4368 12.917C13.6611 13.2617 12.8306 13.4341 12 13.4341M2 10C2 8.34315 3.34315 7 5 7H8M2 10L9.56317 12.917C10.3389 13.2617 11.1694 13.4341 12 13.4341M8 7V6C8 4.89543 8.89543 4 10 4H14C15.1046 4 16 4.89543 16 6V7M8 7H16M12 13.4341V12M12 13.4341V15"/>',
-                'bar_chart'   => '<path d="M4.8787 8.90834L10.5858 3.54999C11.3669 2.81667 12.6332 2.81667 13.4142 3.54999L19.1213 8.90834M4.8787 8.90834C4.31629 9.43653 4.00002 10.1531 4.00002 10.9V18.1833C4.00002 19.7389 5.34317 21 7.00002 21H9V16C9 14.8954 9.89543 14 11 14H13C14.1046 14 15 14.8954 15 16V21H17C18.6569 21 20 19.7389 20 18.1833V10.9C20 10.153 19.684 9.43656 19.1213 8.90834M4.8787 8.90834L3.00031 10.6722M19.1213 8.90834L21 10.6722"/>',
-                'folder'      => '<path d="M12 4H6C4.34315 4 3 5.34315 3 7V18C3 19.6569 4.34315 21 6 21H17C18.6569 21 20 19.6569 20 18V12M7 17H12M7 13H15M21 5.5C21 6.88071 19.8807 8 18.5 8C17.1193 8 16 6.88071 16 5.5C16 4.11929 17.1193 3 18.5 3C19.8807 3 21 4.11929 21 5.5Z"/>',
-                'settings'    => '<path d="M6.78883 3.18702L9.45314 2.08342C10.0104 1.85259 10.6493 2.11723 10.8801 2.6745C11.0637 3.11762 11.5233 3.38148 12.0029 3.38184C12.4828 3.38219 12.9361 3.11793 13.1197 2.67459C13.3506 2.11727 13.9895 1.85261 14.5469 2.08346L17.211 3.187C17.7683 3.41784 18.033 4.05676 17.8021 4.61407C17.6185 5.0574 17.7523 5.56484 18.0918 5.90389C18.4312 6.24278 18.9429 6.38129 19.386 6.19774C19.9433 5.96691 20.5822 6.23155 20.813 6.78882L21.9166 9.45314C22.1474 10.0104 21.8828 10.6493 21.3255 10.8801C20.8824 11.0637 20.6185 11.5234 20.6182 12.003C20.6178 12.4828 20.8821 12.9362 21.3254 13.1198C21.8827 13.3507 22.1473 13.9896 21.9165 14.5469L20.813 17.2111C20.5821 17.7684 19.9432 18.033 19.3859 17.8022C18.9426 17.6186 18.4351 17.7523 18.0961 18.0918C17.7572 18.4312 17.6187 18.9429 17.8023 19.386C18.0331 19.9433 17.7685 20.5821 17.2112 20.813L14.5469 21.9166C13.9896 22.1474 13.3507 21.8828 13.1199 21.3255C12.9363 20.8824 12.4766 20.6185 11.997 20.6182C11.5171 20.6178 11.0637 20.8821 10.8801 21.3254C10.6492 21.8827 10.0103 22.1474 9.45297 21.9165L6.78887 20.813C6.23152 20.5822 5.96686 19.9432 6.19772 19.3859C6.38136 18.9425 6.24769 18.4351 5.90812 18.096C5.56872 17.7571 5.05713 17.6187 4.61402 17.8022C4.05674 18.0331 3.41786 17.7684 3.18703 17.2112L2.08343 14.5469C1.8526 13.9896 2.11723 13.3507 2.67451 13.1199C3.11762 12.9363 3.38149 12.4766 3.38185 11.997C3.3822 11.5171 3.11794 11.0638 2.67458 10.8801C2.11724 10.6493 1.85257 10.0103 2.08343 9.45299L3.18693 6.78891C3.41779 6.23157 4.05675 5.9669 4.61409 6.19776C5.05745 6.38141 5.56487 6.24771 5.90395 5.90813C6.24284 5.56874 6.38129 5.05713 6.19775 4.61401C5.96692 4.05674 6.23155 3.41785 6.78883 3.18702Z"/>',
-                'folder_open' => '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
-                'menu_book'   => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1V17"/>',
-            ];
-        @endphp
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            @foreach($cards as $card)
-            @php
-                $mc  = $moduleColors[$card['color']] ?? $moduleColors['blue'];
-                $svg = $moduleIcons[$card['icon']] ?? $moduleIcons['folder'];
-
-                // Logika penentuan teks singkatan aplikasi
-                $appText = '';
-                if ($card['color'] === 'blue') {
-                    $appText = 'SIBASO';
-                } elseif ($card['color'] === 'purple') {
-                    $appText = 'SICATA';
-                } elseif ($card['color'] === 'green') {
-                    $appText = 'SIMENMA';
-                } elseif ($card['color'] === 'orange') {
-                    $appText = 'SIPERKOM';
-                }
-            @endphp
-
-            <a href="{{ route($card['route']) }}"
-               class="group bg-white border border-[#DFE1E7] rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-[0_4px_12px_-2px_rgba(22,22,43,0.08)] hover:border-{{ $card['color'] === 'blue' ? '[#8FA3D1]' : ($card['color'] === 'purple' ? '[#5C78B8]' : ($card['color'] === 'green' ? '[#40C4AA]' : '[#D39C3D]')) }} relative overflow-hidden min-h-[165px]">
-
-                {{-- Subtle bg shape --}}
-                <div class="absolute -top-5 -right-5 w-20 h-20 rounded-full opacity-40 group-hover:opacity-80 transition-opacity pointer-events-none"
-                     style="background:{{ $mc['icon_bg'] }}"></div>
-
-                {{-- Top Row: Icon + App Token --}}
-                <div class="flex items-center justify-between relative z-10">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                         style="background:{{ $mc['icon_bg'] }}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                             stroke="{{ $mc['icon_color'] }}" stroke-width="1.8"
-                             stroke-linecap="round" stroke-linejoin="round">
-                            {!! $svg !!}
-                        </svg>
-                    </div>
-                    
-                    @if($appText)
-                    <span class="text-[10px] font-extrabold tracking-wider px-2 py-0.5 rounded-md text-slate-500 bg-slate-100 uppercase select-none">
-                        {{ $appText }}
-                    </span>
-                    @endif
-                </div>
-
-                {{-- Text Content --}}
-                <div class="relative flex-1 flex flex-col justify-end mt-1">
-                    <h3 class="text-[13px] font-bold text-[#0D0D12] group-hover:text-[#0B266E] transition-colors leading-tight mb-1">
-                        {{ $card['title'] }}
-                    </h3>
-                    <p class="text-[#A4ABB8] text-[11px] leading-normal line-clamp-2">
-                        {{ $card['description'] }}
-                    </p>
-                </div>
-
-                {{-- Arrow Row --}}
-                <div class="flex justify-end mt-1">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                         stroke="#DFE1E7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                         class="group-hover:stroke-[#0B266E] group-hover:translate-x-0.5 transition-all">
-                        <polyline points="9 18 15 12 9 6"/>
-                    </svg>
-                </div>
-            </a>
-            @endforeach
-        </div>
-
-        {{-- ── PENGUMUMAN ───────────────────────────────────────────────── --}}
-        @php
-            $tabs = [
-                ['key' => 'all',           'label' => 'Semua'],
-                ['key' => 'bank_soal',     'label' => 'Ujian Komprehensif'],
-                ['key' => 'capstone',      'label' => 'Capstone TA'],
-                ['key' => 'kemahasiswaan', 'label' => 'Kemahasiswaan'],
-                ['key' => 'eoffice',       'label' => 'EOffice'],
-            ];
-
-            $badgeMap = [
-                'bank_soal'     => ['bg' => '#E8EDF7', 'text' => '#0B266E', 'dot' => '#3C518B', 'border_l' => '#3C518B', 'label' => 'Ujian Komprehensif'],
-                'capstone'      => ['bg' => '#E8EDF7', 'text' => '#091958', 'dot' => '#091958', 'border_l' => '#091958', 'label' => 'Capstone TA'],
-                'kemahasiswaan' => ['bg' => '#DDF2EE', 'text' => '#287F6E', 'dot' => '#40C4AA', 'border_l' => '#40C4AA', 'label' => 'Kemahasiswaan'],
-                'eoffice'       => ['bg' => '#F9ECCB', 'text' => '#956321', 'dot' => '#D39C3D', 'border_l' => '#D39C3D', 'label' => 'EOffice'],
-            ];
-        @endphp
-
-        <div x-data="{ activeTab: 'all' }">
-
-            {{-- Section header + Tabs --}}
-            <div class="flex items-end justify-between mb-0">
-                <div class="mb-3">
-                    <h2 class="text-[14px] font-bold text-[#0D0D12] tracking-tight">Pengumuman</h2>
-                    <p class="text-[11px] text-[#A4ABB8] mt-0.5 font-medium">Informasi terbaru dari setiap modul</p>
-                </div>
-            </div>
-
-            {{-- Tab bar --}}
-            <div class="flex items-end gap-0 border-b border-[#DFE1E7] overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;" onscroll="this.style.webkitScrollbarDisplay='none'">
-                @foreach($tabs as $tab)
-                <button
-                    @click="activeTab = '{{ $tab['key'] }}'"
-                    :class="activeTab === '{{ $tab['key'] }}'
-                        ? 'border-b-2 border-[#0B266E] text-[#0B266E] font-semibold bg-white'
-                        : 'text-[#A4ABB8] hover:text-[#666D80] border-b-2 border-transparent hover:bg-[#F6F8FA]'"
-                    class="px-4 py-2.5 text-[12px] transition-all duration-150 -mb-px whitespace-nowrap rounded-t-lg flex-shrink-0 flex items-center gap-1.5">
-                    
-                    <span>{{ $tab['label'] }}</span>
-                    
-                    {{-- Badge Count Pengumuman --}}
-                    <span :class="activeTab === '{{ $tab['key'] }}' ? 'bg-[#E8EDF7] text-[#0B266E]' : 'bg-[#F0F1F4] text-[#A4ABB8]'" 
-                          class="px-1.5 py-0.5 text-[10px] font-bold rounded-full transition-colors">
-                        {{ $announcementCounts[$tab['key']] ?? 0 }}
-                    </span>
-
-                </button>
-                @endforeach
-            </div>
-
-            {{-- Announcement pane + Scroll Container --}}
-            <div class="bg-white border border-t-0 border-[#DFE1E7] rounded-b-2xl overflow-hidden max-h-[440px] overflow-y-auto custom-scrollbar flex flex-col">
-
-                {{-- Tab: Semua --}}
-                <div x-show="activeTab === 'all'"
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     class="w-full flex flex-col">
-                    @forelse($announcements['all'] ?? [] as $item)
-                    @php $b = $badgeMap[$item['module']] ?? $badgeMap['bank_soal']; @endphp
-                    <div class="w-full flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
-                         style="border-left: 3px solid {{ $b['border_l'] }}"
-                         @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
-                        <div class="flex-1 min-w-0 w-full">
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
-                                      style="background:{{ $b['bg'] }};color:{{ $b['text'] }}">
-                                    <span class="w-1.5 h-1.5 rounded-full inline-block"
-                                          style="background:{{ $b['dot'] }}"></span>
-                                    {{ $b['label'] }}
-                                </span>
-                                <span class="text-[10px] text-[#C1C7CF] flex-shrink-0">{{ $item['date'] }}</span>
-                            </div>
-                            <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors w-full">
-                                {{ $item['title'] }}
-                            </p>
-                            <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2 w-full whitespace-normal">
-                                {{ $item['body'] }}
-                            </p>
-                        </div>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                             stroke="#DFE1E7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                             class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </div>
-                    @empty
-                    <div class="flex flex-col items-center justify-center py-12 text-[#DFE1E7] w-full">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                        </svg>
-                        <p class="text-[12px] text-[#A4ABB8]">Belum ada pengumuman</p>
-                    </div>
-                    @endforelse
-                </div>
-
-                {{-- Tab: Per modul --}}
-                @foreach(['bank_soal', 'capstone', 'kemahasiswaan', 'eoffice'] as $moduleKey)
-                @php $b = $badgeMap[$moduleKey]; @endphp
-                <div x-show="activeTab === '{{ $moduleKey }}'"
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     class="w-full flex flex-col"
-                     style="display:none">
-                    @forelse($announcements[$moduleKey] ?? [] as $item)
-                    <div class="w-full flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
-                         style="border-left: 3px solid {{ $b['border_l'] }}"
-                         @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
-                        <div class="flex-1 min-w-0 w-full">
-                            <div class="flex items-center gap-2 mb-1 flex-wrap">
-                                <span class="text-[10px] text-[#C1C7CF] flex-shrink-0">{{ $item['date'] }}</span>
-                                @if(!empty($item['pinned']))
-                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-                                      style="background:{{ $b['bg'] }};color:{{ $b['text'] }}">
-                                    Penting
-                                </span>
-                                @endif
-                            </div>
-                            <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors w-full">
-                                {{ $item['title'] }}
-                            </p>
-                            <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2 w-full whitespace-normal">
-                                {{ $item['body'] }}
-                            </p>
-                        </div>
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
-                             stroke="#DFE1E7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                             class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
-                            <polyline points="9 18 15 12 9 6"/>
-                        </svg>
-                    </div>
-                    @empty
-                    <div class="flex flex-col items-center justify-center py-12 w-full text-[#DFE1E7]">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                        </svg>
-                        <p class="text-[12px] text-[#A4ABB8]">Belum ada pengumuman dari {{ $b['label'] }}</p>
-                    </div>
-                    @endforelse
-                </div>
-                @endforeach
-
-            </div>
-        </div>
-
-        {{-- ── FOOTER ──────────────────────────────────────────────────── --}}
-        <div class="mt-8 pt-5 border-t border-[#DFE1E7] flex items-center justify-between flex-wrap gap-2">
-            <p class="text-[11px] text-[#A4ABB8]">
-                &copy; {{ date('Y') }} <span class="font-semibold text-[#666D80]">{{ config('app.name') }}</span>. All rights reserved.
-            </p>
-            <p class="text-[10px] text-[#C1C7CF] font-semibold uppercase tracking-widest">SITKOM · Teknik Komputer UNDIP</p>
-        </div>
-
-    </div>
-</div>
-
-{{-- ── MOBILE BOTTOM NAV (untuk halaman dashboard utama) ── --}}
 @php
-    $dashUser     = auth()->user();
-    $dashRoles    = $dashUser->roles->pluck('name')->toArray();
-    $dashIsSA     = in_array('superadmin', $dashRoles);
-    $dashInitials = strtoupper(substr($dashUser->name, 0, 1));
-    $spDash = strpos($dashUser->name, ' ');
-    if ($spDash !== false) $dashInitials .= strtoupper(substr($dashUser->name, $spDash + 1, 1));
+    $user = auth()->user();
+    $name = $user->name;
+    $initials = strtoupper(substr($name, 0, 1));
+    $sp = strpos($name, ' ');
+    if ($sp !== false)
+        $initials .= strtoupper(substr($name, $sp + 1, 1));
+
+    $userRoles = $user->roles->pluck('name')->toArray();
+    $isSuperadmin = in_array('superadmin', $userRoles);
+    $isDosen = in_array('dosen', $userRoles);
+    $isMahasiswa = in_array('mahasiswa', $userRoles);
 @endphp
 
-<div x-data="{ show: window.innerWidth < 768, openMenu: false }"
-    x-init="window.addEventListener('resize', () => show = window.innerWidth < 768)"
-    x-show="show" style="display:none;"
-    class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] font-['Inter_Tight']">
+{{-- Style Box Wrap khas SITKOM untuk Dashboard --}}
+<style>
+    /* Hilangkan padding default agar wrap bisa full 100vh */
+    .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 
-    {{-- More Menu Drawer --}}
-    <div x-show="openMenu" class="fixed inset-0 z-[60]" style="display:none;">
-        <div @click="openMenu = false" x-show="openMenu"
-            x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-            x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-            class="absolute inset-0 bg-slate-900/40"></div>
+    /* Header Dashboard Standalone */
+    .dash-topbar {
+        background: #fff;
+        border-bottom: 1px solid var(--c-border);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+        height: 60px;
+        position: sticky;
+        top: 0;
+        z-index: 20;
+    }
+    .dash-topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .dash-topbar-logo {
+        width: 32px;
+        height: 32px;
+    }
+    .dash-topbar-brand {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .dash-topbar-title {
+        font-family: 'Geist', 'Inter Tight', sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--c-fg);
+        letter-spacing: -.01em;
+        line-height: 1.2;
+    }
+    .dash-topbar-subtitle {
+        font-size: 9px;
+        color: var(--c-fg-placeholder);
+        font-weight: 500;
+        line-height: 1.2;
+    }
+    .dash-topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .dash-topbar-user {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: background .15s;
+    }
+    .dash-topbar-user:hover {
+        background: var(--c-bg);
+    }
+    .dash-topbar-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8FA3D1, #5C78B8);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+    .dash-topbar-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+    .dash-topbar-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--c-fg);
+        line-height: 1.2;
+    }
+    .dash-topbar-role {
+        font-size: 11px;
+        color: var(--c-fg-muted);
+        line-height: 1.2;
+    }
+    .dash-user-dropdown {
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 20px;
+        background: #fff;
+        border: 1px solid var(--c-border);
+        border-radius: 10px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        min-width: 200px;
+        z-index: 50;
+        overflow: hidden;
+    }
+    .dash-user-dropdown a,
+    .dash-user-dropdown button {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        width: 100%;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--c-fg-sec);
+        text-decoration: none;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        transition: background .15s;
+        border-bottom: 1px solid var(--c-border);
+    }
+    .dash-user-dropdown a:last-child,
+    .dash-user-dropdown button:last-child {
+        border-bottom: none;
+    }
+    .dash-user-dropdown a:hover,
+    .dash-user-dropdown button:hover {
+        background: var(--c-bg);
+    }
+    .dash-user-dropdown button.logout {
+        color: var(--c-error);
+    }
+    .dash-user-dropdown button.logout:hover {
+        background: #FEF1F4;
+    }
+    .dash-user-dropdown svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+    @media (max-width: 768px) {
+        .dash-topbar-subtitle { display: none; }
+        .dash-topbar-sep { display: none; }
+    }
+    @media (max-width: 640px) {
+        .dash-topbar {
+            padding: 10px 12px;
+        }
+        .dash-topbar-meta {
+            display: none;
+        }
+    }
 
-        <div x-show="openMenu" x-transition:enter="transition ease-out duration-300 transform"
-            x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
-            x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
-            class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[70vh] flex flex-col">
+    /* Container luar */
+    .dash-wrap {
+        display: flex; flex-direction: column; height: calc(100vh - 60px);
+        padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+    }
 
-            <div class="flex justify-center pt-3 pb-2 shrink-0">
-                <div class="w-10 h-1.5 bg-slate-200 rounded-full"></div>
-            </div>
+    /* Kotak utama (Box) */
+    .dash-box {
+        display: flex; flex-direction: column; flex: 1; min-height: 0;
+        background: #fff; border: 1px solid var(--c-border);
+        border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        overflow: hidden; width: 100%; box-sizing: border-box;
+    }
 
-            <div class="flex items-center gap-3 px-5 pb-4 border-b border-slate-100 shrink-0">
-                <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-sm bg-gradient-to-br from-[#3C518B] to-[#0B266E] text-white overflow-hidden">
-                    @if($dashUser->avatar_url)
-                        <img src="{{ $dashUser->avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
-                    @else
-                        {{ $dashInitials }}
-                    @endif
-                </div>
-                <div class="min-w-0">
-                    <p class="text-[14px] font-bold text-slate-800 truncate">{{ $dashUser->name }}</p>
-                    <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ ucfirst($dashUser->roles->first()->name ?? 'User') }}</p>
-                </div>
-            </div>
+    /* Area Header Box (Fixed di atas kotak) */
+    .dash-box-header {
+        background: #fff;
+        border-bottom: 1px solid var(--c-border);
+        flex-shrink: 0; width: 100%; box-sizing: border-box;
+        padding: 16px 24px;
+    }
 
-            <div class="overflow-y-auto px-4 py-3 space-y-1">
-                <a href="{{ route('profile.edit') }}" @click="openMenu = false"
-                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
-                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                    </svg>
-                    <span class="text-[13px] font-semibold">Profil Saya</span>
-                </a>
-                <form method="POST" action="{{ route('logout') }}" data-no-loader>
-                    @csrf
-                    <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors">
-                        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                        <span class="text-[13px] font-semibold">Keluar</span>
-                    </button>
-                </form>
-                <div class="h-4"></div>
-            </div>
+    /* Area Konten Box (Scrollable) */
+    .dash-box-body {
+        flex: 1; overflow-y: auto; padding: 20px 24px;
+        display: flex; flex-direction: column; gap: 24px;
+    }
+
+    .dash-box-body > * {
+        flex-shrink: 0;
+        width: 100%;
+        min-width: 0;
+    }
+
+    /* Percantik scrollbar */
+    .dash-box-body::-webkit-scrollbar { width: 6px; }
+    .dash-box-body::-webkit-scrollbar-thumb {
+        background: var(--c-border-strong);
+        border-radius: 10px;
+    }
+
+    /* ── Mobile: scroll natively, bukan inner-scroll ── */
+    @media (max-width: 767px) {
+        .sitkom-content {
+            padding: 8px 8px 80px !important;
+            display: block !important;
+            overflow: visible !important;
+        }
+        .dash-wrap {
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 0;
+        }
+        .dash-box {
+            flex: none !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+            border-radius: 10px;
+        }
+        .dash-box-header {
+            padding: 12px 14px;
+            position: sticky;
+            top: 52px;
+            z-index: 10;
+        }
+        .dash-box-body {
+            overflow-y: visible !important;
+            flex: none !important;
+            padding: 14px;
+        }
+    }
+</style>
+
+{{-- Header Dashboard Standalone --}}
+<div class="dash-topbar" x-data="{ userDropdown: false }" @click.outside="userDropdown = false">
+    <div class="dash-topbar-left">
+        <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" class="dash-topbar-logo">
+        <div class="dash-topbar-brand">
+            <div class="dash-topbar-title">SITKOM</div>
+            <div class="dash-topbar-subtitle">Sistem Informasi Teknik Komputer</div>
         </div>
     </div>
-
-    {{-- Bottom Bar --}}
-    <div class="flex items-center justify-around px-2 py-1.5">
-        {{-- Home (aktif) --}}
-        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[#0B266E]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+    <div class="dash-topbar-right">
+        <div class="dash-topbar-user" @click="userDropdown = !userDropdown">
+            <div class="dash-topbar-avatar" @if($isSuperadmin) style="background:#F3F4F6;color:#6B7280;border:1px solid #E5E7EB;" @endif>
+                @if($user->avatar_url)
+                    <img src="{{ $user->avatar_url }}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+                @else
+                    {{ $initials }}
+                @endif
+            </div>
+            <div class="dash-topbar-meta">
+                <div class="dash-topbar-name">{{ $user->name }}</div>
+                <div class="dash-topbar-role">
+                    @if($isSuperadmin) Super Admin
+                    @elseif($isDosen) Dosen
+                    @elseif($isMahasiswa) Mahasiswa
+                    @else User
+                    @endif
+                </div>
+            </div>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="transition:transform .15s;" :style="userDropdown ? 'transform:rotate(180deg)' : ''">
+                <path d="M6 9l6 6 6-6"/>
             </svg>
-            <span class="text-[9px] font-extrabold uppercase tracking-tight">Home</span>
-        </a>
+        </div>
 
-        {{-- Profil --}}
-        <a href="{{ route('profile.edit') }}" class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[#ADB5BD]">
-            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-            </svg>
-            <span class="text-[9px] font-extrabold uppercase tracking-tight">Profil</span>
-        </a>
-
-        {{-- Menu (drawer) --}}
-        <button @click="openMenu = true" class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[#ADB5BD]">
-            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-            <span class="text-[9px] font-extrabold uppercase tracking-tight">Menu</span>
-        </button>
+        {{-- Dropdown Menu --}}
+        <div x-show="userDropdown"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="dash-user-dropdown"
+             style="display:none;">
+            <a href="{{ route('profile.edit') }}">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+                    <path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1A2 2 0 114.4 17l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1A1.7 1.7 0 004.4 7l-.1-.1A2 2 0 117.1 4l.1.1a1.7 1.7 0 001.8.3 1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1A2 2 0 1119.6 7l-.1.1a1.7 1.7 0 00-.3 1.8 1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>
+                </svg>
+                Settings
+            </a>
+            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                @csrf
+                <button type="submit" class="logout">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+                    </svg>
+                    Logout
+                </button>
+            </form>
+        </div>
     </div>
 </div>
+
+<div class="dash-wrap">
+    <div class="dash-box">
+
+        {{-- Area Header (Fixed) --}}
+        <div class="dash-box-header">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+                <div>
+                    <h1 style="font-size:22px; font-weight:700; color:var(--c-fg); letter-spacing:-0.02em; line-height:1.2; margin-bottom:3px;">
+                        Selamat datang, <span style="color:var(--c-primary);">{{ explode(' ', auth()->user()->name)[0] }}</span>
+                    </h1>
+                    <p style="font-size:12px; color:var(--c-fg-muted);">
+                        Pilih modul yang ingin kamu akses hari ini
+                        <span style="margin-left:4px; color:var(--c-fg-placeholder);">·</span>
+                        <span style="margin-left:4px;">{{ now()->translatedFormat('l, d F Y') }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        {{-- Area Konten (Scrollable) --}}
+        <div class="dash-box-body">
+
+            {{-- MODULE CARDS --}}
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                    <span style="width:3px;height:14px;border-radius:2px;background:var(--c-primary);"></span>
+                    <span style="font-size:14px;font-weight:700;color:var(--c-fg);">Modul Aplikasi</span>
+                </div>
+
+                @php
+                    $moduleIcons = [
+                        'quiz'        => '<path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>', // Clipboard checklist - Bank Soal
+                        'school'      => '<path d="M12 14l9-5-9-5-9 5 9 5zM12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zM12 14v6.25"/>', // Graduation cap - Capstone
+                        'groups'      => '<path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>', // User groups - Manajemen Mahasiswa
+                        'folder_open' => '<path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>', // Document - E-Office
+                    ];
+
+                    $moduleTags = [
+                        'blue'   => ['label' => 'SIBASO',   'bg' => '#F9ECCB', 'color' => '#956321'],
+                        'purple' => ['label' => 'SICATA',   'bg' => '#D1F0F9', 'color' => '#0C4D6E'],
+                        'green'  => ['label' => 'SIMENMA',  'bg' => '#DDF2EE', 'color' => '#287F6E'],
+                        'orange' => ['label' => 'SIPERKOM', 'bg' => '#FADAE1', 'color' => '#95122B'],
+                    ];
+                @endphp
+
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;" class="dash-modules">
+                    @foreach($cards as $card)
+                    @php
+                        $svg = $moduleIcons[$card['icon']] ?? $moduleIcons['folder_open'];
+                        $tag = $moduleTags[$card['color']] ?? ['label' => 'APP', 'bg' => 'var(--c-bg)', 'color' => 'var(--c-fg-muted)'];
+                    @endphp
+                    <a href="{{ route($card['route']) }}"
+                       style="background:#fff;border:1px solid var(--c-border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;text-decoration:none;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s,transform .15s;"
+                       onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)';this.style.transform='translateY(-2px)'"
+                       onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)';this.style.transform='translateY(0)'">
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.02em;background:{{ $tag['bg'] }};color:{{ $tag['color'] }};">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    {!! $svg !!}
+                                </svg>
+                                {{ $tag['label'] }}
+                            </span>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--c-border-strong)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:all .15s;">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </div>
+
+                        <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+                            <h3 style="font-size:14px;font-weight:700;color:var(--c-fg);line-height:1.3;margin:0;">{{ $card['title'] }}</h3>
+                            <p style="font-size:11.5px;color:var(--c-fg-muted);line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                {{ $card['description'] }}
+                            </p>
+                        </div>
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- PENGUMUMAN --}}
+            <div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                    <span style="width:3px;height:14px;border-radius:2px;background:var(--c-primary);"></span>
+                    <span style="font-size:14px;font-weight:700;color:var(--c-fg);">Pengumuman</span>
+                </div>
+
+                @php
+                    $tabs = [
+                        ['key' => 'all',           'label' => 'Semua'],
+                        ['key' => 'bank_soal',     'label' => 'Bank Soal'],
+                        ['key' => 'capstone',      'label' => 'Capstone TA'],
+                        ['key' => 'kemahasiswaan', 'label' => 'Kemahasiswaan'],
+                        ['key' => 'eoffice',       'label' => 'EOffice'],
+                    ];
+                    $badgeMap = [
+                        'bank_soal'     => ['bg' => '#F9ECCB', 'text' => '#956321', 'dot' => '#D39C3D', 'border_l' => '#D39C3D', 'label' => 'Bank Soal'],
+                        'capstone'      => ['bg' => '#D1F0F9', 'text' => '#0C4D6E', 'dot' => '#3B82F6', 'border_l' => '#3B82F6', 'label' => 'Capstone TA'],
+                        'kemahasiswaan' => ['bg' => '#DDF2EE', 'text' => '#287F6E', 'dot' => '#10B981', 'border_l' => '#10B981', 'label' => 'Kemahasiswaan'],
+                        'eoffice'       => ['bg' => '#FADAE1', 'text' => '#95122B', 'dot' => '#EF4444', 'border_l' => '#EF4444', 'label' => 'EOffice'],
+                    ];
+                @endphp
+
+                <div style="background:#fff;border:1px solid var(--c-border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-card);">
+
+                    {{-- Tabs --}}
+                    <div x-data="{ activeTab: 'all' }" class="w-full">
+                        <div style="display:flex;border-bottom:1px solid var(--c-border);overflow-x:auto;scrollbar-width:none;gap:2px;padding:0 16px;">
+                            @foreach($tabs as $tab)
+                            <button @click="activeTab = '{{ $tab['key'] }}'"
+                                    :class="activeTab === '{{ $tab['key'] }}' ? 'border-[var(--c-primary)] text-[var(--c-primary)]' : 'border-transparent text-[#808897] hover:text-[#353849]'"
+                                    style="flex-shrink:0;padding:12px 16px;border-bottom:2px solid transparent;font-size:12px;font-weight:600;transition:all .15s;white-space:nowrap;">
+                                {{ $tab['label'] }}
+                                @if(isset($announcementCounts[$tab['key']]) && $announcementCounts[$tab['key']] > 0)
+                                <span :class="activeTab === '{{ $tab['key'] }}' ? 'bg-[var(--c-primary)] text-white' : 'bg-[#F0F1F4] text-[#808897]'"
+                                      style="display:inline-block;margin-left:6px;padding:1px 6px;border-radius:9999px;font-size:10px;font-weight:700;min-width:18px;text-align:center;transition:all .15s;">
+                                    {{ $announcementCounts[$tab['key']] }}
+                                </span>
+                                @endif
+                            </button>
+                            @endforeach
+                        </div>
+
+                        {{-- Tab: Semua --}}
+                        <div x-show="activeTab === 'all'"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="w-full flex flex-col">
+                            @forelse($announcements['all'] ?? [] as $item)
+                            <div class="w-full flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
+                                 @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
+                                <div class="flex-1 min-w-0 w-full">
+                                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                        <span class="text-[10px] text-[#C1C7CF] flex-shrink-0">{{ $item['date'] }}</span>
+                                        @if(!empty($item['badge']))
+                                        @php $b = $badgeMap[$item['badge']] ?? ['bg' => '#F0F1F4', 'text' => '#808897']; @endphp
+                                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                                              style="background:{{ $b['bg'] }};color:{{ $b['text'] }}">
+                                            {{ $b['label'] }}
+                                        </span>
+                                        @endif
+                                        @if(!empty($item['pinned']))
+                                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 bg-[#FEF3C7] text-[#92400E]">
+                                            Penting
+                                        </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors w-full">
+                                        {{ $item['title'] }}
+                                    </p>
+                                    <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2 w-full whitespace-normal">
+                                        {{ $item['body'] }}
+                                    </p>
+                                </div>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                     stroke="#DFE1E7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                     class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                            @empty
+                            <div class="flex flex-col items-center justify-center py-12 w-full text-[#DFE1E7]">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                                </svg>
+                                <p class="text-[12px] text-[#A4ABB8]">Belum ada pengumuman</p>
+                            </div>
+                            @endforelse
+                        </div>
+
+                        {{-- Tab: Per modul --}}
+                        @foreach(['bank_soal', 'capstone', 'kemahasiswaan', 'eoffice'] as $moduleKey)
+                        @php $b = $badgeMap[$moduleKey]; @endphp
+                        <div x-show="activeTab === '{{ $moduleKey }}'"
+                             x-transition:enter="transition ease-out duration-150"
+                             x-transition:enter-start="opacity-0 translate-y-1"
+                             x-transition:enter-end="opacity-100 translate-y-0"
+                             class="w-full flex flex-col"
+                             style="display:none">
+                            @forelse($announcements[$moduleKey] ?? [] as $item)
+                            <div class="w-full flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
+                                 style="border-left: 3px solid {{ $b['border_l'] }}"
+                                 @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
+                                <div class="flex-1 min-w-0 w-full">
+                                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                        <span class="text-[10px] text-[#C1C7CF] flex-shrink-0">{{ $item['date'] }}</span>
+                                        @if(!empty($item['pinned']))
+                                        <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                                              style="background:{{ $b['bg'] }};color:{{ $b['text'] }}">
+                                            Penting
+                                        </span>
+                                        @endif
+                                    </div>
+                                    <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors w-full">
+                                        {{ $item['title'] }}
+                                    </p>
+                                    <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2 w-full whitespace-normal">
+                                        {{ $item['body'] }}
+                                    </p>
+                                </div>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+                                     stroke="#DFE1E7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                     class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
+                                    <polyline points="9 18 15 12 9 6"/>
+                                </svg>
+                            </div>
+                            @empty
+                            <div class="flex flex-col items-center justify-center py-12 w-full text-[#DFE1E7]">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                                </svg>
+                                <p class="text-[12px] text-[#A4ABB8]">Belum ada pengumuman dari {{ $b['label'] }}</p>
+                            </div>
+                            @endforelse
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<style>
+@media (max-width: 1280px) { .dash-modules { grid-template-columns: repeat(2, 1fr) !important; } }
+@media (max-width: 640px)  { .dash-modules { grid-template-columns: 1fr !important; } }
+</style>
+
 </x-app-layout>

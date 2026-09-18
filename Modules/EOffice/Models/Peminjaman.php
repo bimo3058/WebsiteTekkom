@@ -4,11 +4,12 @@ namespace Modules\EOffice\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\User;
 
 class Peminjaman extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'eo_mr_peminjamans';
 
@@ -45,6 +46,15 @@ class Peminjaman extends Model
         }
 
         return $value;
+    }
+
+    public function getBerkasUrlAttribute(): ?string
+    {
+        if (empty($this->berkas_pendukung)) {
+            return null;
+        }
+
+        return app(\App\Services\SupabaseStorage::class)->getPublicUrl($this->berkas_pendukung, 'eoffice');
     }
 
     public function user()

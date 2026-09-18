@@ -46,7 +46,7 @@
                 Jenis Tugas <span style="color:#DF1C41;">*</span>
             </label>
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
-                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'praktikum' => 'Praktikum', 'laporan' => 'Laporan', 'responsi' => 'Responsi'] as $val => $label)
+                @foreach(['tugas_pendahuluan' => 'Tugas Pendahuluan', 'laporan' => 'Laporan', 'responsi' => 'Responsi', 'tugas_pengganti' => 'Tugas Pengganti'] as $val => $label)
                 @php $isChecked = old('jenis_tugas', $tugas->jenis_tugas) === $val; @endphp
                 <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:2px solid {{ $isChecked ? '#5D6DA2' : '#DFE1E7' }};border-radius:10px;cursor:pointer;background:{{ $isChecked ? '#F0F1FE' : '#FAFBFC' }};transition:border-color .15s,background .15s;"
                        x-data
@@ -128,7 +128,7 @@
                     <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($tugas->file_path, 'eoffice') }}"
                        target="_blank"
                        style="font-size:11px;color:#0B266E;text-decoration:none;font-weight:500;">
-                       Lihat / Unduh PDF →
+                       Lihat / Unduh PDF <x-eoffice::manajemen-praktikum.ui.icon name="arrow-right" />
                     </a>
                 </div>
                 <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:#DF1C41;font-weight:600;flex-shrink:0;">

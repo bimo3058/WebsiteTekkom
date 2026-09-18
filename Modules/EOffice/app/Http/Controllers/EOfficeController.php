@@ -3,16 +3,12 @@
 namespace Modules\EOffice\Http\Controllers;
 
 use App\Models\EoAuditLog;
-use App\Models\User;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Modules\EOffice\Models\DaftarPraktikan;
-use Modules\EOffice\Models\KerjaPraktik;
-use Modules\EOffice\Models\KpDosen;
-use Modules\EOffice\Models\KpMahasiswa;
 use Modules\EOffice\Models\KpPengumuman;
 use Modules\EOffice\Models\Praktikum;
 
@@ -36,14 +32,14 @@ class EOfficeController extends Controller
     {
         // $this->authorize('eoffice.view'); // Bypassed for email logic
 
-        $praktikums = Praktikum::with(['dosens', 'koordinator'])
+        $praktikums = Praktikum::with(['dosens', 'koordinator'])->withCount('daftarPraktikan')
             ->where('status', 'aktif')
             ->latest()
             ->take(8)
             ->get();
 
         $recentActivities = EoAuditLog::with('user')
-            ->latest()
+            ->latest('id')
             ->take(6)
             ->get()
             ->map(function ($log) {
@@ -53,49 +49,40 @@ class EOfficeController extends Controller
                     'delete' => 'warning',
                 ];
 
-                $modelLabel = match ($log->model) {
+                $actionKey = strtolower($log->action ?? '');
+
+                $subjectType = $log->subject_type ?? '';
+                $modelLabel = match ($subjectType) {
                     'Praktikum'    => 'Praktikum',
                     'EoMaster'     => 'Surat',
                     'EoPeminjaman' => 'Peminjaman',
-                    default        => $log->model,
+                    default        => $subjectType,
                 };
 
-                $actionLabel = match ($log->action) {
+                $actionLabel = match ($actionKey) {
                     'create' => 'dibuat',
                     'update' => 'diperbarui',
                     'delete' => 'dihapus',
-                    default  => $log->action,
+                    default  => $log->action ?? '',
                 };
 
-                $newValues = is_array($log->new_values) ? $log->new_values : [];
-                $name      = $newValues['nama'] ?? $newValues['name'] ?? ('#' . substr($log->model_id ?? '', 0, 8));
+                $newData = is_array($log->new_data) ? $log->new_data : [];
+                $name    = $log->description ?: ($newData['nama'] ?? $newData['name'] ?? ($log->subject_id ? '#' . substr((string) $log->subject_id, 0, 8) : null));
 
                 return [
-                    'type' => $typeMap[$log->action] ?? 'blue',
-                    'text' => '<strong>' . e($log->user?->name ?? 'Sistem') . '</strong> ' . $actionLabel . ' ' . $modelLabel,
+                    'type' => $typeMap[$actionKey] ?? 'blue',
+                    'text' => '<strong>' . e($log->user?->name ?? 'Sistem') . '</strong> ' . $actionLabel . ($modelLabel ? ' ' . $modelLabel : ''),
                     'desc' => $name ?: null,
                     'time' => $log->created_at?->diffForHumans() ?? '—',
                 ];
             })
             ->toArray();
 
-        return view('eoffice::dashboard.admin', [
-            'totalSuratDiproses'     => 0,
-            'statSuratHariIni'       => 0,
-            'totalPeminjamanAktif'   => 0,
-            'totalPeminjamanPending' => 0,
-            'totalSuratPending'      => 0,
-            'totalPraktikumAktif'    => Praktikum::where('status', 'aktif')->count(),
-            'totalKpBerjalan'        => KerjaPraktik::whereNotIn('status_kp', ['Selesai'])->count(),
-            'totalKpPending'         => KerjaPraktik::where('status_kp', 'Pra-KP')->where('is_acc_admin', false)->count(),
-            'statKpBaru'             => KerjaPraktik::whereDate('created_at', today())->count(),
-            'totalDosen'             => User::whereHas('roles', fn($q) => $q->where('name', 'dosen')->where('module', 'eoffice'))->count(),
-            'totalLogHariIni'        => EoAuditLog::whereDate('created_at', today())->count(),
-            'totalNotifikasi'        => 0,
-            'praktikums'             => $praktikums,
-            'recentActivities'       => $recentActivities,
-            'semesterLabel'          => $this->semesterLabel(),
-        ]);
+        return view('eoffice::dashboard.admin', array_merge([
+            'praktikums' => $praktikums,
+            'recentActivities' => $recentActivities,
+            'semesterLabel' => $this->semesterLabel(),
+        ], app(\Modules\EOffice\Services\DashboardOverview::class)->forUser(auth()->user(), 'admin')));
     }
 
     public function dosenDashboard()
@@ -109,21 +96,12 @@ class EOfficeController extends Controller
             ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->withCount('daftarPraktikan')
             ->orderByDesc('created_at')
-            ->get();
+            ->limit(8)->get();
 
-        // Bimbingan KP — cari lewat tabel eo_kp_dosen dulu
-        $kpDosen = KpDosen::where('user_id', $user->id)->first();
-        $kpList  = $kpDosen
-            ? KerjaPraktik::where('dosen_pembimbing_id', $kpDosen->id)
-                ->whereNotIn('status_kp', ['Selesai'])
-                ->get()
-            : collect();
-
-        return view('eoffice::dashboard.dosen', [
+        return view('eoffice::dashboard.dosen', array_merge([
             'praktikumList' => $praktikumList,
-            'kpList'        => $kpList,
             'semesterLabel' => $this->semesterLabel(),
-        ]);
+        ], app(\Modules\EOffice\Services\DashboardOverview::class)->forUser($user, 'dosen')));
     }
 
     public function mahasiswaDashboard()
@@ -133,18 +111,12 @@ class EOfficeController extends Controller
         $user = auth()->user();
 
         // Praktikum aktif yang diikuti mahasiswa
-        $daftarPraktikan = DaftarPraktikan::with(['praktikum.dosens'])
+        $semuaPraktikan = DaftarPraktikan::with(['praktikum.dosens'])
             ->where('user_id', $user->id)
             ->whereHas('praktikum', fn($q) => $q->where('status', 'aktif'))
-            ->first();
+            ->get();
 
-        $praktikumAktif = $daftarPraktikan?->praktikum;
-
-        // Persentase kehadiran — TODO: isi saat tabel absensi siap
-        $absensiPct = null;
-
-        // Tugas mendatang — TODO: isi saat tabel tugas siap
-        $tugasMendatang = collect();
+        $praktikumAktif = $semuaPraktikan->first()?->praktikum;
 
         // Pengumuman KP
         $kpPengumuman = KpPengumuman::where('is_active', true)
@@ -163,7 +135,7 @@ class EOfficeController extends Controller
             });
 
         // Pengumuman Manajemen Praktikum
-        $praktikumIds = $praktikumAktif ? [$praktikumAktif->id] : [];
+        $praktikumIds = $semuaPraktikan->pluck('praktikum_id')->all();
         $mpPengumuman = \Modules\EOffice\Models\Pengumuman::with('praktikum')
             ->where('is_published', true)
             ->where(function($q) use ($praktikumIds) {
@@ -197,27 +169,11 @@ class EOfficeController extends Controller
             ->take(5)
             ->values();
 
-        // Timeline KP
-        $timelineKp = KpPengumuman::where('is_active', true)
-            ->where('tipe', 'timeline')
-            ->orderBy('created_at', 'asc')
-            ->get();
-
-        // Status KP mahasiswa
-        $kpMahasiswa = KpMahasiswa::where('user_id', $user->id)->first();
-        $statusKp    = $kpMahasiswa
-            ? KerjaPraktik::where('mahasiswa_id', $kpMahasiswa->id)->value('status_kp')
-            : null;
-
-        return view('eoffice::dashboard.mahasiswa', [
+        return view('eoffice::dashboard.mahasiswa', array_merge([
             'praktikumAktif' => $praktikumAktif,
-            'absensiPct'     => $absensiPct,
-            'tugasMendatang' => $tugasMendatang,
-            'pengumuman'     => $pengumuman,
-            'timelineKp'     => $timelineKp,
-            'statusKp'       => $statusKp,
-            'semesterLabel'  => $this->semesterLabel(),
-        ]);
+            'pengumuman' => $pengumuman,
+            'semesterLabel' => $this->semesterLabel(),
+        ], app(\Modules\EOffice\Services\DashboardOverview::class)->forUser($user, 'mahasiswa')));
     }
 
     /*

@@ -34,4 +34,10 @@ class Ruangan extends Model
     {
         return $this->hasMany(RuanganFoto::class, 'ruangan_id')->orderBy('urutan', 'asc');
     }
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        $firstFoto = $this->fotos->first();
+        return $firstFoto ? $firstFoto->foto_url : null;
+    }
 }

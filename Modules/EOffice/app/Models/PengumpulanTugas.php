@@ -52,4 +52,16 @@ class PengumpulanTugas extends Model
     {
         return $this->hasMany(RiwayatPengumpulan::class, 'pengumpulan_tugas_id')->orderByDesc('created_at');
     }
+
+    public function getFilesAttribute()
+    {
+        if (empty($this->file_path)) {
+            return [];
+        }
+        $decoded = json_decode($this->file_path, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return array_values(array_filter($decoded));
+        }
+        return [$this->file_path];
+    }
 }

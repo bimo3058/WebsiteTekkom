@@ -144,6 +144,7 @@
             font-weight: 500;
         }
     </style>
+    <x-mobile-navigation-assets />
 </head>
 <body>
     <div class="container">
@@ -179,5 +180,6 @@
     <footer>
         &copy; {{ date('Y') }} <a href="/">LuminHR</a>. All rights reserved.
     </footer>
+    <x-mobile-navigation />
 </body>
 </html>

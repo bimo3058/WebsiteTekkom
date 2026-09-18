@@ -21,16 +21,40 @@ class AbsensiController extends Controller
                 ->where('role', 'asprak')->whereNull('deleted_at')->first();
 
         $moduls = $asprak
-            ? ModulAsprak::where('asprak_id', $asprak->id)->with('modul.praktikum')->get()->pluck('modul')->filter()->values()
+            ? ModulAsprak::where('asprak_id', $asprak->id)->with(['modul.praktikum', 'modul.asprak.user'])->get()->pluck('modul')->filter()->values()
             : collect();
-            
+
         if ($asprak && $moduls->isEmpty()) {
             session()->now('error', 'Akses terbatas: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
         }
 
+        $praktikum = $asprak ? $asprak->praktikum : null;
+
+        $daftarPraktikan = collect();
+        $nilaiJenisMap = [];
+
+        if ($praktikum) {
+            $daftarPraktikan = DaftarPraktikan::where('praktikum_id', $praktikum->id)
+                ->with(['user', 'user.student', 'nilai', 'absensi'])
+                ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
+                ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
+                ->orderBy('created_at')
+                ->get();
+
+            $modulIds = $moduls->pluck('id')->toArray();
+            $nilaiJenisAll = NilaiJenisTugas::whereIn('modul_id', $modulIds)->get();
+
+            foreach ($nilaiJenisAll as $nj) {
+                $nilaiJenisMap[$nj->modul_id][$nj->daftar_praktikan_id][$nj->jenis_tugas] = $nj->nilai;
+            }
+        }
+
         return view('eoffice::manajemen-praktikum.asprak.absensi', [
-            'moduls'      => $moduls,
+            'moduls' => $moduls,
             'modulDiampu' => $moduls,
+            'praktikum' => $praktikum,
+            'daftarPraktikan' => $daftarPraktikan,
+            'nilaiJenisMap' => $nilaiJenisMap,
         ]);
     }
 
@@ -58,46 +82,49 @@ class AbsensiController extends Controller
                 ->where('role', 'asprak')->whereNull('deleted_at')->first();
 
         $moduls = $asprak
-            ? ModulAsprak::where('asprak_id', $asprak->id)->with('modul.praktikum')->get()->pluck('modul')->filter()->values()
+            ? ModulAsprak::where('asprak_id', $asprak->id)->with(['modul.praktikum', 'modul.asprak.user'])->get()->pluck('modul')->filter()->values()
             : collect();
 
-        return view('eoffice::manajemen-praktikum.asprak.absensi-show',
-            compact('modul', 'praktikans', 'absensi', 'moduls', 'nilaiJenis')
+        $praktikum = $asprak ? $asprak->praktikum : null;
+
+        return view(
+            'eoffice::manajemen-praktikum.asprak.absensi-show',
+            compact('modul', 'praktikans', 'absensi', 'moduls', 'nilaiJenis', 'praktikum')
         );
     }
 
     public function store(Request $request, int $modulId)
     {
         $request->validate([
-            'absensi'                       => 'required|array',
-            'absensi.*.status'              => 'required|in:hadir,izin,tidak_hadir',
-            'absensi.*.keterangan'          => 'nullable|string|max:255',
-            'tanggal'                       => 'required|date',
-            'nilai'                         => 'nullable|array',
-            'nilai.*.tugas_pendahuluan'     => 'nullable|numeric|min:0|max:100',
-            'nilai.*.praktikum'             => 'nullable|numeric|min:0|max:100',
-            'nilai.*.laporan'               => 'nullable|numeric|min:0|max:100',
-            'nilai.*.responsi'              => 'nullable|numeric|min:0|max:100',
+            'absensi' => 'required|array',
+            'absensi.*.status' => 'nullable|in:hadir,terlambat,alpa,tidak_hadir',
+            'absensi.*.keterangan' => 'nullable|string|max:255',
+            'tanggal' => 'required|date',
+            'nilai' => 'nullable|array',
+            'nilai.*.tugas_pendahuluan' => 'nullable|numeric|min:0|max:100',
+            'nilai.*.laporan' => 'nullable|numeric|min:0|max:100',
+            'nilai.*.responsi' => 'nullable|numeric|min:0|max:100',
+            'nilai.*.tugas_pengganti' => 'nullable|numeric|min:0|max:100',
         ]);
 
-        $jenisList = ['tugas_pendahuluan', 'praktikum', 'laporan', 'responsi'];
+        $jenisList = ['tugas_pendahuluan', 'laporan', 'responsi', 'tugas_pengganti'];
 
         foreach ($request->absensi as $daftarPraktikanId => $item) {
             $status = $item['status'];
-            
+
             Absensi::updateOrCreate(
                 ['modul_id' => $modulId, 'daftar_praktikan_id' => $daftarPraktikanId],
                 [
-                    'tanggal'    => $request->tanggal,
-                    'status'     => $status,
+                    'tanggal' => $request->tanggal,
+                    'status' => $status,
                     'keterangan' => $item['keterangan'] ?? null,
                 ]
             );
 
             // Jika ada data nilai, update nilai_jenis_tugas & pengumpulan_tugas
-            if ($request->has("nilai.{$daftarPraktikanId}") && $status === 'hadir') {
+            if ($request->has("nilai.{$daftarPraktikanId}") && in_array($status, ['hadir', 'terlambat'])) {
                 $nilaiData = $request->nilai[$daftarPraktikanId];
-                
+
                 foreach ($jenisList as $jenis) {
                     $nilaiValue = isset($nilaiData[$jenis]) && $nilaiData[$jenis] !== ''
                         ? (float) $nilaiData[$jenis]
@@ -107,8 +134,8 @@ class AbsensiController extends Controller
                     NilaiJenisTugas::updateOrCreate(
                         [
                             'daftar_praktikan_id' => $daftarPraktikanId,
-                            'modul_id'            => $modulId,
-                            'jenis_tugas'         => $jenis,
+                            'modul_id' => $modulId,
+                            'jenis_tugas' => $jenis,
                         ],
                         ['nilai' => $nilaiValue]
                     );
@@ -117,7 +144,7 @@ class AbsensiController extends Controller
                     $tugas = \Modules\EOffice\Models\Tugas::where('modul_id', $modulId)
                         ->where('jenis_tugas', $jenis)
                         ->first();
-                        
+
                     if ($tugas) {
                         $pengumpulan = \Modules\EOffice\Models\PengumpulanTugas::firstOrCreate(
                             [
@@ -144,12 +171,12 @@ class AbsensiController extends Controller
     public function update(Request $request, int $absensiId)
     {
         $request->validate([
-            'status'     => 'required|in:hadir,izin,tidak_hadir',
+            'status' => 'nullable|in:hadir,terlambat,alpa,tidak_hadir',
             'keterangan' => 'nullable|string|max:255',
         ]);
 
         $absensi = Absensi::findOrFail($absensiId);
-        if (! $this->ownsModul((int) $absensi->modul_id)) {
+        if (!$this->ownsModul((int) $absensi->modul_id)) {
             abort(403, 'Anda tidak berhak mengubah absensi ini.');
         }
 
@@ -166,7 +193,7 @@ class AbsensiController extends Controller
     public function destroy(int $absensiId)
     {
         $absensi = Absensi::findOrFail($absensiId);
-        if (! $this->ownsModul((int) $absensi->modul_id)) {
+        if (!$this->ownsModul((int) $absensi->modul_id)) {
             abort(403, 'Anda tidak berhak menghapus absensi ini.');
         }
 
@@ -191,7 +218,7 @@ class AbsensiController extends Controller
 
             foreach ($daftarList as $dp) {
                 $totalAbsensi = Absensi::where('daftar_praktikan_id', $dp->id)->count();
-                $jumlahHadir  = Absensi::where('daftar_praktikan_id', $dp->id)->where('status', 'hadir')->count();
+                $jumlahHadir = Absensi::where('daftar_praktikan_id', $dp->id)->where('status', 'hadir')->count();
                 $nilaiAbsensi = $totalAbsensi > 0 ? round(($jumlahHadir / $totalAbsensi) * 100, 2) : 0;
 
                 Nilai::updateOrCreate(
@@ -206,10 +233,80 @@ class AbsensiController extends Controller
 
     private function ownsModul(int $modulId): bool
     {
-        return ModulAsprak::whereHas('asprak', fn($q) => $q
-            ->where('user_id', auth()->id())
-            ->where('role', 'asprak')
-            ->whereNull('deleted_at')
+        return ModulAsprak::whereHas(
+            'asprak',
+            fn($q) => $q
+                ->where('user_id', auth()->id())
+                ->where('role', 'asprak')
+                ->whereNull('deleted_at')
         )->where('modul_id', $modulId)->exists();
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $asprak = $request->attributes->get('asprak')
+            ?? AsistenPraktikum::where('user_id', auth()->id())
+                ->where('role', 'asprak')->whereNull('deleted_at')->first();
+
+        $moduls = $asprak
+            ? ModulAsprak::where('asprak_id', $asprak->id)->with(['modul.praktikum', 'modul.asprak.user'])->get()->pluck('modul')->filter()->values()
+            : collect();
+
+        $praktikum = $asprak ? $asprak->praktikum : null;
+        if (!$praktikum) abort(404);
+
+        $daftarPraktikan = DaftarPraktikan::where('praktikum_id', $praktikum->id)
+            ->with(['user', 'user.student', 'absensi'])
+            ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
+            ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
+            ->orderBy('created_at')
+            ->get();
+
+        $modulIds = $moduls->pluck('id')->toArray();
+        $nilaiJenisAll = NilaiJenisTugas::whereIn('modul_id', $modulIds)->get();
+        $nilaiJenisMap = [];
+        foreach ($nilaiJenisAll as $nj) {
+            $nilaiJenisMap[$nj->modul_id][$nj->daftar_praktikan_id][$nj->jenis_tugas] = $nj->nilai;
+        }
+
+        $headers = [
+            "Content-type" => "text/csv",
+            "Content-Disposition" => "attachment; filename=Rekap_Nilai_{$praktikum->kode}.csv",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function () use ($daftarPraktikan, $moduls, $nilaiJenisMap) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['No', 'Nama Praktikan', 'NIM', 'Kelompok', 'Shift', 'Modul', 'Kehadiran', 'Tugas Pendahuluan', 'Laporan', 'Responsi', 'Tugas Pengganti', 'Keterangan']);
+
+            $no = 1;
+            foreach ($daftarPraktikan as $dp) {
+                foreach ($moduls as $m) {
+                    $absensi = $dp->absensi->firstWhere('modul_id', $m->id);
+                    $njMap = $nilaiJenisMap[$m->id][$dp->id] ?? [];
+                    $row = [
+                        $no,
+                        $dp->user?->name ?? '-',
+                        $dp->user?->student?->student_number ?? $dp->user?->email ?? '-',
+                        $dp->kelompok ?? '-',
+                        $dp->shift ?? '-',
+                        $m->nama,
+                        $absensi ? ucfirst($absensi->status) : '-',
+                        $njMap['tugas_pendahuluan'] ?? '-',
+                        $njMap['laporan'] ?? '-',
+                        $njMap['responsi'] ?? '-',
+                        $njMap['tugas_pengganti'] ?? '-',
+                        $absensi?->keterangan ?? '-',
+                    ];
+                    fputcsv($file, $row);
+                }
+                $no++;
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

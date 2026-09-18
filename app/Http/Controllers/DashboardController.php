@@ -92,24 +92,24 @@ class DashboardController extends Controller
                 'icon'        => 'folder_open',
                 'title'       => 'E-Office',
                 'description' => $isMahasiswa
-                    ? 'Lihat pengumuman dan dokumen.'
-                    : 'Manajemen dokumen dan workflow.',
+                    ? 'Praktikum, peminjaman ruangan, dan kerja praktik.'
+                    : 'Manajemen praktikum, peminjaman ruangan, dan kerja praktik.',
                 'route'       => 'eoffice.dashboard',
                 'color'       => 'orange',
             ],
         ];
 
         // ── Announcements ────────────────────────────────────────────────────
-        // Tab eoffice: gabungan periode pendaftaran aktif + pengumuman praktikum published
+        // Tab eoffice: gabungan periode pendaftaran aktif + pengumuman praktikum published (maks 5 terbaru)
         $eofficeItems = collect();
 
-        // 1. Periode pendaftaran yang sedang aktif/baru dibuka (maks 5 terbaru)
-        $periodeAktif = PeriodePendaftaran::with(['praktikum', 'dibukaOleh'])
+        // 1. Periode pendaftaran yang sedang aktif/baru dibuka (maks 3 terbaru)
+        $periodeAktif = PeriodePendaftaran::with('praktikum')
             ->where('is_aktif', true)
             ->where(fn ($q) => $q->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', now()))
             ->where(fn ($q) => $q->whereNull('ditutup_pada')->orWhere('ditutup_pada', '>', now()))
             ->orderByDesc('created_at')
-            ->limit(5)
+            ->limit(3)
             ->get();
 
         foreach ($periodeAktif as $periode) {
@@ -136,30 +136,16 @@ class DashboardController extends Controller
                 'pinned' => true,
                 '_ts'    => $periode->created_at?->timestamp ?? 0,
                 'url'    => $url,
+                'badge'  => 'eoffice',
             ]);
         }
 
-        // 2. Periode pendaftaran yang baru saja ditutup (is_aktif=false, dibuat < 7 hari)
-        $periodeBaru = collect();
-
-        foreach ($periodeBaru as $periode) {
-            $jenisLabel = $periode->jenis === 'koor' ? 'Koordinator' : 'Asisten Praktikum';
-            $eofficeItems->push([
-                'module' => 'eoffice',
-                'date'   => $periode->created_at?->diffForHumans() ?? '',
-                'title'  => "Pendaftaran {$jenisLabel} Ditutup — {$periode->praktikum?->nama}",
-                'body'   => 'Periode pendaftaran telah ditutup.',
-                'pinned' => false,
-                '_ts'    => $periode->created_at?->timestamp ?? 0,
-            ]);
-        }
-
-        // 3. Pengumuman praktikum yang published (maks 5 terbaru)
-        $pengumumanPraktikum = Pengumuman::with(['praktikum', 'user'])
+        // 2. Pengumuman praktikum yang published (maks 2 terbaru untuk total 5)
+        $pengumumanPraktikum = Pengumuman::query()
             ->where('is_published', true)
             ->where(fn ($q) => $q->whereNull('tipe_sistem')->orWhere('tipe_sistem', 'buka'))
             ->orderByDesc('created_at')
-            ->limit(5)
+            ->limit(2)
             ->get();
 
         foreach ($pengumumanPraktikum as $peng) {
@@ -180,12 +166,14 @@ class DashboardController extends Controller
                 'pinned' => false,
                 '_ts'    => $peng->created_at?->timestamp ?? 0,
                 'url'    => $url,
+                'badge'  => 'eoffice',
             ]);
         }
 
-        // Sort eoffice: pinned dulu, lalu by timestamp terbaru
+        // Sort eoffice: pinned dulu, lalu by timestamp terbaru, maks 5
         $eofficeItems = $eofficeItems
             ->sortByDesc(fn ($i) => [$i['pinned'] ? 1 : 0, $i['_ts'] ?? 0])
+            ->take(5)
             ->values()
             ->all();
 
@@ -203,18 +191,23 @@ class DashboardController extends Controller
                 'pinned' => (bool) $p->is_pinned,
                 'url'    => route('manajemenmahasiswa.pengumuman.show', $p->id),
                 '_ts'    => ($p->published_at ?? $p->created_at)?->timestamp ?? 0,
+                'badge'  => 'kemahasiswaan',
             ])
             ->all();
 
-        // ── Bank Soal: Personalised announcements (Ujian Komprehensif) ────────
+        // ── Bank Soal: Role-specific announcements ────────
         $bankSoalAnnouncements = [];
-        if ($isMahasiswa) {
-            try {
-                $bankSoalAnnouncements = app(DashboardAnnouncementService::class)
-                    ->getForDashboard($user->id);
-            } catch (\Throwable $e) {
-                logger()->warning('DashboardAnnouncementService failed: ' . $e->getMessage());
-            }
+        $userRoles = $user->roles->pluck('name')->toArray();
+
+        try {
+            $bankSoalAnnouncements = collect(
+                app(DashboardAnnouncementService::class)->getForDashboard($user->id, $userRoles)
+            )->map(function ($item) {
+                $item['badge'] = $item['badge'] ?? 'bank_soal';
+                return $item;
+            })->take(5)->values()->all();
+        } catch (\Throwable $e) {
+            logger()->warning('DashboardAnnouncementService failed: ' . $e->getMessage());
         }
 
         $announcements = [
@@ -224,12 +217,12 @@ class DashboardController extends Controller
             'eoffice'       => $eofficeItems,
         ];
 
-        // Tab "all" = gabungan semua modul, diurutkan: pinned dulu, lalu timestamp terbaru
-        // Fix bug: sebelumnya hanya sort by pinned tanpa secondary sort by tanggal,
-        // sehingga urutan bergantung pada urutan insert (kemahasiswaan dulu, baru eoffice).
+        // Tab "all" = maksimal 3 terbaru per modul, digabung dan diurutkan (pinned dulu, timestamp terbaru)
         $allItems = collect();
         foreach ($announcements as $key => $items) {
-            foreach ($items as $item) {
+            $limitedPerModule = collect($items)->take(3);
+            foreach ($limitedPerModule as $item) {
+                $item['badge'] = $item['badge'] ?? $key;
                 $allItems->push(array_merge($item, ['module' => $key]));
             }
         }

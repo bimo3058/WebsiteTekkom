@@ -8,7 +8,7 @@
     $iconArsip = 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4';
 @endphp
 
-<aside :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'"
+<aside data-mobile-sidebar :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'"
        class="relative h-screen bg-white border-r border-[#DFE1E7] flex flex-col flex-shrink-0 transition-all duration-200 ease-in-out z-20 font-sans"
        style="font-family: 'Inter Tight', system-ui, sans-serif;">
     
@@ -88,8 +88,15 @@
         @endif
     </div>
 
-    {{-- Bottom Nav --}}
+        {{-- Bottom Nav --}}
     <div class="p-[8px_10px_12px] border-t border-[#DFE1E7] flex flex-col gap-[1px] flex-shrink-0">
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-[10px] p-[8px_10px] rounded-lg text-[13px] font-medium text-[#353849] hover:bg-[#F6F8FA] transition-colors" :class="!sidebarOpen ? 'justify-center p-[8px_0]' : ''">
+<svg class="w-4 h-4 flex-shrink-0 text-[#666D80]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+  <path d="M9 15L3 9l6-6" />
+  <path d="M3 9h12.5a5.5 5.5 0 0 1 0 11H5" />
+</svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap overflow-hidden text-ellipsis">Global Dashboard</span>
+        </a>
         <a href="{{ route('profile.edit') }}" class="flex items-center gap-[10px] p-[8px_10px] rounded-lg text-[13px] font-medium text-[#353849] hover:bg-[#F6F8FA] transition-colors {{ request()->routeIs('profile.edit') ? 'bg-[#F6F8FA]' : '' }}" :class="!sidebarOpen ? 'justify-center p-[8px_0]' : ''">
             <svg class="w-4 h-4 flex-shrink-0 text-[#666D80]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconSettings }}"/></svg>
             <span x-show="sidebarOpen" class="whitespace-nowrap overflow-hidden text-ellipsis">Settings</span>
@@ -98,7 +105,7 @@
             <svg class="w-4 h-4 flex-shrink-0 text-[#666D80]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconHelp }}"/></svg>
             <span x-show="sidebarOpen" class="whitespace-nowrap overflow-hidden text-ellipsis">Help &amp; Center</span>
         </a>
-        <form method="POST" action="{{ route('logout') }}" class="m-0" data-no-loader>
+        <form method="POST" action="{{ route('logout') }}" class="m-0">
             @csrf
             <button type="submit" class="w-full flex items-center gap-[10px] p-[8px_10px] rounded-lg text-[13px] font-medium text-[#DF1C41] hover:bg-[#FEF1F4] transition-colors" :class="!sidebarOpen ? 'justify-center p-[8px_0]' : ''">
                 <svg class="w-4 h-4 flex-shrink-0 text-[#DF1C41]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconLogout }}"/></svg>

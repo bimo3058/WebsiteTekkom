@@ -224,7 +224,7 @@
         </style>
 
         <div class="settings-wrap" id="settings-root"
-            x-data="{ tab: '{{ session('status') === 'password-updated' ? 'password' : 'general' }}' }">
+            x-data="{ tab: '{{ session('status') === 'password-updated' ? 'password' : ((session('status') === 'notifications-updated' || request('tab') === 'notifikasi' || old('_settings_tab') === 'notifikasi') ? 'notifikasi' : 'general') }}' }">
             <div class="settings-box">
 
                 {{-- ── Header ── --}}
@@ -236,6 +236,7 @@
                             <span style="font-size:15px;font-weight:700;color:#0f172a;">Settings</span>
                         </div>
                         <button type="button" onclick="submitActiveForm()"
+                            x-show="tab !== 'notifikasi' || {{ $user->hasRole('superadmin') ? 'true' : 'false' }}"
                             style="padding:7px 18px;background:#1E1B4B;color:#fff;font-size:13px;font-weight:600;border-radius:8px;border:none;cursor:pointer;transition:background .15s;"
                             onmouseover="this.style.background='#2d2a5e'" onmouseout="this.style.background='#1E1B4B'">
                             Save Changes
@@ -279,16 +280,13 @@
                             @include('profile.partials.settings-panel-tema')
                 </div>
 
-                                <div x-show="tab==='notifikasi'" x-transition.opacity.duration.150ms>
-                            @include('profile.partials.settings-panel-notifikasi')
-                        </div>
-
                     <div x-show="tab==='notifikasi'" x-transition.opacity.duration.150ms>
                         @include('profile.partials.settings-panel-notifikasi')
                     </div>
         </div>
             </div>
             </div>
+        </div>
             
             @include('profile.partials.settings-modals')
             
@@ -301,6 +299,7 @@
 
             if (tab === 'general')  document.getElementById('form-general').submit();
             if (tab === 'password') document.getElementById('form-password').submit();
+            if (tab === 'notifikasi') document.getElementById('form-notifikasi')?.requestSubmit();
         }
 </script>
 

@@ -35,7 +35,7 @@ class GradeCalculationService
         $allScores = collect();
         foreach (AssessmentScoreRepository::getSupportedTypes() as $type) {
             $typeScores = AssessmentScoreRepository::forType($type)
-                ->with(['evaluator:id,name', 'periodComponent.template'])
+                ->with(['evaluator:id,user_id', 'periodComponent.template'])
                 ->whereIn('group_id', $groupIds)
                 ->get();
             $allScores = $allScores->merge($typeScores);
@@ -64,7 +64,7 @@ class GradeCalculationService
         }
 
         // 4. Batch load ALL groups with supervisors
-        $groups = Group::with(['supervisor1:id,name', 'supervisor2:id,name'])
+        $groups = Group::with(['supervisor1:id,user_id', 'supervisor2:id,user_id'])
             ->where('period_id', $periodId)
             ->get();
 
