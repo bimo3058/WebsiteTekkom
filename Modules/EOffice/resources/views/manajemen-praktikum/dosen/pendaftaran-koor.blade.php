@@ -167,6 +167,7 @@
             ->where('jenis', 'koordinator')
             ->where('is_aktif', true)
             ->first();
+        /** @var \Modules\EOffice\Models\PeriodePendaftaran|null $periodeAktif */
     @endphp
     <div class="mp-card flex-shrink-0">
         <div class="mp-card-header">
