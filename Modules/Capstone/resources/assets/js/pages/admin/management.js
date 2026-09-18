@@ -54,11 +54,167 @@ export function semproAdmin(){return mergePage(basePage(),{groups:[],lecturers:[
     reject(item){this.selected=item;this.reason='';dialog('sempro-reject').showModal();},
     async rejectSave(){if(!this.reason.trim())return;if(await this.run(()=>api(`/admin/sempro/schedules/${this.selected.id}/reject`,{method:'PUT',body:{rejection_reason:this.reason.trim()}}))){dialog('sempro-reject').close();await this.load();}},
 });}
-export function finalizationAdmin(){return mergePage(basePage(),{titles:[],groups:[],lecturers:[],loads:[],locked:false,action:'',form:{},
-    async init(){try{await this.periodsLoad();this.lecturers=await allRows('/admin/users?role=dosen');await this.load();}catch(e){this.error=e.message;this.loading=false;}},
-    async load(){this.loading=true;this.error='';try{if(!this.periodId)return;const [data,loads,groups]=await Promise.all([api('/admin/finalization'+query({period_id:this.periodId})),api('/admin/finalization/dosen-load'+query({period_id:this.periodId})),allRows('/admin/groups')]);this.titles=rows(data);this.items=this.titles;this.loads=rows(loads);this.groups=groups.filter(g=>String(g.period_id)===String(this.periodId));this.locked=data.is_locked;}catch(e){this.error=e.message;}finally{this.loading=false;}},
-    allocate(title,bid=null){this.selected=title;this.action=bid?'allocate':'allocate-student-proposed';this.form={bid_id:bid?.id,group_id:bid?.group_id || title.proposed_by_group_id || '',title_id:title.id,supervisor_1_id:bid?.proposed_supervisor_1_id||title.lecturer_id||'',supervisor_2_id:bid?.proposed_supervisor_2_id||''};dialog('allocate-form').showModal();},
-    async save(){const body=Object.fromEntries(Object.entries(this.form).filter(([,v])=>v!==undefined).map(([k,v])=>[k,v===''?null:Number(v)]));if(await this.run(()=>api('/admin/finalization/'+this.action,{method:'POST',body}))){dialog('allocate-form').close();await this.load();}},
-    confirm(action){this.action=action;dialog('finalization-confirm').showModal();},
-    async apply(){if(!this.periodId)return;if(await this.run(()=>api('/admin/finalization/'+this.action,{method:'POST',body:{period_id:Number(this.periodId)}}))){dialog('finalization-confirm').close();await this.periodsLoad();await this.load();}},
+export function finalizationAdmin(){return mergePage(basePage(),{
+    tab:'ready',subTab:'no_group',supervisorStatus:'all',memberCount:'all',
+    stats:null,flow:null,pagination:{current_page:1,last_page:1,total:0,per_page:20},
+    multiplePeriods:false,simResult:null,execConfirm:false,
+    lecturers:[],availTitles:[],availGroups:[],
+    selectedIds:[],noGroupSelected:[],
+    svForm:{group_ids:[],supervisor_1_id:'',supervisor_2_id:'',notes:''},svError:'',
+    titleForm:{group_id:'',group_code:'',title_id:''},
+    manualForm:{option:'no_title',title_id:'',newTitle:{title:'',description:'',lecturer_id:''}},
+    addForm:{group_id:''},reasonForm:{reason:''},
+    rollbackIds:[],cancelTarget:null,forceTarget:null,biddingAction:'',autoFixMode:'safe',
+    searchTimer:null,
+    get isGroupView(){return this.tab!=='others'||this.subTab!=='no_group';},
+    async init(){
+        try{
+            const params=new URLSearchParams(location.search);
+            if(params.get('tab'))this.tab=params.get('tab');
+            if(params.get('sub_tab'))this.subTab=params.get('sub_tab');
+            if(params.get('search'))this.search=params.get('search');
+            if(params.get('page'))this.page=Number(params.get('page'))||1;
+            if(params.get('per_page'))this.pageSize=Number(params.get('per_page'))||20;
+            await this.periodsLoad(false);
+            if(params.get('period_id'))this.periodId=params.get('period_id');
+            else if(!this.periodId)this.periodId=String(this.periods.find(p=>p.is_active)?.id||this.periods[0]?.id||'');
+            if(this.periodId){await this.loadLecturers();await this.load();}
+            else this.loading=false;
+        }catch(e){this.error=e.message;this.loading=false;}
+    },
+    syncUrl(){
+        const params=new URLSearchParams({period_id:this.periodId,tab:this.tab,sub_tab:this.subTab,search:this.search,page:String(this.page),per_page:String(this.pageSize)});
+        history.replaceState(null,'',location.pathname+'?'+params);
+    },
+    onSearch(){clearTimeout(this.searchTimer);this.searchTimer=setTimeout(()=>{this.page=1;this.load();},500);},
+    setTab(tab,sub=null){this.tab=tab;if(sub)this.subTab=sub;this.page=1;this.selectedIds=[];this.noGroupSelected=[];this.load();},
+    setSubTab(sub){this.subTab=sub;this.page=1;this.selectedIds=[];this.noGroupSelected=[];this.load();},
+    gotoPage(page){page=Math.min(Math.max(1,page),this.pagination.last_page||1);if(page!==this.page){this.page=page;this.load();}},
+    async load(){
+        this.loading=true;this.error='';
+        try{
+            if(!this.periodId){this.items=[];return;}
+            const suffix=query({period_id:this.periodId,tab:this.tab,sub_tab:this.subTab,search:this.search,supervisor_status:this.supervisorStatus,member_count:this.memberCount,page:this.page,per_page:this.pageSize});
+            const body=unwrap(await api('/admin/finalization/dashboard'+suffix));
+            this.stats=body.stats||null;this.flow=body.flow||null;
+            const paginator=body.data||{};
+            this.items=Array.isArray(paginator.data)?paginator.data:[];
+            this.pagination={current_page:paginator.current_page||1,last_page:paginator.last_page||1,total:paginator.total||0,per_page:paginator.per_page||this.pageSize};
+            this.page=this.pagination.current_page;
+            this.selectedIds=[];this.noGroupSelected=[];
+            this.syncUrl();
+        }catch(e){
+            if(String(e.message||'').includes('Multiple active periods')){this.multiplePeriods=true;this.error='';}
+            else this.error=e.message;
+        }finally{this.loading=false;}
+    },
+    async loadLecturers(){
+        try{
+            const body=unwrap(await api('/admin/finalization/lecturers'+query({period_id:this.periodId})));
+            this.lecturers=body?.lecturers||[];
+        }catch(e){notify(e.message,true);}
+    },
+    async refreshAll(){await this.loadLecturers();await this.load();},
+    memberNames(item){return (item.members||[]).map(m=>m.student?.name||m.student?.user?.name||'').filter(Boolean).slice(0,3).join(', ');},
+    groupStatusClass(status){return ['FORMING','FORMING_SOLO','READY_FOR_BIDDING'].includes(status)?'bg-red-50 text-red-600 border-red-200':['READY_FOR_FINALIZATION','TITLE_APPROVED','TITLE_PROPOSED'].includes(status)?'bg-amber-50 text-amber-700 border-amber-200':'bg-emerald-50 text-emerald-700 border-emerald-200';},
+    toggleId(id){this.selectedIds=this.selectedIds.includes(id)?this.selectedIds.filter(i=>i!==id):[...this.selectedIds,id];},
+    toggleAll(checked){this.selectedIds=checked?this.items.map(i=>i.id):[];},
+    toggleStudent(id){this.noGroupSelected=this.noGroupSelected.includes(id)?this.noGroupSelected.filter(i=>i!==id):[...this.noGroupSelected,id];},
+    toggleAllStudents(checked){this.noGroupSelected=checked?this.items.map(i=>i.id):[];},
+    openSingleSv(item){this.svError='';this.svForm={group_ids:[item.id],supervisor_1_id:item.supervisor_1_id?String(item.supervisor_1_id):'',supervisor_2_id:item.supervisor_2_id?String(item.supervisor_2_id):'',notes:''};dialog('fin-set-sv').showModal();},
+    openBatchSv(){if(!this.selectedIds.length)return;this.svError='';this.svForm={group_ids:[...this.selectedIds],supervisor_1_id:'',supervisor_2_id:'',notes:''};dialog('fin-set-sv').showModal();},
+    async saveSupervisors(){
+        const sv1=this.svForm.supervisor_1_id?Number(this.svForm.supervisor_1_id):null;
+        const sv2=this.svForm.supervisor_2_id?Number(this.svForm.supervisor_2_id):null;
+        if(!sv1){this.svError='Pembimbing 1 wajib dipilih.';return;}
+        if(sv2&&sv2===sv1){this.svError='Pembimbing 1 dan 2 harus berbeda.';return;}
+        this.svError='';
+        const body={supervisor_1_id:sv1,supervisor_2_id:sv2,notes:this.svForm.notes||null};
+        const done=await this.run(async()=>{
+            if(this.svForm.group_ids.length>1){await api('/admin/finalization/batch-set-supervisor',{method:'POST',body:{...body,group_ids:this.svForm.group_ids}});}
+            else{await api('/admin/finalization/set-supervisor',{method:'POST',body:{...body,group_id:this.svForm.group_ids[0]}});}
+        },'Pembimbing ditetapkan.');
+        if(done){dialog('fin-set-sv').close();await this.refreshAll();}
+    },
+    async openAssignTitle(item){
+        this.titleForm={group_id:item.id,group_code:item.code||('Kelompok #'+item.id),title_id:''};
+        try{const body=unwrap(await api('/admin/finalization/available-titles'+query({period_id:this.periodId})));this.availTitles=body?.titles||[];}catch(e){notify(e.message,true);return;}
+        dialog('fin-assign-title').showModal();
+    },
+    async saveAssignTitle(){
+        if(!this.titleForm.title_id)return;
+        if(await this.run(()=>api('/admin/finalization/assign-title',{method:'POST',body:{group_id:Number(this.titleForm.group_id),title_id:Number(this.titleForm.title_id)}}),'Judul ditetapkan.')){dialog('fin-assign-title').close();await this.load();}
+    },
+    async promote(item){
+        if(await this.run(()=>api('/admin/finalization/promote-to-ready',{method:'POST',body:{group_id:item.id}}),'Grup dipromosikan.'))await this.load();
+    },
+    async openManual(){
+        if(!this.noGroupSelected.length)return;
+        this.manualForm={option:'no_title',title_id:'',newTitle:{title:'',description:'',lecturer_id:''}};
+        try{
+            const [titles]=await Promise.all([api('/admin/finalization/available-titles'+query({period_id:this.periodId}))]);
+            this.availTitles=unwrap(titles)?.titles||[];
+        }catch(e){notify(e.message,true);return;}
+        dialog('fin-manual').showModal();
+    },
+    async saveManual(){
+        const body={student_ids:this.noGroupSelected.map(Number),period_id:Number(this.periodId),option:this.manualForm.option};
+        if(this.manualForm.option==='assign_title'){if(!this.manualForm.title_id)return;body.title_id=Number(this.manualForm.title_id);}
+        if(this.manualForm.option==='add_title'){
+            if(!this.manualForm.newTitle.title.trim()||!this.manualForm.newTitle.lecturer_id)return;
+            body.new_title={title:this.manualForm.newTitle.title.trim(),description:this.manualForm.newTitle.description||null,specializations:[],lecturer_id:Number(this.manualForm.newTitle.lecturer_id)};
+        }
+        if(await this.run(()=>api('/admin/finalization/create-manual-group',{method:'POST',body}),'Grup manual dibuat.')){dialog('fin-manual').close();this.noGroupSelected=[];await this.load();}
+    },
+    async openAddExisting(){
+        if(!this.noGroupSelected.length)return;
+        this.addForm={group_id:''};
+        try{const body=unwrap(await api('/admin/finalization/available-groups'+query({period_id:this.periodId})));this.availGroups=body?.groups||[];}catch(e){notify(e.message,true);return;}
+        dialog('fin-add-existing').showModal();
+    },
+    async saveAddExisting(){
+        if(!this.addForm.group_id)return;
+        if(await this.run(()=>api('/admin/finalization/add-to-existing-group',{method:'POST',body:{group_id:Number(this.addForm.group_id),student_ids:this.noGroupSelected.map(Number)}}),'Anggota ditambahkan.')){dialog('fin-add-existing').close();this.noGroupSelected=[];await this.load();}
+    },
+    async openExecute(){
+        this.execConfirm=false;this.simResult=null;
+        try{this.simResult=unwrap(await api('/admin/finalization/simulate'+query({period_id:this.periodId})))||null;}catch(e){notify(e.message,true);return;}
+        dialog('fin-execute').showModal();
+    },
+    async doExecute(){
+        if(await this.run(()=>api('/admin/finalization/execute',{method:'POST',body:{period_id:Number(this.periodId),confirmation:true}}),'Finalisasi dieksekusi.')){dialog('fin-execute').close();this.execConfirm=false;await this.refreshAll();}
+    },
+    openRollback(){this.reasonForm={reason:''};this.rollbackIds=[...this.selectedIds];dialog('fin-rollback').showModal();},
+    async doRollback(){
+        if(!this.reasonForm.reason.trim())return;
+        if(await this.run(()=>api('/admin/finalization/rollback',{method:'POST',body:{period_id:Number(this.periodId),group_ids:this.rollbackIds,reason:this.reasonForm.reason.trim()}}),'Rollback berhasil.')){dialog('fin-rollback').close();await this.load();}
+    },
+    openCancel(item){this.cancelTarget=item;this.reasonForm={reason:''};dialog('fin-cancel').showModal();},
+    async doCancel(){
+        if(await this.run(()=>api('/admin/finalization/cancel-kelompok-final',{method:'POST',body:{period_id:Number(this.periodId),group_id:this.cancelTarget.id,reason:this.reasonForm.reason.trim()||null}}),'Kelompok final dibatalkan.')){dialog('fin-cancel').close();await this.load();}
+    },
+    openReopen(){this.execConfirm=false;dialog('fin-reopen').showModal();},
+    async doReopen(){
+        if(await this.run(()=>api('/admin/finalization/reopen',{method:'POST',body:{period_id:Number(this.periodId)}}),'Periode dibuka kembali.')){dialog('fin-reopen').close();this.execConfirm=false;await this.refreshAll();}
+    },
+    openAutoFix(){dialog('fin-autofix').showModal();},
+    async doAutoFix(){
+        if(await this.run(()=>api('/admin/finalization/auto-fix',{method:'POST',body:{period_id:Number(this.periodId),mode:this.autoFixMode}}),'Auto-fix selesai.')){dialog('fin-autofix').close();await this.load();}
+    },
+    openForceReady(item){this.forceTarget=item;this.reasonForm={reason:''};dialog('fin-force').showModal();},
+    async doForceReady(){
+        if(await this.run(()=>api('/admin/finalization/force-ready',{method:'POST',body:{group_id:this.forceTarget.id,reason:this.reasonForm.reason.trim()||null}}),'Grup dipaksa ready.')){dialog('fin-force').close();await this.load();}
+    },
+    confirmBidding(action){this.biddingAction=action;dialog('fin-bidding').showModal();},
+    async doBidding(){
+        if(await this.run(()=>api('/admin/finalization/'+this.biddingAction,{method:'POST',body:{period_id:Number(this.periodId)}}))){dialog('fin-bidding').close();await this.periodsLoad(false);await this.load();}
+    },
+    async doExport(format){
+        try{
+            const blob=await api('/admin/finalization/export'+query({period_id:this.periodId,format}),{blob:true});
+            const {download}=await import('../../api.js');
+            download(blob,`finalisasi_periode_${this.periodId}.${format==='excel'?'csv':'html'}`);
+            notify('Laporan diunduh.');
+        }catch(e){notify(e.message,true);}
+    },
 });}
