@@ -22,7 +22,7 @@ class DashboardOverviewTest extends TestCase
             'users' => ['name', 'email', 'deleted_at'],
             'eo_surat' => ['pemohon_id', 'nomor_surat', 'status', 'tanggal_pengajuan'],
             'eo_approval' => ['surat_id', 'approver_id', 'status'],
-            'eo_mr_peminjamans' => ['user_id', 'ruangan_id', 'status', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'tujuan'],
+            'eo_mr_peminjamans' => ['user_id', 'ruangan_id', 'status', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'tujuan', 'deleted_at'],
             'eo_mr_ruangans' => ['nama'],
             'eo_kp_mahasiswa' => ['user_id', 'nama_lengkap'],
             'eo_kp_dosen' => ['user_id', 'nama_lengkap'],
