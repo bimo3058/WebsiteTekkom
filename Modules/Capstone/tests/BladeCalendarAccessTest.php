@@ -33,7 +33,7 @@ class BladeCalendarAccessTest extends TestCase
         Schema::table('capstone_groups', fn(Blueprint $t)=>$t->unsignedBigInteger('title_id')->nullable());
         Schema::table('capstone_seminar_schedules', function(Blueprint $t){$t->foreignId('examiner_1_id')->nullable()->change();$t->foreignId('examiner_2_id')->nullable()->change();});
         (require __DIR__.'/../database/migrations/2026_09_08_110000_support_capstone_mentoring_calendar.php')->up();
-        Schema::create('capstone_group_members', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id');$t->boolean('is_leader')->default(false);$t->timestamps();});
+        Schema::create('capstone_group_members', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id');$t->boolean('is_leader')->default(false);$t->string('status')->nullable();$t->unsignedBigInteger('removed_by')->nullable();$t->text('removal_reason')->nullable();$t->timestamps();$t->softDeletes();});
         Schema::create('capstone_period_registrations', function(Blueprint $t){$t->id();$t->unsignedBigInteger('user_id');$t->unsignedBigInteger('period_id');$t->timestamps();});
         Schema::create('capstone_supervisions', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('supervisor_id');$t->string('role')->nullable();});
         Schema::create('capstone_ta_defense_schedules', function(Blueprint $t){
