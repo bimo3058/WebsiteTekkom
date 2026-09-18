@@ -183,10 +183,14 @@ class SupabaseStorage
      * Generate public URL dari path
      * Format: {SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}
      */
-    public function getPublicUrl(string $path, ?string $bucket = null): string
+    public function getPublicUrl(string $path, ?string $bucket = null, ?string $downloadName = null): string
     {
         $targetBucket = $bucket ?? $this->bucket;
-        return $this->url . '/storage/v1/object/public/' . $targetBucket . '/' . $path;
+        $url = $this->url . '/storage/v1/object/public/' . $targetBucket . '/' . ltrim($path, '/');
+        if ($downloadName) {
+            $url .= '?download=' . rawurlencode($downloadName);
+        }
+        return $url;
     }
 
     /**
@@ -238,10 +242,9 @@ class SupabaseStorage
     /**
      * Ambil public URL dengan dukungan pilihan bucket.
      */
-    public function publicUrl(string $path, ?string $bucket = null): string
+    public function publicUrl(string $path, ?string $bucket = null, ?string $downloadName = null): string
     {
-        $targetBucket = $bucket ?? $this->bucket;
-        return $this->url . '/storage/v1/object/public/' . $targetBucket . '/' . $path;
+        return $this->getPublicUrl($path, $bucket, $downloadName);
     }
 
     /**

@@ -79,12 +79,11 @@
                                     <button type="button" data-judul="{{ $p->judul }}" data-konten="{{ $p->konten }}"
                                         @click="openEditModal({{ $p->id }}, $el.dataset.judul, $el.dataset.konten)"
                                         title="Edit Pengumuman"
-                                        style="background:#E0E7FF; color:#293C79; border:none; border-radius:6px; padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
-                                        onmouseover="this.style.background='#C7D2FE'" onmouseout="this.style.background='#E0E7FF'">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2" stroke-linecap="round">
-                                            <path d="M12 20h9"></path>
-                                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                        style="background:transparent; color:#293C79; border:none; padding:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; outline:none; transition:opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                         </svg>
                                     </button>
 
@@ -94,15 +93,14 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" title="Hapus Pengumuman"
-                                            style="background:#FFE4E6; color:#DF1C41; border:none; border-radius:6px; padding:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;"
-                                            onmouseover="this.style.background='#FECDD3'"
-                                            onmouseout="this.style.background='#FFE4E6'">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2" stroke-linecap="round">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path
-                                                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                                </path>
+                                            style="background:transparent; color:#DF1C41; border:none; padding:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; outline:none; transition:opacity 0.2s;"
+                                            onmouseover="this.style.opacity='0.7'"
+                                            onmouseout="this.style.opacity='1'">
+                                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 6h18"></path>
+                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
                                             </svg>
                                         </button>
                                     </form>
@@ -124,7 +122,7 @@
                             <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top: 10px;">
                                 @foreach($p->lampiran as $lamp)
                                     @php $baseName = isset($lamp['name']) ? $lamp['name'] : pathinfo($lamp['path'], PATHINFO_BASENAME); @endphp
-                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($lamp['path'], 'eoffice') }}"
+                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($lamp['path'], 'eoffice', $baseName) }}"
                                         target="_blank" title="{{ $baseName }}"
                                         style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
                                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"

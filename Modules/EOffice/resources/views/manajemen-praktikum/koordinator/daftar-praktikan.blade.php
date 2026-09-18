@@ -375,8 +375,8 @@
                                       <div style="font-weight:700; color:#0D0D12; font-size:14px; margin-bottom:4px;">Kelompok {{ $i }}</div>
                                       <div style="font-size:12px; color:#666D80;">Shift {{ $defShift }} <span style="margin:0 4px;">-</span> <strong>{{ $jmlAnggota }}</strong> Anggota</div>
                                   </div>
-                                  <button @click="openEditModal('{{ $i }}', '{{ $defShift }}')" style="background:#F0F1F4; border:none; padding:8px; border-radius:6px; cursor:pointer; color:#0B266E;" title="Edit Anggota Kelompok {{ $i }}">
-                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                                  <button @click="openEditModal('{{ $i }}', '{{ $defShift }}')" style="background:transparent; border:none; padding:8px; border-radius:6px; cursor:pointer; color:#0B266E; transition:opacity 0.2s;" onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'" title="Edit Anggota Kelompok {{ $i }}">
+                                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>
                                   </button>
                               </div>
                           @endfor
@@ -393,7 +393,7 @@
                             @csrf
                             <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
                             <button type="submit" style="width:100%; background:#FFF0F0; color:#D32F2F; border:1px solid #FFCDD2; padding:12px 0; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:background 0.2s;" onmouseover="this.style.background='#FFE4E4'" onmouseout="this.style.background='#FFF0F0'">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
                                 Hapus Kelompok & Shift
                             </button>
                         </form>
@@ -419,25 +419,57 @@
 
                 {{-- Filter --}}
                 <div style="padding:16px 24px; border-bottom:1px solid #DFE1E7;">
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Cari Anggota</label>
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Cari Mahasiswa</label>
                     <input type="text" x-model="searchQuery" placeholder="Ketik nama atau NIM..." class="mp-input" style="width:100%;">
                 </div>
                 
                 {{-- Daftar Mahasiswa --}}
                 <div style="flex:1; overflow-y:auto; padding:8px 24px;">
-                    <div style="font-size:12px; color:#A4ABB8; margin:8px 0; font-weight:600;">ANGGOTA KELOMPOK (<span x-text="filteredPraktikans.length"></span>)</div>
+                    <template x-if="otherPraktikans.length > 0">
+                        <div>
+                            <div style="font-size:12px; color:#A4ABB8; margin:8px 0; font-weight:600;">
+                                <span x-show="searchQuery === ''">BELUM MEMILIKI KELOMPOK</span>
+                                <span x-show="searchQuery !== ''">HASIL PENCARIAN</span>
+                                (<span x-text="otherPraktikans.length"></span>)
+                            </div>
+                            <template x-for="p in otherPraktikans" :key="p.id">
+                                <label class="group" style="display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; transition:background 0.2s;" :class="(p.kel === null || p.kel === '') ? 'cursor-pointer' : 'cursor-default'" onmouseover="if(this.classList.contains('cursor-pointer')) this.style.background='#F0F1F4'" onmouseout="this.style.background='transparent'">
+                                    <div class="relative flex items-center justify-center" :class="(p.kel === null || p.kel === '') ? 'cursor-pointer' : 'opacity-40 cursor-not-allowed'">
+                                          <input type="checkbox" :value="p.id" x-model="selectedMembers" class="hidden" :disabled="p.kel !== null && p.kel !== ''">
+                                          <div class="w-5 h-5 rounded-[6px] border-[1.5px] transition-all flex items-center justify-center group-hover:border-[#A4ABB8]"
+                                               :class="selectedMembers.includes(p.id) || selectedMembers.includes(p.id.toString()) ? 'bg-[#0B266E] border-[#0B266E]' : 'bg-white border-[#DFE1E7]'">
+                                              <svg class="w-3.5 h-3.5 text-white transition-opacity" 
+                                                   :class="selectedMembers.includes(p.id) || selectedMembers.includes(p.id.toString()) ? 'opacity-100' : 'opacity-0'" 
+                                                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                              </svg>
+                                          </div>
+                                      </div>
+                                    <div class="mp-av yellow" style="width:32px;height:32px;font-size:12px;" x-text="p.inisial"></div>
+                                    <div style="flex:1;" :style="(p.kel !== null && p.kel !== '') ? 'opacity:0.6;' : ''">
+                                        <div style="font-weight:600; color:#0D0D12; font-size:13px;" x-text="p.nama"></div>
+                                        <div style="font-size:12px; color:#666D80; " x-text="p.nim"></div>
+                                    </div>
+                                    <div x-show="p.kel !== null && p.kel !== '' && p.kel !== activeKelompok" style="font-size:11px; background:#F1F5F9; color:#475569; padding:2px 8px; border-radius:4px; font-weight:600; text-align:right;" x-text="'Kelompok ' + p.kel + ' Shift ' + (p.shift || '-')"></div>
+                                    <div x-show="p.kel === null || p.kel === ''" style="font-size:11px; background:#FEF2F2; color:#DC2626; padding:2px 8px; border-radius:4px; font-weight:600;">Kosong</div>
+                                </label>
+                            </template>
+                        </div>
+                    </template>
+
+                    <div style="font-size:12px; color:#A4ABB8; margin:8px 0; font-weight:600;">ANGGOTA KELOMPOK (<span x-text="memberPraktikans.length"></span>)</div>
                     
-                    <template x-for="p in filteredPraktikans" :key="p.id">
+                    <template x-for="p in memberPraktikans" :key="p.id">
                         <label class="group" style="display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='#F0F1F4'" onmouseout="this.style.background='transparent'">
                             <div class="relative flex items-center justify-center cursor-pointer">
                                   <input type="checkbox" :value="p.id" x-model="selectedMembers" class="hidden">
                                   <div class="w-5 h-5 rounded-[6px] border-[1.5px] transition-all flex items-center justify-center group-hover:border-[#A4ABB8]"
                                        :class="selectedMembers.includes(p.id) || selectedMembers.includes(p.id.toString()) ? 'bg-[#0B266E] border-[#0B266E]' : 'bg-white border-[#DFE1E7]'">
-                                      <svg class="w-3.5 h-3.5 text-white transition-opacity" 
-                                           :class="selectedMembers.includes(p.id) || selectedMembers.includes(p.id.toString()) ? 'opacity-100' : 'opacity-0'" 
-                                           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                                          <polyline points="20 6 9 17 4 12"></polyline>
-                                      </svg>
+                                              <svg class="w-3.5 h-3.5 text-white transition-opacity" 
+                                                   :class="selectedMembers.includes(p.id) || selectedMembers.includes(p.id.toString()) ? 'opacity-100' : 'opacity-0'" 
+                                                   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                                                  <polyline points="20 6 9 17 4 12"></polyline>
+                                              </svg>
                                   </div>
                               </div>
                             <div class="mp-av yellow" style="width:32px;height:32px;font-size:12px;" x-text="p.inisial"></div>
@@ -449,9 +481,10 @@
                             <div x-show="p.kel === null || p.kel === ''" style="font-size:11px; background:#FEF2F2; color:#DC2626; padding:2px 8px; border-radius:4px; font-weight:600;">Kosong</div>
                         </label>
                     </template>
-                    <div x-show="filteredPraktikans.length === 0" style="padding:32px; text-align:center; color:#666D80; font-size:13px;">
+                    <div x-show="memberPraktikans.length === 0" style="padding:32px; text-align:center; color:#666D80; font-size:13px;">
                           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                          Kelompok <span x-text="activeKelompok"></span> belum memiliki anggota.
+                          <span x-show="searchQuery === ''">Kelompok <span x-text="activeKelompok"></span> belum memiliki anggota.</span>
+                          <span x-show="searchQuery !== ''">Kelompok <span x-text="activeKelompok"></span> belum memiliki anggota dengan nama tersebut.</span>
                       </div>
                 </div>
 
@@ -489,19 +522,27 @@
                 return this.allPraktikans.filter(p => p.kel === null || p.kel === '').length;
             },
 
-            get filteredPraktikans() {
+            get otherPraktikans() {
                 let q = this.searchQuery.toLowerCase();
-                
+                return this.allPraktikans.filter(p => {
+                    let isCurrentGroup = (p.kel === this.activeKelompok) || this.selectedMembers.includes(p.id) || this.selectedMembers.includes(p.id.toString());
+                    if(isCurrentGroup) return false;
+
+                    if(q !== '') {
+                        return p.nama.toLowerCase().includes(q) || p.nim.toLowerCase().includes(q);
+                    } else {
+                        return (p.kel === null || p.kel === '');
+                    }
+                });
+            },
+
+            get memberPraktikans() {
+                let q = this.searchQuery.toLowerCase();
                 return this.allPraktikans.filter(p => {
                     let isMemberOrSelected = (p.kel === this.activeKelompok) || this.selectedMembers.includes(p.id) || this.selectedMembers.includes(p.id.toString());
-                    
-                    if (q === '') {
-                        return isMemberOrSelected;
-                    } else {
-                        let isEligible = isMemberOrSelected || (p.kel === null || p.kel === '');
-                        if(!isEligible) return false;
-                        return p.nama.toLowerCase().includes(q) || p.nim.toLowerCase().includes(q);
-                    }
+                    if(!isMemberOrSelected) return false;
+                    if(q !== '') return p.nama.toLowerCase().includes(q) || p.nim.toLowerCase().includes(q);
+                    return true;
                 });
             },
 

@@ -47,10 +47,9 @@
                     @method('DELETE')
                     <button type="submit" style="cursor:pointer; background:rgba(223,28,65,0.9); padding:8px; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,0.1); backdrop-filter:blur(4px); transition:all 0.2s;" onmouseover="this.style.background='#DF1C41'" onmouseout="this.style.background='rgba(223,28,65,0.9)'" title="Hapus Gambar Sampul">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"></path>
-                            <path d="M10 11v6"></path>
-                            <path d="M14 11v6"></path>
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
                         </svg>
                     </button>
                 </form>

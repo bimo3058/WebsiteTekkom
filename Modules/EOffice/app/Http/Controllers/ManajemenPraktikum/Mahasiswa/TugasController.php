@@ -48,27 +48,36 @@ class TugasController extends Controller
             ]);
         }
 
-        $modulList = Modul::with(['tugas' => function($q) {
-                $q->where('is_published', true)->orderBy('deadline');
-            }, 'modulAsprak.asprak.user'])
+        // --- Optimasi: Load semua pengumpulan dalam 1 query, bukan per-tugas (fix N+1) ---
+        // Kumpulkan semua tugas_id terlebih dahulu
+        $modulListRaw = Modul::with([
+                'tugas' => fn($q) => $q->where('is_published', true)->orderBy('deadline'),
+                'modulAsprak.asprak.user',
+            ])
             ->where('praktikum_id', $daftarPraktikan->praktikum_id)
             ->orderBy('urutan')
+            ->get();
+
+        $allTugasIds = $modulListRaw->flatMap(fn($m) => $m->tugas->pluck('id'));
+
+        // 1 query untuk semua pengumpulan sekaligus
+        $allPengumpulan = PengumpulanTugas::whereIn('tugas_id', $allTugasIds)
+            ->where('daftar_praktikan_id', $daftarPraktikan->id)
+            ->with('riwayat')
             ->get()
-            ->map(function ($modul) use ($daftarPraktikan) {
-                $tugasList = $modul->tugas->map(function ($tugas) use ($daftarPraktikan) {
-                    $pengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
-                        ->where('daftar_praktikan_id', $daftarPraktikan->id)
-                        ->with('riwayat')
-                        ->first();
-                    $tugas->pengumpulan = $pengumpulan;
-                    return $tugas;
-                });
-                return collect([
-                    'modul'         => $modul,
-                    'tugas'         => $tugasList,
-                    'asprak'        => $modul->modulAsprak->map(fn($ma) => $ma->asprak?->user?->name)->filter()->values(),
-                ]);
+            ->keyBy('tugas_id');
+
+        $modulList = $modulListRaw->map(function ($modul) use ($allPengumpulan) {
+            $tugasList = $modul->tugas->map(function ($tugas) use ($allPengumpulan) {
+                $tugas->pengumpulan = $allPengumpulan->get($tugas->id);
+                return $tugas;
             });
+            return collect([
+                'modul'  => $modul,
+                'tugas'  => $tugasList,
+                'asprak' => $modul->modulAsprak->map(fn($ma) => $ma->asprak?->user?->name)->filter()->values(),
+            ]);
+        });
 
         return view('eoffice::manajemen-praktikum.mahasiswa.tugas', compact(
             'modulList',
@@ -228,11 +237,13 @@ class TugasController extends Controller
 
         $path = json_encode($paths);
 
+        $isFromRevisi = $pengumpulan->status_pengumpulan === PengumpulanTugas::STATUS_REVISI || $pengumpulan->is_revision;
+
         $pengumpulan->update([
             'file_path'          => $path,
             'catatan'            => $request->catatan,
             'catatan_revisi'     => null,
-            'is_revision'        => true,
+            'is_revision'        => $isFromRevisi,
             'status_pengumpulan' => PengumpulanTugas::STATUS_BELUM_DICEK,
         ]);
 
@@ -240,7 +251,7 @@ class TugasController extends Controller
         $pengumpulan->riwayat()->create([
             'file_path'   => $path,
             'catatan'     => $request->catatan,
-            'is_revision' => true,
+            'is_revision' => $isFromRevisi,
         ]);
 
         if ($failedCount > 0) {

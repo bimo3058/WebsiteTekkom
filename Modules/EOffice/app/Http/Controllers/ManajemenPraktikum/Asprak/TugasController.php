@@ -343,8 +343,8 @@ class TugasController extends Controller
     public function beriRevisi(Request $request, int $id)
     {
         $request->validate([
-            'catatan_revisi' => 'required|string',
-            'file_revisi' => 'nullable|file|max:5120',
+            'file_revisi' => 'required|array|max:3',
+            'file_revisi.*' => 'required|file|max:5120',
         ]);
 
         $pengumpulan = PengumpulanTugas::with('tugas.modul')->findOrFail($id);
@@ -352,27 +352,33 @@ class TugasController extends Controller
             abort(403, 'Anda tidak berhak merevisi pengumpulan ini.');
         }
 
-        $filePath = $pengumpulan->file_revisi_asprak;
-        if ($request->hasFile('file_revisi')) {
-            // Hapus file revisi lama jika ada
-            if ($pengumpulan->file_revisi_asprak) {
-                try {
-                    $this->supabase->delete($pengumpulan->file_revisi_asprak, 'eoffice');
-                } catch (\Throwable $e) {
-                    // Ignore storage deletion errors
-                }
-            }
-
-            $filePath = $this->supabase->upload(
-                $request->file('file_revisi'),
+        $paths = [];
+        $failedCount = 0;
+        foreach ($request->file('file_revisi') as $f) {
+            $uploadedPath = $this->supabase->upload(
+                $f,
                 'tugas-revisi/' . ($pengumpulan->tugas?->modul?->praktikum_id ?? 'default') . '/' . $pengumpulan->tugas_id,
                 'eoffice'
             );
+            if ($uploadedPath) {
+                $paths[] = [
+                    'path' => $uploadedPath,
+                    'original_name' => $f->getClientOriginalName()
+                ];
+            } else {
+                $failedCount++;
+            }
         }
 
+        if ($failedCount > 0 && count($paths) === 0) {
+            return back()->with('error', 'Gagal mengunggah file revisi.');
+        }
+
+        $filePathJson = json_encode($paths);
+
         $pengumpulan->update([
-            'catatan_revisi' => $request->catatan_revisi,
-            'file_revisi_asprak' => $filePath,
+            'catatan_revisi' => null,
+            'file_revisi_asprak' => $filePathJson,
             'is_revision' => true,
             'status_pengumpulan' => PengumpulanTugas::STATUS_REVISI,
         ]);

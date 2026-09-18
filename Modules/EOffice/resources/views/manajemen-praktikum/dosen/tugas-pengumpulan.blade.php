@@ -269,7 +269,7 @@
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice', $fName) }}"
                                                     target="_blank"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'"
@@ -342,12 +342,26 @@
                                     @if($p && ($p->file_revisi_asprak || $p->catatan_revisi))
                                         <div style="padding:6px 8px;background:#FEF2F2;border:1px solid #FEE2E2;border-radius:6px;font-size:11px;width:100%;box-sizing:border-box;">
                                             @if($p->file_revisi_asprak)
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->file_revisi_asprak, 'eoffice') }}"
-                                                    target="_blank"
-                                                    style="font-weight:600;color:#95122B;text-decoration:none;display:block;word-break:break-all;"
-                                                    title="{{ basename($p->file_revisi_asprak) }}">
-                                                    &#128196; {{ Str::limit(basename($p->file_revisi_asprak), 12) }}
-                                                </a>
+                                                @php 
+                                                    $revFiles = json_decode($p->file_revisi_asprak, true);
+                                                    if (!is_array($revFiles)) {
+                                                        $revFiles = [$p->file_revisi_asprak];
+                                                    }
+                                                @endphp
+                                                @foreach($revFiles as $rf)
+                                                    @php 
+                                                        $rPath = is_array($rf) ? ($rf['path'] ?? null) : $rf;
+                                                        $rName = is_array($rf) ? ($rf['original_name'] ?? basename($rPath)) : basename($rPath);
+                                                    @endphp
+                                                    @if($rPath)
+                                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($rPath, 'eoffice', $rName) }}"
+                                                            target="_blank"
+                                                            style="font-weight:600;color:#95122B;text-decoration:none;display:block;word-break:break-all;margin-bottom:4px;"
+                                                            title="{{ $rName }}">
+                                                            &#128196; {{ Str::limit($rName, 12) }}
+                                                        </a>
+                                                    @endif
+                                                @endforeach
                                             @endif
                                             @if($p->catatan_revisi)
                                                 <div style="color:#7C1028;font-style:italic;margin-top:2px;word-break:break-word;"
@@ -369,7 +383,7 @@
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice', $fName) }}"
                                                     target="_blank"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0F6E56'" onmouseout="this.style.borderColor='#DFE1E7'"

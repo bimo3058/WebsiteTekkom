@@ -1,4 +1,4 @@
-﻿@php
+@php
     $jenisTugasMap = [
         'tugas_pendahuluan' => 'Tugas Pendahuluan',
         'laporan' => 'Laporan',
@@ -204,18 +204,18 @@
                     </thead>
                     <tbody>
                         @forelse($praktikans as $idx => $pr)
-                            @php
-                                $p = $pengumpulan[$pr->id] ?? null;
-                                $st = $p ? ($p->status_pengumpulan ?? 'belum_dicek') : 'belum_kumpul';
-                                $waktuSubmit = null;
-                                $latestRevision = null;
-                                if ($p) {
-                                    $firstSub = $p->riwayat->where('is_revision', false)->sortBy('created_at')->first() ?? $p->riwayat->sortBy('created_at')->first();
-                                    $waktuSubmit = $firstSub ? $firstSub->created_at : $p->created_at;
-                                    $latestRevision = $p->riwayat->where('is_revision', true)->sortByDesc('created_at')->first();
-                                }
-                                $noUrut = method_exists($praktikans, 'currentPage') ? (($praktikans->currentPage() - 1) * $praktikans->perPage()) + $idx + 1 : $idx + 1;
-                            @endphp
+                                @php
+                                    $p = $pengumpulan[$pr->id] ?? null;
+                                    $st = $p ? ($p->status_pengumpulan ?? 'belum_dicek') : 'belum_kumpul';
+                                    $waktuSubmit = null;
+                                    $latestRevision = null;
+                                    if ($p) {
+                                        $firstSub = $p->riwayat->where('is_revision', false)->sortByDesc('created_at')->first() ?? $p->riwayat->sortByDesc('created_at')->first();
+                                        $waktuSubmit = $firstSub ? $firstSub->created_at : $p->created_at;
+                                        $latestRevision = $p->riwayat->where('is_revision', true)->sortByDesc('created_at')->first();
+                                    }
+                                    $noUrut = method_exists($praktikans, 'currentPage') ? (($praktikans->currentPage() - 1) * $praktikans->perPage()) + $idx + 1 : $idx + 1;
+                                @endphp
                             <tr style="border-bottom:1px solid #EEF0F5;transition:background .1s;"
                                 onmouseover="this.style.background='#FAFBFC'" onmouseout="this.style.background=''">
                                 <td style="padding:14px 16px;vertical-align:middle;color:#808897;font-size:12px;">{{ $noUrut }}
@@ -274,7 +274,7 @@
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice', $fName) }}"
                                                     target="_blank"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'"
@@ -377,96 +377,179 @@
                                     @if($st === 'acc' || $st === 'belum_kumpul')
                                         <span style="font-size:12px;color:#999;">&ndash;</span>
                                     @else
-                                        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+                                        <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;">
                                             @if(isset($tugas->modul->praktikum) && $tugas->modul->praktikum->is_active)
-                                                <div x-data="{ showRevisiModal: false }">
-                                                    <button type="button" @click="showRevisiModal = true" class="mp-btn secondary sm"
-                                                        style="white-space:nowrap;padding:4px 8px;font-size:11px;">Revisi</button>
+                                                <div x-data="{
+                                                    showRevisiModal: false,
+                                                    files: [],
+                                                    addFiles(event) {
+                                                        const newFiles = Array.from(event.target.files);
+                                                        if (this.files.length + newFiles.length > 3) {
+                                                            alert('Maksimal 3 file diperbolehkan.');
+                                                            event.target.value = '';
+                                                            return;
+                                                        }
+                                                        const maxSize = 5 * 1024 * 1024;
+                                                        for(let i=0; i<newFiles.length; i++) {
+                                                            if (newFiles[i].size > maxSize) {
+                                                                alert('Ukuran file ' + newFiles[i].name + ' melebihi 5MB.');
+                                                                event.target.value = '';
+                                                                return;
+                                                            }
+                                                        }
+                                                        let dt = new DataTransfer();
+                                                        this.files.forEach(f => dt.items.add(f));
+                                                        newFiles.forEach(f => dt.items.add(f));
+                                                        this.$refs.fileInput.files = dt.files;
+                                                        this.files = Array.from(this.$refs.fileInput.files);
+                                                        this.$refs.addInput.value = '';
+                                                    },
+                                                    removeFile(index) {
+                                                        let dt = new DataTransfer();
+                                                        this.files.splice(index, 1);
+                                                        this.files.forEach(f => dt.items.add(f));
+                                                        this.$refs.fileInput.files = dt.files;
+                                                        this.$refs.addInput.value = '';
+                                                    }
+                                                }">
+                                                    <div style="display:grid; grid-template-columns: {{ ($p && $p->file_revisi_asprak) ? '1fr auto' : '1fr' }}; gap:6px; align-items:center; width:100%;">
+                                                        <button type="button" @click="showRevisiModal = true" class="mp-btn primary sm"
+                                                            style="white-space:nowrap;padding:4px 8px;font-size:11px; width:100%;">Revisi</button>
+                                                        
+                                                        @if($p && $p->file_revisi_asprak)
+                                                            <button type="button" @click="showRevisiModal = true" title="Ubah Revisi"
+                                                                style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: transparent; color: #293C79; border: none; outline:none; cursor:pointer; padding: 0; transition:opacity 0.2s; flex-shrink:0;"
+                                                                onmouseover="this.style.opacity='0.7'"
+                                                                onmouseout="this.style.opacity='1'">
+                                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                                                    stroke-linejoin="round">
+                                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                                                                </svg>
+                                                            </button>
+                                                        @endif
+                                                    </div>
 
                                                     <!-- Modal Overlay -->
-                                                    <div x-cloak x-show="showRevisiModal" x-transition:enter="transition ease-out duration-200"
-                                                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                                        x-transition:leave="transition ease-in duration-150"
-                                                        x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                                        style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15, 23, 42, 0.45);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;"
-                                                        @click.self="showRevisiModal = false">
+                                                    <template x-teleport="body">
+                                                        <div x-cloak x-show="showRevisiModal" x-transition:enter="transition ease-out duration-200"
+                                                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                                            x-transition:leave="transition ease-in duration-150"
+                                                            x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                                                            style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15, 23, 42, 0.45);backdrop-filter:blur(4px);z-index:9999;">
+                                                            
+                                                            <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:16px;" @click.self="showRevisiModal = false">
+                                                                <!-- Modal Content -->
+                                                                <div
+                                                                    style="background:#fff;border-radius:12px;width:100%;max-width:480px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);border:1px solid #DFE1E7;display:flex;flex-direction:column;overflow:hidden;">
 
-                                                        <!-- Modal Content -->
-                                                        <div
-                                                            style="background:#fff;border-radius:12px;width:100%;max-width:480px;box-shadow:0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);border:1px solid #DFE1E7;display:flex;flex-direction:column;overflow:hidden;">
+                                                                    <!-- Modal Header -->
+                                                                    <div
+                                                                        style="padding:16px 20px;border-bottom:1px solid #EEF0F5;display:flex;align-items:center;justify-content:space-between;">
+                                                                        <div style="font-size:15px;font-weight:700;color:#0D0D12;">Lampiran Revisi</div>
+                                                                        <button type="button" @click="showRevisiModal = false"
+                                                                            style="background:none;border:none;cursor:pointer;color:#666D80;padding:4px;margin-left:auto;">
+                                                                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24"
+                                                                                stroke="currentColor" stroke-width="2">
+                                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                                    d="M6 18L18 6M6 6l12 12" />
+                                                                            </svg>
+                                                                        </button>
+                                                                    </div>
 
-                                                            <!-- Modal Header -->
-                                                            <div
-                                                                style="padding:16px 20px;border-bottom:1px solid #EEF0F5;display:flex;align-items:center;justify-content:between;">
-                                                                <div style="font-size:15px;font-weight:700;color:#0D0D12;">Beri Catatan
-                                                                    & Lampiran Revisi</div>
-                                                                <button type="button" @click="showRevisiModal = false"
-                                                                    style="background:none;border:none;cursor:pointer;color:#666D80;padding:4px;margin-left:auto;">
-                                                                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"
-                                                                        stroke="currentColor" stroke-width="2">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                                            d="M6 18L18 6M6 6l12 12" />
-                                                                    </svg>
-                                                                </button>
+                                                                    <!-- Form -->
+                                                                    <form method="POST"
+                                                                        action="{{ route('eoffice.manprak.asprak.tugas.revisi', $p->id) }}"
+                                                                        enctype="multipart/form-data" style="margin:0;">
+                                                                        @csrf
+                                                                        <div
+                                                                            style="padding:20px;display:flex;flex-direction:column;gap:16px;text-align:left;">
+                                                                            <div>
+                                                                                <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">
+                                                                                    Berkas Lampiran <span style="color:#DF1C41;">*</span>
+                                                                                </label>
+                                                                                
+                                                                                <input type="file" name="file_revisi[]" multiple x-ref="fileInput" required style="width:0;height:0;opacity:0;position:absolute;z-index:-1;">
+                                                                                <input type="file" multiple @change="addFiles" x-ref="addInput" style="display:none;">
+
+                                                                                <button type="button" @click="$refs.addInput.click()" title="Pilih berkas lampiran"
+                                                                                    style="display:flex; width:100%; align-items:center; justify-content:center; gap:8px; border:1px dashed #A4ABB8; background:#fff; color:#0B266E; padding:12px 20px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s;"
+                                                                                    onmouseover="this.style.background='#F9FAFB'; this.style.borderColor='#0B266E';"
+                                                                                    onmouseout="this.style.background='#fff'; this.style.borderColor='#A4ABB8';">
+                                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                                                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                                                                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                                                                    </svg>
+                                                                                    Tambah Berkas
+                                                                                </button>
+
+                                                                                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:12px;">
+                                                                                    <span style="font-size:11px;color:#666D80;">Batas akumulasi maksimal lampiran adalah 3 file</span>
+                                                                                    <span style="font-size:11px;color:#666D80;">Maks. 5MB per file</span>
+                                                                                </div>
+                                                                                
+                                                                                <div x-show="files.length > 0" style="display:flex;flex-direction:column;gap:5px; margin-bottom:12px;">
+                                                                                    <template x-for="(file, index) in files" :key="index">
+                                                                                        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 14px; border:1px solid #DFE1E7; border-radius:8px; background:#fff; margin-bottom:5px;">
+                                                                                            <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                                                                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                                                                                                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                                                                                    <polyline points="13 2 13 9 20 9"></polyline>
+                                                                                                </svg>
+                                                                                                <span x-text="file.name" style="font-size:13px; font-weight:500; color:#353849; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></span>
+                                                                                            </div>
+                                                                                            <button type="button" @click="removeFile(index)" style="color:#DF1C41; background:none; border:none; padding:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; border-radius:4px;" onmouseover="this.style.background='#FFF0F2'" onmouseout="this.style.background='none'">
+                                                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                                                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                                                                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                                                                </svg>
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    </template>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                    <!-- Modal Footer -->
+                                                                    <div
+                                                                        style="padding:16px 20px;background:#F9FAFB;border-top:1px solid #EEF0F5;display:flex;justify-content:end;gap:8px;">
+                                                                        <button type="button" @click="showRevisiModal = false"
+                                                                            class="mp-btn secondary md">Batal</button>
+                                                                        <button type="submit" class="mp-btn primary md">Kirim
+                                                                            Revisi</button>
+                                                                    </div>
+                                                                </form>
                                                             </div>
-
-                                                            <!-- Form -->
-                                                            <form method="POST"
-                                                                action="{{ route('eoffice.manprak.asprak.tugas.revisi', $p->id) }}"
-                                                                enctype="multipart/form-data" style="margin:0;">
-                                                                @csrf
-                                                                <div
-                                                                    style="padding:20px;display:flex;flex-direction:column;gap:16px;text-align:left;">
-                                                                    <div>
-                                                                        <label
-                                                                            style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Catatan
-                                                                            Revisi <span style="color:#DF1C41;">*</span></label>
-                                                                        <textarea name="catatan_revisi" required rows="4"
-                                                                            placeholder="Tuliskan catatan perbaikan untuk mahasiswa..."
-                                                                            class="mp-input"
-                                                                            style="width:100%;resize:none;font-size:13px;"></textarea>
-                                                                    </div>
-                                                                    <div>
-                                                                        <label
-                                                                            style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Lampiran
-                                                                            File Pendukung (Opsional)</label>
-                                                                        <input type="file" name="file_revisi" class="mp-input"
-                                                                            style="width:100%;font-size:12px;">
-                                                                        <span
-                                                                            style="font-size:11px;color:#666D80;display:block;margin-top:4px;">Format:
-                                                                            PDF, DOCX, ZIP, RAR (maks. 10MB)</span>
-                                                                    </div>
-                                                                </div>
-
-                                                                <!-- Modal Footer -->
-                                                                <div
-                                                                    style="padding:16px 20px;background:#F9FAFB;border-top:1px solid #EEF0F5;display:flex;justify-content:end;gap:8px;">
-                                                                    <button type="button" @click="showRevisiModal = false"
-                                                                        class="mp-btn secondary md">Batal</button>
-                                                                    <button type="submit" class="mp-btn primary md">Kirim
-                                                                        Revisi</button>
-                                                                </div>
-                                                            </form>
                                                         </div>
-                                                    </div>
+                                                    </template>
                                                 </div>
                                             @endif
 
-                                            @if($p && ($p->file_revisi_asprak || $p->catatan_revisi))
-                                                <div
-                                                    style="padding:6px 8px;background:#FEF2F2;border:1px solid #FEE2E2;border-radius:6px;font-size:11px;width:100%;box-sizing:border-box;">
-                                                    @if($p->file_revisi_asprak)
-                                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->file_revisi_asprak, 'eoffice') }}"
-                                                            target="_blank"
-                                                            style="font-weight:600;color:#95122B;text-decoration:none;display:block;word-break:break-all;"
-                                                            title="{{ basename($p->file_revisi_asprak) }}">
-                                                            ?? {{ Str::limit(basename($p->file_revisi_asprak), 12) }}
-                                                        </a>
-                                                    @endif
-                                                    @if($p->catatan_revisi)
-                                                        <div style="color:#7C1028;font-style:italic;margin-top:2px;word-break:break-word;"
-                                                            title="{{ $p->catatan_revisi }}">&#128172;: {{ Str::limit($p->catatan_revisi, 25) }}
-                                                        </div>
+                                            @if($p && $p->file_revisi_asprak)
+                                                <div style="display:flex;flex-direction:column;gap:4px;">
+                                                    @php 
+                                                        $revFiles = json_decode($p->file_revisi_asprak, true);
+                                                    @endphp
+                                                    @if(is_array($revFiles))
+                                                        @foreach($revFiles as $rf)
+                                                            @php 
+                                                                $rPath = is_array($rf) ? ($rf['path'] ?? null) : $rf;
+                                                                $rName = is_array($rf) ? ($rf['original_name'] ?? basename($rPath)) : basename($rPath);
+                                                            @endphp
+                                                            @if($rPath)
+                                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($rPath, 'eoffice', $rName) }}"
+                                                                    target="_blank"
+                                                                    style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
+                                                                    onmouseover="this.style.borderColor='#0B266E'" onmouseout="this.style.borderColor='#DFE1E7'"
+                                                                    title="{{ $rName }}">
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0; margin-right:8px;">
+                                                                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                                                                        <polyline points="13 2 13 9 20 9"></polyline>
+                                                                    </svg>
+                                                                    <span style="font-size:11px; font-weight:500; color:#353849; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 120px;">{{ $rName }}</span>
+                                                                </a>
+                                                            @endif
+                                                        @endforeach
                                                     @endif
                                                 </div>
                                             @endif
@@ -483,7 +566,7 @@
                                                     $fPath = is_array($fPathObj) && isset($fPathObj['path']) ? $fPathObj['path'] : $fPathObj;
                                                     $fName = is_array($fPathObj) && isset($fPathObj['original_name']) ? $fPathObj['original_name'] : pathinfo($fPath, PATHINFO_BASENAME);
                                                 @endphp
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice') }}"
+                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($fPath, 'eoffice', $fName) }}"
                                                     target="_blank"
                                                     style="display:flex; align-items:center; padding:6px 10px; border:1px solid #DFE1E7; border-radius:6px; background:#fff; text-decoration:none; transition:border-color 0.2s; margin-bottom:4px;"
                                                     onmouseover="this.style.borderColor='#0F6E56'" onmouseout="this.style.borderColor='#DFE1E7'"

@@ -126,12 +126,13 @@
                                             @if($isMine)
                                             <button type="button" @click.stop="open = true; isEditing = true;"
                                                 title="{{ $t ? 'Edit Tugas' : 'Buat Tugas' }}"
-                                                style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; background: #EEF2FF; color: #4F46E5; border: 1px solid #E0E7FF; outline:none; cursor:pointer;">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                                style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: transparent; color: #293C79; border: none; outline:none; cursor:pointer; padding: 0; transition:opacity 0.2s;"
+                                                onmouseover="this.style.opacity='0.7'"
+                                                onmouseout="this.style.opacity='1'">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                                    stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
                                                     stroke-linejoin="round">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                                 </svg>
                                             </button>
                                             @endif
@@ -167,7 +168,7 @@
                                                             $pathStr = is_array($f) && isset($f['path']) ? $f['path'] : $f;
                                                             $baseName = is_array($f) && isset($f['original_name']) ? $f['original_name'] : pathinfo($pathStr, PATHINFO_BASENAME);
                                                         @endphp
-                                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice') }}"
+                                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice', $baseName) }}"
                                                             target="_blank" title="{{ $baseName }}"
                                                             style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                                                             <div
@@ -347,7 +348,7 @@
                                                                             <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
                                                                             <polyline points="13 2 13 9 20 9"></polyline>
                                                                         </svg>
-                                                                        <a href="{{ \App\Services\SupabaseStorage::class ? app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice') : '#' }}" target="_blank"
+                                                                        <a href="{{ \App\Services\SupabaseStorage::class ? app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice', $baseName) : '#' }}" target="_blank"
                                                                             style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-decoration: none; color: #293C79; flex: 1; min-width: 0;"
                                                                             title="{{ $baseName }}">{{ $baseName }}</a>
                                                                     </div>

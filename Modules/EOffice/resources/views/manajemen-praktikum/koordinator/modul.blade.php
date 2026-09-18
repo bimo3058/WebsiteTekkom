@@ -216,7 +216,13 @@
                         <td style="padding:12px 16px;">
                             <div class="flex gap-2">
                                 <div x-data="{ showDetail: false }" class="inline-block">
-                                    <button type="button" @click="showDetail = true" class="mp-btn primary sm" style="text-decoration:none; font-size:11px; padding-top:6px; padding-bottom:6px;">Detail</button>
+                                    <button type="button" @click="showDetail = true" title="Detail Modul"
+                                        style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: transparent; color: #0B266E; border: none; outline:none; cursor:pointer; padding: 0; transition:opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                        </svg>
+                                    </button>
 
                                     <template x-teleport="body">
                                         <div x-show="showDetail" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300" style="display: none;" x-cloak>
@@ -310,7 +316,15 @@
                                 @if($praktikum->is_active)
                                 <form method="POST" action="{{ route('eoffice.manprak.koor.modul.destroy', $m->id) }}" onsubmit="return confirm('Hapus modul ini?')">
                                     @csrf @method('DELETE')
-                                    <button class="mp-btn destructive sm" style="font-size:11px; padding-top:6px; padding-bottom:6px;">Hapus</button>
+                                    <button type="submit" title="Hapus Modul"
+                                        style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: transparent; color: #E11D48; border: none; outline:none; cursor:pointer; padding: 0; transition:opacity 0.2s;"
+                                        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 6h18"></path>
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                                        </svg>
+                                    </button>
                                 </form>
                                 @endif
                             </div>

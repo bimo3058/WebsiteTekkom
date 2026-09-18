@@ -234,7 +234,7 @@
                                                         $pathStr = is_array($f) && isset($f['path']) ? $f['path'] : $f;
                                                         $baseName = is_array($f) && isset($f['original_name']) ? $f['original_name'] : pathinfo($pathStr, PATHINFO_BASENAME);
                                                     @endphp
-                                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice') }}"
+                                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($pathStr, 'eoffice', $baseName) }}"
                                                         target="_blank" title="{{ $baseName }}"
                                                         style="display: flex; flex-direction: column; width: 140px; height: 140px; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; text-decoration: none; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition:transform 0.15s, box-shadow 0.15s;"
                                                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"

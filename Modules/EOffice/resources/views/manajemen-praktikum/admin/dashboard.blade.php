@@ -67,7 +67,7 @@
             </div>
             <div class="mp-stat-label" style="font-size:14px; color:var(--c-fg);">Pendaftaran</div>
         </div>
-        <div class="mp-stat-value" style="font-size:32px;">{{ ($totalAsprakPending ?? 0) + ($totalKoorPending ?? 0) }}</div>
+        <div class="mp-stat-value" style="font-size:32px; color:0B266E;">{{ ($totalAsprakPending ?? 0) + ($totalKoorPending ?? 0) }}</div>
         <div class="mp-stat-sub" style="font-size:13px;">Perlu Peninjauan</div>
     </div>
 

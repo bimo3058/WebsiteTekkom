@@ -1,5 +1,79 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Praktikum">
 
+    <style>
+        .praktikum-filter-search {
+            flex: 1 1 280px;
+            min-width: 240px;
+        }
+
+        .praktikum-filter-status {
+            flex: 0 0 135px;
+            width: 135px;
+        }
+
+        .praktikum-filter-semester {
+            flex: 0 0 150px;
+            width: 150px;
+        }
+
+        .praktikum-filter-year {
+            flex: 0 0 220px;
+            width: 220px;
+        }
+
+        .praktikum-filter-status button,
+        .praktikum-filter-semester button {
+            padding-left: 10px;
+            padding-right: 8px;
+        }
+
+        .praktikum-filter-status button span,
+        .praktikum-filter-semester button span {
+            padding-right: 4px;
+        }
+
+        .praktikum-filter-status button svg,
+        .praktikum-filter-semester button svg {
+            margin-right: 0;
+        }
+
+        .praktikum-filter-status label svg,
+        .praktikum-filter-semester label svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        @media (min-width: 1280px) {
+            .praktikum-toolbar-actions {
+                margin-left: 8px;
+                padding-left: 8px;
+            }
+        }
+
+        .praktikum-name {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            line-height: 1.45;
+        }
+
+        @media (max-width: 1279px) {
+            .praktikum-filter-search {
+                flex: 1 1 260px;
+            }
+        }
+
+        @media (max-width: 639px) {
+            .praktikum-filter-search,
+            .praktikum-filter-status,
+            .praktikum-filter-semester,
+            .praktikum-filter-year {
+                flex: 1 1 100%;
+                width: 100%;
+                min-width: 0;
+            }
+        }
+    </style>
+
     @php
         /** @var \Illuminate\Pagination\LengthAwarePaginator|\Modules\EOffice\Models\Praktikum[] $praktikums */
         /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\MatkulPraktikum[] $matkulList */
@@ -17,10 +91,11 @@
     {{-- Tabel Data Grid terintegrasi Filter --}}
     <div id="daftar-praktikum" class="mp-card mt-2">
         {{-- Area Filter & Aksi Utama di dalam Card --}}
-        <div class="p-4 border-b border-[#DFE1E7] bg-white flex gap-4 justify-between items-center flex-wrap">
+        <div
+            class="p-4 border-b border-[#DFE1E7] bg-white flex flex-col gap-4 xl:flex-row xl:flex-nowrap xl:justify-between xl:items-center">
             <form id="filter_praktikum_form" method="GET" action="{{ url()->current() }}#daftar-praktikum"
-                class="flex flex-wrap gap-3 items-center flex-1 min-w-0">
-                <div class="relative flex-1 min-w-[200px]">
+                class="flex flex-wrap gap-3 items-center flex-1 min-w-0 xl:flex-nowrap">
+                <div class="praktikum-filter-search relative">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" viewBox="0 0 24 24"
                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                         <circle cx="11" cy="11" r="8"></circle>
@@ -33,26 +108,30 @@
                 </div>
 
                 {{-- Custom Dropdown Status --}}
-                <x-eoffice::manajemen-praktikum.ui.select name="status" :options="[
+                <div class="praktikum-filter-status">
+                    <x-eoffice::manajemen-praktikum.ui.select name="status" :options="[
         ['value' => '', 'label' => 'Semua Status'],
         ['value' => 'aktif', 'label' => 'Aktif'],
         ['value' => 'nonaktif', 'label' => 'Nonaktif']
     ]"
-                    :selected="request('status', '')" placeholder="Status Praktikum"
-                    onChange="$event.target.form.submit()" minWidth="170px" />
+                        :selected="request('status', '')" placeholder="Status Praktikum"
+                        onChange="$event.target.form.submit()" minWidth="0" />
+                </div>
 
                 {{-- Custom Dropdown Semester --}}
-                <x-eoffice::manajemen-praktikum.ui.select name="semester" :options="[
+                <div class="praktikum-filter-semester">
+                    <x-eoffice::manajemen-praktikum.ui.select name="semester" :options="[
         ['value' => '', 'label' => 'Semua Semester'],
         ['value' => 'Ganjil', 'label' => 'Ganjil'],
         ['value' => 'Genap', 'label' => 'Genap']
     ]"
-                    :selected="request('semester', '')" placeholder="Semua Semester"
-                    onChange="$event.target.form.submit()" minWidth="160px" />
+                        :selected="request('semester', '')" placeholder="Semua Semester"
+                        onChange="$event.target.form.submit()" minWidth="0" />
+                </div>
 
                 <input type="text" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}"
                     placeholder="Tahun Ajaran (Contoh: 2025/2026)"
-                    class="w-56 h-[38px] px-3 text-[13px] border border-[#DFE1E7] rounded-[8px] focus:outline-none focus:border-[#0B266E]"
+                    class="praktikum-filter-year h-[38px] px-3 text-[13px] border border-[#DFE1E7] rounded-[8px] focus:outline-none focus:border-[#0B266E]"
                     onchange="this.form.submit()">
 
                 @if(request()->anyFilled(['search', 'status', 'semester', 'tahun_ajaran']))
@@ -61,7 +140,8 @@
                 @endif
             </form>
 
-            <div class="flex-shrink-0 border-l border-[#DFE1E7] pl-4 flex gap-2">
+            <div
+                class="praktikum-toolbar-actions w-full flex flex-wrap gap-2 pt-4 border-t border-[#DFE1E7] xl:w-auto xl:flex-nowrap xl:flex-shrink-0 xl:pt-0 xl:border-t-0 xl:border-l">
                 {{-- Bulk Toggle --}}
                 <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-bulk-modal'))"
                     class="mp-btn secondary md"
@@ -114,7 +194,7 @@
                             style="grid-template-columns: minmax(220px, 1.5fr) minmax(320px, 2fr) minmax(250px, 1.5fr) 90px 100px 90px;"
                             onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.detail', $p->id) }}'">
                             <div class="min-w-0">
-                                <div class="text-[13px] font-semibold text-[#0D0D12] whitespace-nowrap">{{ $p->nama }}</div>
+                                <div class="praktikum-name text-[13px] font-semibold text-[#0D0D12]">{{ $p->nama }}</div>
                                 <div class="text-[11px] text-[#666D80] mt-1">{{ $p->tahun_ajaran }} / Semester
                                     {{ $p->semester }}</div>
                             </div>
@@ -427,7 +507,7 @@
                                         class="truncate pr-2" :class="!selected ? 'text-[#94A3B8]' : ''"></span>
                                     <svg class="w-4 h-4 transition-transform duration-200 flex-shrink-0"
                                         :class="{'rotate-180': open, 'text-[#0B266E]': open, 'text-[#666D80]': !open}"
-                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.5"
                                         stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="6 9 12 15 18 9"></polyline>
                                     </svg>

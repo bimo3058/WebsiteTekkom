@@ -190,7 +190,7 @@
 
                                 <div style="display:flex; gap:16px; flex-wrap:wrap;">
                                     @foreach($modul->materi as $materi)
-                                        <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') : '#' }}"
+                                        <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice', ($materi->judul ?? basename($materi->file_path))) : '#' }}"
                                             target="_blank"
                                             style="display:flex; flex-direction:column; width:140px; height:140px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
                                             onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"

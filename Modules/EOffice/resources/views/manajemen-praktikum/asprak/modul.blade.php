@@ -96,12 +96,11 @@
                                         @click.stop="openEditModal($el.dataset.modulId, $el.dataset.modulNama, $el.dataset.modulDeskripsi, {{ json_encode($modul->materi->map(function ($m) {
                                 return ['id' => $m->id, 'name' => $m->judul ?? basename($m->file_path ?? 'File'), 'url' => app(\App\Services\SupabaseStorage::class)->publicUrl($m->file_path, 'eoffice')]; })) }})"
                                         title="Edit Modul"
-                                        style="background:#EEF2FF; border:none; padding:10px; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s; flex-shrink:0; margin-left:12px; width:40px; height:40px;"
-                                        onmouseover="this.style.background='#E0E7FF'" onmouseout="this.style.background='#EEF2FF'">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2"
+                                        style="background:transparent; border:none; padding:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:opacity 0.2s; flex-shrink:0; margin-left:12px; outline:none;"
+                                        onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="1.5"
                                             stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-                                            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                                         </svg>
                                     </button>
                                 @endif
@@ -126,7 +125,7 @@
 
                                     <div style="display:flex; gap:16px; flex-wrap:wrap;">
                                         @foreach($modul->materi as $materi)
-                                            <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') : '#' }}"
+                                            <a href="{{ $materi->file_path ? app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice', ($materi->judul ?? basename($materi->file_path))) : '#' }}"
                                                 target="_blank"
                                                 style="display:flex; flex-direction:column; width:140px; height:140px; border:1px solid #DFE1E7; border-radius:8px; overflow:hidden; text-decoration:none; background:#fff; transition:transform 0.15s, box-shadow 0.15s;"
                                                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)';"

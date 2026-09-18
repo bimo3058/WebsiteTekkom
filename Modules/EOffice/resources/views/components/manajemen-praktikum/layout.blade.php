@@ -98,7 +98,6 @@
                         ['href' => route('eoffice.manprak.koor.dashboard'), 'label' => 'Dashboard', 'match' => 'koor.dashboard', 'icon' => $iHome],
                     ],
                     'Kelola' => [
-                        ['href' => route('eoffice.manprak.koor.pendaftaran-praktikan.index'), 'label' => 'Pendaftaran Praktikan', 'match' => 'koor.pendaftaran-praktikan', 'icon' => $iClipboard],
                         ['href' => route('eoffice.manprak.koor.praktikum.index'), 'label' => 'Praktikum', 'match' => ['koor.praktikum', 'koordinator.periode-pendaftaran', 'koor.pendaftaran-asprak', 'koor.modul', 'bagi-modul', 'koor.praktikan', 'koor.nilai'], 'icon' => $iBook],
                     ],
                 ],
@@ -133,7 +132,6 @@
                         ['href' => route('eoffice.manprak.mahasiswa.dashboard'), 'label' => 'Dashboard', 'match' => 'mahasiswa.dashboard', 'icon' => $iHome],
                     ],
                     'Aktivitas' => [
-                        ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Pendaftaran Praktikan', 'match' => 'mahasiswa.pendaftaran-praktikan', 'icon' => $iClipboard],
                         ['href' => route('eoffice.manprak.mahasiswa.praktikum.index'), 'label' => 'Praktikum', 'match' => ['mahasiswa.praktikum', 'mahasiswa.modul', 'mahasiswa.pengumuman', 'mahasiswa.tugas', 'mahasiswa.nilai', 'mahasiswa.daftar-praktikan'], 'icon' => $iBook],
                         ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Pendaftaran', 'match' => 'daftar-asprak', 'icon' => $iUser],
                     ],
