@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\DB;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupInvitation;
 use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\GroupSupervisorProposal;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodRegistration;
@@ -604,69 +603,6 @@ class GroupController extends Controller
 
             return response()->json(['message' => 'Failed to leave group: '.$e->getMessage()], 500);
         }
-    }
-
-    /**
-     * Propose preferred supervisors (group leader only, when READY_FOR_BIDDING).
-     */
-    public function proposeSupervisors(Request $request)
-    {
-        $request->validate([
-            'proposed_supervisor_1_id' => 'required|exists:lecturers,id',
-            'proposed_supervisor_2_id' => 'nullable|exists:lecturers,id|different:proposed_supervisor_1_id',
-        ]);
-
-        $user = $request->user();
-        $studentId = CapstoneActor::student($user)->id;
-
-        $leaderMembership = GroupMember::where('student_id', $studentId)
-            ->first();
-
-        if (! $leaderMembership || ! $leaderMembership->is_leader) {
-            return response()->json(['message' => 'Only the group leader can propose supervisors.'], 403);
-        }
-
-        $group = Group::with('period')->find($leaderMembership->group_id);
-
-        if ($group->status !== 'READY_FOR_BIDDING') {
-            return response()->json(['message' => 'Supervisors can only be proposed when group is READY_FOR_BIDDING.'], 400);
-        }
-
-        // Check bidding lock
-        if ($group->period->isBiddingLocked()) {
-            return response()->json(['message' => 'Bidding is locked. Cannot propose supervisors.'], 400);
-        }
-
-        // Validate supervisors are dosen
-        $sup1 = Lecturer::whereKey($request->proposed_supervisor_1_id)
-            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
-            ->first();
-        if (! $sup1) {
-            return response()->json(['message' => 'Proposed supervisor 1 must be a lecturer.'], 400);
-        }
-        if ($request->proposed_supervisor_2_id) {
-            $sup2 = Lecturer::whereKey($request->proposed_supervisor_2_id)
-                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
-                ->first();
-            if (! $sup2) {
-                return response()->json(['message' => 'Proposed supervisor 2 must be a lecturer.'], 400);
-            }
-        }
-
-        // Upsert proposal
-        $proposal = GroupSupervisorProposal::updateOrCreate(
-            ['group_id' => $group->id],
-            [
-                'proposed_supervisor_1_id' => $request->proposed_supervisor_1_id,
-                'proposed_supervisor_2_id' => $request->proposed_supervisor_2_id,
-                'status' => 'PENDING',
-            ]
-        );
-
-        return response()->json([
-            'message' => 'Supervisor proposal submitted.',
-            'proposal' => $proposal->load(['supervisor1', 'supervisor2']),
-        ]);
     }
 
     public function supervisedGroups(Request $request)

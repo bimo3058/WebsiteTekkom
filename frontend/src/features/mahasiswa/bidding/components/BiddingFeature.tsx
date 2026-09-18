@@ -7,13 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import api from '@/lib/api';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Gavel, Trash2, UserCheck, Lock, AlertTriangle, ArrowUp, ArrowDown, Save } from 'lucide-react';
+import { Gavel, Trash2, Lock, AlertTriangle, ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Loading } from '@/components/ui/loading';
 import { Field } from '@/components/ui/field';
 import { FieldLabel } from '@/components/ui/field-label';
 import { FieldError } from '@/components/ui/field-error';
-import { FieldContent } from '@/components/ui/field-content';
 import {
     Select,
     SelectContent,
@@ -35,7 +34,6 @@ import { useAuth } from '@/context/AuthContext';
 import { createBidSchema, type CreateBidFormData } from '@/lib/validations/bidding';
 import { getBidStatusBadgeVariant } from '@/lib/badge-variants';
 import {
-    Lecturer,
     Title,
     Bid,
     GroupInfo,
@@ -47,7 +45,6 @@ export function BiddingFeature() {
     const { user } = useAuth();
     const [bids, setBids] = useState<Bid[]>([]);
     const [titles, setTitles] = useState<Title[]>([]);
-    const [dosens, setDosens] = useState<Lecturer[]>([]);
     const [loading, setLoading] = useState(true);
     const [addOpen, setAddOpen] = useState(false);
     const [group, setGroup] = useState<GroupInfo | null>(null);
@@ -60,7 +57,6 @@ export function BiddingFeature() {
         control,
         handleSubmit,
         reset,
-        watch,
         formState: { errors, isSubmitting },
         setError: setFormError,
     } = useForm<CreateBidFormData>({
@@ -68,12 +64,8 @@ export function BiddingFeature() {
         mode: 'onBlur',
         defaultValues: {
             title_id: '',
-            proposed_supervisor_1_id: '',
-            proposed_supervisor_2_id: '',
         },
     });
-
-    const supervisor1Id = watch('proposed_supervisor_1_id');
 
     const fetchGroup = useCallback(async () => {
         try {
@@ -122,22 +114,12 @@ export function BiddingFeature() {
         }
     }, []);
 
-    const fetchDosens = useCallback(async () => {
-        try {
-            const res = await api.get('/mahasiswa/lecturers');
-            setDosens(res.data?.data || []);
-        } catch (err) {
-            console.error('Failed to fetch lecturers', err);
-        }
-    }, []);
-
     useEffect(() => {
         fetchGroup();
         fetchBids();
         fetchTitles();
-        fetchDosens();
         fetchProposals();
-    }, [fetchGroup, fetchBids, fetchTitles, fetchDosens, fetchProposals]);
+    }, [fetchGroup, fetchBids, fetchTitles, fetchProposals]);
 
     const isLeader = group?.members.some(m => m.is_leader && m.student.id === user?.id) ?? false;
     const MAX_TITLES = 3;
@@ -209,8 +191,6 @@ export function BiddingFeature() {
         try {
             await api.post('/mahasiswa/bids', {
                 title_id: Number(data.title_id),
-                proposed_supervisor_1_id: Number(data.proposed_supervisor_1_id),
-                proposed_supervisor_2_id: data.proposed_supervisor_2_id ? Number(data.proposed_supervisor_2_id) : null,
             });
             toast.success('Bid submitted successfully!');
             setAddOpen(false);
@@ -259,7 +239,6 @@ export function BiddingFeature() {
 
     const bidTitleIds = bids.map(b => b.title_id);
     const availableTitles = titles.filter(t => !bidTitleIds.includes(t.id));
-    const availableSup2 = dosens.filter(d => d.id.toString() !== supervisor1Id);
 
     if (!isLeader) {
         return (
@@ -479,20 +458,6 @@ export function BiddingFeature() {
                                                 </div>
                                             </div>
                                         </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                <div className="flex items-center gap-1">
-                                                    <UserCheck className="h-4 w-4" />
-                                                    <span>Pembimbing 1: <span className="font-medium text-foreground">{bid.proposed_supervisor1?.name || '-'}</span></span>
-                                                </div>
-                                                {bid.proposed_supervisor2 && (
-                                                    <div className="flex items-center gap-1">
-                                                        <UserCheck className="h-4 w-4" />
-                                                        <span>Pembimbing 2: <span className="font-medium text-foreground">{bid.proposed_supervisor2.name}</span></span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </CardContent>
                                         <CardFooter className="border-t pt-3">
                                             <div className="flex justify-between w-full items-center">
                                                 <span className="text-sm text-muted-foreground">Priority #{bid.priority}</span>
@@ -519,7 +484,7 @@ export function BiddingFeature() {
                         <DialogHeader>
                             <DialogTitle>Submit a New Bid</DialogTitle>
                             <DialogDescription>
-                                Select a title and propose supervisors (Pembimbing 1 required, Pembimbing 2 optional).
+                                Select a title to bid. Supervisors are assigned during finalization (balancing).
                                 <br />
                                 <span className="font-medium">{slotsRemaining} slot{slotsRemaining !== 1 ? 's' : ''} remaining</span> (max {MAX_TITLES} bids + proposals combined).
                             </DialogDescription>
@@ -569,62 +534,6 @@ export function BiddingFeature() {
                                     </span>
                                 </div>
                             </Field>
-
-                            <Controller
-                                name="proposed_supervisor_1_id"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor={field.name}>
-                                            Proposed Pembimbing 1 <span className="text-destructive">*</span>
-                                        </FieldLabel>
-                                        <Select
-                                            name={field.name}
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger id={field.name} aria-invalid={fieldState.invalid}>
-                                                <SelectValue placeholder="Select supervisor..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {dosens.map(d => (
-                                                    <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                                    </Field>
-                                )}
-                            />
-
-                            <Controller
-                                name="proposed_supervisor_2_id"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldContent>
-                                            <FieldLabel htmlFor={field.name}>
-                                                Proposed Pembimbing 2 <span className="text-muted-foreground text-xs">(optional)</span>
-                                            </FieldLabel>
-                                        </FieldContent>
-                                        <Select
-                                            name={field.name}
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger id={field.name} aria-invalid={fieldState.invalid}>
-                                                <SelectValue placeholder="Select supervisor (optional)..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="">— None —</SelectItem>
-                                                {availableSup2.map(d => (
-                                                    <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                )}
-                            />
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={handleCloseDialog}>Cancel</Button>

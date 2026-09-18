@@ -62,11 +62,9 @@ export function TitleDetailFeature() {
             await api.post('/mahasiswa/bids', {
                 title_id: title.id,
                 priority: 1,
-                proposed_supervisor_1_id: title.lecturer.id,
-                proposed_supervisor_2_id: null,
             });
             toast.success('Bid submitted successfully!');
-            router.push('/mahasiswa/group');
+            router.push('/mahasiswa/bidding');
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error(api.getApiErrorMessage(error, 'Failed to bid'));

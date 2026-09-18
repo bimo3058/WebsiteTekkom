@@ -432,7 +432,8 @@ class BladeCalendarAccessTest extends TestCase
         $this->studentWorkspaceSchema();$lecturer=$this->workspaceLecturer();$student=$this->actor('mahasiswa');$other=$this->actor('mahasiswa');
         $group=$this->group($student,null,'READY_FOR_BIDDING');$group->period->update(['min_group_size'=>1]);
         $controller=app(\Modules\Capstone\Http\Controllers\BidController::class);$bids=[];
-        foreach([1,2] as $priority){$title=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);$response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$title->id,'priority'=>$priority,'proposed_supervisor_1_id'=>$lecturer->lecturer->id]));$this->assertSame(201,$response->getStatusCode());$bids[]=$response->getData(true)['data']['id'];}
+        foreach([1,2] as $priority){$title=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);$response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$title->id,'priority'=>$priority]));$this->assertSame(201,$response->getStatusCode());$bids[]=$response->getData(true)['data']['id'];}
+        $this->assertNull($group->bids()->find($bids[0])->proposed_supervisor_1_id);
         $otherGroup=$this->group($other,null,'READY_FOR_BIDDING');
         $foreign=\Modules\Capstone\Models\Bid::create(['group_id'=>$otherGroup->id,'title_id'=>$this->workspaceTitle($lecturer)->id,'priority'=>1,'status'=>'PENDING']);
         $request=$this->requestFor($student,'/','PUT',['bids'=>[['id'=>$bids[0],'priority'=>2],['id'=>$foreign->id,'priority'=>1]]]);

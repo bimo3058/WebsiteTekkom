@@ -5,8 +5,6 @@ use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
-use App\Models\Lecturer;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Services\BiddingService;
 use Modules\Capstone\Support\CapstoneActor;
@@ -39,8 +37,6 @@ class BidController extends Controller
         $data = $request->validate([
             'title_id'=>'required|integer|exists:capstone_titles,id',
             'priority'=>'sometimes|integer|min:1|max:3',
-            'proposed_supervisor_1_id'=>'required|integer|exists:lecturers,id',
-            'proposed_supervisor_2_id'=>'nullable|integer|exists:lecturers,id|different:proposed_supervisor_1_id',
         ]);
         return DB::transaction(function () use ($request,$data) {
             $member = StudentTitleAccess::membership($request->user());
@@ -54,14 +50,13 @@ class BidController extends Controller
             abort_if($title->period_id && (int)$title->period_id!==(int)$group->period_id,422,'Title belongs to another period.');
             abort_if($title->groups()->where('status','!=','REJECTED')->count()>=$title->quota,422,'Title quota is full.');
             abort_if($group->bids()->where('title_id',$title->id)->exists(),422,'You already bid on this title.');
-            foreach (['proposed_supervisor_1_id','proposed_supervisor_2_id'] as $key) {
-                if (empty($data[$key])) continue;
-                abort_unless(Lecturer::whereKey($data[$key])->whereHas('user.roles',fn($q)=>$q->where('name','dosen'))->exists(),422,'Supervisor must be a lecturer.');
-            }
             $used = $group->bids()->pluck('priority')->map(fn($n)=>(int)$n)->all();
+            // Students do not propose supervisors when bidding on lecturer titles;
+            // supervisors are assigned at finalization (balancing). Ignore any
+            // supervisor fields sent by older clients.
             $priority = $data['priority'] ?? collect([1,2,3])->first(fn($n)=>!in_array($n,$used,true));
             abort_if(in_array($priority,$used,true),422,'Priority is already used.');
-            $bid = Bid::create([...$data,'group_id'=>$group->id,'priority'=>$priority,'status'=>'PENDING']);
+            $bid = Bid::create(['title_id'=>$data['title_id'],'group_id'=>$group->id,'priority'=>$priority,'status'=>'PENDING']);
             return response()->json(['data'=>$bid->load(['title.lecturer','proposedSupervisor1','proposedSupervisor2']),'message'=>'Bid submitted successfully.'],201);
         });
     }

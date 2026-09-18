@@ -18,7 +18,6 @@ use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupInvitation;
 use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\GroupSupervisorProposal;
 use Modules\Capstone\Models\JoinRequest;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Period;
@@ -1201,43 +1200,6 @@ class GroupService
     // ======================================================================
     // Supervisor Management
     // ======================================================================
-
-    /**
-     * Propose supervisors for a group.
-     */
-    public function proposeSupervisors(Group $group, int $supervisor1Id, ?int $supervisor2Id): GroupSupervisorProposal
-    {
-        $this->ensurePeriodIsActive($group);
-
-        if ($group->status !== 'READY_FOR_BIDDING') {
-            throw new DomainRuleException('Supervisors can only be proposed when group is READY_FOR_BIDDING.');
-        }
-
-        if ($group->period->isBiddingLocked()) {
-            throw new DomainRuleException('Bidding is locked. Cannot propose supervisors.');
-        }
-
-        $sup1 = User::find($supervisor1Id);
-        if (! $sup1 || ! $sup1->hasRole('dosen')) {
-            throw new DomainRuleException('Proposed supervisor 1 must be a lecturer.');
-        }
-
-        if ($supervisor2Id) {
-            $sup2 = User::find($supervisor2Id);
-            if (! $sup2 || ! $sup2->hasRole('dosen')) {
-                throw new DomainRuleException('Proposed supervisor 2 must be a lecturer.');
-            }
-        }
-
-        return GroupSupervisorProposal::updateOrCreate(
-            ['group_id' => $group->id],
-            [
-                'proposed_supervisor_1_id' => $supervisor1Id,
-                'proposed_supervisor_2_id' => $supervisor2Id,
-                'status' => 'PENDING',
-            ]
-        );
-    }
 
     /**
      * Assign Supervisor 2 to a group (admin only).

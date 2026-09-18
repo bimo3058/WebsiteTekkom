@@ -319,7 +319,6 @@ Route::prefix('capstone')->group(function () {
             Route::post('/group/leave', [GroupController::class, 'leaveGroup']);
             Route::post('/group/add-member', [GroupController::class, 'addMember']);
             Route::delete('/group/members/{memberId}', [GroupController::class, 'removeMember']);
-            Route::post('/group/propose-supervisors', [GroupController::class, 'proposeSupervisors']);
             Route::post('/group-invitations/{id}/accept', [GroupController::class, 'acceptInvite']);
             Route::post('/group-invitations/{id}/reject', [GroupController::class, 'rejectInvite']);
 
