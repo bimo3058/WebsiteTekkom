@@ -83,7 +83,7 @@ export function BiddingFeature() {
             const responseData = res.data?.data ?? res.data;
             const fetchedBids = responseData?.bids ?? responseData ?? [];
             setBids(fetchedBids);
-            setReorderedBids(fetchedBids);
+            setReorderedBids((fetchedBids ?? []).filter((b: Bid) => b.status !== 'REJECTED'));
             setBiddingFlow(res.data?.flow ?? responseData?.flow ?? null);
         } catch (err) {
             console.error('Failed to fetch bids', err);
@@ -124,7 +124,9 @@ export function BiddingFeature() {
     const isLeader = group?.members.some(m => m.is_leader && m.student.id === user?.id) ?? false;
     const MAX_TITLES = 3;
 
-    const totalUsed = bids.length + proposals.length;
+    const activeBids = bids.filter(b => b.status !== 'REJECTED');
+    const rejectedBids = bids.filter(b => b.status === 'REJECTED');
+    const totalUsed = activeBids.length + proposals.length;
     const slotsRemaining = MAX_TITLES - totalUsed;
     const hasActiveProposal = proposals.length > 0;
     const localCanSubmit = isLeader && slotsRemaining > 0 && !hasActiveProposal;
@@ -175,7 +177,10 @@ export function BiddingFeature() {
         try {
             const orderData = reorderedBids.map(b => ({ id: b.id, priority: b.priority }));
             await api.put('/mahasiswa/bids/reorder', { bids: orderData });
-            setBids(reorderedBids);
+            setBids(prev => {
+                const rejected = prev.filter(b => b.status === 'REJECTED');
+                return [...reorderedBids, ...rejected];
+            });
             setHasChanges(false);
             toast.success('Urutan prioritas berhasil disimpan');
         } catch (error) {
@@ -237,7 +242,7 @@ export function BiddingFeature() {
 
     if (loading) return <Loading variant="section" />;
 
-    const bidTitleIds = bids.map(b => b.title_id);
+    const bidTitleIds = activeBids.map(b => b.title_id);
     const availableTitles = titles.filter(t => !bidTitleIds.includes(t.id));
 
     if (!isLeader) {
@@ -264,10 +269,10 @@ export function BiddingFeature() {
                         </AlertDescription>
                     </Alert>
                 ) : null}
-                {(bids ?? []).length > 0 && (
+                {(activeBids ?? []).length > 0 && (
                     <div className="grid gap-4">
                         <h2 className="text-lg font-semibold">Current Bids</h2>
-                        {(bids ?? []).sort((a, b) => a.priority - b.priority).map((bid) => (
+                        {(activeBids ?? []).sort((a, b) => a.priority - b.priority).map((bid) => (
                             <Card key={bid.id}>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
@@ -279,6 +284,24 @@ export function BiddingFeature() {
                                                 <CardTitle className="text-base">{bid.title.title}</CardTitle>
                                                 <CardDescription>Lecturer: {bid.title.lecturer?.name}</CardDescription>
                                             </div>
+                                        </div>
+                                        <Badge variant={getStatusVariant(bid.status)}>{bid.status}</Badge>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+                {rejectedBids.length > 0 && (
+                    <div className="grid gap-4">
+                        <h2 className="text-lg font-semibold">Riwayat Ditolak</h2>
+                        {rejectedBids.map((bid) => (
+                            <Card key={bid.id} className="opacity-80">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <CardTitle className="text-base">{bid.title.title}</CardTitle>
+                                            <CardDescription>Lecturer: {bid.title.lecturer?.name} — ditolak dosen, slot sudah dibebaskan.</CardDescription>
                                         </div>
                                         <Badge variant={getStatusVariant(bid.status)}>{bid.status}</Badge>
                                     </div>
@@ -368,7 +391,7 @@ export function BiddingFeature() {
                 </Alert>
             )}
 
-            {bids.length === 0 && proposals.length === 0 ? (
+            {activeBids.length === 0 && proposals.length === 0 ? (
                 <div className="text-center py-12 border rounded-lg border-dashed">
                     <Gavel className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
                     <h2 className="text-xl font-bold mb-2">No Bids Yet</h2>
@@ -407,7 +430,7 @@ export function BiddingFeature() {
                         </div>
                     )}
 
-                    {(bids ?? []).length > 0 && (
+                    {(reorderedBids ?? []).length > 0 && (
                         <div>
                             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                                 <Badge variant="default" className="bg-green-100 text-green-800">Bid</Badge>
@@ -474,6 +497,42 @@ export function BiddingFeature() {
                             </div>
                         </div>
                     )}
+                    {rejectedBids.length > 0 && (
+                        <div>
+                            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                <Badge variant="destructive">Riwayat</Badge>
+                                Bid Ditolak Dosen
+                            </h2>
+                            <p className="text-sm text-muted-foreground mb-3">
+                                Bid berikut ditolak dan otomatis dikeluarkan dari slot aktif — slot Anda sudah dibebaskan untuk bid judul lain.
+                            </p>
+                            <div className="grid gap-4">
+                                {rejectedBids.map((bid) => (
+                                    <Card key={bid.id} className="relative border-destructive/40 bg-muted/20">
+                                        <CardHeader className="pb-3">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <CardTitle className="text-base">{bid.title.title}</CardTitle>
+                                                    <CardDescription>Lecturer: {bid.title.lecturer?.name}</CardDescription>
+                                                </div>
+                                                <Badge variant={getStatusVariant(bid.status)}>{bid.status}</Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardFooter className="border-t pt-3">
+                                            <div className="flex justify-between w-full items-center">
+                                                <span className="text-sm text-muted-foreground">Ditolak dosen — tidak memakan slot</span>
+                                                {canDeleteBid && (
+                                                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteBid(bid.id)}>
+                                                        <Trash2 className="mr-1 h-4 w-4" /> Hapus riwayat
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -528,9 +587,9 @@ export function BiddingFeature() {
                                 <FieldLabel>Priority</FieldLabel>
                                 <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md border">
                                     <Badge variant="outline" className="bg-background">Auto</Badge>
-                                    <span className="font-semibold text-lg">#{(bids ?? []).length + 1}</span>
+                                    <span className="font-semibold text-lg">#{activeBids.length + 1}</span>
                                     <span className="text-sm text-muted-foreground">
-                                        (akan menjadi prioritas ke-{(bids ?? []).length + 1})
+                                        (akan menjadi prioritas ke-{activeBids.length + 1})
                                     </span>
                                 </div>
                             </Field>

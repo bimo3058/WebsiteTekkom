@@ -5,6 +5,8 @@ use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Services\BiddingService;
 use Modules\Capstone\Support\CapstoneActor;
@@ -49,11 +51,11 @@ class BidController extends Controller
             abort_if($title->title_source==='STUDENT' || $title->status!=='open',422,'Title is not open for bidding.');
             abort_if($title->period_id && (int)$title->period_id!==(int)$group->period_id,422,'Title belongs to another period.');
             abort_if($title->groups()->where('status','!=','REJECTED')->count()>=$title->quota,422,'Title quota is full.');
-            abort_if($group->bids()->where('title_id',$title->id)->exists(),422,'You already bid on this title.');
-            $used = $group->bids()->pluck('priority')->map(fn($n)=>(int)$n)->all();
+            abort_if($group->bids()->where('title_id',$title->id)->where('status','!=','REJECTED')->exists(),422,'You already bid on this title.');
             // Students do not propose supervisors when bidding on lecturer titles;
             // supervisors are assigned at finalization (balancing). Ignore any
             // supervisor fields sent by older clients.
+            $used = $group->bids()->where('status','PENDING')->pluck('priority')->map(fn($n)=>(int)$n)->all();
             $priority = $data['priority'] ?? collect([1,2,3])->first(fn($n)=>!in_array($n,$used,true));
             abort_if(in_array($priority,$used,true),422,'Priority is already used.');
             $bid = Bid::create(['title_id'=>$data['title_id'],'group_id'=>$group->id,'priority'=>$priority,'status'=>'PENDING']);
@@ -70,10 +72,10 @@ class BidController extends Controller
             $member->setRelation('group',$group);
             abort_unless(StudentTitleAccess::bidFlow($member)['can_delete_bid'],403,'Bidding is locked.');
             $bid = $group->bids()->lockForUpdate()->findOrFail($id);
-            abort_unless($bid->status==='PENDING',403,'Only pending bids can be deleted.');
+            abort_unless(in_array($bid->status,['PENDING','REJECTED'],true),403,'Only pending or rejected bids can be deleted.');
             $bid->delete();
-            // Compact ascending priorities; each lower slot is already vacant.
-            foreach ($group->bids()->orderBy('priority')->get() as $index=>$remaining) $remaining->update(['priority'=>$index+1]);
+            // Compact ascending priorities of remaining active bids; each lower slot is already vacant.
+            foreach ($group->bids()->where('status','PENDING')->orderBy('priority')->get() as $index=>$remaining) $remaining->update(['priority'=>$index+1]);
             return response()->json(['message'=>'Bid deleted successfully.']);
         });
     }
@@ -87,7 +89,8 @@ class BidController extends Controller
             $group = Group::with('period')->lockForUpdate()->findOrFail($member->group_id);
             $member->setRelation('group',$group);
             abort_unless(StudentTitleAccess::bidFlow($member)['can_reorder_bid'],403,'Bidding is locked.');
-            $bids = $group->bids()->lockForUpdate()->get();
+            // Only active (PENDING) bids participate in priority ordering; rejected bids live in history.
+            $bids = $group->bids()->where('status','PENDING')->lockForUpdate()->get();
             $ids = collect($data['bids'])->pluck('id')->sort()->values()->all();
             abort_unless($bids->pluck('id')->sort()->values()->all()===$ids,422,'Submit every bid in your own group exactly once.');
             abort_unless(collect($data['bids'])->pluck('priority')->sort()->values()->all()===range(1,$bids->count()),422,'Priorities must be consecutive.');
@@ -116,35 +119,129 @@ class BidController extends Controller
     }
 
     /**
-     * Lecturer recommendation on a bid (ACCEPT/REJECT â€” advisory only).
+     * Lecturer recommendation on a bid.
+     * REJECT is a hard reject: bid moves to status REJECTED (kept in history),
+     * its slot is freed automatically, members are notified and the action is logged.
+     * CANCEL clears a previous recommendation (undo accept/reject) back to PENDING.
      */
     public function recommend(Request $request, $id)
     {
         $request->validate([
-            'recommendation' => 'required|in:ACCEPT,REJECT',
+            'recommendation' => 'required|in:ACCEPT,REJECT,CANCEL',
         ]);
 
-        $user = $request->user();
-        $lecturerId = CapstoneActor::lecturer($user)->id;
+        return DB::transaction(function () use ($request, $id) {
+            $user = $request->user();
+            $lecturerId = CapstoneActor::lecturer($user)->id;
 
-        $bid = Bid::with('title')->findOrFail($id);
+            $bid = Bid::with('title')->lockForUpdate()->findOrFail($id);
 
-        // Verify lecturer owns the title
-        if ($bid->title->lecturer_id !== $lecturerId) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+            // Verify lecturer owns the title
+            if ($bid->title->lecturer_id !== $lecturerId) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
 
-        // Check lock
-        $group = Group::with('period')->find($bid->group_id);
-        if ($this->biddingService->isBiddingLocked($group->period)) {
-            return response()->json(['message' => 'Bidding is locked. Cannot change recommendation.'], 400);
-        }
+            // Check lock
+            $group = Group::with(['period', 'members.student'])->lockForUpdate()->find($bid->group_id);
+            if ($this->biddingService->isBiddingLocked($group->period)) {
+                return response()->json(['message' => 'Bidding is locked. Cannot change recommendation.'], 400);
+            }
 
-        $bid->update(['lecturer_recommendation' => $request->recommendation]);
+            $recommendation = $request->recommendation;
 
-        return response()->json([
-            'message' => 'Recommendation submitted.',
-            'data' => $bid,
-        ]);
+            if ($recommendation === 'REJECT') {
+                // Idempotent: already hard-rejected, nothing more to do.
+                if ($bid->status === 'REJECTED' && $bid->lecturer_recommendation === 'REJECT') {
+                    return response()->json([
+                        'message' => 'Recommendation submitted.',
+                        'data' => $bid,
+                    ]);
+                }
+
+                $bid->update(['lecturer_recommendation' => 'REJECT', 'status' => 'REJECTED']);
+
+                // Compact priorities of remaining active bids so slots stay consecutive.
+                foreach ($group->bids()->where('status', 'PENDING')->orderBy('priority')->get() as $index => $remaining) {
+                    if ((int) $remaining->priority !== $index + 1) $remaining->update(['priority' => $index + 1]);
+                }
+
+                AuditLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'BID_REJECTED',
+                    'target_type' => 'Bid',
+                    'target_id' => $bid->id,
+                    'payload' => [
+                        'group_id' => $bid->group_id,
+                        'title_id' => $bid->title_id,
+                        'title' => $bid->title->title ?? null,
+                        'lecturer_id' => $lecturerId,
+                        'recommendation' => 'REJECT',
+                    ],
+                ]);
+
+                $titleName = $bid->title->title ?? ('Judul #' . $bid->title_id);
+                foreach ($group->members as $gm) {
+                    $studentUserId = $gm->student->user_id ?? null;
+                    if (!$studentUserId) continue;
+                    Notification::create([
+                        'user_id' => $studentUserId,
+                        'type' => 'BID_REJECTED',
+                        'title' => 'Bid Ditolak',
+                        'message' => "Bid Anda pada judul '{$titleName}' ditolak oleh dosen. Slot bidding Anda telah dibebaskan, silakan bid judul lain.",
+                        'related_type' => 'Bid',
+                        'related_id' => $bid->id,
+                    ]);
+                }
+
+                return response()->json([
+                    'message' => 'Recommendation submitted.',
+                    'data' => $bid->fresh(),
+                ]);
+            }
+
+            if ($recommendation === 'CANCEL') {
+                $wasRejected = $bid->status === 'REJECTED';
+                $nextPriority = null;
+                if ($wasRejected) {
+                    $activeCount = $group->bids()->where('status', 'PENDING')->count();
+                    abort_if($activeCount >= 3, 422, 'Active bid slots are full.');
+                    $nextPriority = (int) ($group->bids()->where('status', 'PENDING')->max('priority') ?? 0) + 1;
+                }
+                $bid->update(array_filter([
+                    'lecturer_recommendation' => null,
+                    'status' => 'PENDING',
+                    'priority' => $nextPriority,
+                ], fn($v) => $v !== null));
+
+                AuditLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'BID_RECOMMENDATION_CANCELLED',
+                    'target_type' => 'Bid',
+                    'target_id' => $bid->id,
+                    'payload' => ['group_id' => $bid->group_id, 'title_id' => $bid->title_id],
+                ]);
+
+                return response()->json([
+                    'message' => 'Recommendation cancelled.',
+                    'data' => $bid->fresh(),
+                ]);
+            }
+
+            // ACCEPT: advisory only, status stays PENDING until koordinator allocates.
+            // If reactivating a previously rejected bid, assign a free priority slot.
+            if ($bid->status === 'REJECTED') {
+                $activeCount = $group->bids()->where('status', 'PENDING')->count();
+                abort_if($activeCount >= 3, 422, 'Active bid slots are full.');
+                $nextPriority = (int) ($group->bids()->where('status', 'PENDING')->max('priority') ?? 0) + 1;
+                $bid->update(['lecturer_recommendation' => 'ACCEPT', 'status' => 'PENDING', 'priority' => $nextPriority]);
+            } else {
+                $bid->update(['lecturer_recommendation' => 'ACCEPT']);
+            }
+
+            return response()->json([
+                'message' => 'Recommendation submitted.',
+                'data' => $bid->fresh(),
+            ]);
+        });
     }
 }

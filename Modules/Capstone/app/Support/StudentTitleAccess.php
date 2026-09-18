@@ -61,7 +61,7 @@ final class StudentTitleAccess
         if (!$reason && !$group->period->isBiddingOpen()) $reason = 'BIDDING_WINDOW_CLOSED';
         if (!$reason && $group->members()->count()<($group->period->min_group_size??3)) $reason='INSUFFICIENT_MEMBERS';
         if (!$reason && self::proposals($group)->whereIn('supervisor_approval_status',['PENDING','UNDER_REVIEW','APPROVED'])->exists()) $reason='ACTIVE_PROPOSAL_EXISTS';
-        if (!$reason && $group->bids()->count()>=3) $reason='TITLE_LIMIT_REACHED';
+        if (!$reason && $group->bids()->where('status','!=','REJECTED')->count()>=3) $reason='TITLE_LIMIT_REACHED';
         return ['can_submit_bid'=>$reason===null,'can_reorder_bid'=>$canManage,'can_delete_bid'=>$canManage,'reason'=>$reason];
     }
 }
