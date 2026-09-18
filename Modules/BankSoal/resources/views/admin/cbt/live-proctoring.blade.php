@@ -5,7 +5,7 @@
         <span class="text-gray-900 font-semibold">Live Pengawasan</span>
     @endsection
 
-    <div class="w-full">
+    <div x-data="{ confirmModal: false, targetSession: null, isSubmitting: false, openForceConfirm(s) { this.targetSession = s; this.confirmModal = true; document.body.style.overflow = 'hidden'; }, closeForceConfirm() { if (this.isSubmitting) return; this.confirmModal = false; document.body.style.overflow = ''; setTimeout(() => { this.targetSession = null; }, 300); }, submitForce() { if (!this.targetSession || this.isSubmitting) return; this.isSubmitting = true; const f = document.getElementById('form-force-submit'); f.action = '{{ route('banksoal.admin.cbt.force-submit', 'REPLACE_ID') }}'.replace('REPLACE_ID', this.targetSession.id); f.submit(); } }" class="w-full">
         <!-- Header -->
         <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -135,20 +135,17 @@
                                     </div>
                                 </td>
                                 <td style="padding:14px 16px; text-align:right;">
-                                    <form action="{{ route('banksoal.admin.cbt.force-submit', $session->id) }}" method="POST"
-                                        onsubmit="return confirm('Anda yakin ingin memaksa selesai sesi ujian mahasiswa ini?');">
-                                        @csrf
-                                        <button type="submit"
-                                            style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; background:transparent; color:#EF4444; border:none; cursor:pointer; transition:all .15s;"
-                                            title="Force Submit"
-                                            onmouseover="this.style.background='#FEF2F2'"
-                                            onmouseout="this.style.background='transparent'">
-                                            <svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
-                                            </svg>
-                                        </button>
-                                    </form>
+                                    <button type="button"
+                                        @click='openForceConfirm({ id: {{ $session->id }}, name: @json($session->user->name), nim: @json($session->user->student->student_number ?? '-') })'
+                                        style="display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; background:transparent; color:#EF4444; border:none; cursor:pointer; transition:all .15s;"
+                                        title="Force Submit"
+                                        onmouseover="this.style.background='#FEF2F2'"
+                                        onmouseout="this.style.background='transparent'">
+                                        <svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path>
+                                        </svg>
+                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -172,5 +169,58 @@
                 </table>
             </div>
         </div>
+
+        <!-- Modal Popup: Konfirmasi Force Submit (gaya alokasi-sesi) -->
+        <div x-show="confirmModal" tabindex="-1" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="display: none;" x-cloak>
+            <div x-show="confirmModal"
+                  x-transition:enter="ease-out duration-300"
+                  x-transition:enter-start="opacity-0"
+                  x-transition:enter-end="opacity-100"
+                  x-transition:leave="ease-in duration-200"
+                  x-transition:leave-start="opacity-100"
+                  x-transition:leave-end="opacity-0"
+                  class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
+                  @click="closeForceConfirm()">
+            </div>
+
+            <div x-show="confirmModal"
+                  x-transition:enter="ease-out duration-300"
+                  x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                  x-transition:leave="ease-in duration-200"
+                  x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                  x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-full">
+
+                <div class="px-6 pt-6 pb-4 text-center">
+                    <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <h3 class="text-[17px] font-extrabold text-slate-800 tracking-tight mb-2">Akhiri Paksa Ujian?</h3>
+                    <p class="text-[13px] text-slate-500 font-medium leading-relaxed">
+                        Anda yakin ingin memaksa selesai sesi ujian mahasiswa ini?
+                    </p>
+                    <div x-show="targetSession" class="mt-3 p-3 bg-slate-50 border border-slate-200 rounded-xl text-left">
+                        <p class="text-[13px] font-bold text-slate-800" x-text="targetSession?.name"></p>
+                        <p class="text-[12px] text-slate-500 font-mono" x-text="targetSession?.nim"></p>
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
+                    <button type="button" @click="closeForceConfirm()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" @click="submitForce()" :disabled="isSubmitting" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Ya, Akhiri Paksa'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden form for force submit (action diisi inline x-data) -->
+        <form id="form-force-submit" method="POST" style="display:none;">
+            @csrf
+        </form>
     </div>
 </x-banksoal::layouts.admin>

@@ -41,8 +41,40 @@
             </h2>
         </div>
 
-        <div class="divide-y divide-slate-100">
-            @forelse($items as $item)
+        <div class="divide-y divide-slate-200" x-data="{ openGroup: 0 }">
+            @forelse($items->groupBy(fn ($item) => $item->round?->mataKuliah?->id ?? $item->round?->mataKuliah?->kode ?? 'lainnya') as $groupKey => $groupItems)
+                @php
+                    $groupMk = $groupItems->first()->round?->mataKuliah;
+                    $groupId = 'blind-review-mk-' . $loop->index;
+                @endphp
+                <div class="bg-white">
+                    <button type="button"
+                            class="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-slate-50"
+                            @click="openGroup = openGroup === {{ $loop->index }} ? null : {{ $loop->index }}"
+                            :aria-expanded="openGroup === {{ $loop->index }}"
+                            aria-controls="{{ $groupId }}">
+                        <span class="flex min-w-0 items-center gap-3">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <i class="fas fa-book text-sm"></i>
+                            </span>
+                            <span class="min-w-0">
+                                <span class="block truncate text-sm font-semibold text-slate-900">{{ $groupMk?->nama ?? '-' }}</span>
+                                <span class="block text-xs text-slate-500">{{ $groupMk?->kode ?? '-' }} · {{ $groupItems->count() }} soal perlu direview</span>
+                            </span>
+                        </span>
+                        <i class="fas fa-chevron-down shrink-0 text-xs text-slate-400 transition-transform duration-200"
+                           :class="openGroup === {{ $loop->index }} ? 'rotate-180 text-primary' : ''"></i>
+                    </button>
+
+                    <div id="{{ $groupId }}" x-show="openGroup === {{ $loop->index }}" x-cloak
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 -translate-y-2"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 translate-y-0"
+                        x-transition:leave-end="opacity-0 -translate-y-2"
+                        class="border-t border-slate-100">
+                        @foreach($groupItems as $item)
                 <div class="p-6">
                     <div class="flex items-start justify-between gap-4">
                         <div>
@@ -77,32 +109,37 @@
                         <div class="prose prose-sm max-w-none text-slate-700">{!! $item->pertanyaan?->soal !!}</div>
                     </div>
 
-                    <form action="{{ route('banksoal.soal.dosen.blind-review.submit', $item->id) }}" method="POST"
-                          class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                      <form action="{{ route('banksoal.soal.dosen.blind-review.submit', $item->id) }}" method="POST"
+                          class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
                         @csrf
                         <div class="md:col-span-1">
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Keputusan</label>
-                            <select name="status" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                            <select name="status" class="h-[76px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                                     required {{ $item->status !== 'pending' ? 'disabled' : '' }}>
                                 <option value="approved" {{ $item->status === 'approved' ? 'selected' : '' }}>Approve</option>
                                 <option value="rejected" {{ $item->status === 'rejected' ? 'selected' : '' }}>Reject</option>
                             </select>
                         </div>
-                        <div class="md:col-span-2">
+                        <div>
                             <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan / Masukan</label>
                             <textarea name="catatan" rows="2"
                                       class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
+                                      style="height: 76px; min-height: 76px; max-height: 76px; resize: none;"
                                       placeholder="Tambahkan masukan untuk pembuat soal"
                                       {{ $item->status !== 'pending' ? 'disabled' : '' }}>{{ old('catatan', $item->catatan) }}</textarea>
                         </div>
                         <div class="md:col-span-1">
+                            <span class="mb-1 block h-4 text-xs font-semibold text-transparent" aria-hidden="true">Aksi</span>
                             <button type="submit"
-                                    class="w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-slate-300"
+                                    class="h-[76px] w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-slate-300"
                                     {{ $item->status !== 'pending' ? 'disabled' : '' }}>
                                 Simpan Review
                             </button>
                         </div>
                     </form>
+                </div>
+                        @endforeach
+                    </div>
                 </div>
             @empty
                 <div class="p-10 text-center text-slate-500">
@@ -123,8 +160,40 @@
             </h2>
         </div>
 
-        <div class="divide-y divide-slate-100">
-            @foreach($myRounds as $round)
+        <div class="divide-y divide-slate-200" x-data="{ openStatusGroup: 0 }">
+            @foreach($myRounds->groupBy(fn ($round) => $round->mataKuliah?->id ?? $round->mataKuliah?->kode ?? 'lainnya') as $groupKey => $roundGroup)
+                @php
+                    $groupMk = $roundGroup->first()->mataKuliah;
+                    $groupId = 'blind-review-status-mk-' . $loop->index;
+                @endphp
+                <div class="bg-white">
+                    <button type="button"
+                            class="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-slate-50"
+                            @click="openStatusGroup = openStatusGroup === {{ $loop->index }} ? null : {{ $loop->index }}"
+                            :aria-expanded="openStatusGroup === {{ $loop->index }}"
+                            aria-controls="{{ $groupId }}">
+                        <span class="flex min-w-0 items-center gap-3">
+                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                <i class="fas fa-book text-sm"></i>
+                            </span>
+                            <span class="min-w-0">
+                                <span class="block truncate text-sm font-semibold text-slate-900">{{ $groupMk?->nama ?? '-' }}</span>
+                                <span class="block text-xs text-slate-500">{{ $groupMk?->kode ?? '-' }} · {{ $roundGroup->count() }} round review</span>
+                            </span>
+                        </span>
+                        <i class="fas fa-chevron-down shrink-0 text-xs text-slate-400 transition-transform duration-200"
+                           :class="openStatusGroup === {{ $loop->index }} ? 'rotate-180 text-primary' : ''"></i>
+                    </button>
+
+                    <div id="{{ $groupId }}" x-show="openStatusGroup === {{ $loop->index }}" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-2"
+                         class="border-t border-slate-100">
+            @foreach($roundGroup as $round)
                 <div class="p-6">
                     <div class="flex items-start justify-between gap-4 mb-4">
                         <div>
@@ -214,6 +283,9 @@
                             @endforeach
                         </div>
                     @endif
+                </div>
+            @endforeach
+                    </div>
                 </div>
             @endforeach
         </div>

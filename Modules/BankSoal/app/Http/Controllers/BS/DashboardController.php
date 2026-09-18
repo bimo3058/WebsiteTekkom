@@ -3,12 +3,116 @@
 namespace Modules\BankSoal\Http\Controllers\BS;
 
 use Illuminate\Routing\Controller;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Services\RpsService;
 
 class DashboardController extends Controller
 {
+    public function gpmNotifications(): JsonResponse
+    {
+        $items = collect();
+
+        $bankSoal = DB::table('bs_mata_kuliah')
+            ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
+            ->where('bs_pertanyaan.status', 'diajukan')
+            ->select('bs_mata_kuliah.id as mk_id', 'bs_mata_kuliah.kode as mk_kode', 'bs_mata_kuliah.nama as mk_nama')
+            ->groupBy('bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama')
+            ->orderBy('bs_mata_kuliah.nama')
+            ->take(5)
+            ->get();
+
+        foreach ($bankSoal as $item) {
+            $items->push([
+                'id' => 'bank-soal-'.$item->mk_id,
+                'title' => 'Bank Soal · Menunggu Validasi',
+                'description' => $item->mk_nama.' ('.$item->mk_kode.')',
+                'time' => 'Perlu direview',
+                'url' => route('banksoal.soal.gpm.validasi-bank-soal'),
+            ]);
+        }
+
+        $rpsService = app(RpsService::class);
+        $rpsItems = collect($rpsService->getDiajukan(5)->items())
+            ->map(fn ($item) => ['item' => $item, 'type' => 'Menunggu Validasi'])
+            ->merge(collect($rpsService->getRevisi(5)->items())
+                ->map(fn ($item) => ['item' => $item, 'type' => 'Menunggu Revisi']))
+            ->take(5);
+
+        foreach ($rpsItems as $entry) {
+            $item = $entry['item'];
+            $items->push([
+                'id' => 'rps-'.$item->id,
+                'title' => 'RPS · '.$entry['type'],
+                'description' => ($item->mataKuliah?->nama ?? 'Mata kuliah').' ('.($item->mataKuliah?->kode ?? '-').')',
+                'time' => 'Perlu direview',
+                'url' => route('banksoal.rps.gpm.validasi-rps.review', $item->id),
+            ]);
+        }
+
+        return response()->json(['notifications' => $items->take(10)->values()])
+            ->header('Cache-Control', 'private, no-store');
+    }
+
+    public function dosenNotifications(): JsonResponse
+    {
+        $user = Auth::user();
+        $items = collect();
+
+        $bankSoal = DB::table('bs_mata_kuliah as mk')
+            ->join('bs_dosen_pengampu_mk as dpm', 'mk.id', '=', 'dpm.mk_id')
+            ->join('bs_pertanyaan as soal', 'mk.id', '=', 'soal.mk_id')
+            ->where('dpm.user_id', $user->id)
+            ->whereIn('soal.status', ['diajukan', 'revisi'])
+            ->select('mk.id as mk_id', 'mk.kode as mk_kode', 'mk.nama as mk_nama', 'soal.status')
+            ->selectRaw('COUNT(soal.id) as jumlah_soal')
+            ->groupBy('mk.id', 'mk.kode', 'mk.nama', 'soal.status')
+            ->orderBy('mk.nama')
+            ->take(10)
+            ->get();
+
+        foreach ($bankSoal as $item) {
+            $status = $item->status === 'revisi' ? 'Perlu Revisi' : 'Menunggu Validasi';
+            $items->push([
+                'id' => 'bank-soal-'.$item->mk_id.'-'.$item->status,
+                'title' => 'Bank Soal · '.$status,
+                'description' => $item->mk_nama.' ('.$item->mk_kode.') · '.$item->jumlah_soal.' soal',
+                'time' => 'Status terbaru',
+                'url' => route('banksoal.soal.dosen.index', [
+                    'mk_id' => $item->mk_id,
+                    'status' => $item->status,
+                ]),
+            ]);
+        }
+
+        $rpsItems = \Modules\BankSoal\Models\RpsDetail::with(['mataKuliah', 'dosens'])
+            ->whereIn('status', ['diajukan', 'revisi'])
+            ->where(function ($query) use ($user) {
+                $query->whereHas('dosens', fn ($relation) => $relation->where('users.id', $user->id))
+                    ->orWhereHas('mataKuliah.dosenPengampu', fn ($relation) => $relation->where('user_id', $user->id));
+            })
+            ->orderByDesc('updated_at')
+            ->take(10)
+            ->get();
+
+        foreach ($rpsItems as $item) {
+            $status = $item->status instanceof \BackedEnum ? $item->status->value : (string) $item->status;
+            $items->push([
+                'id' => 'rps-'.$item->id,
+                'title' => 'RPS · '.($status === 'revisi' ? 'Perlu Revisi' : 'Menunggu Validasi'),
+                'description' => ($item->mataKuliah?->nama ?? 'Mata kuliah').' ('.($item->mataKuliah?->kode ?? '-').')',
+                'time' => 'Status terbaru',
+                'url' => $status === 'revisi'
+                    ? route('banksoal.rps.dosen.edit', $item->id)
+                    : route('banksoal.rps.dosen.preview', $item->id),
+            ]);
+        }
+
+        return response()->json(['notifications' => $items->take(10)->values()])
+            ->header('Cache-Control', 'private, no-store');
+    }
+
     public function index()
     {
         $user  = Auth::user();

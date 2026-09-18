@@ -59,13 +59,22 @@
             <span x-show="sidebarOpen" class="flex-1 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">Manajemen RPS</span>
         </a>
 
-        @php $isSoal = request()->routeIs('banksoal.soal.dosen.*'); @endphp
+        @php $isSoal = request()->routeIs('banksoal.soal.dosen.*') && !request()->routeIs('banksoal.soal.dosen.blind-review.*'); @endphp
         <a href="{{ route('banksoal.soal.dosen.index') }}" class="relative flex items-center gap-[9px] p-[7px_10px_7px_14px] rounded-lg text-[13px] mt-[1px] transition-colors {{ $isSoal ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}" :class="!sidebarOpen ? 'justify-center p-[7px_0]' : ''">
             @if($isSoal)
                 <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></span>
             @endif
             <svg class="w-4 h-4 flex-shrink-0 {{ $isSoal ? 'text-[#0B266E]' : 'text-[#666D80]' }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="{{ $iconSoal }}"/></svg>
             <span x-show="sidebarOpen" class="flex-1 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">Bank Soal</span>
+        </a>
+
+        @php $isBlindReview = request()->routeIs('banksoal.soal.dosen.blind-review.*'); @endphp
+        <a href="{{ route('banksoal.soal.dosen.blind-review.index') }}" class="relative flex items-center gap-[9px] p-[7px_10px_7px_14px] rounded-lg text-[13px] mt-[1px] transition-colors {{ $isBlindReview ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] font-medium hover:bg-[#F6F8FA]' }}" :class="!sidebarOpen ? 'justify-center p-[7px_0]' : ''">
+            @if($isBlindReview)
+                <span class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]" x-show="sidebarOpen"></span>
+            @endif
+            <svg class="w-4 h-4 flex-shrink-0 {{ $isBlindReview ? 'text-[#0B266E]' : 'text-[#666D80]' }}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span x-show="sidebarOpen" class="flex-1 whitespace-nowrap overflow-hidden text-ellipsis leading-tight">Blind Review</span>
         </a>
 
         @php $isArsip = request()->routeIs('banksoal.arsip.dosen.*'); @endphp

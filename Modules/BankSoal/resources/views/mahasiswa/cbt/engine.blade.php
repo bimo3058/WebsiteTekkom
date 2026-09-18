@@ -306,20 +306,28 @@
         <!-- OVERLAY 4: Submit Konfirmasi (kustom, tidak keluar fullscreen) -->
         <!-- ============================================================ -->
         <div x-show="showSubmitModal" x-cloak
-            class="fixed inset-0 z-[9997] bg-black/75 flex items-center justify-center p-8">
-            <div class="bg-white border-2 border-black max-w-md w-full p-8 shadow-2xl">
-                <div class="text-center mb-6">
-                    <div class="text-5xl mb-4">📋</div>
-                    <h3 class="text-xl font-black uppercase tracking-tight mb-3">Selesaikan Ujian?</h3>
-                    <p class="text-sm text-slate-600 leading-relaxed" x-text="submitMessage"></p>
+            class="fixed inset-0 z-[9997] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6">
+            <div class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-full"
+                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100">
+                <div class="px-6 pt-6 pb-4 text-center">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+                         :class="submitMessage.includes('BELUM') ? 'bg-amber-50' : 'bg-primary/10'">
+                        <span class="material-symbols-outlined text-[28px]"
+                              :class="submitMessage.includes('BELUM') ? 'text-amber-600' : 'text-primary'"
+                              x-text="submitMessage.includes('BELUM') ? 'warning' : 'assignment_turned_in'"></span>
+                    </div>
+                    <h3 class="text-[17px] font-extrabold text-slate-800 tracking-tight mb-2">Selesaikan Ujian?</h3>
+                    <p class="text-[13px] font-medium leading-relaxed"
+                       :class="submitMessage.includes('BELUM') ? 'text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3' : 'text-slate-500'"
+                       x-text="submitMessage"></p>
                 </div>
-                <div class="grid grid-cols-2 gap-3 mt-6">
+                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
                     <button @click="showSubmitModal = false"
-                        class="border-2 border-slate-200 px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-slate-50 active:translate-y-0.5 transition-colors">
+                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Kembali
                     </button>
                     <button @click="confirmSubmit()"
-                        class="bg-[primary] text-slate-800 border-2 border-[primary-700] px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-[primary-700] active:translate-y-0.5 transition-colors flex items-center justify-center gap-2">
+                        class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
                         Ya, Selesaikan
                     </button>
@@ -641,6 +649,31 @@
                     this.timerInterval = setInterval(() => {
                         this.updateTimer();
                     }, 1000);
+
+                    // Polling force submit admin — jika sesi di-akhiri paksa, langsung redirect
+                    this.statusInterval = setInterval(async () => {
+                        try {
+                            const res = await fetch('{{ route('komprehensif.mahasiswa.engine.status') }}', {
+                                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                            });
+                            if (!res.ok) return;
+                            const data = await res.json();
+                            if (data.status === 'finished') {
+                                clearInterval(this.timerInterval);
+                                clearInterval(this.statusInterval);
+                                window.onbeforeunload = null;
+                                // Tampilkan alert lalu redirect ke dashboard
+                                if (this.showAlert) {
+                                    this.showAlert('Ujian Diakhiri', 'Sesi ujian Anda telah diakhiri paksa oleh pengawas.', 'warning');
+                                    setTimeout(() => { window.location.href = '{{ route('komprehensif.mahasiswa.dashboard') }}'; }, 2000);
+                                } else {
+                                    window.location.href = '{{ route('komprehensif.mahasiswa.dashboard') }}';
+                                }
+                            }
+                        } catch (e) {
+                            // Abaikan error polling
+                        }
+                    }, 5000);
 
                     history.pushState(null, null, location.href);
                     window.onpopstate = function () {

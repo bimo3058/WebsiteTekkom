@@ -31,6 +31,7 @@
     confirmIsBulk: false,
     confirmData: [],
     confirmStatus: null,
+    isConfirmSubmitting: false,
 
     openConfirm(action, method, title, text, btnColor, iconColor, iconBg, isBulk = false, data = [], status = null) {
         this.confirmAction = action;
@@ -43,9 +44,11 @@
         this.confirmIsBulk = isBulk;
         this.confirmData = data;
         this.confirmStatus = status;
+        this.isConfirmSubmitting = false;
         this.confirmModal = true;
     },
     closeConfirm() {
+        if (this.isConfirmSubmitting) return;
         this.confirmModal = false;
     }
 }">
@@ -245,7 +248,6 @@
                         <select onchange="document.getElementById('hidden-per-page').value = this.value; document.getElementById('filter-form').submit();" {{ !request('periode_id') ? 'disabled' : '' }} class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
                             <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
                             <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
-                            <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
                             <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
                             <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
                         </select>
@@ -282,7 +284,7 @@
 
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center gap-3">
                 <button type="button" @click="closeConfirm()" class="flex-1 px-4 py-2 text-[13px] font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">Batal</button>
-                <form :action="confirmAction" method="POST" class="flex-1 m-0">
+                <form :action="confirmAction" method="POST" class="flex-1 m-0" id="form-confirm-action" @submit="if(isConfirmSubmitting){ $event.preventDefault(); return; } isConfirmSubmitting = true">
                     @csrf
                     <input type="hidden" name="_method" :value="confirmMethod">
                     
@@ -298,8 +300,9 @@
                         </template>
                     </template>
                     
-                    <button type="submit" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all ' + confirmBtnColor">
-                        Ya, Lanjutkan
+                    <button type="submit" :disabled="isConfirmSubmitting" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all flex justify-center items-center gap-2 ' + confirmBtnColor + (isConfirmSubmitting ? ' opacity-50 cursor-not-allowed' : '')">
+                        <svg x-show="isConfirmSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isConfirmSubmitting ? 'Memproses...' : 'Ya, Lanjutkan'"></span>
                     </button>
                 </form>
             </div>

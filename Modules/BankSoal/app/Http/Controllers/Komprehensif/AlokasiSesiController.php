@@ -4,6 +4,7 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
@@ -66,30 +67,27 @@ class AlokasiSesiController extends Controller
             'jadwal_id.required' => 'Anda harus memilih sesi ujian tujuan.'
         ]);
 
-        $jadwal = JadwalUjian::findOrFail($request->jadwal_id);
+        return DB::transaction(function () use ($request) {
+            $jadwal = JadwalUjian::lockForUpdate()->findOrFail($request->jadwal_id);
 
-        // Cari tahu jumlah slot yang terisi saat ini
-        $currentFilled = PendaftarUjian::where('jadwal_ujian_id', $jadwal->id)->count();
+            $currentFilled = PendaftarUjian::where('jadwal_ujian_id', $jadwal->id)->count();
 
-        // Cari tahu dari request, mana mahasiswa yang sebelumnya BELUM masuk ke jadwal ini
-        // (Supaya jika mereka dichecklist kembali ke jadwal yang sama, tidak dihitung memakan kuota tambahan)
-        $newAssigneesCount = PendaftarUjian::whereIn('id', $request->pendaftar_ids)
-            ->where(function ($q) use ($jadwal) {
-                $q->whereNull('jadwal_ujian_id')
-                  ->orWhere('jadwal_ujian_id', '!=', $jadwal->id);
-            })->count();
+            $newAssigneesCount = PendaftarUjian::whereIn('id', $request->pendaftar_ids)
+                ->where(function ($q) use ($jadwal) {
+                    $q->whereNull('jadwal_ujian_id')
+                      ->orWhere('jadwal_ujian_id', '!=', $jadwal->id);
+                })->count();
 
-        // Validasi Kapasitas
-        if (($currentFilled + $newAssigneesCount) > $jadwal->kuota) {
-            return back()->with('error', "Gagal! Sesi '{$jadwal->nama_sesi}' hanya memiliki sisa " . ($jadwal->kuota - $currentFilled) . " kuota.");
-        }
+            if (($currentFilled + $newAssigneesCount) > $jadwal->kuota) {
+                return back()->with('error', "Gagal! Sesi '{$jadwal->nama_sesi}' hanya memiliki sisa " . ($jadwal->kuota - $currentFilled) . " kuota.");
+            }
 
-        // Eksekusi Pindah Sesi
-        PendaftarUjian::whereIn('id', $request->pendaftar_ids)->update([
-            'jadwal_ujian_id' => $jadwal->id
-        ]);
+            PendaftarUjian::whereIn('id', $request->pendaftar_ids)->update([
+                'jadwal_ujian_id' => $jadwal->id
+            ]);
 
-        return back()->with('success', 'Berhasil! Peserta telah sukses dialokasikan ke Sesi: ' . $jadwal->nama_sesi);
+            return back()->with('success', 'Berhasil! Peserta telah sukses dialokasikan ke Sesi: ' . $jadwal->nama_sesi);
+        });
     }
 
     public function remove(Request $request)
