@@ -330,7 +330,7 @@ class BladeCalendarAccessTest extends TestCase
         Schema::table('capstone_periods',fn(Blueprint $t)=>$t->boolean('is_finalized')->default(false));
         Schema::table('capstone_groups',function(Blueprint $t){$t->boolean('is_solo')->default(false);$t->boolean('has_active_proposal')->default(false);});
         Schema::table('capstone_group_members',fn(Blueprint $t)=>$t->unsignedBigInteger('period_id')->nullable());
-        foreach (['2026_05_05_000003_create_capstone_titles_table.php','2026_05_05_000009_create_capstone_bids_table.php','2026_05_05_000028_create_capstone_notifications_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
+        foreach (['2026_05_05_000003_create_capstone_titles_table.php','2026_05_05_000009_create_capstone_bids_table.php','2026_05_05_000028_create_capstone_notifications_table.php','2026_05_05_000029_create_capstone_audit_logs_table.php','2026_09_18_000000_make_capstone_bids_uniques_reject_aware.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
         Schema::table('capstone_titles',fn(Blueprint $t)=>$t->unsignedBigInteger('period_id')->nullable());
         Schema::create('roles',function(Blueprint $t){$t->id();$t->string('name');$t->string('guard_name')->default('web');});
         Schema::create('model_has_roles',function(Blueprint $t){$t->unsignedBigInteger('role_id');$t->unsignedBigInteger('model_id');$t->string('model_type');});
@@ -446,6 +446,27 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertWorkspaceDenied(fn()=>$controller->destroy($this->requestFor($student,'/','DELETE'),$bids[1]));
         $group->period->update(['is_finalized'=>false]);$controller->destroy($this->requestFor($student,'/','DELETE'),$bids[1]);
         $this->assertEquals(1,$group->bids()->first()->priority);
+    }
+
+    public function test_rejected_bid_frees_slot_and_allows_rebidding_same_title(): void
+    {
+        $this->studentWorkspaceSchema();$lecturer=$this->workspaceLecturer();$student=$this->actor('mahasiswa');
+        $group=$this->group($student,null,'READY_FOR_BIDDING');$group->period->update(['min_group_size'=>1]);
+        $controller=app(\Modules\Capstone\Http\Controllers\BidController::class);
+        $titleA=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);
+        $titleB=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);
+        $response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$titleA->id,'priority'=>1]));$this->assertSame(201,$response->getStatusCode());
+        $response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$titleB->id,'priority'=>2]));$this->assertSame(201,$response->getStatusCode());
+        $bidA=$group->bids()->where('title_id',$titleA->id)->firstOrFail();
+        $rec=$controller->recommend($this->requestFor($lecturer,'/','PUT',['recommendation'=>'REJECT']),$bidA->id);
+        $this->assertSame(200,$rec->getStatusCode());
+        $this->assertSame('REJECTED',$bidA->fresh()->status);
+        $this->assertSame([1],$group->bids()->where('status','PENDING')->orderBy('priority')->pluck('priority')->all());
+        // Re-bidding the rejected title must succeed (hit 23505 before partial uniques).
+        $response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$titleA->id]));
+        $this->assertSame(201,$response->getStatusCode());
+        $this->assertSame(2,$response->getData(true)['data']['priority']);
+        $this->assertNull(\Modules\Capstone\Models\Bid::find($response->getData(true)['data']['id'])->proposed_supervisor_1_id);
     }
 
     public function test_accepting_marketplace_join_promotes_proposal_without_assigning_title_early(): void
