@@ -3,12 +3,13 @@
 namespace Modules\BankSoal\Http\Requests\Komprehensif;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Validasi form tambah peserta manual oleh admin.
  *
- * Catatan: pengecekan duplikat NIM dan eksistensi mahasiswa di sistem
- * dilakukan di controller karena membutuhkan named error bag 'pendaftar'.
+ * Duplikat NIM cek di sini (unique scoped periode + whereNull deleted_at)
+ * agar error langsung masuk bag 'pendaftar', plus guard atomik di controller + DB index.
  */
 class StoreAdminPendaftarRequest extends FormRequest
 {
@@ -21,7 +22,13 @@ class StoreAdminPendaftarRequest extends FormRequest
     {
         return [
             'periode_ujian_id'      => ['required', 'exists:bs_periode_ujians,id'],
-            'nim'                   => ['required', 'string', 'max:50'],
+            'nim'                   => [
+                'required', 'string', 'max:50',
+                Rule::unique('bs_pendaftar_ujians', 'nim')->where(function ($query) {
+                    return $query->where('periode_ujian_id', $this->input('periode_ujian_id'))
+                                 ->whereNull('deleted_at');
+                }),
+            ],
             'nama_lengkap'          => ['required', 'string', 'max:255'],
             'semester_aktif'        => ['required', 'integer', 'min:1', 'max:20'],
             'target_wisuda'         => ['nullable', 'string', 'max:100'],

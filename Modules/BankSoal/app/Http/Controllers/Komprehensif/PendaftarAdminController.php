@@ -58,13 +58,15 @@ class PendaftarAdminController extends Controller
             }
 
             $totalCount = $query->count();
-            $perPage = $request->get('per_page', 5);
+            $perPage = in_array((int) $request->get('per_page', 5), [5, 10, 25, 50])
+                ? (int) $request->get('per_page', 5)
+                : 5;
             $pendaftars = $query
                 ->with(['mahasiswa', 'dosenPembimbing1', 'dosenPembimbing2', 'ditambahkanOleh'])
                 ->withCount('sesiSelesai')
                 ->latest()
                 ->paginate($perPage)
-                ->appends($request->query());
+                ->withQueryString();
         }
 
         // Ambil semua dosen untuk dropdown
@@ -87,40 +89,53 @@ class PendaftarAdminController extends Controller
      */
     public function store(StoreAdminPendaftarRequest $request)
     {
-        // Cek duplikat di periode yang sama — hanya record aktif (pending/approved)
-        // Mahasiswa yang sudah ditolak (soft-deleted) boleh didaftarkan ulang
-        $exists = PendaftarUjian::where('periode_ujian_id', $request->periode_ujian_id)
-            ->where('nim', $request->nim)
-            ->exists();
+        try {
+            return \Illuminate\Support\Facades\DB::transaction(function () use ($request) {
+                // Lock + cek duplikat atomik — cegah race double-click
+                $exists = PendaftarUjian::where('periode_ujian_id', $request->periode_ujian_id)
+                    ->where('nim', $request->nim)
+                    ->lockForUpdate()
+                    ->exists();
 
-        if ($exists) {
-            return back()->withErrors(['nim' => 'Mahasiswa dengan NIM ini sudah terdaftar pada periode ujian tersebut.'], 'pendaftar')->withInput();
+                if ($exists) {
+                    throw \Illuminate\Validation\ValidationException::withMessages(
+                        ['nim' => 'Mahasiswa dengan NIM ini sudah terdaftar pada periode ujian tersebut.']
+                    )->errorBag('pendaftar');
+                }
+
+                $student = Student::with('user')->where('student_number', $request->nim)->first();
+
+                if (!$student || !$student->user) {
+                    return back()->withErrors(['nim' => 'Mahasiswa dengan NIM tersebut belum terdaftar di sistem.'], 'pendaftar')->withInput();
+                }
+
+                $mahasiswa = $student->user;
+
+                PendaftarUjian::create([
+                    'periode_ujian_id' => $request->periode_ujian_id,
+                    'mahasiswa_id' => $mahasiswa->id,
+                    'nim' => $request->nim,
+                    'nama_lengkap' => $request->nama_lengkap,
+                    'semester_aktif' => $request->semester_aktif,
+                    'target_wisuda' => $request->target_wisuda,
+                    'dosen_pembimbing_1_id' => $request->dosen_pembimbing_1_id ?: null,
+                    'dosen_pembimbing_2_id' => $request->dosen_pembimbing_2_id ?: null,
+                    'status_pendaftaran' => PendaftaranStatus::Approved->value,
+                    'catatan_admin' => $request->catatan_admin,
+                    'ditambahkan_oleh' => auth()->id(),
+                ]);
+
+                return back()->with('success', 'Peserta berhasil ditambahkan.');
+            });
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Fallback DB unique violation (race lolos validasi)
+            if (str_contains($e->getMessage(), 'uniq_pendaftar') || $e->getCode() === '23505') {
+                return back()->withErrors(['nim' => 'Mahasiswa dengan NIM ini sudah terdaftar pada periode ujian tersebut.'], 'pendaftar')->withInput();
+            }
+            throw $e;
         }
-
-        // Cari ID Mahasiswa dari tabel students (kolom student_number) beserta relasi usernya
-        $student = Student::with('user')->where('student_number', $request->nim)->first();
-
-        if (!$student || !$student->user) {
-            return back()->withErrors(['nim' => 'Mahasiswa dengan NIM tersebut belum terdaftar di sistem.'], 'pendaftar')->withInput();
-        }
-
-        $mahasiswa = $student->user;
-
-        PendaftarUjian::create([
-            'periode_ujian_id' => $request->periode_ujian_id,
-            'mahasiswa_id' => $mahasiswa->id,
-            'nim' => $request->nim,
-            'nama_lengkap' => $request->nama_lengkap,
-            'semester_aktif' => $request->semester_aktif,
-            'target_wisuda' => $request->target_wisuda,
-            'dosen_pembimbing_1_id' => $request->dosen_pembimbing_1_id ?: null,
-            'dosen_pembimbing_2_id' => $request->dosen_pembimbing_2_id ?: null,
-            'status_pendaftaran' => PendaftaranStatus::Approved->value,
-            'catatan_admin' => $request->catatan_admin,
-            'ditambahkan_oleh' => auth()->id(),
-        ]);
-
-        return back()->with('success', 'Peserta berhasil ditambahkan.');
     }
 
     /**

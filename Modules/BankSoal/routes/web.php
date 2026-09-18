@@ -409,6 +409,7 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::get('/engine/waiting-room', [CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
 
         // CBT Engine API Routes
+        Route::get('/engine/status', [CbtEngineController::class, 'status'])->name('engine.status');
         Route::post('/engine/save-answer', [CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
         Route::post('/engine/toggle-ragu', [CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
         Route::post('/engine/log-violation', [CbtEngineController::class, 'logViolation'])->name('engine.log-violation');

@@ -292,8 +292,9 @@
                                         
                                         <div class="flex justify-between items-center mb-3">
                                             <h3 class="font-bold text-slate-700 text-[13px]">Tambahkan ke sesi ini:</h3>
-                                            <button type="button" @click="document.getElementById('formAssign').submit()" class="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
-                                                Tambahkan (<span x-text="selectedUnassignedIds.length"></span>)
+                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formAssign').submit()" class="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="isSubmitting || selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
+                                                <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                <span x-text="isSubmitting ? 'Memproses...' : 'Tambahkan (' + selectedUnassignedIds.length + ')'"></span>
                                             </button>
                                         </div>
 
@@ -346,8 +347,9 @@
                                         
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="font-bold text-slate-700 text-[13px]">Daftar peserta di sesi ini:</h3>
-                                            <button type="button" @click="document.getElementById('formRemove').submit()" class="bg-white text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="selectedAssignedIds.length === 0">
-                                                Keluarkan (<span x-text="selectedAssignedIds.length"></span>)
+                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formRemove').submit()" class="bg-white text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="isSubmitting || selectedAssignedIds.length === 0">
+                                                <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin text-red-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                <span x-text="isSubmitting ? 'Memproses...' : 'Keluarkan (' + selectedAssignedIds.length + ')'"></span>
                                             </button>
                                         </div>
 
@@ -433,6 +435,13 @@
                         @csrf
                         <input type="hidden" name="periode_ujian_id" value="{{ $selectedPeriodeId }}">
                         
+                        @if($errors->has('database'))
+                            <div class="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-[13px] font-medium text-red-600 flex items-start gap-2">
+                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>{{ $errors->first('database') }}</span>
+                            </div>
+                        @endif
+
                         @if(session('error'))
                             <div class="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-[13px] font-medium text-red-600 flex items-start gap-2">
                                 <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -456,7 +465,7 @@
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Tanggal Ujian (Berdasarkan Rentang Periode)</label>
                             <div class="relative">
-                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow cursor-pointer">
+                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow cursor-pointer {{ $errors->has('tanggal_ujian') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
                                     <option value="">Pilih Tanggal Ujian...</option>
                                     @if($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
                                         @php
@@ -481,18 +490,36 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Mulai</label>
-                                <input type="time" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
+                                <input type="time" id="as_waktu_mulai" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow {{ $errors->has('waktu_mulai') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                                @error('waktu_mulai')
+                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Selesai</label>
-                                <input type="time" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
+                                <input type="time" id="as_waktu_selesai" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow {{ $errors->has('waktu_selesai') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                                @error('waktu_selesai')
+                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
                         </div>
 
                         <!-- Box 4: Kapasitas -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Kapasitas Maksimal</label>
-                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow">
+                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow {{ $errors->has('kuota') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                            @error('kuota')
+                                <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                     </form>
                 </div>
@@ -502,8 +529,9 @@
                     <button type="button" @click="openModal = false" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formTambahSesi').submit()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors">
-                        Simpan Sesi
+                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formTambahSesi').submit()" :disabled="isSubmitting" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Sesi'"></span>
                     </button>
                 </div>
             </div>
@@ -546,9 +574,10 @@
                     <button type="button" @click="closeDeleteConfirm()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Batal
                     </button>
-                    <button type="button" @click="submitDelete()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        Hapus Sesi
+                    <button type="button" @click="submitDelete()" :disabled="isSubmitting" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                        <svg x-show="!isSubmitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Hapus Sesi'"></span>
                     </button>
                 </div>
             </div>
@@ -567,6 +596,7 @@
                 openDrawer: false,
                 deleteConfirmModal: false,
                 jadwalToDeleteId: null,
+                isSubmitting: false,
                 drawerTab: 'unassigned', // unassigned | assigned
                 selectedJadwal: null,
                 jadwals: [],
@@ -632,6 +662,7 @@
                 },
 
                 closeDeleteConfirm() {
+                    if (this.isSubmitting) return;
                     this.deleteConfirmModal = false;
                     setTimeout(() => {
                         this.jadwalToDeleteId = null;
@@ -639,7 +670,9 @@
                 },
 
                 submitDelete() {
+                    if (this.isSubmitting) return;
                     if (this.jadwalToDeleteId) {
+                        this.isSubmitting = true;
                         const form = document.getElementById('form-delete-' + this.jadwalToDeleteId);
                         if(form) form.submit();
                     }
