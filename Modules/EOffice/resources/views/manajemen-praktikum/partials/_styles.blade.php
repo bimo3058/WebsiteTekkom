@@ -160,6 +160,31 @@
     .mp-stats-grid.cols-4 { grid-template-columns:repeat(2,1fr); }
     .mp-stats-grid.cols-3 { grid-template-columns:repeat(2,1fr); }
 }
+
+.mp-registration-badge {
+    display: inline-block;
+    padding-block: 2px;
+    padding-inline: 8px;
+    border: 1px solid;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.mp-registration-badge.is-koor {
+    background: rgba(94, 83, 244, .1);
+    border-color: rgba(94, 83, 244, .2);
+    color: var(--c-primary);
+}
+.mp-registration-badge.is-praktikan {
+    background: #FFF7E6;
+    border-color: #D39C3D;
+    color: #956321;
+}
+.mp-registration-badge.is-asprak {
+    background: #DDF2EE;
+    border-color: #40C4AA;
+    color: #287F6E;
+}
 @media (max-width:480px) {
     .mp-stats-grid.cols-2,
     .mp-stats-grid.cols-3,
