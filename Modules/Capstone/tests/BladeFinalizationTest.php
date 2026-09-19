@@ -394,4 +394,35 @@ class BladeFinalizationTest extends TestCase
             ->assertOk()
             ->assertSee('Finalisasi Kelompok', false);
     }
+
+    public function test_manual_group_with_enough_members_becomes_ready_for_bidding(): void
+    {
+        $this->admin();
+        $period = $this->period();
+        $students = [$this->studentAccount(), $this->studentAccount()];
+
+        $response = $this->postJson('/api/capstone/admin/finalization/create-manual-group', [
+            'student_ids' => [$students[0]->id, $students[1]->id],
+            'period_id' => $period->id,
+            'option' => 'no_title',
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertSame('READY_FOR_BIDDING', Group::findOrFail($response->json('data.group.id'))->status);
+    }
+
+    public function test_add_to_existing_group_promotes_to_ready_when_min_met(): void
+    {
+        $this->admin();
+        $period = $this->period();
+        $group = $this->groupWithMembers($period, 1, 'FORMING');
+        $extra = $this->studentAccount();
+
+        $this->postJson('/api/capstone/admin/finalization/add-to-existing-group', [
+            'group_id' => $group->id,
+            'student_ids' => [$extra->id],
+        ])->assertOk()->assertJsonPath('success', true);
+
+        $this->assertSame('READY_FOR_BIDDING', $group->fresh()->status);
+    }
 }

@@ -973,6 +973,16 @@ class FinalizationController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
 
+        // Sync state with the student flow: a group meeting the min size
+        // should read READY_FOR_BIDDING, not stay stuck at FORMING.
+        if (in_array($group->status, ['FORMING', 'FORMING_SOLO'], true)) {
+            try {
+                $this->groupService->evaluateGroupReadiness($group->fresh());
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
+
         return $this->ok(['group' => $this->groupPayload($group->fresh())], 'Grup berhasil dibuat.');
     }
 
@@ -1035,6 +1045,17 @@ class FinalizationController extends Controller
                 'payload' => ['added_count' => count($students)],
             ]);
         });
+
+        // A top-up can push the group over the min size: promote
+        // FORMING -> READY_FOR_BIDDING like the student flow does.
+        $group->refresh();
+        if (in_array($group->status, ['FORMING', 'FORMING_SOLO'], true)) {
+            try {
+                $this->groupService->evaluateGroupReadiness($group);
+            } catch (\Throwable $e) {
+                report($e);
+            }
+        }
 
         return $this->ok(['group' => $this->groupPayload($group->fresh())], 'Anggota berhasil ditambahkan ke grup.');
     }
