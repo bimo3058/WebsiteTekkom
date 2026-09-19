@@ -5,6 +5,7 @@ use Modules\Capstone\Http\Controllers\Admin\AuditLogController;
 use Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
 use Modules\Capstone\Http\Controllers\Admin\BladeUserController;
 use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
+use Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController;
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\StakeholderController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentController;
@@ -104,6 +105,9 @@ Route::prefix('capstone')->group(function () {
             Route::put('/period-wizard/{period}', [BladePeriodController::class, 'update']);
             Route::get('/dashboard', [DashboardController::class, 'admin']);
             Route::apiResource('periods', PeriodController::class);
+            Route::get('/period-registrations', [PeriodRegistrationApprovalController::class, 'index']);
+            Route::put('/period-registrations/{id}/approve', [PeriodRegistrationApprovalController::class, 'approve']);
+            Route::put('/period-registrations/{id}/reject', [PeriodRegistrationApprovalController::class, 'reject']);
             Route::get('/users', [UserController::class, 'index']);
             Route::apiResource('user-management', BladeUserController::class)->parameters(['user-management' => 'user'])->except(['update', 'destroy']);
             Route::apiResource('expo-events', ExpoEventController::class);
@@ -371,6 +375,7 @@ Route::prefix('capstone')->group(function () {
             Route::get('/my-period', [RegistrationController::class, 'myPeriod']);
             Route::get('/periods/{periodId}/check-registration', [RegistrationController::class, 'check']);
             Route::post('/periods/register', [RegistrationController::class, 'register']);
+            Route::delete('/periods/registration', [RegistrationController::class, 'cancel']);
 
             Route::get('/bursa-ide', [BursaIdeController::class, 'index']);
             Route::post('/bursa-ide/{groupId}/request-join', [BursaIdeController::class, 'requestJoin']);

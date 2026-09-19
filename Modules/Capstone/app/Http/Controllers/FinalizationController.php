@@ -1611,10 +1611,10 @@ class FinalizationController extends Controller
         // GroupMember.student_id references students.id (FK + belongsTo relation).
         $groupedStudentIds = GroupMember::where('period_id', $period->id)->pluck('student_id');
 
-        // Registration status is stored lowercase ('active') by seeders, but the
-        // column default is uppercase ('ACTIVE') — match case-insensitively.
+        // Only approved registrations count as registered. Statuses are
+        // normalized to uppercase (PENDING / APPROVED / REJECTED / FLAGGED).
         $registeredIds = PeriodRegistration::where('period_id', $period->id)
-            ->whereRaw('UPPER(status) = ?', ['ACTIVE'])
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->pluck('user_id');
 
         // No fallback to "all students": without registrations the honest

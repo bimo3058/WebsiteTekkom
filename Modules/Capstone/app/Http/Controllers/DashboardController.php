@@ -15,6 +15,7 @@ use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\Title;
@@ -45,6 +46,9 @@ class DashboardController extends Controller
         $pendingDocuments = Document::where('status', 'SUBMITTED')
             ->when($scopedPeriod, fn ($query) => $query->whereHas('group', fn ($groups) => $groups->where('period_id', $scopedPeriod)))
             ->count();
+        $pendingJoinRequests = PeriodRegistration::where('status', PeriodRegistration::STATUS_PENDING)
+            ->when($scopedPeriod, fn ($query) => $query->where('period_id', $scopedPeriod))
+            ->count();
 
         $activePeriods = Period::where('is_active', true)->get();
 
@@ -60,11 +64,13 @@ class DashboardController extends Controller
             'pending_finalization' => $pendingFinalization,
             'pending_title_approvals' => $pendingTitles,
             'pending_documents' => $pendingDocuments,
-            'pending_approval' => $pendingFinalization + $pendingTitles + $pendingDocuments,
+            'pending_join_requests' => $pendingJoinRequests,
+            'pending_approval' => $pendingFinalization + $pendingTitles + $pendingDocuments + $pendingJoinRequests,
             'pending_breakdown' => [
                 'finalization' => $pendingFinalization,
                 'titles' => $pendingTitles,
                 'documents' => $pendingDocuments,
+                'join_requests' => $pendingJoinRequests,
             ],
             'selected_period_id' => $periodId ?: 'all',
             'recent_groups' => $canViewGroups

@@ -328,13 +328,16 @@ class BladeFinalizationTest extends TestCase
         $this->assertSame($proposer->id, $rows[$g2->id]['suggested_supervisor_1_id']);
     }
 
-    public function test_no_group_counts_only_registered_students_case_insensitive(): void
+    public function test_no_group_counts_only_approved_students(): void
     {
         $this->admin();
         $period = $this->period();
 
         $registered = $this->studentAccount();
-        PeriodRegistration::create(['user_id' => $registered->id, 'period_id' => $period->id, 'status' => 'active']);
+        PeriodRegistration::create(['user_id' => $registered->id, 'period_id' => $period->id, 'status' => 'APPROVED']);
+
+        $pending = $this->studentAccount();
+        PeriodRegistration::create(['user_id' => $pending->id, 'period_id' => $period->id, 'status' => 'PENDING']);
 
         $this->studentAccount(); // never registered in this period
 

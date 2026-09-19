@@ -90,6 +90,11 @@
           "title": "Audit Log",
           "url": "/admin/audit-logs",
           "icon": "ScrollText"
+        },
+        {
+          "title": "Approval",
+          "url": "/admin/period-registrations",
+          "icon": "UserPlus"
         }
       ]
     },

@@ -187,7 +187,7 @@ class GroupController extends Controller
             Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
             $period = Period::lockForUpdate()->findOrFail($data['period_id']);
             abort_unless($period->isRegistrationOpen(), 403, 'Period is closed.');
-            abort_unless(PeriodRegistration::where('user_id', $student->id)->where('period_id', $period->id)->exists(), 403, 'Register for this period first.');
+            abort_unless(PeriodRegistration::where('user_id', $student->id)->where('period_id', $period->id)->where('status', PeriodRegistration::STATUS_APPROVED)->exists(), 403, 'Your join request for this period must be approved by admin first.');
             abort_if(GroupMember::where('student_id', $student->id)->whereHas('group', fn ($q) => $q->whereNotIn('status', ['CLOSED', 'DISSOLVED']))->exists(), 422, 'You already have an active group.');
             $group = Group::create(['period_id' => $period->id, 'status' => $solo ? 'FORMING_SOLO' : 'FORMING', 'group_mode' => 'GROUP', 'has_existing_group' => false, 'is_solo' => $solo]);
             GroupMember::create(['group_id' => $group->id, 'student_id' => $student->id, 'is_leader' => true, 'period_id' => $period->id]);

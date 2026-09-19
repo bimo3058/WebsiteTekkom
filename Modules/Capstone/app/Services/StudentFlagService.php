@@ -106,7 +106,7 @@ class StudentFlagService
                     }
 
                     // Check if already flagged
-                    if ($registration->status === 'flagged') {
+                    if (strtoupper((string) $registration->status) === PeriodRegistration::STATUS_FLAGGED) {
                         throw new DomainRuleException('Student is already flagged for this period.');
                     }
 
@@ -240,7 +240,7 @@ class StudentFlagService
                     PeriodRegistration::create([
                         'user_id' => $lockedStudent->id,
                         'period_id' => $lockedPeriod->id,
-                        'status' => 'active',
+                        'status' => PeriodRegistration::STATUS_APPROVED,
                     ]);
 
                     // Restore soft-deleted GroupMember records
@@ -319,10 +319,11 @@ class StudentFlagService
             return false;
         }
 
-        // Check if student has active period registration
+        // Check if student has approved period registration
         // (if no registration exists, they were flagged and removed)
         $hasActiveRegistration = PeriodRegistration::where('user_id', $studentId)
             ->where('period_id', $group->period_id)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->exists();
 
         if (! $hasActiveRegistration) {
@@ -369,9 +370,10 @@ class StudentFlagService
      */
     public function isFlaggedInPeriod(int $studentId, int $periodId): bool
     {
-        // Check if there's no active period registration
+        // Check if there's no approved period registration
         $hasActiveRegistration = PeriodRegistration::where('user_id', $studentId)
             ->where('period_id', $periodId)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->exists();
 
         if ($hasActiveRegistration) {
@@ -406,8 +408,9 @@ class StudentFlagService
             ->distinct()
             ->pluck('period_id');
 
-        // Filter out periods where the student has active registration
+        // Filter out periods where the student has approved registration
         $activePeriodIds = PeriodRegistration::where('user_id', $studentId)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->pluck('period_id');
 
         $flaggedPeriodIds = $flaggedPeriodIds->diff($activePeriodIds);

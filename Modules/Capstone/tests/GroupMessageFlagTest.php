@@ -50,7 +50,7 @@ class GroupMessageFlagTest extends TestCase
         $group = Group::create(['period_id' => $period->id, 'status' => 'FORMING', 'code' => 'TEST-01']);
         for ($i = 0; $i < $count; $i++) {
             $student = $this->studentAccount();
-            PeriodRegistration::create(['user_id' => $student->id, 'period_id' => $period->id, 'status' => 'active']);
+            PeriodRegistration::create(['user_id' => $student->id, 'period_id' => $period->id, 'status' => 'APPROVED']);
             GroupMember::create(['group_id' => $group->id, 'student_id' => $student->id, 'period_id' => $period->id, 'is_leader' => $i === 0]);
         }
 
@@ -114,7 +114,7 @@ class GroupMessageFlagTest extends TestCase
             ->assertOk();
 
         $this->assertTrue(GroupMember::where('id', $member->id)->where('status', 'active')->exists());
-        $this->assertTrue(PeriodRegistration::where('user_id', $studentId)->where('period_id', $group->period_id)->where('status', 'active')->exists());
+        $this->assertTrue(PeriodRegistration::where('user_id', $studentId)->where('period_id', $group->period_id)->where('status', 'APPROVED')->exists());
     }
 
     public function test_group_detail_includes_workflow_progress_and_flagged_members(): void

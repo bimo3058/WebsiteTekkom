@@ -250,6 +250,13 @@
     ]
   },
   {
+    "route": "/admin/period-registrations",
+    "source": "frontend/src/app/admin/period-registrations/page.tsx",
+    "imports": [
+      "@/features/admin/period-registrations"
+    ]
+  },
+  {
     "route": "/admin/periods/[id]/edit",
     "source": "frontend/src/app/admin/periods/[id]/edit/page.tsx",
     "imports": [

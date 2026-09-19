@@ -733,7 +733,9 @@ class GroupService
         }
 
         if (! $period) {
-            $registration = PeriodRegistration::where('user_id', $userId)->first();
+            $registration = PeriodRegistration::where('user_id', $userId)
+                ->where('status', PeriodRegistration::STATUS_APPROVED)
+                ->first();
             if ($registration) {
                 $period = Period::find($registration->period_id);
             }
@@ -1644,20 +1646,16 @@ class GroupService
             throw new DomainRuleException('Kelompok sudah penuh. Cari kelompok lain atau buat kelompok baru.');
         }
 
-        $isRegistered = PeriodRegistration::where('user_id', $user->id)
+        $isApproved = PeriodRegistration::where('user_id', $user->id)
             ->where('period_id', $group->period_id)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->exists();
 
-        $autoRegistered = false;
-        if (! $isRegistered) {
-            PeriodRegistration::create([
-                'user_id' => $user->id,
-                'period_id' => $group->period_id,
-            ]);
-            $autoRegistered = true;
+        if (! $isApproved) {
+            throw new DomainRuleException('Permintaan gabung periode Anda belum disetujui admin. Tunggu persetujuan sebelum bergabung kelompok.');
         }
 
-        return ['group' => $group, 'auto_registered' => $autoRegistered];
+        return ['group' => $group, 'auto_registered' => false];
     }
 
     /**

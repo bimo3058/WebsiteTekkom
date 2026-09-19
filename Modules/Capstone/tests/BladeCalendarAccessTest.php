@@ -34,7 +34,8 @@ class BladeCalendarAccessTest extends TestCase
         Schema::table('capstone_seminar_schedules', function(Blueprint $t){$t->foreignId('examiner_1_id')->nullable()->change();$t->foreignId('examiner_2_id')->nullable()->change();});
         (require __DIR__.'/../database/migrations/2026_09_08_110000_support_capstone_mentoring_calendar.php')->up();
         Schema::create('capstone_group_members', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id');$t->boolean('is_leader')->default(false);$t->string('status')->nullable();$t->unsignedBigInteger('removed_by')->nullable();$t->text('removal_reason')->nullable();$t->timestamps();$t->softDeletes();});
-        Schema::create('capstone_period_registrations', function(Blueprint $t){$t->id();$t->unsignedBigInteger('user_id');$t->unsignedBigInteger('period_id');$t->timestamps();});
+        Schema::create('capstone_period_registrations', function(Blueprint $t){$t->id();$t->unsignedBigInteger('user_id');$t->unsignedBigInteger('period_id');$t->string('status')->default('PENDING');$t->text('rejection_reason')->nullable();$t->unsignedBigInteger('reviewed_by')->nullable();$t->timestamp('reviewed_at')->nullable();$t->timestamp('flagged_at')->nullable();$t->unsignedBigInteger('flagged_by')->nullable();$t->timestamps();});
+
         Schema::create('capstone_supervisions', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('supervisor_id');$t->string('role')->nullable();});
         Schema::create('capstone_ta_defense_schedules', function(Blueprint $t){
             $t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id')->nullable();$t->unsignedBigInteger('examiner_1_id')->nullable();$t->unsignedBigInteger('examiner_2_id')->nullable();
@@ -216,6 +217,7 @@ class BladeCalendarAccessTest extends TestCase
     public function test_period_registration_unlocks_all_group_submenus_and_links_using_student_profile_id(): void
     {
         Schema::table('capstone_periods', fn(Blueprint $t)=>$t->boolean('is_finalized')->default(false));
+        (require __DIR__.'/../database/migrations/2026_05_05_000028_create_capstone_notifications_table.php')->up();
         $this->actor('admin'); // Account ID must differ from the student profile ID.
         $user = $this->actor('mahasiswa');
         $this->assertNotEquals($user->id, $user->student->id);
@@ -242,6 +244,20 @@ class BladeCalendarAccessTest extends TestCase
         $response = (new \Modules\Capstone\Http\Controllers\RegistrationController)->register($request);
         $this->assertSame(201, $response->getStatusCode());
         $this->assertEquals($user->student->id, PeriodRegistration::first()->user_id);
+        $this->assertSame('PENDING', PeriodRegistration::first()->status);
+        // A pending join request keeps every feature locked with a pending message.
+        $pendingState = BladeFeatureAccess::snapshot($user);
+        $this->assertFalse($pendingState['registered']);
+        $this->assertTrue($pendingState['pending_registration']);
+        $this->assertSame('Your join request is still pending admin approval', BladeFeatureAccess::reason('/mahasiswa/group', $pendingState));
+        $response = (new BladeAccessMiddleware)->handle($this->requestFor($user, '/capstone/mahasiswa/group'), fn()=>response('allowed'), 'mahasiswa');
+        $this->assertSame(403, $response->getStatusCode());
+        // Admin approval unlocks the menus.
+        $admin = User::where('id', '<>', $user->id)->first();
+        $approveRequest = $this->requestFor($admin, '/api/capstone/admin/period-registrations/'.PeriodRegistration::first()->id.'/approve', 'PUT');
+        $approveResponse = (new \Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController)->approve($approveRequest, PeriodRegistration::first()->id);
+        $this->assertSame(200, $approveResponse->getStatusCode());
+        $this->assertSame('APPROVED', PeriodRegistration::first()->fresh()->status);
         $html = $renderSidebar();
         $this->assertMatchesRegularExpression('/<button[^>]*aria-disabled="false"[^>]*title="Group &amp; Titles"/', $html);
         foreach ($paths as $path) {
@@ -378,7 +394,9 @@ class BladeCalendarAccessTest extends TestCase
         $controller=app(\Modules\Capstone\Http\Controllers\GroupController::class);
         $request=$this->requestFor($student,'/','POST',['period_id'=>$period->id]);
         $this->assertWorkspaceDenied(fn()=>$controller->storeSolo($request));
-        PeriodRegistration::create(['user_id'=>$student->student->id,'period_id'=>$period->id]);
+        PeriodRegistration::create(['user_id'=>$student->student->id,'period_id'=>$period->id,'status'=>'PENDING']);
+        $this->assertWorkspaceDenied(fn()=>$controller->storeSolo($request));
+        PeriodRegistration::where('user_id',$student->student->id)->update(['status'=>'APPROVED']);
         $response=$controller->storeSolo($request);$this->assertSame(201,$response->getStatusCode());
         $this->assertSame('FORMING_SOLO',Group::first()->status);
         $this->assertEquals($student->student->id,GroupMember::first()->student_id);

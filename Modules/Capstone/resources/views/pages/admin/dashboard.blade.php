@@ -42,7 +42,7 @@
                 </div>
                 <p class="mt-3 text-2xl font-bold text-slate-900" x-text="data.total_students ?? 0"></p>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm" :title="'Finalisasi: '+(data.pending_breakdown?.finalization ?? 0)+', Judul: '+(data.pending_breakdown?.titles ?? 0)+', Dokumen: '+(data.pending_breakdown?.documents ?? 0)">
+            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm" :title="'Finalisasi: '+(data.pending_breakdown?.finalization ?? 0)+', Judul: '+(data.pending_breakdown?.titles ?? 0)+', Dokumen: '+(data.pending_breakdown?.documents ?? 0)+', Join Request: '+(data.pending_breakdown?.join_requests ?? 0)">
                 <div class="flex items-center gap-2.5">
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"><x-capstone::icon name="Users" size="18" /></span>
                     <p class="text-[13px] font-medium text-slate-600">Butuh Persetujuan</p>
