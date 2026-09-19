@@ -3,7 +3,6 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\ManajemenMahasiswa\Http\Requests\PengaduanPayloadRequest;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
@@ -14,7 +13,6 @@ class PengaduanController extends Controller
 {
     private const VIEWER_ROLES = [
         'mahasiswa',
-        'dosen',
         'gpm',
         'kaprodi',
         'dpm',
@@ -25,17 +23,6 @@ class PengaduanController extends Controller
     ];
 
     private const STAFF_VIEW_ROLES = [
-        'dosen',
-        'gpm',
-        'kaprodi',
-        'dpm',
-        'admin',
-        'superadmin',
-        'admin_kemahasiswaan',
-        'ketua_departemen',
-    ];
-
-    private const REPLY_ROLES = [
         'gpm',
         'kaprodi',
         'dpm',
@@ -76,28 +63,13 @@ class PengaduanController extends Controller
         $filters = [
             'q' => trim((string)$request->query('q', '')),
             'kategori' => (string)$request->query('kategori', ''),
-            'status' => (string)$request->query('status', ''),
         ];
 
         $allowedKategori = Pengaduan::KATEGORI_LIST;
-        $allowedStatus = [
-            Pengaduan::STATUS_BARU,
-            Pengaduan::STATUS_DIBACA,
-            Pengaduan::STATUS_DIDELEGASIKAN,
-            Pengaduan::STATUS_SELESAI,
-        ];
-
-        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi', 'dpm', 'ketua_departemen']);
 
         $query = Pengaduan::query();
         if ($isStaff) {
-            $query->with(['pelapor', 'delegasiAktif.delegatedTo']);
-            if ($isDosenOnly) {
-                // Dosen hanya bisa melihat tiket yang didelegasikan ke mereka
-                $query->whereHas('delegasi', function($q) use ($user) {
-                    $q->where('delegated_to', $user->id);
-                });
-            }
+            $query->with(['pelapor']);
         } else {
             // Mahasiswa hanya bisa melihat tiket non-anonim di daftar ini
             $query->where('user_id', $user->id)
@@ -106,17 +78,13 @@ class PengaduanController extends Controller
 
         $query->where('status', '!=', Pengaduan::STATUS_DRAFT);
 
-        // ── Base query untuk stats (sebelum filter user) ─────────
+        // ── Base query untuk stats (sebelum filter) ─────────
         $baseQuery = clone $query;
 
         if ($filters['kategori'] !== '' && in_array($filters['kategori'], $allowedKategori, true)) {
             $kategoriUtama = $filters['kategori'];
             $kategoriKeys = array_merge([$kategoriUtama], Pengaduan::legacyKeysFor($kategoriUtama));
             $query->whereIn('kategori', $kategoriKeys);
-        }
-
-        if ($filters['status'] !== '' && in_array($filters['status'], $allowedStatus, true)) {
-            $query->where('status', $filters['status']);
         }
 
         if ($filters['q'] !== '') {
@@ -133,51 +101,9 @@ class PengaduanController extends Controller
             });
         }
 
-        $belumDijawabCount = (clone $baseQuery)
-            ->where('status', '!=', Pengaduan::STATUS_SELESAI)
+        $baruCount = (clone $baseQuery)
+            ->where('status', Pengaduan::STATUS_BARU)
             ->count();
-
-        $selesaiCount = (clone $baseQuery)
-            ->where('status', Pengaduan::STATUS_SELESAI)
-            ->count();
-
-        // ── Stats lanjutan per role ──────────────────────────────
-        $summaryStats = [];
-
-        if ($isStaff) {
-            $perluDitindakCount = (clone $baseQuery)
-                ->where('status', Pengaduan::STATUS_BARU)
-                ->count();
-
-            $baruCount = $perluDitindakCount;
-
-            $menungguDosenCount = (clone $baseQuery)
-                ->where('status', Pengaduan::STATUS_DIDELEGASIKAN)
-                ->count();
-
-            $totalNonDraft = (clone $baseQuery)->count();
-            $ditanganiCount = (clone $baseQuery)
-                ->where('status', Pengaduan::STATUS_SELESAI)
-                ->count();
-            $responsivitas = $totalNonDraft > 0 ? round($ditanganiCount / $totalNonDraft * 100) : 0;
-
-            // Distribusi per kategori (Semua kategori)
-            $kategoriDistribusi = (clone $baseQuery)
-                ->selectRaw("kategori, COUNT(*) as total")
-                ->groupBy('kategori')
-                ->orderByDesc('total')
-                ->pluck('total', 'kategori');
-
-            $summaryStats = compact(
-                'perluDitindakCount', 'baruCount',
-                'menungguDosenCount',
-                'responsivitas', 'ditanganiCount', 'totalNonDraft',
-                'kategoriDistribusi',
-            );
-        } else {
-            // Mahasiswa stats disederhanakan
-            $summaryStats = [];
-        }
 
         $pengaduan = $query
             ->orderByDesc('created_at')
@@ -191,29 +117,18 @@ class PengaduanController extends Controller
         });
 
         $kategoriOptions = $this->kategoriMetaNew();
-        $statusOptions = [
-            Pengaduan::STATUS_BARU => 'Baru',
-            Pengaduan::STATUS_DIBACA => 'Diproses',
-            Pengaduan::STATUS_DIDELEGASIKAN => 'Didelegasikan',
-            Pengaduan::STATUS_SELESAI => 'Selesai',
-        ];
-
-        $isDosenOnlyView = $isDosenOnly;
 
         return view('manajemenmahasiswa::pengaduan.index', compact(
             'pengaduan',
             'isStaff',
-            'isDosenOnlyView',
             'canCreate',
             'canDelete',
             'filters',
             'kategoriOptions',
-            'statusOptions',
-            'belumDijawabCount',
-            'selesaiCount',
-            'summaryStats',
+            'baruCount',
         ));
     }
+
 
     public function jalur(Request $request)
     {
@@ -308,21 +223,13 @@ class PengaduanController extends Controller
         $this->ensureViewer($user);
 
         $isStaff = $this->isStaffViewer($user);
-        $canReply = $this->canReply($user);
         $canDelete = $this->canDelete($user);
 
         if (!$isStaff && $pengaduan->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
         }
 
-        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi', 'dpm', 'ketua_departemen']);
-        if ($isDosenOnly) {
-            $hasDelegation = $pengaduan->delegasi()->where('delegated_to', $user->id)->exists();
-            if (!$hasDelegation) {
-                abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
-            }
-        }
-
+        // Auto-clear 'baru' saat staff membuka detail (notification-style)
         if ($isStaff) {
             $this->pengaduanService->markRead($pengaduan, $user->id);
         }
@@ -331,23 +238,12 @@ class PengaduanController extends Controller
         $kategoriLabel = data_get($this->kategoriMetaNew(), $kategoriUtama . '.label')
             ?? ucwords(str_replace('_', ' ', $kategoriUtama));
 
-        // Untuk modal delegasi: daftar dosen yang bisa dipilih
-        $dosenList = [];
-        if ($canReply) {
-            $dosenList = User::whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
-                ->orderBy('name')
-                ->get(['id', 'name']);
-        }
-
-        $pengaduan->load(['delegasi.delegatedBy', 'delegasi.delegatedTo', 'logs.actor', 'delegasiAktif', 'delegasiTerakhir.delegatedTo', 'delegasiTerakhir.delegatedBy']);
+        $pengaduan->load(['logs.actor']);
 
         if ($pengaduan->is_anonim) {
             $pengaduan->setRelation('pelapor', null);
 
-            // Lapis kedua, untuk tiket lama yang terlanjur menyimpan actor pelapor:
-            // panel "Riwayat Tiket" merender "Oleh: {actor->name}" pada SEMUA entri,
-            // sehingga identitas pelapor konfidensial bocor ke staf lewat pintu itu
-            // walaupun blok "Pelapor" sudah bertuliskan "Identitas dilindungi sistem".
+            // Sembunyikan identitas pelapor dari log riwayat tiket
             $pengaduan->logs->each(function ($log) use ($pengaduan) {
                 if ($log->actor_user_id !== null && (int) $log->actor_user_id === (int) $pengaduan->user_id) {
                     $log->setRelation('actor', null);
@@ -361,17 +257,11 @@ class PengaduanController extends Controller
             }
         }
 
-        $isDelegatedToMe = $pengaduan->delegasiAktif && $pengaduan->delegasiAktif->delegated_to === $user->id && $pengaduan->delegasiAktif->status === 'aktif';
-
-        // Referensi delegasi yang ditampilkan di panel:
-        // - delegasiAktif: jika masih berstatus 'aktif' (menunggu respons dosen)
-        // - delegasiTerakhir: digunakan untuk membaca tanggapan dosen setelah delegasi selesai/di-forward
-        $delegasiPanel = $pengaduan->delegasiAktif ?? $pengaduan->delegasiTerakhir;
-
         return view('manajemenmahasiswa::pengaduan.show', compact(
-            'pengaduan', 'isStaff', 'canReply', 'canDelete', 'kategoriLabel', 'dosenList', 'isDelegatedToMe', 'delegasiPanel'
+            'pengaduan', 'isStaff', 'canDelete', 'kategoriLabel'
         ));
     }
+
 
 
     public function destroy(Request $request, Pengaduan $pengaduan)
@@ -400,89 +290,34 @@ class PengaduanController extends Controller
             ->with('success', 'Pengaduan berhasil dihapus.');
     }
 
-    public function delegate(Request $request, Pengaduan $pengaduan)
+    public function toggleTercatat(Request $request, Pengaduan $pengaduan)
     {
         $user = $request->user();
         $this->ensureViewer($user);
-        if (!$this->canReply($user)) {
-            abort(403, 'Anda tidak memiliki akses untuk mendelegasikan pengaduan.');
-        }
-        if ($pengaduan->isSelesai()) {
-            abort(403, 'Tiket sudah ditutup.');
+
+        if (!$this->isStaffViewer($user)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah status pengaduan.');
         }
 
-        $validated = $request->validate([
-            'delegated_to' => ['required', 'integer', 'exists:users,id'],
-            'notes_admin'  => ['required', 'string', 'min:5', 'max:2000'],
-        ]);
-
-        // Dropdown memang hanya berisi dosen, tapi itu validasi sisi klien belaka.
-        // Tanpa cek ini, delegasi ke non-dosen membuat tiket macet permanen:
-        // targetnya tidak akan pernah lolos route respond/reject (role:dosen).
-        $dosen = User::query()
-            ->whereKey($validated['delegated_to'])
-            ->whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
-            ->first();
-
-        if (!$dosen) {
-            return back()
-                ->withErrors(['delegated_to' => 'Tujuan delegasi harus dosen atau dosen koordinator.'])
-                ->withInput();
+        // Toggle: jika sudah tercatat → kembalikan ke dibaca, jika belum → tandai tercatat
+        if ($pengaduan->status === Pengaduan::STATUS_TERCATAT) {
+            $pengaduan->update(['status' => Pengaduan::STATUS_DIBACA]);
+            $message = 'Pengaduan ditandai belum tercatat.';
+        } else {
+            $pengaduan->update(['status' => Pengaduan::STATUS_TERCATAT]);
+            $message = 'Pengaduan ditandai tercatat.';
         }
 
-        // Rambu konflik kepentingan: jangan pernah mendelegasikan aduan kepada
-        // pihak yang justru disebut sebagai terlapor pada field "Dosen Terkait".
-        $terlapor = (string) data_get($pengaduan->data_template, 'nama_dosen', '');
-        if ($this->namaCocok($terlapor, (string) $dosen->name)) {
-            return back()
-                ->withErrors([
-                    'delegated_to' => 'Dosen ini disebut sebagai pihak terkait di dalam aduan. Pilih dosen lain untuk menghindari konflik kepentingan.',
-                ])
-                ->withInput();
+        // Support AJAX request dari checkbox di tabel
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'status' => $pengaduan->status,
+                'message' => $message,
+            ]);
         }
 
-        $this->pengaduanService->delegate(
-            $pengaduan,
-            $user->id,
-            (int) $validated['delegated_to'],
-            $validated['notes_admin']
-        );
-
-        return back()->with('success', 'Pengaduan berhasil didelegasikan.');
-    }
-
-
-    public function closeByAdmin(Request $request, Pengaduan $pengaduan)
-    {
-        $user = $request->user();
-        $this->ensureViewer($user);
-        if (!$this->canReply($user)) {
-            abort(403);
-        }
-        if ($pengaduan->isSelesai()) {
-            return back()->with('info', 'Tiket sudah selesai.');
-        }
-
-        $this->pengaduanService->closeByAdmin($pengaduan, $user->id);
-
-        return back()->with('success', 'Tiket berhasil ditutup.');
-    }
-
-    public function markProses(Request $request, Pengaduan $pengaduan)
-    {
-        $user = $request->user();
-        $this->ensureViewer($user);
-        if (!$this->canReply($user)) {
-            abort(403);
-        }
-
-        if ($pengaduan->status !== Pengaduan::STATUS_BARU) {
-            return back()->with('info', 'Status tiket tidak valid untuk diproses.');
-        }
-
-        $this->pengaduanService->markProses($pengaduan, $user->id);
-
-        return back()->with('success', 'Status tiket berhasil diubah menjadi Diproses.');
+        return back()->with('success', $message);
     }
 
 
@@ -512,13 +347,6 @@ class PengaduanController extends Controller
     {
         return method_exists($user, 'hasAnyRole')
             ? $user->hasAnyRole(self::STAFF_VIEW_ROLES)
-            : false;
-    }
-
-    private function canReply($user): bool
-    {
-        return method_exists($user, 'hasAnyRole')
-            ? $user->hasAnyRole(self::REPLY_ROLES)
             : false;
     }
 
@@ -566,50 +394,5 @@ class PengaduanController extends Controller
             ],
         ];
     }
-
-    // kategoriMetaAll dihapus: hanya 8 kategori utama yang ditampilkan pada UI.
-
-    // Validasi & normalisasi payload pindah ke PengaduanPayloadRequest agar
-    // jalur Reguler dan Konfidensial memakai aturan yang sama persis.
-
-    /**
-     * Pembandingan nama yang toleran terhadap gelar dan tanda baca, dipakai
-     * untuk mendeteksi konflik kepentingan saat delegasi. "Dr. Budi Santoso,
-     * S.T., M.T." dianggap cocok dengan "Budi Santoso".
-     *
-     * Sengaja butuh minimal dua kata yang sama (atau nama yang identik penuh)
-     * supaya nama depan yang umum tidak memblokir delegasi yang sah.
-     */
-    private function namaCocok(string $a, string $b): bool
-    {
-        $gelar = [
-            'dr', 'ir', 'drs', 'dra', 'prof', 'phd', 'st', 'mt', 'mkom', 'skom',
-            'spd', 'mpd', 'msi', 'ssi', 'se', 'mm', 'sh', 'mh', 'kom', 'mem',
-        ];
-
-        $pecah = static function (string $nama) use ($gelar): array {
-            $nama = mb_strtolower($nama);
-            $nama = preg_replace('/[^a-z\s]/', ' ', $nama) ?? '';
-            $kata = preg_split('/\s+/', trim($nama), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-
-            return array_values(array_diff(
-                array_filter($kata, static fn($k) => mb_strlen($k) >= 3),
-                $gelar
-            ));
-        };
-
-        $kataA = $pecah($a);
-        $kataB = $pecah($b);
-
-        if (empty($kataA) || empty($kataB)) {
-            return false;
-        }
-
-        $pendek = count($kataA) <= count($kataB) ? $kataA : $kataB;
-        $panjang = count($kataA) <= count($kataB) ? $kataB : $kataA;
-
-        $semuaCocok = count(array_intersect($pendek, $panjang)) === count($pendek);
-
-        return $semuaCocok && (count($pendek) >= 2 || $kataA === $kataB);
-    }
 }
+
