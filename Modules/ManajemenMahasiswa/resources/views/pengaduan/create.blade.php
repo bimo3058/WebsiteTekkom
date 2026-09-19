@@ -93,7 +93,7 @@
 
     {{-- ── Header ── --}}
     <div class="d-flex align-items-center gap-3 mb-4">
-        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
             <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
             <span class="detail-back-label">Kembali</span>
         </a>
@@ -110,7 +110,7 @@
         </div>
         <div>
             <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Reguler</div>
-            <div class="text-muted" style="font-size: 12px;">Identitas Anda terlihat oleh Admin. <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" style="color: #6b7280;">Ganti jalur</a></div>
+            <div class="text-muted" style="font-size: 12px;">Identitas Anda terlihat oleh Admin. <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" style="color: #6b7280;">Ganti jalur</a></div>
         </div>
     </div>
 

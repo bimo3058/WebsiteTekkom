@@ -125,28 +125,6 @@ class Pengaduan extends Model
         return $this->belongsTo(\App\Models\User::class, 'closed_by');
     }
 
-    public function delegasi(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(PengaduanDelegasi::class, 'pengaduan_id')->orderByDesc('delegated_at');
-    }
-
-    public function delegasiAktif(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(PengaduanDelegasi::class, 'pengaduan_id')
-            ->where('status', 'aktif')
-            ->latestOfMany('delegated_at');
-    }
-
-    /**
-     * Delegasi terakhir (apapun statusnya) — digunakan untuk menampilkan
-     * tanggapan dosen bahkan setelah delegasi di-forward ke mahasiswa.
-     */
-    public function delegasiTerakhir(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(PengaduanDelegasi::class, 'pengaduan_id')
-            ->latestOfMany('delegated_at');
-    }
-
     public function logs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(PengaduanLog::class, 'pengaduan_id')->orderByDesc('created_at');

@@ -332,7 +332,8 @@
                         'ditutup_mahasiswa'  => 'Ditutup',
                         'ditutup_otomatis'   => 'Ditutup Otomatis',
                         'selesai'            => 'Tercatat',
-                        'tercatat'           => 'Tercatat',
+                        'tercatat'           => 'Ditandai Tercatat',
+                        'batal_tercatat'     => 'Tanda Tercatat Dicabut',
                         // Legacy labels — tetap ditampilkan tapi dengan label netral
                         'didelegasikan'      => 'Diteruskan',
                         'ditanggapi_dosen'   => 'Ditanggapi',

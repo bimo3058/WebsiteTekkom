@@ -5,7 +5,6 @@ namespace Modules\ManajemenMahasiswa\Services;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
-use Modules\ManajemenMahasiswa\Models\PengaduanDelegasi;
 use Modules\ManajemenMahasiswa\Models\PengaduanLog;
 
 class PengaduanService
@@ -56,121 +55,26 @@ class PengaduanService
 
     // ── Lifecycle: Admin ───────────────────────────────────────────────────
 
+    /**
+     * Staff membuka detail. Notification-style: status 'baru' berubah menjadi
+     * 'dibaca' (dot biru di tabel hilang). Status lain tidak diturunkan.
+     */
     public function markRead(Pengaduan $pengaduan, int $readerUserId): void
     {
-        if ($pengaduan->read_at) {
-            return;
+        $pertamaDibuka = !$pengaduan->read_at;
+
+        $pengaduan->forceFill([
+            'status'  => $pengaduan->status === Pengaduan::STATUS_BARU
+                ? Pengaduan::STATUS_DIBACA
+                : $pengaduan->status,
+            'read_at' => $pengaduan->read_at ?? now(),
+            'read_by' => $pengaduan->read_by ?? $readerUserId,
+        ])->save();
+
+        if ($pertamaDibuka) {
+            $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
         }
-
-        $pengaduan->forceFill([
-            'read_at' => now(),
-            'read_by' => $readerUserId,
-        ])->save();
-
-        $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
     }
-
-    public function markProses(Pengaduan $pengaduan, int $adminId): void
-    {
-        $pengaduan->forceFill([
-            'status' => Pengaduan::STATUS_DIBACA,
-        ])->save();
-
-        $this->logAction($pengaduan, $adminId, 'diproses');
-    }
-
-
-    /**
-     * Admin mendelegasikan ke dosen.
-     */
-    public function delegate(Pengaduan $pengaduan, int $adminId, int $dosenId, string $notesAdmin): PengaduanDelegasi
-    {
-        // Tutup delegasi aktif sebelumnya jika ada (re-delegate)
-        $pengaduan->delegasiAktif?->forceFill(['status' => PengaduanDelegasi::STATUS_DITOLAK])->save();
-
-        $delegasi = PengaduanDelegasi::create([
-            'pengaduan_id'  => $pengaduan->id,
-            'delegated_by'  => $adminId,
-            'delegated_to'  => $dosenId,
-            'notes_admin'   => $notesAdmin,
-            'status'        => PengaduanDelegasi::STATUS_AKTIF,
-            'delegated_at'  => now(),
-        ]);
-
-        $pengaduan->forceFill(['status' => Pengaduan::STATUS_DIDELEGASIKAN])->save();
-
-        $this->logAction($pengaduan, $adminId, PengaduanLog::ACTION_DIDELEGASIKAN, $notesAdmin);
-
-        return $delegasi;
-    }
-
-
-
-    /**
-     * Admin menutup tiket secara paksa.
-     */
-    public function closeByAdmin(Pengaduan $pengaduan, int $adminId): void
-    {
-        $pengaduan->forceFill([
-            'status'    => Pengaduan::STATUS_SELESAI,
-            'closed_at' => now(),
-            'closed_by' => $adminId,
-        ])->save();
-
-        $this->logAction($pengaduan, $adminId, PengaduanLog::ACTION_DITUTUP_ADMIN);
-    }
-
-    // ── Lifecycle: Dosen ───────────────────────────────────────────────────
-
-    /**
-     * Dosen menyelesaikan tugas delegasi dan menutup pengaduan.
-     */
-    public function dosenRespond(PengaduanDelegasi $delegasi, ?string $notesBalik): void
-    {
-        $delegasi->forceFill([
-            'notes_balik'  => $notesBalik,
-            'status'       => PengaduanDelegasi::STATUS_DITANGGAPI,
-            'responded_at' => now(),
-        ])->save();
-
-        $delegasi->pengaduan->forceFill([
-            'status'    => Pengaduan::STATUS_SELESAI,
-            'closed_at' => now(),
-            'closed_by' => $delegasi->delegated_to,
-        ])->save();
-
-        $this->logAction(
-            $delegasi->pengaduan,
-            $delegasi->delegated_to,
-            PengaduanLog::ACTION_DITANGGAPI_DOSEN,
-            $notesBalik
-        );
-    }
-
-    /**
-     * Dosen menolak delegasi — tiket dikembalikan ke admin (status: dibaca).
-     */
-    public function dosenReject(PengaduanDelegasi $delegasi, string $alasanTolak): void
-    {
-        $delegasi->forceFill([
-            'alasan_tolak' => $alasanTolak,
-            'status'       => PengaduanDelegasi::STATUS_DITOLAK,
-            'responded_at' => now(),
-        ])->save();
-
-        $delegasi->pengaduan->forceFill([
-            'status' => Pengaduan::STATUS_DIBACA,
-        ])->save();
-
-        $this->logAction(
-            $delegasi->pengaduan,
-            $delegasi->delegated_to,
-            PengaduanLog::ACTION_DITOLAK_DOSEN,
-            $alasanTolak
-        );
-    }
-
-
 
     // ── Internal helper ───────────────────────────────────────────────────
 

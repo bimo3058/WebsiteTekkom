@@ -83,7 +83,7 @@
             <h4>Form Pengaduan Konfidensial</h4>
             <p>Identitas Anda tidak akan ditampilkan kepada publik maupun admin.</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
             <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
             <span class="detail-back-label">Kembali</span>
         </a>
@@ -227,7 +227,7 @@
         </div>
 
         <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
-            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">Batal</a>
+            <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="btn-back">Batal</a>
             <button type="submit" class="btn-post" style="width: auto;">Lanjut Konfirmasi</button>
         </div>
     </form>

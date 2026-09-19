@@ -43,12 +43,20 @@ class AnonPengaduanController extends Controller
             ]);
         }
 
+        // Modal pemilih jalur meminta JSON dan menampilkan tautannya di tempat;
+        // halaman init tetap menjadi cadangan bila JavaScript tidak jalan.
+        if ($request->expectsJson()) {
+            return response()->json([
+                'url' => route('manajemenmahasiswa.pengaduan.track', ['token' => $pengaduan->anon_token]),
+            ]);
+        }
+
         return view('manajemenmahasiswa::pengaduan.anon.init', compact('pengaduan'));
     }
 
     private function ensureMahasiswa($user): void
     {
-        if (!$user || !method_exists($user, 'hasAnyRole') || !$user->hasAnyRole(['mahasiswa'])) {
+        if (!$user || !method_exists($user, 'hasAnyRole') || !$user->hasAnyRole(PengaduanController::PELAPOR_ROLES)) {
             abort(403, 'Hanya mahasiswa yang dapat membuat pengaduan.');
         }
     }
@@ -58,7 +66,7 @@ class AnonPengaduanController extends Controller
      */
     public function track(Request $request, $token)
     {
-        $pengaduan = Pengaduan::with(['logs.actor', 'delegasiAktif.delegatedTo', 'delegasiTerakhir'])
+        $pengaduan = Pengaduan::with(['logs.actor'])
             ->where('anon_token', $token)
             ->firstOrFail();
 

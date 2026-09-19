@@ -3,6 +3,7 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\ManajemenMahasiswa\Http\Requests\PengaduanPayloadRequest;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
@@ -12,8 +13,26 @@ use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PengaduanController extends Controller
 {
+    /**
+     * Role yang berstatus mahasiswa dan boleh membuat pengaduan. Pengurus
+     * himpunan tetap mahasiswa; harus sama dengan whitelist route pembuatan.
+     */
+    public const PELAPOR_ROLES = [
+        'mahasiswa',
+        'pengurus_himpunan',
+        'ketua_himpunan',
+        'ketua_bidang',
+        'ketua_unit',
+        'staff_himpunan',
+    ];
+
     private const VIEWER_ROLES = [
         'mahasiswa',
+        'pengurus_himpunan',
+        'ketua_himpunan',
+        'ketua_bidang',
+        'ketua_unit',
+        'staff_himpunan',
         'gpm',
         'kaprodi',
         'dpm',
@@ -58,12 +77,13 @@ class PengaduanController extends Controller
 
         $isStaff = $this->isStaffViewer($user);
 
-        $canCreate = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['mahasiswa']);
+        $canCreate = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(self::PELAPOR_ROLES);
         $canDelete = $this->canDelete($user);
 
         $filters = [
             'q' => trim((string)$request->query('q', '')),
             'kategori' => (string)$request->query('kategori', ''),
+            'sort' => $request->query('sort') === 'terlama' ? 'terlama' : 'terbaru',
         ];
 
         $allowedKategori = Pengaduan::KATEGORI_LIST;
@@ -106,8 +126,11 @@ class PengaduanController extends Controller
             ->where('status', Pengaduan::STATUS_BARU)
             ->count();
 
+        $arah = $filters['sort'] === 'terlama' ? 'asc' : 'desc';
+
         $pengaduan = $query
-            ->orderByDesc('created_at')
+            ->orderBy('created_at', $arah)
+            ->orderBy('id', $arah)
             ->paginate(PerPage::resolve($request))
             ->withQueryString();
 
@@ -131,12 +154,15 @@ class PengaduanController extends Controller
     }
 
 
+    /**
+     * Pemilih jalur kini berupa modal di halaman daftar. URL lama dialihkan ke
+     * sana supaya tautan/bookmark lama tetap bekerja.
+     */
     public function jalur(Request $request)
     {
-        $user = $request->user();
-        $this->ensureMahasiswa($user);
+        $this->ensureMahasiswa($request->user());
 
-        return view('manajemenmahasiswa::pengaduan.jalur');
+        return redirect()->route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]);
     }
 
     public function create(Request $request)
@@ -146,16 +172,9 @@ class PengaduanController extends Controller
         $this->ensureMahasiswa($user);
 
         // Form ini khusus jalur Reguler. Jalur Konfidensial memakai alur
-        // magic link terpisah yang dimulai dari halaman pemilih jalur.
-        $jalur = $request->query('jalur');
-        if ($jalur === 'konfidensial') {
-            // anon.generate kini POST (karena menulis draft ke database), jadi
-            // tidak bisa dituju lewat redirect GET. Kembalikan ke pemilih jalur
-            // yang memuat tombol POST-nya.
-            return redirect()->route('manajemenmahasiswa.pengaduan.jalur');
-        }
-        if ($jalur !== 'reguler') {
-            return redirect()->route('manajemenmahasiswa.pengaduan.jalur');
+        // magic link terpisah yang dimulai dari modal pemilih jalur.
+        if ($request->query('jalur') !== 'reguler') {
+            return redirect()->route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]);
         }
 
         $isStaff = false;
@@ -303,9 +322,11 @@ class PengaduanController extends Controller
         // Toggle: jika sudah tercatat → kembalikan ke dibaca, jika belum → tandai tercatat
         if ($pengaduan->status === Pengaduan::STATUS_TERCATAT) {
             $pengaduan->update(['status' => Pengaduan::STATUS_DIBACA]);
+            $this->pengaduanService->logAction($pengaduan, $user->id, PengaduanLog::ACTION_BATAL_TERCATAT);
             $message = 'Pengaduan ditandai belum tercatat.';
         } else {
             $pengaduan->update(['status' => Pengaduan::STATUS_TERCATAT]);
+            $this->pengaduanService->logAction($pengaduan, $user->id, PengaduanLog::ACTION_TERCATAT);
             $message = 'Pengaduan ditandai tercatat.';
         }
 
@@ -339,7 +360,7 @@ class PengaduanController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk membuat pengaduan.');
         }
 
-        if (!method_exists($user, 'hasAnyRole') || !$user->hasAnyRole(['mahasiswa'])) {
+        if (!method_exists($user, 'hasAnyRole') || !$user->hasAnyRole(self::PELAPOR_ROLES)) {
             abort(403, 'Hanya mahasiswa yang dapat membuat pengaduan.');
         }
     }
