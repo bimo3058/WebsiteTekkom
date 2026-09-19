@@ -38,7 +38,7 @@
         <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
 
             <!-- Topbar -->
-            <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 z-10">
+            <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 relative z-50">
                 <div class="flex items-center text-sm font-medium text-slate-600">
                     <span class="mr-2">SIBASO</span>
                     @hasSection('breadcrumbs')

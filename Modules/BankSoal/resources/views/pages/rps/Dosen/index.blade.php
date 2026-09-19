@@ -7,6 +7,32 @@
 
     <link rel="stylesheet" href="{{ asset('css/banksoal-ui.css') }}">
     <style>
+        .br-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: visible;
+            width: 100%;
+        }
+        .br-box-header {
+            background: #fff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 16px 24px;
+            border-radius: 12px 12px 0 0;
+        }
+        .br-box-body {
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        @media (max-width: 767px) {
+            .br-box-header { padding: 12px 14px; }
+            .br-box-body   { padding: 14px; }
+        }
+    </style>
+    <style>
         .controls-section {
             padding: 12px 14px;
             border: 1px solid #e2e8f0;
@@ -227,53 +253,68 @@
 
     <x-banksoal::notification.alerts />
 
-    <x-banksoal::ui.page-header title="Manajemen RPS" subtitle="Lengkapi data rencana pembelajaran semester dan unggah dokumen pendukung." />
+    <div class="br-box">
 
-    <x-banksoal::ui.status-banner
-        :activePeriode="$activePeriode ?? null"
-        :isUploadOpen="$isUploadOpen ?? false"
-        :tenggatH7="$tenggatH7 ?? false"
-        :unsubmittedMk="$unsubmittedMk ?? []"
-        :daysLeft="$daysLeft ?? 0"
-        :isHourFormat="$isHourFormat ?? false"
-    />
+        {{-- Header Box --}}
+        <div class="br-box-header">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                    <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">Manajemen RPS</h1>
+                    <p class="mt-1 text-sm text-slate-600">Lengkapi data rencana pembelajaran semester dan unggah dokumen pendukung.</p>
+                </div>
+                <div>
+                    @if(!($isUploadOpen ?? false))
+                    <button
+                        type="button"
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+                        disabled
+                        title="Periode upload RPS saat ini tidak aktif"
+                    >
+                        <i class="fas fa-plus"></i> Ajukan RPS
+                    </button>
+                    @else
+                    <a
+                        href="{{ route('banksoal.rps.dosen.create') }}"
+                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                        title="Ajukan RPS baru"
+                    >
+                        <i class="fas fa-plus"></i> Ajukan RPS
+                    </a>
+                    @endif
+                </div>
+            </div>
+        </div>
 
-    <div class="mb-6 flex items-center justify-end">
-        @if(!($isUploadOpen ?? false))
-        <button
-            type="button"
-            class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-            disabled
-            title="Periode upload RPS saat ini tidak aktif"
-        >
-            <i class="fas fa-plus"></i> Ajukan RPS
-        </button>
-        @else
-        <a
-            href="{{ route('banksoal.rps.dosen.create') }}"
-            class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
-            title="Ajukan RPS baru"
-        >
-            <i class="fas fa-plus"></i> Ajukan RPS
-        </a>
-        @endif
-    </div>
+        {{-- Body --}}
+        <div class="br-box-body">
 
-    <div id="riwayatPengajuanContainer">
-        <x-banksoal::ui.riwayat-rps :riwayat="$riwayat" />
-    </div>
+            <x-banksoal::ui.status-banner
+                :activePeriode="$activePeriode ?? null"
+                :isUploadOpen="$isUploadOpen ?? false"
+                :tenggatH7="$tenggatH7 ?? false"
+                :unsubmittedMk="$unsubmittedMk ?? []"
+                :daysLeft="$daysLeft ?? 0"
+                :isHourFormat="$isHourFormat ?? false"
+            />
 
-    <div id="rpsRiwayatEmptyState" class="empty-state" style="display:none;">
-        Tidak ada riwayat pengajuan RPS yang sesuai dengan pencarian mata kuliah.
-    </div>
+            <div id="riwayatPengajuanContainer">
+                <x-banksoal::ui.riwayat-rps :riwayat="$riwayat" />
+            </div>
 
-    <div id="rpsPagination" class="pagination-section" style="display:none;">
-        <div id="rpsPaginationList" class="pagination-list"></div>
-    </div>
+            <div id="rpsRiwayatEmptyState" class="empty-state" style="display:none;">
+                Tidak ada riwayat pengajuan RPS yang sesuai dengan pencarian mata kuliah.
+            </div>
 
-    <div class="mt-8">
-        <x-banksoal::ui.riwayat-rps-disetujui :riwayatMkDisetujui="$riwayatMkDisetujui" />
-    </div>
+            <div id="rpsPagination" class="pagination-section" style="display:none;">
+                <div id="rpsPaginationList" class="pagination-list"></div>
+            </div>
+
+            <div>
+                <x-banksoal::ui.riwayat-rps-disetujui :riwayatMkDisetujui="$riwayatMkDisetujui" />
+            </div>
+
+        </div>{{-- end .br-box-body --}}
+    </div>{{-- end .br-box --}}
 
     <!-- Modal Ajukan RPS Baru -->
     <div id="rpsUploadModal" data-has-validation-errors="{{ $errors->any() ? '1' : '0' }}" class="fixed inset-0 bg-black/70 z-50 items-start justify-center overflow-y-auto hidden">

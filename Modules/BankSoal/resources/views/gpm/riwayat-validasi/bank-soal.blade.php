@@ -59,7 +59,26 @@
                                 <div class="font-semibold text-slate-900">{{ $riwayat->mk_nama }}</div>
                                 <div class="text-xs text-slate-500">{{ $riwayat->mk_kode }}</div>
                             </td>
-                            <td class="px-6 py-4 text-sm text-slate-600">Dosen Pengampu</td>
+                            <td class="px-6 py-4">
+                                @php
+                                    $dosenPengampu = collect(explode('|||', (string) ($riwayat->dosen_pengampu ?? '')))
+                                        ->map(fn ($nama) => trim($nama))
+                                        ->filter()
+                                        ->values();
+                                @endphp
+                                <div class="flex flex-col gap-2">
+                                    @forelse($dosenPengampu as $namaDosen)
+                                        <div class="flex items-center gap-2">
+                                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                                                {{ strtoupper(substr($namaDosen, 0, 2)) }}
+                                            </div>
+                                            <span class="text-sm font-medium text-slate-700">{{ $namaDosen }}</span>
+                                        </div>
+                                    @empty
+                                        <span class="text-xs text-slate-500">-</span>
+                                    @endforelse
+                                </div>
+                            </td>
                             <td class="px-6 py-4 text-sm text-slate-600">{{ $riwayat->jumlah_soal }} Butir Direview</td>
                             <td class="px-6 py-4 text-sm text-slate-600">
                                 {{ $riwayat->tanggal_review ? \Carbon\Carbon::parse($riwayat->tanggal_review)->format('d M Y') : '-' }}
