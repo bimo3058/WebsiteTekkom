@@ -96,7 +96,7 @@ class Prestasi extends Model
 
     const CLAIM_LABELS = [
         self::CLAIM_BELUM_AJUKAN => 'Belum diajukan',
-        self::CLAIM_DIAJUKAN     => 'Menunggu persetujuan',
+        self::CLAIM_DIAJUKAN     => 'Menunggu Review',
         self::CLAIM_DISETUJUI    => 'Disetujui',
         self::CLAIM_DITOLAK      => 'Ditolak',
     ];

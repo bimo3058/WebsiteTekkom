@@ -304,7 +304,6 @@ class DirektoriAlumniController extends Controller
                     'angkatan' => $km?->angkatan ?? $student?->cohort_year ?? date('Y'),
                     'tahun_lulus' => $km?->tahun_lulus ?? (int) date('Y'),
                     'program_studi' => 'S1 Teknik Komputer',
-                    'ipk' => $km?->ipk,
                 ]);
 
                 // Sekaligus pastikan status km juga konsisten
@@ -326,15 +325,6 @@ class DirektoriAlumniController extends Controller
                     ->where('status', Kemahasiswaan::STATUS_ALUMNI)
                     ->update(['status' => Kemahasiswaan::STATUS_AKTIF]);
                 $changed = true;
-            }
-
-            // 3. Sinkronisasi IPK: untuk semua alumni yang sudah ada, pastikan IPK sesuai dengan mk_kemahasiswaan
-            $alumniRecords = Alumni::whereIn('user_id', $alumniUserIds)->get();
-            foreach ($alumniRecords as $alumniRecord) {
-                $km = Kemahasiswaan::where('user_id', $alumniRecord->user_id)->first();
-                if ($km && $km->ipk !== null && (string) $alumniRecord->ipk !== (string) $km->ipk) {
-                    $alumniRecord->update(['ipk' => $km->ipk]);
-                }
             }
 
             if ($changed) {
@@ -435,8 +425,6 @@ class DirektoriAlumniController extends Controller
             $isAdmin         = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
             $canSeeHistory   = $this->canSeeHistory();
             $canManageHistory = $this->canManageHistory();
-            // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
-            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
             // Role yang boleh mengunduh CV alumni — sumber kebenarannya CvProfilePolicy,
             // sama dengan gerbang route dan Policy di generateCv().
             $canDownloadCv = $this->hasRole(...\App\Policies\CvProfilePolicy::PENGELOLA_CV);
@@ -449,7 +437,6 @@ class DirektoriAlumniController extends Controller
                 'isAdmin',
                 'canSeeHistory',
                 'canManageHistory',
-                'isCanSeeIpk',
                 'canDownloadCv',
             ))->with('layout', $this->resolveLayout());
 
@@ -481,7 +468,6 @@ class DirektoriAlumniController extends Controller
                         'angkatan' => $mhs->angkatan,
                         'tahun_lulus' => $mhs->tahun_lulus ?? date('Y'),
                         'program_studi' => 'Teknik Komputer',
-                        'ipk' => $mhs->ipk,
                     ]));
                 } else {
                     return back()->with('error', 'Akses ditolak. Anda belum terdaftar sebagai alumni.');
@@ -545,12 +531,7 @@ class DirektoriAlumniController extends Controller
                 ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
         }
 
-        // IPK = data sensitif. Samakan gating dengan halaman show: hanya admin group/GPM/DPM/Dosen.
-        // (Route edit sudah dibatasi admin group sehingga flag ini selalu true utk editor saat ini,
-        //  namun tetap digating agar konsisten & aman bila akses edit kelak diperluas.)
-        $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
-
-        return view('manajemenmahasiswa::direktori.alumni-edit', compact('alumni', 'isCanSeeIpk'))
+        return view('manajemenmahasiswa::direktori.alumni-edit', compact('alumni'))
             ->with('layout', $this->resolveLayout());
     }
 
@@ -563,7 +544,6 @@ class DirektoriAlumniController extends Controller
         $validated = $request->validate([
             'tahun_lulus' => 'required|integer|min:2000|max:2099',
             'program_studi' => 'nullable|string|max:255',
-            'ipk' => 'nullable|numeric|min:0|max:4',
             'status_karir' => 'nullable|string|in:' . implode(',', Alumni::STATUS_LIST),
             'perusahaan' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
@@ -576,12 +556,6 @@ class DirektoriAlumniController extends Controller
         // Email pribadi disimpan di tabel users (bukan kolom mk_alumni) — pisahkan dari payload alumni.
         $personalEmail = $validated['personal_email'] ?? null;
         unset($validated['personal_email']);
-
-        // IPK = data sensitif. Hanya role tertentu yang boleh mengubahnya (samakan gating dgn halaman show).
-        $canEditIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
-        if (!$canEditIpk) {
-            unset($validated['ipk']);
-        }
 
         try {
             $alumni = $this->withRetry(fn() => $this->alumniService->update($id, $validated));
@@ -621,13 +595,6 @@ class DirektoriAlumniController extends Controller
                 if ($userModel) {
                     $userModel->updateQuietly(['personal_email' => $personalEmail]);
                 }
-            }
-
-            // Write-through IPK ke mk_kemahasiswaan (sumber utama IPK) agar perubahan tidak ketimpa
-            // oleh auto-sync di halaman index. Hanya jika role berhak & field IPK memang dikirim.
-            if ($canEditIpk && array_key_exists('ipk', $validated)) {
-                \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $alumni->user_id)
-                    ->update(['ipk' => $validated['ipk']]);
             }
 
         } catch (\Throwable $e) {

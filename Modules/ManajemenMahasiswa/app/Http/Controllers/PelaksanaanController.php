@@ -17,6 +17,7 @@ use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PelaksanaanController extends Controller
 {
@@ -39,8 +40,6 @@ class PelaksanaanController extends Controller
         // Ikut menghitung kegiatan yang kolom `tahun`-nya belum terisi lewat
         // tanggal mulainya — lihat Kegiatan::daftarTahun().
         $tahunList = Kegiatan::daftarTahun(Kegiatan::STATUS_DISETUJUI);
-        // Opsi "Belum ada tanggal" hanya dirender bila memang ada isinya.
-        $adaTanpaTahun = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->tanpaTahun()->exists();
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -85,11 +84,11 @@ class PelaksanaanController extends Controller
             });
         }
 
-        $pelaksanaanList = $query->paginate(12);
+        $pelaksanaanList = $query->paginate(PerPage::resolve($request, PerPage::KARTU, 12));
 
 
         return view('manajemenmahasiswa::pelaksanaan.index', compact(
-            'pelaksanaanList', 'bidangList', 'tahunList', 'adaTanpaTahun',
+            'pelaksanaanList', 'bidangList', 'tahunList',
             'isAdmin', 'isPengurus', 'canManage'
         ));
     }

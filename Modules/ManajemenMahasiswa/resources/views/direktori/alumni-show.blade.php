@@ -195,12 +195,6 @@
                     <span class="detail-label">Tahun Lulus</span>
                     <span class="detail-value">{{ $alumni->tahun_lulus }}</span>
                 </div>
-                @if($isCanSeeIpk && $alumni->ipk !== null)
-                <div class="detail-row">
-                    <span class="detail-label">IPK</span>
-                    <span class="detail-value">{{ number_format($alumni->ipk, 2) }}</span>
-                </div>
-                @endif
                 <div class="detail-row">
                     <span class="detail-label">WhatsApp / Telepon</span>
                     <span class="detail-value {{ empty($alumni->user->whatsapp) ? 'empty' : '' }}">{{ $alumni->user->whatsapp ?? 'Belum diisi' }}</span>

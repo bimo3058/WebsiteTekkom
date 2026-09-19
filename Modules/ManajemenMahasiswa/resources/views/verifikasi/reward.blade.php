@@ -12,16 +12,18 @@
     .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
     /* Sama seperti Verifikasi Prestasi: kartu hanya menampilkan angka, filternya
        ada di dropdown status pada baris filter di bawahnya. */
-    .admin-stat-card { background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
+    /* Warna status memakai token yang sama dengan Verifikasi Prestasi & Kegiatan
+       (admin.blade.php) — jangan diberi hex sendiri, nanti melenceng lagi. */
+    .admin-stat-card { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
     .admin-stat-card .stat-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .admin-stat-card .stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 1px; }
-    .admin-stat-card .stat-lbl { font-size: .78rem; color: #666D80; font-weight: 500; }
-    .admin-stat-card.pending .stat-icon { background: #FFFBEB; color: #d97706; }
-    .admin-stat-card.pending .stat-num { color: #d97706; }
-    .admin-stat-card.approved .stat-icon { background: #ECFDF5; color: #059669; }
-    .admin-stat-card.approved .stat-num { color: #059669; }
-    .admin-stat-card.rejected .stat-icon { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
-    .admin-stat-card.rejected .stat-num { color: var(--c-error, #dc2626); }
+    .admin-stat-card .stat-lbl { font-size: .78rem; color: var(--c-fg-muted); font-weight: 500; }
+    .admin-stat-card.pending .stat-icon { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .admin-stat-card.pending .stat-num { color: var(--c-warning); }
+    .admin-stat-card.approved .stat-icon { background: var(--c-success-subtle); color: var(--c-success); }
+    .admin-stat-card.approved .stat-num { color: var(--c-success); }
+    .admin-stat-card.rejected .stat-icon { background: var(--c-error-subtle); color: var(--c-error); }
+    .admin-stat-card.rejected .stat-num { color: var(--c-error); }
     .filter-chip {
         padding: 7px 16px; border-radius: 8px; border: 1px solid #DFE1E7;
         background: #fff; color: #666D80; font-size: .82rem; font-weight: 600;
@@ -34,43 +36,38 @@
     .filter-chip.active .tab-badge { background: #fff; color: #0B266E; }
     .tab-badge.zero { background: #f3f4f6; color: #666D80; }
 
-    .filter-select-custom { padding: 0 14px; border-radius: 8px; border: 1px solid #DFE1E7; background: #fff; color: #374151; font-size: .82rem; font-weight: 600; outline: none; height: 34px; min-width: 122px; flex: 0 0 auto; transition: all .2s; }
-    .filter-select-custom[name="angkatan"] { min-width: 142px; }
-    .filter-select-custom:focus { border-color: #0B266E; box-shadow: 0 0 0 3px rgba(11,38,110,.1); }
-    .filter-controls { flex-wrap: wrap; flex-shrink: 0; }
-    .search-wrapper { position: relative; flex-grow: 1; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #666D80; }
-    .search-input { background-color: #fff; border: 1px solid #DFE1E7; border-radius: 8px; height: 34px; padding-left: 36px; font-size: .85rem; font-weight: 500; width: 100%; color: #374151; }
+    .search-input { background-color: #fff; border: 1px solid #DFE1E7; border-radius: 8px; height: 34px; padding-left: 36px; font-size: .85rem; font-weight: 500; width: 100%; color: var(--c-fg); }
     .search-input:focus { background-color: #fff; border-color: #0B266E; box-shadow: 0 0 0 3px rgba(11,38,110,.1); outline: none; }
 
-    .form-card { background: #fff; border-radius: 14px; padding: 22px 24px; border: 1px solid #DFE1E7; margin-bottom: 18px; }
-
     .verif-table { width: 100%; border-collapse: collapse; }
-    .verif-table thead th { font-size: 11px; font-weight: 600; color: #666D80; padding: 11px 12px; text-align: left; background: #FAFAFA; border-bottom: 1px solid #DFE1E7; white-space: nowrap; }
-    .verif-table tbody td { padding: 11px 12px; font-size: .87rem; color: #374151; border-bottom: 1px solid #f9fafb; vertical-align: middle; }
+    /* Header, garis antar baris, dan warna teks sel disamakan dengan tabel di
+       Verifikasi Prestasi & Kegiatan (admin.blade.php). */
+    .verif-table thead th { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); padding: 11px 12px; text-align: left; background: var(--c-bg); border-bottom: 1px solid var(--c-border); white-space: nowrap; }
+    .verif-table tbody td { padding: 11px 12px; font-size: .87rem; color: var(--c-fg); border-bottom: 1px solid var(--c-border); vertical-align: middle; }
     .verif-table tbody tr:last-child td { border-bottom: none; }
-    .verif-table tbody tr:hover td { background: #fafafa; }
+    .verif-table tbody tr:hover td { background: #FAFAFA; }
 
     .tingkat-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase; }
-    .tingkat-badge.internasional { background: #FFFBEB; color: #92400e; }
-    .tingkat-badge.nasional { background: #dbeafe; color: #1e40af; }
-    .tingkat-badge.regional { background: #f3e8ff; color: #7c3aed; }
-    .tingkat-badge.universitas { background: #ECFDF5; color: #059669; }
-    .tingkat-badge.prodi { background: #eef2ff; color: #0B266E; }
+    /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
+       di kolom sebelahnya, sehingga keduanya tampak sama. */
+    .tingkat-badge.internasional { background: var(--c-primary); color: #fff; }
+    .tingkat-badge.nasional { background: var(--c-primary-subtle); color: var(--c-primary); }
+    .tingkat-badge.regional { background: var(--c-sky-subtle); color: var(--c-sky); }
+    .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
+    .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
 
     .claim-badge { font-size: .73rem; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
-    .claim-badge.belum { background: #f3f4f6; color: #666D80; }
-    .claim-badge.diajukan { background: #dbeafe; color: #1e40af; }
-    .claim-badge.disetujui { background: #ECFDF5; color: #059669; }
-    .claim-badge.ditolak { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
-    .reward-mini { font-size: .72rem; color: #666D80; margin-top: 4px; max-width: 220px; line-height: 1.4; }
+    .claim-badge.belum { background: var(--c-bg); color: var(--c-fg-muted); }
+    .claim-badge.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
+    .claim-badge.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
+    .reward-mini { font-size: .72rem; color: var(--c-fg-muted); margin-top: 4px; max-width: 220px; line-height: 1.4; }
 
-    .btn-batal-reward { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 5px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s; }
-    .btn-batal-reward:hover { background: #fee2e2; border-color: #fca5a5; }
     .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .73rem; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
-    .detail-status-pill.disetujui { background: #ECFDF5; color: #059669; }
-    .detail-status-pill.ditolak { background: var(--c-error-subtle, #fef2f2); color: var(--c-error, #dc2626); }
-    .detail-status-pill.diajukan { background: #dbeafe; color: #1e40af; }
+    .detail-status-pill.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
+    .detail-status-pill.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
+    .detail-status-pill.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
 
     /* MK pilihan mahasiswa (read-only) */
     .mk-by-mhs { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 2px 8px; margin-left: 4px; }
@@ -110,18 +107,19 @@
 </style>
 
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
+@include('manajemenmahasiswa::partials.filter-popover')
 
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -155,7 +153,7 @@
         </div>
         <div>
             <div class="stat-num">{{ $rewardStats['menunggu'] }}</div>
-            <div class="stat-lbl">Menunggu</div>
+            <div class="stat-lbl">Menunggu Review</div>
         </div>
     </div>
     <div class="admin-stat-card approved">
@@ -178,37 +176,99 @@
     </div>
 </div>
 
-<!-- Filter Area -->
-<form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}" id="filterForm">
-    <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
-        <div class="search-wrapper w-100 me-0 me-md-2">
-            <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
-            <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari nama, NIM, prestasi, tingkat..." value="{{ request('search') }}">
-        </div>
-        <div class="d-flex gap-3 filter-controls">
-            <!-- Status Klaim — pengganti kartu statistik yang dulu bisa diklik -->
-            <select name="reward" class="form-select border-1 filter-select-custom" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua" {{ $reward === 'semua' ? 'selected' : '' }}>Semua Status</option>
-                <option value="menunggu" {{ $reward === 'menunggu' ? 'selected' : '' }}>Menunggu</option>
-                <option value="disetujui" {{ $reward === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
-                <option value="ditolak" {{ $reward === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-            </select>
-            <select name="angkatan" class="form-select border-1 filter-select-custom" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Angkatan</option>
-                @foreach($angkatanList as $a)
-                    <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
-                @endforeach
-            </select>
-        </div>
+<!-- Main Table Card (Global Style) — disamakan dengan Verifikasi Prestasi & Kegiatan -->
+<div class="filter-pop-host" style="background:var(--c-card, #fff); border:1px solid var(--c-border, #DFE1E7); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
+
+    <!-- Table Toolbar -->
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border, #DFE1E7); gap:10px; flex-wrap:wrap;">
+        <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0; flex-shrink:0;">Klaim Reward</h2>
+
+        <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}" id="filterForm"
+              style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
+            {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+            @if(request()->filled('per_page'))
+                <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+            @endif
+            <div style="position:relative; width:min(240px, calc(100vw - 200px)); min-width:120px;">
+                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari nama, NIM, prestasi, tingkat..." value="{{ request('search') }}">
+            </div>
+            {{-- Status Klaim & Angkatan dikumpulkan dalam satu panel, sama dengan panel
+                 "Advanced Filters" tabel Audit Log global (partials/filter-popover).
+                 Titik di tombol Filter menyala bila ada dropdown yang sedang menyaring —
+                 termasuk "Menunggu Review" yang jadi tampilan bawaan. --}}
+            @php
+                $filterRewardAktif   = $reward !== 'semua';
+                $filterAngkatanAktif = filled($angkatan) && $angkatan !== 'semua';
+                $adaFilterApaPun     = $filterAngkatanAktif || request()->filled('search') || $reward !== 'menunggu';
+            @endphp
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height: 1;">Filter</span>
+                    @if($filterRewardAktif || $filterAngkatanAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
+
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;"
+                     @click="filterOpen = false"></div>
+
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <!-- Status Klaim — pengganti kartu statistik yang dulu bisa diklik -->
+                        <div>
+                            <label class="filter-pop-label" for="filterReward">Status</label>
+                            <select name="reward" id="filterReward" class="filter-pop-select">
+                                <option value="semua" {{ $reward === 'semua' ? 'selected' : '' }}>Semua Status</option>
+                                <option value="menunggu" {{ $reward === 'menunggu' ? 'selected' : '' }}>Menunggu Review</option>
+                                <option value="disetujui" {{ $reward === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+                                <option value="ditolak" {{ $reward === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
+                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                                <option value="semua">Semua Angkatan</option>
+                                @foreach($angkatanList as $a)
+                                    <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilterApaPun)
+                                {{-- Reset kembali ke tampilan bawaan (Menunggu Review), bukan "semua status". --}}
+                                <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
     </div>
-</form>
 
 @if($rewardData->count() > 0)
-    <div class="form-card p-0" style="overflow-x: auto;">
+    <div style="overflow-x: auto;">
         <table class="verif-table">
             <thead>
                 <tr>
-                    <th>#</th>
+                    <th>No</th>
                     <th>Mahasiswa</th>
                     <th>NIM</th>
                     <th>Nama Prestasi</th>
@@ -270,7 +330,7 @@
                             @if($p->reward_status === $P::CLAIM_DISETUJUI)
                                 <span class="claim-badge disetujui">Disetujui</span>
                             @elseif($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                <span class="claim-badge diajukan">Menunggu</span>
+                                <span class="claim-badge diajukan">Menunggu Review</span>
                             @elseif($p->reward_status === $P::CLAIM_DITOLAK)
                                 <span class="claim-badge ditolak">Ditolak</span>
                             @endif
@@ -283,10 +343,6 @@
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Tinjau
                                 </button>
-                                @if($canReview && $p->reward_status === $P::CLAIM_DISETUJUI)
-                                    <button type="button" class="btn-batal-reward"
-                                            onclick="openBatalReward(@js($p->id), @js($p->nama_prestasi), @js($p->kemahasiswaan->nama ?? '-'))">Batalkan</button>
-                                @endif
                             </div>
                         </td>
                     </tr>
@@ -295,7 +351,7 @@
         </table>
 
         {{-- Di dalam kartu, sama seperti tabel Verifikasi Prestasi & Kegiatan --}}
-        @include('manajemenmahasiswa::verifikasi.partials.pagination', ['paginator' => $rewardData])
+        @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $rewardData])
     </div>
 @else
     <div class="empty-state">
@@ -304,6 +360,8 @@
         <p style="font-size: 13px; color: #666D80; margin: 0;">Belum ada klaim reward yang sesuai filter</p>
     </div>
 @endif
+
+</div> {{-- End Main Table Card --}}
 
 {{-- Tinjau Reward Modal — kerangka split-pane yang sama dengan halaman Verifikasi
      Prestasi: bukti di kiri, data & keputusan di kanan. Klaim yang sudah diputus
@@ -370,7 +428,7 @@
                                           placeholder="Catatan persetujuan / alasan penolakan"
                                           style="border-radius: 10px; font-size: 13.5px;"
                                           oninput="document.getElementById('charCount_tr').innerText = this.value.length + ' / 300 huruf'; document.getElementById('trError').style.display = 'none';"></textarea>
-                                <div id="trError" style="display: none; font-size: 12px; font-weight: 600; color: #dc2626; margin-top: 6px;"></div>
+                                <div id="trError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                 <div class="tp-aksi">
                                     <button type="button" id="trTolakBtn" class="tp-btn-tolak">Tolak</button>
                                     <button type="button" id="trSetujuiBtn" class="tp-btn-setujui">Setujui</button>
@@ -384,35 +442,6 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<!-- Batalkan Persetujuan Reward Modal -->
-<div class="modal fade" id="batalRewardModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="batalRewardForm" method="POST">
-                @csrf @method('PATCH')
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: #0D0D12;">Batalkan Persetujuan Reward</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p style="font-size: 13px; color: #374151;">Reward untuk <strong id="brNama"></strong> (<span id="brMhs"></span>) akan diubah menjadi <b style="color:#dc2626;">Ditolak</b> dan kuota mahasiswa dikembalikan. Gunakan ini bila Fakultas menolak peningkatan nilai.</p>
-                    <div class="mb-1">
-                        <label class="form-label fw-bold mb-1" style="font-size: 13px;">Alasan pembatalan <span style="color:#dc2626;">*</span></label>
-                        <textarea name="reward_note" id="brNote" class="form-control" rows="3" maxlength="300"
-                                  placeholder="Contoh: Ditolak Bidang Akademik Fakultas — nilai mata kuliah tidak dapat dinaikkan."
-                                  style="border-radius: 10px; font-size: 14px;"></textarea>
-                    </div>
-                    <div id="brError" style="display: none; font-size: 12px; color: #dc2626; margin-top: 6px;"></div>
-                </div>
-                <div class="modal-footer" style="justify-content: space-between;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Tutup</button>
-                    <button type="button" id="brConfirmBtn" style="padding: 8px 18px; border-radius: 10px; border: none; background: #dc2626; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">Ya, Batalkan Persetujuan</button>
                 </div>
             </form>
         </div>
@@ -571,7 +600,7 @@ function trRenderKuotaDipakai(data) {
 
 // Ringkasan keputusan untuk klaim yang sudah disetujui/ditolak
 function trRenderHasil(data) {
-    const label = { disetujui: 'Disetujui', ditolak: 'Ditolak', diajukan: 'Menunggu' };
+    const label = { disetujui: 'Disetujui', ditolak: 'Ditolak', diajukan: 'Menunggu Review' };
 
     const statusEl = document.getElementById('trStatusArea');
     statusEl.innerHTML = '';
@@ -592,10 +621,10 @@ function trRenderHasil(data) {
     reviewEl.innerHTML = '';
 
     if (data.mk_disetujui) {
-        reviewEl.appendChild(trBarisHasil('MK disetujui: ', data.mk_disetujui, '#059669', false));
+        reviewEl.appendChild(trBarisHasil('MK disetujui: ', data.mk_disetujui, 'var(--c-success)', false));
     }
     if (data.note) {
-        reviewEl.appendChild(trBarisHasil('Catatan: ', data.note, data.status === 'ditolak' ? '#dc2626' : '#059669', true));
+        reviewEl.appendChild(trBarisHasil('Catatan: ', data.note, data.status === 'ditolak' ? 'var(--c-error)' : 'var(--c-success)', true));
     }
 }
 
@@ -697,30 +726,6 @@ function trRenderBukti(idx) {
         const note = document.getElementById('trNote').value.trim();
         if (!note) { errEl.textContent = 'Catatan/alasan wajib diisi untuk menolak.'; errEl.style.display = 'block'; return; }
         form.action = baseUrl + '/prestasi/' + trData.id + '/reward/tolak';
-        form.submit();
-    });
-})();
-
-// Batalkan persetujuan reward (yg sudah disetujui) -> jadi ditolak + alasan
-let brId = null;
-function openBatalReward(id, nama, mahasiswa) {
-    brId = id;
-    document.getElementById('brNama').textContent = nama;
-    document.getElementById('brMhs').textContent = mahasiswa;
-    document.getElementById('brNote').value = '';
-    document.getElementById('brError').style.display = 'none';
-    new bootstrap.Modal(document.getElementById('batalRewardModal')).show();
-}
-(function() {
-    const baseUrl = '{{ url("manajemen-mahasiswa/verifikasi") }}';
-    const form = document.getElementById('batalRewardForm');
-    if (!form) return;
-    const errEl = document.getElementById('brError');
-    document.getElementById('brConfirmBtn').addEventListener('click', function() {
-        if (!brId) return;
-        const note = document.getElementById('brNote').value.trim();
-        if (!note) { errEl.textContent = 'Alasan pembatalan wajib diisi.'; errEl.style.display = 'block'; return; }
-        form.action = baseUrl + '/prestasi/' + brId + '/reward/batalkan-persetujuan';
         form.submit();
     });
 })();

@@ -167,14 +167,6 @@
                 <input type="number" name="tahun_lulus" class="form-control @error('tahun_lulus') is-invalid @enderror" value="{{ old('tahun_lulus', $alumni->tahun_lulus) }}" required min="2000" max="2099">
                 @error('tahun_lulus') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
-            @if($isCanSeeIpk)
-            <div class="col-md-6">
-                <label class="form-label">IPK</label>
-                <input type="number" step="0.01" min="0" max="4" name="ipk" class="form-control @error('ipk') is-invalid @enderror" value="{{ old('ipk', $alumni->ipk) }}" placeholder="0.00">
-                @error('ipk') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Tersinkron dengan data Kemahasiswaan · skala 0–4.</small>
-            </div>
-            @endif
 
             <!-- Kontak -->
             <div class="col-md-12" x-data="alumniPhoneCode('{{ $savedCode }}')">

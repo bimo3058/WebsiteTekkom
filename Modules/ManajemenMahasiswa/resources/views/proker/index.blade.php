@@ -1,6 +1,7 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
+@include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
     /* ── Status Badges ── */
@@ -106,22 +107,71 @@
 
 {{-- Filter --}}
 <form method="GET" action="{{ route('manajemenmahasiswa.proker.index') }}" id="filterForm">
+    {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+    @if(request()->filled('per_page'))
+        <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+    @endif
     <div class="mk-kegiatan-filter-row">
         <div class="mk-kegiatan-search w-100">
             <span class="mk-kegiatan-search__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <input type="text" name="search" class="mk-kegiatan-search__input"
                    placeholder="Cari judul atau deskripsi rencana proker..." value="{{ request('search') }}">
         </div>
-    </div>
-    <div class="mk-kegiatan-filter-bar">
-        <a href="{{ route('manajemenmahasiswa.proker.index', request()->except(['bidang','page'])) }}"
-           class="mk-kegiatan-filter-chip {{ !request('bidang')||request('bidang')==='semua'?'active':'' }}">Semua</a>
-        <a href="{{ route('manajemenmahasiswa.proker.index', array_merge(request()->except('page'),['bidang'=>'prodi'])) }}"
-           class="mk-kegiatan-filter-chip {{ request('bidang')==='prodi'?'active':'' }}">Prodi</a>
-        @foreach($bidangList as $bidang)
-            <a href="{{ route('manajemenmahasiswa.proker.index', array_merge(request()->except('page'),['bidang'=>$bidang->id])) }}"
-               class="mk-kegiatan-filter-chip {{ request('bidang')==$bidang->id?'active':'' }}">{{ $bidang->nama_bidang }}</a>
-        @endforeach
+        {{-- Bidang memakai panel yang sama dengan panel "Advanced Filters" tabel Audit Log
+             global (partials/filter-popover). Dulu berupa deretan chip di bawah pencarian. --}}
+        @php
+            $filterBidangAktif = request()->filled('bidang') && request('bidang') !== 'semua';
+            $adaFilterApaPun   = $filterBidangAktif || request()->filled('search');
+        @endphp
+        <div class="mk-kegiatan-filter-controls">
+            <div class="filter-pop filter-pop--md" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height: 1;">Filter</span>
+                    @if($filterBidangAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
+
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;"
+                     @click="filterOpen = false"></div>
+
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <div>
+                            <label class="filter-pop-label" for="filterBidang">Bidang</label>
+                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                                <option value="semua">Semua Bidang</option>
+                                <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
+                                @foreach($bidangList as $bidang)
+                                    <option value="{{ $bidang->id }}" {{ request('bidang') == $bidang->id ? 'selected' : '' }}>{{ $bidang->nama_bidang }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilterApaPun)
+                                <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </form>
 
@@ -180,9 +230,13 @@
             </div>
         @endforeach
     </div>
-    @if($prokerList->hasPages())
-        @include('manajemenmahasiswa::partials.kegiatan-pagination', ['paginator' => $prokerList])
-    @endif
+    {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama).
+         Daftar ini berupa grid kartu, jadi pilihannya kelipatan 6 (PerPage::KARTU). --}}
+    @include('manajemenmahasiswa::partials.table-footer', [
+        'paginator'      => $prokerList,
+        'perPageOptions' => \Modules\ManajemenMahasiswa\Support\PerPage::KARTU,
+        'standalone'     => true,
+    ])
 @else
     <div class="empty-state">
         <div style="font-size:48px;margin-bottom:12px;opacity:0.5;">&#128203;</div>

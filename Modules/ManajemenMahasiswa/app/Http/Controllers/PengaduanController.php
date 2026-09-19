@@ -9,6 +9,7 @@ use Modules\ManajemenMahasiswa\Http\Requests\PengaduanPayloadRequest;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
 use Modules\ManajemenMahasiswa\Models\PengaduanLog;
 use Modules\ManajemenMahasiswa\Services\PengaduanService;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PengaduanController extends Controller
 {
@@ -181,7 +182,7 @@ class PengaduanController extends Controller
 
         $pengaduan = $query
             ->orderByDesc('created_at')
-            ->paginate(15)
+            ->paginate(PerPage::resolve($request))
             ->withQueryString();
 
         $pengaduan->getCollection()->each(function ($item) {

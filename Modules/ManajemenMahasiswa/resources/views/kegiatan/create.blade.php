@@ -1234,7 +1234,7 @@ function renderPanitiaChips() {
         chip.className = 'panitia-chip';
         chip.innerHTML = `
             ${name}
-            <button type="button" class="panitia-chip-remove mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removePanitia('${id}')" title="Hapus panitia" aria-label="Hapus panitia ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus panitia" aria-label="Hapus panitia ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         container.insertBefore(chip, searchInput);
     });
@@ -1369,7 +1369,7 @@ function renderDosenChips() {
         chip.className = 'panitia-chip';
         chip.innerHTML = `
             ${name}
-            <button type="button" class="panitia-chip-remove mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeDosen('${id}')" title="Hapus dosen" aria-label="Hapus dosen ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="panitia-chip-remove" onclick="removeDosen('${id}')" title="Hapus dosen" aria-label="Hapus dosen ${name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         container.insertBefore(chip, searchInput);
     });

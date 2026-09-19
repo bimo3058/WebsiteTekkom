@@ -64,7 +64,9 @@
         display: inline-flex; align-items: center; padding: 2px 8px;
         border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase;
     }
-    .tingkat-badge.internasional { background: var(--c-warning-subtle); color: var(--c-warning); }
+    /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
+       di kolom sebelahnya, sehingga keduanya tampak sama. */
+    .tingkat-badge.internasional { background: var(--c-primary); color: #fff; }
     .tingkat-badge.nasional { background: var(--c-primary-subtle); color: var(--c-primary); }
     .tingkat-badge.regional { background: var(--c-sky-subtle); color: var(--c-sky); }
     .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
@@ -87,38 +89,16 @@
         flex-wrap: wrap; gap: 10px;
     }
 
-    /* ── Enhanced Table Visibility ── */
-    table thead tr {
-        background: var(--c-bg) !important;
-        border-bottom: 2px solid var(--c-border-strong) !important;
-    }
-    table thead th {
-        font-size: 11.5px !important;
-        font-weight: 700 !important;
-        color: var(--c-fg-sec) !important;
-        text-transform: uppercase;
-        letter-spacing: .03em;
-        padding-top: 13px !important;
-        padding-bottom: 13px !important;
-    }
-    table tbody tr {
-        border-bottom: 1px solid var(--c-border) !important;
-    }
-    table tbody tr:nth-child(even) {
-        background: var(--c-card);
-    }
-    table tbody tr:hover {
-        background: var(--c-primary-subtle) !important;
-        box-shadow: inset 3px 0 0 0 var(--c-primary);
-    }
-    table tbody td {
-        font-size: 13px;
-        padding-top: 15px !important;
-        padding-bottom: 15px !important;
-    }
+    /* Header & baris tabel disamakan dengan tabel User Management global
+       (resources/views/superadmin/users/_table.blade.php): latar #FAFAFA polos,
+       tanpa uppercase/letter-spacing, tanpa zebra-stripe, hover netral —
+       diatur langsung lewat style inline pada thead/tr, bukan lewat aturan
+       global di sini (lihat riwayat "Enhanced Table Visibility" yang sempat
+       menimpanya dengan !important). */
 </style>
 
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
+@include('manajemenmahasiswa::partials.filter-popover')
 
 <!-- Flash Messages -->
 @if(session('success'))
@@ -187,7 +167,7 @@
         </div>
         <div>
             <div class="stat-num">{{ $adminStats['pending'] }}</div>
-            <div class="stat-lbl">Menunggu Verifikasi</div>
+            <div class="stat-lbl">Menunggu Review</div>
         </div>
     </div>
     <div class="admin-stat-card approved">
@@ -211,7 +191,7 @@
 </div>
 
 <!-- Main Table Card (Global Style) -->
-<div style="background:var(--c-card); border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
+<div class="filter-pop-host" style="background:var(--c-card); border:1px solid var(--c-border); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
 
     <!-- Table Toolbar -->
     <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
@@ -232,6 +212,10 @@
         <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.index') }}" id="filterForm"
               style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
             <input type="hidden" name="tab" value="{{ $tab }}">
+            {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+            @if(request()->filled('per_page'))
+                <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+            @endif
 
             <!-- Search -->
             <div style="position:relative; width:min(280px, calc(100vw - 200px)); min-width:120px;">
@@ -247,37 +231,90 @@
             </div>
 
 
-            <!-- Status Filter — pengganti kartu statistik yang dulu bisa diklik -->
-            <select name="status"
-                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:var(--c-card); cursor:pointer;"
-                    onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Status</option>
-                <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Menunggu Verifikasi</option>
-                <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Disetujui</option>
-                <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
-            </select>
+            {{-- Status, Angkatan, & Tingkat dikumpulkan dalam satu panel, sama dengan panel
+                 "Advanced Filters" tabel Audit Log global (partials/filter-popover).
+                 Titik di tombol Filter menyala bila ada dropdown yang sedang menyaring —
+                 termasuk "Menunggu Review" yang jadi bawaan verifikator. --}}
+            @php
+                $statusBawaan        = ($canVerify ?? true) ? 'pending' : 'semua';
+                $filterStatusAktif   = $status !== 'semua';
+                $filterAngkatanAktif = filled($angkatan) && $angkatan !== 'semua';
+                $filterTingkatAktif  = $tab === 'prestasi' && $tingkat !== 'semua';
+                $adaFilterApaPun     = $filterAngkatanAktif || $filterTingkatAktif
+                    || request()->filled('search') || $status !== $statusBawaan;
+            @endphp
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height:1;">Filter</span>
+                    @if($filterStatusAktif || $filterAngkatanAktif || $filterTingkatAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
 
-            <!-- Angkatan Filter -->
-            <select name="angkatan"
-                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:var(--c-card); cursor:pointer;"
-                    onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Angkatan</option>
-                @foreach($angkatanList as $a)
-                    <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
-                @endforeach
-            </select>
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display:none;"
+                     @click="filterOpen = false"></div>
 
-            @if($tab === 'prestasi')
-                <!-- Tingkat Filter — hanya tab Prestasi; riwayat kegiatan tidak punya kolom tingkat -->
-                <select name="tingkat"
-                        style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:var(--c-card); cursor:pointer;"
-                        onchange="document.getElementById('filterForm').submit()">
-                    <option value="semua">Semua Tingkat</option>
-                    @foreach($tingkatList as $t)
-                        <option value="{{ $t }}" {{ $tingkat === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
-                    @endforeach
-                </select>
-            @endif
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display:none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <!-- Status — pengganti kartu statistik yang dulu bisa diklik -->
+                        <div>
+                            <label class="filter-pop-label" for="filterStatus">Status</label>
+                            <select name="status" id="filterStatus" class="filter-pop-select">
+                                <option value="semua">Semua Status</option>
+                                <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Menunggu Review</option>
+                                <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Disetujui</option>
+                                <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            </select>
+                        </div>
+
+                        <!-- Angkatan -->
+                        <div>
+                            <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
+                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                                <option value="semua">Semua Angkatan</option>
+                                @foreach($angkatanList as $a)
+                                    <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        @if($tab === 'prestasi')
+                            <!-- Tingkat — hanya tab Prestasi; riwayat kegiatan tidak punya kolom tingkat -->
+                            <div>
+                                <label class="filter-pop-label" for="filterTingkat">Tingkat</label>
+                                <select name="tingkat" id="filterTingkat" class="filter-pop-select">
+                                    <option value="semua">Semua Tingkat</option>
+                                    @foreach($tingkatList as $t)
+                                        <option value="{{ $t }}" {{ $tingkat === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilterApaPun)
+                                {{-- Reset kembali ke tampilan bawaan tab ini (bukan "semua status"). --}}
+                                <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab]) }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -358,7 +395,7 @@
                             ];
                         @endphp
                         <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
-                            onmouseover="this.style.background='var(--c-primary-subtle)'" onmouseout="this.style.background='transparent'">
+                            onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
                                 <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $rw->student->user->name ?? '-' }}</p>
@@ -375,7 +412,7 @@
                                      bersaing dengan apa pun. Catatan verifikasi dibaca utuh di
                                      modal Tinjau, bukan sebagai potongan kalimat di sel ini. --}}
                                 <span class="status-verif {{ $rw->verification_status }}">
-                                    @if($rw->verification_status === 'pending') Menunggu Persetujuan
+                                    @if($rw->verification_status === 'pending') Menunggu Review
                                     @elseif($rw->verification_status === 'approved') Disetujui
                                     @else Ditolak
                                     @endif
@@ -396,53 +433,8 @@
             </table>
         </div>
 
-        <!-- Pagination (Global Style) -->
-        @php
-            $rFrom = $riwayatData->firstItem() ?? 0;
-            $rTo   = $riwayatData->lastItem() ?? 0;
-            $rTotal = $riwayatData->total();
-            $rCurrentPage = $riwayatData->currentPage();
-            $rLastPage = $riwayatData->lastPage();
-        @endphp
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--c-card); border-top:1px solid var(--c-border); flex-wrap:wrap; gap:10px;">
-            <span style="font-size:12px; color:var(--c-fg-sec);">
-                Showing <strong style="color:var(--c-fg); font-weight:700;">{{ $rFrom }}</strong>
-                to <strong style="color:var(--c-fg); font-weight:700;">{{ $rTo }}</strong>
-                of <strong style="color:var(--c-fg); font-weight:700;">{{ number_format($rTotal) }}</strong> results
-            </span>
-            @if($rLastPage > 1)
-            <div style="display:flex; align-items:center; gap:4px;">
-                @if($rCurrentPage > 1)
-                <a href="{{ $riwayatData->appends(request()->query())->previousPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
-                @endif
-
-                @php $range = 2; $start = max(1, $rCurrentPage - $range); $end = min($rLastPage, $rCurrentPage + $range); @endphp
-                @if($start > 1)
-                    <a href="{{ $riwayatData->appends(request()->query())->url(1) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">1</a>
-                    @if($start > 2)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                @endif
-                @for($p = $start; $p <= $end; $p++)
-                <a href="{{ $riwayatData->appends(request()->query())->url($p) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; font-weight:{{ $p === $rCurrentPage ? '700' : '500' }}; text-decoration:none; transition:all .15s; {{ $p === $rCurrentPage ? 'background:var(--c-primary); color:#fff; border:1px solid var(--c-primary); box-shadow:0 2px 6px rgba(11,38,110,0.25);' : 'border:1px solid var(--c-border); background:#fff; color:var(--c-fg-sec);' }}">{{ $p }}</a>
-                @endfor
-                @if($end < $rLastPage)
-                    @if($end < $rLastPage - 1)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                    <a href="{{ $riwayatData->appends(request()->query())->url($rLastPage) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">{{ $rLastPage }}</a>
-                @endif
-
-                @if($rCurrentPage < $rLastPage)
-                <a href="{{ $riwayatData->appends(request()->query())->nextPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
-                @endif
-            </div>
-            @endif
-        </div>
+        {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman --}}
+        @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $riwayatData])
     @else
         <div class="empty-state">
             <div class="empty-icon">
@@ -535,7 +527,7 @@
                             ];
                         @endphp
                         <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
-                            onmouseover="this.style.background='var(--c-primary-subtle)'" onmouseout="this.style.background='transparent'">
+                            onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
                                 <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
@@ -550,7 +542,7 @@
                             <td style="padding:14px 16px;">
                                 {{-- Badge saja — lihat catatan pada kolom Status tab Kegiatan --}}
                                 <span class="status-verif {{ $p->verification_status }}">
-                                    @if($p->verification_status === 'pending') Menunggu Persetujuan
+                                    @if($p->verification_status === 'pending') Menunggu Review
                                     @elseif($p->verification_status === 'approved') Disetujui
                                     @else Ditolak
                                     @endif
@@ -559,7 +551,7 @@
                             <td style="padding:14px 16px;">
                                 @if($p->verification_status === 'approved')
                                     @if($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                        <span class="claim-badge diajukan">Menunggu</span>
+                                        <span class="claim-badge diajukan">Menunggu Review</span>
                                     @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
                                         <span class="claim-badge disetujui">Disetujui</span>
                                     @elseif($p->reward_status === $P::CLAIM_DITOLAK)
@@ -586,53 +578,8 @@
             </table>
         </div>
 
-        <!-- Pagination (Global Style) -->
-        @php
-            $pFrom = $prestasiData->firstItem() ?? 0;
-            $pTo   = $prestasiData->lastItem() ?? 0;
-            $pTotal = $prestasiData->total();
-            $pCurrentPage = $prestasiData->currentPage();
-            $pLastPage = $prestasiData->lastPage();
-        @endphp
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--c-card); border-top:1px solid var(--c-border); flex-wrap:wrap; gap:10px;">
-            <span style="font-size:12px; color:var(--c-fg-sec);">
-                Showing <strong style="color:var(--c-fg); font-weight:700;">{{ $pFrom }}</strong>
-                to <strong style="color:var(--c-fg); font-weight:700;">{{ $pTo }}</strong>
-                of <strong style="color:var(--c-fg); font-weight:700;">{{ number_format($pTotal) }}</strong> results
-            </span>
-            @if($pLastPage > 1)
-            <div style="display:flex; align-items:center; gap:4px;">
-                @if($pCurrentPage > 1)
-                <a href="{{ $prestasiData->appends(request()->query())->previousPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
-                @endif
-
-                @php $range = 2; $start = max(1, $pCurrentPage - $range); $end = min($pLastPage, $pCurrentPage + $range); @endphp
-                @if($start > 1)
-                    <a href="{{ $prestasiData->appends(request()->query())->url(1) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">1</a>
-                    @if($start > 2)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                @endif
-                @for($p_page = $start; $p_page <= $end; $p_page++)
-                <a href="{{ $prestasiData->appends(request()->query())->url($p_page) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; font-weight:{{ $p_page === $pCurrentPage ? '700' : '500' }}; text-decoration:none; transition:all .15s; {{ $p_page === $pCurrentPage ? 'background:var(--c-primary); color:#fff; border:1px solid var(--c-primary); box-shadow:0 2px 6px rgba(11,38,110,0.25);' : 'border:1px solid var(--c-border); background:#fff; color:var(--c-fg-sec);' }}">{{ $p_page }}</a>
-                @endfor
-                @if($end < $pLastPage)
-                    @if($end < $pLastPage - 1)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                    <a href="{{ $prestasiData->appends(request()->query())->url($pLastPage) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">{{ $pLastPage }}</a>
-                @endif
-
-                @if($pCurrentPage < $pLastPage)
-                <a href="{{ $prestasiData->appends(request()->query())->nextPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:var(--c-bg); color:var(--c-fg-placeholder); cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
-                @endif
-            </div>
-            @endif
-        </div>
+        {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman --}}
+        @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
     @else
         <div class="empty-state">
             <div class="empty-icon">

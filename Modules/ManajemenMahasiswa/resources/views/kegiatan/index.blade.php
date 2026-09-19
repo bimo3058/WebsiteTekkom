@@ -1,6 +1,7 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
+@include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
     /* ── Filter Bar ── */
@@ -225,6 +226,10 @@
 
 <!-- Search & Filter Area (matching forum layout) -->
 <form method="GET" action="{{ route('manajemenmahasiswa.kegiatan.index') }}" id="filterForm">
+    {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+    @if(request()->filled('per_page'))
+        <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+    @endif
     <div class="mk-kegiatan-filter-row">
         <div class="mk-kegiatan-search w-100">
             <span class="mk-kegiatan-search__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
@@ -232,61 +237,90 @@
                    placeholder="Cari judul atau deskripsi kegiatan..." value="{{ request('search') }}">
         </div>
 
+        {{-- Bidang & Tahun dikumpulkan dalam satu panel, sama dengan panel "Advanced
+             Filters" tabel Audit Log global (partials/filter-popover). Bidang dulu berupa
+             deretan chip di bawah pencarian; kini jadi dropdown di panel ini, jadi ikut
+             terbawa bersama Tahun tanpa hidden input tambahan. Filter Kategori sengaja
+             tidak ada: pilihannya (Kegiatan Himpunan / Kegiatan Prodi) sudah terwakili
+             Bidang — "Prodi" di sana mencakup kegiatan tanpa bidang atau berkategori Prodi.
+             Badge kategori di kartu tetap tampil sebagai informasi. --}}
+        @php
+            $filterBidangAktif = request()->filled('bidang') && request('bidang') !== 'semua';
+            $filterTahunAktif  = request()->filled('tahun') && request('tahun') !== 'semua';
+            $adaFilterApaPun   = $filterBidangAktif || $filterTahunAktif
+                || request()->filled('search');
+        @endphp
         <div class="mk-kegiatan-filter-controls">
-            {{-- Filter kategori: badge kategori tampil di tiap kartu, jadi user wajar
-                 mencari cara menyaringnya. Sebelumnya daftar kategori dikirim ke
-                 halaman ini tapi tidak pernah dirender maupun dipakai menyaring. --}}
-            <select name="kategori" class="mk-kegiatan-filter-select"
-                    style="min-width: 180px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Kategori</option>
-                @foreach($kategoriList as $kat)
-                    <option value="{{ $kat->id }}" {{ request('kategori') == $kat->id ? 'selected' : '' }}>
-                        {{ $kat->nama_kategori }}
-                    </option>
-                @endforeach
-            </select>
+            <div class="filter-pop filter-pop--md" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height: 1;">Filter</span>
+                    @if($filterBidangAktif || $filterTahunAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
 
-            <select name="tahun" class="mk-kegiatan-filter-select"
-                    style="min-width: 160px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Tahun</option>
-                @foreach($tahunList as $t)
-                    <option value="{{ $t }}" {{ request('tahun') == $t ? 'selected' : '' }}>
-                        {{ $t }}
-                    </option>
-                @endforeach
-                {{-- Kegiatan tanpa tanggal sama sekali: tahunnya tidak diketahui, jadi
-                     tanpa opsi ini ia cuma muncul di "Semua Tahun" dan sulit ditemukan. --}}
-                @if($adaTanpaTahun)
-                    <option value="{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN }}"
-                        {{ request('tahun') === \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN ? 'selected' : '' }}>
-                        Belum ada tanggal
-                    </option>
-                @endif
-            </select>
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;"
+                     @click="filterOpen = false"></div>
+
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <div>
+                            <label class="filter-pop-label" for="filterBidang">Bidang</label>
+                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                                <option value="semua">Semua Bidang</option>
+                                <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
+                                @foreach($bidangList as $bidang)
+                                    <option value="{{ $bidang->id }}" {{ request('bidang') == $bidang->id ? 'selected' : '' }}>
+                                        {{ $bidang->nama_bidang }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="filter-pop-label" for="filterTahun">Tahun</label>
+                            <select name="tahun" id="filterTahun" class="filter-pop-select">
+                                <option value="semua">Semua Tahun</option>
+                                @foreach($tahunList as $t)
+                                    <option value="{{ $t }}" {{ request('tahun') == $t ? 'selected' : '' }}>
+                                        {{ $t }}
+                                    </option>
+                                @endforeach
+                                {{-- Kegiatan tanpa tanggal sama sekali: tahunnya tidak diketahui, jadi
+                                     tanpa opsi ini ia cuma muncul di "Semua Tahun" dan sulit ditemukan. --}}
+                                @if($adaTanpaTahun)
+                                    <option value="{{ \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN }}"
+                                        {{ request('tahun') === \Modules\ManajemenMahasiswa\Models\Kegiatan::FILTER_TANPA_TAHUN ? 'selected' : '' }}>
+                                        Belum ada tanggal
+                                    </option>
+                                @endif
+                            </select>
+                        </div>
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilterApaPun)
+                                <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-
-    {{-- Bidang dipilih lewat chip <a href> di bawah, jadi nilainya harus ikut
-         dibawa form ini. Tanpa hidden input, mencari atau mengganti Kategori/Tahun
-         diam-diam mengembalikan filter bidang ke "Semua". --}}
-    <input type="hidden" name="bidang" value="{{ request('bidang') }}">
-
-    <!-- Bidang Filter Chips -->
-    <div class="mk-kegiatan-filter-bar">
-        <a href="{{ route('manajemenmahasiswa.kegiatan.index', request()->except(['bidang', 'page'])) }}"
-           class="mk-kegiatan-filter-chip {{ !request('bidang') || request('bidang') == 'semua' ? 'active' : '' }}">
-            Semua
-        </a>
-        <a href="{{ route('manajemenmahasiswa.kegiatan.index', array_merge(request()->except('page'), ['bidang' => 'prodi'])) }}"
-           class="mk-kegiatan-filter-chip {{ request('bidang') == 'prodi' ? 'active' : '' }}">
-            Prodi
-        </a>
-        @foreach($bidangList as $bidang)
-            <a href="{{ route('manajemenmahasiswa.kegiatan.index', array_merge(request()->except('page'), ['bidang' => $bidang->id])) }}"
-               class="mk-kegiatan-filter-chip {{ request('bidang') == $bidang->id ? 'active' : '' }}">
-                {{ $bidang->nama_bidang }}
-            </a>
-        @endforeach
     </div>
 </form>
 
@@ -349,10 +383,13 @@
         @endforeach
     </div>
 
-    <!-- Pagination -->
-    @if($kegiatan->hasPages())
-        @include('manajemenmahasiswa::partials.kegiatan-pagination', ['paginator' => $kegiatan])
-    @endif
+    {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama).
+         Daftar ini berupa grid kartu, jadi pilihannya kelipatan 6 (PerPage::KARTU). --}}
+    @include('manajemenmahasiswa::partials.table-footer', [
+        'paginator'      => $kegiatan,
+        'perPageOptions' => \Modules\ManajemenMahasiswa\Support\PerPage::KARTU,
+        'standalone'     => true,
+    ])
 @else
     <div class="empty-state">
         <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>

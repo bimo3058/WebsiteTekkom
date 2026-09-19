@@ -227,18 +227,6 @@
             </div>
             @endif
 
-            <!-- IPK -->
-            <div class="col-md-6">
-                <label class="form-label-custom">IPK</label>
-                <input type="number" name="ipk" class="form-control form-control-custom"
-                       value="{{ old('ipk', $mhs->ipk) }}" min="0" max="4" step="0.01"
-                       placeholder="Contoh: 3.75">
-                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1" style="color: var(--c-warning);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                    Masukkan nilai IPK antara <strong>0.00</strong> hingga <strong>4.00</strong>.
-                </small>
-            </div>
-
             <!-- Email Pribadi -->
             <div class="col-md-6">
                 <label class="form-label-custom">Email Pribadi</label>

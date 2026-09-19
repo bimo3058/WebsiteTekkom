@@ -288,30 +288,24 @@
         transform: none !important;
     }
 
-    /* Shared 38px search and filter controls. */
+    /* Shared 38px search and filter controls. Pencarian + tombol Filter (panel
+       partials/filter-popover) selalu sebaris, juga di layar sempit: tombolnya cuma
+       satu, dan di ujung kanan panelnya tidak menjulur keluar layar di sisi kiri. */
     .mk-kegiatan-filter-row {
         display: flex;
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
         justify-content: space-between;
         gap: 8px;
-        margin-bottom: 12px;
-    }
-
-    .mk-kegiatan-filter-controls,
-    .mk-kegiatan-filter-bar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 8px;
+        margin-bottom: 20px;
     }
 
     .mk-kegiatan-filter-controls {
+        display: flex;
         flex: 0 0 auto;
-    }
-
-    .mk-kegiatan-filter-bar {
-        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
     }
 
     .mk-kegiatan-search {
@@ -329,10 +323,11 @@
         transform: translateY(-50%);
     }
 
-    .mk-kegiatan-search__input,
-    .mk-kegiatan-filter-select {
+    .mk-kegiatan-search__input {
+        width: 100%;
         height: 38px;
         min-height: 38px;
+        padding: 0 12px 0 36px;
         border: 1px solid var(--c-border);
         border-radius: 8px;
         background-color: var(--c-surface);
@@ -344,81 +339,11 @@
         transition: border-color 150ms ease, box-shadow 150ms ease;
     }
 
-    .mk-kegiatan-search__input {
-        width: 100%;
-        padding: 0 12px 0 36px;
-    }
-
-    .mk-kegiatan-filter-select {
-        appearance: none;
-        min-width: 0;
-        padding: 0 36px 0 14px;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666D80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-        background-position: right 12px center;
-        background-repeat: no-repeat;
-        background-size: 12px;
-        cursor: pointer;
-    }
-
     .mk-kegiatan-search__input:focus,
-    .mk-kegiatan-search__input:focus-visible,
-    .mk-kegiatan-filter-select:focus,
-    .mk-kegiatan-filter-select:focus-visible {
+    .mk-kegiatan-search__input:focus-visible {
         border-color: var(--c-primary);
         box-shadow: 0 0 0 3px var(--c-primary-shadow);
         outline: none;
     }
 
-    .mk-kegiatan-filter-select:disabled {
-        background-color: var(--c-surface-muted);
-        color: var(--c-fg-muted);
-        cursor: not-allowed;
-    }
-
-    .mk-kegiatan-filter-chip {
-        min-height: 38px;
-        padding: 0 16px;
-        border: 1px solid var(--c-border);
-        border-radius: 8px;
-        background: var(--c-surface);
-        color: var(--c-fg-muted);
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 1.2;
-        text-decoration: none !important;
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease,
-            box-shadow 150ms ease;
-    }
-
-    .mk-kegiatan-filter-chip:hover {
-        background: var(--c-primary-subtle);
-        border-color: var(--c-primary);
-        color: var(--c-primary);
-    }
-
-    .mk-kegiatan-filter-chip:focus-visible {
-        border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px var(--c-primary-shadow);
-        outline: none;
-    }
-
-    .mk-kegiatan-filter-chip:active,
-    .mk-kegiatan-filter-chip.active,
-    .mk-kegiatan-filter-chip[aria-current="page"] {
-        background: var(--c-primary);
-        border-color: var(--c-primary);
-        color: var(--c-surface) !important;
-    }
-
-    @media (min-width: 768px) {
-        .mk-kegiatan-filter-row {
-            flex-direction: row;
-            align-items: center;
-        }
-    }
 </style>

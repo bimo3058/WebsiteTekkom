@@ -14,6 +14,7 @@ use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class ProkerController extends Controller
 {
@@ -85,7 +86,7 @@ class ProkerController extends Controller
             });
         }
 
-        $prokerList = $query->paginate(12);
+        $prokerList = $query->paginate(PerPage::resolve($request, PerPage::KARTU, 12));
 
 
         return view('manajemenmahasiswa::proker.index', compact(

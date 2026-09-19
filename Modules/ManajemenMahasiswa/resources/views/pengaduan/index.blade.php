@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$isStaff ? 'manajemenmahasiswa::layouts.admin' : 'manajemenmahasiswa::layouts.mahasiswa'">
 
     @push('styles')
+    @include('manajemenmahasiswa::partials.filter-popover')
     <style>
         .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
 
@@ -124,13 +125,6 @@
             border-color: #293C79; box-shadow: 0 0 0 3px rgba(41,60,121,.12);
             background: #fff;
         }
-        .filter-select {
-            height: 44px; padding: 0 14px; border: 1px solid #e5e7eb;
-            border-radius: 12px; background: #fff; font-size: .85rem;
-            font-weight: 600; color: #374151; cursor: pointer;
-            outline: none; transition: all .2s; min-width: 160px;
-        }
-        .filter-select:hover, .filter-select:focus { border-color: #293C79; }
 
         /* ── CTA Button (Forum pattern) ───────────────── */
         .btn-post {
@@ -215,20 +209,11 @@
         .empty-state h5 { font-size: 1rem; font-weight: 700; color: #374151; margin-bottom: 4px; }
         .empty-state p { font-size: .88rem; }
 
-        /* ── Pagination ───────────────────────────────── */
-        .pagination-info { font-size: .82rem; color: #9ca3af; font-weight: 500; }
-        .pagination .page-link {
-            color: #293C79; border-color: #DDE1E8; border-radius: 8px;
-            margin: 0 2px; font-size: .875rem; font-weight: 500;
-            padding: 7px 13px; transition: all .2s;
-        }
-        .pagination .page-link:hover { background: #E7E8F0; border-color: #293C79; }
-        .pagination .page-item.active .page-link { background: #293C79; border-color: #293C79; color: #fff; }
-        .pagination .page-item.disabled .page-link { color: #d1d5db; border-color: #DDE1E8; }
-
         /* ── Responsive ───────────────────────────────── */
         @media (max-width: 768px) {
-            .toolbar { flex-direction: column; }
+            /* Toolbar dulu ditumpuk (kolom) karena memuat pencarian + 2 dropdown. Kini cuma
+               pencarian + satu tombol Filter, jadi tetap sebaris dan panelnya (menjulur ke
+               kiri dari ujung kanan tombol) tidak keluar layar. */
             .kategori-label { width: 120px; }
             .stat-row { grid-template-columns: 1fr; }
         }
@@ -368,6 +353,10 @@
 
     {{-- ══ TOOLBAR ════════════════════════════════════ --}}
     <form method="GET" action="{{ route('manajemenmahasiswa.pengaduan.index') }}" id="pgdFilterForm">
+        {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+        @if(request()->filled('per_page'))
+            <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+        @endif
         <div class="toolbar">
             <div class="search-wrapper">
                 <span class="search-icon">
@@ -377,18 +366,70 @@
                     placeholder="Cari judul, kronologi, atau ID pengaduan…">
             </div>
             @if($isStaff)
-                <select name="kategori" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
-                    <option value="">Semua Kategori</option>
-                    @foreach($kategoriOptions as $value => $meta)
-                        <option value="{{ $value }}" {{ ($filters['kategori'] ?? '') === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
-                    @endforeach
-                </select>
-                <select name="status" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
-                    <option value="">Semua Status</option>
-                    @foreach($statusOptions as $value => $label)
-                        <option value="{{ $value }}" {{ ($filters['status'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                    @endforeach
-                </select>
+                {{-- Kategori & Status dikumpulkan dalam satu panel, sama dengan panel "Advanced
+                     Filters" tabel Audit Log global (partials/filter-popover). --}}
+                @php
+                    $filterKategoriAktif = ($filters['kategori'] ?? '') !== '';
+                    $filterStatusAktif   = ($filters['status'] ?? '') !== '';
+                    $adaFilterApaPun     = $filterKategoriAktif || $filterStatusAktif || ($filters['q'] ?? '') !== '';
+                @endphp
+                <div class="filter-pop filter-pop--lg" style="margin-left: auto;"
+                     x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                    <button type="button" class="filter-pop-btn"
+                            @click="filterOpen = !filterOpen"
+                            :class="{ 'is-open': filterOpen }">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                        </svg>
+                        <span style="line-height: 1;">Filter</span>
+                        @if($filterKategoriAktif || $filterStatusAktif)
+                            <span class="filter-pop-dot"></span>
+                        @endif
+                    </button>
+
+                    <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;"
+                         @click="filterOpen = false"></div>
+
+                    <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95">
+
+                        <p class="filter-pop-title">Advanced Filters</p>
+
+                        <div class="filter-pop-fields">
+                            <div>
+                                <label class="filter-pop-label" for="filterKategori">Kategori</label>
+                                <select name="kategori" id="filterKategori" class="filter-pop-select">
+                                    <option value="">Semua Kategori</option>
+                                    @foreach($kategoriOptions as $value => $meta)
+                                        <option value="{{ $value }}" {{ ($filters['kategori'] ?? '') === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="filter-pop-label" for="filterStatus">Status</label>
+                                <select name="status" id="filterStatus" class="filter-pop-select">
+                                    <option value="">Semua Status</option>
+                                    @foreach($statusOptions as $value => $label)
+                                        <option value="{{ $value }}" {{ ($filters['status'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="filter-pop-actions">
+                                <button type="submit" class="filter-pop-submit">Terapkan</button>
+                                @if($adaFilterApaPun)
+                                    <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="filter-pop-reset">Reset</a>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
             @endif
         </div>
     </form>
@@ -450,19 +491,12 @@
         </div>
     @endforelse
 
-    {{-- ── Pagination ─────────────────────────────────── --}}
-    @if($pengaduan->total() > 0)
-        <div class="mb-2">
-            <span class="pagination-info">
-                Menampilkan {{ $pengaduan->firstItem() }}–{{ $pengaduan->lastItem() }} dari {{ $pengaduan->total() }} pengaduan
-            </span>
-        </div>
-    @endif
-    @if($pengaduan->hasPages())
-        <div class="d-flex justify-content-center mt-2 mb-4">
-            {{ $pengaduan->appends(request()->query())->links('pagination::bootstrap-5') }}
-        </div>
-    @endif
+    {{-- ── Footer: Per page + Showing X to Y of Z results + nomor halaman ──
+         Daftar ini berupa kartu tiket (bukan tabel), jadi footer dipasang sebagai bilah mandiri. --}}
+    @include('manajemenmahasiswa::partials.table-footer', [
+        'paginator'  => $pengaduan,
+        'standalone' => true,
+    ])
 
     {{-- ── Delete Modal ───────────────────────────────── --}}
     @if($canDelete)

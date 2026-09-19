@@ -595,40 +595,11 @@
             color: var(--c-border);
         }
 
-        /* ── Enhanced Table Visibility ── */
-        table thead tr {
-            background: #eef0f4 !important;
-            border-bottom: 2px solid #d1d5db !important;
-        }
-
-        table thead th {
-            font-size: 11.5px !important;
-            font-weight: 700 !important;
-            color: #374151 !important;
-            text-transform: uppercase;
-            letter-spacing: .03em;
-            padding-top: 13px !important;
-            padding-bottom: 13px !important;
-        }
-
-        table tbody tr {
-            border-bottom: 1px solid #e5e7eb !important;
-        }
-
-        table tbody tr:nth-child(even) {
-            background: #f9fafb;
-        }
-
-        table tbody tr:hover {
-            background: #eef2ff !important;
-            box-shadow: inset 3px 0 0 0 #0B266E;
-        }
-
-        table tbody td {
-            font-size: 13px;
-            padding-top: 15px !important;
-            padding-bottom: 15px !important;
-        }
+        /* Header & baris tabel disamakan dengan tabel User Management global
+           (resources/views/superadmin/users/_table.blade.php): latar #FAFAFA
+           polos, tanpa uppercase/letter-spacing, tanpa zebra-stripe, hover
+           netral — sudah diatur lewat style inline pada thead/tr di bawah,
+           jadi tidak perlu ditimpa lagi di sini. */
     </style>
 
     @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
@@ -784,7 +755,7 @@
                                                         'Status',
                                                         $rwDiputus
                                                         ? ($rw->verification_status === 'approved' ? 'Disetujui' : 'Ditolak')
-                                                        : 'Menunggu Persetujuan',
+                                                        : 'Menunggu Review',
                                                         'status-verif ' . $rw->verification_status
                                                     ],
                                                     $rwDiputus && $rw->verified_at ? ['Diverifikasi', $rw->verified_at->translatedFormat('d M Y, H:i')] : null,
@@ -832,7 +803,7 @@
                                         {{-- Badge saja — catatan verifikasi dibaca utuh di modal Tinjau,
                                         bukan sebagai potongan kalimat di dalam sel ini. --}}
                                         <span class="status-verif {{ $rw->verification_status }}">
-                                            @if($rw->verification_status === 'pending') Menunggu Persetujuan
+                                            @if($rw->verification_status === 'pending') Menunggu Review
                                             @elseif($rw->verification_status === 'approved') Disetujui
                                             @else Ditolak
                                             @endif
@@ -868,7 +839,7 @@
                     </table>
                 </div>
 
-                @include('manajemenmahasiswa::verifikasi.partials.pagination', ['paginator' => $riwayatData])
+                @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $riwayatData])
             @else
                 <div class="empty-state">
                     <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
@@ -1037,7 +1008,7 @@
                                                 'Status',
                                                 $pDiputus
                                                 ? ($pDisetujui ? 'Disetujui' : 'Ditolak')
-                                                : 'Menunggu Persetujuan',
+                                                : 'Menunggu Review',
                                                 'status-verif ' . $p->verification_status
                                             ],
                                             $pDiputus && $p->verified_at ? ['Diverifikasi', $p->verified_at->translatedFormat('d M Y, H:i')] : null,
@@ -1152,7 +1123,7 @@
                                         {{-- Badge saja — catatan verifikasi dibaca utuh di modal Tinjau,
                                         bukan sebagai potongan kalimat di dalam sel ini. --}}
                                         <span class="status-verif {{ $p->verification_status }}">
-                                            @if($p->verification_status === 'pending') Menunggu Persetujuan
+                                            @if($p->verification_status === 'pending') Menunggu Review
                                             @elseif($p->verification_status === 'approved') Disetujui
                                             @else Ditolak
                                             @endif
@@ -1164,7 +1135,7 @@
                                         pindah ke kolom Aksi. --}}
                                         @if($pDisetujui)
                                             @if($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                                <span class="claim-badge diajukan">Menunggu persetujuan</span>
+                                                <span class="claim-badge diajukan">Menunggu Review</span>
                                                 {{-- Tombol Batalkan tinggal di dalam modal Tinjau; formnya
                                                 tetap di sini karena satu form milik satu baris. --}}
                                                 <form method="POST" id="batalRewardForm{{ $p->id }}"
@@ -1230,7 +1201,7 @@
                     </table>
                 </div>
 
-                @include('manajemenmahasiswa::verifikasi.partials.pagination', ['paginator' => $prestasiData])
+                @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
             @else
                 <div class="empty-state">
                     <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"

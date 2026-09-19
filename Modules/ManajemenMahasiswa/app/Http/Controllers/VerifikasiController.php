@@ -12,6 +12,7 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\VerifikasiBukti;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class VerifikasiController extends Controller
 {
@@ -26,7 +27,7 @@ class VerifikasiController extends Controller
     public const MAKS_NAMA  = 150;
     public const MAKS_PERAN = 60;
 
-    /** Jumlah baris per halaman pada daftar milik mahasiswa. */
+    /** Baris per halaman bawaan pada daftar milik mahasiswa (bisa diganti lewat "Per page"). */
     private const PER_HALAMAN_MAHASISWA = 10;
 
     /**
@@ -370,7 +371,13 @@ class VerifikasiController extends Controller
         // Filter status verifikasi — pilihannya dikunci ke isi dropdown. Nilai di
         // luar daftar dianggap "semua" agar URL yang diubah manual tidak berujung
         // tabel kosong tanpa penjelasan, sama seperti perlakuan filter tingkat.
-        $status = $request->get('status', 'semua');
+        //
+        // Default saat halaman dibuka tanpa query "status": verifikator yang memang
+        // bertugas menyetujui/menolak langsung disodori antrean "Menunggu Verifikasi"
+        // — itu pekerjaan mereka. Pengawas read-only (GPM/Ketua Departemen) tetap
+        // default "semua" karena mereka memantau seluruh riwayat, bukan mengerjakan
+        // antrean.
+        $status = $request->get('status', $readOnly ? 'semua' : 'pending');
         if (!\in_array($status, ['pending', 'approved', 'rejected'], true)) {
             $status = 'semua';
         }
@@ -382,6 +389,10 @@ class VerifikasiController extends Controller
         if (!\in_array($tingkat, Prestasi::TINGKAT_LIST, true)) {
             $tingkat = 'semua';
         }
+
+        // Baris per halaman — dipilih lewat "Per page" di footer tabel. Satu nilai untuk kedua
+        // tab karena hanya satu tab yang tampil sekaligus.
+        $perPage = PerPage::resolve($request);
 
         // ── Riwayat Kegiatan (manual only) ──
         $riwayatQuery = RiwayatKegiatan::with(['student.user', 'kegiatan', 'verifiedBy', 'buktiFiles'])
@@ -404,7 +415,7 @@ class VerifikasiController extends Controller
             });
         }
 
-        $riwayatData = $riwayatQuery->orderByDesc('created_at')->paginate(15, ['*'], 'riwayat_page');
+        $riwayatData = $riwayatQuery->orderByDesc('created_at')->paginate($perPage, ['*'], 'riwayat_page');
 
         // ── Prestasi ──
         $prestasiQuery = Prestasi::with(['kemahasiswaan.user', 'verifiedBy', 'claimedBy', 'reviewedBy', 'buktiFiles']);
@@ -427,7 +438,7 @@ class VerifikasiController extends Controller
             $prestasiQuery->where('tingkat', $tingkat);
         }
 
-        $prestasiData = $prestasiQuery->orderByDesc('created_at')->paginate(15, ['*'], 'prestasi_page');
+        $prestasiData = $prestasiQuery->orderByDesc('created_at')->paginate($perPage, ['*'], 'prestasi_page');
 
         // Counters
         $pendingRiwayat  = RiwayatKegiatan::manualOnly()->pending()->count();
@@ -526,7 +537,9 @@ class VerifikasiController extends Controller
             });
         }
 
-        $rewardData = $rewardQuery->orderByDesc('claimed_at')->paginate(15)->withQueryString();
+        $rewardData = $rewardQuery->orderByDesc('claimed_at')
+            ->paginate(PerPage::resolve($request))
+            ->withQueryString();
 
         $pendingPrestasiReward = Prestasi::rewardDiajukan()->count();
 
@@ -573,6 +586,7 @@ class VerifikasiController extends Controller
         $tab  = $request->get('tab', 'prestasi');
         $student = Student::where('user_id', $user->id)->first();
         $mhs = Kemahasiswaan::where('user_id', $user->id)->first();
+        $perPage = PerPage::resolve($request, PerPage::TABEL, self::PER_HALAMAN_MAHASISWA);
 
         // Dipisah per tab & dihalamankan: daftar milik satu mahasiswa bisa
         // panjang, dan sebelumnya seluruhnya dimuat sekaligus tanpa alat bantu.
@@ -584,7 +598,7 @@ class VerifikasiController extends Controller
                     ->manualOnly()
                 : RiwayatKegiatan::whereRaw('1 = 0'))
             ->orderByDesc('created_at')
-            ->paginate(self::PER_HALAMAN_MAHASISWA, ['*'], 'riwayat_page')
+            ->paginate($perPage, ['*'], 'riwayat_page')
             ->withQueryString();
 
         $prestasiData = ($mhs
@@ -592,7 +606,7 @@ class VerifikasiController extends Controller
                     ->where('kemahasiswaan_id', $mhs->id)
                 : Prestasi::whereRaw('1 = 0'))
             ->orderByDesc('created_at')
-            ->paginate(self::PER_HALAMAN_MAHASISWA, ['*'], 'prestasi_page')
+            ->paginate($perPage, ['*'], 'prestasi_page')
             ->withQueryString();
 
         // Rincian dulu, angkanya diturunkan dari situ — supaya "2/2" yang dibaca

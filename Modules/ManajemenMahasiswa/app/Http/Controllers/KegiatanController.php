@@ -19,6 +19,7 @@ use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Services\PengelolaKegiatanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class KegiatanController extends Controller
 {
@@ -37,8 +38,7 @@ class KegiatanController extends Controller
     public function index(Request $request)
     {
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
-        $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
-        
+
         // Ikut menghitung kegiatan yang kolom `tahun`-nya belum terisi lewat
         // tanggal mulainya — lihat Kegiatan::daftarTahun().
         $tahunList = Kegiatan::daftarTahun(Kegiatan::STATUS_SELESAI);
@@ -63,12 +63,8 @@ class KegiatanController extends Controller
             }
         }
 
-        // Filter by kategori — daftar kategori sudah lama dikirim ke view tapi tidak
-        // pernah dipakai menyaring apa pun, padahal badge kategorinya tampil di
-        // setiap kartu sehingga user wajar mengira bisa disaring lewat itu.
-        if ($request->filled('kategori') && $request->kategori !== 'semua') {
-            $query->whereHas('kategoris', fn($k) => $k->where('mk_kategori_kegiatan.id', $request->kategori));
-        }
+        // Tidak ada filter kategori: "Kegiatan Himpunan"/"Kegiatan Prodi" sudah terwakili
+        // filter bidang di atas (bidang "prodi" mencakup kegiatan berkategori Prodi).
 
         // Filter by tahun — pakai scope supaya kegiatan ber-`tahun` NULL tetap
         // ketemu lewat tahun pada tanggal mulainya, bukan hilang dari daftar.
@@ -90,7 +86,7 @@ class KegiatanController extends Controller
             });
         }
 
-        $kegiatan = $query->paginate(12);
+        $kegiatan = $query->paginate(PerPage::resolve($request, PerPage::KARTU, 12));
 
         // Cek apakah user adalah admin/pengurus (untuk tombol Tambah)
         $user  = Auth::user();
@@ -113,7 +109,6 @@ class KegiatanController extends Controller
             'bidangList',
             'tahunList',
             'adaTanpaTahun',
-            'kategoriList',
             'isAdmin',
             'canTambahKegiatan',
         ));

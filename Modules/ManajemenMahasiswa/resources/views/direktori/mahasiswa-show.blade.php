@@ -362,16 +362,6 @@
                     <span class="detail-label">Status Saat Ini</span>
                     <span class="status-badge {{ $mhs->status }}">{{ $statusLabel }}</span>
                 </div>
-                @if($isCanSeeIpk)
-                <div class="detail-row">
-                    <span class="detail-label">IPK</span>
-                    @if($mhs->ipk !== null)
-                        <span class="detail-value">{{ number_format($mhs->ipk, 2) }} / 4.00</span>
-                    @else
-                        <span class="detail-value empty">Belum diisi</span>
-                    @endif
-                </div>
-                @endif
             </div>
         </div>
     </div>
