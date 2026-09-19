@@ -8,7 +8,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
 use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 use Modules\ManajemenMahasiswa\Http\Controllers\AnonPengaduanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
-use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanDelegasiController;
+
 use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ProkerController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PelaksanaanController;
@@ -164,37 +164,25 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->middleware('throttle:10,1')->name('anon.generate');
             });
 
-            // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
-            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|gpm|kaprodi|ketua_departemen|admin|superadmin|admin_kemahasiswaan')->group(function () {
+            // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (gpm/admin)
+            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dpm|gpm|kaprodi|ketua_departemen|admin|superadmin|admin_kemahasiswaan')->group(function () {
                 Route::get('/', [PengaduanController::class, 'index'])->name('index');
                 Route::get('/{pengaduan}', [PengaduanController::class, 'show'])
                     ->whereNumber('pengaduan')
                     ->name('show');
             });
 
-            // Admin: delegasi, tutup paksa
+            // Admin: toggle tercatat
             Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen')->group(function () {
-                Route::post('/{pengaduan}/delegate', [PengaduanController::class, 'delegate'])
-                    ->name('delegate')->whereNumber('pengaduan');
-                Route::post('/{pengaduan}/close-admin', [PengaduanController::class, 'closeByAdmin'])
-                    ->name('close.admin')->whereNumber('pengaduan');
-                Route::post('/{pengaduan}/mark-proses', [PengaduanController::class, 'markProses'])
-                    ->name('mark.proses')->whereNumber('pengaduan');
+                Route::post('/{pengaduan}/toggle-tercatat', [PengaduanController::class, 'toggleTercatat'])
+                    ->name('toggle.tercatat')->whereNumber('pengaduan');
             });
 
-            // Hapus pengaduan — hanya Admin & GPM
+            // Hapus pengaduan — hanya Admin & Superadmin
             Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
-                ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen');
-
-            // ── Delegasi (khusus Dosen) ────────────────────────────────────
-            Route::prefix('delegasi')->name('delegasi.')->middleware('role:dosen|dosen_koordinator')->group(function () {
-                Route::post('/{delegasi}/respond', [PengaduanDelegasiController::class, 'respond'])
-                    ->name('respond')->whereNumber('delegasi');
-                Route::post('/{delegasi}/reject', [PengaduanDelegasiController::class, 'reject'])
-                    ->name('reject')->whereNumber('delegasi');
-            });
+                ->middleware('role:admin|superadmin');
         });
 
         // ── Forum Notifications (AJAX) ────────────────────────────────────

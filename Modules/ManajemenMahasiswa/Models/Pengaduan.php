@@ -45,8 +45,9 @@ class Pengaduan extends Model
     public const STATUS_DRAFT             = 'draft';
     public const STATUS_BARU              = 'baru';
     public const STATUS_DIBACA            = 'dibaca';
-    public const STATUS_DIDELEGASIKAN     = 'didelegasikan';
-    public const STATUS_SELESAI           = 'selesai';
+    public const STATUS_TERCATAT          = 'tercatat';
+    public const STATUS_DIDELEGASIKAN     = 'didelegasikan'; // Legacy — data lama
+    public const STATUS_SELESAI           = 'selesai';       // Legacy — data lama
 
     public const MAX_REOPEN = 2;
 
@@ -163,10 +164,11 @@ class Pengaduan extends Model
     {
         return match ($this->status) {
             self::STATUS_BARU          => 'Baru',
-            self::STATUS_DIBACA        => 'Diproses',
-            self::STATUS_DIDELEGASIKAN => 'Didelegasikan',
-            self::STATUS_SELESAI       => 'Selesai',
-            default                    => ucfirst(str_replace('_', ' ', (string) $this->status)),
+            self::STATUS_DIBACA        => '',
+            self::STATUS_TERCATAT      => 'Tercatat',
+            self::STATUS_DIDELEGASIKAN => 'Tercatat', // Legacy fallback
+            self::STATUS_SELESAI       => 'Tercatat', // Legacy fallback
+            default                    => '',
         };
     }
 }
