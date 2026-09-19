@@ -805,7 +805,7 @@ class FinalizationController extends Controller
             ->where('period_id', $period->id)
             ->whereIn('status', ['FORMING', 'FORMING_SOLO', 'READY_FOR_BIDDING'])
             ->withCount('members')
-            ->having('members_count', '<', $maxSize)
+            ->whereRaw('(SELECT COUNT(*) FROM capstone_group_members WHERE capstone_group_members.group_id = capstone_groups.id AND capstone_group_members.deleted_at IS NULL) < ?', [$maxSize])
             ->get()
             ->map(fn (Group $group) => $this->groupPayload($group));
 

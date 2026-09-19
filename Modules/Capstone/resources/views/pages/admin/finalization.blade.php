@@ -33,7 +33,7 @@
     </x-capstone::card>
 
     <div x-show="flow && flow.blockers && flow.blockers.length" class="space-y-2">
-        <template x-for="blocker in flow.blockers" :key="blocker.type">
+        <template x-for="blocker in (flow?.blockers || [])" :key="blocker.type">
             <div class="flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 text-sm" :class="blocker.severity==='error' ? 'border-red-200 bg-red-50 text-red-700' : 'border-amber-200 bg-amber-50 text-amber-700'">
                 <x-capstone::icon name="AlertTriangle" />
                 <span x-text="blocker.message" class="mr-auto"></span>

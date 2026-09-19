@@ -1,4 +1,4 @@
-import {basePage,api,rows,unwrap,query,dialog,allRows,mergePage} from './shared.js';
+import {basePage,api,rows,unwrap,query,dialog,allRows,mergePage,notify} from './shared.js';
 import {context} from '../../api.js';
 export function adminGroups(detail=false){return mergePage(basePage(),{detail,group:null,lecturers:[],supervisorId:'',status:'',sortBy:'',allItems:[],selectedMembers:[],messageText:'',flagTarget:null,flagReason:'',unflagTarget:null,
     async init(){try{await this.periodsLoad(false);if(detail){this.lecturers=await allRows('/admin/users?role=dosen');await this.load();}else{await this.loadAll();}}catch(e){this.error=e.message;this.loading=false;}},
