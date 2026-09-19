@@ -597,6 +597,118 @@ class FinalizationController extends Controller
     }
 
     /**
+     * Finalize the period flag when groups were already marked KELOMPOK_FINAL
+     * one-by-one (mark_final) so `execute` has no READY_FOR_FINALIZATION rows
+     * left to process. Groups already past finalization (PDC1_ACTIVE, e.g.
+     * after a reopen that ran before the revert logic existed) are accepted
+     * as-is. Optionally activates PDC1 for the finalized groups.
+     *
+     * POST /admin/finalization/finalize-period-flag
+     */
+    public function finalizePeriodFlag(Request $request)
+    {
+        $request->validate([
+            'period_id' => 'required|exists:capstone_periods,id',
+            'activate_pdc1' => 'nullable|boolean',
+            'confirmation' => 'required|accepted',
+        ]);
+
+        $period = Period::findOrFail($request->input('period_id'));
+
+        if (! $period->is_active) {
+            return response()->json(['success' => false, 'message' => 'Cannot finalize an inactive period.'], 400);
+        }
+
+        if ($period->is_finalized) {
+            return response()->json(['success' => false, 'message' => 'Period is already finalized.'], 400);
+        }
+
+        $base = Group::where('period_id', $period->id);
+
+        $readyLeft = (clone $base)->whereIn('status', self::READY_STATUSES)->count();
+        if ($readyLeft > 0) {
+            return response()->json(['success' => false, 'message' => "Masih ada {$readyLeft} kelompok berstatus siap finalisasi."], 400);
+        }
+
+        $notReadyLeft = (clone $base)->whereIn('status', self::NOT_READY_STATUSES)->count();
+        if ($notReadyLeft > 0) {
+            return response()->json(['success' => false, 'message' => "Masih ada {$notReadyLeft} kelompok yang belum siap finalisasi."], 400);
+        }
+
+        $finalGroups = (clone $base)->whereIn('status', ['KELOMPOK_FINAL', 'PDC1_ACTIVE'])->with(['period', 'title', 'members'])->get();
+        if ($finalGroups->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada kelompok final atau pasca-final pada periode ini.'], 400);
+        }
+
+        $ineligible = [];
+        foreach ($finalGroups as $group) {
+            $reason = $this->checkReadyForExecute($group);
+            if ($reason !== null) {
+                $ineligible[] = ['group_id' => $group->id, 'code' => $group->code, 'reason' => $reason];
+            }
+        }
+        if (! empty($ineligible)) {
+            return response()->json(['success' => false, 'message' => 'Ada kelompok final yang tidak memenuhi syarat.', 'ineligible' => $ineligible], 422);
+        }
+
+        $activatePdc1 = $request->boolean('activate_pdc1');
+        $activated = [];
+        $alreadyActive = [];
+
+        DB::transaction(function () use ($period, $request, $finalGroups, $activatePdc1, &$activated, &$alreadyActive) {
+            $locked = Period::lockForUpdate()->findOrFail($period->id);
+            if ($locked->is_finalized) {
+                throw new \InvalidArgumentException('Period is already finalized.');
+            }
+            $locked->is_finalized = true;
+            $locked->save();
+
+            AuditLog::create([
+                'user_id' => $request->user()->id,
+                'action' => 'PERIOD_MANUAL_FINALIZED',
+                'target_type' => 'Period',
+                'target_id' => $locked->id,
+                'payload' => [
+                    'period_id' => $locked->id,
+                    'final_group_ids' => $finalGroups->where('status', 'KELOMPOK_FINAL')->pluck('id')->all(),
+                    'pdc1_group_ids' => $finalGroups->where('status', 'PDC1_ACTIVE')->pluck('id')->all(),
+                    'activate_pdc1' => $activatePdc1,
+                ],
+            ]);
+
+            if ($activatePdc1) {
+                foreach ($finalGroups as $group) {
+                    if ($group->status === 'PDC1_ACTIVE') {
+                        $alreadyActive[] = $group->id;
+                        continue;
+                    }
+
+                    $this->stateMachine->transition($group->fresh(), 'PDC1_ACTIVE');
+
+                    AuditLog::create([
+                        'user_id' => $request->user()->id,
+                        'action' => 'GROUP_ACTIVATED_PDC1',
+                        'target_type' => 'Group',
+                        'target_id' => $group->id,
+                        'payload' => ['old_status' => 'KELOMPOK_FINAL', 'new_status' => 'PDC1_ACTIVE', 'period_id' => $locked->id],
+                    ]);
+
+                    $activated[] = $group->id;
+                }
+            } else {
+                $alreadyActive = $finalGroups->where('status', 'PDC1_ACTIVE')->pluck('id')->all();
+            }
+        });
+
+        return $this->ok([
+            'period' => $period->fresh(),
+            'finalized_groups' => $finalGroups->pluck('id')->all(),
+            'activated_pdc1' => $activated,
+            'already_pdc1' => $alreadyActive,
+        ], $activatePdc1 ? 'Periode difinalisasi dan '.count($activated).' kelompok diaktifkan ke PDC1.' : 'Periode difinalisasi.');
+    }
+
+    /**
      * Rollback finalization: POST /admin/finalization/rollback
      */
     public function rollback(Request $request)
@@ -1068,18 +1180,52 @@ class FinalizationController extends Controller
         $request->validate(['period_id' => 'required|exists:capstone_periods,id']);
 
         $period = Period::findOrFail($request->input('period_id'));
-        $period->is_finalized = false;
-        $period->save();
 
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'FINALIZATION_REOPEN',
-            'target_type' => 'Period',
-            'target_id' => $period->id,
-            'payload' => [],
-        ]);
+        $reverted = [];
+        $leftPostFinal = [];
 
-        return $this->ok(['period' => $period->fresh()], 'Periode dibuka kembali.');
+        DB::transaction(function () use ($period, $request, &$reverted, &$leftPostFinal) {
+            $locked = Period::lockForUpdate()->findOrFail($period->id);
+            $locked->is_finalized = false;
+            $locked->save();
+
+            AuditLog::create([
+                'user_id' => $request->user()->id,
+                'action' => 'FINALIZATION_REOPEN',
+                'target_type' => 'Period',
+                'target_id' => $locked->id,
+                'payload' => [],
+            ]);
+
+            // Return groups that never progressed past PDC1 activation to
+            // KELOMPOK_FINAL so the period can be finalized again. Groups
+            // deeper into post-finalization (sempro, PDC2, expo, ...) are
+            // left untouched and reported instead.
+            $groups = Group::where('period_id', $locked->id)
+                ->whereIn('status', array_merge(self::FINAL_STATUSES, self::POST_FINALIZATION_STATUSES))
+                ->lockForUpdate()
+                ->get();
+
+            foreach ($groups as $group) {
+                if ($group->status === 'PDC1_ACTIVE') {
+                    $group->status = 'KELOMPOK_FINAL';
+                    $group->save();
+                    $reverted[] = $group->id;
+
+                    AuditLog::create([
+                        'user_id' => $request->user()->id,
+                        'action' => 'FINALIZATION_REOPEN_GROUP',
+                        'target_type' => 'Group',
+                        'target_id' => $group->id,
+                        'payload' => ['old_status' => 'PDC1_ACTIVE', 'new_status' => 'KELOMPOK_FINAL', 'period_id' => $locked->id],
+                    ]);
+                } elseif ($group->status !== 'KELOMPOK_FINAL') {
+                    $leftPostFinal[] = ['group_id' => $group->id, 'code' => $group->code, 'status' => $group->status];
+                }
+            }
+        });
+
+        return $this->ok(['period' => $period->fresh(), 'reverted_group_ids' => $reverted, 'left_post_final' => $leftPostFinal], 'Periode dibuka kembali.');
     }
 
     /**
@@ -1269,7 +1415,13 @@ class FinalizationController extends Controller
         }
 
         if ($canModify && $stats['total_ready'] === 0) {
-            $blockers[] = ['type' => 'NO_READY_GROUPS', 'message' => 'Belum ada kelompok yang siap difinalisasi.', 'severity' => 'warning'];
+            $leftoverGroups = ($stats['total_no_title'] ?? 0) + ($stats['total_not_ready'] ?? 0);
+            $finalPool = ($stats['total_kelompok_final'] ?? 0) + ($stats['total_pdc1_active'] ?? 0);
+            if ($finalPool > 0 && $leftoverGroups === 0) {
+                $blockers[] = ['type' => 'ALL_GROUPS_FINAL', 'message' => 'Semua kelompok sudah final atau pasca-final. Klik Finalisasi Periode untuk mengunci periode.', 'severity' => 'info', 'action' => 'period_flag'];
+            } else {
+                $blockers[] = ['type' => 'NO_READY_GROUPS', 'message' => 'Belum ada kelompok yang siap difinalisasi.', 'severity' => 'warning'];
+            }
         }
 
         if (Group::where('period_id', $period->id)->count() === 0) {

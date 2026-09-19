@@ -5,7 +5,7 @@
     <div class="flex flex-wrap items-center gap-3">
         <div class="mr-auto">
             <h1 class="text-2xl font-bold">Finalisasi Kelompok</h1>
-            <p class="text-muted-foreground text-sm">Dashboard finalisasi: kesiapan kelompok, pembimbing, judul, dan eksekusi periode.</p>
+            <p class="text-muted-foreground text-sm">Dashboard finalisasi: kesiapan kelompok, pembimbing, judul, dan penguncian periode.</p>
         </div>
         <label class="text-sm">Periode
             <select x-model="periodId" @change="page=1;load()" :disabled="saving" class="ml-2 rounded-md border bg-background px-3 py-2">
@@ -17,7 +17,7 @@
         <x-capstone::button variant="outline" @click="load()" ::disabled="loading || saving"><x-capstone::icon name="RefreshCw" />Refresh</x-capstone::button>
         <x-capstone::button variant="outline" @click="doExport('excel')" ::disabled="loading || saving || !periodId"><x-capstone::icon name="Download" />Excel</x-capstone::button>
         <x-capstone::button variant="outline" @click="doExport('pdf')" ::disabled="loading || saving || !periodId"><x-capstone::icon name="Download" />PDF</x-capstone::button>
-        <x-capstone::button @click="openExecute()" ::disabled="!flow?.can_execute_finalization || saving"><x-capstone::icon name="CheckCircle" />Eksekusi Finalisasi</x-capstone::button>
+        <x-capstone::button variant="outline" @click="openPeriodFlag()" x-show="!period?.is_finalized && !flow?.can_execute_finalization && ((stats?.total_kelompok_final ?? 0) + (stats?.total_pdc1_active ?? 0)) > 0" ::disabled="saving"><x-capstone::icon name="Flag" />Finalisasi Periode</x-capstone::button>
         <x-capstone::button variant="outline" @click="openReopen()" x-show="stats?.can_reopen_finalization" ::disabled="saving"><x-capstone::icon name="RotateCcw" />Buka Kembali</x-capstone::button>
         <x-capstone::button variant="outline" @click="openAutoFix()" ::disabled="!periodId || saving"><x-capstone::icon name="Wrench" />Auto-fix</x-capstone::button>
         <x-capstone::button variant="outline" @click="confirmBidding('lock')" x-show="period && period.is_finalized" ::disabled="saving">Kunci Bidding</x-capstone::button>
@@ -38,6 +38,7 @@
                 <x-capstone::icon name="AlertTriangle" />
                 <span x-text="blocker.message" class="mr-auto"></span>
                 <x-capstone::button x-show="blocker.action==='reopen'" size="sm" variant="outline" @click="openReopen()">Buka Kembali</x-capstone::button>
+                <x-capstone::button x-show="blocker.action==='period_flag'" size="sm" @click="openPeriodFlag()">Finalisasi Periode</x-capstone::button>
             </div>
         </template>
     </div>
@@ -268,16 +269,11 @@
         <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-add-existing').close()">Batal</x-capstone::button><x-capstone::button @click="saveAddExisting()" ::disabled="saving">Tambahkan</x-capstone::button></div>
     </x-capstone::dialog>
 
-    <x-capstone::dialog id="fin-execute" title="Eksekusi Finalisasi" description="Finalisasi seluruh kelompok yang siap pada periode ini.">
-        <p class="text-sm">Akan difinalisasi: <strong x-text="simResult?.would_finalize_count ?? '...'"></strong> kelompok<span x-show="simResult?.skipped_count">, dilewati: <strong x-text="simResult?.skipped_count"></strong></span>.</p>
-        <p class="text-xs text-muted-foreground">Syarat per grup: sudah berjudul, jumlah anggota min–maks, serta SV1 dan SV2 terisi. Grup yang tidak lolos dilewati otomatis (lihat daftar).</p>
-        <template x-if="simResult?.skipped?.length">
-            <ul class="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2 text-xs text-amber-700">
-                <template x-for="skip in simResult.skipped" :key="skip.group_id"><li><span x-text="skip.code"></span>: <span x-text="skip.reason"></span></li></template>
-            </ul>
-        </template>
-        <label class="flex items-start gap-2 text-sm"><input type="checkbox" x-model="execConfirm" class="mt-1">Saya paham bahwa eksekusi akan memfinalisasi periode dan tidak dapat dibatalkan tanpa rollback.</label>
-        <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-execute').close()">Batal</x-capstone::button><x-capstone::button @click="doExecute()" ::disabled="!execConfirm || saving">Eksekusi</x-capstone::button></div>
+    <x-capstone::dialog id="fin-period-flag" title="Finalisasi Periode" description="Kunci periode yang seluruh kelompoknya sudah Kelompok Final.">
+        <p class="text-sm">Kelompok final: <strong x-text="stats?.total_kelompok_final ?? 0"></strong><span x-show="(stats?.total_pdc1_active ?? 0) > 0">, pasca-final (PDC1): <strong x-text="stats?.total_pdc1_active ?? 0"></strong></span>. Periode akan dikunci sehingga bidding terkunci dan data tidak bisa diubah lagi.</p>
+        <label class="flex items-start gap-2 text-sm"><input type="checkbox" x-model="activatePdc1" class="mt-1">Langsung aktifkan seluruh kelompok final ke PDC1.</label>
+        <label class="flex items-start gap-2 text-sm"><input type="checkbox" x-model="periodFlagConfirm" class="mt-1">Saya paham finalisasi periode tidak dapat dibatalkan tanpa membuka kembali periode.</label>
+        <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-period-flag').close()">Batal</x-capstone::button><x-capstone::button @click="doPeriodFlag()" ::disabled="!periodFlagConfirm || saving">Finalisasi Periode</x-capstone::button></div>
     </x-capstone::dialog>
 
     <x-capstone::dialog id="fin-rollback" title="Rollback Finalisasi" description="Kembalikan kelompok final ke status siap.">
@@ -293,6 +289,7 @@
     </x-capstone::dialog>
 
     <x-capstone::dialog id="fin-reopen" title="Buka Kembali Periode" description="Membuka kembali periode yang sudah difinalisasi.">
+        <p class="text-sm text-muted-foreground">Kelompok berstatus PDC1 Aktif akan dikembalikan menjadi Kelompok Final.</p>
         <label class="flex items-start gap-2 text-sm"><input type="checkbox" x-model="execConfirm" class="mt-1">Saya paham periode akan kembali bisa diubah.</label>
         <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-reopen').close()">Batal</x-capstone::button><x-capstone::button @click="doReopen()" ::disabled="!execConfirm || saving">Buka Kembali</x-capstone::button></div>
     </x-capstone::dialog>

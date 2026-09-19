@@ -137,6 +137,7 @@ Route::prefix('capstone')->group(function () {
             Route::post('/finalization/allocate', [FinalizationController::class, 'allocate']);
             Route::post('/finalization/allocate-student-proposed', [FinalizationController::class, 'allocateStudentProposed']);
             Route::post('/finalization/finalize-period', [FinalizationController::class, 'finalizePeriod']);
+            Route::post('/finalization/finalize-period-flag', [FinalizationController::class, 'finalizePeriodFlag']);
             Route::post('/finalization/lock', [FinalizationController::class, 'lock']);
             Route::post('/finalization/unlock', [FinalizationController::class, 'unlock']);
             // Finalization dashboard contract

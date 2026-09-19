@@ -70,7 +70,7 @@ export function semproAdmin(){return mergePage(basePage(),{groups:[],lecturers:[
 export function finalizationAdmin(){return mergePage(basePage(),{
     tab:'ready',subTab:'no_group',supervisorStatus:'all',memberCount:'all',
     stats:null,flow:null,pagination:{current_page:1,last_page:1,total:0,per_page:20},
-    multiplePeriods:false,simResult:null,execConfirm:false,
+    multiplePeriods:false,execConfirm:false,periodFlagConfirm:false,activatePdc1:true,
     lecturers:[],availTitles:[],availGroups:[],
     selectedIds:[],noGroupSelected:[],
     svForm:{group_ids:[],supervisor_1_id:'',supervisor_2_id:'',notes:'',mark_final:false,isReady:false,svDefaultName:''},svError:'',
@@ -162,7 +162,9 @@ export function finalizationAdmin(){return mergePage(basePage(),{
             if(this.svForm.group_ids.length>1){await api('/admin/finalization/batch-set-supervisor',{method:'POST',body:{...body,group_ids:this.svForm.group_ids}});}
             else{await api('/admin/finalization/set-supervisor',{method:'POST',body:{...body,group_id:this.svForm.group_ids[0]}});}
         },markFinal?'Kelompok ditandai sebagai Kelompok Final.':'Pembimbing ditetapkan.');
-        if(done){dialog('fin-set-sv').close();await this.refreshAll();}
+        if(done){dialog('fin-set-sv').close();await this.refreshAll();
+            if(markFinal){const s=this.stats||{};if((s.total_ready||0)===0&&(s.total_no_title||0)===0&&(s.total_not_ready||0)===0&&(s.total_kelompok_final||0)>0){notify('Semua kelompok sudah Kelompok Final. Klik \u2018Finalisasi Periode\u2019 untuk mengunci periode dan lanjut ke PDC1.');}}
+        }
     },
     async openAssignTitle(item){
         this.titleForm={group_id:item.id,group_code:item.code||('Kelompok #'+item.id),title_id:''};
@@ -204,13 +206,9 @@ export function finalizationAdmin(){return mergePage(basePage(),{
         if(!this.addForm.group_id)return;
         if(await this.run(()=>api('/admin/finalization/add-to-existing-group',{method:'POST',body:{group_id:Number(this.addForm.group_id),student_ids:this.noGroupSelected.map(Number)}}),'Anggota ditambahkan.')){dialog('fin-add-existing').close();this.noGroupSelected=[];await this.load();}
     },
-    async openExecute(){
-        this.execConfirm=false;this.simResult=null;
-        try{this.simResult=unwrap(await api('/admin/finalization/simulate'+query({period_id:this.periodId})))||null;}catch(e){notify(e.message,true);return;}
-        dialog('fin-execute').showModal();
-    },
-    async doExecute(){
-        if(await this.run(()=>api('/admin/finalization/execute',{method:'POST',body:{period_id:Number(this.periodId),confirmation:true}}),'Finalisasi dieksekusi.')){dialog('fin-execute').close();this.execConfirm=false;await this.refreshAll();}
+    openPeriodFlag(){this.periodFlagConfirm=false;this.activatePdc1=true;dialog('fin-period-flag').showModal();},
+    async doPeriodFlag(){
+        if(await this.run(()=>api('/admin/finalization/finalize-period-flag',{method:'POST',body:{period_id:Number(this.periodId),confirmation:true,activate_pdc1:this.activatePdc1}}),'Periode difinalisasi.')){dialog('fin-period-flag').close();this.periodFlagConfirm=false;await this.refreshAll();}
     },
     openRollback(){this.reasonForm={reason:''};this.rollbackIds=[...this.selectedIds];dialog('fin-rollback').showModal();},
     async doRollback(){
