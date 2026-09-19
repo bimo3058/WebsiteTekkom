@@ -145,9 +145,24 @@ class BladeFinalizationTest extends TestCase
             'group_id' => $group->id,
         ])->assertOk()->assertJsonPath('data.group.status', 'READY_FOR_FINALIZATION');
 
+        // Ready groups must not accept (re)assignment of titles.
+        $otherTitle = Title::create([
+            'lecturer_id' => $lecturer->id,
+            'title' => 'Judul Lain',
+            'quota' => 2,
+            'title_source' => 'LECTURER',
+            'approved_by_admin' => true,
+        ]);
+        $this->postJson('/api/capstone/admin/finalization/assign-title', [
+            'group_id' => $group->id,
+            'title_id' => $otherTitle->id,
+        ])->assertStatus(400);
+
+        $lecturer2 = $this->lecturerAccount();
         $this->postJson('/api/capstone/admin/finalization/set-supervisor', [
             'group_id' => $group->id,
             'supervisor_1_id' => $lecturer->id,
+            'supervisor_2_id' => $lecturer2->id,
         ])->assertOk()->assertJsonPath('success', true);
 
         $this->postJson('/api/capstone/admin/finalization/execute', [
@@ -162,6 +177,155 @@ class BladeFinalizationTest extends TestCase
             'period_id' => $period->id,
             'group_id' => $group->id,
         ])->assertOk()->assertJsonPath('data.new_status', 'READY_FOR_FINALIZATION');
+    }
+
+    public function test_promote_and_force_ready_require_title_and_member_range(): void
+    {
+        $this->admin();
+        $period = $this->period();
+
+        // No title → promote rejected.
+        $noTitle = $this->groupWithMembers($period, 2, 'TITLE_APPROVED');
+        $this->postJson('/api/capstone/admin/finalization/promote-to-ready', [
+            'group_id' => $noTitle->id,
+        ])->assertStatus(400);
+        $this->postJson('/api/capstone/admin/finalization/force-ready', [
+            'group_id' => $noTitle->id,
+        ])->assertStatus(400);
+
+        // Undersized even with title → rejected.
+        $lecturer = $this->lecturerAccount();
+        $title = Title::create([
+            'lecturer_id' => $lecturer->id,
+            'title' => 'Judul Kecil',
+            'quota' => 2,
+            'title_source' => 'LECTURER',
+            'approved_by_admin' => true,
+        ]);
+        $small = $this->groupWithMembers($period, 1, 'TITLE_APPROVED');
+        $small->assignTitleFromFinalization($title->id);
+        $small->save();
+        $this->postJson('/api/capstone/admin/finalization/promote-to-ready', [
+            'group_id' => $small->id,
+        ])->assertStatus(400);
+        $this->postJson('/api/capstone/admin/finalization/force-ready', [
+            'group_id' => $small->id,
+        ])->assertStatus(400);
+    }
+
+    public function test_set_supervisor_mark_final_requires_sv1_and_sv2(): void
+    {
+        $this->admin();
+        $period = $this->period();
+        $lecturer = $this->lecturerAccount();
+        $lecturer2 = $this->lecturerAccount();
+        $title = Title::create([
+            'lecturer_id' => $lecturer->id,
+            'title' => 'Judul Mark Final',
+            'quota' => 2,
+            'title_source' => 'LECTURER',
+            'approved_by_admin' => true,
+        ]);
+
+        $group = $this->groupWithMembers($period, 2, 'TITLE_APPROVED');
+        $group->assignTitleFromFinalization($title->id);
+        $group->save();
+        $this->postJson('/api/capstone/admin/finalization/promote-to-ready', [
+            'group_id' => $group->id,
+        ])->assertOk();
+        $group = $group->fresh();
+
+        // Flag consumed by the UI "Final" button.
+        $dashboard = $this->getJson("/api/capstone/admin/finalization/dashboard?period_id={$period->id}&tab=ready&per_page=20");
+        $row = collect($dashboard->json('data.data.data'))->firstWhere('id', $group->id);
+        $this->assertTrue($row['allowed_actions']['can_mark_kelompok_final']);
+
+        // SV1 only → rejected, stays READY.
+        $this->postJson('/api/capstone/admin/finalization/set-supervisor', [
+            'group_id' => $group->id,
+            'supervisor_1_id' => $lecturer->id,
+            'mark_final' => true,
+        ])->assertStatus(400);
+        $this->assertSame('READY_FOR_FINALIZATION', $group->fresh()->status);
+
+        // SV1 + SV2 → transitions to KELOMPOK_FINAL.
+        $this->postJson('/api/capstone/admin/finalization/set-supervisor', [
+            'group_id' => $group->id,
+            'supervisor_1_id' => $lecturer->id,
+            'supervisor_2_id' => $lecturer2->id,
+            'mark_final' => true,
+        ])->assertOk()->assertJsonPath('data.group.status', 'KELOMPOK_FINAL');
+        $this->assertNotNull($group->fresh()->finalized_at);
+    }
+
+    public function test_set_supervisor_rejected_before_ready(): void
+    {
+        $this->admin();
+        $period = $this->period();
+        $lecturer = $this->lecturerAccount();
+
+        foreach (['FORMING', 'READY_FOR_BIDDING', 'TITLE_APPROVED'] as $status) {
+            $group = $this->groupWithMembers($period, 2, $status);
+            $this->postJson('/api/capstone/admin/finalization/set-supervisor', [
+                'group_id' => $group->id,
+                'supervisor_1_id' => $lecturer->id,
+            ])->assertStatus(400);
+            $this->assertNull($group->fresh()->supervisor_1_id);
+        }
+
+        $ready = $this->groupWithMembers($period, 2, 'READY_FOR_FINALIZATION');
+        $dashboard = $this->getJson("/api/capstone/admin/finalization/dashboard?period_id={$period->id}&tab=ready&per_page=20");
+        $row = collect($dashboard->json('data.data.data'))->firstWhere('id', $ready->id);
+        $this->assertTrue($row['allowed_actions']['can_set_supervisor']);
+
+        $notReady = $this->getJson("/api/capstone/admin/finalization/dashboard?period_id={$period->id}&tab=others&sub_tab=not_ready&per_page=20");
+        foreach ($notReady->json('data.data.data') as $item) {
+            $this->assertFalse($item['allowed_actions']['can_set_supervisor']);
+        }
+    }
+
+    public function test_group_payload_suggests_title_lecturer_as_sv1(): void
+    {
+        $this->admin();
+        $period = $this->period();
+        $owner = $this->lecturerAccount();
+        $proposer = $this->lecturerAccount();
+
+        $makeReady = function (Title $title) use ($period) {
+            $group = $this->groupWithMembers($period, 2, 'TITLE_APPROVED');
+            $group->assignTitleFromFinalization($title->id);
+            $group->save();
+            $this->postJson('/api/capstone/admin/finalization/promote-to-ready', [
+                'group_id' => $group->id,
+            ])->assertOk();
+
+            return $group->fresh();
+        };
+
+        $lecturerTitle = Title::create([
+            'lecturer_id' => $owner->id,
+            'title' => 'Judul Dosen',
+            'quota' => 2,
+            'title_source' => 'LECTURER',
+            'approved_by_admin' => true,
+        ]);
+        $studentTitle = Title::create([
+            'lecturer_id' => $proposer->id,
+            'proposed_supervisor_id' => $proposer->id,
+            'title' => 'Judul Mahasiswa',
+            'quota' => 2,
+            'title_source' => 'STUDENT',
+            'supervisor_approval_status' => 'APPROVED',
+            'proposed_by_group_id' => $makeReady($lecturerTitle)->id,
+        ]);
+
+        $g1 = $makeReady($lecturerTitle);
+        $g2 = $makeReady($studentTitle);
+
+        $dashboard = $this->getJson("/api/capstone/admin/finalization/dashboard?period_id={$period->id}&tab=ready&per_page=20");
+        $rows = collect($dashboard->json('data.data.data'))->keyBy('id');
+        $this->assertSame($owner->id, $rows[$g1->id]['suggested_supervisor_1_id']);
+        $this->assertSame($proposer->id, $rows[$g2->id]['suggested_supervisor_1_id']);
     }
 
     public function test_no_group_counts_only_registered_students_case_insensitive(): void

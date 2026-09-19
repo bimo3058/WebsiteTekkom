@@ -117,7 +117,7 @@
         </label>
     </div>
 
-    <div x-show="isGroupView && selectedIds.length" x-cloak class="flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+    <div x-show="isGroupView && tab==='ready' && selectedIds.length" x-cloak class="flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
         <span><span x-text="selectedIds.length"></span> kelompok dipilih</span>
         <x-capstone::button size="sm" @click="openBatchSv()">Set Pembimbing Massal</x-capstone::button>
         <x-capstone::button size="sm" variant="outline" x-show="tab==='final'" @click="openRollback()">Rollback</x-capstone::button>
@@ -146,6 +146,7 @@
                     <th class="h-10 px-2 text-left font-semibold text-gray-700">Judul</th>
                     <th class="h-10 px-2 text-left font-semibold text-gray-700">Pembimbing</th>
                     <th class="h-10 px-2 text-left font-semibold text-gray-700">Status</th>
+                    <th x-show="tab==='ready'" class="h-10 px-2 text-left font-semibold text-gray-700">Kesiapan</th>
                     <th class="h-10 px-2 text-left font-semibold text-gray-700">Aksi</th>
                 </tr></thead>
                 <tbody class="[&_tr:last-child]:border-0">
@@ -157,12 +158,14 @@
                             <td class="px-2 py-2"><span x-text="item.title?.title || '—'"></span></td>
                             <td class="px-2 py-2 text-xs"><span x-text="'SV1: '+(item.supervisor1?.name || item.supervisor1?.user?.name || '—')"></span><br><span x-text="'SV2: '+(item.supervisor2?.name || item.supervisor2?.user?.name || '—')"></span></td>
                             <td class="px-2 py-2"><span class="rounded-full border px-2 py-0.5 text-xs" :class="groupStatusClass(item.status)" x-text="item.status_label || item.status"></span></td>
+                            <td x-show="tab==='ready'" class="px-2 py-2"><div class="flex flex-wrap gap-1"><template x-for="r in readiness(item)" :key="r.label"><span class="rounded-full border px-2 py-0.5 text-xs" :class="r.ok ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-600 border-red-200'" x-text="(r.ok ? '✓ ' : '✗ ') + r.label"></span></template></div></td>
                             <td class="px-2 py-2"><div class="flex flex-wrap gap-1">
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_set_supervisor" @click="openSingleSv(item)">SV</x-capstone::button>
+                                <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_mark_kelompok_final" @click="openMarkFinal(item)">Final</x-capstone::button>
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_assign_title" @click="openAssignTitle(item)">Judul</x-capstone::button>
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_promote_to_ready_for_finalization" @click="promote(item)">Promote</x-capstone::button>
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_cancel_kelompok_final" @click="openCancel(item)">Batalkan</x-capstone::button>
-                                <x-capstone::button size="sm" variant="ghost" x-show="!['KELOMPOK_FINAL','PDC1_ACTIVE','PDC2_ACTIVE','CLOSED'].includes(item.status)" @click="openForceReady(item)">Force</x-capstone::button>
+                                <x-capstone::button size="sm" variant="ghost" x-show="!['READY_FOR_FINALIZATION','KELOMPOK_FINAL','PDC1_ACTIVE','PDC2_ACTIVE','CLOSED'].includes(item.status)" @click="openForceReady(item)">Force</x-capstone::button>
                             </div></td>
                         </tr>
                     </template>
@@ -228,10 +231,13 @@
     <x-capstone::dialog id="fin-set-sv" title="Set Pembimbing" description="Tetapkan pembimbing 1 (wajib) dan pembimbing 2 (opsional, harus berbeda).">
         <p class="text-sm text-muted-foreground"><span x-text="svForm.group_ids.length"></span> kelompok dipilih</p>
         <label class="block text-sm">Pembimbing 1<select x-model="svForm.supervisor_1_id" class="mt-1 w-full rounded-md border bg-background px-3 py-2"><option value="">Pilih dosen</option><template x-for="lecturer in lecturers" :key="lecturer.id"><option :value="String(lecturer.id)" x-text="lecturer.name + ' (' + lecturer.current_load + '/' + lecturer.max_load + ')'"></option></template></select></label>
+        <p x-show="svForm.svDefaultName" class="text-xs text-muted-foreground">SV1 default: dosen pemilik/pengaju judul (<span x-text="svForm.svDefaultName"></span>) — dapat diganti.</p>
         <label class="block text-sm">Pembimbing 2 (opsional)<select x-model="svForm.supervisor_2_id" class="mt-1 w-full rounded-md border bg-background px-3 py-2"><option value="">Tidak ada</option><template x-for="lecturer in lecturers" :key="lecturer.id"><option :value="String(lecturer.id)" x-text="lecturer.name + ' (' + lecturer.current_load + '/' + lecturer.max_load + ')'"></option></template></select></label>
+        <label x-show="svForm.group_ids.length===1 && svForm.isReady" class="flex items-start gap-2 text-sm"><input type="checkbox" x-model="svForm.mark_final" class="mt-1">Tandai sebagai Kelompok Final (wajib SV1 dan SV2 terisi)</label>
+        <p x-show="svForm.mark_final && !(svForm.supervisor_1_id && svForm.supervisor_2_id)" class="text-xs text-amber-700">Kelompok Final wajib SV1 dan SV2 terisi.</p>
         <label class="block text-sm">Catatan (opsional)<input type="text" x-model="svForm.notes" class="mt-1 w-full rounded-md border bg-background px-3 py-2"></label>
         <p x-show="svError" x-text="svError" class="text-sm text-red-600"></p>
-        <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-set-sv').close()">Batal</x-capstone::button><x-capstone::button @click="saveSupervisors()" ::disabled="saving">Simpan</x-capstone::button></div>
+        <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-set-sv').close()">Batal</x-capstone::button><x-capstone::button @click="saveSupervisors()" ::disabled="saving || (svForm.mark_final && !(svForm.supervisor_1_id && svForm.supervisor_2_id))">Simpan</x-capstone::button></div>
     </x-capstone::dialog>
 
     <x-capstone::dialog id="fin-assign-title" title="Tetapkan Judul" description="Pilih judul yang masih memiliki kuota.">
@@ -264,6 +270,7 @@
 
     <x-capstone::dialog id="fin-execute" title="Eksekusi Finalisasi" description="Finalisasi seluruh kelompok yang siap pada periode ini.">
         <p class="text-sm">Akan difinalisasi: <strong x-text="simResult?.would_finalize_count ?? '...'"></strong> kelompok<span x-show="simResult?.skipped_count">, dilewati: <strong x-text="simResult?.skipped_count"></strong></span>.</p>
+        <p class="text-xs text-muted-foreground">Syarat per grup: sudah berjudul, jumlah anggota min–maks, serta SV1 dan SV2 terisi. Grup yang tidak lolos dilewati otomatis (lihat daftar).</p>
         <template x-if="simResult?.skipped?.length">
             <ul class="max-h-40 space-y-1 overflow-y-auto rounded-md border p-2 text-xs text-amber-700">
                 <template x-for="skip in simResult.skipped" :key="skip.group_id"><li><span x-text="skip.code"></span>: <span x-text="skip.reason"></span></li></template>
@@ -295,7 +302,7 @@
         <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-autofix').close()">Batal</x-capstone::button><x-capstone::button @click="doAutoFix()" ::disabled="saving">Jalankan</x-capstone::button></div>
     </x-capstone::dialog>
 
-    <x-capstone::dialog id="fin-force" title="Force Ready" description="Paksa kelompok ke status Ready for Finalization tanpa validasi.">
+    <x-capstone::dialog id="fin-force" title="Force Ready" description="Paksa kelompok ke status Ready for Finalization. Syarat tetap berlaku: sudah punya judul dan jumlah anggota dalam rentang periode.">
         <p class="text-sm">Kelompok: <strong x-text="forceTarget?.code"></strong></p>
         <label class="block text-sm">Alasan<textarea x-model="reasonForm.reason" class="mt-1 w-full rounded-md border bg-background px-3 py-2"></textarea></label>
         <div class="flex justify-end gap-2"><x-capstone::button variant="outline" @click="dialog('fin-force').close()">Batal</x-capstone::button><x-capstone::button @click="doForceReady()" ::disabled="saving">Paksa Ready</x-capstone::button></div>

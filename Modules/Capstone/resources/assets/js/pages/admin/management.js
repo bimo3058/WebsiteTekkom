@@ -60,7 +60,7 @@ export function finalizationAdmin(){return mergePage(basePage(),{
     multiplePeriods:false,simResult:null,execConfirm:false,
     lecturers:[],availTitles:[],availGroups:[],
     selectedIds:[],noGroupSelected:[],
-    svForm:{group_ids:[],supervisor_1_id:'',supervisor_2_id:'',notes:''},svError:'',
+    svForm:{group_ids:[],supervisor_1_id:'',supervisor_2_id:'',notes:'',mark_final:false,isReady:false,svDefaultName:''},svError:'',
     titleForm:{group_id:'',group_code:'',title_id:''},
     manualForm:{option:'no_title',title_id:'',newTitle:{title:'',description:'',lecturer_id:''}},
     addForm:{group_id:''},reasonForm:{reason:''},
@@ -116,24 +116,39 @@ export function finalizationAdmin(){return mergePage(basePage(),{
     },
     async refreshAll(){await this.loadLecturers();await this.load();},
     memberNames(item){return (item.members||[]).map(m=>m.student?.name||m.student?.user?.name||'').filter(Boolean).slice(0,3).join(', ');},
+    readiness(item){
+        const min=Number(item.period?.min_group_size ?? 3);
+        const max=Number(item.period?.max_group_size ?? 4);
+        const n=(item.members||[]).length;
+        return [
+            {label:'Judul',ok:!!(item.title_id||item.title)},
+            {label:`Anggota ${n}/${min}–${max}`,ok:n>=min&&n<=max},
+            {label:'SV1',ok:!!item.supervisor_1_id},
+            {label:'SV2',ok:!!item.supervisor_2_id},
+        ];
+    },
     groupStatusClass(status){return ['FORMING','FORMING_SOLO','READY_FOR_BIDDING'].includes(status)?'bg-red-50 text-red-600 border-red-200':['READY_FOR_FINALIZATION','TITLE_APPROVED','TITLE_PROPOSED'].includes(status)?'bg-amber-50 text-amber-700 border-amber-200':'bg-emerald-50 text-emerald-700 border-emerald-200';},
     toggleId(id){this.selectedIds=this.selectedIds.includes(id)?this.selectedIds.filter(i=>i!==id):[...this.selectedIds,id];},
     toggleAll(checked){this.selectedIds=checked?this.items.map(i=>i.id):[];},
     toggleStudent(id){this.noGroupSelected=this.noGroupSelected.includes(id)?this.noGroupSelected.filter(i=>i!==id):[...this.noGroupSelected,id];},
     toggleAllStudents(checked){this.noGroupSelected=checked?this.items.map(i=>i.id):[];},
-    openSingleSv(item){this.svError='';this.svForm={group_ids:[item.id],supervisor_1_id:item.supervisor_1_id?String(item.supervisor_1_id):'',supervisor_2_id:item.supervisor_2_id?String(item.supervisor_2_id):'',notes:''};dialog('fin-set-sv').showModal();},
-    openBatchSv(){if(!this.selectedIds.length)return;this.svError='';this.svForm={group_ids:[...this.selectedIds],supervisor_1_id:'',supervisor_2_id:'',notes:''};dialog('fin-set-sv').showModal();},
+    svDefaultFor(item){return item.supervisor_1_id?{id:String(item.supervisor_1_id),name:''}:{id:item.suggested_supervisor_1_id?String(item.suggested_supervisor_1_id):'',name:item.suggested_supervisor_1_name||''};},
+    openSingleSv(item){this.svError='';const d=this.svDefaultFor(item);this.svForm={group_ids:[item.id],supervisor_1_id:d.id,supervisor_2_id:item.supervisor_2_id?String(item.supervisor_2_id):'',notes:'',mark_final:false,isReady:item.status==='READY_FOR_FINALIZATION',svDefaultName:d.name};dialog('fin-set-sv').showModal();},
+    openMarkFinal(item){this.svError='';const d=this.svDefaultFor(item);this.svForm={group_ids:[item.id],supervisor_1_id:d.id,supervisor_2_id:item.supervisor_2_id?String(item.supervisor_2_id):'',notes:'',mark_final:true,isReady:item.status==='READY_FOR_FINALIZATION',svDefaultName:d.name};dialog('fin-set-sv').showModal();},
+    openBatchSv(){if(!this.selectedIds.length)return;this.svError='';this.svForm={group_ids:[...this.selectedIds],supervisor_1_id:'',supervisor_2_id:'',notes:'',mark_final:false,isReady:false,svDefaultName:''};dialog('fin-set-sv').showModal();},
     async saveSupervisors(){
         const sv1=this.svForm.supervisor_1_id?Number(this.svForm.supervisor_1_id):null;
         const sv2=this.svForm.supervisor_2_id?Number(this.svForm.supervisor_2_id):null;
         if(!sv1){this.svError='Pembimbing 1 wajib dipilih.';return;}
         if(sv2&&sv2===sv1){this.svError='Pembimbing 1 dan 2 harus berbeda.';return;}
+        const markFinal=this.svForm.group_ids.length===1&&!!this.svForm.mark_final;
+        if(markFinal&&!sv2){this.svError='Kelompok Final wajib SV1 dan SV2 terisi.';return;}
         this.svError='';
-        const body={supervisor_1_id:sv1,supervisor_2_id:sv2,notes:this.svForm.notes||null};
+        const body={supervisor_1_id:sv1,supervisor_2_id:sv2,notes:this.svForm.notes||null,mark_final:markFinal};
         const done=await this.run(async()=>{
             if(this.svForm.group_ids.length>1){await api('/admin/finalization/batch-set-supervisor',{method:'POST',body:{...body,group_ids:this.svForm.group_ids}});}
             else{await api('/admin/finalization/set-supervisor',{method:'POST',body:{...body,group_id:this.svForm.group_ids[0]}});}
-        },'Pembimbing ditetapkan.');
+        },markFinal?'Kelompok ditandai sebagai Kelompok Final.':'Pembimbing ditetapkan.');
         if(done){dialog('fin-set-sv').close();await this.refreshAll();}
     },
     async openAssignTitle(item){

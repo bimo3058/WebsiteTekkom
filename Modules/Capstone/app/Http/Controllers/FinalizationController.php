@@ -433,6 +433,7 @@ class FinalizationController extends Controller
             'supervisor_1_id' => 'required|exists:lecturers,id',
             'supervisor_2_id' => 'nullable|exists:lecturers,id|different:supervisor_1_id',
             'notes' => 'nullable|string|max:1000',
+            'mark_final' => 'nullable|boolean',
         ]);
 
         $group = Group::findOrFail($request->input('group_id'));
@@ -445,11 +446,34 @@ class FinalizationController extends Controller
                 $request->user()->id,
                 $request->input('notes')
             );
+
+            // Mark as Kelompok Final: READY_FOR_FINALIZATION → KELOMPOK_FINAL.
+            // Requires title + member count in range + SV1 + SV2.
+            if ($request->boolean('mark_final')) {
+                $group->loadMissing(['period', 'title', 'members']);
+                $reason = $this->checkReadyForExecute($group->fresh());
+                if ($reason !== null) {
+                    throw new \InvalidArgumentException('Cannot mark Kelompok Final: '.$reason);
+                }
+                $oldStatus = $group->status;
+                $this->stateMachine->transition($group, 'KELOMPOK_FINAL');
+                $group->finalized_at = now();
+                $group->finalized_by = $request->user()->id;
+                $group->save();
+
+                AuditLog::create([
+                    'user_id' => $request->user()->id,
+                    'action' => 'FINALIZATION_MARK_KELOMPOK_FINAL',
+                    'target_type' => 'Group',
+                    'target_id' => $group->id,
+                    'payload' => ['old_status' => $oldStatus, 'new_status' => 'KELOMPOK_FINAL'],
+                ]);
+            }
         } catch (\InvalidArgumentException $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
         }
 
-        return $this->ok(['group' => $this->groupPayload($group->fresh())], 'Supervisor assigned.');
+        return $this->ok(['group' => $this->groupPayload($group->fresh())], $request->boolean('mark_final') ? 'Kelompok berhasil ditandai sebagai Kelompok Final.' : 'Supervisor assigned.');
     }
 
     /**
@@ -688,6 +712,12 @@ class FinalizationController extends Controller
         $group = Group::findOrFail($request->input('group_id'));
         $title = Title::findOrFail($request->input('title_id'));
 
+        // Title assignment is for groups that are not yet ready/finalized.
+        // Siap Finalisasi only sets supervisors — it must not (re)assign titles.
+        if (in_array($group->status, array_merge(self::READY_STATUSES, self::FINAL_STATUSES, self::POST_FINALIZATION_STATUSES), true)) {
+            return response()->json(['success' => false, 'message' => 'Cannot assign title: group is already ready for finalization or finalized.'], 400);
+        }
+
         if ($group->period && $group->period->is_finalized) {
             return response()->json(['success' => false, 'message' => 'Cannot assign title: period is finalized.'], 400);
         }
@@ -808,15 +838,15 @@ class FinalizationController extends Controller
             return response()->json(['success' => false, 'message' => "Cannot promote: group has {$memberCount} members, allowed range is {$minSize}–{$maxSize}."], 400);
         }
 
-        $hasTitle = $group->title_id !== null
-            || $group->bids()->where('lecturer_recommendation', 'ACCEPT')->exists()
-            || Title::where('proposed_by_group_id', $group->id)
-                ->where('title_source', 'STUDENT')
-                ->where('supervisor_approval_status', 'APPROVED')
-                ->exists();
+        // A group can only be marked ready when it has a concrete title assigned.
+        // (An ACCEPT bid alone is not enough — assign the title first via assign-title.)
+        if ($group->title_id === null) {
+            return response()->json(['success' => false, 'message' => 'Cannot promote: group has no title. Assign a title first.'], 400);
+        }
 
-        if (! $hasTitle) {
-            return response()->json(['success' => false, 'message' => 'Cannot promote: group has no approved title or accepted bid.'], 400);
+        $title = $group->title;
+        if ($title && $title->title_source === 'STUDENT' && $title->supervisor_approval_status !== 'APPROVED') {
+            return response()->json(['success' => false, 'message' => 'Cannot promote: student title has not been approved by the supervisor.'], 400);
         }
 
         try {
@@ -1126,6 +1156,26 @@ class FinalizationController extends Controller
             return response()->json(['success' => false, 'message' => 'Group is already past finalization.'], 400);
         }
 
+        // Same gates as promote-to-ready: concrete title + member count in range.
+        $group->loadMissing(['members', 'title']);
+        $period = $group->period;
+        $minSize = $group->group_mode === 'INDIVIDUAL' ? 1 : (int) ($period?->min_group_size ?? 3);
+        $maxSize = (int) ($period?->max_group_size ?? 4);
+        $memberCount = $group->members->count();
+
+        if ($memberCount < $minSize || $memberCount > $maxSize) {
+            return response()->json(['success' => false, 'message' => "Cannot force ready: group has {$memberCount} members, allowed range is {$minSize}–{$maxSize}."], 400);
+        }
+
+        if ($group->title_id === null) {
+            return response()->json(['success' => false, 'message' => 'Cannot force ready: group has no title. Assign a title first.'], 400);
+        }
+
+        $title = $group->title;
+        if ($title && $title->title_source === 'STUDENT' && $title->supervisor_approval_status !== 'APPROVED') {
+            return response()->json(['success' => false, 'message' => 'Cannot force ready: student title has not been approved by the supervisor.'], 400);
+        }
+
         $oldStatus = $group->status;
 
         DB::transaction(function () use ($group, $oldStatus, $request) {
@@ -1243,6 +1293,26 @@ class FinalizationController extends Controller
 
         $payload = $this->groupService->transformGroupForAdminList($group);
         $payload['allowed_actions'] = $this->resolveFinalizationActions($group);
+        $payload['suggested_supervisor_1_id'] = null;
+        $payload['suggested_supervisor_1_name'] = null;
+
+        // SV1 default: existing SV1 → title owner (for student titles the
+        // lecturer_id is the proposed supervisor) → accepted bid proposal.
+        if ($group->supervisor_1_id) {
+            $payload['suggested_supervisor_1_id'] = (int) $group->supervisor_1_id;
+            $payload['suggested_supervisor_1_name'] = $group->supervisor1?->name;
+        } elseif ($group->title?->lecturer_id) {
+            $payload['suggested_supervisor_1_id'] = (int) $group->title->lecturer_id;
+            $payload['suggested_supervisor_1_name'] = $group->title->lecturer?->name;
+        } else {
+            $acceptedBid = Bid::where('group_id', $group->id)
+                ->where('lecturer_recommendation', 'ACCEPT')
+                ->first();
+            if ($acceptedBid?->proposed_supervisor_1_id) {
+                $payload['suggested_supervisor_1_id'] = (int) $acceptedBid->proposed_supervisor_1_id;
+                $payload['suggested_supervisor_1_name'] = Lecturer::find($payload['suggested_supervisor_1_id'])?->name;
+            }
+        }
 
         return $payload;
     }
@@ -1267,7 +1337,7 @@ class FinalizationController extends Controller
                 'can_set_supervisor' => true,
                 'can_mark_kelompok_final' => true,
                 'can_cancel_kelompok_final' => false,
-                'can_assign_title' => true,
+                'can_assign_title' => false,
                 'can_promote_to_ready_for_finalization' => false,
                 'reason' => null,
             ],
@@ -1280,7 +1350,7 @@ class FinalizationController extends Controller
                 'reason' => null,
             ],
             'TITLE_APPROVED', 'READY_FOR_BIDDING' => [
-                'can_set_supervisor' => true,
+                'can_set_supervisor' => false,
                 'can_mark_kelompok_final' => false,
                 'can_cancel_kelompok_final' => false,
                 'can_assign_title' => true,
@@ -1288,7 +1358,7 @@ class FinalizationController extends Controller
                 'reason' => null,
             ],
             default => [
-                'can_set_supervisor' => in_array($group->status, ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL'], true),
+                'can_set_supervisor' => false,
                 'can_mark_kelompok_final' => false,
                 'can_cancel_kelompok_final' => false,
                 'can_assign_title' => in_array($group->status, ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL'], true),
@@ -1427,6 +1497,10 @@ class FinalizationController extends Controller
             return 'Belum memiliki pembimbing 1.';
         }
 
+        if ($group->supervisor_2_id === null) {
+            return 'Belum memiliki pembimbing 2.';
+        }
+
         return null;
     }
 
@@ -1442,6 +1516,11 @@ class FinalizationController extends Controller
 
         if (in_array($group->status, array_merge(self::FINAL_STATUSES, self::POST_FINALIZATION_STATUSES), true)) {
             throw new \InvalidArgumentException('Cannot set supervisor: group is already finalized.');
+        }
+
+        // Supervisors are only set on groups that are ready for finalization.
+        if ($group->status !== 'READY_FOR_FINALIZATION') {
+            throw new \InvalidArgumentException('Cannot set supervisor: group is not ready for finalization.');
         }
 
         return DB::transaction(function () use ($group, $supervisor1Id, $supervisor2Id, $adminId, $notes) {
