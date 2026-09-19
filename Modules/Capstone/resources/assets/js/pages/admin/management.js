@@ -1,6 +1,6 @@
 import {basePage,api,rows,unwrap,query,dialog,allRows,mergePage,notify} from './shared.js';
 import {context} from '../../api.js';
-export function adminGroups(detail=false){return mergePage(basePage(),{detail,group:null,lecturers:[],supervisorId:'',status:'',sortBy:'',allItems:[],selectedMembers:[],messageText:'',flagTarget:null,flagReason:'',unflagTarget:null,
+export function adminGroups(detail=false){return mergePage(basePage(),{detail,group:null,lecturers:[],supervisorId:'',status:'',sortBy:'',allItems:[],selectedMembers:[],messageText:'',flagTarget:null,flagReason:'',unflagTarget:null,deleteTarget:null,deleteReason:'',
     async init(){try{await this.periodsLoad(false);if(detail){this.lecturers=await allRows('/admin/users?role=dosen');await this.load();}else{await this.loadAll();}}catch(e){this.error=e.message;this.loading=false;}},
     async load(){this.loading=true;this.error='';try{if(detail)this.group=unwrap(await api('/admin/groups/'+context.params.id));else{await this.loadAll();}}catch(e){this.error=e.message;}finally{this.loading=false;}},
     async loadAll(){this.loading=true;this.error='';try{this.allItems=await allRows('/admin/groups',{period_id:this.periodId,status:this.status});this.items=this.allItems;this.page=1;}catch(e){this.error=e.message;}finally{this.loading=false;}},
@@ -34,6 +34,19 @@ export function adminGroups(detail=false){return mergePage(basePage(),{detail,gr
     async sendFlag(){if(!this.flagReason.trim()||!this.flagTarget)return;if(await this.run(()=>api(`/admin/groups/${this.group.id}/members/${this.flagTarget.id}/flag`,{method:'POST',body:{reason:this.flagReason.trim()}}),'Mahasiswa di-flag.')){dialog('group-flag').close();this.flagTarget=null;this.flagReason='';await this.load();}},
     openUnflag(member){this.unflagTarget=member;dialog('group-unflag').showModal();},
     async sendUnflag(){if(!this.unflagTarget)return;if(await this.run(()=>api(`/admin/groups/${this.group.id}/members/${this.unflagTarget.id}/unflag`,{method:'POST'}),'Mahasiswa dikembalikan.')){dialog('group-unflag').close();this.unflagTarget=null;await this.load();}},
+    openDelete(item){this.deleteTarget=item||this.group;this.deleteReason='';dialog('group-delete').showModal();},
+    closeDelete(){dialog('group-delete').close();dialog('group-delete-confirm').close();this.deleteTarget=null;this.deleteReason='';},
+    get deleteReasonValid(){return this.deleteReason.trim().length>=10;},
+    confirmDelete(){if(!this.deleteTarget||!this.deleteReasonValid)return;dialog('group-delete').close();dialog('group-delete-confirm').showModal();},
+    backToDeleteReason(){dialog('group-delete-confirm').close();dialog('group-delete').showModal();},
+    async sendDelete(){
+        if(!this.deleteTarget||!this.deleteReasonValid)return;
+        const id=this.deleteTarget.id;
+        if(await this.run(()=>api(`/admin/groups/${id}`,{method:'DELETE',body:{reason:this.deleteReason.trim()}}),'Kelompok dihapus permanen.')){
+            const wasDetail=this.detail;this.closeDelete();
+            if(wasDetail)location.href=this.url('/admin/groups');else await this.loadAll();
+        }
+    },
 });}
 export function expoAdmin(){return mergePage(basePage(),{editing:null,form:{},action:'',
     async init(){try{await this.periodsLoad(false);await this.load();}catch(e){this.error=e.message;this.loading=false;}},

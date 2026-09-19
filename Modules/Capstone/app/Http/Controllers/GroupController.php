@@ -549,6 +549,17 @@ class GroupController extends Controller
         try {
             $member->delete();
 
+            // Empty group (no remaining active members) is hard-deleted,
+            // never left behind as an orphan row.
+            $groupId = $group->id;
+            if (GroupMember::where('group_id', $groupId)->count() === 0) {
+                $this->groupService->destroyIfEmpty($groupId, 'member_removed', $user->id);
+
+                DB::commit();
+
+                return response()->json(['message' => 'Member removed. Group had no remaining members and was deleted.', 'group' => null, 'group_deleted' => true]);
+            }
+
             // Shrink policy: auto-cancel PENDING bids below min (ACCEPT kept,
             // title retained), demote bidding statuses, notify members.
             $shrink = $this->groupService->handleMembershipShrink($group);
@@ -591,7 +602,18 @@ class GroupController extends Controller
 
         DB::beginTransaction();
         try {
+            $groupId = $membership->group_id;
             $membership->delete();
+
+            // Empty group (no remaining active members) is hard-deleted,
+            // never left behind as an orphan row.
+            if (GroupMember::where('group_id', $groupId)->count() === 0) {
+                $this->groupService->destroyIfEmpty($groupId, 'member_left', $user->id);
+
+                DB::commit();
+
+                return response()->json(['message' => 'You have left the group. Group had no remaining members and was deleted.', 'group_deleted' => true]);
+            }
 
             $shrink = $this->groupService->handleMembershipShrink($group);
 

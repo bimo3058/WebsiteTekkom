@@ -85,6 +85,11 @@
           "title": "TA Defense",
           "url": "/admin/ta-defense",
           "icon": "GraduationCap"
+        },
+        {
+          "title": "Audit Log",
+          "url": "/admin/audit-logs",
+          "icon": "ScrollText"
         }
       ]
     },

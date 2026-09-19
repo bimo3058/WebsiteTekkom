@@ -418,52 +418,15 @@ class StudentFlagService
     /**
      * Handle a group that may have become empty after member removal.
      *
-     * If no active members remain, the group is dissolved.
+     * If no active members remain, the group is hard-deleted (with an
+     * AuditLog trail) instead of being left behind as an orphan row.
      *
      * @param  int  $groupId  The group ID to check
      * @param  int  $periodId  The period ID for context
      */
     private function handleEmptyGroup(int $groupId, int $periodId): void
     {
-        $activeMembersCount = GroupMember::where('group_id', $groupId)
-            ->whereNull('deleted_at')
-            ->count();
-
-        if ($activeMembersCount === 0) {
-            $group = Group::where('id', $groupId)->lockForUpdate()->first();
-
-            if ($group && $group->status !== 'DISSOLVED') {
-                // Dissolve the group
-                $group->update(['status' => 'DISSOLVED']);
-
-                // Cancel pending invitations for this group
-                GroupInvitation::where('group_id', $groupId)
-                    ->where('status', 'PENDING')
-                    ->update(['status' => 'INVALIDATED']);
-
-                // Cancel pending join requests for this group
-                JoinRequest::where('group_id', $groupId)
-                    ->where('status', 'PENDING')
-                    ->update(['status' => 'INVALIDATED']);
-
-                Log::info('group.lifecycle.dissolved', [
-                    'group_id' => $groupId,
-                    'reason' => 'last_member_flagged',
-                ]);
-
-                // Log to AuditLog
-                AuditLog::create([
-                    'user_id' => null,
-                    'action' => 'GROUP_DISSOLVED',
-                    'target_type' => Group::class,
-                    'target_id' => $groupId,
-                    'payload' => [
-                        'reason' => 'last_member_flagged',
-                        'period_id' => $periodId,
-                    ],
-                ]);
-            }
-        }
+        $this->groupService->destroyIfEmpty($groupId, 'member_flagged');
     }
 
     /**

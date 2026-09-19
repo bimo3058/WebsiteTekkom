@@ -30,6 +30,7 @@ class CapstoneServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 \Modules\Capstone\Console\Commands\RepairDuplicateLeaders::class,
+                \Modules\Capstone\Console\Commands\PurgeEmptyGroups::class,
             ]);
         }
         $this->loadViewsFrom(module_path('Capstone', 'resources/views'), 'capstone');

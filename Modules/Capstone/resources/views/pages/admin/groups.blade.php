@@ -101,6 +101,7 @@
                                     <button type="button" @click="menu=!menu" :aria-expanded="menu" aria-label="Aksi group" class="rounded px-1 font-bold tracking-widest text-slate-400 hover:bg-slate-100 hover:text-slate-700">...</button>
                                     <span x-show="menu" x-cloak class="absolute right-0 z-20 min-w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" :class="idx>=pagedGroups.length-2 ? 'bottom-full mb-1' : 'top-full mt-1'">
                                         <a :href="url('/admin/groups/'+item.id)" @click="menu=false" class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-100"><x-capstone::icon name="Eye" size="15" />Lihat Detail</a>
+                                        <button type="button" @click="menu=false;openDelete(item)" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-red-600 hover:bg-red-50"><x-capstone::icon name="Trash2" size="15" />Hapus</button>
                                     </span>
                                 </span>
                             </td>
@@ -129,5 +130,7 @@
             </div>
         </div>
     </div>
+
+    @include('capstone::partials.group-delete-dialogs')
 </div>
 @endsection

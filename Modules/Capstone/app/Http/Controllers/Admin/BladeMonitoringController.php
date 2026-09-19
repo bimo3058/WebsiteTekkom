@@ -108,4 +108,20 @@ class BladeMonitoringController extends Controller
 
         return response()->json(['message' => 'Mahasiswa dikembalikan ke status aktif.']);
     }
+
+    /**
+     * Admin force-delete a group in any status.
+     * Requires a mandatory reason (min 10 chars) recorded in the audit log.
+     */
+    public function destroy(Group $group, Request $request, GroupService $groups)
+    {
+        $data = $request->validate(['reason' => 'required|string|min:10|max:1000']);
+        try {
+            $count = $groups->adminForceDeleteGroup($group, $request->user(), $data['reason']);
+        } catch (DomainRuleException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['message' => 'Kelompok dihapus permanen.', 'affected_students' => $count]);
+    }
 }

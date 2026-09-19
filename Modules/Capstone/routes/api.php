@@ -97,6 +97,7 @@ Route::prefix('capstone')->group(function () {
             Route::post('/groups/{group}/message', [BladeMonitoringController::class, 'message'])->middleware(['permission:capstone.groups.manage', 'throttle:10,1']);
             Route::post('/groups/{group}/members/{memberId}/flag', [BladeMonitoringController::class, 'flagMember'])->middleware('permission:capstone.groups.manage');
             Route::post('/groups/{group}/members/{memberId}/unflag', [BladeMonitoringController::class, 'unflagMember'])->middleware('permission:capstone.groups.manage');
+            Route::delete('/groups/{group}', [BladeMonitoringController::class, 'destroy'])->middleware(['permission:capstone.groups.manage', 'throttle:10,1']);
             Route::get('/period-wizard/options', [BladePeriodController::class, 'options']);
             Route::get('/period-wizard/{period}', [BladePeriodController::class, 'show']);
             Route::post('/period-wizard', [BladePeriodController::class, 'store']);

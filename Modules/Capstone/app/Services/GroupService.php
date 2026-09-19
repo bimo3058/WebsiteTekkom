@@ -24,6 +24,7 @@ use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\Title;
+use Modules\Capstone\Models\TitleApprovalAudit;
 use Throwable;
 
 class GroupService
@@ -191,7 +192,7 @@ class GroupService
                     // C. Handle Old Group
                     $remainingMembers = GroupMember::where('group_id', $oldGroup->id)->count();
                     if ($remainingMembers === 0) {
-                        $this->archiveGroup($oldGroup);
+                        $this->destroyIfEmpty($oldGroup, 'member_left');
                     } else {
                         $this->evaluateGroupReadiness($oldGroup);
                     }
@@ -609,10 +610,88 @@ class GroupService
     }
 
     /**
+     * Destroy a group that has no remaining active members.
+     *
+     * Must be called inside the caller's DB transaction, after the last
+     * member row was removed. Applies to groups of ANY status (including
+     * finalized ones): an empty group is deleted, never left behind as an
+     * orphan row. Most relations cascade at the DB level
+     * (cascadeOnDelete); STUDENT titles and restrictOnDelete rows are
+     * removed explicitly first. An AuditLog entry is written BEFORE the
+     * delete so the trail survives the row removal.
+     *
+     * Active members = GroupMember rows with deleted_at IS NULL
+     * (soft-deleted/flagged rows do not count).
+     *
+     * @param  Group|int  $groupOrId  Group instance or ID
+     * @param  string  $reason  member_removed|member_left|member_flagged|merge|purge
+     * @param  int|null  $triggeredBy  Acting user ID for the audit payload
+     * @return bool True when the group was deleted
+     */
+    public function destroyIfEmpty(Group|int $groupOrId, string $reason, ?int $triggeredBy = null): bool
+    {
+        $groupId = $groupOrId instanceof Group ? $groupOrId->id : (int) $groupOrId;
+
+        $group = Group::where('id', $groupId)->lockForUpdate()->first();
+        if (! $group) {
+            return false;
+        }
+
+        $remainingMembers = GroupMember::where('group_id', $group->id)->count();
+        if ($remainingMembers > 0) {
+            return false;
+        }
+
+        $statusBefore = $group->status;
+        $periodId = $group->period_id;
+
+        AuditLog::create([
+            'user_id' => $triggeredBy,
+            'action' => 'GROUP_AUTO_DELETED',
+            'target_type' => Group::class,
+            'target_id' => $group->id,
+            'payload' => [
+                'reason' => $reason,
+                'status_before' => $statusBefore,
+                'period_id' => $periodId,
+            ],
+        ]);
+
+        // STUDENT proposals owned by the group are removed (matches the
+        // manual deleteGroup semantics); other titles detach via nullOnDelete.
+        Title::where('proposed_by_group_id', $group->id)
+            ->where('title_source', 'STUDENT')
+            ->delete();
+
+        // restrictOnDelete table — must go before the group row.
+        DB::table('capstone_expo_self_evaluations')->where('group_id', $group->id)->delete();
+
+        // Everything else (members incl. soft-deleted rows, bids,
+        // supervisions, documents, schedules, evaluations, invitations,
+        // join requests, …) cascades at the DB level.
+        $group->delete();
+
+        Log::info('group.lifecycle.auto_deleted', [
+            'group_id' => $groupId,
+            'reason' => $reason,
+            'status_before' => $statusBefore,
+            'period_id' => $periodId,
+        ]);
+
+        return true;
+    }
+
+    /**
      * Mark a group as dissolved (audit trail preserved).
+     *
+     * @deprecated Empty groups are now hard-deleted via destroyIfEmpty().
+     * Kept for backward compatibility; delegates to destroyIfEmpty().
      */
     private function archiveGroup(Group $group): void
     {
+        if ($this->destroyIfEmpty($group, 'legacy_archive')) {
+            return;
+        }
         $group->update(['status' => self::STATUS_DISSOLVED]);
         Log::info('group.lifecycle.dissolved', ['group_id' => $group->id]);
     }
@@ -953,8 +1032,11 @@ class GroupService
         }
 
         $affectedStudents = $group->members()->pluck('student_id')->toArray();
+        // Notifications target users.id; members carry student-profile ids.
+        $notifyUserIds = $group->members()->with('student')->get()
+            ->pluck('student.user_id')->filter()->unique()->values()->all();
 
-        DB::transaction(function () use ($group, $admin, $period, $affectedStudents) {
+        DB::transaction(function () use ($group, $admin, $period, $affectedStudents, $notifyUserIds) {
             Title::where('proposed_by_group_id', $group->id)
                 ->where('title_source', 'STUDENT')
                 ->delete();
@@ -968,7 +1050,7 @@ class GroupService
             $group->schedules()->delete();
             $group->seminarSchedules()->delete();
             $group->taDefenseSchedules()->delete();
-            $group->approvalAudits()->delete();
+            TitleApprovalAudit::where('affected_group_id', $group->id)->delete();
             $group->members()->delete();
             GroupInvitation::where('group_id', $group->id)->delete();
             JoinRequest::where('group_id', $group->id)->delete();
@@ -988,9 +1070,9 @@ class GroupService
 
             $group->delete();
 
-            foreach ($affectedStudents as $studentId) {
+            foreach ($notifyUserIds as $userId) {
                 Notification::create([
-                    'user_id' => $studentId,
+                    'user_id' => $userId,
                     'type' => 'GROUP_DELETED_BY_ADMIN',
                     'title' => 'Kelompok Dihapus oleh Admin',
                     'message' => 'Kelompok Anda telah dihapus oleh admin. Anda sekarang dapat mendaftar kembali ke periode yang aktif.',
@@ -1003,9 +1085,90 @@ class GroupService
         return count($affectedStudents);
     }
 
-    // ======================================================================
-    // Member Management
-    // ======================================================================
+    /**
+     * Admin force-delete a group in ANY status.
+     *
+     * Unlike adminDeleteGroup() (inactive period or FORMING only), this allows
+     * deletion of finalized/active groups. The trade-off is a mandatory reason
+     * which is stored in the audit log payload and shown to affected students.
+     *
+     * @return int Number of affected students
+     */
+    public function adminForceDeleteGroup(Group $group, User $admin, string $reason): int
+    {
+        $reason = trim($reason);
+        if (mb_strlen($reason) < 10) {
+            throw new DomainRuleException('Alasan penghapusan wajib diisi (minimal 10 karakter).');
+        }
+
+        $affectedStudents = $group->members()->pluck('student_id')->toArray();
+        $statusBefore = $group->status;
+        $periodId = $group->period_id;
+        $period = $group->period;
+        // Notifications target users.id; members carry student-profile ids.
+        $notifyUserIds = $group->members()->with('student')->get()
+            ->pluck('student.user_id')->filter()->unique()->values()->all();
+
+        DB::transaction(function () use ($group, $admin, $reason, $statusBefore, $periodId, $period, $affectedStudents, $notifyUserIds) {
+            Title::where('proposed_by_group_id', $group->id)
+                ->where('title_source', 'STUDENT')
+                ->delete();
+
+            $group->bids()->delete();
+            $group->supervisorProposals()->delete();
+            $group->supervisions()->delete();
+            $group->taSubmissions()->delete();
+            $group->documents()->delete();
+            $group->evaluations()->delete();
+            $group->schedules()->delete();
+            $group->seminarSchedules()->delete();
+            $group->taDefenseSchedules()->delete();
+            TitleApprovalAudit::where('affected_group_id', $group->id)->delete();
+            $group->members()->delete();
+            GroupInvitation::where('group_id', $group->id)->delete();
+            JoinRequest::where('group_id', $group->id)->delete();
+
+            // restrictOnDelete table — must go before the group row.
+            DB::table('capstone_expo_self_evaluations')->where('group_id', $group->id)->delete();
+
+            AuditLog::create([
+                'user_id' => $admin->id,
+                'action' => 'GROUP_DELETED_BY_ADMIN',
+                'target_type' => 'Group',
+                'target_id' => $group->id,
+                'payload' => [
+                    'group_id' => $group->id,
+                    'period_id' => $periodId,
+                    'status_before' => $statusBefore,
+                    'reason' => $reason,
+                    'affected_students' => $affectedStudents,
+                ],
+            ]);
+
+            $group->delete();
+
+            foreach ($notifyUserIds as $userId) {
+                Notification::create([
+                    'user_id' => $userId,
+                    'type' => 'GROUP_DELETED_BY_ADMIN',
+                    'title' => 'Kelompok Dihapus oleh Admin',
+                    'message' => 'Kelompok Anda telah dihapus oleh admin. Alasan: '.$reason,
+                    'related_type' => 'Period',
+                    'related_id' => $period?->id,
+                ]);
+            }
+        });
+
+        Log::info('group.lifecycle.admin_deleted', [
+            'group_id' => $group->id,
+            'admin_id' => $admin->id,
+            'status_before' => $statusBefore,
+            'period_id' => $periodId,
+            'affected_students' => count($affectedStudents),
+        ]);
+
+        return count($affectedStudents);
+    }
 
     /**
      * Send a group invitation to a student.
@@ -1133,8 +1296,7 @@ class GroupService
 
             $remainingMembers = GroupMember::where('group_id', $group->id)->count();
             if ($remainingMembers === 0) {
-                $group->update(['status' => 'DISSOLVED']);
-                Log::info('group.lifecycle.dissolved', ['group_id' => $group->id]);
+                $group->setAttribute('was_auto_deleted', $this->destroyIfEmpty($group, 'member_removed'));
             } else {
                 $this->evaluateGroupReadiness($group);
                 $this->handleMembershipShrink($group);
@@ -1185,9 +1347,8 @@ class GroupService
 
             $remainingMembers = GroupMember::where('group_id', $group->id)->count();
             if ($remainingMembers === 0) {
-                $group->update(['status' => 'DISSOLVED']);
-                Log::info('group.lifecycle.dissolved', ['group_id' => $group->id]);
-                $groupDissolved = true;
+                $groupDissolved = $this->destroyIfEmpty($group, 'member_left');
+                $group->setAttribute('was_auto_deleted', $groupDissolved);
             } else {
                 $this->evaluateGroupReadiness($group);
                 $this->handleMembershipShrink($group);

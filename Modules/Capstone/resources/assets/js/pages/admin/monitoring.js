@@ -18,3 +18,15 @@ export function documentUploads(){return mergePage(basePage(),{summary:{},source
     async load(){this.loading=true;this.error='';try{const [list,summary]=await Promise.all([api('/admin/document-uploads'+query({period_id:this.periodId,group_id:this.groupId,source:this.source,status:this.status,date_from:this.dateFrom,date_to:this.dateTo,search:this.search,page:this.page,per_page:this.pageSize})),api('/admin/document-uploads/summary'+query({period_id:this.periodId}))]);this.items=rows(list);this.pagination=unwrap(list).pagination||{};this.summary=unwrap(summary);}catch(e){this.error=e.message;}finally{this.loading=false;}},
     async downloadDoc(doc){await this.run(async()=>{const blob=await api('/admin/document-uploads/'+doc.id+'/download'+query({source:doc.source}),{blob:true});download(blob,doc.original_name||doc.document_type+'.pdf');},'Dokumen diunduh');},
 });}
+export function auditLogsAdmin(){return mergePage(basePage(),{action:'',targetType:'',dateFrom:'',dateTo:'',actionTypes:[],pagination:{current_page:1,last_page:1,total:0},expanded:null,
+    async init(){try{await this.periodsLoad(false);this.actionTypes=rows(await api('/admin/audit-logs/action-types'))||[];await this.load();}catch(e){this.error=e.message;this.loading=false;}},
+    async load(){this.loading=true;this.error='';try{const list=await api('/admin/audit-logs'+query({action:this.action,target_type:this.targetType,period_id:this.periodId,date_from:this.dateFrom,date_to:this.dateTo,search:this.search,page:this.page,per_page:this.pageSize}));this.items=rows(list);this.pagination=unwrap(list).pagination||{current_page:1,last_page:1,total:0};this.page=this.pagination.current_page||1;}catch(e){this.error=e.message;}finally{this.loading=false;}},
+    filter(){this.page=1;this.load();},
+    reset(){this.action='';this.targetType='';this.dateFrom='';this.dateTo='';this.search='';this.periodId='';this.page=1;this.load();},
+    actorName(log){return log.user?.name||log.user?.email||('User #'+(log.user_id??'—'));},
+    actionClass(action){return String(action||'').includes('DELETE')?'bg-red-50 text-red-600 border border-red-200':String(action||'').includes('FLAG')?'bg-amber-50 text-amber-700 border border-amber-200':'bg-slate-100 text-slate-600 border border-slate-200';},
+    payloadEntries(log){return Object.entries(log.payload||{});},
+    payloadText(value){return typeof value==='object'?JSON.stringify(value):String(value??'—');},
+    shortDate(value){return value?new Date(value).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';},
+    gotoPage(p){p=Math.min(Math.max(1,p),this.pagination.last_page||1);if(p!==this.page){this.page=p;this.load();}},
+});}

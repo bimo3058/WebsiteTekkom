@@ -7,8 +7,9 @@
     <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
 
     <div x-show="!loading && !error && group" x-cloak class="space-y-5">
-        <div>
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <x-capstone::button href="/admin/groups" variant="outline" class="text-slate-500"><x-capstone::icon name="ChevronLeft" size="16" /> Kembali</x-capstone::button>
+            <x-capstone::button variant="destructive" @click="openDelete()"><x-capstone::icon name="Trash2" size="16" /> Hapus Grup</x-capstone::button>
         </div>
 
         <h1 class="text-2xl font-bold tracking-tight text-slate-900" x-text="group.code || ('Group '+group.id)"></h1>
@@ -174,5 +175,7 @@
             </div>
         </div>
     </x-capstone::dialog>
+
+    @include('capstone::partials.group-delete-dialogs')
 </div>
 @endsection
