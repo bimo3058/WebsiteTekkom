@@ -10,9 +10,11 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::table('eo_kp_penilaian', function (Blueprint $table) {
-            $table->dropColumn('nilai_laporan_pembimbing');
-        });
+        if (Schema::hasColumn('eo_kp_penilaian', 'nilai_laporan_pembimbing')) {
+            Schema::table('eo_kp_penilaian', function (Blueprint $table) {
+                $table->dropColumn('nilai_laporan_pembimbing');
+            });
+        }
     }
 
     /**
@@ -20,8 +22,10 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::table('eo_kp_penilaian', function (Blueprint $table) {
-            $table->double('nilai_laporan_pembimbing')->nullable();
-        });
+        if (! Schema::hasColumn('eo_kp_penilaian', 'nilai_laporan_pembimbing')) {
+            Schema::table('eo_kp_penilaian', function (Blueprint $table) {
+                $table->double('nilai_laporan_pembimbing')->nullable();
+            });
+        }
     }
 };

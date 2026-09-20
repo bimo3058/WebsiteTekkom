@@ -4,23 +4,24 @@ namespace Modules\BankSoal\Enums;
 
 /**
  * Status Workflow:
- * 1. DIAJUKAN -> Dosen submit dokumen RPS, menunggu review dari GPM
- * 2. REVISI -> GPM memberi masukan, Dosen perlu revisi
- * 3. DISETUJUI -> GPM approve dokumen, proses selesai
+ * 0. DRAFT     -> Progress tersimpan sementara di bs_rps_draft (belum diajukan)
+ * 1. DIAJUKAN  -> Dosen submit, menunggu review GPM
+ * 2. REVISI    -> GPM minta revisi
+ * 3. DISETUJUI -> GPM setujui
  */
 enum RpsStatus: string
 {
-    case DIAJUKAN = 'diajukan';
-    
-    case REVISI = 'revisi';
-    
+    case DRAFT     = 'draft';
+    case DIAJUKAN  = 'diajukan';
+    case REVISI    = 'revisi';
     case DISETUJUI = 'disetujui';
 
     public function label(): string
     {
         return match ($this) {
-            self::DIAJUKAN => 'Diajukan',
-            self::REVISI => 'Revisi',
+            self::DRAFT     => 'Draft',
+            self::DIAJUKAN  => 'Diajukan',
+            self::REVISI    => 'Revisi',
             self::DISETUJUI => 'Disetujui',
         };
     }
@@ -28,12 +29,12 @@ enum RpsStatus: string
     public function badgeClass(): string
     {
         return match ($this) {
-            self::DIAJUKAN => 'badge-pending',    
-            self::REVISI => 'badge-rejected',    
-            self::DISETUJUI => 'badge-verified', 
+            self::DRAFT     => 'badge-secondary',
+            self::DIAJUKAN  => 'badge-pending',
+            self::REVISI    => 'badge-rejected',
+            self::DISETUJUI => 'badge-verified',
         };
     }
-
 
     public static function values(): array
     {

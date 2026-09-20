@@ -1,8 +1,8 @@
 <x-banksoal::layouts.dosen-admin>
     @section('breadcrumbs')
-    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
-    <span class="mx-2 text-slate-300">/</span>
-    <span class="text-slate-800 font-semibold">Manajemen RPS</span>
+        <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold">Manajemen RPS</span>
     @endsection
 
     <link rel="stylesheet" href="{{ asset('css/banksoal-ui.css') }}">
@@ -11,25 +11,33 @@
             background: #fff;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
             overflow: visible;
             width: 100%;
         }
+
         .br-box-header {
             background: #fff;
             border-bottom: 1px solid #e2e8f0;
             padding: 16px 24px;
             border-radius: 12px 12px 0 0;
         }
+
         .br-box-body {
             padding: 20px 24px;
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
+
         @media (max-width: 767px) {
-            .br-box-header { padding: 12px 14px; }
-            .br-box-body   { padding: 14px; }
+            .br-box-header {
+                padding: 12px 14px;
+            }
+
+            .br-box-body {
+                padding: 14px;
+            }
         }
     </style>
     <style>
@@ -155,85 +163,109 @@
         }
 
         /* ── 3-dot dropdown ── */
-        .dots-wrap { 
-            position: relative; 
+        .dots-wrap {
+            position: relative;
             display: inline-block;
             line-height: 1;
         }
+
         .btn-dots {
-            display: inline-flex; 
-            align-items: center; 
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
-            width: 32px; 
-            height: 32px; 
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
-            border: 1px solid #e2e8f0; 
+            border: 1px solid #e2e8f0;
             background: #fff;
-            font-size: 18px; 
-            cursor: pointer; 
+            font-size: 18px;
+            cursor: pointer;
             color: #64748b;
             transition: all 0.2s;
         }
-        .btn-dots:hover { 
-            border-color: rgb(11, 38, 110); 
-            color: rgb(11, 38, 110); 
-            background: #f8fafc; 
+
+        .btn-dots:hover {
+            border-color: rgb(11, 38, 110);
+            color: rgb(11, 38, 110);
+            background: #f8fafc;
         }
+
         .dots-menu {
-            display: none; 
-            position: absolute; 
-            right: 0; 
+            display: none;
+            position: absolute;
+            right: 0;
             top: calc(100% + 5px);
-            background: #fff; 
+            background: #fff;
             border: 1px solid #e2e8f0;
-            border-radius: 12px; 
+            border-radius: 12px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            min-width: 160px; 
-            z-index: 100; 
+            min-width: 160px;
+            z-index: 100;
             overflow: hidden;
             padding: 4px;
         }
-        .dots-menu.open { 
-            display: block; 
+
+        .dots-menu.open {
+            display: block;
             animation: menuFadeIn 0.2s ease-out;
         }
+
         @keyframes menuFadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        .dots-menu button, .dots-menu a {
-            display: flex !important; 
-            align-items: center !important; 
+
+        .dots-menu button,
+        .dots-menu a {
+            display: flex !important;
+            align-items: center !important;
             justify-content: flex-start !important;
             gap: 10px !important;
-            width: 100% !important; 
+            width: 100% !important;
             padding: 10px 12px !important;
-            background: none !important; 
-            border: none !important; 
+            background: none !important;
+            border: none !important;
             border-radius: 8px !important;
-            font-size: 13px !important; 
-            font-weight: 500 !important; 
+            font-size: 13px !important;
+            font-weight: 500 !important;
             color: #334155 !important;
-            cursor: pointer !important; 
+            cursor: pointer !important;
             text-align: left !important;
             text-decoration: none !important;
             transition: all 0.15s !important;
             margin: 0 !important;
             line-height: 1.2 !important;
         }
-        .dots-menu button:hover:not(:disabled), .dots-menu a:hover:not(:disabled) { 
-            background: #f1f5f9 !important; 
+
+        .dots-menu button:hover:not(:disabled),
+        .dots-menu a:hover:not(:disabled) {
+            background: #f1f5f9 !important;
             color: rgb(11, 38, 110) !important;
         }
-        .dots-menu button:disabled, .dots-menu a:disabled {
+
+        .dots-menu button:disabled,
+        .dots-menu a:disabled {
             color: #94a3b8 !important;
             cursor: not-allowed !important;
             opacity: 0.7;
         }
-        .dots-menu button:disabled svg, .dots-menu a:disabled svg, .dots-menu button:disabled i, .dots-menu a:disabled i {
+
+        .dots-menu button:disabled svg,
+        .dots-menu a:disabled svg,
+        .dots-menu button:disabled i,
+        .dots-menu a:disabled i {
             opacity: 0.6;
         }
-        .dots-menu i, .dots-menu svg {
+
+        .dots-menu i,
+        .dots-menu svg {
             font-size: 14px !important;
             width: 18px !important;
             display: flex !important;
@@ -242,11 +274,13 @@
             flex-shrink: 0 !important;
             margin: 0 !important;
         }
-        .dots-menu .menu-delete:not(:disabled) { 
-            color: #ef4444 !important; 
+
+        .dots-menu .menu-delete:not(:disabled) {
+            color: #ef4444 !important;
         }
-        .dots-menu .menu-delete:hover:not(:disabled) { 
-            background: #fef2f2 !important; 
+
+        .dots-menu .menu-delete:hover:not(:disabled) {
+            background: #fef2f2 !important;
             color: #dc2626 !important;
         }
     </style>
@@ -260,27 +294,8 @@
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">Manajemen RPS</h1>
-                    <p class="mt-1 text-sm text-slate-600">Lengkapi data rencana pembelajaran semester dan unggah dokumen pendukung.</p>
-                </div>
-                <div>
-                    @if(!($isUploadOpen ?? false))
-                    <button
-                        type="button"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-                        disabled
-                        title="Periode upload RPS saat ini tidak aktif"
-                    >
-                        <i class="fas fa-plus"></i> Ajukan RPS
-                    </button>
-                    @else
-                    <a
-                        href="{{ route('banksoal.rps.dosen.create') }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
-                        title="Ajukan RPS baru"
-                    >
-                        <i class="fas fa-plus"></i> Ajukan RPS
-                    </a>
-                    @endif
+                    <p class="mt-1 text-sm text-slate-600">Lengkapi data rencana pembelajaran semester dan unggah
+                        dokumen pendukung.</p>
                 </div>
             </div>
         </div>
@@ -288,17 +303,12 @@
         {{-- Body --}}
         <div class="br-box-body">
 
-            <x-banksoal::ui.status-banner
-                :activePeriode="$activePeriode ?? null"
-                :isUploadOpen="$isUploadOpen ?? false"
-                :tenggatH7="$tenggatH7 ?? false"
-                :unsubmittedMk="$unsubmittedMk ?? []"
-                :daysLeft="$daysLeft ?? 0"
-                :isHourFormat="$isHourFormat ?? false"
-            />
+            <x-banksoal::ui.status-banner :activePeriode="$activePeriode ?? null" :isUploadOpen="$isUploadOpen ?? false"
+                :tenggatH7="$tenggatH7 ?? false" :unsubmittedMk="$unsubmittedMk ?? []" :daysLeft="$daysLeft ?? 0"
+                :isHourFormat="$isHourFormat ?? false" />
 
             <div id="riwayatPengajuanContainer">
-                <x-banksoal::ui.riwayat-rps :riwayat="$riwayat" />
+                <x-banksoal::ui.riwayat-rps :riwayat="$riwayat" :isUploadOpen="$isUploadOpen" />
             </div>
 
             <div id="rpsRiwayatEmptyState" class="empty-state" style="display:none;">
@@ -317,26 +327,26 @@
     </div>{{-- end .br-box --}}
 
     <!-- Modal Ajukan RPS Baru -->
-    <div id="rpsUploadModal" data-has-validation-errors="{{ $errors->any() ? '1' : '0' }}" class="fixed inset-0 bg-black/70 z-50 items-start justify-center overflow-y-auto hidden">
+    <div id="rpsUploadModal" data-has-validation-errors="{{ $errors->any() ? '1' : '0' }}"
+        class="fixed inset-0 bg-black/70 z-50 items-start justify-center overflow-y-auto hidden">
         <div class="relative w-full max-w-5xl mx-4 my-8">
-            <button type="button" onclick="closeRpsUploadModal()" class="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-slate-500 shadow hover:text-slate-700" aria-label="Tutup modal">
+            <button type="button" onclick="closeRpsUploadModal()"
+                class="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-slate-500 shadow hover:text-slate-700"
+                aria-label="Tutup modal">
                 ×
             </button>
 
-            <x-banksoal::ui.rps-form
-                :mataKuliahs="$mataKuliahs"
-                :tahunAjarans="$tahunAjarans"
-                :isUploadOpen="$isUploadOpen ?? false"
-                :semester="$semester ?? 'Genap'"
-                :academicYear="$academicYear ?? date('Y') . '/' . (date('Y') + 1)"
-            />
+            <x-banksoal::ui.rps-form :mataKuliahs="$mataKuliahs" :tahunAjarans="$tahunAjarans"
+                :isUploadOpen="$isUploadOpen ?? false" :semester="$semester ?? 'Genap'" :academicYear="$academicYear ?? date('Y') . '/' . (date('Y') + 1)" />
         </div>
     </div>
 
     <!-- Modal Edit RPS (Revisi) -->
     <div id="rpsEditModal" class="fixed inset-0 bg-black/70 z-50 items-start justify-center overflow-y-auto hidden">
         <div class="relative w-full max-w-5xl mx-4 my-8">
-            <button type="button" onclick="closeRpsEditModal()" class="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-slate-500 shadow hover:text-slate-700" aria-label="Tutup modal">
+            <button type="button" onclick="closeRpsEditModal()"
+                class="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-slate-500 shadow hover:text-slate-700"
+                aria-label="Tutup modal">
                 ×
             </button>
             <div id="editModalContent"></div>
@@ -350,11 +360,11 @@
     <x-banksoal::ui.rps-script />
 
     <script>
-        window.toggleMenu = function(id, event) {
+        window.toggleMenu = function (id, event) {
             event.stopPropagation();
             const menus = document.querySelectorAll('.dots-menu');
             const menu = document.getElementById(`menu-${id}`);
-            
+
             menus.forEach(m => {
                 if (m.id !== `menu-${id}`) {
                     m.classList.remove('open');
@@ -364,14 +374,14 @@
                     m.style.right = '';
                 }
             });
-            
+
             if (menu) {
                 menu.classList.toggle('open');
-                
+
                 if (menu.classList.contains('open')) {
                     const rect = menu.getBoundingClientRect();
                     const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-                    
+
                     if (rect.bottom > viewHeight) {
                         menu.style.top = 'auto';
                         menu.style.bottom = '100%';
@@ -382,7 +392,7 @@
                         menu.style.marginBottom = '0';
                         menu.style.marginTop = '5px';
                     }
-                    
+
                     if (rect.left < 0) {
                         menu.style.right = 'auto';
                         menu.style.left = '0';
@@ -396,18 +406,18 @@
             }
         };
 
-        document.addEventListener('click', function() {
+        document.addEventListener('click', function () {
             document.querySelectorAll('.dots-menu').forEach(m => m.classList.remove('open'));
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const uploadModal = document.getElementById('rpsUploadModal');
             const editModal = document.getElementById('rpsEditModal');
             const hasValidationErrors = document.getElementById('rpsUploadModal')?.dataset?.hasValidationErrors === '1';
 
             initClientSidePagination();
 
-            document.addEventListener('keydown', function(event) {
+            document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') {
                     if (uploadModal && !uploadModal.classList.contains('hidden')) {
                         window.closeRpsUploadModal();
@@ -422,7 +432,7 @@
                 window.openRpsUploadModal();
             }
 
-            document.addEventListener('click', function(event) {
+            document.addEventListener('click', function (event) {
                 const editBtn = event.target.closest('.edit-rps-btn');
                 if (editBtn) {
                     const rpsId = editBtn.dataset.rpsid;
@@ -523,7 +533,7 @@
                 if (pagination) pagination.style.display = 'flex';
             }
 
-            window.handleRiwayatSearch = function() {
+            window.handleRiwayatSearch = function () {
                 searchQuery = searchInput?.value || '';
                 selectedStatus = statusSelect?.value || '';
                 selectedMk = mkSelect?.value || '';
@@ -564,7 +574,7 @@
                 selectedMk = mkSelect.value;
             }
 
-            window.handleRiwayatFilterChange = function() {
+            window.handleRiwayatFilterChange = function () {
                 selectedStatus = statusSelect?.value || '';
                 selectedMk = mkSelect?.value || '';
                 currentPage = 1;
@@ -574,7 +584,7 @@
 
             window.handleSearch = window.handleRiwayatSearch;
 
-            window.rpsTablePageChanger = function(page) {
+            window.rpsTablePageChanger = function (page) {
                 showPage(page);
             };
 

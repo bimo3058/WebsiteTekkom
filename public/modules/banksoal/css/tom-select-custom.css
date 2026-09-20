@@ -6,24 +6,42 @@
 /* ==========================================================================
    1. Main Control (Input Box)
    ========================================================================== */
+.ts-wrapper {
+    box-sizing: border-box !important;
+}
+
 .ts-control {
-    border: 1px solid #cbd5e1; /* border-slate-300 */
-    border-radius: 0.5rem; /* rounded-lg */
-    padding: 0.5rem 2rem 0.5rem 0.75rem; /* padding-right 2rem for chevron */
-    font-size: 0.875rem; /* text-sm */
-    color: #334155; /* text-slate-700 */
-    background-color: #ffffff;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
-    transition: all 0.2s ease-in-out;
-    min-height: 2.5rem;
-    display: flex;
-    align-items: center;
+    box-sizing: border-box !important;
+    border: 1px solid #cbd5e1 !important; /* border-slate-300 */
+    border-radius: 0.5rem !important; /* rounded-lg */
+    padding: 0 2rem 0 0.5rem !important; /* padding-right 2rem for chevron */
+    font-size: 0.875rem !important; /* text-sm */
+    color: #334155 !important; /* text-slate-700 */
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important; /* shadow-sm */
+    transition: all 0.2s ease-in-out !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    max-height: 38px !important;
+    display: flex !important;
+    align-items: center !important;
     flex-wrap: nowrap !important;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     scrollbar-width: thin; /* Firefox */
-    gap: 0.375rem;
-    position: relative; /* for chevron absolute positioning */
+    gap: 0.375rem !important;
+    position: relative !important; /* for chevron absolute positioning */
+}
+
+/* Ensure inner input element doesn't stretch control box height */
+.ts-control > input {
+    height: 24px !important;
+    min-height: 24px !important;
+    max-height: 24px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 24px !important;
+    box-sizing: border-box !important;
 }
 
 /* Hide scrollbar or make it minimal */
@@ -93,22 +111,27 @@ select.field-control::-ms-expand {
    2. Selected Items (Chips/Tags)
    ========================================================================== */
 .ts-control > .item {
-    background-color: #f0f9ff !important; /* bg-sky-50 */
-    color: #0369a1 !important; /* text-sky-700 */
-    border: 1px solid #bae6fd !important; /* border-sky-200 */
+    background-color: #f1f5f9 !important; /* Light transparent blue shade */
+    color: #0b266e !important; /* Navy font */
+    border: 1px solid #cbd5e1 !important;
     border-radius: 0.375rem !important; /* rounded-md */
-    padding: 0.125rem 0.375rem 0.125rem 0.5rem !important;
+    padding: 2px 6px !important;
     font-size: 0.8125rem !important;
-    font-weight: 500 !important;
+    font-weight: 600 !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 0.25rem !important;
     margin: 0 !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    height: 24px !important;
+    line-height: 20px !important;
+    box-sizing: border-box !important;
 }
 
 /* Remove button on the chip (the 'x') */
 .ts-control > .item .remove {
-    color: #38bdf8 !important; /* text-sky-400 */
+    color: #0b266e !important;
     border-left: none !important;
     padding: 0 0.125rem !important;
     display: flex !important;
@@ -118,7 +141,7 @@ select.field-control::-ms-expand {
 }
 
 .ts-control > .item .remove:hover {
-    color: #0284c7 !important; /* hover:text-sky-600 */
+    color: #ef4444 !important;
     background: transparent !important;
 }
 

@@ -1,4 +1,42 @@
 <x-banksoal::layouts.gpm-master>
+    <style>
+        .gpm-bank-filter-btn,
+        .gpm-bank-history-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: #ffffff;
+            padding: 0.625rem 1.25rem;
+            color: #334155;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .gpm-bank-filter-btn:hover {
+            border-color: #0b266e;
+            background: #f8fafc;
+            color: #0b266e;
+        }
+
+        .gpm-bank-history-action {
+            min-width: 6.25rem;
+            border-color: #0b266e;
+            background: #0b266e;
+            color: #ffffff;
+            padding: 0.375rem 0.625rem;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .gpm-bank-history-action:hover {
+            border-color: #081c52;
+            background: #081c52;
+        }
+    </style>
     <x-banksoal::ui.page-header title="Riwayat Validasi Bank Soal" subtitle="Pantau riwayat paket soal mata kuliah yang telah selesai dievaluasi" />
 
     <div class="mb-6 border-b border-slate-200">
@@ -27,7 +65,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" name="search" autocomplete="off" list="datalistRiwayat" value="{{ request('search') }}" placeholder="Cari mata kuliah..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" onchange="this.form.submit()">
+            <input type="text" name="search" autocomplete="off" list="datalistRiwayat" value="{{ request('search') }}" placeholder="Cari mata kuliah..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" @change="$el.form.submit()">
             <datalist id="datalistRiwayat">
                 @foreach($all_riwayat_soal as $item)
                     <option value="{{ $item->mk_nama }}"></option>
@@ -35,20 +73,28 @@
                 @endforeach
             </datalist>
         </form>
-        <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-            <i class="fas fa-filter"></i> Filter
+        <button type="button" class="gpm-bank-filter-btn">
+            Filter
         </button>
     </div>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
+            <table class="min-w-full table-fixed text-sm">
+                <colgroup>
+                    <col class="w-[25%]">
+                    <col class="w-[25%]">
+                    <col class="w-[15%]">
+                    <col class="w-[17%]">
+                    <col class="w-[10%]">
+                    <col class="w-[8%]">
+                </colgroup>
                 <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-200">
                     <tr>
-                        <th class="px-6 py-4 text-left">Mata Kuliah</th>
-                        <th class="px-6 py-4 text-left">Dosen Pengampu</th>
-                        <th class="px-6 py-4 text-left">Jumlah Soal</th>
-                        <th class="px-6 py-4 text-left">Tanggal Review Terakhir</th>
-                        <th class="px-6 py-4 text-left">Status</th>
+                        <th class="whitespace-nowrap px-6 py-4 text-left">Mata Kuliah</th>
+                        <th class="whitespace-nowrap px-6 py-4 text-left">Dosen Pengampu</th>
+                        <th class="whitespace-nowrap px-6 py-4 text-left">Jumlah Soal</th>
+                        <th class="whitespace-nowrap px-6 py-4 text-left">Tanggal Review Terakhir</th>
+                        <th class="whitespace-nowrap px-6 py-4 text-left">Status</th>
                         <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -68,10 +114,7 @@
                                 @endphp
                                 <div class="flex flex-col gap-2">
                                     @forelse($dosenPengampu as $namaDosen)
-                                        <div class="flex items-center gap-2">
-                                            <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">
-                                                {{ strtoupper(substr($namaDosen, 0, 2)) }}
-                                            </div>
+                                        <div>
                                             <span class="text-sm font-medium text-slate-700">{{ $namaDosen }}</span>
                                         </div>
                                     @empty
@@ -85,15 +128,14 @@
                             </td>
                             <td class="px-6 py-4">
                                 @if($riwayat->jumlah_revisi > 0)
-                                    <span class="inline-flex w-full justify-center rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-semibold text-rose-700 border border-rose-200">Dikembalikan</span>
+                                    <span class="inline-flex justify-center rounded-full border border-rose-200 bg-rose-50/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-rose-700">Revisi</span>
                                 @else
-                                    <span class="inline-flex w-full justify-center rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-200">Selesai</span>
+                                    <span class="inline-flex justify-center rounded-full border border-emerald-200 bg-emerald-50/80 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700">Disetujui</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal.detail', $riwayat->mk_id) }}" class="inline-flex flex-col items-center text-primary hover:text-primary/90">
-                                    <i class="fas fa-eye"></i>
-                                    <span class="text-[11px] font-semibold">Lihat Detail</span>
+                                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal.detail', $riwayat->mk_id) }}" class="gpm-bank-history-action">
+                                    Lihat Detail
                                 </a>
                             </td>
                         </tr>
