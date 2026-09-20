@@ -4,7 +4,6 @@
 <div x-data="adminUsers" class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <h1 class="text-xl font-bold tracking-tight text-slate-900">User Management</h1>
-        <x-capstone::button href="/admin/users/new" class="bg-[#2f3d8a] text-white hover:bg-[#2f3d8a]/90"><x-capstone::icon name="UserPlus" size="16" /> Tambah User</x-capstone::button>
     </div>
 
     @include('capstone::partials.loading')

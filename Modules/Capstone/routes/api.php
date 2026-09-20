@@ -109,7 +109,7 @@ Route::prefix('capstone')->group(function () {
             Route::put('/period-registrations/{id}/approve', [PeriodRegistrationApprovalController::class, 'approve']);
             Route::put('/period-registrations/{id}/reject', [PeriodRegistrationApprovalController::class, 'reject']);
             Route::get('/users', [UserController::class, 'index']);
-            Route::apiResource('user-management', BladeUserController::class)->parameters(['user-management' => 'user'])->except(['update', 'destroy']);
+            Route::apiResource('user-management', BladeUserController::class)->parameters(['user-management' => 'user'])->except(['store', 'update', 'destroy']);
             Route::apiResource('expo-events', ExpoEventController::class);
             Route::put('/expo-events/{expoEvent}/publish', [ExpoEventController::class, 'publish']);
             Route::apiResource('document-types', DocumentTypeController::class);

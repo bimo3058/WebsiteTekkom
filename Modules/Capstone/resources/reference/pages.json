@@ -478,13 +478,6 @@
     ]
   },
   {
-    "route": "/admin/users/new",
-    "source": "frontend/src/app/admin/users/new/page.tsx",
-    "imports": [
-      "next/navigation"
-    ]
-  },
-  {
     "route": "/admin/users",
     "source": "frontend/src/app/admin/users/page.tsx",
     "imports": [

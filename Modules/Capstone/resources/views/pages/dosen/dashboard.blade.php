@@ -51,68 +51,135 @@
             </div>
         </div>
 
-        <div class="grid gap-3 xl:grid-cols-3">
-            <div class="rounded-xl border border-slate-200 bg-white shadow-sm xl:col-span-2">
-                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 p-3">
-                    <h2 class="text-sm font-bold text-slate-900">Riwayat Akses Sistem</h2>
-                    <div class="flex items-center gap-2">
-                        <select x-model="activityRange" @change="hoverIdx=-1" class="rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-[13px] text-slate-500 outline-none" aria-label="Rentang waktu">
-                            <option value="7">Weekly</option>
-                            <option value="30">Monthly</option>
-                        </select>
-                        <button type="button" @click="load()" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50" aria-label="Muat ulang"><x-capstone::icon name="RefreshCw" size="15" /></button>
-                    </div>
+        <div class="flex items-center gap-2">
+            <span class="h-5 w-1 rounded-full bg-[#2f3d8a]"></span>
+            <h2 class="text-[15px] font-bold text-slate-900">Jadwal</h2>
+            <span class="h-px flex-1 bg-slate-200"></span>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-3">
+                <div class="inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-[13px] font-medium">
+                    <button type="button" @click="jadwalView='kanban'" class="rounded-md px-4 py-1.5 text-slate-500" :class="jadwalView==='kanban' && 'bg-white text-slate-900 shadow-sm font-semibold'">Kanban</button>
+                    <button type="button" @click="jadwalView='table'" class="rounded-md px-4 py-1.5 text-slate-500" :class="jadwalView==='table' && 'bg-white text-slate-900 shadow-sm font-semibold'">Table</button>
+                    <button type="button" @click="jadwalView='calendar'" class="rounded-md px-4 py-1.5 text-slate-500" :class="jadwalView==='calendar' && 'bg-white text-slate-900 shadow-sm font-semibold'">Calendar</button>
                 </div>
-                <div class="p-3">
-                    <div class="relative">
-                        <div class="flex gap-2">
-                            <div class="flex w-8 flex-col justify-between py-1 text-right text-[11px] text-slate-400">
-                                <template x-for="t in activityTicks" :key="t"><span x-text="t"></span></template>
-                            </div>
-                            <div class="relative min-w-0 flex-1">
-                                <svg viewBox="0 0 600 200" class="block h-52 w-full" @mousemove="chartHover($event)" @mouseleave="hoverIdx=-1" role="img" aria-label="Grafik aktivitas">
-                                    <defs>
-                                        <linearGradient id="dosenActivityFill" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="0" stop-color="#2f3d8a" stop-opacity="0.18" />
-                                            <stop offset="1" stop-color="#2f3d8a" stop-opacity="0.02" />
-                                        </linearGradient>
-                                    </defs>
-                                    <line x1="10" :y1="activityAvgY" x2="590" :y2="activityAvgY" stroke="#94a3b8" stroke-width="1" stroke-dasharray="5 4" />
-                                    <path :d="activityArea" fill="url(#dosenActivityFill)" />
-                                    <path :d="activityLine" fill="none" stroke="#2f3d8a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
-                                    <circle x-show="activityHover" :cx="activityHover?.x/100*600" :cy="activityHover?.y/100*200" r="4.5" fill="#2f3d8a" stroke="#fff" stroke-width="2" />
-                                </svg>
-                                <div x-show="activityHover" x-cloak class="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded-lg bg-slate-900 px-2.5 py-1.5 text-center shadow-lg" :style="'left:'+activityHover?.x+'%;top:'+activityHover?.y+'%'">
-                                    <p class="whitespace-nowrap text-[11px] text-slate-300" x-text="activityHover?.label"></p>
-                                    <p class="whitespace-nowrap text-xs font-bold text-white" x-text="activityHover?.value+' aktivitas'"></p>
+                <div class="flex items-center gap-2">
+                    <label class="inline-flex min-w-0 items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
+                        <x-capstone::icon name="Search" size="15" />
+                        <input x-model.debounce.300ms="jadwalSearch" @input="tablePage=1" type="search" placeholder="Search" class="w-36 bg-transparent outline-none placeholder:text-slate-400" aria-label="Search jadwal">
+                    </label>
+                    <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Filter tipe">
+                        <x-capstone::icon name="ListFilter" size="15" />
+                        <select x-model="typeFilter" @change="tablePage=1" class="bg-transparent text-slate-600 outline-none" aria-label="Filter tipe jadwal">
+                            <option value="all">Semua</option>
+                            <option value="BIMBINGAN">Bimbingan</option>
+                            <option value="SEMPRO">Sempro</option>
+                            <option value="EXPO">Expo</option>
+                            <option value="TA_DEFENSE">TA Defense</option>
+                        </select>
+                    </label>
+                    <label class="hidden items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 sm:inline-flex" title="Filter status">
+                        <select x-model="statusFilter" @change="tablePage=1" class="bg-transparent text-slate-600 outline-none" aria-label="Filter status jadwal">
+                            <option value="all">Semua Status</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="SCHEDULED">Scheduled</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="COMPLETED">Completed</option>
+                            <option value="REJECTED">Rejected</option>
+                            <option value="CANCELLED">Cancelled</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div x-show="jadwalView==='calendar'" class="p-3">
+                <div class="rounded-xl border border-slate-200">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-3 py-2.5">
+                        <div class="flex items-center gap-1">
+                            <button type="button" @click="move(-1)" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Bulan sebelumnya"><x-capstone::icon name="ChevronLeft" size="16" /></button>
+                            <h3 class="min-w-36 text-center text-sm font-semibold text-slate-800" x-text="monthLabel"></h3>
+                            <button type="button" @click="move(1)" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Bulan berikutnya"><x-capstone::icon name="ChevronRight" size="16" /></button>
+                        </div>
+                        <button type="button" @click="today()" class="rounded-lg border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50">Today</button>
+                    </div>
+                    <div class="grid grid-cols-7 border-b border-slate-100">
+                        <template x-for="d in ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']" :key="d">
+                            <div class="py-2 text-center text-xs font-medium text-slate-500" x-text="d"></div>
+                        </template>
+                    </div>
+                    <div class="grid grid-cols-7">
+                        <template x-for="(day,index) in days" :key="day.key">
+                            <div @click="openDay(day)" tabindex="0" role="button" @keydown.enter="openDay(day)"
+                                class="min-h-[92px] min-w-0 cursor-pointer border-b border-r border-slate-100 p-1.5 align-top transition-colors hover:bg-slate-50 sm:min-h-[118px] sm:p-2"
+                                :class="[!day.current && 'bg-slate-50/70', day.key===selectedDate && 'bg-blue-50/40', (index+1)%7===0 && 'border-r-0', index>=days.length-7 && 'border-b-0']">
+                                <div class="mb-1 flex justify-end">
+                                    <span class="inline-flex h-6 min-w-6 items-center justify-center px-1 text-xs" :class="day.key===selectedDate ? 'rounded-md bg-[#2f3d8a] font-bold text-white' : day.current ? 'font-medium text-slate-700' : 'text-slate-300'" x-text="day.number"></span>
+                                </div>
+                                <div class="space-y-1">
+                                    <template x-for="event in eventsFor(day).slice(0,2)" :key="event._key">
+                                        <button type="button" @click.stop="detail(event)" class="w-full truncate rounded border-l-4 px-1.5 py-1 text-left text-[11px] font-medium leading-tight" :class="dashboardEventPill(event.type)" :title="time(event)+' — '+title(event)" x-text="title(event)"></button>
+                                    </template>
+                                    <div x-show="eventsFor(day).length>2" class="px-1 text-[11px] font-bold text-slate-700" x-text="'+'+(eventsFor(day).length-2)+' more'"></div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="flex justify-between pl-10 text-[11px] text-slate-400"><span x-text="activityFirstLabel"></span><span x-text="activityLastLabel"></span></div>
+                        </template>
                     </div>
                 </div>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
-                <div class="flex items-center justify-between border-b border-slate-100 p-3">
-                    <h2 class="text-sm font-bold text-slate-900">Judul Tersedia</h2>
-                    <button type="button" @click="load()" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 hover:bg-slate-50" aria-label="Muat ulang"><x-capstone::icon name="RefreshCw" size="15" /></button>
+
+            <div x-show="jadwalView==='table'" x-cloak class="p-3">
+                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                    <table class="w-full text-left text-[13px]">
+                        <thead class="border-b border-slate-100 bg-slate-50/60 text-xs text-slate-500">
+                            <tr><th class="px-3 py-2.5 font-medium">Tipe</th><th class="px-3 py-2.5 font-medium"><button type="button" @click="sortDirection*=-1" class="inline-flex items-center gap-1">Tanggal &amp; Waktu <x-capstone::icon name="ArrowUpDown" size="13" /></button></th><th class="px-3 py-2.5 font-medium">Kelompok</th><th class="px-3 py-2.5 font-medium">Ruangan</th><th class="px-3 py-2.5 font-medium">Status</th><th class="px-3 py-2.5 font-medium">Aksi</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <template x-for="event in jadwalVisible" :key="event._key">
+                                <tr class="cursor-pointer hover:bg-slate-50" @click="detail(event)">
+                                    <td class="px-3 py-2.5"><span class="rounded px-2 py-0.5 text-[11px] font-semibold" :class="color(event.type)" x-text="label(event.type)"></span></td>
+                                    <td class="whitespace-nowrap px-3 py-2.5"><p class="font-medium text-slate-700" x-text="date(event.date)"></p><p class="text-xs text-slate-400" x-text="time(event)"></p></td>
+                                    <td class="max-w-52 truncate px-3 py-2.5 font-medium text-slate-700" x-text="event.group?.title?.title || event.group?.code || '-'"></td>
+                                    <td class="px-3 py-2.5 text-slate-500" x-text="event.room || (event.mode==='online' ? 'Online' : '-')"></td>
+                                    <td class="px-3 py-2.5"><span class="rounded-full px-2 py-0.5 text-[11px] font-medium capitalize" :class="statusColor(event.status)" x-text="(event.status || 'SCHEDULED').toLowerCase()"></span></td>
+                                    <td class="px-3 py-2.5"><button type="button" @click.stop="detail(event)" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50"><x-capstone::icon name="Eye" size="14" />Detail</button></td>
+                                </tr>
+                            </template>
+                            <tr x-show="!jadwalRows.length"><td colspan="6" class="px-3 py-10 text-center text-sm text-slate-400">Tidak ada jadwal.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="flex flex-col items-center p-4">
-                    <div class="relative h-44 w-44">
-                        <svg viewBox="0 0 176 176" class="h-full w-full -rotate-90" role="img" aria-label="Keterseidaan judul">
-                            <circle cx="88" cy="88" r="70" fill="none" :stroke="donutTotal ? '#f0b429' : '#e2e8f0'" stroke-width="24" />
-                            <circle cx="88" cy="88" r="70" fill="none" stroke="#8b8bd4" stroke-width="24" stroke-linecap="round" :stroke-dasharray="donutDash" />
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <p class="text-[11px] text-slate-400">Total Judul</p>
-                            <p class="text-2xl font-bold text-slate-900" x-text="donutTotal"></p>
+                <div class="flex flex-wrap items-center justify-between gap-3 px-1 pt-3 text-[13px] text-slate-500">
+                    <span x-text="jadwalRows.length+' jadwal'"></span>
+                    <div class="flex items-center gap-2">
+                        <label class="inline-flex items-center gap-1.5">Rows <select x-model.number="tablePerPage" @change="tablePage=1" class="rounded-md border border-slate-200 px-1.5 py-1"><option>10</option><option>20</option><option>50</option></select></label>
+                        <span x-text="'Page '+jadwalCurrentPage+' of '+jadwalTotalPages"></span>
+                        <button type="button" @click="tablePage=Math.max(1,jadwalCurrentPage-1)" :disabled="jadwalCurrentPage<=1" class="rounded-md border border-slate-200 p-1.5 disabled:opacity-40" aria-label="Previous page"><x-capstone::icon name="ChevronLeft" size="15" /></button>
+                        <button type="button" @click="tablePage=Math.min(jadwalTotalPages,jadwalCurrentPage+1)" :disabled="jadwalCurrentPage>=jadwalTotalPages" class="rounded-md border border-slate-200 p-1.5 disabled:opacity-40" aria-label="Next page"><x-capstone::icon name="ChevronRight" size="15" /></button>
+                    </div>
+                </div>
+            </div>
+
+            <div x-show="jadwalView==='kanban'" x-cloak class="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-4">
+                <template x-for="col in kanbanGroups" :key="col.type">
+                    <div class="rounded-xl border border-slate-200 bg-slate-50/50 p-2.5">
+                        <div class="mb-2.5 flex items-center justify-between px-1">
+                            <p class="text-[13px] font-bold text-slate-700" x-text="label(col.type)"></p>
+                            <span class="rounded-full bg-white px-2 py-0.5 text-xs font-semibold text-slate-500 shadow-sm" x-text="col.items.length"></span>
+                        </div>
+                        <div class="max-h-96 space-y-2 overflow-y-auto">
+                            <template x-for="event in col.items.slice(0,20)" :key="event._key">
+                                <button type="button" @click="detail(event)" class="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-left shadow-sm transition-shadow hover:shadow">
+                                    <span class="mb-1.5 inline-block rounded-full px-2 py-0.5 text-[11px] font-medium capitalize" :class="statusColor(event.status)" x-text="(event.status || 'SCHEDULED').toLowerCase()"></span>
+                                    <p class="line-clamp-2 text-[13px] font-semibold text-slate-800" x-text="title(event)"></p>
+                                    <p class="mt-1.5 flex items-center gap-1.5 text-xs text-slate-400"><x-capstone::icon name="Clock" size="13" /><span x-text="date(event.date)+' '+(event.start_time || '').slice(0,5)"></span></p>
+                                    <p class="mt-1 flex items-center gap-1.5 truncate text-xs text-slate-400"><x-capstone::icon name="MapPin" size="13" /><span class="truncate" x-text="event.room || (event.mode==='online' ? 'Online' : '-')"></span></p>
+                                </button>
+                            </template>
+                            <p x-show="!col.items.length" class="rounded-lg border border-dashed border-slate-200 bg-white px-3 py-6 text-center text-xs text-slate-400">Belum ada jadwal</p>
+                            <p x-show="col.items.length>20" class="px-1 text-center text-xs text-slate-400" x-text="'+'+(col.items.length-20)+' lainnya'"></p>
                         </div>
                     </div>
-                    <div class="mt-4 flex items-center gap-4 text-xs text-slate-600">
-                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-[#8b8bd4]"></span>Tersedia (<span x-text="data.titles_available ?? 0"></span>)</span>
-                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-full bg-[#f0b429]"></span>Tidak Tersedia (<span x-text="data.titles_full ?? 0"></span>)</span>
-                    </div>
-                </div>
+                </template>
             </div>
         </div>
 
@@ -249,5 +316,7 @@
             </div>
         </section>
     </div>
+    @include('capstone::partials.schedule-detail', ['allowManage' => false])
+    @include('capstone::partials.schedule-day')
 </div>
 @endsection

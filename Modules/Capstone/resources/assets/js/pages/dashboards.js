@@ -7,19 +7,32 @@ export function registerDashboards(Alpine) {
         month:new Date().getMonth(),year:new Date().getFullYear(),selectedDate:localDateKey(new Date()),
         selected:null,rejecting:null,reason:'',saving:false,
         allGroups:[],groupSearch:'',groupStatus:'',groupSort:'newest',groupPage:1,groupPerPage:3,groupLoading:false,groupSelected:[],
-        mySearch:'',myStatus:'all',mySort:'code-asc',myFilterOpen:false,mySortOpen:false,myActionOpen:false,
+        docPage:1,docPerPage:5,
         activityRange:'30',hoverIdx:-1,        get progress(){const phases=this.workflow?.phases || [];return phases.length ? Math.round(phases.filter(p=>p.status==='completed').length/phases.length*100) : 0;},
         get dashboardDocuments(){
-            const phases=this.workflow?.phases || [];
-            if(!phases.length)return [];
-            const reference=[['C100','PDC1','PDC 1'],['C200','PDC1','PDC 1'],['C300','PDC1','PDC 1'],['PPT Presentasi','SEMPRO','SEMPRO'],['C400','PDC2','PDC 2'],['C500','PDC2','PDC 2']];
-            return reference.map(([name,phase,phaseLabel])=>{
-                const workflowPhase=phases.find(p=>p.phase===phase);
-                const doc=(workflowPhase?.documents || []).find(d=>String(d.type).trim().toUpperCase()===name.toUpperCase());
-                return {...doc,name,type:doc?.type || name,phase,phaseLabel,status:doc?.status || 'missing',
-                    can_upload:workflowPhase?.can_upload === true && doc?.can_upload === true,
-                    locked_reason:doc?.locked_reason || workflowPhase?.locked_reason || (!doc ? 'Dokumen belum dikonfigurasi untuk periode ini' : null)};
-            });
+            const rows=[];
+            for(const phase of this.workflow?.phases || []){
+                for(const doc of phase.documents || []){
+                    rows.push({name:doc.type,type:doc.type,phase:phase.phase,status:doc.status || 'missing',
+                        can_upload:doc.can_upload === true,
+                        locked_reason:doc.locked_reason || null,
+                        latest_document:doc.latest_document || null});
+                }
+            }
+            return rows;
+        },
+        get docTotal(){return this.dashboardDocuments.length;},
+        get docTotalPages(){return Math.max(1,Math.ceil(this.docTotal/this.docPerPage));},
+        get docCurrentPage(){return Math.min(this.docPage,this.docTotalPages);},
+        get pagedDocuments(){return this.dashboardDocuments.slice((this.docCurrentPage-1)*this.docPerPage,this.docCurrentPage*this.docPerPage);},
+        get docFrom(){return this.docTotal ? (this.docCurrentPage-1)*this.docPerPage+1 : 0;},
+        get docTo(){return Math.min(this.docCurrentPage*this.docPerPage,this.docTotal);},
+        get docPageList(){
+            const last=this.docTotalPages,current=Math.min(this.docPage,last);
+            if(last<=5)return Array.from({length:last},(_,i)=>i+1);
+            if(current<=2)return [1,2,3,'…',last];
+            if(current>=last-1)return [1,'…',last-2,last-1,last];
+            return [1,'…',current,'…',last];
         },
         documentStatus(status){return {missing:'Belum Upload',SUBMITTED:'Terkirim',APPROVED:'Disetujui',REJECTED:'Perlu Revisi',DRAFT:'Draft'}[status] || status;},
         documentStatusClass(status){return {missing:'border-red-200 bg-red-50 text-red-600',SUBMITTED:'border-blue-200 bg-blue-50 text-blue-600',APPROVED:'border-emerald-200 bg-emerald-50 text-emerald-700',REJECTED:'border-amber-200 bg-amber-50 text-amber-700'}[status] || 'border-slate-200 bg-slate-50 text-slate-600';},
@@ -64,6 +77,7 @@ export function registerDashboards(Alpine) {
         move(direction){const next=new Date(this.year,this.month+direction,1);this.year=next.getFullYear();this.month=next.getMonth();},
         today(){const now=new Date();this.year=now.getFullYear();this.month=now.getMonth();this.selectedDate=localDateKey(now);},
         detail(event){this.selected=event;document.getElementById('schedule-detail')?.showModal();},
+        openDay(day){this.selectedDate=typeof day === 'string' ? day : day.key;document.getElementById('schedule-day')?.showModal();},
         async approve(event){
             if(!this.canApprove(event)||this.saving)return;
             this.saving=true;
@@ -100,20 +114,13 @@ export function registerDashboards(Alpine) {
         initials(name){return String(name || '?').trim().split(/\s+/).slice(0,2).map(w=>w.charAt(0).toUpperCase()).join('');},
         phaseLabel(code){return {PDC1:'PDC 1',SEMPRO:'Seminar Proposal',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'Sidang TA',EXPO:'Expo',SIDANG:'Sidang TA'}[code] || code || '—';},
         memberDisplayName(member){return member?.student?.name || member?.student?.user?.name || '—';},
-        get myRows(){return this.group?.id ? [this.group] : [];},
-        get myVisible(){
-            const term=this.mySearch.trim().toLocaleLowerCase();
-            let items=this.myRows;
-            if(this.myStatus!=='all')items=items.filter(i=>i.status===this.myStatus);
-            if(term)items=items.filter(i=>[i.code,i.title?.title,this.ketuaName(i),this.supervisorNames(i).join(' ')].some(v=>String(v||'').toLocaleLowerCase().includes(term)));
-            return [...items].sort((a,b)=>this.mySort==='code-desc' ? String(b.code||'').localeCompare(String(a.code||'')) : String(a.code||'').localeCompare(String(b.code||'')));
-        },
         async refreshMahasiswa(){this.loading=true;this.error='';try{
             const result=await Promise.allSettled([api('/mahasiswa/dashboard'),api('/mahasiswa/group'),api('/mahasiswa/all-schedules'),api('/mahasiswa/workflow')]);
             if(result[0].status==='rejected')throw result[0].reason;
             this.data=unwrap(result[0].value);
             const group=result[1].status==='fulfilled' ? unwrap(result[1].value) : null;
             this.group=group?.group || group;
+            this.docPage=1;
             this.schedules=result[2].status==='fulfilled' ? rows(result[2].value).map(item=>normalizeSchedule(item,item.type)) : [];
             this.workflow=result[3].status==='fulfilled' ? unwrap(result[3].value) : this.data.workflow || {};
         }catch(e){this.error=e.message;}finally{this.loading=false;}},
@@ -172,8 +179,9 @@ export function registerDashboards(Alpine) {
             if(role==='admin'){await this.loadAdminAll();}
             else if(role==='dosen'){
                 const query=this.selectedPeriod==='all' ? '' : '?period_id='+encodeURIComponent(this.selectedPeriod);
-                const result=await Promise.all([api('/dosen/dashboard'+query),api('/dosen/groups/supervised'+query),api('/dosen/supervisor-evaluation/pending-count')]);
+                const result=await Promise.all([api('/dosen/dashboard'+query),api('/dosen/groups/supervised'+query),api('/dosen/supervisor-evaluation/pending-count'),api('/dosen/all-schedules'+query)]);
                 this.data=unwrap(result[0]);this.groups=rows(result[1]);this.pending=unwrap(result[2])?.count || 0;this.periods=this.data.available_periods || [];
+                this.schedules=rows(result[3]).map(item=>normalizeSchedule(item,item.type)).filter(item=>localDateKey(item.date));
                 this.allGroups=this.groups;this.groupPage=1;this.groupPerPage=2;this.groupSelected=[];this.hoverIdx=-1;
             }else{
                 const period=unwrap(await api('/mahasiswa/my-period'));

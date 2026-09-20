@@ -39,37 +39,7 @@
     <div>
         <h2 class="text-base font-bold text-gray-900 border-l-4 border-[#2f3d8a] pl-3 mb-4">Upload Document</h2>
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
-            <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
-                <div class="px-5 pt-4 pb-3 flex flex-wrap items-center gap-2">
-                    <h3 class="text-sm font-semibold text-gray-900 mr-auto">Tabel Groups</h3>
-                    <div class="relative"><x-capstone::icon name="Search" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" /><input x-model="mySearch" placeholder="Search" aria-label="Search groups" class="h-9 w-56 rounded-lg border border-gray-200 bg-white pl-9 pr-3 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2f3d8a]/20" /></div>
-                    <div class="relative" @click.outside="myFilterOpen=false"><button type="button" @click="myFilterOpen=!myFilterOpen" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-sm text-gray-500 hover:bg-gray-50"><x-capstone::icon name="Funnel" class="h-4 w-4" />Filter</button><div x-show="myFilterOpen" x-cloak class="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-gray-100 bg-white p-1 shadow-lg"><button type="button" @click="myStatus='all';myFilterOpen=false" class="block w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-gray-50" :class="myStatus==='all' && 'font-semibold text-gray-900'">Semua Status</button><template x-for="st in [...new Set(myRows.map(r=>r.status))]" :key="st"><button type="button" @click="myStatus=st;myFilterOpen=false" class="block w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-gray-50" :class="myStatus===st && 'font-semibold text-gray-900'" x-text="groupStatusLabel({status:st})"></button></template></div></div>
-                    <div class="relative" @click.outside="mySortOpen=false"><button type="button" @click="mySortOpen=!mySortOpen" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-gray-200 px-3 text-sm text-gray-500 hover:bg-gray-50"><x-capstone::icon name="ArrowUpDown" class="h-4 w-4" />Sort by</button><div x-show="mySortOpen" x-cloak class="absolute right-0 z-20 mt-1 w-40 rounded-lg border border-gray-100 bg-white p-1 shadow-lg"><button type="button" @click="mySort='code-asc';mySortOpen=false" class="block w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-gray-50" :class="mySort==='code-asc' && 'font-semibold text-gray-900'">Kode A–Z</button><button type="button" @click="mySort='code-desc';mySortOpen=false" class="block w-full rounded-md px-3 py-1.5 text-left text-sm hover:bg-gray-50" :class="mySort==='code-desc' && 'font-semibold text-gray-900'">Kode Z–A</button></div></div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead><tr class="bg-gray-50/70">@foreach(['No','Kode','Ketua','Dosen Pembimbing','Status','Action'] as $i=>$label)<th class="px-4 py-2.5 text-xs font-medium text-gray-500 {{ $i===0 ? 'text-left w-12' : ($i===5 ? 'text-right' : 'text-left') }}">{{ $label }}</th>@endforeach</tr></thead>
-                        <tbody class="divide-y divide-gray-100">
-                            <template x-for="(item,index) in myVisible" :key="item.id">
-                                <tr class="hover:bg-gray-50/50">
-                                    <td class="px-4 py-3 text-sm text-gray-800" x-text="index+1"></td>
-                                    <td class="px-4 py-3 text-sm font-medium text-gray-800" x-text="item.code"></td>
-                                    <td class="px-4 py-3"><span class="inline-flex items-center gap-2 rounded-full border border-gray-200 pl-1 pr-3 py-0.5 text-sm text-gray-700"><span class="h-6 w-6 rounded-full bg-gray-200 text-gray-600 text-[10px] font-semibold flex items-center justify-center" x-text="initials(ketuaName(item))"></span><span x-text="ketuaName(item)"></span></span></td>
-                                    <td class="px-4 py-3"><div class="flex flex-col gap-1.5 items-start"><template x-for="name in supervisorNames(item)" :key="name"><span class="inline-flex items-center gap-2 rounded-full border border-gray-200 pl-1 pr-3 py-0.5 text-sm text-gray-700"><span class="h-6 w-6 rounded-full bg-[#2f3d8a]/10 text-[#2f3d8a] text-[10px] font-semibold flex items-center justify-center" x-text="initials(name)"></span><span x-text="name"></span></span></template><span x-show="!supervisorNames(item).length" class="text-sm text-gray-300">—</span></div></td>
-                                    <td class="px-4 py-3"><span class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium" :class="groupStatusClass(item.status)" x-text="groupStatusLabel(item)"></span></td>
-                                    <td class="px-4 py-3 text-right"><div class="relative inline-block" @click.outside="myActionOpen=false"><button type="button" @click="myActionOpen=!myActionOpen" class="rounded-md p-1.5 text-gray-400 hover:bg-gray-100" aria-label="Row actions"><x-capstone::icon name="Ellipsis" class="h-5 w-5" /></button><div x-show="myActionOpen" x-cloak class="absolute right-0 z-20 mt-1 w-40 rounded-lg border border-gray-100 bg-white p-1 shadow-lg"><a href="/mahasiswa/group" class="block rounded-md px-3 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50">Lihat Detail</a></div></div></td>
-                                </tr>
-                            </template>
-                            <tr x-show="!myVisible.length"><td colspan="6" class="px-4 py-8 text-center text-sm text-gray-400" x-text="group?.id ? 'Tidak cocok dengan pencarian.' : 'Anda belum memiliki grup.'"></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="flex flex-wrap items-center gap-3 px-5 py-3 border-t border-gray-100">
-                    <span class="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-500">Per page <span class="font-semibold text-gray-800">10</span></span>
-                    <span class="text-sm text-gray-800">Showing <span x-text="myVisible.length ? 1 : 0"></span> to <span x-text="myVisible.length"></span> of, <span x-text="myVisible.length"></span> results</span>
-                    <div class="ml-auto flex items-center gap-1.5"><button type="button" disabled class="rounded-lg border border-gray-200 p-1.5 text-gray-300" aria-label="Previous page"><x-capstone::icon name="ChevronLeft" class="h-4 w-4" /></button><button type="button" class="rounded-lg bg-[#2f3d8a] px-3 py-1.5 text-sm font-medium text-white">1</button><button type="button" disabled class="rounded-lg border border-gray-200 p-1.5 text-gray-300" aria-label="Next page"><x-capstone::icon name="ChevronRight" class="h-4 w-4" /></button></div>
-                </div>
-            </div>
+            @include('capstone::pages.mahasiswa.dashboard._documents')
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
                 <div class="px-5 pt-4 pb-3 border-b border-gray-100"><h3 class="text-sm font-semibold text-gray-900">Akses Cepat</h3></div>
                 <div class="p-4 grid grid-cols-2 gap-3">

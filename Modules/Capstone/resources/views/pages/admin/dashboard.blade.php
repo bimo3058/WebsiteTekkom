@@ -110,7 +110,7 @@
                         </div>
                         <div class="grid grid-cols-7">
                             <template x-for="(day,index) in days" :key="day.key">
-                                <div @click="selectedDate=day.key" tabindex="0" role="button" @keydown.enter="selectedDate=day.key"
+                                <div @click="openDay(day)" tabindex="0" role="button" @keydown.enter="openDay(day)"
                                     class="min-h-[92px] min-w-0 cursor-pointer border-b border-r border-slate-100 p-1.5 align-top transition-colors hover:bg-slate-50 sm:min-h-[118px] sm:p-2"
                                     :class="[!day.current && 'bg-slate-50/70', day.key===selectedDate && 'bg-blue-50/40', (index+1)%7===0 && 'border-r-0', index>=days.length-7 && 'border-b-0']">
                                     <div class="mb-1 flex justify-end">
@@ -123,18 +123,6 @@
                                         <div x-show="eventsFor(day).length>2" class="px-1 text-[11px] font-bold text-slate-700" x-text="'+'+(eventsFor(day).length-2)+' more'"></div>
                                     </div>
                                 </div>
-                            </template>
-                        </div>
-                    </div>
-                    <div x-show="dayEvents.length" class="mt-3 rounded-xl border border-slate-200">
-                        <p class="border-b border-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-800" x-text="selectedLabel+' — '+dayEvents.length+' kegiatan'"></p>
-                        <div class="divide-y divide-slate-100">
-                            <template x-for="event in dayEvents" :key="event._key">
-                                <button type="button" @click="detail(event)" class="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-slate-50">
-                                    <span class="rounded px-2 py-0.5 text-[11px] font-semibold" :class="color(event.type)" x-text="label(event.type)"></span>
-                                    <span class="min-w-0 flex-1 truncate text-[13px] font-medium text-slate-800" x-text="title(event)"></span>
-                                    <span class="shrink-0 text-xs text-slate-400" x-text="(event.start_time || '').slice(0,5)"></span>
-                                </button>
                             </template>
                         </div>
                     </div>
@@ -332,6 +320,7 @@
         </section>
     </div>
 
+    @include('capstone::partials.schedule-day')
     @include('capstone::partials.schedule-detail')
     <x-capstone::dialog id="schedule-reject" title="Reject Schedule">
         <form @submit.prevent="submitRejection" class="mt-4 space-y-4">

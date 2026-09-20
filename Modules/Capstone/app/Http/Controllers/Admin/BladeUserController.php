@@ -3,16 +3,8 @@
 namespace Modules\Capstone\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Lecturer;
-use App\Models\Role;
-use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Modules\Capstone\Support\CapstoneActor;
 
 /** Account management uses users.id; academic selectors keep their existing IDs. */
@@ -52,60 +44,6 @@ class BladeUserController extends Controller
     public function show(Request $request, User $user)
     {
         return response()->json($this->payload($user, $request));
-    }
-
-    public function store(Request $request)
-    {
-        $data = $this->validated($request);
-        $user = DB::transaction(function () use ($data) {
-            $user = User::create(['name' => $data['name'], 'email' => $data['email'], 'password' => Hash::make($data['password']), 'external_id' => 'capstone-local-'.Str::uuid()]);
-            $this->saveRolesAndProfiles($user, $data);
-
-            return $user;
-        });
-        $user->clearUserCache();
-
-        return response()->json($this->payload($user, $request), 201);
-    }
-
-    private function validated(Request $request, ?User $user = null): array
-    {
-        $user?->loadMissing(['student', 'lecturer']);
-        $roles = $request->input('roles', []);
-        $isStudent = is_array($roles) && in_array('mahasiswa', $roles, true);
-        $isLecturer = is_array($roles) && in_array('dosen', $roles, true);
-        $data = $request->validate([
-            'name' => 'required|string|min:2|max:100',
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user?->id)],
-            'password' => [$user ? 'nullable' : 'required', 'string', 'min:8', 'max:255'],
-            'roles' => 'required|array|min:1|max:3', 'roles.*' => 'required|distinct|in:admin,dosen,mahasiswa',
-            'nim' => [$isStudent ? 'required' : 'nullable', 'string', 'min:8', 'max:100', Rule::unique('students', 'student_number')->ignore($user?->student?->id)],
-            'nip' => [$isLecturer ? 'required' : 'nullable', 'string', 'max:100', Rule::unique('lecturers', 'employee_number')->ignore($user?->lecturer?->id)],
-            'cohort_year' => [$isStudent ? 'required' : 'nullable', 'integer', 'min:1900', 'max:'.(now()->year + 1)],
-        ]);
-        if ($isStudent && count($data['roles']) > 1) {
-            throw ValidationException::withMessages(['roles' => 'Role mahasiswa harus berdiri sendiri.']);
-        }
-
-        return $data;
-    }
-
-    private function saveRolesAndProfiles(User $user, array $data): void
-    {
-        // Preserve unrelated roles and permissions; only change Capstone/academic roles.
-        $user->roles()->detach(Role::whereIn('name', self::ROLE_NAMES)->pluck('id'));
-        foreach ($data['roles'] as $slug) {
-            $name = $slug === 'admin' ? 'admin_capstone' : $slug;
-            $role = Role::where('name', $name)->where('guard_name', 'web')->orderByRaw('CASE WHEN module = ? THEN 0 ELSE 1 END', [$slug === 'admin' ? 'capstone' : 'global'])->firstOrFail();
-            $user->roles()->syncWithoutDetaching([$role->id]);
-        }
-        if (in_array('mahasiswa', $data['roles'], true)) {
-            Student::updateOrCreate(['user_id' => $user->id], ['student_number' => $data['nim'], 'cohort_year' => $data['cohort_year']]);
-        }
-        if (in_array('dosen', $data['roles'], true)) {
-            Lecturer::updateOrCreate(['user_id' => $user->id], ['employee_number' => $data['nip']]);
-        }
-        $user->unsetRelation('roles')->unsetRelation('student')->unsetRelation('lecturer');
     }
 
     private function canManage(User $user): bool
