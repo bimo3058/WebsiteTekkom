@@ -680,6 +680,7 @@ class FinalizationController extends Controller
                 foreach ($finalGroups as $group) {
                     if ($group->status === 'PDC1_ACTIVE') {
                         $alreadyActive[] = $group->id;
+
                         continue;
                     }
 
@@ -838,6 +839,11 @@ class FinalizationController extends Controller
             return response()->json(['success' => false, 'message' => 'Cannot assign: student title has not been approved by the supervisor.'], 400);
         }
 
+        // STUDENT titles are period-locked; LECTURER titles are cross-period.
+        if ($title->title_source === 'STUDENT' && $title->period_id && (int) $title->period_id !== (int) $group->period_id) {
+            return response()->json(['success' => false, 'message' => 'Title belongs to another period.'], 400);
+        }
+
         $allocated = Group::where('title_id', $title->id)
             ->where('id', '!=', $group->id)
             ->whereNotIn('status', ['FORMING', 'READY_FOR_BIDDING', 'CLOSED'])
@@ -876,11 +882,16 @@ class FinalizationController extends Controller
 
         $titles = Title::with('lecturer')
             ->where(function ($q) use ($period) {
-                $q->where('period_id', $period->id)->orWhereNull('period_id');
-            })
-            ->where(function ($q) {
-                $q->where('title_source', '!=', 'STUDENT')
-                    ->orWhere('supervisor_approval_status', 'APPROVED');
+                // Dosen (LECTURER) titles are cross-period: visible in every period
+                // while global quota remains, including legacy rows with period_id set.
+                // STUDENT titles stay period-locked (approved ones only).
+                $q->where(function ($q) {
+                    $q->where('title_source', 'LECTURER')->orWhereNull('title_source');
+                })->orWhere(function ($q) use ($period) {
+                    $q->where('title_source', 'STUDENT')
+                        ->where('supervisor_approval_status', 'APPROVED')
+                        ->where('period_id', $period->id);
+                });
             })
             ->get()
             ->map(function (Title $title) {

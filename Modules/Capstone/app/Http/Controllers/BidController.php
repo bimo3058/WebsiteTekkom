@@ -1,19 +1,18 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Services\BiddingService;
 use Modules\Capstone\Support\CapstoneActor;
 use Modules\Capstone\Support\StudentTitleAccess;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class BidController extends Controller
 {
@@ -30,75 +29,89 @@ class BidController extends Controller
     public function index(Request $request)
     {
         $member = StudentTitleAccess::membership($request->user());
-        $bids = $member ? Bid::with(['title.lecturer','proposedSupervisor1','proposedSupervisor2'])->where('group_id',$member->group_id)->orderBy('priority')->get() : [];
-        return response()->json(['data'=>$bids,'flow'=>StudentTitleAccess::bidFlow($member)]);
+        $bids = $member ? Bid::with(['title.lecturer', 'proposedSupervisor1', 'proposedSupervisor2'])->where('group_id', $member->group_id)->orderBy('priority')->get() : [];
+
+        return response()->json(['data' => $bids, 'flow' => StudentTitleAccess::bidFlow($member)]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title_id'=>'required|integer|exists:capstone_titles,id',
-            'priority'=>'sometimes|integer|min:1|max:3',
+            'title_id' => 'required|integer|exists:capstone_titles,id',
+            'priority' => 'sometimes|integer|min:1|max:3',
         ]);
-        return DB::transaction(function () use ($request,$data) {
+
+        return DB::transaction(function () use ($request, $data) {
             $member = StudentTitleAccess::membership($request->user());
-            abort_unless($member && $member->is_leader,403,'Only the group leader can submit bids.');
+            abort_unless($member && $member->is_leader, 403, 'Only the group leader can submit bids.');
             $group = Group::with('period')->lockForUpdate()->findOrFail($member->group_id);
-            $member->setRelation('group',$group);
+            $member->setRelation('group', $group);
             $flow = StudentTitleAccess::bidFlow($member);
-            abort_unless($flow['can_submit_bid'],403,$flow['reason'] ?? 'Bidding locked.');
+            abort_unless($flow['can_submit_bid'], 403, $flow['reason'] ?? 'Bidding locked.');
             $title = Title::lockForUpdate()->findOrFail($data['title_id']);
-            abort_if($title->title_source==='STUDENT' || $title->status!=='open',422,'Title is not open for bidding.');
-            abort_if($title->period_id && (int)$title->period_id!==(int)$group->period_id,422,'Title belongs to another period.');
-            abort_if($title->groups()->where('status','!=','REJECTED')->count()>=$title->quota,422,'Title quota is full.');
-            abort_if($group->bids()->where('title_id',$title->id)->where('status','!=','REJECTED')->exists(),422,'You already bid on this title.');
+            abort_if($title->title_source === 'STUDENT' || $title->status !== 'open', 422, 'Title is not open for bidding.');
+            // Dosen (LECTURER) titles are cross-period: period_id is ignored for them,
+            // including legacy rows created with a period_id. STUDENT titles stay period-locked.
+            abort_if($title->title_source !== 'LECTURER' && $title->period_id && (int) $title->period_id !== (int) $group->period_id, 422, 'Title belongs to another period.');
+            abort_if($title->groups()->whereNotIn('status', ['FORMING', 'READY_FOR_BIDDING', 'CLOSED'])->count() >= $title->quota, 422, 'Title quota is full.');
+            abort_if($group->bids()->where('title_id', $title->id)->where('status', '!=', 'REJECTED')->exists(), 422, 'You already bid on this title.');
             // Students do not propose supervisors when bidding on lecturer titles;
             // supervisors are assigned at finalization (balancing). Ignore any
             // supervisor fields sent by older clients.
-            $used = $group->bids()->where('status','PENDING')->pluck('priority')->map(fn($n)=>(int)$n)->all();
-            $priority = $data['priority'] ?? collect([1,2,3])->first(fn($n)=>!in_array($n,$used,true));
-            abort_if(in_array($priority,$used,true),422,'Priority is already used.');
-            $bid = Bid::create(['title_id'=>$data['title_id'],'group_id'=>$group->id,'priority'=>$priority,'status'=>'PENDING']);
-            return response()->json(['data'=>$bid->load(['title.lecturer','proposedSupervisor1','proposedSupervisor2']),'message'=>'Bid submitted successfully.'],201);
+            $used = $group->bids()->where('status', 'PENDING')->pluck('priority')->map(fn ($n) => (int) $n)->all();
+            $priority = $data['priority'] ?? collect([1, 2, 3])->first(fn ($n) => ! in_array($n, $used, true));
+            abort_if(in_array($priority, $used, true), 422, 'Priority is already used.');
+            $bid = Bid::create(['title_id' => $data['title_id'], 'group_id' => $group->id, 'priority' => $priority, 'status' => 'PENDING']);
+
+            return response()->json(['data' => $bid->load(['title.lecturer', 'proposedSupervisor1', 'proposedSupervisor2']), 'message' => 'Bid submitted successfully.'], 201);
         });
     }
 
     public function destroy(Request $request, $id)
     {
-        return DB::transaction(function () use ($request,$id) {
+        return DB::transaction(function () use ($request, $id) {
             $member = StudentTitleAccess::membership($request->user());
-            abort_unless($member && $member->is_leader,403,'Only the group leader can delete bids.');
+            abort_unless($member && $member->is_leader, 403, 'Only the group leader can delete bids.');
             $group = Group::with('period')->lockForUpdate()->findOrFail($member->group_id);
-            $member->setRelation('group',$group);
-            abort_unless(StudentTitleAccess::bidFlow($member)['can_delete_bid'],403,'Bidding is locked.');
+            $member->setRelation('group', $group);
+            abort_unless(StudentTitleAccess::bidFlow($member)['can_delete_bid'], 403, 'Bidding is locked.');
             $bid = $group->bids()->lockForUpdate()->findOrFail($id);
-            abort_unless(in_array($bid->status,['PENDING','REJECTED'],true),403,'Only pending or rejected bids can be deleted.');
+            abort_unless(in_array($bid->status, ['PENDING', 'REJECTED'], true), 403, 'Only pending or rejected bids can be deleted.');
             $bid->delete();
             // Compact ascending priorities of remaining active bids; each lower slot is already vacant.
-            foreach ($group->bids()->where('status','PENDING')->orderBy('priority')->get() as $index=>$remaining) $remaining->update(['priority'=>$index+1]);
-            return response()->json(['message'=>'Bid deleted successfully.']);
+            foreach ($group->bids()->where('status', 'PENDING')->orderBy('priority')->get() as $index => $remaining) {
+                $remaining->update(['priority' => $index + 1]);
+            }
+
+            return response()->json(['message' => 'Bid deleted successfully.']);
         });
     }
 
     public function reorder(Request $request)
     {
-        $data = $request->validate(['bids'=>'required|array|min:1|max:3','bids.*.id'=>'required|integer|distinct','bids.*.priority'=>'required|integer|distinct|min:1|max:3']);
-        return DB::transaction(function () use ($request,$data) {
+        $data = $request->validate(['bids' => 'required|array|min:1|max:3', 'bids.*.id' => 'required|integer|distinct', 'bids.*.priority' => 'required|integer|distinct|min:1|max:3']);
+
+        return DB::transaction(function () use ($request, $data) {
             $member = StudentTitleAccess::membership($request->user());
-            abort_unless($member && $member->is_leader,403,'Only the group leader can reorder bids.');
+            abort_unless($member && $member->is_leader, 403, 'Only the group leader can reorder bids.');
             $group = Group::with('period')->lockForUpdate()->findOrFail($member->group_id);
-            $member->setRelation('group',$group);
-            abort_unless(StudentTitleAccess::bidFlow($member)['can_reorder_bid'],403,'Bidding is locked.');
+            $member->setRelation('group', $group);
+            abort_unless(StudentTitleAccess::bidFlow($member)['can_reorder_bid'], 403, 'Bidding is locked.');
             // Only active (PENDING) bids participate in priority ordering; rejected bids live in history.
-            $bids = $group->bids()->where('status','PENDING')->lockForUpdate()->get();
+            $bids = $group->bids()->where('status', 'PENDING')->lockForUpdate()->get();
             $ids = collect($data['bids'])->pluck('id')->sort()->values()->all();
-            abort_unless($bids->pluck('id')->sort()->values()->all()===$ids,422,'Submit every bid in your own group exactly once.');
-            abort_unless(collect($data['bids'])->pluck('priority')->sort()->values()->all()===range(1,$bids->count()),422,'Priorities must be consecutive.');
+            abort_unless($bids->pluck('id')->sort()->values()->all() === $ids, 422, 'Submit every bid in your own group exactly once.');
+            abort_unless(collect($data['bids'])->pluck('priority')->sort()->values()->all() === range(1, $bids->count()), 422, 'Priorities must be consecutive.');
             // A positive temporary range avoids the immediate PostgreSQL unique constraint.
-            $offset = (int)$bids->max('priority')+count($bids)+1;
-            foreach ($bids as $index=>$bid) $bid->update(['priority'=>$offset+$index]);
-            foreach ($data['bids'] as $item) $bids->firstWhere('id',$item['id'])->update(['priority'=>$item['priority']]);
-            return response()->json(['message'=>'Urutan prioritas berhasil disimpan.']);
+            $offset = (int) $bids->max('priority') + count($bids) + 1;
+            foreach ($bids as $index => $bid) {
+                $bid->update(['priority' => $offset + $index]);
+            }
+            foreach ($data['bids'] as $item) {
+                $bids->firstWhere('id', $item['id'])->update(['priority' => $item['priority']]);
+            }
+
+            return response()->json(['message' => 'Urutan prioritas berhasil disimpan.']);
         });
     }
 
@@ -162,7 +175,9 @@ class BidController extends Controller
 
                 // Compact priorities of remaining active bids so slots stay consecutive.
                 foreach ($group->bids()->where('status', 'PENDING')->orderBy('priority')->get() as $index => $remaining) {
-                    if ((int) $remaining->priority !== $index + 1) $remaining->update(['priority' => $index + 1]);
+                    if ((int) $remaining->priority !== $index + 1) {
+                        $remaining->update(['priority' => $index + 1]);
+                    }
                 }
 
                 AuditLog::create([
@@ -179,10 +194,12 @@ class BidController extends Controller
                     ],
                 ]);
 
-                $titleName = $bid->title->title ?? ('Judul #' . $bid->title_id);
+                $titleName = $bid->title->title ?? ('Judul #'.$bid->title_id);
                 foreach ($group->members as $gm) {
                     $studentUserId = $gm->student->user_id ?? null;
-                    if (!$studentUserId) continue;
+                    if (! $studentUserId) {
+                        continue;
+                    }
                     Notification::create([
                         'user_id' => $studentUserId,
                         'type' => 'BID_REJECTED',
@@ -211,7 +228,7 @@ class BidController extends Controller
                     'lecturer_recommendation' => null,
                     'status' => 'PENDING',
                     'priority' => $nextPriority,
-                ], fn($v) => $v !== null));
+                ], fn ($v) => $v !== null));
 
                 AuditLog::create([
                     'user_id' => $user->id,
