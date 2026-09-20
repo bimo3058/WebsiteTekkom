@@ -246,12 +246,12 @@
                 @endif
 
                 {{-- Date Picker Dropdown (Weekly) --}}
-                <div x-data="{ open: false }" class="relative">
+                <div x-data="{ open: false }" class="relative flex-1 flex justify-center">
                     <button @click="open = !open" type="button"
-                        class="flex items-center gap-2 text-[15px] font-bold text-[#0B266E] hover:bg-[#EFF6FF] px-4 py-1.5 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-[#0B266E]/20">
-                        {{ $weekStart->translatedFormat('d M Y') }} — {{ $weekEnd->translatedFormat('d M Y') }}
-                        <svg class="w-4 h-4 text-[#0B266E] transition-transform duration-200" :class="{'rotate-180': open}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        class="flex items-center gap-1 md:gap-2 text-[12px] md:text-[15px] font-bold text-[#0B266E] hover:bg-[#EFF6FF] px-1 md:px-4 py-1.5 rounded-lg transition-colors cursor-pointer border border-transparent hover:border-[#0B266E]/20 text-center">
+                        {{ $weekStart->translatedFormat('d M') }} — {{ $weekEnd->translatedFormat('d M Y') }}
+                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-[#0B266E] transition-transform duration-200 shrink-0"
+                            :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
                     </button>
@@ -260,7 +260,7 @@
                         x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
                         x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[220px] bg-white border border-gray-200 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 p-4"
+                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[200px] md:w-[220px] bg-white border border-gray-200 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 p-3 md:p-4"
                         style="display: none;">
                         <p class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2 text-center">Pindah ke
                             Tanggal</p>
@@ -358,7 +358,7 @@
                                 }
                             }
                             $cellMatrix[$dateStr][$rId][$jam] = [
-                                'skip' => false, 
+                                'skip' => false,
                                 'rowspan' => $rowspan,
                                 'type' => $stObj['type'] ?? ''
                             ];
@@ -384,7 +384,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E;
-                                                                                    {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
+                                                                                                    {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">
                                             {{ $day->format('d/m') }}
@@ -584,8 +584,7 @@
                                                             } else {
                                                                 $tColor = '#991B1B';
                                                             }
-                                                        }
-                                                        elseif ($slotStatus === 'menunggu')
+                                                        } elseif ($slotStatus === 'menunggu')
                                                             $tColor = '#B45309';
                                                         else
                                                             $tColor = '#374151';
@@ -594,10 +593,10 @@
                                                         @mouseover="$el.style.transform='scale(1.03)'; $el.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)'"
                                                     @mouseout="$el.style.transform='scale(1)'; $el.style.boxShadow='none'" @endif
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-size:9px; font-weight:800; color:{{ $tColor }}; transition: all 0.15s;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               font-size:9px; font-weight:800; color:{{ $tColor }}; transition: all 0.15s;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -689,15 +688,15 @@
 
                             @foreach($months as $num => $name)
                                 <button type="button" @click="
-                                                            let url = new URL(window.location.href);
-                                                            url.searchParams.set('mode', 'month');
-                                                            url.searchParams.set('month', selectedYear + '-{{ $num }}');
-                                                            window.location.href = url.href;
-                                                        "
+                                                                            let url = new URL(window.location.href);
+                                                                            url.searchParams.set('mode', 'month');
+                                                                            url.searchParams.set('month', selectedYear + '-{{ $num }}');
+                                                                            window.location.href = url.href;
+                                                                        "
                                     class="py-2 text-center text-[13px] rounded-lg transition-colors cursor-pointer" :class="{
-                                                            'bg-[#0B266E] text-white font-bold shadow-md': selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}',
-                                                            'text-gray-600 hover:bg-[#EFF6FF] hover:text-[#0B266E] hover:font-bold': !(selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}')
-                                                        }">
+                                                                            'bg-[#0B266E] text-white font-bold shadow-md': selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}',
+                                                                            'text-gray-600 hover:bg-[#EFF6FF] hover:text-[#0B266E] hover:font-bold': !(selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}')
+                                                                        }">
                                     {{ $name }}
                                 </button>
                             @endforeach
@@ -764,8 +763,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                                                                                                      background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                                                                                                      transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -826,7 +825,8 @@
 
                     <div class="w-full mt-3 space-y-2">
                         {{-- Kelas: hanya untuk Jadwal Kuliah (internal) --}}
-                        <div class="flex justify-between items-center text-[12px]" x-show="detailData.status === 'internal' && detailData.kelas !== '-'">
+                        <div class="flex justify-between items-center text-[12px]"
+                            x-show="detailData.status === 'internal' && detailData.kelas !== '-'">
                             <span class="text-gray-500 font-medium">Kelas</span>
                             <span class="text-gray-800 font-bold" x-text="detailData.kelas"></span>
                         </div>
@@ -844,13 +844,16 @@
                             <span class="text-gray-800 font-bold" x-text="detailData.waktu"></span>
                         </div>
                         {{-- Tujuan: hanya untuk booking milik sendiri (menunggu) --}}
-                        <div class="flex justify-between items-center text-[12px]" x-show="detailData.status === 'menunggu' && detailData.tujuan">
+                        <div class="flex justify-between items-center text-[12px]"
+                            x-show="detailData.status === 'menunggu' && detailData.tujuan">
                             <span class="text-gray-500 font-medium">Keperluan</span>
-                            <span class="text-gray-800 font-bold text-right max-w-[55%]" x-text="detailData.tujuan"></span>
+                            <span class="text-gray-800 font-bold text-right max-w-[55%]"
+                                x-text="detailData.tujuan"></span>
                         </div>
                         {{-- Pesan konfirmasi untuk booking sendiri --}}
                         <div x-show="detailData.status === 'menunggu'" class="mt-2 pt-2 border-t border-amber-100">
-                            <p class="text-[11px] text-amber-600 font-medium text-center">⏳ Booking Anda sedang menunggu konfirmasi dari admin.</p>
+                            <p class="text-[11px] text-amber-600 font-medium text-center">Peminjaman Anda sedang
+                                menunggu konfirmasi dari admin.</p>
                         </div>
                     </div>
                 </div>
@@ -988,14 +991,15 @@
                             </div>
 
                             {{-- Persetujuan S&K --}}
-                            <div class="mt-2 pt-4 border-t border-gray-100">
+                            <div class="mt-2 pt-3 border-t border-gray-100 pb-2">
                                 <label class="flex items-start gap-3 cursor-pointer group">
                                     <div class="flex items-center h-5 mt-0.5">
                                         <input type="checkbox" name="syarat_ketentuan" required
-                                            class="w-4 h-4 border border-gray-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm">
+                                            class="w-4 h-4 border border-gray-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm"
+                                            style="scroll-margin-bottom: 80px; scroll-margin-top: 120px;">
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="text-[11px] text-gray-500 mt-0.5 leading-relaxed">
+                                        <span class="text-[12px] text-gray-500 leading-relaxed block">
                                             Saya bersedia <strong class="text-gray-700">merapikan kembali
                                                 ruangan</strong> setelah digunakan dan siap <strong
                                                 class="text-gray-700">bertanggung jawab penuh mengganti

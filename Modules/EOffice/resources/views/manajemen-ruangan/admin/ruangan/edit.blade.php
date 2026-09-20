@@ -10,9 +10,11 @@
         </div>
     </div>
 
+    {{-- DEBUG: action URL = {{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }} --}}
     <div class="mp-card" style="margin-top: 20px; max-width: 800px;">
         <form method="POST" id="editForm" action="{{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }}"
-            enctype="multipart/form-data">
+            enctype="multipart/form-data"
+            onsubmit="console.log('FORM SUBMIT FIRED - action:', this.action); return true;">
             @csrf
             @method('PUT')
             <div class="mp-card-body" style="display:flex; flex-direction:column; gap:20px; padding: 24px;">
@@ -23,6 +25,9 @@
                             <span style="color:red">*</span></label>
                         <input type="text" name="nama" class="mp-input" value="{{ old('nama', $ruangan->nama) }}"
                             required>
+                        @error('nama')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
@@ -32,17 +37,26 @@
                             Gedung <span style="color:red">*</span></label>
                         <input type="text" name="lokasi" class="mp-input" value="{{ old('lokasi', $ruangan->lokasi) }}"
                             required>
+                        @error('lokasi')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div style="width: 120px;">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Lantai</label>
                         <input type="number" name="lantai" class="mp-input"
                             value="{{ old('lantai', $ruangan->lantai) }}">
+                        @error('lantai')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div style="width: 150px;">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kapasitas
                             <span style="color:red">*</span></label>
                         <input type="number" name="kapasitas" class="mp-input" min="1"
                             value="{{ old('kapasitas', $ruangan->kapasitas) }}" required>
+                        @error('kapasitas')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 

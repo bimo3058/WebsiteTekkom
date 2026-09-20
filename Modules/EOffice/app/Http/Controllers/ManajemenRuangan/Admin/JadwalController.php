@@ -246,6 +246,18 @@ class JadwalController extends Controller
             ->with('success', 'Jadwal berhasil dihapus. Pemblokiran ruangan telah dicabut.');
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'exists:eo_mr_jadwal_internal,id'
+        ]);
+
+        MrJadwalInternal::whereIn('id', $request->ids)->delete();
+
+        return redirect()->back()->with('success', 'Berhasil menghapus jadwal yang dipilih.');
+    }
+
     public function resetAkademik()
     {
         MrJadwalInternal::where('kategori', 'Jadwal Akademik (Kuliah)')->delete();

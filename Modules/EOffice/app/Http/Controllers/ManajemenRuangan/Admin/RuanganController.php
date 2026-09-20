@@ -73,16 +73,16 @@ class RuanganController extends Controller
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Ruangan berhasil ditambahkan.');
     }
 
-    public function edit($id)
+    public function edit(Ruangan $ruangan)
     {
-        $ruangan = Ruangan::findOrFail($id);
         return view('eoffice::manajemen-ruangan.admin.ruangan.edit', compact('ruangan'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Ruangan $ruangan)
     {
-        $ruangan = Ruangan::findOrFail($id);
-
+        // TEMPORARY DEBUG - hapus setelah konfirmasi
+        \Illuminate\Support\Facades\Log::info('=== UPDATE REACHED ===', ['id' => $ruangan->id]);
+        \Session::flash('success', 'DEBUG: Update method reached! ID=' . $ruangan->id);
         $request->validate([
             'nama' => 'required|string|max:255',
             'lokasi' => 'required|string|max:255',
@@ -137,9 +137,8 @@ class RuanganController extends Controller
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Detail ruangan berhasil diperbarui.');
     }
 
-    public function destroy($id)
+    public function destroy(Ruangan $ruangan)
     {
-        $ruangan = Ruangan::findOrFail($id);
         $ruangan->delete();
 
         return redirect()->route('eoffice.peminjaman.admin.ruangan.index')->with('success', 'Ruangan berhasil dihapus.');

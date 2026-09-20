@@ -303,7 +303,10 @@ class UserPeminjamanController extends Controller
             ->firstOrFail();
 
         if ($peminjaman->status == 'menunggu' || $peminjaman->status == 'disetujui') {
-            $peminjaman->update(['status' => 'dibatalkan']);
+            $peminjaman->update([
+                'status' => 'dibatalkan',
+                'waktu_approval' => now()
+            ]);
             return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan secara mandiri.');
         }
 
@@ -340,5 +343,41 @@ class UserPeminjamanController extends Controller
             ->latest('updated_at')
             ->paginate(request('per_page', 10))->appends(request()->query());
         return view('eoffice::manajemen-ruangan.user.riwayat.index', compact('riwayats'));
+    }
+
+    /**
+     * Mark a specific notification as read and redirect to its URL
+     */
+    public function markNotificationAsRead(Request $request, $id)
+    {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+
+        $peminjamanId = $notification->data['peminjaman_id'] ?? null;
+        $url = $notification->data['url'] ?? route('eoffice.peminjaman.user.riwayat');
+
+        if ($peminjamanId) {
+            $peminjaman = \Modules\EOffice\Models\Peminjaman::find($peminjamanId);
+            if ($peminjaman) {
+                if ($peminjaman->status == 'disetujui') {
+                    $now = now();
+                    $date = $now->format('Y-m-d');
+                    $time = $now->format('H:i:s');
+                    
+                    $isPast = ($peminjaman->tanggal_pinjam < $date) || ($peminjaman->tanggal_pinjam == $date && $peminjaman->jam_selesai <= $time);
+                    
+                    if ($isPast) {
+                        $url = route('eoffice.peminjaman.user.riwayat');
+                    } else {
+                        $url = route('eoffice.peminjaman.user.saya');
+                    }
+                } else {
+                    // Ditolak / Dibatalkan
+                    $url = route('eoffice.peminjaman.user.riwayat');
+                }
+            }
+        }
+
+        return redirect()->to($url);
     }
 }

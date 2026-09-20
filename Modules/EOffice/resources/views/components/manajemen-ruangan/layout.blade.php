@@ -9,6 +9,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @vite(['resources/assets/sass/app.scss', 'resources/assets/js/app.js'], 'build-eoffice')
     <style>
+        [x-cloak] { display: none !important; }
         /* ─── SITKOM Design System — ManajemenRuangan component layer ─── */
 
         /* Box / Wrap (superadmin pattern) */
@@ -634,7 +635,7 @@
 
         {{-- SIDEBAR --}}
         <aside
-            class="flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
+            class="hidden md:flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
             :class="sidebarOpen ? '' : '!w-[64px]'">
 
             <div class="relative px-[14px] h-[60px] flex items-center border-b border-[#DFE1E7] flex-shrink-0 transition-all duration-200"
@@ -648,6 +649,7 @@
                         class="font-bold text-[14px] text-[#0D0D12] leading-[1.2] whitespace-nowrap tracking-[-0.01em]">
                         SIPERKOM</div>
                     <div class="text-[9px] font-medium text-[#808897] whitespace-nowrap mt-[2px]">Manajemen Ruangan
+                        Teknik Komputer
                     </div>
                 </div>
 
@@ -701,47 +703,49 @@
                         <div class="h-px bg-[#F0F1F4] mx-[6px] my-[4px]"></div>
                     @endif
                 @endforeach
-
-                <div class="h-px bg-[#F0F1F4] mx-[14px] my-[6px]"></div>
-                <a href="{{ route('eoffice.dashboard') }}"
-                    class="group relative flex items-center gap-[9px] pl-[14px] pr-[10px] py-[7px] rounded-[8px] no-underline transition-colors hover:bg-[#F8FAFC] text-[#475569]"
-                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
-                    <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#94A3B8]" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                        <path d="{{ $iBack }}" />
-                    </svg>
-                    <span class="text-[12px] font-medium flex-1" x-show="sidebarOpen">Kembali ke EOffice Utama</span>
-                </a>
             </nav>
 
-            <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0"
-                :class="sidebarOpen ? '' : '!px-[10px]'">
-                <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg overflow-hidden transition-colors hover:bg-[#F6F8FA]"
-                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
-                    <div class="flex items-center justify-center w-[30px] h-[30px] rounded-full flex-shrink-0 text-white text-[11px] font-bold"
-                        style="background:linear-gradient(135deg,#1F2937,#111827);">{{ $initials }}</div>
-                    <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen">
-                        <div
-                            class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">
-                            {{ $name }}
-                        </div>
-                        <div class="text-[10px] text-[#666D80] whitespace-nowrap overflow-hidden text-ellipsis">
-                            {{ $user?->email ?? '' }}
-                        </div>
-                    </div>
-                    <form method="POST" action="{{ route('logout') }}" class="flex-shrink-0"
-                        :class="sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
-                        @csrf
-                        <button type="submit"
-                            class="p-1 rounded text-[#A4ABB8] hover:text-red-500 bg-transparent border-none cursor-pointer">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round">
-                                <path d="{{ $iLogout }}" />
-                            </svg>
-                        </button>
-                    </form>
-                </div>
+            {{-- Bottom fixed section: Dasbor Utama, Pengaturan Profil, Keluar --}}
+            <div class="flex-shrink-0 border-t border-[#DFE1E7] px-[10px] py-[8px] pb-[12px]">
+
+                {{-- Kembali ke EOffice --}}
+                <a href="{{ url('/eoffice/dashboard') }}"
+                    class="relative flex items-center gap-[9px] w-full min-h-[36px] px-[10px] py-[8px] pl-[14px] rounded-[8px] no-underline transition-colors duration-[120ms] hover:bg-[#F6F8FA] text-[#353849] font-medium text-[13px] leading-[1.4] whitespace-nowrap"
+                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0 !pl-0'">
+                    <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#94A3B8]" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5m7-7-7 7 7 7" />
+                    </svg>
+                    <span class="min-w-0 overflow-hidden text-ellipsis" x-show="sidebarOpen">Kembali ke Eoffice</span>
+                </a>
+
+                {{-- Pengaturan Profil --}}
+                <a href="{{ url('/profile') }}"
+                    class="relative flex items-center gap-[9px] w-full min-h-[36px] px-[10px] py-[8px] pl-[14px] rounded-[8px] no-underline transition-colors duration-[120ms] hover:bg-[#F6F8FA] text-[#353849] font-medium text-[13px] leading-[1.4] whitespace-nowrap"
+                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0 !pl-0'">
+                    <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#94A3B8]" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21v-2a7 7 0 0 0-14 0v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
+                    </svg>
+                    <span class="min-w-0 overflow-hidden text-ellipsis" x-show="sidebarOpen">Pengaturan Profil</span>
+                </a>
+
+                {{-- Keluar --}}
+                <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                    @csrf
+                    <button type="submit"
+                        class="relative flex items-center gap-[9px] w-full min-h-[36px] px-[10px] py-[8px] pl-[14px] rounded-[8px] transition-colors duration-[120ms] hover:bg-[#FEF1F4] text-[#DF1C41] font-medium text-[13px] leading-[1.4] whitespace-nowrap bg-transparent border-none cursor-pointer text-left"
+                        :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0 !pl-0'">
+                        <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#DF1C41]" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9" />
+                        </svg>
+                        <span class="min-w-0 overflow-hidden text-ellipsis" x-show="sidebarOpen">Keluar</span>
+                    </button>
+                </form>
             </div>
+
+
         </aside>
 
         {{-- MAIN AREA --}}
@@ -760,20 +764,70 @@
                     {{-- ── Right Actions ── --}}
                     <div class="flex items-center gap-2 md:gap-4">
                         {{-- Notification Bell --}}
-                        <div
-                            class="relative flex items-center justify-center cursor-pointer transition-colors hover:bg-gray-50 rounded-[10px] border border-[#DFE1E7] bg-white text-[#666D80] w-[30px] h-[30px] md:w-[36px] md:h-[36px]">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9" />
-                                <path d="M10 21a2 2 0 004 0" />
-                            </svg>
-                            @php
-                                $notifCount = class_exists('\Modules\EOffice\Models\Notifikasi') ? \Modules\EOffice\Models\Notifikasi::where('user_id', $user->id)->where('is_read', false)->count() : 0;
-                            @endphp
-                            @if($notifCount > 0)
-                                <span
-                                    class="absolute rounded-full w-[6px] h-[6px] bg-[#DF1C41] border-[1.5px] border-white top-1 right-1 md:top-2 md:right-2"></span>
-                            @endif
+                        <div class="relative" x-data="{ openNotif: false }" @click.outside="openNotif = false">
+                            <button @click="openNotif = !openNotif" type="button"
+                                class="relative flex items-center justify-center cursor-pointer transition-colors hover:bg-gray-50 rounded-[10px] border border-[#DFE1E7] bg-white text-[#666D80] w-[30px] h-[30px] md:w-[36px] md:h-[36px]">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                @php
+                                    $unreadNotifications = $user->unreadNotifications;
+                                    $notifCount = $unreadNotifications->count();
+                                @endphp
+                                @if($notifCount > 0)
+                                    <span class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">
+                                        {{ $notifCount > 99 ? '99+' : $notifCount }}
+                                    </span>
+                                @endif
+                            </button>
+
+                            {{-- Dropdown Notifikasi --}}
+                            <div x-show="openNotif" x-transition.opacity.duration.200ms
+                                class="absolute right-0 mt-2 w-[320px] bg-white border border-[#DFE1E7] rounded-[12px] shadow-lg overflow-hidden z-[99]"
+                                style="display: none;">
+                                <div class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-center bg-[#F8FAFC]">
+                                    <h3 class="font-bold text-[13px] text-[#0D0D12]">Notifikasi</h3>
+                                    @if($notifCount > 0)
+                                        <span class="bg-[#DF1C41] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $notifCount }} Baru</span>
+                                    @endif
+                                </div>
+                                <div class="max-h-[320px] overflow-y-auto">
+                                    @forelse($user->notifications()->limit(5)->get() as $notification)
+                                        <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read', $notification->id) }}" class="m-0 border-b border-[#F0F1F4] last:border-b-0">
+                                            @csrf
+                                            <button type="submit" class="w-full text-left p-4 hover:bg-[#F8FAFC] transition-colors cursor-pointer {{ $notification->read_at ? 'opacity-60' : 'bg-[#F0F9FF]' }}">
+                                                <div class="flex items-start gap-3">
+                                                    <div class="flex-shrink-0 mt-0.5">
+                                                        @if(isset($notification->data['status']) && $notification->data['status'] == 'disetujui')
+                                                            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                            </div>
+                                                        @elseif(isset($notification->data['status']) && in_array($notification->data['status'], ['ditolak', 'dibatalkan']))
+                                                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                                            </div>
+                                                        @else
+                                                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                                                            </div>
+                                                        @endif
+                                                    </div>
+                                                    <div>
+                                                        <div class="text-[12px] font-semibold text-[#0D0D12] leading-[1.4] mb-1">{{ $notification->data['message'] ?? 'Pemberitahuan Baru' }}</div>
+                                                        <div class="text-[10px] text-[#666D80]">{{ $notification->created_at->diffForHumans() }}</div>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </form>
+                                    @empty
+                                        <div class="p-6 text-center text-[12px] text-[#808897]">
+                                            Belum ada notifikasi
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
                         </div>
 
                         {{-- Separator --}}
@@ -842,6 +896,30 @@
                             </button>
                         </div>
                     @endif
+                    @if($errors->any())
+                        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)"
+                            x-transition.opacity.duration.300ms class="mp-flash mp-flash-error"
+                            style="justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                <span>Terdapat kesalahan pada input Anda. Mohon periksa kembali form.</span>
+                            </div>
+                            <button @click="show = false"
+                                style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
+                                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.6'">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    @endif
 
                     <div class="mp-box-body">
                         {{ $slot }}
@@ -850,6 +928,19 @@
             </div>
         </div>
     </div>
+    @if(!$isAdmin)
+        @include('eoffice::components.manajemen-ruangan.sidebar-mobile', [
+            'user' => $user,
+            'rawSettings' => $rawSettings,
+            'currentRoute' => $currentRoute
+        ])
+    @else
+        @include('eoffice::components.manajemen-ruangan.sidebar-admin-mobile', [
+            'user' => $user,
+            'rawSettings' => $rawSettings,
+            'currentRoute' => $currentRoute
+        ])
+    @endif
 </body>
 
 </html>
