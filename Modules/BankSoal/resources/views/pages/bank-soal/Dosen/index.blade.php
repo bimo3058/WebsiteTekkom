@@ -121,14 +121,14 @@
 
     <div class="overflow-x-auto" data-tab-panel="soal">
         <table class="w-full" id="tableSoal">
-            <thead class="bg-primary text-white border-b border-primary/20">
+            <thead class="table-header">
                 <tr>
-                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
-                    <th class="px-2 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
-                    <th class="px-2 py-4 text-left text-xs font-semibold uppercase tracking-wider">Topik</th>
-                    <th class="px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tingkat Kesulitan</th>
-                    <th class="px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tindakan</th>
+                    <th class="table-header-cell px-6">ID</th>
+                    <th class="table-header-cell px-2">Mata Kuliah</th>
+                    <th class="table-header-cell px-2">Topik</th>
+                    <th class="table-header-cell px-3">Tingkat Kesulitan</th>
+                    <th class="table-header-cell px-3">Status</th>
+                    <th class="table-header-cell px-6">Tindakan</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -263,14 +263,14 @@
 
         <div class="overflow-x-auto" data-tab-panel="paket">
             <table class="w-full" id="tablePackages">
-                <thead class="bg-primary text-white border-b border-primary/20">
+                <thead class="table-header">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Kode MK</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Terkait CPL</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Terkait CPMK</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jumlah Soal</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tindakan</th>
+                        <th class="table-header-cell">Kode MK</th>
+                        <th class="table-header-cell">Mata Kuliah</th>
+                        <th class="table-header-cell">Terkait CPL</th>
+                        <th class="table-header-cell">Terkait CPMK</th>
+                        <th class="table-header-cell">Jumlah Soal</th>
+                        <th class="table-header-cell">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -613,7 +613,7 @@
         renderCplCpmk(selectedMk, null, null);
 
         // Fetch questions exactly for this MK to drive the filtering
-        fetch(`/bank-soal/soal/dosen/get-by-mk/${mk_id}`, {
+        fetch(@json(route('banksoal.soal.dosen.get-available-soals', ['mk_id' => '__MK_ID__'])).replace('__MK_ID__', mk_id), {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json'
@@ -708,7 +708,7 @@
         listDiv.classList.add('hidden');
         if (window.Spinner) window.Spinner.showTable('lihatSoalLoading');
 
-        fetch(`/bank-soal/soal/dosen/get-by-mk/${mk_id}`, {
+        fetch(@json(route('banksoal.soal.dosen.get-available-soals', ['mk_id' => '__MK_ID__'])).replace('__MK_ID__', mk_id), {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',

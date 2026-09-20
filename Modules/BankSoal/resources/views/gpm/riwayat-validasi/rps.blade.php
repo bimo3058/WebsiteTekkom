@@ -10,9 +10,14 @@
     </div>
 
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="px-6 py-5 border-b border-slate-200">
+            <h2 class="text-lg font-semibold text-slate-900">Riwayat Pengajuan RPS</h2>
+            <p class="mt-1 text-sm text-slate-500">Daftar dokumen RPS yang telah selesai direview oleh GPM.</p>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
-                <thead class="bg-primary text-xs uppercase text-white">
+                <thead class="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500 border-y border-slate-200">
                     <tr>
                         <th class="px-6 py-4 text-left">Mata Kuliah</th>
                         <th class="px-6 py-4 text-left">Dosen Pengampu</th>
@@ -21,7 +26,7 @@
                         <th class="px-6 py-4 text-right">Aksi</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-200">
+                <tbody class="divide-y divide-slate-200 bg-white">
                     @forelse($riwayat_rps as $rps)
                         <tr>
                             <td class="px-6 py-4">
@@ -44,8 +49,8 @@
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Disetujui</span>
                             </td>
-                            <td class="px-6 py-4 text-right">
-                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/90">
+                            <td class="px-6 py-4 text-center">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex flex-col items-center text-primary hover:text-primary/90">
                                     <i class="far fa-eye"></i> Lihat Detail
                                 </a>
                             </td>

@@ -56,9 +56,13 @@
                             <td class="px-6 py-4 text-sm text-slate-600">Menunggu Review</td>
                             <td class="px-6 py-4 text-right">
                                 @if($tugas->tipe_dokumen == 'Bank Soal')
-                                    <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="inline-flex items-center rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90">Review Sekarang</a>
+                                    <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="inline-flex items-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-all hover:border-blue-700 hover:bg-blue-700 hover:text-white whitespace-nowrap">
+                                        <i class="fas fa-comment-dots"></i> Review Sekarang
+                                    </a>
                                 @else
-                                    <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $tugas->rps_id) }}" class="inline-flex items-center rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90">Review Sekarang</a>
+                                    <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $tugas->rps_id) }}" class="inline-flex items-center gap-2 rounded-xl border border-blue-300 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 transition-all hover:border-blue-700 hover:bg-blue-700 hover:text-white whitespace-nowrap">
+                                        <i class="fas fa-comment-dots"></i> Review Sekarang
+                                    </a>
                                 @endif
                             </td>
                         </tr>

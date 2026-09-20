@@ -91,8 +91,7 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <!-- NIM -->
                         <div class="space-y-1">
-                            <label class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">Nomor
-                                Induk</label>
+                            <label class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">NIM</label>
                             <input type="text" name="nim" required readonly
                                 value="{{ old('nim', optional(auth()->user()->student)->student_number ?? auth()->user()->external_id) }}"
                                 class="w-full h-11 bg-slate-50 border border-slate-200 text-slate-500 font-mono text-sm px-3 outline-none cursor-not-allowed rounded-xl" />

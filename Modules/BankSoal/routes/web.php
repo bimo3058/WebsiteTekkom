@@ -40,6 +40,14 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             ->middleware('role:admin_banksoal|superadmin|dosen|gpm')
             ->name('banksoal.dashboard');
 
+        Route::get('/gpm/notifications', [DashboardController::class, 'gpmNotifications'])
+            ->middleware(['role:gpm', GpmSessionCheck::class])
+            ->name('banksoal.gpm.notifications');
+
+        Route::get('/dosen/notifications', [DashboardController::class, 'dosenNotifications'])
+            ->middleware('role:dosen')
+            ->name('banksoal.dosen.notifications');
+
         # Role Switcher
         Route::get('/switch-role/{role}', [DashboardController::class, 'switchRole'])
             ->name('banksoal.switch-role')
@@ -401,6 +409,7 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::get('/engine/waiting-room', [CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
 
         // CBT Engine API Routes
+        Route::get('/engine/status', [CbtEngineController::class, 'status'])->name('engine.status');
         Route::post('/engine/save-answer', [CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
         Route::post('/engine/toggle-ragu', [CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
         Route::post('/engine/log-violation', [CbtEngineController::class, 'logViolation'])->name('engine.log-violation');

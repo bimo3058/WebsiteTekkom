@@ -262,11 +262,10 @@
                         <span class="text-[13px] text-gray-700 font-medium whitespace-nowrap">Per page</span>
                         <div class="relative">
                             <select onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); url.searchParams.delete('page'); window.location.href = url.toString();" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
-                                <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
-                                <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
-                                <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
-                                <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
-                                <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
+                                 <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
+                                 <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
+                                 <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
+                                 <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
                             </select>
                         </div>
                         @if ($sessions instanceof \Illuminate\Pagination\LengthAwarePaginator)

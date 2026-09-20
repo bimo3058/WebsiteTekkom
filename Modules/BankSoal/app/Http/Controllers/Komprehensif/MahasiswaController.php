@@ -154,8 +154,10 @@ class MahasiswaController extends Controller
             $query->orderBy('finished_at', 'desc');
         }
 
-        $perPage = $request->input('per_page', 10);
-        $sessions = $query->paginate($perPage);
+        $perPage = in_array((int) $request->input('per_page', 5), [5, 10, 25, 50])
+            ? (int) $request->input('per_page', 5)
+            : 5;
+        $sessions = $query->paginate($perPage)->withQueryString();
 
         $allSessions = KompreSession::where('user_id', auth()->id())->where('status', 'finished')->get();
         $totalUjian     = $allSessions->count();
