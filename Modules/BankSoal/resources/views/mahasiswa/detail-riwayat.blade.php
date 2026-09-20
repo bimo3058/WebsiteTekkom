@@ -176,12 +176,12 @@
                 <div class="dash-stats"
                     style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;">
                     {{-- Score --}}
-                    <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+                    <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                         onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                         onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                             <div
-                                style="width:28px;height:28px;border-radius:8px;background:{{ $lulus ? 'rgba(34,197,94,0.1)' : 'rgba(220,38,38,0.1)' }};color:{{ $lulus ? '#22C55E' : '#DC2626' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                style="width:28px;height:28px;border-radius:8px;background:var(--c-primary-subtle);color:var(--c-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                 <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     @if($lulus)
@@ -195,13 +195,13 @@
                                 ({{ $lulus ? 'Lulus' : 'Tidak Lulus' }})</p>
                         </div>
                         <p
-                            style="font-size:24px;font-weight:700;color:{{ $lulus ? '#15803D' : '#B91C1C' }};line-height:1;letter-spacing:-.02em;">
+                            style="font-size:24px;font-weight:700;color:var(--c-fg);line-height:1;letter-spacing:-.02em;">
                             {{ $skor }}<span style="font-size:14px;color:var(--c-fg-muted);font-weight:500;">/100</span>
                         </p>
                     </div>
 
                     {{-- Benar --}}
-                    <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+                    <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                         onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                         onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
@@ -221,7 +221,7 @@
                     </div>
 
                     {{-- Salah --}}
-                    <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+                    <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                         onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                         onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
@@ -241,7 +241,7 @@
                     </div>
 
                     {{-- Kosong --}}
-                    <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+                    <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                         onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                         onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
@@ -261,7 +261,7 @@
                     </div>
 
                     {{-- Durasi --}}
-                    <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+                    <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                         onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                         onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
