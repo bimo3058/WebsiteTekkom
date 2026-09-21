@@ -2,10 +2,20 @@
 
     @push('styles')
         <style>
+            /* Halaman ini memakai kartu sendiri di atas latar abu, jadi kotak bawaan
+               .main-wrapper dimatikan dan hanya menyisakan area scroll bergutter. */
             .main-wrapper {
+                /* Lebar bleed garis pemisah page-header bordered mengikuti padding di bawah. */
+                --mm-ph-bleed: 10px;
+                --mm-ph-bleed-top: 10px;
+                --mm-ph-bleed-sm: 10px;
+                --mm-ph-bleed-top-sm: 10px;
                 background: transparent !important;
+                border: none !important;
                 box-shadow: none !important;
-                padding: 0 !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                overflow-y: auto !important;
             }
 
             /* ── Back Button ──────────────────────────────────────── */

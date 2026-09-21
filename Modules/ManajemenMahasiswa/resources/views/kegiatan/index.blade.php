@@ -199,6 +199,21 @@
     }
 </style>
 
+<!-- Page Header -->
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Manajemen Kegiatan"
+    subtitle="Daftar kegiatan terbaru dari berbagai bidang kepengurusan">
+    <x-slot:actions>
+        @if($canTambahKegiatan)
+            <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
+               class="mk-btn mk-btn--primary mk-btn--sm">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Tambah Kegiatan
+            </a>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
+
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -207,22 +222,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Manajemen Kegiatan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
-    </div>
-
-    @if($canTambahKegiatan)
-        <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
-           class="mk-btn mk-btn--primary mk-btn--sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Tambah Kegiatan
-        </a>
-    @endif
-</div>
 
 <!-- Search & Filter Area (matching forum layout) -->
 <form method="GET" action="{{ route('manajemenmahasiswa.kegiatan.index') }}" id="filterForm">

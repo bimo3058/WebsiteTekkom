@@ -55,11 +55,11 @@
                                 @csrf @method('PATCH')
                                 <div id="tpActions" style="padding-top: 18px;">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label class="form-label fw-bold mb-0" style="font-size: 12.5px;">Catatan Verifikasi</label>
+                                        <label class="form-label fw-bold mb-0" style="font-size: 12px;">Catatan Verifikasi</label>
                                         <span class="text-muted" style="font-size: 11px;" id="charCount_tp">0 / 200 huruf</span>
                                     </div>
                                     <textarea name="verification_note" id="tpNote" class="form-control" rows="3" maxlength="200"
-                                              style="border-radius: 10px; font-size: 13.5px;"
+                                              style="border-radius: 10px; font-size: 13px;"
                                               oninput="document.getElementById('charCount_tp').innerText = this.value.length + ' / 200 huruf'; document.getElementById('tpError').style.display = 'none';"></textarea>
                                     <div id="tpError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                     <div class="tp-aksi">
@@ -71,7 +71,7 @@
                         @endif
 
                         <div id="tpReadonly" style="display: none; margin-top: auto; padding-top: 18px;">
-                            <p id="tpReadonlyText" style="font-size: 12.5px; color: var(--c-fg-muted); margin: 0;"></p>
+                            <p id="tpReadonlyText" style="font-size: 12px; color: var(--c-fg-muted); margin: 0;"></p>
                             {{-- Aksi lanjutan (mis. batalkan pengajuan reward) diletakkan di
                                  bawah datanya, bukan di baris tabel — jadi baru bisa diambil
                                  setelah isinya terbaca. --}}

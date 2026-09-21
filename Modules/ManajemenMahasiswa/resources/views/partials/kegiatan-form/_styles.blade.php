@@ -426,12 +426,6 @@
     }
 
     /* ── Back Button ── */
-    .detail-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
     .btn-back {
         width: 38px;
         height: 38px;

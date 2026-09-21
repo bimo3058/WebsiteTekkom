@@ -23,7 +23,7 @@
         border-radius: 8px;
         height: 34px;
         padding-left: 34px;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 500;
         width: 100%;
         color: var(--c-fg);
@@ -174,6 +174,11 @@
     }
 </style>
 
+<!-- Page Header -->
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Direktori Alumni"
+    subtitle="Daftar dan profil karir seluruh lulusan program studi" />
+
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -183,14 +188,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Direktori Alumni</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar dan profil karir seluruh lulusan program studi</p>
-    </div>
-</div>
 
 <!-- Stat Cards -->
 <div class="row g-3 mb-4 row-cols-2 row-cols-md-4">

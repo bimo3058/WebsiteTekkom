@@ -24,12 +24,21 @@
         --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
     }
 
-    .main-wrapper { background:transparent !important; box-shadow:none !important; padding:0 !important; }
+    /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+       jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+    .main-wrapper {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
 
     /* ── Shell kotak: mengikuti halaman User Management Super Admin ──── */
     .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     .user-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-    .user-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border); border-radius: 12px; box-shadow: var(--shadow-card); overflow: hidden; width: 100%; box-sizing: border-box; }
+    .user-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
     .user-box-header { background: #fff; border-bottom: 1px solid var(--c-border); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
     .user-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
     .user-box-body::-webkit-scrollbar { width: 6px; }
@@ -203,7 +212,7 @@
         display: inline-flex; align-items: center; gap: 6px;
         padding: 6px 11px; border-radius: 6px;
         background: #fff; border: 1px solid var(--c-border);
-        font-size: 11.5px; font-weight: 600; color: var(--c-fg-sec);
+        font-size: 11px; font-weight: 600; color: var(--c-fg-sec);
         font-family: inherit; cursor: pointer; transition: all .15s;
     }
     .mp-row-action:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
@@ -229,7 +238,7 @@
         border-radius: 2px; background: var(--c-primary);
     }
     .uc-section-label { font-size: 13px; font-weight: 700; color: var(--c-fg); }
-    .uc-hint { font-size: 11.5px; color: var(--c-fg-muted); margin: 0 0 12px; line-height: 1.5; }
+    .uc-hint { font-size: 11px; color: var(--c-fg-muted); margin: 0 0 12px; line-height: 1.5; }
     .uc-hint strong { color: var(--c-fg-sec); }
 
     .uc-role-options { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
@@ -240,7 +249,7 @@
         border: 1px solid var(--c-border); background: #fff;
         transition: background .15s, border-color .15s, color .15s;
     }
-    .mk-role-pill span { font-size: 11.5px; font-weight: 600; letter-spacing: .01em; }
+    .mk-role-pill span { font-size: 11px; font-weight: 600; letter-spacing: .01em; }
     .mk-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; transition: background .15s; }
 
     .uc-actions {
@@ -269,7 +278,7 @@
         display: flex; align-items: center; justify-content: center;
     }
     .mp-modal-head h3 { font-size: 14px; font-weight: 700; color: var(--c-fg); margin: 0; }
-    .mp-modal-head p  { font-size: 11.5px; color: var(--c-fg-muted); margin: 3px 0 0; }
+    .mp-modal-head p  { font-size: 11px; color: var(--c-fg-muted); margin: 3px 0 0; }
     .mp-modal-body { padding: 16px 18px; overflow-y: auto; }
     .mp-modal-foot {
         display: flex; gap: 8px; justify-content: flex-end;
@@ -284,7 +293,7 @@
     .mp-warning-box {
         background: var(--c-error-subtle); border: 1px solid var(--c-error);
         border-radius: 8px; padding: 10px 14px; margin-bottom: 10px;
-        font-size: 11.5px; color: var(--c-error); line-height: 1.5;
+        font-size: 11px; color: var(--c-error); line-height: 1.5;
         display: flex; gap: 8px; align-items: flex-start;
     }
     .mp-warning-box svg { flex-shrink: 0; margin-top: 1px; }

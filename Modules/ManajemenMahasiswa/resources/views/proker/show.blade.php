@@ -11,17 +11,6 @@
 .modal-box{background:var(--c-surface);border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.15)}
 </style>
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
-    {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
-@if(session('error'))
-<div class="alert alert-danger alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-error-subtle);color:var(--c-error);font-weight:500;font-size:14px;">
-    {{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
-
 @php
     // Field yang masih kosong — dipakai untuk tooltip tombol Ajukan
     $kelengkapanKurang = collect($kelengkapan ?? [])->reject(fn($i) => $i['terisi'])->pluck('label');
@@ -29,18 +18,15 @@
 @endphp
 
 {{-- Header --}}
-<div class="d-flex justify-content-between align-items-start">
-    <div class="detail-header">
-        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg></a>
-        <div>
-            <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Detail Rencana Proker</h3>
-            <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">
-                Dibuat oleh <span style="color:var(--c-fg-sec);font-weight:600;">{{ $proker->creator?->name ?? '-' }}</span>
-                &bull; {{ $proker->created_at->translatedFormat('d M Y') }}
-            </p>
-        </div>
-    </div>
+<x-manajemenmahasiswa::ui.page-header bordered title="Detail Rencana Proker">
+    Dibuat oleh <span style="color:var(--c-fg-sec);font-weight:600;">{{ $proker->creator?->name ?? '-' }}</span>
+    &bull; {{ $proker->created_at->translatedFormat('d M Y') }}
 
+    <x-slot:leading>
+        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali"><svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg></a>
+    </x-slot:leading>
+
+    <x-slot:actions>
     {{--
         Badge status sengaja TIDAK dirender di sini. Daftar Rencana Proker hanya
         memuat proker berstatus draft, jadi badge-nya selalu bertuliskan "Draft"
@@ -100,12 +86,24 @@
         </div>
         {{-- Role-nya boleh mengelola, tapi bukan pengelola proker ini (KegiatanPolicy) --}}
         @if($pesanBukanPengelola && $proker->status === 'draft')
-            <p class="mb-0 mt-1 text-end" style="max-width:340px;font-size:.78rem;color:var(--c-fg-muted);font-weight:500;">
+            <p class="mb-0 mt-1 text-end" style="max-width:340px;font-size:12px;color:var(--c-fg-muted);font-weight:500;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{ $pesanBukanPengelola }}
             </p>
         @endif
     </div>
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
+
+@if(session('success'))
+<div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
+    {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
+@endif
+@if(session('error'))
+<div class="alert alert-danger alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-error-subtle);color:var(--c-error);font-weight:500;font-size:14px;">
+    {{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+@endif
 
 {{-- Badan detail dipakai bersama dengan Pelaksanaan; $showDokumentasi = false --}}
 @include('manajemenmahasiswa::partials.kegiatan-detail._body', ['showDokumentasi' => false])

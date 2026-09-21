@@ -35,18 +35,15 @@
     .empty-state h5 { color:var(--c-fg-muted);font-weight:600;margin-bottom:4px; }
 </style>
 
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Pelaksanaan Kegiatan"
+    subtitle="Proker yang sudah disetujui — lengkapi data pelaksanaan di sini" />
+
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
         {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
-
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Pelaksanaan Kegiatan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Proker yang sudah disetujui — lengkapi data pelaksanaan di sini</p>
-    </div>
-</div>
 
 
 {{-- Filter --}}

@@ -407,12 +407,6 @@
     }
 
     /* ── Back Button ── */
-    .detail-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
     .btn-back {
         width: 32px;
         min-width: 32px;
@@ -621,15 +615,15 @@
 </style>
 
 <!-- Header -->
-<div class="detail-header">
-    <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-    </a>
-    <div>
-        <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Tambah Kegiatan Baru</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Isi formulir berikut untuk menambahkan kegiatan baru</p>
-    </div>
-</div>
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Tambah Kegiatan Baru"
+    subtitle="Isi formulir berikut untuk menambahkan kegiatan baru">
+    <x-slot:leading>
+        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+    </x-slot:leading>
+</x-manajemenmahasiswa::ui.page-header>
 
 <!-- Validation Errors -->
 @if($errors->any())

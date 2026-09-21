@@ -24,7 +24,7 @@
     }
     .search-input {
         background: #ffffff; border: 1px solid var(--c-border); border-radius: 8px;
-        height: 34px; padding-left: 34px; font-size: 12.5px; font-weight: 500;
+        height: 34px; padding-left: 34px; font-size: 12px; font-weight: 500;
         width: 100%; color: var(--c-fg);
     }
     .search-input:focus {
@@ -32,7 +32,7 @@
     }
 
     .btn-reset {
-        height: 34px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+        height: 34px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
         display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;
         text-decoration: none !important; border: 1px solid var(--c-border);
         background: #ffffff; color: var(--c-fg-sec); box-shadow: 0 1px 2px rgba(0,0,0,.04);
@@ -96,6 +96,26 @@
     /* ── Menu aksi ── */
 </style>
 
+{{-- ── Header ── --}}
+<x-manajemenmahasiswa::ui.page-header bordered title="Layanan Pengaduan">
+    @if($isStaff)
+        {{ number_format($pengaduan->total()) }} pengaduan
+        @if($baruCount > 0)
+            · <span style="color:#2563eb;font-weight:700;">{{ $baruCount }} baru</span>
+        @endif
+    @else
+        Sampaikan keluhan Anda; tim akan mencatat dan menindaklanjutinya.
+    @endif
+
+    <x-slot:actions>
+        @if($canCreate)
+            <button type="button" class="mk-btn mk-btn--primary" data-bs-toggle="modal" data-bs-target="#buatPengaduanModal">
+                <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
+            </button>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
+
 {{-- ── Flash ── --}}
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -104,28 +124,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-{{-- ── Header ── --}}
-<div class="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Layanan Pengaduan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">
-            @if($isStaff)
-                {{ number_format($pengaduan->total()) }} pengaduan
-                @if($baruCount > 0)
-                    · <span style="color:#2563eb;font-weight:700;">{{ $baruCount }} baru</span>
-                @endif
-            @else
-                Sampaikan keluhan Anda; tim akan mencatat dan menindaklanjutinya.
-            @endif
-        </p>
-    </div>
-    @if($canCreate)
-        <button type="button" class="mk-btn mk-btn--primary" data-bs-toggle="modal" data-bs-target="#buatPengaduanModal">
-            <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
-        </button>
-    @endif
-</div>
 
 @php
     $adaFilter = ($filters['q'] ?? '') !== '' || ($filters['kategori'] ?? '') !== '' || ($filters['sort'] ?? 'terbaru') !== 'terbaru';

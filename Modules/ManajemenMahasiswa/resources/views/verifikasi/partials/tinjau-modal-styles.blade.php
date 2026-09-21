@@ -21,7 +21,7 @@
         display: inline-flex; align-items: center; gap: 4px;
         background: var(--c-primary-subtle, rgba(11,38,110,0.08)); color: var(--c-primary, #0B266E);
         border: 1px solid var(--c-primary-border, #5C78B8); padding: 5px 14px; border-radius: 8px;
-        font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s;
+        font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
     }
     .btn-tinjau:hover { background: var(--c-primary-subtle, rgba(11,38,110,0.08)); border-color: var(--c-primary, #0B266E); }
 
@@ -44,7 +44,7 @@
 
     /* Judul kecil pemisah antar blok di kolom data */
     .tp-pane-heading {
-        font-size: 10.5px; font-weight: 700; color: var(--c-fg-muted, #666D80);
+        font-size: 10px; font-weight: 700; color: var(--c-fg-muted, #666D80);
         text-transform: uppercase; letter-spacing: .05em; margin: 0 0 6px;
     }
 
@@ -55,10 +55,10 @@
 
     .tp-field { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px dashed var(--c-border, #DFE1E7); }
     .tp-field-label {
-        flex: 0 0 92px; padding-top: 2px; font-size: 10.5px; font-weight: 700;
+        flex: 0 0 92px; padding-top: 2px; font-size: 10px; font-weight: 700;
         color: var(--c-fg-muted, #666D80); text-transform: uppercase; letter-spacing: .03em;
     }
-    .tp-field-value { font-size: 13.5px; font-weight: 600; color: var(--c-fg, #0D0D12); line-height: 1.45; word-break: break-word; }
+    .tp-field-value { font-size: 13px; font-weight: 600; color: var(--c-fg, #0D0D12); line-height: 1.45; word-break: break-word; }
 
     /* Nilai yang berupa daftar pendek — mis. mata kuliah yang diusulkan */
     .tp-chips { display: flex; flex-wrap: wrap; gap: 4px; }
@@ -79,7 +79,7 @@
 
     /* Ringkasan data klaim dalam satu kotak (dipakai kolom data Reward) */
     .tinjau-info {
-        font-size: .87rem; color: var(--c-fg-sec, #353849); background: var(--c-bg, #F6F8FA);
+        font-size: 14px; color: var(--c-fg-sec, #353849); background: var(--c-bg, #F6F8FA);
         border: 1px solid var(--c-border, #DFE1E7); border-radius: 10px;
         padding: 12px 14px; line-height: 1.7;
     }
@@ -88,7 +88,7 @@
     /* Rambu kuota — sengaja mencolok saat penuh, karena inilah penentu
        boleh-tidaknya klaim reward disetujui */
     .kuota-pill {
-        display: inline-block; font-size: .8rem; font-weight: 600;
+        display: inline-block; font-size: 13px; font-weight: 600;
         padding: 5px 12px; border-radius: 50px;
         background: var(--c-primary-subtle, rgba(11,38,110,0.08)); color: var(--c-primary, #0B266E);
     }
@@ -102,7 +102,7 @@
     .kuota-dipakai-item:first-child { padding-top: 0; }
     .kuota-dipakai-item:last-child { padding-bottom: 0; border-bottom: none; }
     .kuota-dipakai-nama {
-        font-size: 12.5px; font-weight: 600; line-height: 1.4;
+        font-size: 12px; font-weight: 600; line-height: 1.4;
         color: var(--c-fg, #0D0D12); word-break: break-word;
     }
     .kuota-dipakai-ket {
@@ -114,7 +114,7 @@
     .sk-lawas {
         margin-top: 8px; padding: 8px 12px; border-radius: 8px;
         background: var(--c-warning-subtle, #F9ECCB); border: 1px solid var(--c-warning, #956321); color: var(--c-warning, #956321);
-        font-size: 11.5px; font-weight: 600; line-height: 1.45;
+        font-size: 11px; font-weight: 600; line-height: 1.45;
     }
 
     /* Tombol keputusan — Tolak sengaja dibuat outline agar tidak bersaing
@@ -123,11 +123,11 @@
     .tp-btn-tolak {
         flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid var(--c-error-subtle, #FADAE1);
         background: var(--c-error-subtle, #FADAE1); color: var(--c-error, #DF1C41);
-        font-weight: 700; font-size: 13.5px; cursor: pointer;
+        font-weight: 700; font-size: 13px; cursor: pointer;
     }
     .tp-btn-setujui {
         flex: 1; padding: 9px 0; border-radius: 10px; border: none;
-        background: var(--c-success, #287F6E); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer;
+        background: var(--c-success, #287F6E); color: #fff; font-weight: 700; font-size: 13px; cursor: pointer;
     }
     /* Dikelabukan saat langkahnya memang sudah tidak bisa diambil (mis. kuota
        reward mahasiswa penuh), bukan dihilangkan — panel keputusan tetap utuh
@@ -140,14 +140,14 @@
     .tp-btn-utama {
         flex: 1; padding: 9px 0; border-radius: 10px; border: none;
         background: var(--c-primary, #0B266E); color: #fff;
-        font-weight: 700; font-size: 13.5px; cursor: pointer;
+        font-weight: 700; font-size: 13px; cursor: pointer;
         display: inline-flex; align-items: center; justify-content: center; gap: 6px;
     }
     .tp-btn-utama:disabled { background: var(--c-border-strong, #C1C7CF); cursor: not-allowed; }
     .tp-btn-netral {
         flex: 0 0 auto; padding: 9px 20px; border-radius: 10px;
         border: 1px solid var(--c-border, #DFE1E7); background: var(--c-card, #fff);
-        color: var(--c-fg-sec, #353849); font-weight: 600; font-size: 13.5px; cursor: pointer;
+        color: var(--c-fg-sec, #353849); font-weight: 600; font-size: 13px; cursor: pointer;
     }
     .tp-btn-netral:hover { background: var(--c-bg, #f6f7f9); }
 
@@ -156,7 +156,7 @@
     .tp-btn-batal {
         width: 100%; padding: 9px 0; border-radius: 10px; border: 1px solid var(--c-error-subtle, #FADAE1);
         background: var(--c-error-subtle, #FADAE1); color: var(--c-error, #DF1C41);
-        font-weight: 700; font-size: 13.5px; cursor: pointer;
+        font-weight: 700; font-size: 13px; cursor: pointer;
     }
     .tp-btn-batal:hover { background: var(--c-error, #DF1C41); color: #fff; }
 

@@ -16,8 +16,8 @@
         width: 42px; height: 42px; border-radius: 11px; display: flex;
         align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .admin-stat-card .stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 1px; }
-    .admin-stat-card .stat-lbl { font-size: .78rem; color: var(--c-fg-muted); font-weight: 500; }
+    .admin-stat-card .stat-num { font-size: 24px; font-weight: 800; line-height: 1; margin-bottom: 1px; }
+    .admin-stat-card .stat-lbl { font-size: 12px; color: var(--c-fg-muted); font-weight: 500; }
     .admin-stat-card.pending .stat-icon { background: var(--c-warning-subtle); color: var(--c-warning); }
     .admin-stat-card.pending .stat-num { color: var(--c-warning); }
     .admin-stat-card.approved .stat-icon { background: var(--c-success-subtle); color: var(--c-success); }
@@ -28,7 +28,7 @@
     /* ── Status & Buttons ── */
     .status-verif {
         display: inline-flex; align-items: center; padding: 3px 9px;
-        border-radius: 50px; font-size: .73rem; font-weight: 600;
+        border-radius: 50px; font-size: 12px; font-weight: 600;
     }
     .status-verif.pending { background: var(--c-warning-subtle); color: var(--c-warning); }
     .status-verif.approved { background: var(--c-success-subtle); color: var(--c-success); }
@@ -53,7 +53,7 @@
 
     .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
     .modal-header { border-bottom: 1px solid var(--c-border); padding: 18px 22px; }
-    .modal-header .modal-title { font-size: 1rem; font-weight: 700; color: var(--c-fg); }
+    .modal-header .modal-title { font-size: 16px; font-weight: 700; color: var(--c-fg); }
     .modal-body { padding: 22px; }
     .modal-footer { border-top: 1px solid var(--c-border); padding: 14px 22px; }
 
@@ -62,7 +62,7 @@
 
     .tingkat-badge {
         display: inline-flex; align-items: center; padding: 2px 8px;
-        border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase;
+        border-radius: 50px; font-size: 12px; font-weight: 600; text-transform: uppercase;
     }
     /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
        di kolom sebelahnya, sehingga keduanya tampak sama. */
@@ -73,13 +73,13 @@
     .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
 
     /* ── Reward Badge & Aksi ── */
-    .claim-badge { font-size: .73rem; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
+    .claim-badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
     .claim-badge.belum     { background: var(--c-bg); color: var(--c-fg-muted); }
     .claim-badge.diajukan  { background: var(--c-warning-subtle); color: var(--c-warning); }
     .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
     .claim-badge.ditolak   { background: var(--c-error-subtle); color: var(--c-error); }
 
-    .reward-mini { font-size: .72rem; color: var(--c-fg-muted); margin-top: 4px; max-width: 200px; line-height: 1.4; }
+    .reward-mini { font-size: 11px; color: var(--c-fg-muted); margin-top: 4px; max-width: 200px; line-height: 1.4; }
 
 
     /* ── Pagination (global style) ── */
@@ -99,6 +99,36 @@
 
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 @include('manajemenmahasiswa::partials.filter-popover')
+
+<!-- Page Header -->
+<x-manajemenmahasiswa::ui.page-header bordered
+    :title="$tab === 'prestasi' ? 'Verifikasi Prestasi' : 'Verifikasi Riwayat Kegiatan'">
+    @if($tab === 'prestasi')
+        Review &amp; verifikasi prestasi lomba yang diajukan mahasiswa
+    @else
+        Review &amp; verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa
+    @endif
+    @unless($canVerify ?? true)
+        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
+        </span>
+    @endunless
+
+    <x-slot:actions>
+        @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
+            <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
+               style="background:var(--c-primary); color:#fff; font-weight:600; font-size:13px; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
+               onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
+                Klaim Reward
+                @if($pendingPrestasiReward > 0)
+                    <span style="background:var(--c-card); color:var(--c-primary); font-size:11px; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
+                @endif
+            </a>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
 @if(session('success'))
@@ -128,36 +158,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-<!-- Page Header -->
-<div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
-    <div>
-        @if($tab === 'prestasi')
-            <h4 style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">Verifikasi Prestasi</h4>
-            <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Review & verifikasi prestasi lomba yang diajukan mahasiswa</p>
-        @else
-            <h4 style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">Verifikasi Riwayat Kegiatan</h4>
-            <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Review & verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa</p>
-        @endif
-        @unless($canVerify ?? true)
-            <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
-            </span>
-        @endunless
-    </div>
-    @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
-        <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
-           style="background:var(--c-primary); color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
-           onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
-            Klaim Reward
-            @if($pendingPrestasiReward > 0)
-                <span style="background:var(--c-card); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
-            @endif
-        </a>
-    @endif
-</div>
 
 <!-- Admin Stat Cards — ringkasan angka saja, bukan tombol filter -->
 <div class="admin-stats">
@@ -225,7 +225,7 @@
                 </svg>
                 <input type="text" name="search" value="{{ request('search') }}"
                        placeholder="{{ $searchPlaceholder }}"
-                       style="width:100%; height:34px; padding:0 12px 0 34px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; color:var(--c-fg); font-family:inherit; outline:none; transition:all .15s; box-sizing:border-box; background:var(--c-card);"
+                       style="width:100%; height:34px; padding:0 12px 0 34px; border:1px solid var(--c-border); border-radius:8px; font-size:12px; color:var(--c-fg); font-family:inherit; outline:none; transition:all .15s; box-sizing:border-box; background:var(--c-card);"
                        onfocus="this.style.borderColor='var(--c-primary)'; this.style.boxShadow='0 0 0 3px var(--c-primary-subtle)'"
                        onblur="this.style.borderColor='var(--c-border)'; this.style.boxShadow='none'">
             </div>

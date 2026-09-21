@@ -223,13 +223,13 @@
     }
 
     .simenma-notif-title {
-        font-size: .85rem;
+        font-size: 13px;
         font-weight: 700;
         color: #0D0D12;
     }
 
     .simenma-notif-readall {
-        font-size: .72rem;
+        font-size: 11px;
         font-weight: 600;
         color: #293C79;
         background: none;
@@ -290,7 +290,7 @@
     }
 
     .simenma-notif-msg {
-        font-size: .8rem;
+        font-size: 13px;
         color: #374151;
         line-height: 1.4;
         display: -webkit-box;
@@ -300,7 +300,7 @@
     }
 
     .simenma-notif-time {
-        font-size: .7rem;
+        font-size: 11px;
         color: #9CA3AF;
         margin-top: 3px;
     }
@@ -318,7 +318,7 @@
         text-align: center;
         padding: 32px 16px;
         color: #9CA3AF;
-        font-size: .84rem;
+        font-size: 13px;
     }
 
     /* ─── User Area ──────────────────────────────────────── */

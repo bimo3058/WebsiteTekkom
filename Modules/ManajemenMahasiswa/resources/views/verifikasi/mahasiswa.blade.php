@@ -7,7 +7,7 @@
         }
 
         .verif-header h4 {
-            font-size: 1.45rem;
+            font-size: 24px;
             font-weight: 700;
             color: var(--c-fg);
             margin-bottom: 2px;
@@ -16,7 +16,7 @@
 
         .verif-header p {
             color: var(--c-fg-muted);
-            font-size: .82rem;
+            font-size: 13px;
         }
 
         /* ── Status & Buttons ── */
@@ -25,7 +25,7 @@
             align-items: center;
             padding: 3px 9px;
             border-radius: 50px;
-            font-size: .73rem;
+            font-size: 12px;
             font-weight: 600;
         }
 
@@ -48,7 +48,7 @@
             background: #0B266E;
             color: #fff;
             font-weight: 600;
-            font-size: .85rem;
+            font-size: 13px;
             padding: 9px 18px;
             border-radius: 8px;
             border: none;
@@ -91,7 +91,7 @@
         /* ── Form Controls ── */
         .form-label-custom {
             font-weight: 600;
-            font-size: .87rem;
+            font-size: 14px;
             color: var(--c-fg-sec);
             margin-bottom: 6px;
         }
@@ -101,7 +101,7 @@
             border: 1.5px solid #B6BCC6;
             border-radius: 10px;
             padding: 10px 14px;
-            font-size: .87rem;
+            font-size: 14px;
             font-weight: 500;
             color: var(--c-fg-sec);
             transition: all .2s;
@@ -127,7 +127,7 @@
             align-items: center;
             padding: 2px 8px;
             border-radius: 50px;
-            font-size: .73rem;
+            font-size: 12px;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -159,7 +159,7 @@
 
         /* ── Reward Badge & Button ── */
         .claim-badge {
-            font-size: .73rem;
+            font-size: 12px;
             font-weight: 600;
             padding: 3px 9px;
             border-radius: 50px;
@@ -194,7 +194,7 @@
             border: 1px solid rgba(11, 38, 110, 0.18);
             padding: 5px 14px;
             border-radius: 8px;
-            font-size: .8rem;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all .15s;
@@ -226,7 +226,7 @@
             border: 1px solid var(--c-primary, #0B266E);
             padding: 6px 14px;
             border-radius: 8px;
-            font-size: .8rem;
+            font-size: 13px;
             font-weight: 600;
             cursor: pointer;
             transition: all .15s;
@@ -257,7 +257,7 @@
             border-radius: 10px;
             background: var(--c-primary-subtle);
             border: 1px solid rgba(11, 38, 110, 0.18);
-            font-size: .87rem;
+            font-size: 14px;
             color: var(--c-primary);
         }
 
@@ -266,7 +266,7 @@
         }
 
         .kuota-info {
-            font-size: .8rem;
+            font-size: 13px;
             color: var(--c-fg-muted);
             background: #fafafa;
             border: 1px solid var(--c-border);
@@ -323,7 +323,7 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: .87rem;
+            font-size: 14px;
             font-weight: 700;
             color: var(--c-fg);
             margin-bottom: 10px;
@@ -341,7 +341,7 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: .8rem;
+            font-size: 13px;
             font-weight: 600;
             color: var(--c-primary);
             background: var(--c-primary-subtle);
@@ -362,7 +362,7 @@
             background: rgba(11, 38, 110, 0.18);
             color: var(--c-primary);
             border: none;
-            font-size: .8rem;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             line-height: 1;
@@ -376,7 +376,7 @@
         }
 
         .mk-counter {
-            font-size: .8rem;
+            font-size: 13px;
             font-weight: 600;
             color: var(--c-fg-muted);
             margin-top: 8px;
@@ -398,7 +398,7 @@
         }
 
         .modal-header .modal-title {
-            font-size: 1rem;
+            font-size: 16px;
             font-weight: 700;
             color: var(--c-fg);
         }
@@ -441,7 +441,7 @@
         }
 
         .preview-item .preview-name {
-            font-size: .68rem;
+            font-size: 11px;
             color: var(--c-fg-muted);
             margin-top: 4px;
             overflow: hidden;
@@ -459,7 +459,7 @@
             background: var(--c-error);
             color: #fff;
             border: 2px solid #fff;
-            font-size: .72rem;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -488,7 +488,7 @@
             background: #fafafa;
             border: 1px solid var(--c-border);
             border-radius: 10px;
-            font-size: .87rem;
+            font-size: 14px;
         }
 
         .doc-preview-item .doc-icon {
@@ -499,7 +499,7 @@
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            font-size: .68rem;
+            font-size: 11px;
             color: #fff;
             flex-shrink: 0;
         }
@@ -539,7 +539,7 @@
             background: var(--c-error-subtle);
             color: var(--c-error);
             border: 1px solid #fecaca;
-            font-size: .8rem;
+            font-size: 13px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -604,6 +604,17 @@
 
     @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 
+<!-- Page Header -->
+    <x-manajemenmahasiswa::ui.page-header bordered
+        :title="$tab === 'prestasi' ? 'Prestasi Saya' : 'Riwayat Kegiatan Saya'">
+        @if($tab === 'prestasi')
+            Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda ajukan
+            rewardnya (konversi nilai mata kuliah, SK FT 774).
+        @else
+            Ajukan riwayat keikutsertaan kegiatan untuk diverifikasi admin.
+        @endif
+    </x-manajemenmahasiswa::ui.page-header>
+
     <!-- Flash Messages -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -630,27 +641,6 @@
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
-
-    <!-- Page Header -->
-    <div
-        style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
-        <div>
-            @if($tab === 'prestasi')
-                <h4
-                    style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">
-                    Prestasi Saya</h4>
-                <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Ajukan prestasi lomba untuk diverifikasi
-                    admin. Prestasi yang sudah disetujui bisa Anda ajukan rewardnya (konversi nilai mata kuliah, SK FT 774).
-                </p>
-            @else
-                <h4
-                    style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">
-                    Riwayat Kegiatan Saya</h4>
-                <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Ajukan riwayat keikutsertaan kegiatan untuk
-                    diverifikasi admin.</p>
-            @endif
-        </div>
-    </div>
     @php
         // Dipakai juga oleh modal pengajuan yang berada di luar blok per-tab,
         // jadi didefinisikan di sini — bukan di dalam @if($tab === 'prestasi').
@@ -1249,7 +1239,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
-                        <p style="font-size:11.5px; color:var(--c-fg-muted); margin:0 0 16px;">
+                        <p style="font-size:11px; color:var(--c-fg-muted); margin:0 0 16px;">
                             Dasar aturan: {{ $P::SK_BERLAKU }}
                         </p>
 
@@ -1273,7 +1263,7 @@
 
                                 @if(count($antre))
                                     <div class="tinjau-info" style="margin-bottom:8px;">
-                                        <p style="font-size:11.5px; font-weight:700; color:#1e40af; margin:0 0 6px;">
+                                        <p style="font-size:11px; font-weight:700; color:#1e40af; margin:0 0 6px;">
                                             Sedang menunggu persetujuan — memesan {{ count($antre) }} slot
                                         </p>
                                         @foreach($antre as $a)

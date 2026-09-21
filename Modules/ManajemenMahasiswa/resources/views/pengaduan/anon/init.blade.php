@@ -2,7 +2,21 @@
 
     @push('styles')
         <style>
-            .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+            /* Halaman ini memakai kartu sendiri di atas latar abu, jadi kotak bawaan
+               .main-wrapper dimatikan dan hanya menyisakan area scroll bergutter. */
+            .main-wrapper {
+                /* Lebar bleed garis pemisah page-header bordered mengikuti padding di bawah. */
+                --mm-ph-bleed: 10px;
+                --mm-ph-bleed-top: 10px;
+                --mm-ph-bleed-sm: 10px;
+                --mm-ph-bleed-top-sm: 10px;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                overflow-y: auto !important;
+            }
 
             .init-wrapper {
                 min-height: 70vh; display: flex; flex-direction: column;
@@ -41,7 +55,7 @@
             <div class="success-icon">
                 <x-manajemenmahasiswa::ui.icon name="link-01" size="40" />
             </div>
-            <h2 class="fw-bold text-dark mb-3" style="font-size: 1.5rem; color: #1e1b4b;">Magic Link Dibuat!</h2>
+            <h2 class="fw-bold text-dark mb-3" style="font-size: 24px; color: #1e1b4b;">Magic Link Dibuat!</h2>
             <p class="text-muted" style="font-size: 15px; line-height: 1.6;">
                 Sistem telah membuatkan Anda link khusus. Anda akan menggunakan link ini untuk <strong>mengisi form pengaduan</strong> dan <strong>melacak balasan</strong> dari admin.
             </p>

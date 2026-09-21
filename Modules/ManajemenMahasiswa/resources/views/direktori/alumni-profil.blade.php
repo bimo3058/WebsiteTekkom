@@ -111,7 +111,7 @@
         margin-top: 20px;
         padding-top: 20px;
         border-top: 1px dashed var(--c-border);
-        font-size: 12.5px;
+        font-size: 12px;
         color: var(--c-fg-placeholder);
         line-height: 1.6;
     }

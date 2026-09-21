@@ -26,12 +26,21 @@
                 --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
             }
 
-            .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+            /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+               jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+            .main-wrapper {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
 
             /* ── Shell kotak: mengikuti dashboard Super Admin ───────────── */
             .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
             .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
             .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
             .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
             .dash-box-body::-webkit-scrollbar { width: 6px; }
@@ -136,7 +145,7 @@
 
             .request-meta {
                 display: flex; flex-wrap: wrap; gap: 12px;
-                font-size: 11.5px; color: var(--c-fg-muted, #666D80);
+                font-size: 11px; color: var(--c-fg-muted, #666D80);
             }
             .request-meta-item { display: flex; align-items: center; gap: 5px; }
             .request-meta-item svg { color: var(--c-fg-placeholder, #808897); flex-shrink: 0; }
@@ -151,7 +160,7 @@
             }
             .request-pesan .pesan-label {
                 font-weight: 700; color: var(--c-fg, #0D0D12);
-                font-size: 11.5px; margin-bottom: 4px;
+                font-size: 11px; margin-bottom: 4px;
                 display: flex; align-items: center; gap: 5px;
             }
 
@@ -254,24 +263,19 @@
 
             {{-- ── Header ─────────────────────────────────── --}}
             <div class="dash-box-header">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-                            <h1 style="font-size:22px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:-0.02em; line-height:1.2; margin:0;">Verifikasi Pengumuman</h1>
-                            <span style="font-size:10px; font-weight:600; color:var(--c-primary, #0B266E); background:rgba(11,38,110,0.09); border:1px solid rgba(11,38,110,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Modul Mahasiswa</span>
-                        </div>
-                        <p style="font-size:12px; color:var(--c-fg-muted, #666D80); margin:0;">
-                            Kelola pengajuan verifikasi pengumuman dari staff himpunan
-                        </p>
-                    </div>
-
-                    @if($pendingCount > 0)
-                        <div class="pending-counter">
-                            <div class="counter-num">{{ $pendingCount }}</div>
-                            <span>Menunggu Verifikasi</span>
-                        </div>
-                    @endif
-                </div>
+                <x-manajemenmahasiswa::ui.page-header
+                    title="Verifikasi Pengumuman"
+                    badge="Modul Mahasiswa"
+                    subtitle="Kelola pengajuan verifikasi pengumuman dari staff himpunan">
+                    <x-slot:actions>
+                        @if($pendingCount > 0)
+                            <div class="pending-counter">
+                                <div class="counter-num">{{ $pendingCount }}</div>
+                                <span>Menunggu Verifikasi</span>
+                            </div>
+                        @endif
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
             </div>
 
             <div class="dash-box-body">

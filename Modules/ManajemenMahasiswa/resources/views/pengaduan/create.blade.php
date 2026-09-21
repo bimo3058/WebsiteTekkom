@@ -2,7 +2,21 @@
 
     @push('styles')
         <style>
-            .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+            /* Halaman ini memakai kartu sendiri di atas latar abu, jadi kotak bawaan
+               .main-wrapper dimatikan dan hanya menyisakan area scroll bergutter. */
+            .main-wrapper {
+                /* Lebar bleed garis pemisah page-header bordered mengikuti padding di bawah. */
+                --mm-ph-bleed: 10px;
+                --mm-ph-bleed-top: 10px;
+                --mm-ph-bleed-sm: 10px;
+                --mm-ph-bleed-top-sm: 10px;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                overflow-y: auto !important;
+            }
 
             /* ── Card (Forum pattern) ── */
             .form-card {
@@ -11,12 +25,6 @@
                 border: 1px solid #DDE1E8;
             }
 
-            /* ── Page Title ── */
-            .page-title h4 {
-                font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
-                margin: 0 0 4px; letter-spacing: -.02em;
-            }
-            .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
 
             /* ── Buttons (Forum pattern) ── */
             .btn-post {
@@ -92,16 +100,16 @@
     @endphp
 
     {{-- ── Header ── --}}
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
-            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
-            <span class="detail-back-label">Kembali</span>
-        </a>
-        <div class="page-title">
-            <h4>Buat Pengaduan</h4>
-            <p>Isi form di bawah ini dengan detail yang jelas dan valid.</p>
-        </div>
-    </div>
+    <x-manajemenmahasiswa::ui.page-header bordered
+        title="Buat Pengaduan"
+        subtitle="Isi form di bawah ini dengan detail yang jelas dan valid.">
+        <x-slot:leading>
+            <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
+                <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+                <span class="detail-back-label">Kembali</span>
+            </a>
+        </x-slot:leading>
+    </x-manajemenmahasiswa::ui.page-header>
 
     {{-- Jalur Indicator Banner --}}
     <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f5f5ff; border: 1.5px solid #c7d2fe;">

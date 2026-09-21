@@ -125,7 +125,7 @@
 
     .mkd-body {
         padding: 18px 20px;
-        font-size: 13.5px;
+        font-size: 13px;
         line-height: 1.6;
         color: var(--c-fg-sec, #353849);
         /* Pesan lama memakai \n untuk memisah paragraf — dipertahankan apa adanya. */

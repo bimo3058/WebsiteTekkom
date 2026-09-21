@@ -10,10 +10,10 @@
             border: 1px solid #DDE1E8; margin-bottom: 24px;
         }
         .page-title h4 {
-            font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
+            font-size: 24px; font-weight: 700; color: #1e1b4b;
             margin: 0 0 4px; letter-spacing: -.02em;
         }
-        .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
+        .page-title p { font-size: 15px; color: #6b7280; margin: 0; }
         .btn-post {
             display: inline-flex; align-items: center; gap: 8px;
             background-color: #293C79; color: white; border: none;

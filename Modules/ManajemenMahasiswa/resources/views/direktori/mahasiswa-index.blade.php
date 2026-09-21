@@ -23,7 +23,7 @@
         border-radius: 8px;
         height: 34px;
         padding-left: 34px;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 500;
         width: 100%;
         color: var(--c-fg);
@@ -41,7 +41,7 @@
         height: 34px;
         padding: 0 14px;
         border-radius: 8px;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
@@ -221,6 +221,17 @@
 
 </style>
 
+@php
+    // Pesan gangguan bisa datang dari dua arah: dari halaman ini sendiri ($error)
+    // atau dari halaman detail yang melempar balik ke sini (session('error')).
+    $pesanGangguan = session('error') ?: ($error ?? null);
+@endphp
+<!-- Page Header -->
+<x-manajemenmahasiswa::ui.page-header bordered title="Direktori Mahasiswa">
+    Daftar seluruh mahasiswa yang terdaftar di program studi
+    <span class="sso-badge ms-1">SSO UNDIP</span>
+</x-manajemenmahasiswa::ui.page-header>
+
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -231,11 +242,6 @@
     </div>
 @endif
 
-@php
-    // Pesan gangguan bisa datang dari dua arah: dari halaman ini sendiri ($error)
-    // atau dari halaman detail yang melempar balik ke sini (session('error')).
-    $pesanGangguan = session('error') ?: ($error ?? null);
-@endphp
 @if($pesanGangguan)
     <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-2" role="alert"
          style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
@@ -244,16 +250,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Direktori Mahasiswa</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar seluruh mahasiswa yang terdaftar di program studi
-            <span class="sso-badge ms-1">SSO UNDIP</span>
-        </p>
-    </div>
-</div>
 
     <!-- Stat Cards -->
 <div class="stat-grid">

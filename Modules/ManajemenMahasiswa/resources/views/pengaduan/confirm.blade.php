@@ -2,13 +2,22 @@
 
     @push('styles')
         <style>
-            .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
-
-            .page-title h4 {
-                font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
-                margin: 0 0 4px; letter-spacing: -.02em;
+            /* Halaman ini memakai kartu sendiri di atas latar abu, jadi kotak bawaan
+               .main-wrapper dimatikan dan hanya menyisakan area scroll bergutter. */
+            .main-wrapper {
+                /* Lebar bleed garis pemisah page-header bordered mengikuti padding di bawah. */
+                --mm-ph-bleed: 10px;
+                --mm-ph-bleed-top: 10px;
+                --mm-ph-bleed-sm: 10px;
+                --mm-ph-bleed-top-sm: 10px;
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                overflow-y: auto !important;
             }
-            .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
+
 
             .detail-card {
                 background: #ffffff; border-radius: 12px; padding: 24px 28px;
@@ -110,16 +119,16 @@
     @endphp
 
     {{-- ── Header ── --}}
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <a href="{{ $backUrl }}" class="detail-back" title="Kembali" aria-label="Ubah Pengaduan">
-            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
-            <span class="detail-back-label">Kembali</span>
-        </a>
-        <div class="page-title">
-            <h4>Konfirmasi Pengaduan</h4>
-            <p>Periksa kembali data sebelum dikirim.</p>
-        </div>
-    </div>
+    <x-manajemenmahasiswa::ui.page-header bordered
+        title="Konfirmasi Pengaduan"
+        subtitle="Periksa kembali data sebelum dikirim.">
+        <x-slot:leading>
+            <a href="{{ $backUrl }}" class="detail-back" title="Kembali" aria-label="Ubah Pengaduan">
+                <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+                <span class="detail-back-label">Kembali</span>
+            </a>
+        </x-slot:leading>
+    </x-manajemenmahasiswa::ui.page-header>
 
     <div class="alert border-0" style="background-color: #fef3c7; color: #92400e; border-radius: 12px; font-weight: 600; font-size: 14px;">
         <div class="d-flex align-items-center gap-2">

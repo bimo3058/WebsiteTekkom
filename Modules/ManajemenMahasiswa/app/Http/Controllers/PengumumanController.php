@@ -20,6 +20,9 @@ class PengumumanController extends Controller
     /** Batas jumlah gambar pengumuman yang boleh diunggah sekaligus. */
     private const MAX_GAMBAR = 5;
 
+    /** Batas ukuran per berkas (gambar & lampiran) dalam KB, satuan aturan `max:`. */
+    private const MAX_UKURAN_KB = 5120;
+
     public function __construct(
         private PengumumanService $pengumumanService,
         private RepoMulmedService $repoMulmedService,
@@ -89,7 +92,9 @@ class PengumumanController extends Controller
         // Payload lampiran per draf, dipakai JS saat tombol "Load Draft" ditekan.
         $draftAttachments = $this->draftAttachments($drafts);
 
-        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts', 'draftAttachments'));
+        $maxUkuranMb = intdiv(self::MAX_UKURAN_KB, 1024);
+
+        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts', 'draftAttachments', 'maxUkuranMb'));
     }
 
     /**
@@ -109,8 +114,8 @@ class PengumumanController extends Controller
                 'target_audience' => 'nullable|in:all,mahasiswa,alumni,dosen,pengurus',
                 'konten' => 'nullable|string',
                 'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
-                'poster.*' => 'image|mimes:jpg,jpeg,png|max:10240',
-                'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
+                'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
+                'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Draft validation failed: ', $e->errors());
@@ -295,8 +300,8 @@ class PengumumanController extends Controller
             'target_audience' => 'required|in:all,mahasiswa,alumni',
             'status_publish' => 'required|in:draft,published',
             'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
-            'poster.*' => 'image|mimes:jpg,jpeg,png|max:10240',
-            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
+            'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
+            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
         ]);
 
         // Remove poster & lampiran from $validated before creating Pengumuman
@@ -430,8 +435,9 @@ class PengumumanController extends Controller
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
 
         $maxGambar = self::MAX_GAMBAR;
+        $maxUkuranMb = intdiv(self::MAX_UKURAN_KB, 1024);
 
-        return view('manajemenmahasiswa::pengumuman.pengumuman-edit', compact('pengumuman', 'maxGambar'));
+        return view('manajemenmahasiswa::pengumuman.pengumuman-edit', compact('pengumuman', 'maxGambar', 'maxUkuranMb'));
     }
 
     /**
@@ -449,8 +455,8 @@ class PengumumanController extends Controller
             'target_audience' => 'required|in:all,mahasiswa,alumni',
             'status_publish' => 'required|in:draft,published,archived',
             'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
-            'poster.*' => 'image|mimes:jpg,jpeg,png|max:10240',
-            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
+            'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
+            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
         ]);
 
         $gambarBaru = $request->file('poster', []);

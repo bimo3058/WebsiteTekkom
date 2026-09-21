@@ -181,7 +181,7 @@
         background: none;
         color: var(--c-fg-sec, #353849);
         font-family: inherit;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 500;
         line-height: 1.3;
         text-align: left;

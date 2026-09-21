@@ -32,26 +32,21 @@
 
             {{-- ── Header ─────────────────────────────────── --}}
             <div class="dash-box-header">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-                            <h1 style="font-size:22px; font-weight:700; color:var(--c-fg); letter-spacing:-0.02em; line-height:1.2; margin:0;">Detail Pengumuman</h1>
-                            <span style="font-size:10px; font-weight:600; color:var(--c-primary); background:rgba(11,38,110,0.09); border:1px solid rgba(11,38,110,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Modul Mahasiswa</span>
-                        </div>
-                        <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">
-                            Wadah informasi untuk mahasiswa dan alumni
-                        </p>
-                    </div>
-
-                    <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-action">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                        <span>Kembali</span>
-                    </a>
-                </div>
+                <x-manajemenmahasiswa::ui.page-header
+                    title="Detail Pengumuman"
+                    badge="Modul Mahasiswa"
+                    subtitle="Wadah informasi untuk mahasiswa dan alumni">
+                    <x-slot:actions>
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-action">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            <span>Kembali</span>
+                        </a>
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
             </div>
 
             <div class="dash-box-body">

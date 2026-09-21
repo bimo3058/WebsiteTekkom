@@ -4,12 +4,6 @@
 
 <style>
     /* ── Back Button & Header ── */
-    .detail-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
     .btn-back {
         width: 32px;
         min-width: 32px;
@@ -475,38 +469,18 @@
     }
 </style>
 
-<!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-{{-- Pesan gagal (mis. bukan pengelola kegiatan ini) — sebelumnya halaman ini hanya
-     menampilkan pesan sukses, jadi redirect dengan error jatuh diam-diam. --}}
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
 <!-- Header with back button -->
-<div class="d-flex justify-content-between align-items-start">
-    <div class="detail-header">
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Detail Kegiatan"
+    subtitle="Informasi lengkap tentang kegiatan ini">
+    <x-slot:leading>
         <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
         </a>
-        <div>
-            <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Detail Kegiatan</h3>
-            <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Informasi lengkap tentang kegiatan ini</p>
-        </div>
-    </div>
-    @if($canEdit || $canDelete)
-        <div class="d-flex gap-2">
+    </x-slot:leading>
+
+    <x-slot:actions>
+        @if($canEdit || $canDelete)
             @if($canEdit)
             <a href="{{ route('manajemenmahasiswa.kegiatan.edit', $kegiatan->id) }}"
                class="mk-btn mk-btn--primary mk-btn--sm">
@@ -527,14 +501,33 @@
                 Hapus
             </button>
             @endif
-        </div>
-    @elseif($pesanBukanPengelola)
-        {{-- Role-nya boleh mengelola, tapi bukan pengelola kegiatan ini (KegiatanPolicy) --}}
-        <p class="mb-0 text-end" style="max-width:340px;font-size:.78rem;color:var(--c-fg-muted);font-weight:500;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{ $pesanBukanPengelola }}
-        </p>
-    @endif
-</div>
+        @elseif($pesanBukanPengelola)
+            {{-- Role-nya boleh mengelola, tapi bukan pengelola kegiatan ini (KegiatanPolicy) --}}
+            <p class="mb-0 text-end" style="max-width:340px;font-size:12px;color:var(--c-fg-muted);font-weight:500;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{ $pesanBukanPengelola }}
+            </p>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
+
+<!-- Flash Messages -->
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+{{-- Pesan gagal (mis. bukan pengelola kegiatan ini) — sebelumnya halaman ini hanya
+     menampilkan pesan sukses, jadi redirect dengan error jatuh diam-diam. --}}
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 <!-- Banner -->
 @if($kegiatan->banner)

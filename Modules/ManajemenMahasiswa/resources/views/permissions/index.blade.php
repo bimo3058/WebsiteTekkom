@@ -63,32 +63,29 @@
 
             {{-- ── Header ─────────────────────────────────── --}}
             <div class="user-box-header">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <h1 style="font-size:22px; font-weight:700; color:var(--c-fg); letter-spacing:-0.02em; line-height:1.2; margin:0;">Manajemen Pengguna</h1>
-                        <p style="font-size:12px; color:var(--c-fg-muted); margin:3px 0 0;">
-                            Total <span style="color:var(--c-primary); font-weight:600;">{{ number_format($totalUsers) }}</span> pengguna dalam modul ini
-                        </p>
-                    </div>
-
-                    @if($isAdmin)
-                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <button type="button" onclick="openResetPengurusModal()" class="mk-btn mk-btn--secondary mk-btn--sm">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-                                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
-                                </svg>
-                                Reset Pengurus
-                            </button>
-                            <button type="button" onclick="openAlumniModal()" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                                </svg>
-                                Cek Alumni Otomatis
-                            </button>
-                        </div>
-                    @endif
-                </div>
+                <x-manajemenmahasiswa::ui.page-header
+                    title="Manajemen Pengguna">
+                    Total <span style="color:var(--c-primary); font-weight:600;">{{ number_format($totalUsers) }}</span> pengguna dalam modul ini
+                    <x-slot:actions>
+                        @if($isAdmin)
+                            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                <button type="button" onclick="openResetPengurusModal()" class="mk-btn mk-btn--secondary mk-btn--sm">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+                                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
+                                    </svg>
+                                    Reset Pengurus
+                                </button>
+                                <button type="button" onclick="openAlumniModal()" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                                    </svg>
+                                    Cek Alumni Otomatis
+                                </button>
+                            </div>
+                        @endif
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
             </div>
 
             <div class="user-box-body">
