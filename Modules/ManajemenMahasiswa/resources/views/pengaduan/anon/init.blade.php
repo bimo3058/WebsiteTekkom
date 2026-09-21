@@ -62,7 +62,7 @@
                 Tautan ini bersifat sangat rahasia. Jika hilang, Anda tidak dapat memulihkannya. Pastikan Anda menyalinnya sebelum membuka form.
             </p>
 
-            <a href="{{ $trackUrl }}" target="_blank" class="btn btn-outline-secondary fw-bold px-4 py-2" style="border-radius: 12px;">
+            <a href="{{ $trackUrl }}" target="_blank" class="mk-btn mk-btn--secondary">
                 Buka Form Pengaduan (Tab Baru)
             </a>
         </div>

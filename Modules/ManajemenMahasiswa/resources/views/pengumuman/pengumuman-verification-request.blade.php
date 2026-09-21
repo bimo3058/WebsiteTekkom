@@ -209,7 +209,7 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-cancel-draft">
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
                         </svg>
@@ -280,7 +280,8 @@
 
                             <div class="form-group">
                                 <label>Verifikator <span class="required">*</span></label>
-                                <select name="verifier_id" class="form-select-custom" required id="verifierSelect">
+                                <x-manajemenmahasiswa::ui.select name="verifier_id" id="verifierSelect" size="md" required
+                                    :invalid="$errors->has('verifier_id')">
                                     <option value="">— Pilih Ketua Verifikator —</option>
                                     @foreach($verifiers as $verifier)
                                         @php
@@ -292,7 +293,7 @@
                                             {{ $verifier->name }} — {{ $roleLabel }}
                                         </option>
                                     @endforeach
-                                </select>
+                                </x-manajemenmahasiswa::ui.select>
                                 @error('verifier_id') <span class="form-error">{{ $message }}</span> @enderror
                             </div>
 
@@ -306,11 +307,11 @@
                     </div>
 
                     <div class="form-actions">
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-cancel-draft">Batal</a>
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary">Batal</a>
 
                         <div class="fa-spacer"></div>
 
-                        <button type="submit" class="btn-submit-verif" id="btnSubmitVerif">
+                        <button type="submit" class="mk-btn mk-btn--primary" id="btnSubmitVerif">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                             <span>Kirim Pengajuan Verifikasi</span>
                         </button>

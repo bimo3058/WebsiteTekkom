@@ -217,7 +217,7 @@
 
     @if($canTambahKegiatan)
         <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
-           class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
+           class="mk-btn mk-btn--primary mk-btn--sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
             Tambah Kegiatan
         </a>
@@ -280,7 +280,7 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterBidang">Bidang</label>
-                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidang">
                                 <option value="semua">Semua Bidang</option>
                                 <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
                                 @foreach($bidangList as $bidang)
@@ -288,12 +288,12 @@
                                         {{ $bidang->nama_bidang }}
                                     </option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterTahun">Tahun</label>
-                            <select name="tahun" id="filterTahun" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="tahun" id="filterTahun">
                                 <option value="semua">Semua Tahun</option>
                                 @foreach($tahunList as $t)
                                     <option value="{{ $t }}" {{ request('tahun') == $t ? 'selected' : '' }}>
@@ -308,7 +308,7 @@
                                         Belum ada tanggal
                                     </option>
                                 @endif
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">

@@ -332,22 +332,22 @@
                 <input type="text" name="search" class="search-input" placeholder="Cari thread kamu..."
                     value="{{ request('search') }}">
             </div>
-            <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post flex-shrink-0">
+            <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="mk-btn mk-btn--primary flex-shrink-0">
                 <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Post
             </a>
         </div>
 
         {{-- Row 2: Category + Sort Tabs --}}
         <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
-            <select name="kategori" class="form-select flex-shrink-0"
-                style="border-radius:8px; height:36px; width:auto; min-width:148px; background-color:#fff; border-color:#DFE1E7; font-size:13px; font-weight:500; color:#374151; padding:0 10px;"
+            <x-manajemenmahasiswa::ui.select name="kategori" size="md" :block="false" min-width="148"
+                class="flex-shrink-0"
                 onchange="document.getElementById('myForumFilterForm').submit()">
                 <option value="semua" {{ !request('kategori') || request('kategori') == 'semua' ? 'selected' : '' }}>
                     Semua Kategori</option>
                 @foreach($categories as $key => $label)
                     <option value="{{ $key }}" {{ request('kategori') == $key ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
-            </select>
+            </x-manajemenmahasiswa::ui.select>
             <button type="button" class="sort-tab {{ $currentSort === 'terbaru' ? 'active' : '' }}"
                 onclick="document.getElementById('mySortInput').value='terbaru'; document.getElementById('myForumFilterForm').submit();">
                 <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" /> Terbaru
@@ -448,7 +448,7 @@
 
                 <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                     style="display: inline;" onclick="event.stopPropagation();"
-                    onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
+                    onsubmit="return mkConfirmSubmit(this, 'Yakin ingin menghapus thread ini?', { title: 'Hapus Thread', confirmText: 'Ya, Hapus' })">
                     @csrf @method('DELETE')
                     <button type="submit" class="action-btn delete-btn">
                         <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" /> Hapus

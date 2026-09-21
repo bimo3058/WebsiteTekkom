@@ -381,7 +381,7 @@
                                         onsubmit="return handleReject(this, {{ $req->id }})">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="catatan" class="catatan-hidden-{{ $req->id }}">
-                                        <button type="submit" class="btn-reject">
+                                        <button type="submit" class="mk-btn mk-btn--secondary">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                             Tolak
                                         </button>
@@ -390,7 +390,7 @@
                                         onsubmit="return handleApprove(this, {{ $req->id }})">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="catatan" class="catatan-hidden-{{ $req->id }}">
-                                        <button type="submit" class="btn-approve">
+                                        <button type="submit" class="mk-btn mk-btn--primary">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                                             Setujui
                                         </button>
@@ -442,14 +442,25 @@
             });
         }
 
+        /**
+         * Menyetujui pengumuman: meminta konfirmasi lewat dialog modul, lalu mengirim form.
+         *
+         * Selalu mengembalikan false supaya submit bawaan tertahan — mkConfirmSubmit yang
+         * mengirim formnya sendiri setelah pengguna menyetujui.
+         */
         function handleApprove(form, reqId) {
             syncCatatan(reqId);
-            if (!confirm('Setujui pengumuman ini? Pengumuman akan langsung dipublikasikan.')) {
-                return false;
-            }
-            return true;
+
+            return mkConfirmSubmit(form, 'Setujui pengumuman ini? Pengumuman akan langsung dipublikasikan.', {
+                title: 'Setujui Pengumuman',
+                variant: 'success',
+                confirmText: 'Ya, Setujui',
+            });
         }
 
+        /**
+         * Menolak pengumuman: catatan wajib diisi lebih dulu, lalu konfirmasi.
+         */
         function handleReject(form, reqId) {
             syncCatatan(reqId);
             const textarea = document.getElementById('catatan-' + reqId);
@@ -457,13 +468,18 @@
                 textarea.focus();
                 textarea.style.borderColor = '#DF1C41';
                 textarea.style.boxShadow = '0 0 0 3px rgba(223,28,65,0.12)';
-                alert('Catatan wajib diisi saat menolak pengumuman.');
+                mkNotify({
+                    title: 'Catatan Belum Diisi',
+                    message: 'Catatan wajib diisi saat menolak pengumuman.',
+                    variant: 'warning',
+                });
                 return false;
             }
-            if (!confirm('Tolak pengumuman ini? Pengumuman akan dikembalikan ke status draft.')) {
-                return false;
-            }
-            return true;
+
+            return mkConfirmSubmit(form, 'Tolak pengumuman ini? Pengumuman akan dikembalikan ke status draft.', {
+                title: 'Tolak Pengumuman',
+                confirmText: 'Ya, Tolak',
+            });
         }
     </script>
     @endpush

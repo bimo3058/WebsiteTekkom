@@ -64,12 +64,6 @@
         .pg-search-wrap input::placeholder { color:var(--c-fg-placeholder, #808897); }
         .pg-search-wrap input:focus { border-color:var(--c-primary, #0B266E); box-shadow:0 0 0 3px rgba(11,38,110,.1); }
 
-        .pg-perpage {
-            height:36px; padding:0 10px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px;
-            background:#fff; font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
-            cursor:pointer; outline:none; transition:all .15s; box-shadow:0 1px 2px rgba(0,0,0,.04);
-        }
-        .pg-perpage:hover { border-color:var(--c-border-strong, #C1C7CF); }
 
         /* ── Cards grid ─────────────────────────────────────────────── */
         .pg-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:10px; }
@@ -240,14 +234,14 @@
                                 placeholder="Cari pengumuman..." value="{{ request('search') }}">
                         </div>
 
-                        <select name="per_page" class="pg-perpage"
+                        <x-manajemenmahasiswa::ui.select name="per_page" size="md" :block="false"
                             onchange="document.getElementById('pgFilterForm').submit()">
                             @foreach([9, 18, 27] as $opt)
                                 <option value="{{ $opt }}" {{ request('per_page', 9) == $opt ? 'selected' : '' }}>
                                     {{ $opt }} / hal
                                 </option>
                             @endforeach
-                        </select>
+                        </x-manajemenmahasiswa::ui.select>
                     </div>
 
                     @include('manajemenmahasiswa::pengumuman._filter-kategori', [

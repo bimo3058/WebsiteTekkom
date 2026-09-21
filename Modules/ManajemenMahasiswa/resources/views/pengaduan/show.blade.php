@@ -382,10 +382,8 @@
                             @csrf
                             @method('DELETE')
                             <div class="d-flex justify-content-center gap-3">
-                                <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal"
-                                    style="border: 1px solid #d1d5db; border-radius: 8px; font-weight: 600; color: #4b5563;">Batal</button>
-                                <button type="submit" class="btn px-4 py-2"
-                                    style="background-color: #dc2626; color: white; border-radius: 8px; font-weight: 600;">Hapus</button>
+                                <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" class="mk-btn mk-btn--primary">Hapus</button>
                             </div>
                         </form>
                     </div>

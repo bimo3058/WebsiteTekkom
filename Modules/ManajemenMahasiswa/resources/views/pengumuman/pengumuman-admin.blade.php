@@ -67,12 +67,6 @@
             color:var(--c-fg-placeholder, #808897); pointer-events:none;
         }
 
-        .pg-perpage {
-            height:36px; padding:0 10px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px;
-            background:#fff; font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
-            cursor:pointer; outline:none; transition:all .15s; box-shadow:0 1px 2px rgba(0,0,0,.04);
-        }
-        .pg-perpage:hover { border-color:var(--c-border-strong, #C1C7CF); }
 
         .btn-buat-post {
             display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
@@ -103,21 +97,6 @@
         }
         .pin-badge-global   { background:var(--c-warning-subtle, #F9ECCB); color:var(--c-warning, #956321); }
         .pin-badge-personal { background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); }
-
-        /* ── Tombol aksi ikon ───────────────────────────────────────── */
-        .btn-action-icon {
-            display:inline-flex; align-items:center; justify-content:center;
-            width:30px; height:30px; border-radius:8px;
-            border:1px solid var(--c-border, #DFE1E7);
-            background:#fff; color:var(--c-fg-muted, #666D80);
-            cursor:pointer; transition:all .15s; padding:0;
-        }
-        .btn-action-icon:hover { border-color:var(--c-primary-border, #5C78B8); background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); }
-        .btn-action-icon.btn-edit:hover   { border-color:var(--c-warning, #956321); background:var(--c-warning-subtle, #F9ECCB); color:var(--c-warning, #956321); }
-        .btn-action-icon.btn-delete:hover { border-color:var(--c-error, #DF1C41);   background:var(--c-error-subtle, #FADAE1);   color:var(--c-error, #DF1C41); }
-        .btn-action-icon.active-personal  { border-color:var(--c-primary-border, #5C78B8); background:var(--c-primary-subtle, #EEF1F8); color:var(--c-primary, #0B266E); }
-        .btn-action-icon.active-global    { border-color:var(--c-warning, #956321); background:var(--c-warning-subtle, #F9ECCB); color:var(--c-warning, #956321); }
-        .action-buttons { display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end; }
 
         /* ── Isi kartu ──────────────────────────────────────────────── */
         .pengumuman-card-body { display:flex; align-items:stretch; gap:14px; }
@@ -231,7 +210,7 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-buat-post">
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="mk-btn mk-btn--primary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -255,14 +234,14 @@
                                 value="{{ request('search') }}">
                         </div>
 
-                        <select name="per_page" class="pg-perpage"
+                        <x-manajemenmahasiswa::ui.select name="per_page" size="md" :block="false"
                             onchange="document.getElementById('pengumumanFilterForm').submit()">
                             @foreach([5,10,20,50] as $opt)
                                 <option value="{{ $opt }}" {{ request('per_page',10) == $opt ? 'selected' : '' }}>
                                     {{ $opt }} / hal
                                 </option>
                             @endforeach
-                        </select>
+                        </x-manajemenmahasiswa::ui.select>
                     </div>
 
                     @include('manajemenmahasiswa::pengumuman._filter-kategori', [
@@ -355,56 +334,78 @@
                                     </div>
                                 </div>
 
-                                {{-- Actions --}}
+                                {{-- Aksi: satu tombol "..." + dropdown, mengikuti pola kolom Aksi
+                                     Direktori Alumni/Mahasiswa. Deretan tombol ikon sebelumnya
+                                     diganti supaya baris daftar tetap lapang saat aksinya bertambah. --}}
                                 <div class="pengumuman-card-action" onclick="event.stopPropagation()">
-                                    <div class="action-buttons">
-                                        @if($canEdit)
-                                            <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $item->id) }}"
-                                                class="btn-action-icon btn-edit" title="Edit">
-                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                                </svg>
-                                            </a>
-                                        @endif
-                                        @if($canDelete)
-                                            <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}"
-                                                onsubmit="return confirm('Hapus pengumuman ini?')" style="margin:0;">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="btn-action-icon btn-delete" title="Hapus">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                        <polyline points="3 6 5 6 21 6"/>
-                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                    <div style="position: relative; display: inline-block;" x-data="{ open: false }">
+                                        <button type="button" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm"
+                                            @click="open = !open" @click.outside="open = false"
+                                            :aria-expanded="open" aria-haspopup="menu" title="Aksi lainnya">
+                                            <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
+                                                <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                                            </svg>
+                                        </button>
+
+                                        <div class="mk-menu" role="menu" x-show="open" x-cloak style="display: none;"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="opacity-0 scale-95"
+                                            x-transition:enter-end="opacity-100 scale-100">
+
+                                            @if($canEdit)
+                                                <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $item->id) }}"
+                                                    class="mk-menu-item" role="menuitem">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                                     </svg>
+                                                    Edit
+                                                </a>
+                                            @endif
+
+                                            <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $item->id) }}">
+                                                @csrf
+                                                <button type="submit" role="menuitem"
+                                                    class="mk-menu-item {{ $isPinnedPersonal ? 'is-active' : '' }}">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24"
+                                                        fill="{{ $isPinnedPersonal ? 'currentColor' : 'none' }}"
+                                                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                                                    </svg>
+                                                    {{ $isPinnedPersonal ? 'Lepas Pin Pribadi' : 'Pin Pribadi' }}
                                                 </button>
                                             </form>
-                                        @endif
-                                        <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $item->id) }}" style="margin:0;">
-                                            @csrf
-                                            <button type="submit"
-                                                class="btn-action-icon {{ $isPinnedPersonal ? 'active-personal' : '' }}"
-                                                title="{{ $isPinnedPersonal ? 'Unpin Pribadi' : 'Pin Pribadi' }}">
-                                                <svg width="13" height="13" viewBox="0 0 24 24"
-                                                    fill="{{ $isPinnedPersonal ? 'currentColor' : 'none' }}"
-                                                    stroke="currentColor" stroke-width="1.8">
-                                                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
-                                                </svg>
-                                            </button>
-                                        </form>
-                                        @if($canPinGlobal)
-                                            <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.pin', $item->id) }}" style="margin:0;">
-                                                @csrf @method('PATCH')
-                                                <button type="submit"
-                                                    class="btn-action-icon {{ $isPinnedGlobal ? 'active-global' : '' }}"
-                                                    title="{{ $isPinnedGlobal ? 'Unpin Global' : 'Pin Global' }}">
-                                                    <svg width="13" height="13" viewBox="0 0 24 24"
-                                                        fill="{{ $isPinnedGlobal ? 'currentColor' : 'none' }}"
-                                                        stroke="currentColor" stroke-width="1.8">
-                                                        <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
-                                                    </svg>
-                                                </button>
-                                            </form>
-                                        @endif
+
+                                            @if($canPinGlobal)
+                                                <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.pin', $item->id) }}">
+                                                    @csrf @method('PATCH')
+                                                    <button type="submit" role="menuitem"
+                                                        class="mk-menu-item {{ $isPinnedGlobal ? 'is-active' : '' }}">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24"
+                                                            fill="{{ $isPinnedGlobal ? 'currentColor' : 'none' }}"
+                                                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
+                                                        </svg>
+                                                        {{ $isPinnedGlobal ? 'Lepas Pin Global' : 'Pin Global' }}
+                                                    </button>
+                                                </form>
+                                            @endif
+
+                                            @if($canDelete)
+                                                <div class="mk-menu-sep"></div>
+                                                <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}"
+                                                    onsubmit="return mkConfirmSubmit(this, 'Hapus pengumuman ini?', { title: 'Hapus Pengumuman', confirmText: 'Ya, Hapus' })">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="mk-menu-item" role="menuitem">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <polyline points="3 6 5 6 21 6"/>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                                                        </svg>
+                                                        Hapus
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </div>

@@ -73,14 +73,14 @@
 
                     @if($isAdmin)
                         <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                            <button type="button" onclick="openResetPengurusModal()" class="mp-btn-outline danger">
+                            <button type="button" onclick="openResetPengurusModal()" class="mk-btn mk-btn--secondary mk-btn--sm">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
                                     <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
                                 </svg>
                                 Reset Pengurus
                             </button>
-                            <button type="button" onclick="openAlumniModal()" class="mp-btn-primary">
+                            <button type="button" onclick="openAlumniModal()" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>
                                 </svg>
@@ -121,12 +121,12 @@
                         </div>
 
                         <div class="mp-field">
-                            <button type="submit" class="mp-btn-primary" style="height:32px;padding:0 16px;">Filter</button>
+                            <button type="submit" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm" style="height:32px;padding:0 16px;">Filter</button>
                         </div>
 
                         @if($search)
                             <div class="mp-field">
-                                <a href="{{ route('manajemenmahasiswa.pengguna.index') }}" class="mp-btn-outline" style="height:32px;padding:0 14px;">Reset</a>
+                                <a href="{{ route('manajemenmahasiswa.pengguna.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm" style="height:32px;padding:0 14px;">Reset</a>
                             </div>
                         @endif
                     </div>
@@ -194,9 +194,9 @@
             </div>
 
             <div class="mp-modal-foot">
-                <button type="button" onclick="closeAlumniModal()" class="mp-btn-outline">Batal</button>
-                <button type="button" onclick="previewAlumni()" class="mp-btn-outline">Preview</button>
-                <button type="button" id="btnExecAlumni" onclick="execAlumni()" disabled class="mp-btn-primary">Jalankan</button>
+                <button type="button" onclick="closeAlumniModal()" class="mk-btn mk-btn--secondary mk-btn--sm">Batal</button>
+                <button type="button" onclick="previewAlumni()" class="mk-btn mk-btn--secondary mk-btn--sm">Preview</button>
+                <button type="button" id="btnExecAlumni" onclick="execAlumni()" disabled class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm">Jalankan</button>
             </div>
         </div>
     </div>
@@ -226,9 +226,9 @@
             </div>
 
             <div class="mp-modal-foot">
-                <button type="button" onclick="closeResetPengurusModal()" class="mp-btn-outline">Batal</button>
-                <button type="button" onclick="previewResetPengurus()" class="mp-btn-outline">Preview</button>
-                <button type="button" id="btnExecResetPengurus" onclick="execResetPengurus()" disabled class="mp-btn-primary">Reset Sekarang</button>
+                <button type="button" onclick="closeResetPengurusModal()" class="mk-btn mk-btn--secondary mk-btn--sm">Batal</button>
+                <button type="button" onclick="previewResetPengurus()" class="mk-btn mk-btn--secondary mk-btn--sm">Preview</button>
+                <button type="button" id="btnExecResetPengurus" onclick="execResetPengurus()" disabled class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm">Reset Sekarang</button>
             </div>
         </div>
     </div>
@@ -297,8 +297,16 @@
             preview.innerHTML = '<span style="color:var(--c-error);">Gagal mengambil data.</span>';
         });
     }
-    function execResetPengurus() {
-        if (!confirm('PERHATIAN: Aksi ini tidak dapat dibatalkan!\n\nSeluruh role pengurus himpunan akan dihapus dan mereka kembali menjadi mahasiswa biasa.\n\nLanjutkan?')) return;
+    /** Menghapus seluruh role pengurus himpunan. Tidak dapat dibatalkan. */
+    async function execResetPengurus() {
+        const lanjut = await mkConfirm({
+            title: 'Reset Seluruh Pengurus',
+            subtitle: 'Aksi ini tidak dapat dibatalkan',
+            message: 'Seluruh role pengurus himpunan akan dihapus dan mereka kembali menjadi mahasiswa biasa.\n\nLanjutkan?',
+            confirmText: 'Ya, Reset Semua',
+        });
+
+        if (!lanjut) return;
 
         fetch('{{ route('manajemenmahasiswa.pengguna.reset-pengurus') }}', {
             method: 'POST',
@@ -315,10 +323,10 @@
                 closeResetPengurusModal();
                 location.reload();
             } else {
-                alert('Gagal: ' + (data.error || 'Unknown error'));
+                mkNotify({ title: 'Gagal', message: data.error || 'Unknown error', variant: 'danger' });
             }
         })
-        .catch(() => alert('Terjadi kesalahan jaringan.'));
+        .catch(() => mkNotify({ title: 'Gagal', message: 'Terjadi kesalahan jaringan.', variant: 'danger' }));
     }
 
     // ── Alumni Modal ──────────────────────────────────────────────────────────
@@ -369,8 +377,16 @@
             preview.innerHTML = '<span style="color:var(--c-error);">Gagal mengambil data.</span>';
         });
     }
-    function execAlumni() {
-        if (!confirm('Yakin ingin mengubah semua mahasiswa yang terdeteksi menjadi alumni?')) return;
+    /** Mengubah seluruh mahasiswa yang terdeteksi lulus menjadi alumni. */
+    async function execAlumni() {
+        const lanjut = await mkConfirm({
+            title: 'Jadikan Alumni',
+            message: 'Yakin ingin mengubah semua mahasiswa yang terdeteksi menjadi alumni?',
+            variant: 'primary',
+            confirmText: 'Ya, Ubah Semua',
+        });
+
+        if (!lanjut) return;
 
         fetch('{{ route('manajemenmahasiswa.pengguna.check-alumni') }}', {
             method: 'POST',
@@ -387,10 +403,10 @@
                 closeAlumniModal();
                 location.reload();
             } else {
-                alert('Gagal: ' + (data.error || 'Unknown error'));
+                mkNotify({ title: 'Gagal', message: data.error || 'Unknown error', variant: 'danger' });
             }
         })
-        .catch(() => alert('Terjadi kesalahan jaringan.'));
+        .catch(() => mkNotify({ title: 'Gagal', message: 'Terjadi kesalahan jaringan.', variant: 'danger' }));
     }
 
     // Tutup modal dengan Escape / klik area gelap

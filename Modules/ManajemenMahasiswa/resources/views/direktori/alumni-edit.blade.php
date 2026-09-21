@@ -233,22 +233,22 @@
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label">Status Karir</label>
-                <select name="status_karir" class="form-select @error('status_karir') is-invalid @enderror">
+                <x-manajemenmahasiswa::ui.select name="status_karir" size="md" :invalid="$errors->has('status_karir')">
                     <option value="">— Pilih Status —</option>
                     @foreach(\Modules\ManajemenMahasiswa\Models\Alumni::STATUS_LABELS as $key => $label)
                         <option value="{{ $key }}" {{ old('status_karir', $alumni->status_karir) == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
-                </select>
+                </x-manajemenmahasiswa::ui.select>
                 @error('status_karir') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6">
                 <label class="form-label">Bidang Industri</label>
-                <select name="bidang_industri" class="form-select @error('bidang_industri') is-invalid @enderror">
+                <x-manajemenmahasiswa::ui.select name="bidang_industri" size="md" :invalid="$errors->has('bidang_industri')">
                     <option value="">— Pilih Bidang —</option>
                     @foreach(\Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST as $key => $label)
                         <option value="{{ $key }}" {{ old('bidang_industri', $alumni->bidang_industri) == $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
-                </select>
+                </x-manajemenmahasiswa::ui.select>
                 @error('bidang_industri') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-12">
@@ -274,7 +274,7 @@
         </div>
 
         <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid var(--c-border);">
-            <button type="submit" class="btn-save">
+            <button type="submit" class="mk-btn mk-btn--primary">
                 Simpan Perubahan
             </button>
         </div>

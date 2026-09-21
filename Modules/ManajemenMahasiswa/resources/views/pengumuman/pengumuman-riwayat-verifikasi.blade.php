@@ -295,7 +295,7 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-sm-action">
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
                         </svg>
@@ -462,7 +462,7 @@
                                 @elseif(in_array($req->status, ['rejected', 'cancelled']) && $req->pengumuman)
                                     {{-- Edit dulu, lalu ajukan ulang dari halaman ini --}}
                                     <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $req->pengumuman_id) }}"
-                                        class="btn-sm-action">
+                                        class="mk-btn mk-btn--secondary mk-btn--sm">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -473,9 +473,9 @@
                                     {{-- Ajukan kembali langsung tanpa edit --}}
                                     <form action="{{ route('manajemenmahasiswa.pengumuman.publish', $req->pengumuman_id) }}"
                                           method="POST" style="margin:0;"
-                                          onsubmit="return confirm('Ajukan kembali pengumuman ini untuk diverifikasi?')">
+                                          onsubmit="return mkConfirmSubmit(this, 'Ajukan kembali pengumuman ini untuk diverifikasi?', { title: 'Ajukan Ulang', variant: 'primary', confirmText: 'Ya, Ajukan' })">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="btn-sm-action btn-sm-primary">
+                                        <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                                 <path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                                             </svg>
@@ -487,9 +487,9 @@
                                 @if($req->status === 'pending' && $req->pengumuman)
                                     <form action="{{ route('manajemenmahasiswa.pengumuman.verification.cancel', $req->pengumuman_id) }}"
                                         method="POST" style="margin:0;"
-                                        onsubmit="return confirm('Batalkan pengajuan ini? Pengumuman akan kembali ke status draft.')">
+                                        onsubmit="return mkConfirmSubmit(this, 'Batalkan pengajuan ini? Pengumuman akan kembali ke status draft.', { title: 'Batalkan Pengajuan', variant: 'warning', confirmText: 'Ya, Batalkan' })">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn-sm-action btn-sm-danger">
+                                        <button type="submit" class="mk-btn mk-btn--secondary mk-btn--sm">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                                             </svg>
@@ -522,7 +522,7 @@
                                 Tidak ada pengajuan yang dibatalkan.
                             @endif
                         </p>
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-sm-action">
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>

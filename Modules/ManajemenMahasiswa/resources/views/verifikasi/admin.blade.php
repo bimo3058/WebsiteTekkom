@@ -273,35 +273,35 @@
                         <!-- Status — pengganti kartu statistik yang dulu bisa diklik -->
                         <div>
                             <label class="filter-pop-label" for="filterStatus">Status</label>
-                            <select name="status" id="filterStatus" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="status" id="filterStatus">
                                 <option value="semua">Semua Status</option>
                                 <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Menunggu Review</option>
                                 <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Disetujui</option>
                                 <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <!-- Angkatan -->
                         <div>
                             <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
-                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
                                 <option value="semua">Semua Angkatan</option>
                                 @foreach($angkatanList as $a)
                                     <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         @if($tab === 'prestasi')
                             <!-- Tingkat — hanya tab Prestasi; riwayat kegiatan tidak punya kolom tingkat -->
                             <div>
                                 <label class="filter-pop-label" for="filterTingkat">Tingkat</label>
-                                <select name="tingkat" id="filterTingkat" class="filter-pop-select">
+                                <x-manajemenmahasiswa::ui.select name="tingkat" id="filterTingkat">
                                     <option value="semua">Semua Tingkat</option>
                                     @foreach($tingkatList as $t)
                                         <option value="{{ $t }}" {{ $tingkat === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
                                     @endforeach
-                                </select>
+                                </x-manajemenmahasiswa::ui.select>
                             </div>
                         @endif
 
@@ -422,7 +422,7 @@
                                 {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
                                      dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
                                      read-only mendapat modal mode baca-saja. --}}
-                                <button type="button" class="btn-tinjau" onclick="openTinjau(@js($tinjauRiwayatPayload))">
+                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauRiwayatPayload))">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Tinjau
                                 </button>
@@ -567,7 +567,7 @@
                                 {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
                                      dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
                                      read-only mendapat modal mode baca-saja. --}}
-                                <button type="button" class="btn-tinjau" onclick="openTinjau(@js($tinjauPayload))">
+                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauPayload))">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Tinjau
                                 </button>
@@ -624,8 +624,7 @@
                         </p>
                     </div>
                     <div class="modal-footer" style="justify-content:center; gap:8px;">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                                style="border-radius:10px; font-weight:600; padding:10px 20px;">Batal</button>
+                        <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" id="bvConfirmBtn"
                                 style="border-radius:10px; font-weight:600; font-size:14px; padding:10px 20px; border:none; cursor:pointer; color:#fff; background:var(--c-warning);">
                             Ya, Batalkan Verifikasi

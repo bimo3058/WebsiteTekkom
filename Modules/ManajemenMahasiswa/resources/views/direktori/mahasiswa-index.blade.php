@@ -152,61 +152,8 @@
         display: inline-block;
     }
 
-    /* ── Kolom Aksi: tombol "..." + dropdown menu, disamakan dengan kolom Action
-       User Management global ── */
-    .action-menu-btn {
-        width: 28px;
-        height: 28px;
-        border-radius: 6px;
-        border: 1px solid var(--c-border);
-        background: #ffffff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--c-fg-muted);
-        transition: all 0.15s;
-        margin: 0 auto;
-    }
-    .action-menu-btn:hover {
-        background: var(--c-bg);
-        border-color: var(--c-border-strong);
-    }
-    .action-menu-panel {
-        position: absolute;
-        right: 0;
-        top: calc(100% + 5px);
-        background: #ffffff;
-        border: 1px solid var(--c-border);
-        border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        min-width: 150px;
-        z-index: 40;
-        overflow: hidden;
-        padding: 5px;
-    }
-    .action-menu-item {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 7px 10px;
-        border: none;
-        border-radius: 6px;
-        background: none;
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--c-fg-sec);
-        text-decoration: none !important;
-        cursor: pointer;
-        font-family: inherit;
-        text-align: left;
-        transition: background 0.12s;
-    }
-    .action-menu-item:hover {
-        background: var(--c-bg);
-        color: var(--c-fg-sec);
-    }
+    /* Kolom Aksi memakai tombol .mk-btn--icon + panel .mk-menu milik modul
+       (resources/views/partials/button-theme.blade.php). */
 
     /* ── Stat Cards ── */
     /* Grid yang menyesuaikan jumlah kartu (7 buah) — menghindari baris terakhir
@@ -479,19 +426,19 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
-                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
                                 <option value="semua">Semua Angkatan</option>
                                 @foreach($angkatanList as $ank)
                                     <option value="{{ $ank }}" {{ request('angkatan') == $ank ? 'selected' : '' }}>
                                         Angkatan {{ $ank }}
                                     </option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterStatus">Status</label>
-                            <select name="status" id="filterStatus" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="status" id="filterStatus">
                                 <option value="semua">Semua Status</option>
                                 <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
                                 <option value="cuti" {{ request('status') == 'cuti' ? 'selected' : '' }}>Cuti</option>
@@ -499,7 +446,7 @@
                                 <option value="pindah_studi" {{ request('status') == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
                                 <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
                                 <option value="mangkir" {{ request('status') == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -570,20 +517,20 @@
                              User Management global (Alpine.js sudah dimuat di layout admin/dosen/mahasiswa) --}}
                         <td style="text-align: center;">
                             <div style="position: relative; display: inline-block;" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" @click.outside="open = false" class="action-menu-btn">
+                                <button type="button" @click="open = !open" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">
                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </button>
                                 <div x-show="open" x-cloak
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100"
-                                     class="action-menu-panel" style="display: none;">
-                                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="action-menu-item">
+                                     class="mk-menu" style="display: none;">
+                                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-menu-item">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                         Detail
                                     </a>
                                     @if($isAdmin)
-                                        <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="action-menu-item">
+                                        <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="mk-menu-item">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                             Edit
                                         </a>
@@ -626,7 +573,7 @@
                                         Tidak ditemukan hasil untuk {{ implode(' + ', $kriteria) }}.<br>
                                         Coba kata kunci lain, atau kosongkan filternya.
                                     </p>
-                                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="btn-reset mt-1">
+                                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm mt-1">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                         Reset pencarian &amp; filter
                                     </a>

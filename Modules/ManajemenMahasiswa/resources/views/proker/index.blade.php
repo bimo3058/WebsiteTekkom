@@ -97,7 +97,7 @@
         <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar rencana proker dari 8 bidang himpunan &amp; prodi</p>
     </div>
     @if($canManage)
-        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
+        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-btn mk-btn--primary mk-btn--sm">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Buat Proker
         </a>
@@ -153,13 +153,13 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterBidang">Bidang</label>
-                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidang">
                                 <option value="semua">Semua Bidang</option>
                                 <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
                                 @foreach($bidangList as $bidang)
                                     <option value="{{ $bidang->id }}" {{ request('bidang') == $bidang->id ? 'selected' : '' }}>{{ $bidang->nama_bidang }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -243,7 +243,7 @@
         <h5>Belum ada rencana proker</h5>
         <p>Rencana program kerja yang dibuat akan muncul di sini</p>
         @if($canManage)
-            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form mt-2">+ Buat Proker Pertama</a>
+            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-btn mk-btn--primary mt-2">+ Buat Proker Pertama</a>
         @endif
     </div>
 @endif

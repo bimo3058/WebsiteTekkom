@@ -234,7 +234,7 @@
     <div class="dash-box">
     <div class="dash-box-header">
         <div class="d-flex align-items-center gap-3">
-            <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="back-btn" style="flex-shrink:0;">
+            <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm" style="flex-shrink:0;">
                 <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
             </a>
             <div>
@@ -477,7 +477,7 @@
                     class="btn-action btn-cancel text-decoration-none shadow-sm">
                     <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" /> Batal
                 </a>
-                <button type="submit" class="btn-action btn-post shadow-sm px-4">
+                <button type="submit" class="mk-btn mk-btn--primary">
                     <x-manajemenmahasiswa::ui.icon name="download-01" size="16" /> Simpan Perubahan
                 </button>
             </div>
@@ -663,15 +663,15 @@
                 const totalAllowed = MAX_FILES - existingKeptCount;
                 for (const file of fileList) {
                     if (selectedFiles.length >= totalAllowed) {
-                        alert(`Maksimal ${MAX_FILES} file total (${existingKeptCount} existing + ${totalAllowed} baru).`);
+                        mkNotify({ title: 'Batas File Tercapai', message: `Maksimal ${MAX_FILES} file total (${existingKeptCount} existing + ${totalAllowed} baru).`, variant: 'warning' });
                         break;
                     }
                     if (file.size > MAX_SIZE) {
-                        alert(`File "${file.name}" terlalu besar. Maksimal 10MB per file.`);
+                        mkNotify({ title: 'File Terlalu Besar', message: `File "${file.name}" melebihi 10MB.`, variant: 'warning' });
                         continue;
                     }
                     if (!file.type.match(/^(image|video)\//)) {
-                        alert(`File "${file.name}" bukan gambar/video yang didukung.`);
+                        mkNotify({ title: 'Format Tidak Didukung', message: `File "${file.name}" bukan gambar/video yang didukung.`, variant: 'warning' });
                         continue;
                     }
                     selectedFiles.push(file);

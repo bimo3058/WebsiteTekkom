@@ -186,14 +186,14 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label-custom d-block">Dosen Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
-                    <select class="form-select form-control-custom" name="template[nama_dosen]">
+                    <x-manajemenmahasiswa::ui.select name="template[nama_dosen]" size="lg">
                         <option value="" {{ old('template.nama_dosen') ? '' : 'selected' }}>Pilih dosen…</option>
                         @foreach(($dosenList ?? []) as $namaDosen)
                             <option value="{{ $namaDosen }}" {{ old('template.nama_dosen') === $namaDosen ? 'selected' : '' }}>
                                 {{ $namaDosen }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-manajemenmahasiswa::ui.select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label-custom d-block">Tendik Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
@@ -205,14 +205,14 @@
             <div class="row g-4 mt-0 mb-1 pt-4">
                 <div class="col-md-6">
                     <label class="form-label-custom d-block">Seberapa Sering Terjadi <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
-                    <select class="form-select form-control-custom" name="template[frekuensi]">
+                    <x-manajemenmahasiswa::ui.select name="template[frekuensi]" size="lg">
                         <option value="" {{ old('template.frekuensi') ? '' : 'selected' }}>Pilih frekuensi…</option>
                         @foreach(($frekuensiList ?? []) as $value => $label)
                             <option value="{{ $value }}" {{ old('template.frekuensi') === $value ? 'selected' : '' }}>
                                 {{ $label }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-manajemenmahasiswa::ui.select>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label-custom d-block">Link Bukti Dukung <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
@@ -228,7 +228,7 @@
 
         <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
             <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="btn-back">Batal</a>
-            <button type="submit" class="btn-post" style="width: auto;">Lanjut Konfirmasi</button>
+            <button type="submit" class="mk-btn mk-btn--primary" style="width: auto;">Lanjut Konfirmasi</button>
         </div>
     </form>
 @endsection

@@ -101,23 +101,23 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterBidang">Bidang</label>
-                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidang">
                                 <option value="semua">Semua Bidang</option>
                                 <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
                                 @foreach($bidangList as $bidang)
                                     <option value="{{ $bidang->id }}" {{ request('bidang') == $bidang->id ? 'selected' : '' }}>{{ $bidang->nama_bidang }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterTahun">Tahun</label>
-                            <select name="tahun" id="filterTahun" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="tahun" id="filterTahun">
                                 <option value="semua">Semua Tahun</option>
                                 @foreach($tahunList as $t)
                                     <option value="{{ $t }}" {{ request('tahun')==$t?'selected':'' }}>{{ $t }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -183,7 +183,7 @@
         <div style="font-size:48px;margin-bottom:12px;opacity:0.5;">&#127939;</div>
         <h5>Belum ada proker yang siap dilaksanakan</h5>
         <p>Proker yang sudah disetujui admin akan muncul di sini</p>
-        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form mt-2">
+        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-btn mk-btn--primary mt-2">
             Lihat Rencana Proker
         </a>
     </div>

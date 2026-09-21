@@ -63,8 +63,8 @@
                                               oninput="document.getElementById('charCount_tp').innerText = this.value.length + ' / 200 huruf'; document.getElementById('tpError').style.display = 'none';"></textarea>
                                     <div id="tpError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                     <div class="tp-aksi">
-                                        <button type="button" id="tpTolakBtn" class="tp-btn-tolak">Tolak</button>
-                                        <button type="button" id="tpSetujuiBtn" class="tp-btn-setujui">Setujui</button>
+                                        <button type="button" id="tpTolakBtn" class="mk-btn mk-btn--secondary">Tolak</button>
+                                        <button type="button" id="tpSetujuiBtn" class="mk-btn mk-btn--primary">Setujui</button>
                                     </div>
                                 </div>
                             </form>
@@ -76,8 +76,7 @@
                                  bawah datanya, bukan di baris tabel — jadi baru bisa diambil
                                  setelah isinya terbaca. --}}
                             <div id="tpAksiLain" style="margin-top: 14px;"></div>
-                            <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal"
-                                    style="border-radius: 10px; margin-top: 10px; font-weight: 600; font-size: 13.5px;">Tutup</button>
+                            <button type="button" class="mk-btn mk-btn--secondary mk-btn--block" data-bs-dismiss="modal" style="margin-top: 10px;">Tutup</button>
                         </div>
                     </div>
                 </div>

@@ -26,7 +26,7 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('manajemenmahasiswa.pengguna.index') }}" class="mp-btn-outline">
+                    <a href="{{ route('manajemenmahasiswa.pengguna.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
                         </svg>
@@ -116,7 +116,7 @@
                         </div>
 
                         <div class="mp-field">
-                            <button type="submit" class="mp-btn-primary" style="height:32px;padding:0 16px;">Filter</button>
+                            <button type="submit" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm" style="height:32px;padding:0 16px;">Filter</button>
                         </div>
                     </div>
                 </form>

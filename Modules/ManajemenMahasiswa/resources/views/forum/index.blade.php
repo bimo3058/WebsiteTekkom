@@ -477,7 +477,7 @@
                 <input type="text" name="search" class="search-input" placeholder="Cari thread..."
                     value="{{ request('search') }}">
             </div>
-            <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post flex-shrink-0">
+            <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="mk-btn mk-btn--primary flex-shrink-0">
                 <x-manajemenmahasiswa::ui.icon name="plus" size="16" />
                 Buat Post
             </a>
@@ -485,8 +485,8 @@
 
         {{-- Row 2: Category + Sort Tabs --}}
         <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
-            <select name="kategori" class="form-select flex-shrink-0"
-                style="border-radius: 8px; height: 36px; width: auto; min-width: 148px; background-color: #fff; border-color: #DFE1E7; font-size: 12px; font-weight: 600; color: #353849; padding: 0 10px; box-shadow: 0 1px 2px rgba(0,0,0,.04);"
+            <x-manajemenmahasiswa::ui.select name="kategori" size="md" :block="false" min-width="148"
+                class="flex-shrink-0"
                 onchange="document.getElementById('forumFilterForm').submit()">
                 <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>
                     Semua Kategori</option>
@@ -495,7 +495,7 @@
                         {{ $label }}
                     </option>
                 @endforeach
-            </select>
+            </x-manajemenmahasiswa::ui.select>
             <button type="button" class="sort-tab {{ $currentSort === 'terbaru' ? 'active' : '' }}"
                 onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
                 <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" /> Terbaru
@@ -548,98 +548,102 @@
                             </div>
                         </div>
                     </div>
-                    <div class="dropdown">
-                        <button type="button"
-                            class="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none d-flex align-items-center"
-                            data-bs-toggle="dropdown">
-                            <x-manajemenmahasiswa::ui.icon name="dots" size="20" />
+                    {{-- Aksi thread: tombol "..." + panel .mk-menu milik modul, sama dengan
+                         kolom Aksi Direktori & Pengumuman. Sebelumnya memakai dropdown
+                         Bootstrap; diseragamkan supaya semua menu titik tiga sebentuk. --}}
+                    <div style="position: relative;" x-data="{ open: false }">
+                        <button type="button" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm"
+                            @click="open = !open" @click.outside="open = false"
+                            :aria-expanded="open" aria-haspopup="menu" title="Aksi lainnya">
+                            <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
+                                <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                            </svg>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
+
+                        <div class="mk-menu" role="menu" x-show="open" x-cloak style="display: none;"
+                            x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100">
+
                             {{-- Edit (owner only) --}}
                             @if($thread->user_id === $user->id)
-                                <li>
-                                    <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}"
-                                        class="dropdown-item d-flex align-items-center gap-2">
-                                        <x-manajemenmahasiswa::ui.icon name="file-01" size="14" /> Edit
-                                    </a>
-                                </li>
+                                <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}"
+                                    class="mk-menu-item" role="menuitem">
+                                    <x-manajemenmahasiswa::ui.icon name="file-01" size="14" /> Edit
+                                </a>
                             @endif
+
                             {{-- Lock / Unlock (admin only) --}}
                             @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
-                                <li>
-                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.lock', $thread->id) }}">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
-                                            @if($thread->is_locked)
-                                                <x-manajemenmahasiswa::ui.icon name="unlocked-01" size="14" /> Unlock Thread
-                                            @else
-                                                <x-manajemenmahasiswa::ui.icon name="locked-01" size="14" /> Kunci Thread
-                                            @endif
-                                        </button>
-                                    </form>
-                                </li>
-                            @endif
-                            {{-- Pin Global (admin only) --}}
-                            @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
-                                <li>
-                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
-                                        @csrf @method('PATCH')
-                                        <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
-                                            @if($thread->is_pinned)
-                                                <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" /> Unpin Global
-                                            @else
-                                                <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" /> Pin Global
-                                            @endif
-                                        </button>
-                                    </form>
-                                </li>
-                            @endif
-                            {{-- Pin Pribadi (semua role) --}}
-                            <li>
-                                <form method="POST"
-                                    action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
-                                        <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" />
-                                        @if($thread->is_personal_pinned) Unpin Pribadi @else Pin Pribadi @endif
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.lock', $thread->id) }}">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" role="menuitem"
+                                        class="mk-menu-item {{ $thread->is_locked ? 'is-active' : '' }}">
+                                        @if($thread->is_locked)
+                                            <x-manajemenmahasiswa::ui.icon name="unlocked-01" size="14" /> Unlock Thread
+                                        @else
+                                            <x-manajemenmahasiswa::ui.icon name="locked-01" size="14" /> Kunci Thread
+                                        @endif
                                     </button>
                                 </form>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
+                            @endif
+
+                            {{-- Pin Global (admin only) --}}
+                            @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" role="menuitem"
+                                        class="mk-menu-item {{ $thread->is_pinned ? 'is-active' : '' }}">
+                                        @if($thread->is_pinned)
+                                            <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" /> Unpin Global
+                                        @else
+                                            <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" /> Pin Global
+                                        @endif
+                                    </button>
+                                </form>
+                            @endif
+
+                            {{-- Pin Pribadi (semua role) --}}
+                            <form method="POST"
+                                action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
+                                @csrf
+                                <button type="submit" role="menuitem"
+                                    class="mk-menu-item {{ $thread->is_personal_pinned ? 'is-active' : '' }}">
+                                    <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" />
+                                    @if($thread->is_personal_pinned) Unpin Pribadi @else Pin Pribadi @endif
+                                </button>
+                            </form>
+
+                            <div class="mk-menu-sep"></div>
+
                             {{-- Delete --}}
                             @if($thread->user_id === $user->id)
-                                <li>
-                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
-                                        onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
-                                            <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" /> Hapus
-                                        </button>
-                                    </form>
-                                </li>
-                            @elseif($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
-                                <li>
-                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
-                                        onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
-                                            <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" /> Hapus (Admin)
-                                        </button>
-                                    </form>
-                                </li>
-                            @endif
-                            @if($thread->user_id !== $user->id && !$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
-                                <li>
-                                    <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2"
-                                        data-bs-toggle="modal" data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
-                                        data-thread-title="{{ $thread->judul }}">
-                                        <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="14" /> Laporkan Thread
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
+                                    onsubmit="return mkConfirmSubmit(this, 'Yakin ingin menghapus thread ini?', { title: 'Hapus Thread', confirmText: 'Ya, Hapus' })">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="mk-menu-item" role="menuitem">
+                                        <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" /> Hapus
                                     </button>
-                                </li>
+                                </form>
+                            @elseif($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
+                                    onsubmit="return mkConfirmSubmit(this, 'Yakin ingin menghapus thread ini (sebagai admin)?', { title: 'Hapus Thread (Admin)', confirmText: 'Ya, Hapus' })">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="mk-menu-item" role="menuitem">
+                                        <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" /> Hapus (Admin)
+                                    </button>
+                                </form>
                             @endif
-                        </ul>
+
+                            @if($thread->user_id !== $user->id && !$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
+                                {{-- Modal laporan masih milik Bootstrap, jadi menunya ditutup manual. --}}
+                                <button type="button" class="mk-menu-item" role="menuitem" @click="open = false"
+                                    data-bs-toggle="modal" data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
+                                    data-thread-title="{{ $thread->judul }}">
+                                    <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="14" /> Laporkan Thread
+                                </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
 
@@ -727,7 +731,7 @@
                 </div>
                 <h5>Belum ada diskusi</h5>
                 <p>Jadilah yang pertama memulai diskusi!</p>
-                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post">
+                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="mk-btn mk-btn--primary">
                     <x-manajemenmahasiswa::ui.icon name="plus" size="14" /> Buat Post Pertama
                 </a>
             </div>
@@ -775,8 +779,8 @@
                         </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-danger">Kirim Laporan</button>
+                        <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="mk-btn mk-btn--primary">Kirim Laporan</button>
                     </div>
                 </form>
             </div>

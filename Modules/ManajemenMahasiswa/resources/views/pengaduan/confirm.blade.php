@@ -210,7 +210,7 @@
                     <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
                     <span class="detail-back-label">Kembali</span>
                 </a>
-                <button type="submit" class="btn-post">
+                <button type="submit" class="mk-btn mk-btn--primary">
                     <x-manajemenmahasiswa::ui.icon name="check" size="16" /> Kirim Pengaduan
                 </button>
             </div>

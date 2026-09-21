@@ -1,4 +1,4 @@
-﻿<x-manajemenmahasiswa::layouts.forum-layout>
+<x-manajemenmahasiswa::layouts.forum-layout>
 
     @push('styles')
         <style>
@@ -383,7 +383,7 @@
     <div class="dash-box">
     <div class="dash-box-header">
         <div class="d-flex align-items-center gap-3">
-            <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn" style="flex-shrink:0;">
+            <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm" style="flex-shrink:0;">
                 <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
             </a>
             <div>
@@ -623,7 +623,7 @@
                         class="btn-action btn-cancel text-decoration-none shadow-sm text-center">
                         <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" /> Batal
                     </a>
-                    <button type="submit" class="btn-action btn-post shadow-sm px-4">
+                    <button type="submit" class="mk-btn mk-btn--primary">
                         Terbitkan
                     </button>
                 </div>
@@ -798,12 +798,12 @@
                             draftStatus.textContent = 'Draf tersimpan.';
                             setTimeout(() => { draftStatus.style.display = 'none'; }, 3000);
                             if (isManual) {
-                                alert('Draf berhasil disimpan!');
+                                mkNotify({ title: 'Draf Tersimpan', message: 'Draf berhasil disimpan!', variant: 'success' });
                             }
                         } else {
                             draftStatus.textContent = 'Gagal menyimpan draf.';
                             if (isManual) {
-                                alert('Terjadi kesalahan saat menyimpan draf: ' + (data.message || 'Data tidak valid.'));
+                                mkNotify({ title: 'Gagal Menyimpan Draf', message: data.message || 'Data tidak valid.', variant: 'danger' });
                             }
                         }
                     })
@@ -811,7 +811,7 @@
                         console.error('Error saving draft:', error);
                         draftStatus.textContent = 'Gagal menyimpan draf.';
                         if (isManual) {
-                            alert('Terjadi kesalahan saat menyimpan draf.');
+                            mkNotify({ title: 'Gagal Menyimpan Draf', message: 'Terjadi kesalahan saat menyimpan draf.', variant: 'danger' });
                         }
                     });
             }
@@ -874,15 +874,15 @@
             function addMediaFiles(fileList) {
                 for (const file of fileList) {
                     if (selectedFiles.length >= MAX_FILES) {
-                        alert(`Maksimal ${MAX_FILES} file yang bisa diupload.`);
+                        mkNotify({ title: 'Batas File Tercapai', message: `Maksimal ${MAX_FILES} file yang bisa diupload.`, variant: 'warning' });
                         break;
                     }
                     if (file.size > MAX_SIZE) {
-                        alert(`File "${file.name}" terlalu besar. Maksimal 10MB per file.`);
+                        mkNotify({ title: 'File Terlalu Besar', message: `File "${file.name}" melebihi 10MB.`, variant: 'warning' });
                         continue;
                     }
                     if (!file.type.match(/^(image|video)\//)) {
-                        alert(`File "${file.name}" bukan gambar/video yang didukung.`);
+                        mkNotify({ title: 'Format Tidak Didukung', message: `File "${file.name}" bukan gambar/video yang didukung.`, variant: 'warning' });
                         continue;
                     }
                     selectedFiles.push(file);

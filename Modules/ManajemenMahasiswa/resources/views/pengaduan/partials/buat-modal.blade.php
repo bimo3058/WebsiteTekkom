@@ -133,7 +133,7 @@
                         Pastikan Anda menyalinnya sebelum membuka form.
                     </p>
 
-                    <a href="#" target="_blank" rel="noopener" class="bp-btn-primary" id="bpBukaForm">
+                    <a href="#" target="_blank" rel="noopener" class="mk-btn mk-btn--primary" id="bpBukaForm">
                         Buka Form Pengaduan (Tab Baru)
                     </a>
                 </div>

@@ -232,22 +232,22 @@
                         <!-- Status Klaim — pengganti kartu statistik yang dulu bisa diklik -->
                         <div>
                             <label class="filter-pop-label" for="filterReward">Status</label>
-                            <select name="reward" id="filterReward" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="reward" id="filterReward">
                                 <option value="semua" {{ $reward === 'semua' ? 'selected' : '' }}>Semua Status</option>
                                 <option value="menunggu" {{ $reward === 'menunggu' ? 'selected' : '' }}>Menunggu Review</option>
                                 <option value="disetujui" {{ $reward === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                                 <option value="ditolak" {{ $reward === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
-                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
                                 <option value="semua">Semua Angkatan</option>
                                 @foreach($angkatanList as $a)
                                     <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -339,7 +339,7 @@
                             <div class="d-flex gap-1 flex-wrap">
                                 {{-- Semua baris memakai tombol & modal yang sama; klaim yang sudah
                                      diputus tinggal membuka modal itu tanpa panel keputusan. --}}
-                                <button type="button" class="btn-tinjau" onclick="openTinjauReward(@js($rewardPayload))">
+                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjauReward(@js($rewardPayload))">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Tinjau
                                 </button>
@@ -430,15 +430,14 @@
                                           oninput="document.getElementById('charCount_tr').innerText = this.value.length + ' / 300 huruf'; document.getElementById('trError').style.display = 'none';"></textarea>
                                 <div id="trError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                 <div class="tp-aksi">
-                                    <button type="button" id="trTolakBtn" class="tp-btn-tolak">Tolak</button>
-                                    <button type="button" id="trSetujuiBtn" class="tp-btn-setujui">Setujui</button>
+                                    <button type="button" id="trTolakBtn" class="mk-btn mk-btn--secondary">Tolak</button>
+                                    <button type="button" id="trSetujuiBtn" class="mk-btn mk-btn--primary">Setujui</button>
                                 </div>
                             </div>
 
                             <div id="trReadonly" style="display: none; margin-top: auto; padding-top: 18px;">
                                 <div id="trReviewArea"></div>
-                                <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal"
-                                        style="border-radius: 10px; margin-top: 14px; font-weight: 600; font-size: 13.5px;">Tutup</button>
+                                <button type="button" class="mk-btn mk-btn--secondary mk-btn--block" data-bs-dismiss="modal" style="margin-top: 14px;">Tutup</button>
                             </div>
                         </div>
                     </div>

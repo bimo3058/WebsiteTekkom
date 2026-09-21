@@ -294,7 +294,7 @@
                         @if(!($report->thread->is_locked ?? false))
                             <form method="POST"
                                 action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}"
-                                style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
+                                style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'Kunci thread ini?', { title: 'Kunci Thread', variant: 'warning', confirmText: 'Ya, Kunci' })">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="report-btn warning">
                                     <x-manajemenmahasiswa::ui.icon name="locked-01" size="12" /> Kunci Thread
@@ -303,7 +303,7 @@
                         @endif
                         <form method="POST"
                             action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}"
-                            style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
+                            style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'HAPUS thread ini secara permanen?', { title: 'Hapus Permanen', confirmText: 'Ya, Hapus' })">
                             @csrf @method('DELETE')
                             <button type="submit" class="report-btn danger">
                                 <x-manajemenmahasiswa::ui.icon name="minus-circle" size="12" /> Hapus Thread
@@ -312,7 +312,7 @@
                     @endif
                     <form method="POST"
                         action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}"
-                        style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
+                        style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'Abaikan laporan ini?', { title: 'Abaikan Laporan', variant: 'primary', confirmText: 'Ya, Abaikan' })">
                         @csrf @method('DELETE')
                         <button type="submit" class="report-btn">
                             <x-manajemenmahasiswa::ui.icon name="minus" size="12" /> Abaikan

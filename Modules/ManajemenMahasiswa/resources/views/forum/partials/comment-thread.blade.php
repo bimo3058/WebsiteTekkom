@@ -86,7 +86,7 @@
 
                 @if($comment->user_id === $user->id || $isAdmin)
                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.destroy', $comment->id) }}"
-                        style="display:inline;" onsubmit="return confirm('Hapus komentar ini?')">
+                        style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'Hapus komentar ini?', { title: 'Hapus Komentar', confirmText: 'Ya, Hapus' })">
                         @csrf @method('DELETE')
                         <button type="submit" class="c-action-btn d-flex align-items-center gap-1" style="color:#ef4444;">
                             <x-manajemenmahasiswa::ui.icon name="minus-circle" size="12" /> Hapus
@@ -97,7 +97,7 @@
                 @if($thread->user_id === $user->id && !$comment->is_best_answer && $depth === 0 && $comment->user_id !== $user->id)
                     <form method="POST"
                         action="{{ route('manajemenmahasiswa.forum.best_answer', [$thread->id, $comment->id]) }}"
-                        style="display:inline;" onsubmit="return confirm('Tandai komentar ini sebagai Jawaban Terbaik?')">
+                        style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'Tandai komentar ini sebagai Jawaban Terbaik?', { title: 'Jawaban Terbaik', variant: 'success', confirmText: 'Ya, Tandai' })">
                         @csrf
                         <button type="submit" class="c-action-btn d-flex align-items-center gap-1" style="color:#16a34a; font-weight:600;">
                             <x-manajemenmahasiswa::ui.icon name="check" size="14" /> Best Answer
@@ -115,9 +115,9 @@
                         <input type="hidden" name="parent_id" value="{{ $comment->id }}">
                         <textarea name="konten" rows="2" placeholder="Tulis balasan..." required minlength="3"></textarea>
                         <div class="reply-actions">
-                            <button type="button" class="btn-cancel cancel-reply-btn"
+                            <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm cancel-reply-btn"
                                 data-comment-id="{{ $comment->id }}">Batal</button>
-                            <button type="submit" class="btn-reply-submit">Balas</button>
+                            <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Balas</button>
                         </div>
                     </form>
                 </div>
@@ -135,7 +135,7 @@
                         <div class="reply-actions">
                             <button type="button" class="btn-cancel cancel-edit-btn"
                                 data-comment-id="{{ $comment->id }}">Batal</button>
-                            <button type="submit" class="btn-reply-submit">Simpan Edit</button>
+                            <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Simpan Edit</button>
                         </div>
                     </form>
                 </div>

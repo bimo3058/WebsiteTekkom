@@ -287,6 +287,10 @@
     </style>
 
     @stack('styles')
+
+    {{-- Sistem tombol modul; sengaja SETELAH @stack('styles') supaya menang atas
+         sisa gaya tombol lama yang masih menempel di masing-masing halaman. --}}
+    @include('manajemenmahasiswa::partials.button-theme')
     <x-mobile-navigation-assets />
 </head>
 
@@ -311,6 +315,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {{-- Dialog konfirmasi/pemberitahuan global; pengganti confirm() & alert() bawaan browser.
+         Dipasang sebelum @stack('scripts') supaya mkConfirm/mkNotify sudah ada saat skrip
+         halaman dijalankan. --}}
+    <x-manajemenmahasiswa::ui.dialog />
+
     @stack('scripts')
     <x-mobile-navigation />
 </body>

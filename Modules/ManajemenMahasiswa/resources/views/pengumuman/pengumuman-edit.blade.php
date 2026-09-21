@@ -394,7 +394,7 @@
                         </p>
                     </div>
 
-                    <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="btn-cancel">
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="mk-btn mk-btn--secondary">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                             stroke-linecap="round" stroke-linejoin="round">
                             <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -447,23 +447,23 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Kategori</label>
-                                    <select name="kategori" class="form-select-custom">
+                                    <x-manajemenmahasiswa::ui.select name="kategori" size="md">
                                         <option value="">Pilih Kategori</option>
                                         <option value="akademik" {{ old('kategori', $pengumuman->kategori) === 'akademik' ? 'selected' : '' }}>Akademik</option>
                                         <option value="himpunan" {{ old('kategori', $pengumuman->kategori) === 'himpunan' ? 'selected' : '' }}>Himpunan</option>
                                         <option value="lowongan" {{ old('kategori', $pengumuman->kategori) === 'lowongan' ? 'selected' : '' }}>Lowongan</option>
                                         <option value="event_prodi" {{ old('kategori', $pengumuman->kategori) === 'event_prodi' ? 'selected' : '' }}>Event Prodi</option>
-                                    </select>
+                                    </x-manajemenmahasiswa::ui.select>
                                     @error('kategori') <span class="form-error">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="form-group">
                                     <label>Target Audiens <span class="required">*</span></label>
-                                    <select name="target_audience" class="form-select-custom" required>
+                                    <x-manajemenmahasiswa::ui.select name="target_audience" size="md" required>
                                         <option value="all" {{ old('target_audience', $pengumuman->target_audience) === 'all' ? 'selected' : '' }}>Semua</option>
                                         <option value="mahasiswa" {{ old('target_audience', $pengumuman->target_audience) === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                                         <option value="alumni" {{ old('target_audience', $pengumuman->target_audience) === 'alumni' ? 'selected' : '' }}>Alumni</option>
-                                    </select>
+                                    </x-manajemenmahasiswa::ui.select>
                                     @error('target_audience') <span class="form-error">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -677,11 +677,11 @@
 
                     {{-- ── Actions ───────────────────────────────── --}}
                     <div class="form-actions">
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="btn-cancel">Batal</a>
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}" class="mk-btn mk-btn--secondary">Batal</a>
 
                         <div class="fa-spacer"></div>
 
-                        <button type="submit" class="btn-update">
+                        <button type="submit" class="mk-btn mk-btn--primary">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -701,8 +701,14 @@
     @push('scripts')
         <script>
             // Hapus lampiran via fetch (menghindari nested form)
-            function deleteLampiran(url, btn, confirmMsg) {
-                if (!confirm(confirmMsg)) return;
+            async function deleteLampiran(url, btn, confirmMsg) {
+                const lanjut = await mkConfirm({
+                    title: 'Hapus Lampiran',
+                    message: confirmMsg,
+                    confirmText: 'Ya, Hapus',
+                });
+
+                if (!lanjut) return;
 
                 // Tombol bisa berupa teks (lampiran) atau ikon (kartu gambar), jadi
                 // isinya disimpan dulu supaya bisa dikembalikan kalau gagal.
@@ -726,7 +732,7 @@
                         }
                     })
                     .catch(error => {
-                        alert(error.message);
+                        mkNotify({ title: 'Gagal Menghapus', message: error.message, variant: 'danger' });
                         btn.disabled = false;
                         btn.innerHTML = isiAwal;
                     });
@@ -821,12 +827,12 @@
                             `<img src="${data.url}" alt="${file.name}" style="max-width:100%;border-radius:8px;margin:8px 0;">`);
                         syncEditorContent();
                     } else {
-                        alert('Gagal mengupload gambar. Silakan coba lagi.');
+                        mkNotify({ title: 'Gagal Mengunggah', message: 'Gagal mengupload gambar. Silakan coba lagi.', variant: 'danger' });
                     }
                 } catch (err) {
                     const placeholder = document.getElementById(placeholderId);
                     if (placeholder) placeholder.remove();
-                    alert('Gagal mengupload gambar. Periksa koneksi internet Anda.');
+                    mkNotify({ title: 'Gagal Mengunggah', message: 'Gagal mengupload gambar. Periksa koneksi internet Anda.', variant: 'danger' });
                 }
 
                 this.value = '';
@@ -947,8 +953,12 @@
                     });
 
                     if (ditolak > 0) {
-                        alert('Hanya tersisa ' + sisaSlot + ' gambar yang bisa ditambahkan. '
-                            + ditolak + ' gambar terakhir tidak dimasukkan.');
+                        mkNotify({
+                            title: 'Batas Gambar Tercapai',
+                            message: 'Hanya tersisa ' + sisaSlot + ' gambar yang bisa ditambahkan. '
+                                + ditolak + ' gambar terakhir tidak dimasukkan.',
+                            variant: 'warning',
+                        });
                     }
 
                     syncInputGambar();

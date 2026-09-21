@@ -692,7 +692,7 @@
                     Riwayat Kegiatan
                 </h2>
                 @if($canSubmit)
-                    <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addRiwayatModal">
+                    <button class="mk-btn mk-btn--primary" data-bs-toggle="modal" data-bs-target="#addRiwayatModal">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                             stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -824,7 +824,7 @@
                                         @endif
                                         {{-- Satu pintu masuk seperti halaman admin: bukti, tanggal, dan
                                         catatan verifikasi semuanya dibuka dari sini. --}}
-                                        <button type="button" class="btn-tinjau" onclick="openTinjau(@js($tinjauRiwayatPayload))">
+                                        <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauRiwayatPayload))">
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -875,7 +875,7 @@
                     Prestasi Lomba
                 </h2>
                 @if($canSubmit)
-                    <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addPrestasiModal">
+                    <button class="mk-btn mk-btn--primary" data-bs-toggle="modal" data-bs-target="#addPrestasiModal">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                             stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />
@@ -931,7 +931,7 @@
                         pembuka modal detail selalu berbentuk itu, dan rinciannya tidak
                         boleh menambah tinggi banner karena tabelnya tepat di bawah. --}}
                         @if($kuotaAdaIsi)
-                            <button type="button" class="btn-tinjau" data-bs-toggle="modal"
+                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" data-bs-toggle="modal"
                                 data-bs-target="#rincianKuotaModal">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1175,16 +1175,16 @@
                                                     {{-- Kedua kelompok kuota habis: kategori apa pun yang
                                                     dipilih pasti tertahan, jadi jangan biarkan mahasiswa
                                                     mengisi formulir lalu menunggu penolakan. --}}
-                                                    <button type="button" class="btn-aksi-utama" disabled
+                                                    <button type="button" class="mk-btn mk-btn--primary" disabled
                                                         title="Kuota reward Anda sudah penuh untuk kedua kelompok. Buka &quot;Rincian kuota&quot; di atas tabel untuk melihat prestasi mana yang memakainya.">
                                                         Kuota reward penuh
                                                     </button>
                                                 @else
-                                                    <button type="button" class="btn-aksi-utama"
+                                                    <button type="button" class="mk-btn mk-btn--primary"
                                                         onclick="openAjukanReward(@js($ajukanRewardPayload))">{{ $rewardLabelAksi }}</button>
                                                 @endif
                                             @endif
-                                            <button type="button" class="btn-tinjau"
+                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
                                                 onclick="openTinjau(@js($tinjauPrestasiPayload))">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                                     stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1325,8 +1325,7 @@
                         </p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius: 10px; font-weight: 600; padding: 10px 20px;">Tutup</button>
+                        <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Tutup</button>
                     </div>
                 </div>
             </div>
@@ -1398,9 +1397,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius: 10px; font-weight: 600; padding: 10px 20px;">Batal</button>
-                        <button type="submit" class="btn-submit" data-submit-once>Ajukan</button>
+                        <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="mk-btn mk-btn--primary" data-submit-once>Ajukan</button>
                     </div>
                 </form>
             </div>
@@ -1433,12 +1431,12 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">Tingkat <span style="color: #dc2626;">*</span></label>
-                            <select name="tingkat" class="form-select form-select-custom" required>
+                            <x-manajemenmahasiswa::ui.select name="tingkat" size="lg" required>
                                 <option value="">Pilih tingkat...</option>
                                 @foreach($P::TINGKAT_LIST as $tk)
                                     <option value="{{ $tk }}" {{ old('tingkat') === $tk ? 'selected' : '' }}>{{ ucfirst($tk) }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">Tanggal <span style="color: #dc2626;">*</span></label>
@@ -1466,9 +1464,8 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius: 10px; font-weight: 600; padding: 10px 20px;">Batal</button>
-                        <button type="submit" class="btn-submit" data-submit-once>Ajukan</button>
+                        <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="mk-btn mk-btn--primary" data-submit-once>Ajukan</button>
                     </div>
                 </form>
             </div>
@@ -1510,21 +1507,21 @@
                                     <div class="mb-3">
                                         <label class="form-label-custom">Kategori Penyelenggara <span
                                                 style="color:#dc2626;">*</span></label>
-                                        <select name="reward_penyelenggara" id="arPenyelenggara"
-                                            class="form-select form-select-custom" required>
+                                        <x-manajemenmahasiswa::ui.select name="reward_penyelenggara" id="arPenyelenggara"
+                                            size="lg" required>
                                             <option value="">Pilih kategori...</option>
                                             @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LABELS as $val => $lbl)
                                                 <option value="{{ $val }}">{{ $lbl }}</option>
                                             @endforeach
-                                        </select>
+                                        </x-manajemenmahasiswa::ui.select>
                                     </div>
                                     <div class="mb-3">
                                         <label class="form-label-custom">Capaian / Peringkat <span
                                                 style="color:#dc2626;">*</span></label>
-                                        <select name="reward_capaian" id="arCapaian"
-                                            class="form-select form-select-custom" required disabled>
+                                        <x-manajemenmahasiswa::ui.select name="reward_capaian" id="arCapaian"
+                                            size="lg" required disabled>
                                             <option value="">Pilih penyelenggara dulu...</option>
-                                        </select>
+                                        </x-manajemenmahasiswa::ui.select>
                                     </div>
                                     <div class="mb-3" id="arInventionWrap" style="display:none;">
                                         <label
@@ -1551,7 +1548,7 @@
                                                     id="arMkMax">0</span> MK)</span>
                                         </label>
                                         <div class="d-flex gap-2">
-                                            <select id="arMkSelect" class="form-select form-select-custom"
+                                            <x-manajemenmahasiswa::ui.select id="arMkSelect" size="lg"
                                                 style="flex:1;">
                                                 <option value="">Pilih mata kuliah...</option>
                                                 @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::MATA_KULIAH as $smt => $mks)
@@ -1562,8 +1559,8 @@
                                                         @endforeach
                                                     </optgroup>
                                                 @endforeach
-                                            </select>
-                                            <button type="button" class="btn-claim" id="arMkAddBtn"
+                                            </x-manajemenmahasiswa::ui.select>
+                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" id="arMkAddBtn"
                                                 style="white-space:nowrap;">+ Tambah</button>
                                         </div>
                                         <div id="arMkChosen" class="mk-chosen"></div>
@@ -1584,8 +1581,8 @@
                                 {{-- Tombol memakai bentuk yang sama dengan panel keputusan di modal
                                 Tinjau, jadi kedua modal terasa satu keluarga. --}}
                                 <div class="tp-aksi">
-                                    <button type="button" class="tp-btn-netral" data-bs-dismiss="modal">Batal</button>
-                                    <button type="submit" id="arSubmitBtn" class="tp-btn-utama" disabled
+                                    <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" id="arSubmitBtn" class="mk-btn mk-btn--primary" disabled
                                         data-submit-once>
                                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                                             stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
@@ -1631,8 +1628,7 @@
                         style="color: #666D80; font-size: 14px; line-height: 1.5; margin-bottom: 0;"></p>
                 </div>
                 <div class="modal-footer" style="justify-content: center; gap: 8px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                        style="border-radius: 10px; font-weight: 600; padding: 10px 20px;">Batal</button>
+                    <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="button" id="claimConfirmBtn"
                         style="border-radius: 10px; font-weight: 600; font-size: 14px; padding: 10px 20px; border: none; cursor: pointer; color: #fff;"></button>
                 </div>
@@ -1890,6 +1886,15 @@
             const KUOTA_UMUM = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_UMUM);
             const KUOTA_INV = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_INVENTION);
 
+            /**
+             * Memberi tahu dropdown Alpine (x-manajemenmahasiswa::ui.select) bahwa isi atau
+             * nilai <select> ini baru diubah dari sisi JS, supaya tampilannya ikut menyusul.
+             * Perlu dipanggil manual karena mengubah .value / .innerHTML tidak memicu event.
+             */
+            function syncSelect(el) {
+                el.dispatchEvent(new CustomEvent('mk-select:refresh'));
+            }
+
             let arMkList = [];   // nama MK yang dipilih
             let arJatahOk = false;
             let arKuotaOk = true; // kelompok kuota yang dituju masih tersisa
@@ -1978,11 +1983,12 @@
             mkAddBtn.addEventListener('click', function () {
                 const v = mkSelect.value;
                 if (!v) return;
-                if (arMkList.indexOf(v) !== -1) { mkSelect.value = ''; return; }
+                if (arMkList.indexOf(v) !== -1) { mkSelect.value = ''; syncSelect(mkSelect); return; }
                 if (arMkList.length >= arCap) return;   // jumlah MK sudah penuh
                 if (currentTotalSks() + (MK_SKS[v] || 0) > arSksMax) return;   // melebihi plafon SKS
                 arMkList.push(v);
                 mkSelect.value = '';
+                syncSelect(mkSelect);
                 renderMk();
                 refreshSubmit();
             });
@@ -2009,6 +2015,8 @@
                 penyEl.value = '';
                 capEl.innerHTML = '<option value="">Pilih penyelenggara dulu...</option>';
                 capEl.disabled = true;
+                syncSelect(penyEl);
+                syncSelect(capEl);
                 invWrap.style.display = 'none';
                 invEl.checked = false;
                 previewEl.style.display = 'none';
@@ -2021,6 +2029,7 @@
                 arSksMax = 0;
                 mkWrap.style.display = 'none';
                 mkSelect.value = '';
+                syncSelect(mkSelect);
                 renderMk();
                 submitBtn.disabled = true;
                 arModal.show();
@@ -2040,6 +2049,7 @@
                     });
                     capEl.disabled = false;
                 }
+                syncSelect(capEl);
                 invWrap.style.display = (peny === PENY_LAINNYA) ? 'block' : 'none';
                 if (peny !== PENY_LAINNYA) invEl.checked = false;
             }

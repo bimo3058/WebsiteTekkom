@@ -421,7 +421,7 @@
                     </div>
 
                     @if(isset($drafts) && $drafts->count() > 0)
-                        <button type="button" class="btn-cancel" data-bs-toggle="modal" data-bs-target="#draftsModal">
+                        <button type="button" class="mk-btn mk-btn--secondary" data-bs-toggle="modal" data-bs-target="#draftsModal">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                             </svg>
@@ -469,25 +469,25 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label>Kategori</label>
-                                    <select name="kategori" class="form-select-custom">
+                                    <x-manajemenmahasiswa::ui.select name="kategori" size="md">
                                         <option value="">Pilih Kategori</option>
                                         <option value="akademik" {{ old('kategori') === 'akademik' ? 'selected' : '' }}>Akademik</option>
                                         <option value="himpunan" {{ old('kategori') === 'himpunan' ? 'selected' : '' }}>Himpunan</option>
                                         <option value="lowongan" {{ old('kategori') === 'lowongan' ? 'selected' : '' }}>Lowongan</option>
                                         <option value="event_prodi" {{ old('kategori') === 'event_prodi' ? 'selected' : '' }}>Event Prodi
                                         </option>
-                                    </select>
+                                    </x-manajemenmahasiswa::ui.select>
                                     @error('kategori') <span class="form-error">{{ $message }}</span> @enderror
                                 </div>
 
                                 <div class="form-group">
                                     <label>Target Audiens <span class="required">*</span></label>
-                                    <select name="target_audience" class="form-select-custom" required>
+                                    <x-manajemenmahasiswa::ui.select name="target_audience" size="md" required>
                                         <option value="all" {{ old('target_audience') === 'all' ? 'selected' : '' }}>Semua</option>
                                         <option value="mahasiswa" {{ old('target_audience') === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa
                                         </option>
                                         <option value="alumni" {{ old('target_audience') === 'alumni' ? 'selected' : '' }}>Alumni</option>
-                                    </select>
+                                    </x-manajemenmahasiswa::ui.select>
                                     @error('target_audience') <span class="form-error">{{ $message }}</span> @enderror
                                 </div>
                             </div>
@@ -614,13 +614,13 @@
 
                     {{-- ── Actions ───────────────────────────────── --}}
                     <div class="form-actions">
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-cancel">Batal</a>
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary">Batal</a>
 
                         <div class="fa-spacer"></div>
 
                         <span id="draftStatus" class="draft-status" style="display: none;">Menyimpan draf...</span>
 
-                        <button type="button" class="btn-draft" onclick="saveDraftManual()">
+                        <button type="button" class="mk-btn mk-btn--secondary" onclick="saveDraftManual()">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -630,7 +630,7 @@
                             <span>Simpan Draft</span>
                         </button>
 
-                        <button type="submit" class="btn-publish">
+                        <button type="submit" class="mk-btn mk-btn--primary">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="22" x2="11" y1="2" y2="13" />
@@ -827,7 +827,7 @@
                 });
 
                 if (ditolak > 0) {
-                    alert('Maksimal ' + MAX_GAMBAR + ' gambar. ' + ditolak + ' gambar terakhir tidak ditambahkan.');
+                    mkNotify({ title: 'Batas Gambar Tercapai', message: 'Maksimal ' + MAX_GAMBAR + ' gambar. ' + ditolak + ' gambar terakhir tidak ditambahkan.', variant: 'warning' });
                 }
 
                 // Gambar baru akan menggantikan gambar yang tersimpan di draf.
@@ -932,12 +932,12 @@
                         draftStatus.textContent = 'Draf tersimpan.';
                         setTimeout(() => { draftStatus.style.display = 'none'; }, 3000);
                         if (isManual) {
-                            alert('Draf berhasil disimpan!');
+                            mkNotify({ title: 'Draf Tersimpan', message: 'Draf berhasil disimpan!', variant: 'success' });
                         }
                     } else {
                         draftStatus.textContent = 'Gagal menyimpan draf.';
                         if (isManual) {
-                            alert('Terjadi kesalahan saat menyimpan draf: ' + (data.message || 'Data tidak valid.'));
+                            mkNotify({ title: 'Gagal Menyimpan Draf', message: data.message || 'Data tidak valid.', variant: 'danger' });
                         }
                     }
                 })
@@ -945,7 +945,7 @@
                     console.error('Error saving draft:', error);
                     draftStatus.textContent = 'Gagal menyimpan draf.';
                     if (isManual) {
-                        alert('Terjadi kesalahan saat menyimpan draf.');
+                        mkNotify({ title: 'Gagal Menyimpan Draf', message: 'Terjadi kesalahan saat menyimpan draf.', variant: 'danger' });
                     }
                 });
             }
@@ -1077,12 +1077,12 @@
                             `<img src="${data.url}" alt="${file.name}" style="max-width:100%;border-radius:8px;margin:8px 0;">`);
                         syncEditorContent();
                     } else {
-                        alert('Gagal mengupload gambar. Silakan coba lagi.');
+                        mkNotify({ title: 'Gagal Mengunggah', message: 'Gagal mengupload gambar. Silakan coba lagi.', variant: 'danger' });
                     }
                 } catch (err) {
                     const placeholder = document.getElementById(placeholderId);
                     if (placeholder) placeholder.remove();
-                    alert('Gagal mengupload gambar. Periksa koneksi internet Anda.');
+                    mkNotify({ title: 'Gagal Mengunggah', message: 'Gagal mengupload gambar. Periksa koneksi internet Anda.', variant: 'danger' });
                 }
 
                 this.value = '';
