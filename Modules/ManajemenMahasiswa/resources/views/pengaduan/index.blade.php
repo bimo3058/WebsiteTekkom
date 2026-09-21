@@ -1,500 +1,428 @@
 <x-dynamic-component :component="$isStaff ? 'manajemenmahasiswa::layouts.admin' : 'manajemenmahasiswa::layouts.mahasiswa'">
 
-    @push('styles')
-    <style>
-        .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+@include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.filter-popover')
 
-        /* ── Page Title ────────────────────────────────── */
-        .page-title { margin-bottom: 22px; }
-        .page-title h4 {
-            font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
-            margin: 0 0 4px; letter-spacing: -0.02em;
-        }
-        .page-title p { font-size: 0.95rem; color: #6b7280; margin: 0; }
+<style>
+    /* Pola tabel disamakan dengan Direktori Mahasiswa & User Management global. */
 
-        /* ── KPI Cards (Dashboard pattern) ────────────── */
-        .kpi-row {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 12px; margin-bottom: 20px;
-        }
-        @media (max-width: 900px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 480px) { .kpi-row { grid-template-columns: 1fr; } }
+    /* ── Tombol utama ── */
+    .btn-post {
+        display: inline-flex; align-items: center; gap: 8px;
+        background: var(--c-primary); color: #ffffff !important; border: none;
+        border-radius: 8px; padding: 0 16px; height: 36px;
+        font-size: 13px; font-weight: 600; white-space: nowrap;
+        text-decoration: none !important; transition: background .15s;
+    }
+    .btn-post:hover { background: var(--c-primary-hover); }
 
-        .kpi-mini {
-            background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
-            padding: 14px 16px; display: flex; align-items: center; gap: 12px;
-            position: relative; overflow: hidden;
-        }
-        .kpi-mini::before {
-            content: ''; position: absolute; top: 0; left: 0;
-            width: 4px; height: 100%;
-        }
-        .kpi-mini-icon {
-            width: 38px; height: 38px; border-radius: 10px;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .kpi-mini-val { font-size: 1.4rem; font-weight: 800; color: #1e1b4b; line-height: 1; margin-bottom: 1px; }
-        .kpi-mini-label { font-size: .78rem; color: #9ca3af; font-weight: 500; }
-        .kpi-mini-sub { font-size: .68rem; color: #d1d5db; margin-top: 2px; }
-        .kpi-urgent::before { background: #ef4444; }
-        .kpi-orange::before { background: #f97316; }
-        .kpi-blue::before { background: #293C79; }
+    /* ── Search ── */
+    .search-wrapper { position: relative; width: min(220px, calc(100vw - 200px)); min-width: 120px; }
+    .search-icon {
+        position: absolute; left: 12px; top: 50%;
+        transform: translateY(-50%); color: var(--c-fg-placeholder);
+    }
+    .search-input {
+        background: #ffffff; border: 1px solid var(--c-border); border-radius: 8px;
+        height: 34px; padding-left: 34px; font-size: 12.5px; font-weight: 500;
+        width: 100%; color: var(--c-fg);
+    }
+    .search-input:focus {
+        border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); outline: none;
+    }
 
-        /* ── Chart Card (Dashboard pattern) ───────────── */
-        .chart-card {
-            background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
-            padding: 22px 24px; margin-bottom: 20px;
-        }
-        .chart-title {
-            font-size: .9rem; font-weight: 700; color: #1e1b4b;
-            margin-bottom: 16px; display: flex; align-items: center; gap: 7px;
-        }
-        .chart-title-right {
-            margin-left: auto; font-size: .75rem; color: #9ca3af; font-weight: 500;
-        }
-        .kategori-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-        .kategori-label {
-            font-size: .82rem; font-weight: 600; color: #374151;
-            width: 180px; flex-shrink: 0; white-space: nowrap;
-            overflow: hidden; text-overflow: ellipsis;
-        }
-        .kategori-track {
-            flex: 1; height: 22px; background: #f3f4f6;
-            border-radius: 6px; overflow: hidden;
-        }
-        .kategori-fill {
-            height: 100%; border-radius: 6px;
-            background: linear-gradient(90deg, #293C79, #415086);
-            min-width: 4px; transition: width .6s ease;
-        }
-        .kategori-count {
-            font-size: .82rem; font-weight: 700; color: #1e1b4b;
-            width: 70px; text-align: right; flex-shrink: 0;
-        }
+    .btn-reset {
+        height: 34px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;
+        text-decoration: none !important; border: 1px solid var(--c-border);
+        background: #ffffff; color: var(--c-fg-sec); box-shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    .btn-reset:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-fg); }
 
-        /* ── Stat Cards (Dashboard pattern) ───────────── */
-        .stat-row {
-            display: grid; grid-template-columns: repeat(3, 1fr);
-            gap: 12px; margin-top: 16px; padding-top: 16px;
-            border-top: 1px solid #f3f4f6;
-        }
-        .stat-mini {
-            text-align: center; padding: 10px;
-            background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;
-        }
-        .stat-mini-val { font-size: 1.25rem; font-weight: 800; color: #1e293b; }
-        .stat-mini-label {
-            font-size: .7rem; font-weight: 600; color: #94a3b8;
-            text-transform: uppercase; letter-spacing: .03em;
-        }
+    /* ── Kartu tabel ── */
+    .table-card {
+        background: #ffffff; border: 1px solid var(--c-border);
+        border-radius: 14px; box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    .table-toolbar {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 14px 16px; border-bottom: 1px solid var(--c-border);
+        gap: 10px; flex-wrap: wrap;
+    }
+    .table-toolbar-title { font-size: 14px; font-weight: 700; color: var(--c-fg); margin: 0; flex-shrink: 0; }
+    .table-toolbar-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; }
 
-        /* ── Stat Card Horizontal (Dosen/Mhs) ────────── */
-        .stat-card {
-            background: #fff; border: 1px solid #e5e7eb; border-radius: 14px;
-            padding: 18px 20px; display: flex; align-items: center; gap: 14px;
-            transition: box-shadow .2s;
-        }
-        .stat-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,.06); }
-        .stat-icon {
-            width: 44px; height: 44px; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .stat-value { font-size: 1.6rem; font-weight: 800; color: #1e1b4b; line-height: 1; margin-bottom: 2px; }
-        .stat-label { font-size: .8rem; color: #9ca3af; font-weight: 500; }
+    .pgd-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .pgd-table thead th {
+        background: #FAFAFA; padding: 11px 16px; font-size: 11px; font-weight: 600;
+        color: var(--c-fg-muted); border-bottom: 1px solid var(--c-border); white-space: nowrap;
+    }
+    .pgd-table tbody tr { transition: background .15s; }
+    .pgd-table tbody tr:hover { background: #FAFAFA; }
+    .pgd-table tbody td {
+        padding: 14px 16px; font-size: 13px; color: var(--c-fg);
+        border-bottom: 1px solid #F3F4F6; vertical-align: middle;
+    }
 
-        /* ── Search & Filter (Forum pattern) ──────────── */
-        .toolbar {
-            display: flex; gap: 12px; align-items: center;
-            margin-bottom: 20px; flex-wrap: wrap;
-        }
-        .search-wrapper { position: relative; flex: 1; min-width: 200px; }
-        .search-icon {
-            position: absolute; left: 16px; top: 50%;
-            transform: translateY(-50%); color: #9ca3af;
-            pointer-events: none;
-        }
-        .search-input {
-            width: 100%; border: 1px solid #e5e7eb; border-radius: 12px;
-            padding: 12px 18px 12px 46px; font-size: 0.9rem;
-            color: #4b5563; outline: none; background: #E7E8F0;
-            height: 44px; transition: all 0.25s ease; font-weight: 500;
-        }
-        .search-input::placeholder { color: #9ca3af; }
-        .search-input:focus {
-            border-color: #293C79; box-shadow: 0 0 0 3px rgba(41,60,121,.12);
-            background: #fff;
-        }
-        .filter-select {
-            height: 44px; padding: 0 14px; border: 1px solid #e5e7eb;
-            border-radius: 12px; background: #fff; font-size: .85rem;
-            font-weight: 600; color: #374151; cursor: pointer;
-            outline: none; transition: all .2s; min-width: 160px;
-        }
-        .filter-select:hover, .filter-select:focus { border-color: #293C79; }
+    .pgd-judul {
+        font-weight: 600; color: var(--c-fg); text-decoration: none !important;
+        display: block; max-width: 340px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .pgd-judul:hover { color: var(--c-primary); }
+    .pgd-id { font-family: monospace; font-size: 11px; color: var(--c-fg-muted); margin-top: 1px; }
 
-        /* ── CTA Button (Forum pattern) ───────────────── */
-        .btn-post {
-            display: inline-flex; align-items: center; gap: 8px;
-            background-color: #293C79; color: white; border: none;
-            border-radius: 12px; padding: 0 24px; height: 44px;
-            font-weight: 600; white-space: nowrap;
-            transition: all 0.2s ease; text-decoration: none;
-            flex-shrink: 0;
-        }
-        .btn-post:hover {
-            background-color: #415086; color: white;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(41, 60, 121, 0.3);
-        }
+    /* ── Badge ── */
+    .pill {
+        font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+        display: inline-block; white-space: nowrap;
+    }
+    .pill-kategori { background: var(--c-primary-subtle); color: var(--c-primary); }
+    .pill-baru { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .pill-tercatat { background: var(--c-success-subtle); color: var(--c-success); }
+    .pill-anonim { background: #111827; color: #ffffff; }
 
-        /* ── Ticket Cards (Forum pattern) ─────────────── */
-        .forum-card {
-            background: #fff; border-radius: 12px; border: 1px solid #DDE1E8;
-            padding: 22px 26px; margin-bottom: 14px;
-            transition: all 0.25s ease;
-            box-shadow: 0 1px 3px rgba(22, 22, 43, 0.06), 0 1px 2px rgba(22, 22, 43, 0.04);
-            cursor: pointer; text-decoration: none; display: block; color: inherit;
-        }
-        .forum-card:hover {
-            border-color: #C6CBD2;
-            box-shadow: 0 4px 8px -2px rgba(22, 22, 43, 0.06), 0 2px 4px -2px rgba(22, 22, 43, 0.04);
-            transform: translateY(-1px); color: inherit; text-decoration: none;
-        }
-        .ticket-title {
-            font-size: 15px; font-weight: 700; color: #111827;
-            margin-bottom: 6px; line-height: 1.4;
-        }
-        .ticket-excerpt {
-            font-size: 13px; color: #6b7280; line-height: 1.5;
-            display: -webkit-box; -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 12px;
-        }
-        .ticket-footer {
-            display: flex; align-items: center; justify-content: space-between;
-            gap: 8px; padding-top: 12px; border-top: 1px solid #f3f4f6;
-        }
-        .ticket-meta {
-            font-size: 12px; color: #9ca3af; font-weight: 500;
-            display: flex; align-items: center; gap: 6px;
-        }
+    /* Dot "baru" (belum dibuka staff) */
+    .baru-dot {
+        display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+        background: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.15);
+    }
 
-        /* ── Tags (Forum pattern) ─────────────────────── */
-        .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
-        .tag-label {
-            font-size: 11px; font-weight: 600; padding: 4px 12px;
-            border-radius: 20px; display: inline-flex;
-            align-items: center; gap: 4px; white-space: nowrap;
-        }
-        .tag-kategori { background: #e0e7ff; color: #4f46e5; }
-        .tag-baru { background: #f3f4f6; color: #4b5563; }
-        .tag-dibaca { background: #e0f2fe; color: #0284c7; }
-        .tag-didelegasikan { background: #ffedd5; color: #ea580c; }
-        .tag-ditanggapi_dosen { background: #e0e7ff; color: #4f46e5; }
-        .tag-dijawab { background: #dcfce7; color: #16a34a; }
-        .tag-diajukan_ulang { background: #fef3c7; color: #d97706; }
-        .tag-selesai { background: #bbf7d0; color: #15803d; }
-        .tag-anonim { background: #111827; color: #fff; }
+    /* Checkbox tercatat */
+    .tercatat-check {
+        width: 17px; height: 17px; cursor: pointer; accent-color: var(--c-primary); margin: 0;
+    }
+    .tercatat-check:disabled { opacity: .5; cursor: progress; }
 
-        /* ── Delete Button (Forum pattern) ────────────── */
-        .delete-btn {
-            display: inline-flex; align-items: center; gap: 4px;
-            padding: 5px 12px; border-radius: 6px;
-            font-size: 11px; font-weight: 600;
-            border: 1px solid #fecaca; background: #fff;
-            color: #dc2626; cursor: pointer; transition: all 0.15s;
-        }
-        .delete-btn:hover { background: #fef2f2; border-color: #ef4444; }
+    /* ── Menu aksi ── */
+    .action-menu-btn {
+        width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--c-border);
+        background: #ffffff; display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer; color: var(--c-fg-muted); transition: all .15s; margin: 0 auto;
+    }
+    .action-menu-btn:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+    .action-menu-panel {
+        position: absolute; right: 0; top: calc(100% + 5px); background: #ffffff;
+        border: 1px solid var(--c-border); border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.1); min-width: 150px; z-index: 40;
+        overflow: hidden; padding: 5px;
+    }
+    .action-menu-item {
+        width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+        border: none; border-radius: 6px; background: none; font-size: 11px; font-weight: 500;
+        color: var(--c-fg-sec); text-decoration: none !important; cursor: pointer;
+        font-family: inherit; text-align: left; transition: background .12s;
+    }
+    .action-menu-item:hover { background: var(--c-bg); color: var(--c-fg-sec); }
+    .action-menu-item.is-danger { color: var(--c-error-200); }
+    .action-menu-item.is-danger:hover { background: var(--c-error-0); color: var(--c-error-200); }
+</style>
 
-        /* ── Empty State (Forum pattern) ──────────────── */
-        .empty-state { text-align: center; padding: 72px 20px; color: #9ca3af; }
-        .empty-state .icon {
-            width: 72px; height: 72px; border-radius: 50%;
-            background: #E7E8F0; display: flex; align-items: center;
-            justify-content: center; margin: 0 auto 16px; color: #293C79;
-        }
-        .empty-state h5 { font-size: 1rem; font-weight: 700; color: #374151; margin-bottom: 4px; }
-        .empty-state p { font-size: .88rem; }
-
-        /* ── Pagination ───────────────────────────────── */
-        .pagination-info { font-size: .82rem; color: #9ca3af; font-weight: 500; }
-        .pagination .page-link {
-            color: #293C79; border-color: #DDE1E8; border-radius: 8px;
-            margin: 0 2px; font-size: .875rem; font-weight: 500;
-            padding: 7px 13px; transition: all .2s;
-        }
-        .pagination .page-link:hover { background: #E7E8F0; border-color: #293C79; }
-        .pagination .page-item.active .page-link { background: #293C79; border-color: #293C79; color: #fff; }
-        .pagination .page-item.disabled .page-link { color: #d1d5db; border-color: #DDE1E8; }
-
-        /* ── Responsive ───────────────────────────────── */
-        @media (max-width: 768px) {
-            .toolbar { flex-direction: column; }
-            .kategori-label { width: 120px; }
-            .stat-row { grid-template-columns: 1fr; }
-        }
-    </style>
-    @endpush
-
-    {{-- ── Header ───────────────────────────────────── --}}
-    <div class="d-flex justify-content-between align-items-start mb-4">
-        <div class="page-title">
-            <h4>Layanan Pengaduan</h4>
-            <p>Sampaikan keluhan secara terarah dan pantau jawabannya.</p>
-        </div>
-        @if($canCreate)
-            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-post">
-                <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
-            </a>
-        @endif
+{{-- ── Flash ── --}}
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+@endif
 
-    {{-- ── Flash Message (Staff Only) ───────────────── --}}
-    @if ($isStaff && session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert"
-            style="border-radius: 10px; border: none; background: #dcfce7; color: #16a34a; font-weight: 600;">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
+{{-- ── Header ── --}}
+<div class="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">
+    <div>
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Layanan Pengaduan</h3>
+        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">
+            @if($isStaff)
+                {{ number_format($pengaduan->total()) }} pengaduan
+                @if($baruCount > 0)
+                    · <span style="color:#2563eb;font-weight:700;">{{ $baruCount }} baru</span>
+                @endif
+            @else
+                Sampaikan keluhan Anda; tim akan mencatat dan menindaklanjutinya.
+            @endif
+        </p>
+    </div>
+    @if($canCreate)
+        <button type="button" class="btn-post" data-bs-toggle="modal" data-bs-target="#buatPengaduanModal">
+            <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
+        </button>
     @endif
+</div>
 
-    {{-- ══ SUMMARY STATS ══════════════════════════════ --}}
-    @if($isStaff && !($isDosenOnlyView ?? false))
+@php
+    $adaFilter = ($filters['q'] ?? '') !== '' || ($filters['kategori'] ?? '') !== '' || ($filters['sort'] ?? 'terbaru') !== 'terbaru';
+    $filterPanelAktif = ($filters['kategori'] ?? '') !== '' || ($filters['sort'] ?? 'terbaru') !== 'terbaru';
+    $jumlahKolom = $isStaff ? 8 : 5;
+@endphp
 
-        {{-- ── Admin: KPI Cards ───────────────────────── --}}
-        <div class="kpi-row">
-            <div class="kpi-mini kpi-urgent">
-                <div class="kpi-mini-icon" style="background: #fef2f2; color: #dc2626;">
-                    <x-manajemenmahasiswa::ui.icon name="alert-circle" size="18" />
-                </div>
-                <div>
-                    <div class="kpi-mini-val" style="color: #dc2626;">{{ $summaryStats['perluDitindakCount'] ?? 0 }}</div>
-                    <div class="kpi-mini-label">Perlu Ditindak</div>
-                    <div class="kpi-mini-sub">Baru masuk</div>
-                </div>
-            </div>
-            <div class="kpi-mini kpi-orange">
-                <div class="kpi-mini-icon" style="background: #fff7ed; color: #ea580c;">
-                    <x-manajemenmahasiswa::ui.icon name="clock-02" size="18" />
-                </div>
-                <div>
-                    <div class="kpi-mini-val" style="color: #ea580c;">{{ $summaryStats['menungguDosenCount'] ?? 0 }}</div>
-                    <div class="kpi-mini-label">Menunggu Dosen</div>
-                    <div class="kpi-mini-sub">Didelegasikan</div>
-                </div>
-            </div>
-            <div class="kpi-mini kpi-blue">
-                <div class="kpi-mini-icon" style="background: #E7E8F0; color: #293C79;">
-                    <x-manajemenmahasiswa::ui.icon name="bar-chart-11" size="18" />
-                </div>
-                <div>
-                    <div class="kpi-mini-val" style="color: #293C79;">{{ $summaryStats['responsivitas'] ?? 0 }}%</div>
-                    <div class="kpi-mini-label">Responsivitas</div>
-                    <div class="kpi-mini-sub">{{ $summaryStats['ditanganiCount'] ?? 0 }}/{{ $summaryStats['totalNonDraft'] ?? 0 }} ditangani</div>
-                </div>
-            </div>
-        </div>
+<div class="table-card filter-pop-host">
+    <div class="table-toolbar">
+        <h2 class="table-toolbar-title">Daftar Pengaduan</h2>
+        <form method="GET" action="{{ route('manajemenmahasiswa.pengaduan.index') }}" id="pgdFilterForm" class="table-toolbar-form">
+            @if(request()->filled('per_page'))
+                <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+            @endif
 
-        {{-- ── Admin: Distribusi Kategori ─────────────── --}}
-        @if(!empty($summaryStats['kategoriDistribusi']) && $summaryStats['kategoriDistribusi']->count() > 0)
-            @php $maxKat = $summaryStats['kategoriDistribusi']->max() ?: 1; @endphp
-            <div class="chart-card">
-                <details style="cursor: pointer;">
-                    <summary style="list-style: none; display: flex; align-items: center; gap: 8px;">
-                        <div class="chart-title" style="margin-bottom: 0; flex: 1;">
-                            <x-manajemenmahasiswa::ui.icon name="bar-chart-11" size="15" />
-                            Distribusi Kategori
-                            <span class="chart-title-right">Total: {{ $summaryStats['totalNonDraft'] ?? 0 }}</span>
-                        </div>
-                        <x-manajemenmahasiswa::ui.icon name="chevron-down" size="14" style="color: #94a3b8; flex-shrink: 0;" />
-                    </summary>
-                    <div class="mt-4">
-                        @foreach($summaryStats['kategoriDistribusi'] as $kat => $total)
-                            @php
-                                $katNorm = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori($kat);
-                                $katLabel = data_get($kategoriOptions, $katNorm . '.label') ?? ucwords(str_replace('_', ' ', $katNorm));
-                                $pct = round($total / ($summaryStats['totalNonDraft'] ?: 1) * 100);
-                            @endphp
-                            <div class="kategori-bar">
-                                <div class="kategori-label">{{ $katLabel }}</div>
-                                <div class="kategori-track">
-                                    <div class="kategori-fill" style="width: {{ round($total / $maxKat * 100) }}%"></div>
-                                </div>
-                                <div class="kategori-count">{{ $total }} ({{ $pct }}%)</div>
-                            </div>
-                        @endforeach
-                        <div class="stat-row">
-                            <div class="stat-mini">
-                                <div class="stat-mini-val">{{ $summaryStats['totalNonDraft'] ?? 0 }}</div>
-                                <div class="stat-mini-label">Total</div>
-                            </div>
-                            <div class="stat-mini">
-                                <div class="stat-mini-val">{{ $belumDijawabCount }}</div>
-                                <div class="stat-mini-label">Pending</div>
-                            </div>
-                            <div class="stat-mini">
-                                <div class="stat-mini-val">{{ $selesaiCount }}</div>
-                                <div class="stat-mini-label">Selesai</div>
-                            </div>
-                        </div>
-                    </div>
-                </details>
-            </div>
-        @endif
-
-    @elseif($isDosenOnlyView ?? false)
-        {{-- ── Dosen: Stat Cards ──────────────────────── --}}
-        <div class="d-flex gap-3 mb-4 flex-wrap">
-            <div class="stat-card" style="flex: 1; min-width: 180px;">
-                <div class="stat-icon" style="background: #fff7ed; color: #ea580c;">
-                    <x-manajemenmahasiswa::ui.icon name="mail-05" size="20" />
-                </div>
-                <div>
-                    <div class="stat-value" style="color: #ea580c;">{{ $belumDijawabCount }}</div>
-                    <div class="stat-label">Menunggu Tanggapan</div>
-                </div>
-            </div>
-            <div class="stat-card" style="flex: 1; min-width: 180px;">
-                <div class="stat-icon" style="background: #ecfdf5; color: #059669;">
-                    <x-manajemenmahasiswa::ui.icon name="check-circle" size="20" />
-                </div>
-                <div>
-                    <div class="stat-value" style="color: #059669;">{{ $selesaiCount }}</div>
-                    <div class="stat-label">Sudah Ditanggapi</div>
-                </div>
-            </div>
-        </div>
-
-    @endif
-
-    {{-- ══ TOOLBAR ════════════════════════════════════ --}}
-    <form method="GET" action="{{ route('manajemenmahasiswa.pengaduan.index') }}" id="pgdFilterForm">
-        <div class="toolbar">
             <div class="search-wrapper">
                 <span class="search-icon">
-                    <x-manajemenmahasiswa::ui.icon name="search-01" size="18" />
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </span>
-                <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" class="search-input"
-                    placeholder="Cari judul, kronologi, atau ID pengaduan…">
+                <input type="text" name="q" class="search-input" value="{{ $filters['q'] }}"
+                       placeholder="Cari judul, kronologi, atau ID…">
             </div>
-            <select name="kategori" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
-                <option value="">Semua Kategori</option>
-                @foreach($kategoriOptions as $value => $meta)
-                    <option value="{{ $value }}" {{ ($filters['kategori'] ?? '') === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
-                @endforeach
-            </select>
-            <select name="status" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
-                <option value="">Semua Status</option>
-                @foreach($statusOptions as $value => $label)
-                    <option value="{{ $value }}" {{ ($filters['status'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                @endforeach
-            </select>
-        </div>
-    </form>
 
-    {{-- ══ TICKET CARDS ══════════════════════════════ --}}
-    @forelse($pengaduan as $item)
-        @php
-            $judul = data_get($item, 'data_template.judul') ?? '-';
-            $kronologi = data_get($item, 'data_template.kronologi') ?? data_get($item, 'data_template.hal_aduan') ?? '';
-            $kategoriRaw = (string) $item->kategori;
-            $kategori = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori($kategoriRaw);
-            $status = strtolower($item->status);
-            $kategoriLabel = data_get($kategoriOptions, $kategori . '.label') ?? ucwords(str_replace('_', ' ', $kategori));
-            $pelaporLabel = $item->is_anonim ? 'Anonim' : ($isStaff ? (optional($item->pelapor)->name ?? '—') : 'Anda');
-            $detailUrl = route('manajemenmahasiswa.pengaduan.show', $item->id);
-        @endphp
-        <a href="{{ $detailUrl }}" class="forum-card">
-            <div class="tags-row">
-                <span class="tag-label tag-kategori">{{ $kategoriLabel }}</span>
-                <span class="tag-label tag-{{ $status }}">{{ $status === 'dibaca' ? 'Diproses' : ucfirst(str_replace('_', ' ', $status)) }}</span>
-                @if($item->is_anonim)
-                    <span class="tag-label tag-anonim">
-                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
-                    </span>
-                @endif
-                <span style="font-family: monospace; font-size: 12px; color: #9ca3af; font-weight: 700; margin-left: auto;">#{{ $item->id }}</span>
-            </div>
-            <div class="ticket-title">{{ Str::limit($judul, 90) }}</div>
-            <div class="ticket-excerpt">{{ Str::limit(strip_tags($kronologi), 140) }}</div>
-            <div class="ticket-footer">
-                <div class="d-flex align-items-center gap-3 flex-wrap">
-                    <div class="ticket-meta">
-                        <x-manajemenmahasiswa::ui.icon name="user-01" size="14" />
-                        {{ $pelaporLabel }}
-                        @if($isStaff && in_array($status, ['didelegasikan']) && optional($item->delegasiAktif)->delegatedTo)
-                            <span style="color: #ea580c;">→ {{ $item->delegasiAktif->delegatedTo->name }}</span>
-                        @endif
-                    </div>
-                    <div class="ticket-meta">
-                        <x-manajemenmahasiswa::ui.icon name="clock-02" size="14" />
-                        {{ optional($item->created_at)->translatedFormat('d M Y, H:i') }}
-                    </div>
-                </div>
-                @if($canDelete)
-                    <button type="button" class="delete-btn"
-                        onclick="event.preventDefault();event.stopPropagation();document.getElementById('deleteForm').action='{{ route('manajemenmahasiswa.pengaduan.destroy', $item->id) }}';document.getElementById('deleteModalText').innerText='{{ addslashes($judul) }}';new bootstrap.Modal(document.getElementById('deleteModal')).show()">
-                        <x-manajemenmahasiswa::ui.icon name="minus-circle" size="12" /> Hapus
-                    </button>
-                @endif
-            </div>
-        </a>
-    @empty
-        <div class="empty-state">
-            <div class="icon">
-                <x-manajemenmahasiswa::ui.icon name="box-archive" size="32" />
-            </div>
-            <h5>Belum ada pengaduan</h5>
-            <p>Data pengaduan akan muncul di sini.</p>
-        </div>
-    @endforelse
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height: 1;">Filter</span>
+                    @if($filterPanelAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
 
-    {{-- ── Pagination ─────────────────────────────────── --}}
-    @if($pengaduan->total() > 0)
-        <div class="mb-2">
-            <span class="pagination-info">
-                Menampilkan {{ $pengaduan->firstItem() }}–{{ $pengaduan->lastItem() }} dari {{ $pengaduan->total() }} pengaduan
-            </span>
-        </div>
-    @endif
-    @if($pengaduan->hasPages())
-        <div class="d-flex justify-content-center mt-2 mb-4">
-            {{ $pengaduan->appends(request()->query())->links('pagination::bootstrap-5') }}
-        </div>
-    @endif
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;"
+                     @click="filterOpen = false"></div>
 
-    {{-- ── Delete Modal ───────────────────────────────── --}}
-    @if($canDelete)
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content" style="border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18);">
-                    <div class="modal-body text-center p-4 p-md-5">
-                        <div style="margin-bottom: 16px; color: #f59e0b;">
-                            <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="48" />
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <div>
+                            <label class="filter-pop-label" for="filterKategori">Kategori</label>
+                            <select name="kategori" id="filterKategori" class="filter-pop-select">
+                                <option value="">Semua Kategori</option>
+                                @foreach($kategoriOptions as $value => $meta)
+                                    <option value="{{ $value }}" {{ $filters['kategori'] === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
+                                @endforeach
+                            </select>
                         </div>
-                        <h4 class="fw-bold text-dark mb-3">Hapus Pengaduan?</h4>
-                        <p class="text-muted mb-4" id="deleteModalText" style="font-size: 14px;"></p>
-                        <form id="deleteForm" method="POST" action="">
-                            @csrf
-                            @method('DELETE')
-                            <div class="d-flex justify-content-center gap-3">
-                                <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal"
-                                    style="border: 1px solid #d1d5db; border-radius: 8px; font-weight: 600; color: #4b5563;">Batal</button>
-                                <button type="submit" class="btn px-4 py-2"
-                                    style="background-color: #dc2626; color: white; border-radius: 8px; font-weight: 600;">Hapus</button>
-                            </div>
-                        </form>
+
+                        <div>
+                            <label class="filter-pop-label" for="filterSort">Urutkan</label>
+                            <select name="sort" id="filterSort" class="filter-pop-select">
+                                <option value="terbaru" {{ $filters['sort'] === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                                <option value="terlama" {{ $filters['sort'] === 'terlama' ? 'selected' : '' }}>Terlama</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilter)
+                                <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
+        </form>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table class="pgd-table">
+            <thead>
+                <tr>
+                    @if($isStaff)
+                        <th style="width: 44px; text-align: center;" title="Tercatat">✓</th>
+                    @endif
+                    <th style="width: 56px;">No</th>
+                    <th>Judul</th>
+                    @if($isStaff)
+                        <th>Pelapor</th>
+                    @endif
+                    <th>Kategori</th>
+                    @if($isStaff)
+                        <th style="width: 28px;"></th>
+                    @else
+                        <th>Status</th>
+                    @endif
+                    <th>Tanggal</th>
+                    @if($isStaff)
+                        <th style="width: 72px; text-align: center;">Aksi</th>
+                    @endif
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($pengaduan as $index => $item)
+                    @php
+                        $judul = data_get($item, 'data_template.judul') ?: '-';
+                        $kategoriUtama = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori((string) $item->kategori);
+                        $kategoriLabel = data_get($kategoriOptions, $kategoriUtama . '.label') ?? ucwords(str_replace('_', ' ', $kategoriUtama));
+                        $detailUrl = route('manajemenmahasiswa.pengaduan.show', $item->id);
+                        $tercatat = in_array($item->status, ['tercatat', 'selesai', 'didelegasikan'], true);
+                    @endphp
+                    <tr data-row="{{ $item->id }}">
+                        @if($isStaff)
+                            <td style="text-align: center;">
+                                <input type="checkbox" class="tercatat-check"
+                                       data-url="{{ route('manajemenmahasiswa.pengaduan.toggle.tercatat', $item->id) }}"
+                                       aria-label="Tandai tercatat: {{ $judul }}"
+                                       {{ $tercatat ? 'checked' : '' }}>
+                            </td>
+                        @endif
+                        <td style="color: var(--c-fg-muted); font-weight: 500;">{{ $pengaduan->firstItem() + $index }}</td>
+                        <td>
+                            <a href="{{ $detailUrl }}" class="pgd-judul" title="{{ $judul }}">{{ $judul }}</a>
+                            <div class="pgd-id">#{{ $item->id }}</div>
+                        </td>
+                        @if($isStaff)
+                            <td>
+                                @if($item->is_anonim)
+                                    <span class="pill pill-anonim">Konfidensial</span>
+                                @else
+                                    {{ optional($item->pelapor)->name ?? '—' }}
+                                @endif
+                            </td>
+                        @endif
+                        <td><span class="pill pill-kategori">{{ $kategoriLabel }}</span></td>
+                        @if($isStaff)
+                            <td style="text-align: center;">
+                                <span class="baru-dot js-baru-dot" title="Baru — belum dibuka"
+                                      @if($item->status !== 'baru') style="display: none;" @endif></span>
+                            </td>
+                        @else
+                            <td>
+                                @if($item->status === 'baru')
+                                    <span class="pill pill-baru">Baru</span>
+                                @elseif($tercatat)
+                                    <span class="pill pill-tercatat">Tercatat</span>
+                                @endif
+                            </td>
+                        @endif
+                        <td style="white-space: nowrap; color: var(--c-fg-sec);">{{ optional($item->created_at)->translatedFormat('d M Y, H:i') }}</td>
+                        @if($isStaff)
+                            <td style="text-align: center;">
+                                <div style="position: relative; display: inline-block;" x-data="{ open: false }">
+                                    <button type="button" @click="open = !open" @click.outside="open = false" class="action-menu-btn" aria-label="Aksi">
+                                        <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                                    </button>
+                                    <div x-show="open" x-cloak
+                                         x-transition:enter="transition ease-out duration-100"
+                                         x-transition:enter-start="opacity-0 scale-95"
+                                         x-transition:enter-end="opacity-100 scale-100"
+                                         class="action-menu-panel" style="display: none;">
+                                        <a href="{{ $detailUrl }}" class="action-menu-item">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            Lihat Detail
+                                        </a>
+                                        @if($canDelete)
+                                            <button type="button" class="action-menu-item is-danger js-hapus"
+                                                    data-action="{{ route('manajemenmahasiswa.pengaduan.destroy', $item->id) }}"
+                                                    data-judul="{{ $judul }}">
+                                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                                                Hapus
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
+                            </td>
+                        @endif
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="{{ $jumlahKolom }}" style="padding: 60px 24px; text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #E5E7EB;">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                                @if($adaFilter)
+                                    <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted); margin: 0;">Tidak ada pengaduan yang cocok</p>
+                                    <p style="font-size: 12px; color: var(--c-fg-placeholder); margin: 0;">Coba kata kunci lain, atau kosongkan filternya.</p>
+                                    <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-reset mt-1">Reset pencarian &amp; filter</a>
+                                @else
+                                    <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted); margin: 0;">Belum ada pengaduan</p>
+                                    <p style="font-size: 12px; color: var(--c-fg-placeholder); margin: 0;">Data pengaduan akan muncul di sini.</p>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $pengaduan])
+</div>
+
+{{-- ── Delete Modal ── --}}
+@if($canDelete)
+    <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18);">
+                <div class="modal-body text-center p-4 p-md-5">
+                    <div style="margin-bottom: 16px; color: #f59e0b;">
+                        <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="48" />
+                    </div>
+                    <h4 class="fw-bold text-dark mb-3">Hapus Pengaduan?</h4>
+                    <p class="text-muted mb-4" id="deleteModalText" style="font-size: 14px;"></p>
+                    <form id="deleteForm" method="POST" action="">
+                        @csrf
+                        @method('DELETE')
+                        <div class="d-flex justify-content-center gap-3">
+                            <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal"
+                                style="border: 1px solid #d1d5db; border-radius: 8px; font-weight: 600; color: #4b5563;">Batal</button>
+                            <button type="submit" class="btn px-4 py-2"
+                                style="background-color: #dc2626; color: white; border-radius: 8px; font-weight: 600;">Hapus</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-    @endif
+    </div>
+@endif
 
-    @push('scripts')
-        <script>
-            document.querySelector('.search-input')?.addEventListener('keydown', e => {
-                if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pgdFilterForm').submit(); }
-            });
-        </script>
-    @endpush
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+@if($canCreate)
+    @include('manajemenmahasiswa::pengaduan.partials.buat-modal')
+@endif
+
+<script>
+    document.querySelector('.search-input')?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('pgdFilterForm').submit(); }
+    });
+
+    // Hapus: isi modal konfirmasi
+    document.querySelectorAll('.js-hapus').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('deleteForm').action = btn.dataset.action;
+            document.getElementById('deleteModalText').textContent = btn.dataset.judul;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
+        });
+    });
+
+    // Centang "tercatat" — AJAX, dikembalikan bila gagal
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content ?? '{{ csrf_token() }}';
+    document.querySelectorAll('.tercatat-check').forEach(cb => {
+        cb.addEventListener('change', async () => {
+            const dicentang = cb.checked;
+            cb.disabled = true;
+            try {
+                const res = await fetch(cb.dataset.url, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                });
+                if (!res.ok) throw new Error(res.status);
+                const data = await res.json();
+                cb.checked = data.status === 'tercatat';
+                // Tercatat = sudah ditangani, dot "baru" ikut hilang
+                cb.closest('tr').querySelector('.js-baru-dot').style.display = data.status === 'baru' ? '' : 'none';
+            } catch (e) {
+                cb.checked = !dicentang;
+                alert('Gagal memperbarui status pengaduan. Silakan coba lagi.');
+            } finally {
+                cb.disabled = false;
+            }
+        });
+    });
+</script>
 </x-dynamic-component>

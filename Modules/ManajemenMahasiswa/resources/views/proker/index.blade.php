@@ -1,5 +1,8 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
+@include('manajemenmahasiswa::partials.kegiatan-theme')
+@include('manajemenmahasiswa::partials.filter-popover')
+
 <style>
     /* ── Status Badges ── */
     .status-badge {
@@ -7,74 +10,74 @@
         padding: 4px 12px; border-radius: 50px;
         font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
     }
-    .status-draft     { background: #f3f4f6; color: #666D80; }
-    .status-diajukan  { background: #FFFBEB; color: #d97706; }
-    .status-disetujui { background: #ECFDF5; color: #059669; }
-    .status-ditolak   { background: #fef2f2; color: #dc2626; }
+    .status-draft     { background: var(--c-surface-muted); color: var(--c-fg-muted); }
+    .status-diajukan  { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .status-disetujui { background: var(--c-primary-subtle); color: var(--c-primary); }
+    .status-ditolak   { background: var(--c-error-subtle); color: var(--c-error); }
 
 
 
     /* ── Filter Bar ── */
     .filter-section { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; align-items: center; }
     .filter-chip {
-        padding: 7px 16px; border-radius: 8px; border: 1px solid #DFE1E7;
-        background: #fff; color: #666D80; font-size: 13px; font-weight: 600;
+        padding: 7px 16px; border-radius: 8px; border: 1px solid var(--c-border);
+        background: var(--c-surface); color: var(--c-fg-muted); font-size: 13px; font-weight: 600;
         cursor: pointer; transition: all 0.15s; text-decoration: none !important;
         display: inline-block;
     }
-    .filter-chip:hover { border-color: #0B266E; color: #0B266E; background: rgba(11,38,110,0.06); }
-    .filter-chip.active { background: #0B266E; color: #fff !important; border-color: #0B266E; }
+    .filter-chip:hover { border-color: var(--c-primary); color: var(--c-primary); background: var(--c-primary-subtle); }
+    .filter-chip.active { background: var(--c-primary); color: var(--c-surface) !important; border-color: var(--c-primary); }
 
     .search-wrapper { position: relative; flex-grow: 1; }
-    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #666D80; }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--c-fg-muted); }
     .search-input {
-        background: #fff; border: 1px solid #DFE1E7; border-radius: 8px;
-        height: 38px; padding-left: 36px; font-size: 13px; width: 100%; color: #374151;
+        background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 8px;
+        height: 38px; padding-left: 36px; font-size: 13px; width: 100%; color: var(--c-fg-sec);
     }
-    .search-input:focus { background: #fff; border-color: #0B266E; box-shadow: 0 0 0 3px rgba(11,38,110,0.1); outline: none; }
+    .search-input:focus { background: var(--c-surface); border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); outline: none; }
 
     /* ── Proker Cards ── */
     .proker-card {
-        background: #fff; border-radius: 12px; overflow: hidden;
+        background: var(--c-surface); border-radius: 12px; overflow: hidden;
         box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         transition: all 0.2s ease; text-decoration: none !important;
-        display: flex; flex-direction: column; border: 1px solid #DFE1E7;
+        display: flex; flex-direction: column; border: 1px solid var(--c-border);
     }
     .proker-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 12px 24px -4px rgba(11,38,110,0.12);
-        border-color: rgba(11,38,110,0.25);
+        box-shadow: 0 12px 24px -4px var(--c-primary-shadow);
+        border-color: var(--c-primary-border);
     }
     .proker-card-image {
         width: 100%; aspect-ratio: 16/9;
-        background: linear-gradient(135deg, rgba(11,38,110,0.06) 0%, rgba(11,38,110,0.12) 100%);
+        background: linear-gradient(135deg, var(--c-primary-subtle) 0%, var(--c-primary-shadow) 100%);
         display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
     .proker-card-image img { width: 100%; height: 100%; object-fit: cover; }
     .proker-card-body { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
     .badge-bidang {
         font-size: 11px; font-weight: 700; padding: 3px 10px;
-        border-radius: 50px; background: #eef2ff; color: #0B266E;
+        border-radius: 50px; background: var(--c-primary-subtle); color: var(--c-primary);
     }
     .proker-card-title {
-        font-weight: 700; font-size: 15px; color: #0D0D12;
+        font-weight: 700; font-size: 15px; color: var(--c-fg);
         margin: 8px 0 6px; line-height: 1.4;
         display: -webkit-box; -webkit-line-clamp: 2;
         -webkit-box-orient: vertical; overflow: hidden;
     }
     .proker-card-meta {
         display: flex; flex-wrap: wrap; gap: 10px;
-        font-size: 12px; color: #666D80; font-weight: 500;
-        padding-top: 10px; border-top: 1px solid #f3f4f6; margin-top: auto;
+        font-size: 12px; color: var(--c-fg-muted); font-weight: 500;
+        padding-top: 10px; border-top: 1px solid var(--c-surface-muted); margin-top: auto;
     }
     .proker-card-meta span { display: inline-flex; align-items: center; gap: 4px; }
-    .empty-state { text-align: center; padding: 50px 20px; color: #666D80; }
-    .empty-state h5 { color: #666D80; font-weight: 600; margin-bottom: 4px; }
+    .empty-state { text-align: center; padding: 50px 20px; color: var(--c-fg-muted); }
+    .empty-state h5 { color: var(--c-fg-muted); font-weight: 600; margin-bottom: 4px; }
 </style>
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius:10px;border:none;background:#ECFDF5;color:#059669;font-weight:500;font-size:14px;">
+         style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -82,7 +85,7 @@
 @endif
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius:10px;border:none;background:#fef2f2;color:#dc2626;font-weight:500;font-size:14px;">
+         style="border-radius:10px;border:none;background:var(--c-error-subtle);color:var(--c-error);font-weight:500;font-size:14px;">
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
@@ -90,13 +93,11 @@
 
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Rencana Program Kerja</h3>
-        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Daftar rencana proker dari 8 bidang himpunan &amp; prodi</p>
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Rencana Program Kerja</h3>
+        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar rencana proker dari 8 bidang himpunan &amp; prodi</p>
     </div>
     @if($canManage)
-        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="btn d-flex align-items-center gap-2"
-           style="background:#0B266E;color:#fff;font-weight:600;font-size:14px;padding:9px 18px;border-radius:8px;transition:all .15s;"
-           onmouseover="this.style.background='#091958'" onmouseout="this.style.background='#0B266E'">
+        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Buat Proker
         </a>
@@ -106,23 +107,71 @@
 
 {{-- Filter --}}
 <form method="GET" action="{{ route('manajemenmahasiswa.proker.index') }}" id="filterForm">
-    <div class="d-flex gap-3 align-items-center mb-3">
-        <div class="search-wrapper w-100">
-            <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <input type="text" name="search" class="form-control search-input"
-                   placeholder="Cari rencana proker..." value="{{ request('search') }}">
+    {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+    @if(request()->filled('per_page'))
+        <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+    @endif
+    <div class="mk-kegiatan-filter-row">
+        <div class="mk-kegiatan-search w-100">
+            <span class="mk-kegiatan-search__icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+            <input type="text" name="search" class="mk-kegiatan-search__input"
+                   placeholder="Cari judul atau deskripsi rencana proker..." value="{{ request('search') }}">
         </div>
-    </div>
-    <div class="filter-section">
-        <a href="{{ route('manajemenmahasiswa.proker.index', request()->except(['bidang','page'])) }}"
-           class="filter-chip {{ !request('bidang')||request('bidang')==='semua'?'active':'' }}">Semua</a>
-        <a href="{{ route('manajemenmahasiswa.proker.index', array_merge(request()->except('page'),['bidang'=>'prodi'])) }}"
-           class="filter-chip {{ request('bidang')==='prodi'?'active':'' }}"
-           style="{{ request('bidang')==='prodi'?'background:#0B266E;border-color:#0B266E;':'' }}">Prodi</a>
-        @foreach($bidangList as $bidang)
-            <a href="{{ route('manajemenmahasiswa.proker.index', array_merge(request()->except('page'),['bidang'=>$bidang->id])) }}"
-               class="filter-chip {{ request('bidang')==$bidang->id?'active':'' }}">{{ $bidang->nama_bidang }}</a>
-        @endforeach
+        {{-- Bidang memakai panel yang sama dengan panel "Advanced Filters" tabel Audit Log
+             global (partials/filter-popover). Dulu berupa deretan chip di bawah pencarian. --}}
+        @php
+            $filterBidangAktif = request()->filled('bidang') && request('bidang') !== 'semua';
+            $adaFilterApaPun   = $filterBidangAktif || request()->filled('search');
+        @endphp
+        <div class="mk-kegiatan-filter-controls">
+            <div class="filter-pop filter-pop--md" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height: 1;">Filter</span>
+                    @if($filterBidangAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
+
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;"
+                     @click="filterOpen = false"></div>
+
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <div>
+                            <label class="filter-pop-label" for="filterBidang">Bidang</label>
+                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                                <option value="semua">Semua Bidang</option>
+                                <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
+                                @foreach($bidangList as $bidang)
+                                    <option value="{{ $bidang->id }}" {{ request('bidang') == $bidang->id ? 'selected' : '' }}>{{ $bidang->nama_bidang }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilterApaPun)
+                                <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </form>
 
@@ -135,7 +184,7 @@
                         @if($proker->banner)
                             <img src="{{ $proker->banner_url }}" alt="{{ $proker->judul }}">
                         @else
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5C78B8" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary-border)" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
                         @endif
                     </div>
                     <div class="proker-card-body">
@@ -146,7 +195,7 @@
                                 $hasBidang = $proker->bidangs && $proker->bidangs->count() > 0;
                             @endphp
                             @if($hasProdi || !$hasBidang)
-                                <span class="badge-bidang" style="background:#eef2ff;color:#0B266E;">Prodi</span>
+                                <span class="badge-bidang" style="background:var(--c-primary-subtle);color:var(--c-primary);">Prodi</span>
                             @endif
                             @if($hasBidang)
                                 @foreach($proker->bidangs as $b)
@@ -156,7 +205,7 @@
                         </div>
                         <div class="proker-card-title">{{ $proker->judul }}</div>
                         @if($proker->deskripsi)
-                            <div style="font-size:12px;color:#666D80;line-height:1.55;margin-bottom:8px;
+                            <div style="font-size:12px;color:var(--c-fg-muted);line-height:1.55;margin-bottom:8px;
                                         display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
                                 {{ $proker->deskripsi }}
                             </div>
@@ -181,17 +230,20 @@
             </div>
         @endforeach
     </div>
-    @if($prokerList->hasPages())
-        <div class="mt-4 d-flex justify-content-center">{{ $prokerList->withQueryString()->links() }}</div>
-    @endif
+    {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama).
+         Daftar ini berupa grid kartu, jadi pilihannya kelipatan 6 (PerPage::KARTU). --}}
+    @include('manajemenmahasiswa::partials.table-footer', [
+        'paginator'      => $prokerList,
+        'perPageOptions' => \Modules\ManajemenMahasiswa\Support\PerPage::KARTU,
+        'standalone'     => true,
+    ])
 @else
     <div class="empty-state">
         <div style="font-size:48px;margin-bottom:12px;opacity:0.5;">&#128203;</div>
         <h5>Belum ada rencana proker</h5>
         <p>Rencana program kerja yang dibuat akan muncul di sini</p>
         @if($canManage)
-            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="btn mt-2"
-               style="background:#0B266E;color:#fff;border-radius:8px;font-weight:600;font-size:14px;">+ Buat Proker Pertama</a>
+            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form mt-2">+ Buat Proker Pertama</a>
         @endif
     </div>
 @endif

@@ -1,5 +1,7 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
+@include('manajemenmahasiswa::partials.kegiatan-theme')
+
 <style>
     /* ── Back Button & Header ── */
     .detail-header {
@@ -9,25 +11,27 @@
         margin-bottom: 24px;
     }
     .btn-back {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background: #ffffff;
-        border: 1px solid #DFE1E7;
+        width: 32px;
+        min-width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 8px;
+        background: var(--c-surface);
+        border: 1px solid var(--c-border);
         display: flex;
         align-items: center;
         justify-content: center;
         text-decoration: none;
-        color: #374151;
-        font-size: 18px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        color: var(--c-fg-sec);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
         transition: all 0.2s;
         flex-shrink: 0;
     }
     .btn-back:hover {
-        background: #f3f4f6;
-        border-color: #C1C7CF;
-        color: #0D0D12;
+        background: var(--c-bg);
+        border-color: var(--c-border);
+        color: var(--c-fg);
+        transform: none;
     }
 
     /* ── Banner ── */
@@ -37,7 +41,7 @@
         border-radius: 12px;
         overflow: hidden;
         margin-bottom: 24px;
-        background: linear-gradient(135deg, rgba(11,38,110,0.06) 0%, rgba(11,38,110,0.12) 100%);
+        background: linear-gradient(135deg, var(--c-primary-subtle) 0%, var(--c-primary-shadow) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -54,7 +58,7 @@
 
     /* ── Info Card (matching forum-card style) ── */
     .detail-card {
-        background: #ffffff;
+        background: var(--c-surface);
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
@@ -63,7 +67,7 @@
     .detail-card-title {
         font-weight: 700;
         font-size: 16px;
-        color: #0D0D12;
+        color: var(--c-fg);
         margin-bottom: 16px;
         display: flex;
         align-items: center;
@@ -76,16 +80,16 @@
         font-weight: 700;
         padding: 4px 12px;
         border-radius: 20px;
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
     .badge-kategori {
         font-size: 11px;
         font-weight: 700;
         padding: 4px 12px;
         border-radius: 20px;
-        background: #FFFBEB;
-        color: #92400e;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
     }
 
     /* ── Metadata Grid ── */
@@ -96,15 +100,15 @@
         margin-top: 18px;
     }
     .meta-item {
-        background: #f9fafb;
+        background: var(--c-surface-subtle);
         border-radius: 10px;
         padding: 14px 16px;
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--c-surface-muted);
     }
     .meta-item-label {
         font-size: 11px;
         font-weight: 700;
-        color: #666D80;
+        color: var(--c-fg-muted);
         text-transform: uppercase;
         letter-spacing: 0.4px;
         margin-bottom: 4px;
@@ -112,7 +116,7 @@
     .meta-item-value {
         font-size: 14px;
         font-weight: 600;
-        color: #0D0D12;
+        color: var(--c-fg);
         display: flex;
         align-items: center;
         gap: 6px;
@@ -121,7 +125,7 @@
     /* ── Description ── */
     .detail-description {
         font-size: 14px;
-        color: #374151;
+        color: var(--c-fg-sec);
         line-height: 1.75;
         white-space: pre-line;
     }
@@ -135,8 +139,8 @@
     .gallery-count {
         font-size: 12px;
         font-weight: 600;
-        color: #666D80;
-        background: #f3f4f6;
+        color: var(--c-fg-muted);
+        background: var(--c-surface-muted);
         padding: 4px 12px;
         border-radius: 20px;
     }
@@ -152,14 +156,14 @@
         overflow: hidden;
         cursor: pointer;
         aspect-ratio: 4/3;
-        background: #f3f4f6;
-        border: 1px solid #DFE1E7;
+        background: var(--c-surface-muted);
+        border: 1px solid var(--c-border);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .photo-gallery-item:hover {
         transform: translateY(-4px);
-        box-shadow: 0 12px 28px rgba(11, 38, 110, 0.15);
-        border-color: #5C78B8;
+        box-shadow: 0 12px 28px var(--c-primary-shadow);
+        border-color: var(--c-primary-border);
     }
     .photo-gallery-item img {
         width: 100%;
@@ -185,7 +189,7 @@
         opacity: 1;
     }
     .photo-overlay .photo-name {
-        color: #fff;
+        color: var(--c-surface);
         font-size: 12px;
         font-weight: 600;
         overflow: hidden;
@@ -204,7 +208,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
+        color: var(--c-surface);
         font-size: 16px;
         transition: all 0.2s;
     }
@@ -261,7 +265,7 @@
         background: rgba(255,255,255,0.1);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(255,255,255,0.15);
-        color: #fff;
+        color: var(--c-surface);
         font-size: 20px;
         cursor: pointer;
         display: flex;
@@ -284,7 +288,7 @@
         background: rgba(255,255,255,0.1);
         backdrop-filter: blur(8px);
         border: 1px solid rgba(255,255,255,0.15);
-        color: #fff;
+        color: var(--c-surface);
         font-size: 22px;
         cursor: pointer;
         display: flex;
@@ -308,7 +312,7 @@
         z-index: 10001;
     }
     .lightbox-info .lightbox-title {
-        color: #fff;
+        color: var(--c-surface);
         font-size: 14px;
         font-weight: 600;
         margin-bottom: 4px;
@@ -331,17 +335,17 @@
         align-items: center;
         gap: 14px;
         padding: 16px 18px;
-        background: #f9fafb;
-        border: 1px solid #DFE1E7;
+        background: var(--c-surface-subtle);
+        border: 1px solid var(--c-border);
         border-radius: 12px;
         text-decoration: none !important;
         transition: all 0.25s ease;
     }
     .document-card:hover {
-        background: #eef2ff;
-        border-color: #5C78B8;
+        background: var(--c-primary-subtle);
+        border-color: var(--c-primary-border);
         transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.08);
+        box-shadow: 0 4px 12px var(--c-primary-subtle);
     }
     .document-card .doc-icon-wrapper {
         width: 48px;
@@ -353,11 +357,11 @@
         font-size: 24px;
         flex-shrink: 0;
     }
-    .doc-icon-pdf { background: #fee2e2; }
-    .doc-icon-word { background: #dbeafe; }
-    .doc-icon-excel { background: #ECFDF5; }
-    .doc-icon-ppt { background: #FFFBEB; }
-    .doc-icon-other { background: #f3f4f6; }
+    .doc-icon-pdf { background: var(--c-error-subtle); }
+    .doc-icon-word { background: var(--c-sky-subtle); }
+    .doc-icon-excel { background: var(--c-success-subtle); }
+    .doc-icon-ppt { background: var(--c-warning-subtle); }
+    .doc-icon-other { background: var(--c-surface-muted); }
     .document-card .doc-details {
         flex: 1;
         min-width: 0;
@@ -365,7 +369,7 @@
     .document-card .doc-title {
         font-size: 14px;
         font-weight: 600;
-        color: #0D0D12;
+        color: var(--c-fg);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -373,7 +377,7 @@
     }
     .document-card .doc-meta {
         font-size: 12px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 500;
         display: flex;
         align-items: center;
@@ -387,18 +391,18 @@
         text-transform: uppercase;
         letter-spacing: 0.3px;
     }
-    .ext-pdf { background: #fee2e2; color: #dc2626; }
-    .ext-doc, .ext-docx { background: #dbeafe; color: #2563eb; }
-    .ext-xls, .ext-xlsx { background: #ECFDF5; color: #16a34a; }
-    .ext-ppt, .ext-pptx { background: #FFFBEB; color: #d97706; }
-    .ext-default { background: #f3f4f6; color: #666D80; }
+    .ext-pdf { background: var(--c-error-subtle); color: var(--c-error); }
+    .ext-doc, .ext-docx { background: var(--c-sky-subtle); color: var(--c-sky); }
+    .ext-xls, .ext-xlsx { background: var(--c-success-subtle); color: var(--c-success); }
+    .ext-ppt, .ext-pptx { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .ext-default { background: var(--c-surface-muted); color: var(--c-fg-muted); }
     .document-card .doc-download-btn {
         width: 38px;
         height: 38px;
         border-radius: 10px;
-        background: #eef2ff;
-        border: 1px solid #5C78B8;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        border: 1px solid var(--c-primary-border);
+        color: var(--c-primary);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -406,9 +410,9 @@
         transition: all 0.2s;
     }
     .document-card:hover .doc-download-btn {
-        background: #0B266E;
-        color: #fff;
-        border-color: #0B266E;
+        background: var(--c-primary);
+        color: var(--c-surface);
+        border-color: var(--c-primary);
     }
 
     /* ── Video Section ── */
@@ -421,13 +425,13 @@
     .video-card {
         border-radius: 12px;
         overflow: hidden;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
         background: #000;
         transition: all 0.25s ease;
     }
     .video-card:hover {
-        border-color: #5C78B8;
-        box-shadow: 0 8px 24px rgba(11, 38, 110, 0.12);
+        border-color: var(--c-primary-border);
+        box-shadow: 0 8px 24px var(--c-primary-shadow);
     }
     .video-card video {
         width: 100%;
@@ -436,20 +440,20 @@
         display: block;
     }
     .video-card .video-info {
-        background: #fff;
+        background: var(--c-surface);
         padding: 12px 14px;
     }
     .video-card .video-name {
         font-size: 13px;
         font-weight: 600;
-        color: #0D0D12;
+        color: var(--c-fg);
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
     .video-card .video-type {
         font-size: 11px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 500;
     }
 
@@ -462,7 +466,7 @@
         width: 72px;
         height: 72px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #eef2ff, #eef2ff);
+        background: linear-gradient(135deg, var(--c-primary-subtle), var(--c-primary-subtle));
         display: flex;
         align-items: center;
         justify-content: center;
@@ -474,8 +478,18 @@
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+{{-- Pesan gagal (mis. bukan pengelola kegiatan ini) — sebelumnya halaman ini hanya
+     menampilkan pesan sukses, jadi redirect dengan error jatuh diam-diam. --}}
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
@@ -483,27 +497,28 @@
 <!-- Header with back button -->
 <div class="d-flex justify-content-between align-items-start">
     <div class="detail-header">
-        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back">
-            &larr;
+        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-back" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
         </a>
         <div>
-            <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Detail Kegiatan</h3>
-            <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Informasi lengkap tentang kegiatan ini</p>
+            <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Detail Kegiatan</h3>
+            <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Informasi lengkap tentang kegiatan ini</p>
         </div>
     </div>
-    @if($isAdmin)
+    @if($canEdit || $canDelete)
         <div class="d-flex gap-2">
+            @if($canEdit)
             <a href="{{ route('manajemenmahasiswa.kegiatan.edit', $kegiatan->id) }}"
-               class="btn d-flex align-items-center gap-2"
-               style="background: #0B266E; color: #fff; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
+               class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                 </svg>
                 Edit
             </a>
-            <button type="button" class="btn d-flex align-items-center gap-2"
-                    style="background: #fee2e2; color: #dc2626; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; border: none;"
+            @endif
+            @if($canDelete)
+            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--compact d-flex align-items-center gap-2"
                     onclick="document.getElementById('deleteModal').style.display='flex'">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
@@ -511,7 +526,13 @@
                 </svg>
                 Hapus
             </button>
+            @endif
         </div>
+    @elseif($pesanBukanPengelola)
+        {{-- Role-nya boleh mengelola, tapi bukan pengelola kegiatan ini (KegiatanPolicy) --}}
+        <p class="mb-0 text-end" style="max-width:340px;font-size:.78rem;color:var(--c-fg-muted);font-weight:500;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{ $pesanBukanPengelola }}
+        </p>
     @endif
 </div>
 
@@ -524,7 +545,7 @@
     <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%);z-index:1;transition:background 0.2s;" onmouseover="this.style.background='linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)'" onmouseout="this.style.background='linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%)'"></div>
     <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}" style="width:100%;height:340px;object-fit:cover;display:block;">
     <div style="position:absolute;bottom:24px;left:28px;z-index:2;display:flex;align-items:center;gap:12px;">
-        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
+        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:var(--c-surface);padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Banner Kegiatan &bull; Klik untuk memperbesar
         </span>
     </div>
@@ -542,7 +563,7 @@
         @elseif($kegiatan->bidang)
             <span class="badge-bidang">{{ $kegiatan->bidang->nama_bidang }}</span>
         @else
-            <span class="badge-bidang" style="background: #eef2ff; color: #0B266E;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
+            <span class="badge-bidang" style="background: var(--c-primary-subtle); color: var(--c-primary);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
         @endif
         @if($kegiatan->kategoris && $kegiatan->kategoris->count() > 0)
             @foreach($kegiatan->kategoris as $kat)
@@ -554,7 +575,7 @@
     </div>
 
     <!-- Title -->
-    <h4 class="fw-bold mb-3" style="color:#0D0D12;">{{ $kegiatan->judul }}</h4>
+    <h4 class="fw-bold mb-3" style="color:var(--c-fg);">{{ $kegiatan->judul }}</h4>
 
     <!-- Meta Grid -->
     <div class="meta-grid">
@@ -585,7 +606,7 @@
         <div class="meta-item">
             <div class="meta-item-label">Ketua Pelaksana</div>
             <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {{ $kegiatan->ketuaPelaksana->user->name ?? '-' }}
-                <span style="font-size: 11px; color: #666D80; font-weight: 400;">({{ $kegiatan->ketuaPelaksana->student_number }})</span>
+                <span style="font-size: 11px; color: var(--c-fg-muted); font-weight: 400;">({{ $kegiatan->ketuaPelaksana->student_number }})</span>
             </div>
         </div>
         @elseif($kegiatan->penanggung_jawab)
@@ -595,12 +616,14 @@
         </div>
         @endif
 
-        @if($kegiatan->dosenPendamping)
+        @if($kegiatan->dosenPendampings->isNotEmpty())
         <div class="meta-item">
             <div class="meta-item-label">Dosen Pendamping</div>
-            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $kegiatan->dosenPendamping->user->name ?? '-' }}
-                <span style="font-size: 11px; color: #666D80; font-weight: 400;">({{ $kegiatan->dosenPendamping->employee_number }})</span>
+            @foreach($kegiatan->dosenPendampings as $dosenItem)
+            <div class="meta-item-value" @if(!$loop->first) style="margin-top:4px;" @endif><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $dosenItem->user->name ?? '-' }}
+                <span style="font-size: 11px; color: var(--c-fg-muted); font-weight: 400;">({{ $dosenItem->employee_number }})</span>
             </div>
+            @endforeach
         </div>
         @endif
 
@@ -620,7 +643,9 @@
 
         @php
             $userRoles = auth()->user()->roles->pluck('name');
-            $canViewRestricted = $userRoles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'ketua_departemen', 'dosen_koordinator', 'dosen', 'pengurus_himpunan'])->isNotEmpty();
+            // Anggaran & Dokumen tampil untuk SEMUA role kecuali mahasiswa & alumni murni.
+            // (denylist agar konsisten dengan halaman Pelaksanaan dan tidak ada role pengelola yang terlewat — mis. DPM)
+            $canViewRestricted = $userRoles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
         @endphp
         @if($kegiatan->anggaran && $canViewRestricted)
         <div class="meta-item">
@@ -633,25 +658,25 @@
     {{-- Panitia Kegiatan --}}
     @if($kegiatan->panitia && $kegiatan->panitia->count() > 0)
     @php $panitiaList = $kegiatan->panitia; $panitiaCount = $panitiaList->count(); @endphp
-    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--c-surface-muted);">
         <div class="meta-item-label" style="margin-bottom: 10px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             PANITIA KEGIATAN
-            <span style="font-size: 10px; font-weight: 600; background: #eef2ff; color: #0B266E; padding: 1px 7px; border-radius: 20px; margin-left: 4px;">{{ $panitiaCount }} orang</span>
+            <span style="font-size: 10px; font-weight: 600; background: var(--c-primary-subtle); color: var(--c-primary); padding: 1px 7px; border-radius: 20px; margin-left: 4px;">{{ $panitiaCount }} orang</span>
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
             @foreach($panitiaList->take(2) as $p)
-                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: #eef2ff; color: #091958; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #5C78B8;">
+                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--c-primary-subtle); color: var(--c-primary-hover); border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--c-primary-border);">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     {{ $p->user->name ?? '-' }}
                     @if($p->pivot->peran)
-                        <span style="font-weight: 700; color: #091958; margin-left: 2px;">- {{ $p->pivot->peran }}</span>
+                        <span style="font-weight: 700; color: var(--c-primary-hover); margin-left: 2px;">- {{ $p->pivot->peran }}</span>
                     @endif
-                    <span style="font-size: 10px; color: #0B266E; font-weight: 400;">({{ $p->student_number }})</span>
+                    <span style="font-size: 10px; color: var(--c-primary); font-weight: 400;">({{ $p->student_number }})</span>
                 </span>
             @endforeach
             @if($panitiaCount > 2)
-                <button type="button" onclick="openPanitiaModal()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#f3f4f6;color:#666D80;border-radius:20px;font-size:12px;font-weight:600;border:1px solid #DFE1E7;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#eef2ff';this.style.color='#091958';this.style.borderColor='#5C78B8'" onmouseout="this.style.background='#f3f4f6';this.style.color='#666D80';this.style.borderColor='#DFE1E7'">
+                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--pill" onclick="openPanitiaModal()">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     {{ $panitiaCount - 2 }} lainnya
                 </button>
@@ -661,28 +686,28 @@
 
     {{-- Panitia Full Modal --}}
     <div id="panitiaModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;" onclick="if(event.target===this)closePanitiaModal()">
-        <div style="background:#fff;border-radius:20px;padding:0;max-width:480px;width:92%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,0.18);animation:panitiaModalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);">
-            <div style="padding:22px 24px 16px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <div style="background:var(--c-surface);border-radius:20px;padding:0;max-width:480px;width:92%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,0.18);animation:panitiaModalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);">
+            <div style="padding:22px 24px 16px;border-bottom:1px solid var(--c-surface-muted);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
                 <div>
-                    <div style="font-size:15px;font-weight:700;color:#0D0D12;display:flex;align-items:center;gap:8px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <div style="font-size:15px;font-weight:700;color:var(--c-fg);display:flex;align-items:center;gap:8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                         Daftar Panitia Kegiatan
                     </div>
-                    <div style="font-size:12px;color:#666D80;margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
+                    <div style="font-size:12px;color:var(--c-fg-muted);margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
                 </div>
-                <button type="button" onclick="closePanitiaModal()" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;color:#666D80;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='#fee2e2';this.style.color='#dc2626'" onmouseout="this.style.background='#f3f4f6';this.style.color='#666D80'">&times;</button>
+                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="closePanitiaModal()" aria-label="Tutup daftar panitia">&times;</button>
             </div>
             <div style="overflow-y:auto;padding:16px 24px 24px;flex:1;">
                 <div style="display:flex;flex-direction:column;gap:10px;">
                     @foreach($panitiaList as $idx => $p)
-                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1px solid #f3f4f6;border-radius:12px;transition:all 0.2s;" onmouseover="this.style.background='#eef2ff';this.style.borderColor='#5C78B8'" onmouseout="this.style.background='#f9fafb';this.style.borderColor='#f3f4f6'">
-                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#0B266E,#0B266E);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;">{{ $idx + 1 }}</div>
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--c-surface-subtle);border:1px solid var(--c-surface-muted);border-radius:12px;transition:all 0.2s;" onmouseover="this.style.background='var(--c-primary-subtle)';this.style.borderColor='var(--c-primary-border)'" onmouseout="this.style.background='var(--c-surface-subtle)';this.style.borderColor='var(--c-surface-muted)'">
+                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--c-primary),var(--c-primary));display:flex;align-items:center;justify-content:center;color:var(--c-surface);font-size:13px;font-weight:700;flex-shrink:0;">{{ $idx + 1 }}</div>
                         <div style="flex:1;min-width:0;">
-                            <div style="font-size:13px;font-weight:600;color:#0D0D12;">{{ $p->user->name ?? '-' }}</div>
-                            <div style="font-size:11px;color:#666D80;font-weight:500;margin-top:1px;">{{ $p->student_number ?? '' }}@if($p->pivot->peran) &bull; <span style="color:#0B266E;font-weight:600;">{{ $p->pivot->peran }}</span>@endif</div>
+                            <div style="font-size:13px;font-weight:600;color:var(--c-fg);">{{ $p->user->name ?? '-' }}</div>
+                            <div style="font-size:11px;color:var(--c-fg-muted);font-weight:500;margin-top:1px;">{{ $p->student_number ?? '' }}@if($p->pivot->peran) &bull; <span style="color:var(--c-primary);font-weight:600;">{{ $p->pivot->peran }}</span>@endif</div>
                         </div>
                         @if($p->pivot->peran)
-                        <span style="font-size:10px;font-weight:700;padding:3px 10px;background:#eef2ff;color:#091958;border-radius:20px;white-space:nowrap;border:1px solid #5C78B8;">{{ $p->pivot->peran }}</span>
+                        <span style="font-size:10px;font-weight:700;padding:3px 10px;background:var(--c-primary-subtle);color:var(--c-primary-hover);border-radius:20px;white-space:nowrap;border:1px solid var(--c-primary-border);">{{ $p->pivot->peran }}</span>
                         @endif
                     </div>
                     @endforeach
@@ -725,7 +750,10 @@
     $images    = $kegiatan->repoMulmed ? $kegiatan->repoMulmed->where('tipe_file', 'image') : collect();
     $videos    = $kegiatan->repoMulmed ? $kegiatan->repoMulmed->where('tipe_file', 'video') : collect();
     $documents = $kegiatan->repoMulmed ? $kegiatan->repoMulmed->where('tipe_file', 'document') : collect();
-    $totalFiles = $images->count() + $videos->count() + $documents->count();
+    // Dokumen hanya terlihat oleh sebagian role; hitung file yang BENAR-BENAR tampil
+    // bagi user ini supaya empty-state tetap muncul (bukan area kosong) saat mis. hanya ada dokumen.
+    $visibleDocuments = (isset($canViewRestricted) && $canViewRestricted) ? $documents->count() : 0;
+    $totalFiles = $images->count() + $videos->count() + $visibleDocuments;
 @endphp
 
 @if($totalFiles > 0)
@@ -849,40 +877,38 @@
     <div class="detail-card">
         <div class="detail-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> Foto & Dokumen Kegiatan</div>
         <div class="empty-luaran">
-            <div class="empty-luaran-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
-            <h6 style="font-weight: 600; color: #666D80; margin-bottom: 4px;">Belum ada file untuk kegiatan ini</h6>
-            <p style="font-size: 13px; color: #666D80; margin: 0;">Foto dan dokumen kegiatan akan ditampilkan di sini setelah diunggah oleh admin</p>
+            <div class="empty-luaran-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
+            <h6 style="font-weight: 600; color: var(--c-fg-muted); margin-bottom: 4px;">Belum ada file untuk kegiatan ini</h6>
+            <p style="font-size: 13px; color: var(--c-fg-muted); margin: 0;">Foto dan dokumen kegiatan akan ditampilkan di sini setelah diunggah oleh admin</p>
         </div>
     </div>
 @endif
 
 <!-- Delete Confirmation Modal -->
-@if($isAdmin)
+@if($canDelete)
 <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: #fff; border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
-        <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div style="background: var(--c-surface); border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--c-error-subtle); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-error)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                 <line x1="10" y1="11" x2="10" y2="17"></line>
                 <line x1="14" y1="11" x2="14" y2="17"></line>
             </svg>
         </div>
-        <h5 style="font-weight: 700; color: #0D0D12; margin-bottom: 8px;">Hapus Kegiatan?</h5>
-        <p style="color: #666D80; font-size: 14px; margin-bottom: 24px;">
+        <h5 style="font-weight: 700; color: var(--c-fg); margin-bottom: 8px;">Hapus Kegiatan?</h5>
+        <p style="color: var(--c-fg-muted); font-size: 14px; margin-bottom: 24px;">
             Kegiatan <strong>{{ $kegiatan->judul }}</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
         </p>
         <div class="d-flex gap-3 justify-content-center">
-            <button type="button"
-                    onclick="document.getElementById('deleteModal').style.display='none'"
-                    style="padding: 10px 24px; border-radius: 10px; border: 1px solid #DFE1E7; background: #fff; color: #374151; font-weight: 600; font-size: 14px; cursor: pointer;">
+            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--modal"
+                    onclick="document.getElementById('deleteModal').style.display='none'">
                 Batal
             </button>
             <form action="{{ route('manajemenmahasiswa.kegiatan.destroy', $kegiatan->id) }}" method="POST">
                 @csrf
                 @method('DELETE')
-                <button type="submit"
-                        style="padding: 10px 24px; border-radius: 10px; border: none; background: #dc2626; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">
+                <button type="submit" class="mk-kegiatan-btn mk-kegiatan-btn--danger-solid mk-kegiatan-btn--modal">
                     Ya, Hapus
                 </button>
             </form>
@@ -991,4 +1017,3 @@ document.addEventListener('click', function(e) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-manajemenmahasiswa::layouts.mahasiswa>
-

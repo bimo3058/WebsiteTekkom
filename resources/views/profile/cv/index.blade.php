@@ -4,15 +4,17 @@
             <div class="py-6" x-data="cvWizard()">
                 <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div class="mb-6 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                        <a href="{{ route('profile.edit') }}"
+                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
+                            style="border-color: var(--c-border);" title="Kembali" aria-label="Kembali ke Profil">
+                            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
+                        </a>
                         <div>
                             <h2 class="page-title" style="font-size: 1.5rem;">CV Builder</h2>
                             <p class="page-subtitle">Lengkapi data Anda untuk menghasilkan CV profesional.</p>
                         </div>
-                        <a href="{{ route('profile.edit') }}"
-                            class="btn-secondary text-sm">
-                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
-                            Kembali ke Profil
-                        </a>
+                        </div>
                     </div>
 
                     <!-- Stepper Header -->
@@ -108,7 +110,11 @@
 
                     <!-- Footer Navigation -->
                     <div class="mt-6 flex justify-between items-center">
+                        {{-- :disabled saat loading — dua POST beruntun sama-sama membawa
+                             baris baru dan ditolak indeks UNIQUE user_id. --}}
                         <button @click="goToStep(step - 1)" x-show="step > 1"
+                            :disabled="loading"
+                            :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
                             class="btn-secondary text-sm">
                             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
                             Sebelumnya
@@ -116,8 +122,10 @@
                         <div x-show="step === 1"></div>
 
                         <button @click="saveAndNext()" x-show="step < 6"
+                            :disabled="loading"
+                            :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
                             class="btn-primary text-sm shadow-sm">
-                            Simpan & Lanjut
+                            <span x-text="loading ? 'Menyimpan...' : 'Simpan & Lanjut'"></span>
                             <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                         </button>
                     </div>
@@ -215,33 +223,38 @@
                     }
                 },
 
-                async saveAndNext() {
-                    this.loading = true;
-                    this.error = false;
-
+                // Bangun payload untuk step tertentu (hanya step 1-5 yang punya data).
+                buildPayload(step) {
                     const payload = {};
-                    if (this.step === 1) {
+                    if (step === 1) {
                         payload.tentang_diri = this.data.cv.tentang_diri;
                         payload.personal_email = this.data.user.personal_email;
                         payload.whatsapp = this.data.user.whatsapp;
                         payload.cv_domisili = this.data.cv.cv_domisili;
                         payload.cv_portfolio = this.data.cv.cv_portfolio;
                     }
-                    if (this.step === 2) {
+                    if (step === 2) {
                         payload.pendidikan = this.data.cv.pendidikan;
                         payload.bahasa = this.data.cv.bahasa;
                     }
-                    if (this.step === 3) {
+                    if (step === 3) {
                         payload.pengalaman_kerja = this.data.cv.pengalaman_kerja;
                         payload.kegiatan_organisasi = this.data.cv.kegiatan_organisasi;
                     }
-                    if (this.step === 4) {
+                    if (step === 4) {
                         payload.proyek = this.data.cv.proyek;
                         payload.sertifikasi = this.data.cv.sertifikasi;
                     }
-                    if (this.step === 5) {
+                    if (step === 5) {
                         payload.keahlian = this.data.cv.keahlian;
                     }
+                    return payload;
+                },
+
+                // Simpan step yang sedang aktif. Return true jika sukses, false jika gagal.
+                // Step 6 (preview) tidak punya data untuk disimpan.
+                async persistCurrentStep() {
+                    if (this.step < 1 || this.step > 5) return true;
 
                     try {
                         const response = await fetch(`/profile/cv/step/${this.step}`, {
@@ -251,34 +264,66 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                                 'Accept': 'application/json'
                             },
-                            body: JSON.stringify(payload)
+                            body: JSON.stringify(this.buildPayload(this.step))
                         });
 
-                        const result = await response.json();
+                        // Galat 500 mengembalikan halaman HTML, bukan JSON — response.json()
+                        // akan melempar dan menutupi status aslinya, jadi diamankan dulu.
+                        let result = {};
+                        try {
+                            result = await response.json();
+                        } catch (_) {
+                            result = {};
+                        }
 
                         if (!response.ok) {
-                            // Handle validation errors (422) or server errors
-                            const msg = result.errors
-                                ? Object.values(result.errors).flat().join(', ')
-                                : (result.message || 'Gagal menyimpan data.');
+                            // Hanya pesan validasi (422) yang layak ditampilkan apa adanya.
+                            // Pesan galat lain berisi teks teknis berbahasa Inggris yang
+                            // tidak berarti apa-apa bagi mahasiswa.
+                            const msg = response.status === 422
+                                ? (result.errors
+                                    ? Object.values(result.errors).flat().join(', ')
+                                    : 'Ada isian yang belum sesuai. Periksa kembali data Anda.')
+                                : 'Gagal menyimpan data. Silakan coba lagi.';
                             throw new Error(msg);
                         }
 
-                        if (result.success) {
-                            this.loadStepData(this.step + 1);
-                        } else {
-                            throw new Error(result.message || 'Gagal menyimpan data.');
+                        if (!result.success) {
+                            throw new Error('Gagal menyimpan data. Silakan coba lagi.');
                         }
+
+                        return true;
                     } catch (err) {
                         this.error = true;
-                        this.errorMsg = err.message || 'Terjadi kesalahan jaringan.';
+                        this.errorMsg = err.message || 'Gagal menyimpan. Periksa koneksi Anda lalu coba lagi.';
+                        return false;
+                    }
+                },
+
+                async saveAndNext() {
+                    this.loading = true;
+                    this.error = false;
+
+                    if (await this.persistCurrentStep()) {
+                        this.loadStepData(this.step + 1);
+                    } else {
                         this.loading = false;
                     }
                 },
 
-                goToStep(target) {
-                    if (target >= 1 && target <= this.maxStep && target !== this.step) {
+                // Pindah step (lewat lingkaran stepper / tombol Sebelumnya). Simpan dulu
+                // step aktif agar input yang belum disimpan tidak hilang; batalkan pindah
+                // jika penyimpanan gagal (validasi) supaya pesan error tetap terlihat.
+                async goToStep(target) {
+                    if (target < 1 || target > this.maxStep || target === this.step) return;
+
+                    this.loading = true;
+                    this.error = false;
+
+                    if (await this.persistCurrentStep()) {
                         this.loadStepData(target);
+                    } else {
+                        this.loading = false;
                     }
                 },
 

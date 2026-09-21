@@ -33,6 +33,15 @@
             border: 1px solid #DDE1E8; color: #6b7280;
         }
         .btn-back:hover { background: #E7E8F0; color: #374151; border-color: #293C79; }
+        .detail-back {
+            width: auto; min-width: 0; height: 32px; padding: 0 12px; gap: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 8px; background: #fff; border: 1px solid #DFE1E7;
+            color: #353849; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            text-decoration: none; transition: all .2s;
+        }
+        .detail-back:hover { background: #F6F8FA; color: #0D0D12; }
+        .detail-back-label { color: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; }
         .form-control-custom, .form-select-custom {
             background-color: #f9fafb; border: 1px solid #DDE1E8;
             border-radius: 12px; padding: 12px 16px;
@@ -74,8 +83,9 @@
             <h4>Form Pengaduan Konfidensial</h4>
             <p>Identitas Anda tidak akan ditampilkan kepada publik maupun admin.</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">
-            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" /> Kembali
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
+            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+            <span class="detail-back-label">Kembali</span>
         </a>
     </div>
 
@@ -217,7 +227,7 @@
         </div>
 
         <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
-            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">Batal</a>
+            <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="btn-back">Batal</a>
             <button type="submit" class="btn-post" style="width: auto;">Lanjut Konfirmasi</button>
         </div>
     </form>

@@ -3,14 +3,15 @@
     if (window.mkPermManagerLoaded) return;
     window.mkPermManagerLoaded = true;
 
-    // ── Toggle expand/collapse card ───────────────────────────────────────────
+    // ── Toggle baris form ubah role ───────────────────────────────────────────
     window.mkToggleCard = function (userId) {
         var body    = document.getElementById('card-body-' + userId);
         var chevron = document.querySelector('.card-chevron-' + userId);
         if (!body) return;
 
         var isHidden = body.style.display === 'none' || body.style.display === '';
-        body.style.display = isHidden ? 'block' : 'none';
+        // baris form adalah <tr>, jadi harus table-row — bukan block
+        body.style.display = isHidden ? 'table-row' : 'none';
         if (chevron) {
             chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
         }
@@ -29,9 +30,9 @@
             if (dot) dot.style.background = pill.dataset.activeColor;
         } else {
             pill.style.background  = '#fff';
-            pill.style.borderColor = '#DEE2E6';
-            pill.style.color       = '#6C757D';
-            if (dot) dot.style.background = '#DEE2E6';
+            pill.style.borderColor = '#DFE1E7';
+            pill.style.color       = '#666D80';
+            if (dot) dot.style.background = '#C1C7CF';
         }
     }
 
@@ -94,7 +95,8 @@
         var values = checked.map(function (cb) { return cb.value; });
 
         if (values.includes('mahasiswa')) {
-            var userName = e.target.closest('.user-card').getAttribute('data-name') || 'pengguna ini';
+            var holder   = e.target.closest('[data-name]');
+            var userName = (holder && holder.getAttribute('data-name')) || 'pengguna ini';
             var ok = confirm('Yakin ingin mengembalikan ' + userName + ' ke Mahasiswa Biasa?\nSemua role himpunan akan dicabut.');
             if (!ok) e.preventDefault();
         }

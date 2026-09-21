@@ -39,6 +39,16 @@
             }
             .btn-back:hover { background: #E7E8F0; color: #374151; border-color: #293C79; }
 
+            .detail-back {
+                width: auto; min-width: 0; height: 32px; padding: 0 12px; gap: 8px;
+                display: inline-flex; align-items: center; justify-content: center;
+                border-radius: 8px; background: #fff; border: 1px solid #DFE1E7;
+                color: #353849; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                text-decoration: none; transition: all .2s;
+            }
+            .detail-back:hover { background: #F6F8FA; color: #0D0D12; }
+            .detail-back-label { color: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; }
+
             /* ── Form Controls ── */
             .form-control-custom, .form-select-custom {
                 background-color: #f9fafb; border: 1px solid #DDE1E8;
@@ -76,46 +86,33 @@
     @endpush
 
     @php
-        $jalur = request()->query('jalur', old('jalur_query'));
-        if (!in_array($jalur, ['reguler', 'konfidensial'])) {
-            // Redirect ke halaman pilihan jalur jika tidak ada param valid
-        }
-        $isAnonim = $jalur === 'konfidensial' ? '1' : '0';
+        // Form ini khusus jalur Reguler; jalur Konfidensial memakai alur magic link terpisah.
+        $jalur = 'reguler';
+        $isAnonim = '0';
     @endphp
 
     {{-- ── Header ── --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
+            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+            <span class="detail-back-label">Kembali</span>
+        </a>
         <div class="page-title">
             <h4>Buat Pengaduan</h4>
             <p>Isi form di bawah ini dengan detail yang jelas dan valid.</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">
-            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" /> Kembali
-        </a>
     </div>
 
     {{-- Jalur Indicator Banner --}}
-    @if($jalur === 'konfidensial')
-        <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f8fafc; border: 1.5px solid #e2e8f0;">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #64748b;">
-                <x-manajemenmahasiswa::ui.icon name="shield-02" size="20" />
-            </div>
-            <div>
-                <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Konfidensial</div>
-                <div class="text-muted" style="font-size: 12px;">Identitas Anda tidak akan ditampilkan di sistem. <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" style="color: #6b7280;">Ganti jalur</a></div>
-            </div>
+    <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f5f5ff; border: 1.5px solid #c7d2fe;">
+        <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #4f46e5;">
+            <x-manajemenmahasiswa::ui.icon name="user-circle" size="20" />
         </div>
-    @else
-        <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f5f5ff; border: 1.5px solid #c7d2fe;">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #4f46e5;">
-                <x-manajemenmahasiswa::ui.icon name="user-circle" size="20" />
-            </div>
-            <div>
-                <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Reguler</div>
-                <div class="text-muted" style="font-size: 12px;">Identitas Anda terlihat oleh Admin. <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" style="color: #6b7280;">Ganti jalur</a></div>
-            </div>
+        <div>
+            <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Reguler</div>
+            <div class="text-muted" style="font-size: 12px;">Identitas Anda terlihat oleh Admin. <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" style="color: #6b7280;">Ganti jalur</a></div>
         </div>
-    @endif
+    </div>
 
     @if ($errors->any())
         <div class="alert alert-danger border-0" style="background-color: #fee2e2; color: #dc2626; border-radius: 12px;">

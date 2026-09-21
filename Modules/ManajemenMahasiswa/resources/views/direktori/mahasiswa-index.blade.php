@@ -1,62 +1,99 @@
 <x-dynamic-component :component="$layout">
 
-<style>
-    /* ── Filter Bar ── */
-    .filter-section {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 20px;
-        align-items: center;
-    }
-    .filter-select-custom {
-        padding: 0 14px;
-        border-radius: 8px;
-        border: 1px solid #DFE1E7;
-        background: #ffffff;
-        color: #374151;
-        font-size: 13px;
-        font-weight: 600;
-        outline: none;
-        transition: all 0.15s;
-        height: 38px;
-    }
-    .filter-select-custom:focus {
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
-    }
+@include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.filter-popover')
 
+<style>
     /* ── Search Bar ── */
     .search-wrapper {
         position: relative;
-        flex-grow: 1;
+        width: min(220px, calc(100vw - 200px));
+        min-width: 120px;
     }
     .search-icon {
         position: absolute;
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #666D80;
+        color: var(--c-fg-placeholder);
     }
     .search-input {
         background-color: #ffffff;
-        border: 1px solid #DFE1E7;
+        border: 1px solid var(--c-border);
         border-radius: 8px;
-        height: 38px;
-        padding-left: 36px;
-        font-size: 13px;
+        height: 34px;
+        padding-left: 34px;
+        font-size: 12.5px;
         font-weight: 500;
         width: 100%;
-        color: #374151;
+        color: var(--c-fg);
     }
     .search-input:focus {
         background-color: #ffffff;
-        border-color: #0B266E;
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
+        border-color: var(--c-primary);
+        box-shadow: 0 0 0 3px var(--c-primary-subtle);
         outline: none;
     }
 
+    /* ── Tombol Reset ── */
+    /* Sama dengan tombol outline "Audit Logs"/"Users" di dashboard global */
+    .btn-reset {
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 8px;
+        font-size: 12.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: all 0.15s;
+        text-decoration: none !important;
+        border: 1px solid var(--c-border);
+        background: #ffffff;
+        color: var(--c-fg-sec);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    .btn-reset:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-fg); }
+
+    /* ── Table Card ── */
+    /* Struktur & warna disamakan 1:1 dengan kartu tabel User Management global
+       (resources/views/superadmin/users/_table.blade.php) */
+    .table-card {
+        background: #ffffff;
+        border: 1px solid var(--c-border);
+        border-radius: 14px;
+        /* Tanpa overflow:hidden — panel filter harus bisa keluar dari kartu
+           (kelas .filter-pop-host di partials/filter-popover). */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+    .table-toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--c-border);
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .table-toolbar-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--c-fg);
+        margin: 0;
+        flex-shrink: 0;
+    }
+    .table-toolbar-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 0;
+    }
+
     /* ── Table ── */
+    /* Latar head, hover baris, dan garis antarbaris mengikuti tabel User Management global */
     .mhs-table {
         width: 100%;
         border-collapse: separate;
@@ -64,13 +101,11 @@
     }
     .mhs-table thead th {
         background: #FAFAFA;
-        padding: 12px 16px;
-        font-size: 12px;
-        font-weight: 700;
-        color: #666D80;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-bottom: 2px solid #DFE1E7;
+        padding: 11px 16px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--c-fg-muted);
+        border-bottom: 1px solid var(--c-border);
         white-space: nowrap;
     }
     .mhs-table tbody tr {
@@ -81,43 +116,34 @@
     }
     .mhs-table tbody td {
         padding: 14px 16px;
-        font-size: 14px;
-        color: #374151;
-        border-bottom: 1px solid #f3f4f6;
+        font-size: 13px;
+        color: var(--c-fg);
+        border-bottom: 1px solid #F3F4F6;
         vertical-align: middle;
     }
+    /* Avatar inisial netral, ukuran & border disamakan dengan komponen user-avatar
+       global ukuran "md" (resources/views/components/ui/user-avatar.blade.php) */
     .mhs-avatar {
-        width: 38px;
-        height: 38px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #eef2ff, #dbe4f5);
+        background: var(--c-grey-50);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        color: #0B266E;
-        font-size: 14px;
+        color: var(--c-fg-muted);
+        font-size: 12px;
         flex-shrink: 0;
         overflow: hidden;
-        border: 2px solid #eef2ff;
+        border: 1.5px solid var(--c-border);
     }
     .mhs-avatar img {
         width: 100%;
         height: 100%;
         object-fit: cover;
     }
-    .online-dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-        border: 2px solid #fff;
-        position: absolute;
-        bottom: -1px;
-        right: -1px;
-    }
-    .online-dot.online { background: #22c55e; }
-    .online-dot.offline { background: #C1C7CF; }
-
+    /* Warna tiap status ada di partials/palette */
     .status-badge {
         font-size: 11px;
         font-weight: 700;
@@ -125,68 +151,95 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .status-badge.aktif { background: #ECFDF5; color: #059669; }
-    .status-badge.cuti { background: #FFFBEB; color: #92400e; }
-    .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
-    .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
-    .status-badge.wafat { background: #ede9fe; color: #5b21b6; }
-    .status-badge.mangkir { background: #fff7ed; color: #9a3412; }
 
-    .btn-action {
-        padding: 6px 14px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        text-decoration: none !important;
-        transition: all 0.2s;
+    /* ── Kolom Aksi: tombol "..." + dropdown menu, disamakan dengan kolom Action
+       User Management global ── */
+    .action-menu-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        border: 1px solid var(--c-border);
+        background: #ffffff;
         display: inline-flex;
         align-items: center;
-        gap: 4px;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--c-fg-muted);
+        transition: all 0.15s;
+        margin: 0 auto;
     }
-    .btn-action-view {
-        background: #eef2ff;
-        color: #0B266E;
+    .action-menu-btn:hover {
+        background: var(--c-bg);
+        border-color: var(--c-border-strong);
     }
-    .btn-action-view:hover {
-        background: #eef2ff;
-        color: #091958;
+    .action-menu-panel {
+        position: absolute;
+        right: 0;
+        top: calc(100% + 5px);
+        background: #ffffff;
+        border: 1px solid var(--c-border);
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        min-width: 150px;
+        z-index: 40;
+        overflow: hidden;
+        padding: 5px;
     }
-    .btn-action-edit {
-        background: #FFFBEB;
-        color: #92400e;
+    .action-menu-item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 10px;
+        border: none;
+        border-radius: 6px;
+        background: none;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--c-fg-sec);
+        text-decoration: none !important;
+        cursor: pointer;
+        font-family: inherit;
+        text-align: left;
+        transition: background 0.12s;
     }
-    .btn-action-edit:hover {
-        background: #fde68a;
-        color: #78350f;
-    }
-
-    /* ── Empty State ── */
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: #666D80;
-    }
-    .empty-state h5 {
-        color: #666D80;
-        font-weight: 600;
-        margin-bottom: 4px;
+    .action-menu-item:hover {
+        background: var(--c-bg);
+        color: var(--c-fg-sec);
     }
 
     /* ── Stat Cards ── */
+    /* Grid yang menyesuaikan jumlah kartu (7 buah) — menghindari baris terakhir
+       yang hanya berisi 2 kartu nyangkut di kiri seperti pada grid 5 kolom. */
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+        gap: 12px;
+    }
+    .stat-note {
+        font-size: 11px;
+        color: var(--c-fg-muted);
+        font-weight: 500;
+        margin: 10px 0 0 2px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    /* Border, bayangan, dan efek hover sama dengan kartu statistik dashboard global */
     .stat-card {
         background: #ffffff;
-        border: 1px solid #f3f4f6;
+        border: 1px solid var(--c-border);
         border-radius: 12px;
         padding: 18px 20px;
         display: flex;
         align-items: center;
         gap: 14px;
+        box-shadow: var(--shadow-card);
         transition: all 0.2s;
     }
     .stat-card:hover {
-        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        border-color: var(--c-primary-border);
+        box-shadow: 0 4px 14px rgba(11, 38, 110, 0.07);
     }
     .stat-icon {
         width: 44px;
@@ -200,12 +253,12 @@
     .stat-value {
         font-size: 22px;
         font-weight: 800;
-        color: #0D0D12;
+        color: var(--c-fg);
         line-height: 1;
     }
     .stat-label {
         font-size: 12px;
-        color: #666D80;
+        color: var(--c-fg-muted);
         font-weight: 500;
     }
 
@@ -214,23 +267,33 @@
         font-weight: 700;
         padding: 2px 6px;
         border-radius: 6px;
-        background: #eef2ff;
-        color: #0B266E;
+        background: var(--c-primary-subtle);
+        color: var(--c-primary);
         letter-spacing: 0.05em;
     }
 
-    .last-active {
-        font-size: 11px;
-        color: #666D80;
-    }
 </style>
 
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@php
+    // Pesan gangguan bisa datang dari dua arah: dari halaman ini sendiri ($error)
+    // atau dari halaman detail yang melempar balik ke sini (session('error')).
+    $pesanGangguan = session('error') ?: ($error ?? null);
+@endphp
+@if($pesanGangguan)
+    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-2" role="alert"
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <span>{{ $pesanGangguan }}</span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
@@ -238,19 +301,19 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Direktori Mahasiswa</h3>
-        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Daftar seluruh mahasiswa yang terdaftar di program studi
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Direktori Mahasiswa</h3>
+        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar seluruh mahasiswa yang terdaftar di program studi
             <span class="sso-badge ms-1">SSO UNDIP</span>
         </p>
     </div>
 </div>
 
     <!-- Stat Cards -->
-<div class="row g-3 mb-4 row-cols-2 row-cols-md-5">
+<div class="stat-grid">
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #eef2ff;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                     <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -258,59 +321,59 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $mahasiswa->total() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->sum() }}</div>
                 <div class="stat-label" style="font-size: 11px;">Total Mahasiswa</div>
             </div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #ECFDF5;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-success">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','aktif')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('aktif', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Aktif</div>
             </div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #FFFBEB;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-sky">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','cuti')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('cuti', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Cuti</div>
             </div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #fef2f2;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-error">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="15" y1="9" x2="9" y2="15"></line>
                     <line x1="9" y1="9" x2="15" y2="15"></line>
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','drop_out')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('drop_out', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">DO</div>
             </div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #f3f4f6;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#353849" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="16 16 12 20 8 16"></polyline>
                     <line x1="12" y1="12" x2="12" y2="20"></line>
                     <polyline points="8 8 12 4 16 8"></polyline>
@@ -318,119 +381,177 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','pindah_studi')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('pindah_studi', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Pindah Studi</div>
             </div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #ede9fe;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-outline">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                     <line x1="17" y1="11" x2="23" y2="11"></line>
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','wafat')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('wafat', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Wafat</div>
             </div>
         </div>
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #fff7ed;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <div class="stat-icon tone-warning">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','mangkir')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('mangkir', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Mangkir</div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Search & Filter -->
-<form method="GET" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" id="filterForm">
-    <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
-        <div class="search-wrapper w-100 me-0 me-md-2">
-            <span class="search-icon">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </span>
-            <input type="text" name="search" class="form-control search-input w-100"
-                   placeholder="Cari nama atau NIM mahasiswa..." value="{{ request('search') }}">
-        </div>
-        <div class="d-flex gap-3">
-            <select name="angkatan" class="form-select border-1 filter-select-custom"
-                    style="min-width: 160px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Angkatan</option>
-                @foreach($angkatanList as $ank)
-                    <option value="{{ $ank }}" {{ request('angkatan') == $ank ? 'selected' : '' }}>
-                        Angkatan {{ $ank }}
-                    </option>
-                @endforeach
-            </select>
-            <select name="status" class="form-select border-1 filter-select-custom"
-                    style="min-width: 140px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Status</option>
-                <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                <option value="cuti" {{ request('status') == 'cuti' ? 'selected' : '' }}>Cuti</option>
-                <option value="drop_out" {{ request('status') == 'drop_out' ? 'selected' : '' }}>DO</option>
-                <option value="pindah_studi" {{ request('status') == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
-                <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
-                <option value="mangkir" {{ request('status') == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
-            </select>
-        </div>
-    </div>
-</form>
+<div class="stat-note mb-4">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+    <span>Angka pada kartu mengikuti filter <strong>Angkatan</strong> dan <strong>pencarian</strong>, tetapi sengaja tidak mengikuti filter <strong>Status</strong> — supaya rincian tiap status tetap terlihat. Alumni tidak dihitung di sini (lihat Direktori Alumni).</span>
+</div>
 
 <!-- Mahasiswa Table -->
-@if($mahasiswa->count() > 0)
-    <div style="overflow-x: auto; border-radius: 12px; border: 1px solid #f3f4f6;">
+<div class="table-card filter-pop-host">
+    {{-- Table Toolbar: judul + pencarian + filter menyatu, mengikuti struktur
+         kartu tabel User Management global --}}
+    <div class="table-toolbar">
+        <h2 class="table-toolbar-title">Tabel Mahasiswa</h2>
+        <form method="GET" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" id="filterForm" class="table-toolbar-form">
+            {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+            @if(request()->filled('per_page'))
+                <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+            @endif
+
+            <div class="search-wrapper">
+                <span class="search-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </span>
+                <input type="text" name="search" class="search-input"
+                       placeholder="Cari nama atau NIM..." value="{{ request('search') }}">
+            </div>
+
+            {{-- Filter Angkatan & Status dikumpulkan dalam satu panel, sama dengan panel
+                 "Advanced Filters" tabel Audit Log global. Backdrop (bukan @click.outside)
+                 dipakai supaya klik pada <select> di dalam panel tidak menutupnya. --}}
+            @php
+                $filterAngkatanAktif = request()->filled('angkatan') && request('angkatan') !== 'semua';
+                $filterStatusAktif   = request()->filled('status') && request('status') !== 'semua';
+            @endphp
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height: 1;">Filter</span>
+                    @if($filterAngkatanAktif || $filterStatusAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
+
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;"
+                     @click="filterOpen = false"></div>
+
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <div>
+                            <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
+                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                                <option value="semua">Semua Angkatan</option>
+                                @foreach($angkatanList as $ank)
+                                    <option value="{{ $ank }}" {{ request('angkatan') == $ank ? 'selected' : '' }}>
+                                        Angkatan {{ $ank }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="filter-pop-label" for="filterStatus">Status</label>
+                            <select name="status" id="filterStatus" class="filter-pop-select">
+                                <option value="semua">Semua Status</option>
+                                <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
+                                <option value="cuti" {{ request('status') == 'cuti' ? 'selected' : '' }}>Cuti</option>
+                                <option value="drop_out" {{ request('status') == 'drop_out' ? 'selected' : '' }}>DO</option>
+                                <option value="pindah_studi" {{ request('status') == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
+                                <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
+                                <option value="mangkir" {{ request('status') == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($isFiltered ?? false)
+                                <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div style="overflow-x: auto;">
         <table class="mhs-table">
             <thead>
                 <tr>
-                    <th style="width: 50px;">#</th>
+                    <th style="width: 56px;">No</th>
                     <th>Mahasiswa</th>
                     <th>NIM</th>
                     <th>Angkatan</th>
                     <th>Status</th>
-                    <th>Aktivitas</th>
-                    <th style="width: 160px;">Aksi</th>
+                    <th style="width: 72px; text-align: center;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($mahasiswa as $index => $mhs)
+                @forelse($mahasiswa as $index => $mhs)
                     <tr>
-                        <td style="color: #666D80; font-weight: 500;">{{ $mahasiswa->firstItem() + $index }}</td>
+                        <td style="color: var(--c-fg-muted); font-weight: 500;">{{ $mahasiswa->firstItem() + $index }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
-                                <div style="position: relative;">
-                                    <div class="mhs-avatar">
-                                        @if($mhs->user && $mhs->user->avatar_url)
-                                            <img src="{{ $mhs->user->avatar_url }}" alt="{{ $mhs->nama }}">
-                                        @else
-                                            {{ strtoupper(substr($mhs->nama, 0, 1)) }}
-                                        @endif
-                                    </div>
-                                    @if($mhs->user)
-                                        <div class="online-dot {{ $mhs->user->is_online ? 'online' : 'offline' }}"></div>
+                                {{-- Titik indikator online dihapus: nilainya hanya berubah saat
+                                     login & logout eksplisit, sehingga user yang menutup browser
+                                     tetap terlihat "online" selamanya. Menyusul penghapusan kolom
+                                     "Aktivitas"/"Terakhir Aktif" pada revisi sebelumnya. --}}
+                                <div class="mhs-avatar">
+                                    @if($mhs->user && $mhs->user->avatar_url)
+                                        <img src="{{ $mhs->user->avatar_url }}" alt="{{ $mhs->nama }}">
+                                    @else
+                                        {{ strtoupper(substr($mhs->nama, 0, 1)) }}
                                     @endif
                                 </div>
                                 <div>
-                                    <div style="font-weight: 600; color: #0D0D12;">{{ $mhs->nama }}</div>
+                                    <div style="font-size: 13px; font-weight: 600; color: var(--c-fg);">{{ $mhs->nama }}</div>
                                     @if($mhs->user && $mhs->user->email)
-                                        <div style="font-size: 12px; color: #666D80;">{{ $mhs->user->email }}</div>
+                                        <div style="font-size: 11px; color: var(--c-fg-muted); margin-top: 1px;">{{ $mhs->user->email }}</div>
                                     @endif
                                 </div>
                             </div>
                         </td>
-                        <td style="font-weight: 600; font-family: monospace; color: #0B266E;">{{ $mhs->nim }}</td>
+                        <td style="font-weight: 600; font-family: monospace; color: var(--c-primary);">{{ $mhs->nim }}</td>
                         <td><span style="font-weight: 600;">{{ $mhs->angkatan }}</span></td>
                         <td>
                             <span class="status-badge {{ $mhs->status }}">
@@ -445,146 +566,85 @@
                                 @endswitch
                             </span>
                         </td>
-                        <td>
-                            @if($mhs->user && $mhs->user->last_login)
-                                <div class="last-active">
-                                    {{ $mhs->user->last_login->diffForHumans() }}
-                                </div>
-                            @else
-                                <span class="last-active">Belum login</span>
-                            @endif
-                        </td>
-                        <td>
-                            <div class="d-flex gap-2">
-                                <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}"
-                                   class="btn-action btn-action-view">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                    Detail
-                                </a>
-                                @if($isAdmin)
-                                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}"
-                                       class="btn-action btn-action-edit">
-                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                        Edit
+                        {{-- Aksi: tombol "..." + dropdown, mengikuti pola kolom Action
+                             User Management global (Alpine.js sudah dimuat di layout admin/dosen/mahasiswa) --}}
+                        <td style="text-align: center;">
+                            <div style="position: relative; display: inline-block;" x-data="{ open: false }">
+                                <button type="button" @click="open = !open" @click.outside="open = false" class="action-menu-btn">
+                                    <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+                                </button>
+                                <div x-show="open" x-cloak
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     class="action-menu-panel" style="display: none;">
+                                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="action-menu-item">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        Detail
                                     </a>
+                                    @if($isAdmin)
+                                        <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="action-menu-item">
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                            Edit
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" style="padding: 60px 24px; text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #E5E7EB;">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <line x1="17" y1="11" x2="23" y2="11"></line>
+                                </svg>
+                                @if($pesanGangguan)
+                                    {{-- Tabel kosong karena gangguan, BUKAN karena datanya tidak ada.
+                                         Keterangan lengkapnya sudah tampil sebagai peringatan merah di atas. --}}
+                                    <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted);">Data belum bisa ditampilkan</p>
+                                    <p style="font-size: 12px; color: var(--c-fg-placeholder);">
+                                        Silakan baca keterangan di bagian atas halaman. Data mahasiswa tidak terhapus.
+                                    </p>
+                                @elseif($isFiltered ?? false)
+                                    @php
+                                        $kriteria = [];
+                                        if (request('search')) {
+                                            $kriteria[] = 'pencarian "' . request('search') . '"';
+                                        }
+                                        if (request('angkatan') && request('angkatan') !== 'semua') {
+                                            $kriteria[] = 'angkatan ' . request('angkatan');
+                                        }
+                                        if (request('status') && request('status') !== 'semua') {
+                                            $kriteria[] = 'status ' . str_replace('_', ' ', request('status'));
+                                        }
+                                    @endphp
+                                    <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted);">Tidak ada mahasiswa yang cocok</p>
+                                    <p style="font-size: 12px; color: var(--c-fg-placeholder);">
+                                        Tidak ditemukan hasil untuk {{ implode(' + ', $kriteria) }}.<br>
+                                        Coba kata kunci lain, atau kosongkan filternya.
+                                    </p>
+                                    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="btn-reset mt-1">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                        Reset pencarian &amp; filter
+                                    </a>
+                                @else
+                                    <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted);">Belum ada data mahasiswa</p>
+                                    <p style="font-size: 12px; color: var(--c-fg-placeholder);">Data mahasiswa yang terdaftar akan muncul di sini</p>
                                 @endif
                             </div>
                         </td>
                     </tr>
-                @endforeach
+                @endforelse
             </tbody>
         </table>
     </div>
 
-    <!-- Pagination -->
-    @if($mahasiswa->hasPages())
-        <div class="mt-4 d-flex flex-column align-items-center gap-2">
-            <div class="d-flex align-items-center gap-1">
-
-                {{-- Prev --}}
-                @if($mahasiswa->onFirstPage())
-                    <span class="page-btn page-btn-nav disabled">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                    </span>
-                @else
-                    <a href="{{ $mahasiswa->withQueryString()->previousPageUrl() }}" class="page-btn page-btn-nav">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                    </a>
-                @endif
-
-                {{-- Page Numbers --}}
-                @foreach($mahasiswa->withQueryString()->links()->offsetGet('elements') as $element)
-                    @if(is_string($element))
-                        <span class="page-btn page-btn-dots">…</span>
-                    @endif
-                    @if(is_array($element))
-                        @foreach($element as $page => $url)
-                            @if($page == $mahasiswa->currentPage())
-                                <span class="page-btn page-btn-active">{{ $page }}</span>
-                            @else
-                                <a href="{{ $url }}" class="page-btn">{{ $page }}</a>
-                            @endif
-                        @endforeach
-                    @endif
-                @endforeach
-
-                {{-- Next --}}
-                @if($mahasiswa->hasMorePages())
-                    <a href="{{ $mahasiswa->withQueryString()->nextPageUrl() }}" class="page-btn page-btn-nav">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </a>
-                @else
-                    <span class="page-btn page-btn-nav disabled">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </span>
-                @endif
-
-            </div>
-            {{-- Info teks --}}
-            <div style="font-size: 12px; color: #666D80; font-weight: 500;">
-                Showing {{ $mahasiswa->firstItem() }}–{{ $mahasiswa->lastItem() }} of {{ $mahasiswa->total() }} results
-            </div>
-        </div>
-
-        <style>
-            .page-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 34px;
-                height: 34px;
-                padding: 0 10px;
-                border-radius: 8px;
-                font-size: 13px;
-                font-weight: 600;
-                color: #374151;
-                background: #ffffff;
-                border: 1px solid #DFE1E7;
-                text-decoration: none !important;
-                transition: all 0.15s;
-                cursor: pointer;
-            }
-            .page-btn:hover:not(.disabled):not(.page-btn-active) {
-                background: #F6F8FA;
-                border-color: #0B266E;
-                color: #0B266E;
-            }
-            .page-btn-active {
-                background: #0B266E;
-                border-color: #0B266E;
-                color: #ffffff !important;
-                cursor: default;
-            }
-            .page-btn-nav {
-                color: #666D80;
-            }
-            .page-btn-nav.disabled {
-                opacity: 0.35;
-                cursor: not-allowed;
-            }
-            .page-btn-dots {
-                border: none;
-                background: transparent;
-                color: #666D80;
-                cursor: default;
-                min-width: 24px;
-                padding: 0;
-            }
-        </style>
-    @endif
-@else
-    <div class="empty-state">
-        <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <line x1="17" y1="11" x2="23" y2="11"></line>
-            </svg>
-        </div>
-        <h5>Belum ada data mahasiswa</h5>
-        <p style="font-size: 14px; color: #666D80;">Data mahasiswa yang terdaftar akan muncul di sini</p>
-    </div>
-@endif
+    {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama) --}}
+    @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $mahasiswa])
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-dynamic-component>

@@ -3,22 +3,23 @@
 <style>
     /* ── Stat Cards (Admin KPI) ── */
     .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 22px; }
+    /* Kartu ini murni penunjuk angka — penyaringan status dilakukan lewat dropdown
+       di toolbar tabel, sama seperti Direktori Mahasiswa. Karena itu tidak ada
+       cursor pointer maupun efek hover: kartu yang terlihat bisa diklik tapi diam
+       justru menyesatkan. */
     .admin-stat-card {
-        background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+        background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px;
         padding: 16px 18px; display: flex; align-items: center; gap: 14px;
-        cursor: pointer; transition: all .18s; text-decoration: none !important;
         position: relative; overflow: hidden;
     }
-    .admin-stat-card:hover { border-color: rgba(11,38,110,0.18); box-shadow: 0 4px 14px rgba(0,0,0,.06); transform: translateY(-1px); }
-    .admin-stat-card.active { border-color: var(--c-primary); box-shadow: 0 0 0 2px rgba(11,38,110,.12); }
     .admin-stat-card .stat-icon {
         width: 42px; height: 42px; border-radius: 11px; display: flex;
         align-items: center; justify-content: center; flex-shrink: 0;
     }
     .admin-stat-card .stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 1px; }
     .admin-stat-card .stat-lbl { font-size: .78rem; color: var(--c-fg-muted); font-weight: 500; }
-    .admin-stat-card.pending .stat-icon { background: var(--c-warning-subtle); color: #d97706; }
-    .admin-stat-card.pending .stat-num { color: #d97706; }
+    .admin-stat-card.pending .stat-icon { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .admin-stat-card.pending .stat-num { color: var(--c-warning); }
     .admin-stat-card.approved .stat-icon { background: var(--c-success-subtle); color: var(--c-success); }
     .admin-stat-card.approved .stat-num { color: var(--c-success); }
     .admin-stat-card.rejected .stat-icon { background: var(--c-error-subtle); color: var(--c-error); }
@@ -29,111 +30,80 @@
         display: inline-flex; align-items: center; padding: 3px 9px;
         border-radius: 50px; font-size: .73rem; font-weight: 600;
     }
-    .status-verif.pending { background: #FFFBEB; color: #d97706; }
-    .status-verif.approved { background: #ECFDF5; color: #059669; }
+    .status-verif.pending { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .status-verif.approved { background: var(--c-success-subtle); color: var(--c-success); }
     .status-verif.rejected { background: var(--c-error-subtle); color: var(--c-error); }
 
     .btn-approve {
-        width: 30px; height: 30px; border-radius: 8px; border: 1px solid #bbf7d0;
-        background: #ECFDF5; color: #059669; cursor: pointer; transition: all .15s;
+        width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--c-success-subtle);
+        background: var(--c-success-subtle); color: var(--c-success); cursor: pointer; transition: all .15s;
         display: inline-flex; align-items: center; justify-content: center; padding: 0;
     }
-    .btn-approve:hover { background: #bbf7d0; border-color: #86efac; }
+    .btn-approve:hover { background: var(--c-success); border-color: var(--c-success); color: #fff; }
     .btn-reject {
-        width: 30px; height: 30px; border-radius: 8px; border: 1px solid #fecaca;
+        width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--c-error-subtle);
         background: var(--c-error-subtle); color: var(--c-error); cursor: pointer; transition: all .15s;
         display: inline-flex; align-items: center; justify-content: center; padding: 0;
     }
-    .btn-reject:hover { background: #fee2e2; border-color: #fca5a5; }
+    .btn-reject:hover { background: var(--c-error); border-color: var(--c-error); color: #fff; }
 
     /* ── Empty State ── */
     .empty-state { text-align: center; padding: 60px 24px; color: var(--c-fg-muted); }
-    .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: #E5E7EB; }
+    .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: var(--c-border-strong); }
 
     .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
-    .modal-header { border-bottom: 1px solid #f3f4f6; padding: 18px 22px; }
+    .modal-header { border-bottom: 1px solid var(--c-border); padding: 18px 22px; }
     .modal-header .modal-title { font-size: 1rem; font-weight: 700; color: var(--c-fg); }
     .modal-body { padding: 22px; }
-    .modal-footer { border-top: 1px solid #f3f4f6; padding: 14px 22px; }
+    .modal-footer { border-top: 1px solid var(--c-border); padding: 14px 22px; }
+
+    /* Kerangka modal Tinjau (.tp-*) tinggal di partials/tinjau-modal-styles.blade.php
+       karena dipakai bersama halaman Klaim Reward. */
 
     .tingkat-badge {
         display: inline-flex; align-items: center; padding: 2px 8px;
         border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase;
     }
-    .tingkat-badge.internasional { background: #FFFBEB; color: #92400e; }
-    .tingkat-badge.nasional { background: #dbeafe; color: #1e40af; }
-    .tingkat-badge.regional { background: #f3e8ff; color: #7c3aed; }
-    .tingkat-badge.universitas { background: #ECFDF5; color: #059669; }
-    .tingkat-badge.prodi { background: #eef2ff; color: var(--c-primary); }
+    /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
+       di kolom sebelahnya, sehingga keduanya tampak sama. */
+    .tingkat-badge.internasional { background: var(--c-primary); color: #fff; }
+    .tingkat-badge.nasional { background: var(--c-primary-subtle); color: var(--c-primary); }
+    .tingkat-badge.regional { background: var(--c-sky-subtle); color: var(--c-sky); }
+    .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
+    .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
 
     /* ── Reward Badge & Aksi ── */
     .claim-badge { font-size: .73rem; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
-    .claim-badge.belum     { background: #f3f4f6; color: var(--c-fg-muted); }
-    .claim-badge.diajukan  { background: #dbeafe; color: #1e40af; }
-    .claim-badge.disetujui { background: #ECFDF5; color: #059669; }
+    .claim-badge.belum     { background: var(--c-bg); color: var(--c-fg-muted); }
+    .claim-badge.diajukan  { background: var(--c-warning-subtle); color: var(--c-warning); }
+    .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
     .claim-badge.ditolak   { background: var(--c-error-subtle); color: var(--c-error); }
 
     .reward-mini { font-size: .72rem; color: var(--c-fg-muted); margin-top: 4px; max-width: 200px; line-height: 1.4; }
 
-    .btn-tinjau {
-        background: var(--c-primary-subtle); color: var(--c-primary); border: 1px solid rgba(11,38,110,0.18); padding: 5px 14px;
-        border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s;
-    }
-    .btn-tinjau:hover { background: rgba(11,38,110,0.12); border-color: var(--c-primary-border); }
-
-    .tinjau-info {
-        font-size: .87rem; color: var(--c-fg-sec); background: #fafafa; border: 1px solid var(--c-border);
-        border-radius: 10px; padding: 12px 14px; line-height: 1.7;
-    }
-    .tinjau-info .lbl { color: var(--c-fg-muted); }
-    .kuota-pill {
-        display: inline-block; margin-top: 10px; font-size: .8rem; font-weight: 600;
-        padding: 5px 12px; border-radius: 50px; background: var(--c-primary-subtle); color: var(--c-primary);
-    }
-    .kuota-pill.penuh { background: var(--c-error-subtle); color: var(--c-error); }
 
     /* ── Pagination (global style) ── */
     .verif-pagination {
         display: flex; align-items: center; justify-content: space-between;
-        padding: 12px 16px; background: #fff; border-top: 1px solid #e5e7eb;
+        padding: 12px 16px; background: var(--c-card); border-top: 1px solid var(--c-border);
         flex-wrap: wrap; gap: 10px;
     }
 
-    /* ── Enhanced Table Visibility ── */
-    table thead tr {
-        background: #eef0f4 !important;
-        border-bottom: 2px solid #d1d5db !important;
-    }
-    table thead th {
-        font-size: 11.5px !important;
-        font-weight: 700 !important;
-        color: #374151 !important;
-        text-transform: uppercase;
-        letter-spacing: .03em;
-        padding-top: 13px !important;
-        padding-bottom: 13px !important;
-    }
-    table tbody tr {
-        border-bottom: 1px solid #e5e7eb !important;
-    }
-    table tbody tr:nth-child(even) {
-        background: #f9fafb;
-    }
-    table tbody tr:hover {
-        background: #eef2ff !important;
-        box-shadow: inset 3px 0 0 0 #0B266E;
-    }
-    table tbody td {
-        font-size: 13px;
-        padding-top: 15px !important;
-        padding-bottom: 15px !important;
-    }
+    /* Header & baris tabel disamakan dengan tabel User Management global
+       (resources/views/superadmin/users/_table.blade.php): latar #FAFAFA polos,
+       tanpa uppercase/letter-spacing, tanpa zebra-stripe, hover netral —
+       diatur langsung lewat style inline pada thead/tr, bukan lewat aturan
+       global di sini (lihat riwayat "Enhanced Table Visibility" yang sempat
+       menimpanya dengan !important). */
 </style>
+
+@include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
+@include('manajemenmahasiswa::partials.filter-popover')
 
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -141,7 +111,7 @@
 @endif
 @if(session('error'))
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
         {{ session('error') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -149,7 +119,7 @@
 @endif
 @if($errors->any())
     <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
         <ul style="margin: 0; padding-left: 18px;">
             @foreach($errors->all() as $err)
                 <li>{{ $err }}</li>
@@ -169,34 +139,38 @@
             <h4 style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">Verifikasi Riwayat Kegiatan</h4>
             <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Review & verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa</p>
         @endif
+        @unless($canVerify ?? true)
+            <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
+            </span>
+        @endunless
     </div>
-    @if($tab === 'prestasi')
+    @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
         <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
-           style="background:#0B266E; color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
-           onmouseover="this.style.background='#091958'" onmouseout="this.style.background='#0B266E'">
+           style="background:var(--c-primary); color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
+           onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
             Klaim Reward
             @if($pendingPrestasiReward > 0)
-                <span style="background:#fff; color:#0B266E; font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
+                <span style="background:var(--c-card); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
             @endif
         </a>
     @endif
 </div>
 
-<!-- Admin Stat Cards -->
+<!-- Admin Stat Cards — ringkasan angka saja, bukan tombol filter -->
 <div class="admin-stats">
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'pending']) }}"
-       class="admin-stat-card pending {{ $status === 'pending' ? 'active' : '' }}">
+    <div class="admin-stat-card pending">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         </div>
         <div>
             <div class="stat-num">{{ $adminStats['pending'] }}</div>
-            <div class="stat-lbl">Menunggu Verifikasi</div>
+            <div class="stat-lbl">Menunggu Review</div>
         </div>
-    </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'approved']) }}"
-       class="admin-stat-card approved {{ $status === 'approved' ? 'active' : '' }}">
+    </div>
+    <div class="admin-stat-card approved">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
@@ -204,9 +178,8 @@
             <div class="stat-num">{{ $adminStats['approved'] }}</div>
             <div class="stat-lbl">Disetujui</div>
         </div>
-    </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'rejected']) }}"
-       class="admin-stat-card rejected {{ $status === 'rejected' ? 'active' : '' }}">
+    </div>
+    <div class="admin-stat-card rejected">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         </div>
@@ -214,47 +187,134 @@
             <div class="stat-num">{{ $adminStats['rejected'] }}</div>
             <div class="stat-lbl">Ditolak</div>
         </div>
-    </a>
+    </div>
 </div>
 
 <!-- Main Table Card (Global Style) -->
-<div style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
+<div class="filter-pop-host" style="background:var(--c-card); border:1px solid var(--c-border); border-radius:14px; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
 
     <!-- Table Toolbar -->
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
         <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
             <h2 style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0;">
                 @if($tab === 'prestasi') Verifikasi Prestasi @else Verifikasi Riwayat Kegiatan @endif
             </h2>
         </div>
 
+        @php
+            // Placeholder menyebut kolom yang benar-benar dicari pada tab ini —
+            // fitur pencarian yang tidak disebut tidak akan pernah dipakai admin.
+            $searchPlaceholder = $tab === 'prestasi'
+                ? 'Cari nama, NIM, prestasi, tingkat...'
+                : 'Cari nama, NIM, kegiatan, peran...';
+        @endphp
+
         <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.index') }}" id="filterForm"
               style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
             <input type="hidden" name="tab" value="{{ $tab }}">
+            {{-- Pertahankan pilihan "Per page" saat pencarian/filter dikirim ulang --}}
+            @if(request()->filled('per_page'))
+                <input type="hidden" name="per_page" value="{{ request('per_page') }}">
+            @endif
 
             <!-- Search -->
-            <div style="position:relative; width:min(220px, calc(100vw - 200px)); min-width:120px;">
+            <div style="position:relative; width:min(280px, calc(100vw - 200px)); min-width:120px;">
                 <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--c-fg-placeholder); pointer-events:none;"
                      width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
                 <input type="text" name="search" value="{{ request('search') }}"
-                       placeholder="Cari nama / NIM..."
-                       style="width:100%; height:34px; padding:0 12px 0 34px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; color:var(--c-fg); font-family:inherit; outline:none; transition:all .15s; box-sizing:border-box; background:#fff;"
-                       onfocus="this.style.borderColor='var(--c-primary)'; this.style.boxShadow='0 0 0 3px rgba(11,38,110,0.08)'"
+                       placeholder="{{ $searchPlaceholder }}"
+                       style="width:100%; height:34px; padding:0 12px 0 34px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; color:var(--c-fg); font-family:inherit; outline:none; transition:all .15s; box-sizing:border-box; background:var(--c-card);"
+                       onfocus="this.style.borderColor='var(--c-primary)'; this.style.boxShadow='0 0 0 3px var(--c-primary-subtle)'"
                        onblur="this.style.borderColor='var(--c-border)'; this.style.boxShadow='none'">
             </div>
 
 
-            <!-- Angkatan Filter -->
-            <select name="angkatan"
-                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:#fff; cursor:pointer;"
-                    onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Angkatan</option>
-                @foreach($angkatanList as $a)
-                    <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
-                @endforeach
-            </select>
+            {{-- Status, Angkatan, & Tingkat dikumpulkan dalam satu panel, sama dengan panel
+                 "Advanced Filters" tabel Audit Log global (partials/filter-popover).
+                 Titik di tombol Filter menyala bila ada dropdown yang sedang menyaring —
+                 termasuk "Menunggu Review" yang jadi bawaan verifikator. --}}
+            @php
+                $statusBawaan        = ($canVerify ?? true) ? 'pending' : 'semua';
+                $filterStatusAktif   = $status !== 'semua';
+                $filterAngkatanAktif = filled($angkatan) && $angkatan !== 'semua';
+                $filterTingkatAktif  = $tab === 'prestasi' && $tingkat !== 'semua';
+                $adaFilterApaPun     = $filterAngkatanAktif || $filterTingkatAktif
+                    || request()->filled('search') || $status !== $statusBawaan;
+            @endphp
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn"
+                        @click="filterOpen = !filterOpen"
+                        :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height:1;">Filter</span>
+                    @if($filterStatusAktif || $filterAngkatanAktif || $filterTingkatAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
+
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display:none;"
+                     @click="filterOpen = false"></div>
+
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display:none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+
+                    <p class="filter-pop-title">Advanced Filters</p>
+
+                    <div class="filter-pop-fields">
+                        <!-- Status — pengganti kartu statistik yang dulu bisa diklik -->
+                        <div>
+                            <label class="filter-pop-label" for="filterStatus">Status</label>
+                            <select name="status" id="filterStatus" class="filter-pop-select">
+                                <option value="semua">Semua Status</option>
+                                <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Menunggu Review</option>
+                                <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Disetujui</option>
+                                <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
+                            </select>
+                        </div>
+
+                        <!-- Angkatan -->
+                        <div>
+                            <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
+                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                                <option value="semua">Semua Angkatan</option>
+                                @foreach($angkatanList as $a)
+                                    <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        @if($tab === 'prestasi')
+                            <!-- Tingkat — hanya tab Prestasi; riwayat kegiatan tidak punya kolom tingkat -->
+                            <div>
+                                <label class="filter-pop-label" for="filterTingkat">Tingkat</label>
+                                <select name="tingkat" id="filterTingkat" class="filter-pop-select">
+                                    <option value="semua">Semua Tingkat</option>
+                                    @foreach($tingkatList as $t)
+                                        <option value="{{ $t }}" {{ $tingkat === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        @endif
+
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilterApaPun)
+                                {{-- Reset kembali ke tampilan bawaan tab ini (bukan "semua status"). --}}
+                                <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab]) }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -265,21 +325,76 @@
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; min-width:780px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                    <tr style="border-bottom:1px solid var(--c-border); background:var(--c-bg);">
                         <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:160px;">Mahasiswa</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">NIM</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:180px;">Nama Kegiatan</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Peran</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Tanggal</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Bukti</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
                         <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($riwayatData as $i => $rw)
-                        <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                        @php
+                            // Payload modal Tinjau: data klaim + berkas bukti, agar keduanya
+                            // bisa dibandingkan dalam satu layar tanpa membuka tab baru.
+                            $rwDiputus = $rw->verification_status !== 'pending';
+                            // Pengajuan milik verifikator yang sedang membuka halaman: panel
+                            // keputusan disembunyikan sejak awal. Guard servernya sudah ada,
+                            // tapi sebelumnya tombolnya tetap tampil dan baru menolak setelah
+                            // diklik — tombol yang pasti gagal lebih baik tidak ada.
+                            $rwMilikSendiri = $rw->student?->user_id === auth()->id();
+                            $tinjauRiwayatPayload = [
+                                'id'       => $rw->id,
+                                'jenis'    => 'riwayat',
+                                'judul'    => 'Tinjau Pengajuan Kegiatan',
+                                'pending'  => ! $rwDiputus && ! $rwMilikSendiri,
+                                'contoh'   => 'Wajib diisi bila menolak. Contoh: bukti tidak sesuai dengan kegiatan yang diklaim.',
+                                // Keterangan menyesuaikan aksi yang benar-benar tersedia bagi
+                                // pembacanya: pengawas read-only tidak boleh diarahkan ke tombol
+                                // yang tidak pernah muncul di layarnya.
+                                'readonly' => $rwMilikSendiri
+                                    ? 'Ini pengajuan Anda sendiri — verifikasinya harus dilakukan verifikator lain.'
+                                    : ($rwDiputus
+                                        ? (($canVerify ?? true)
+                                            ? 'Pengajuan ini sudah diverifikasi. Gunakan "Batalkan Verifikasi" bila keputusannya perlu ditinjau ulang.'
+                                            : 'Pengajuan ini sudah diverifikasi.')
+                                        : 'Anda hanya memiliki akses lihat — verifikasi dilakukan oleh admin kemahasiswaan.'),
+                                // Aksi mundur untuk baris yang sudah diputus — satu-satunya
+                                // jalan pulang dari persetujuan/penolakan yang keliru.
+                                'aksi'     => ($canVerify ?? true) && $rwDiputus && ! $rwMilikSendiri ? [
+                                    'label'   => 'Batalkan Verifikasi',
+                                    'gaya'    => 'tolak',
+                                    'panggil' => 'openBatalVerifikasi',
+                                    'args'    => ['riwayat', $rw->id, $rw->nama_kegiatan_manual ?? 'kegiatan ini'],
+                                ] : null,
+                                // Verifikator, waktu, & catatannya hanya ada pada baris yang sudah
+                                // diputus. Kolom Status di tabel kini memuat badge saja, jadi di
+                                // sinilah alasan keputusan dibaca — utuh, tanpa dipotong.
+                                'sections' => [[
+                                    'judul' => 'Data yang diklaim mahasiswa',
+                                    'items' => array_values(array_filter([
+                                        ['Mahasiswa', $rw->student->user->name ?? '-'],
+                                        ['NIM',       $rw->student->student_number ?? '-'],
+                                        ['Kegiatan',  $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui'],
+                                        ['Peran',     $rw->peran_manual ?? ucfirst($rw->peran ?? '')],
+                                        ['Tanggal',   $rw->tanggal_kegiatan?->translatedFormat('d M Y')],
+                                        ['Diajukan',  $rw->created_at?->translatedFormat('d M Y, H:i')],
+                                        $rwDiputus && $rw->verifiedBy        ? ['Verifikator',  $rw->verifiedBy->name] : null,
+                                        $rwDiputus && $rw->verified_at       ? ['Diverifikasi', $rw->verified_at->translatedFormat('d M Y, H:i')] : null,
+                                        $rwDiputus && $rw->verification_note ? ['Catatan',      $rw->verification_note] : null,
+                                    ])),
+                                ]],
+                                'bukti' => ($rw->buktiFiles ?? collect())->map(fn ($b) => [
+                                    'url'      => $b->url_akses,
+                                    'nama'     => $b->nama_file,
+                                    'is_image' => $b->isImage(),
+                                ])->values()->all(),
+                            ];
+                        @endphp
+                        <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
                             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
@@ -289,68 +404,28 @@
                                 <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $rw->student->student_number ?? '-' }}</span>
                             </td>
                             <td style="padding:14px 16px; min-width:180px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:300px;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
                             </td>
                             <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-sec);">{{ $rw->peran_manual ?? ucfirst($rw->peran ?? '') }}</td>
-                            <td style="padding:14px 16px; white-space:nowrap;">
-                                @if($rw->tanggal_kegiatan)
-                                    <span style="font-size:12px; font-weight:500; color:var(--c-fg-sec);">{{ $rw->tanggal_kegiatan->translatedFormat('d M Y') }}</span>
-                                @else
-                                    <span style="font-size:12px; color:var(--c-fg-muted);">-</span>
-                                @endif
-                            </td>
                             <td style="padding:14px 16px;">
-                                @if($rw->buktiFiles && $rw->buktiFiles->count() > 0)
-                                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                        @foreach($rw->buktiFiles as $bukti)
-                                            <a href="{{ $bukti->public_url }}" target="_blank" title="{{ $bukti->nama_file }}" style="text-decoration: none;">
-                                                @if($bukti->isImage())
-                                                    <img src="{{ $bukti->public_url }}" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1px solid var(--c-border); cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                                                @else
-                                                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 6px; background: #eef2ff; border: 1px solid var(--c-border); font-size: 16px; cursor: pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
-                                                @endif
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span style="font-size: 11px; color: var(--c-fg-muted);">—</span>
-                                @endif
-                            </td>
-                            <td style="padding:14px 16px;">
+                                {{-- Badge saja: tinggi baris jadi seragam & warna statusnya tidak
+                                     bersaing dengan apa pun. Catatan verifikasi dibaca utuh di
+                                     modal Tinjau, bukan sebagai potongan kalimat di sel ini. --}}
                                 <span class="status-verif {{ $rw->verification_status }}">
-                                    @if($rw->verification_status === 'pending') Pending
+                                    @if($rw->verification_status === 'pending') Menunggu Review
                                     @elseif($rw->verification_status === 'approved') Disetujui
                                     @else Ditolak
                                     @endif
                                 </span>
-                                @if($rw->verification_status === 'rejected' && $rw->verification_note)
-                                    <p style="font-size:11px; color:var(--c-error); margin:4px 0 0 0; max-width:160px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.4;" title="{{ $rw->verification_note }}">
-                                        "{{ Str::limit($rw->verification_note, 40) }}"
-                                    </p>
-                                @endif
-                                @if($rw->verification_status === 'approved' && $rw->verification_note)
-                                    <p style="font-size:11px; color:var(--c-success); margin:4px 0 0 0; max-width:160px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.4;" title="{{ $rw->verification_note }}">
-                                        "{{ Str::limit($rw->verification_note, 40) }}"
-                                    </p>
-                                @endif
                             </td>
                             <td style="padding:14px 16px; text-align:center;">
-                                @if($rw->verification_status === 'pending')
-                                    <div style="display:flex; gap:6px; justify-content:center;">
-                                        <button type="button" class="btn-approve" title="Setujui"
-                                                onclick="openApproveModal('riwayat', {{ $rw->id }}, '{{ addslashes($rw->nama_kegiatan_manual ?? '') }}')">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                        </button>
-                                        <button type="button" class="btn-reject" title="Tolak"
-                                                onclick="openRejectModal('riwayat', {{ $rw->id }}, '{{ addslashes($rw->nama_kegiatan_manual ?? '') }}')">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                        </button>
-                                    </div>
-                                @else
-                                    <span style="font-size: 11px; color: var(--c-fg-muted);">
-                                        @if($rw->verifiedBy) {{ $rw->verifiedBy->name }} @endif
-                                    </span>
-                                @endif
+                                {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
+                                     dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
+                                     read-only mendapat modal mode baca-saja. --}}
+                                <button type="button" class="btn-tinjau" onclick="openTinjau(@js($tinjauRiwayatPayload))">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Tinjau
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -358,57 +433,12 @@
             </table>
         </div>
 
-        <!-- Pagination (Global Style) -->
-        @php
-            $rFrom = $riwayatData->firstItem() ?? 0;
-            $rTo   = $riwayatData->lastItem() ?? 0;
-            $rTotal = $riwayatData->total();
-            $rCurrentPage = $riwayatData->currentPage();
-            $rLastPage = $riwayatData->lastPage();
-        @endphp
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#fff; border-top:1px solid #e5e7eb; flex-wrap:wrap; gap:10px;">
-            <span style="font-size:12px; color:var(--c-fg-sec);">
-                Showing <strong style="color:var(--c-fg); font-weight:700;">{{ $rFrom }}</strong>
-                to <strong style="color:var(--c-fg); font-weight:700;">{{ $rTo }}</strong>
-                of <strong style="color:var(--c-fg); font-weight:700;">{{ number_format($rTotal) }}</strong> results
-            </span>
-            @if($rLastPage > 1)
-            <div style="display:flex; align-items:center; gap:4px;">
-                @if($rCurrentPage > 1)
-                <a href="{{ $riwayatData->appends(request()->query())->previousPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
-                @endif
-
-                @php $range = 2; $start = max(1, $rCurrentPage - $range); $end = min($rLastPage, $rCurrentPage + $range); @endphp
-                @if($start > 1)
-                    <a href="{{ $riwayatData->appends(request()->query())->url(1) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">1</a>
-                    @if($start > 2)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                @endif
-                @for($p = $start; $p <= $end; $p++)
-                <a href="{{ $riwayatData->appends(request()->query())->url($p) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; font-weight:{{ $p === $rCurrentPage ? '700' : '500' }}; text-decoration:none; transition:all .15s; {{ $p === $rCurrentPage ? 'background:var(--c-primary); color:#fff; border:1px solid var(--c-primary); box-shadow:0 2px 6px rgba(11,38,110,0.25);' : 'border:1px solid var(--c-border); background:#fff; color:var(--c-fg-sec);' }}">{{ $p }}</a>
-                @endfor
-                @if($end < $rLastPage)
-                    @if($end < $rLastPage - 1)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                    <a href="{{ $riwayatData->appends(request()->query())->url($rLastPage) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">{{ $rLastPage }}</a>
-                @endif
-
-                @if($rCurrentPage < $rLastPage)
-                <a href="{{ $riwayatData->appends(request()->query())->nextPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
-                @endif
-            </div>
-            @endif
-        </div>
+        {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman --}}
+        @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $riwayatData])
     @else
         <div class="empty-state">
             <div class="empty-icon">
-                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;" stroke="currentColor" stroke-width="1.5">
+                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border-strong);" stroke="currentColor" stroke-width="1.5">
                     <rect x="8" y="2" width="8" height="4" rx="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><path d="M9 12h6M9 16h6"></path>
                 </svg>
             </div>
@@ -427,14 +457,12 @@
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; min-width:960px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                        <tr style="border-bottom:1px solid var(--c-border); background:var(--c-bg);">
                         <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:160px;">Mahasiswa</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">NIM</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:180px;">Nama Prestasi</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Tingkat</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Tanggal</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Bukti</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:140px;">Reward</th>
                         <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">Aksi</th>
@@ -442,65 +470,88 @@
                 </thead>
                 <tbody>
                     @foreach($prestasiData as $i => $p)
-                        <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                        @php
+                            // Payload modal Tinjau: data klaim + berkas bukti, agar keduanya
+                            // bisa dibandingkan dalam satu layar tanpa membuka tab baru.
+                            $pDiputus = $p->verification_status !== 'pending';
+                            // Lihat catatan yang sama pada tab Riwayat Kegiatan
+                            $pMilikSendiri = $p->kemahasiswaan?->user_id === auth()->id();
+                            // Prestasi yang rewardnya sudah berjalan tidak boleh dikembalikan
+                            // ke "menunggu" — klaimnya akan menggantung. Urutannya dibalik
+                            // dari halaman Klaim Reward lebih dulu.
+                            $pAdaKlaim = $p->reward_status !== $P::CLAIM_BELUM_AJUKAN;
+                            $tinjauPayload = [
+                                'id'       => $p->id,
+                                'jenis'    => 'prestasi',
+                                'judul'    => 'Tinjau Pengajuan Prestasi',
+                                'pending'  => ! $pDiputus && ! $pMilikSendiri,
+                                'contoh'   => 'Wajib diisi bila menolak. Contoh: tingkat pada sertifikat tidak sesuai.',
+                                // Lihat catatan pada tab Riwayat Kegiatan
+                                'readonly' => $pMilikSendiri
+                                    ? 'Ini pengajuan Anda sendiri — verifikasinya harus dilakukan verifikator lain.'
+                                    : ($pDiputus
+                                        ? (!($canVerify ?? true)
+                                            ? 'Pengajuan ini sudah diverifikasi.'
+                                            : ($pAdaKlaim
+                                                ? 'Pengajuan ini sudah diverifikasi dan rewardnya sudah diklaim. Batalkan klaim rewardnya lebih dulu di halaman Klaim Reward bila keputusannya perlu ditinjau ulang.'
+                                                : 'Pengajuan ini sudah diverifikasi. Gunakan "Batalkan Verifikasi" bila keputusannya perlu ditinjau ulang.'))
+                                        : 'Anda hanya memiliki akses lihat — verifikasi dilakukan oleh admin kemahasiswaan.'),
+                                'aksi'     => ($canVerify ?? true) && $pDiputus && ! $pMilikSendiri && ! $pAdaKlaim ? [
+                                    'label'   => 'Batalkan Verifikasi',
+                                    'gaya'    => 'tolak',
+                                    'panggil' => 'openBatalVerifikasi',
+                                    'args'    => ['prestasi', $p->id, $p->nama_prestasi],
+                                ] : null,
+                                // Verifikator, waktu, & catatannya hanya ada pada baris yang sudah
+                                // diputus. Kolom Status di tabel kini memuat badge saja, jadi di
+                                // sinilah alasan keputusan dibaca — utuh, tanpa dipotong.
+                                'sections' => [[
+                                    'judul' => 'Data yang diklaim mahasiswa',
+                                    'items' => array_values(array_filter([
+                                        ['Mahasiswa', $p->kemahasiswaan?->nama ?? '-'],
+                                        ['NIM',       $p->kemahasiswaan?->nim ?? '-'],
+                                        ['Prestasi',  $p->nama_prestasi],
+                                        ['Tingkat',   ucfirst($p->tingkat)],
+                                        ['Tgl Raih',  $p->tanggal?->translatedFormat('d M Y')],
+                                        ['Diajukan',  $p->created_at?->translatedFormat('d M Y, H:i')],
+                                        $pDiputus && $p->verifiedBy        ? ['Verifikator',  $p->verifiedBy->name] : null,
+                                        $pDiputus && $p->verified_at       ? ['Diverifikasi', $p->verified_at->translatedFormat('d M Y, H:i')] : null,
+                                        $pDiputus && $p->verification_note ? ['Catatan',      $p->verification_note] : null,
+                                    ])),
+                                ]],
+                                'bukti' => $p->buktiFiles->map(fn ($b) => [
+                                    'url'      => $b->url_akses,
+                                    'nama'     => $b->nama_file,
+                                    'is_image' => $b->isImage(),
+                                ])->values()->all(),
+                            ];
+                        @endphp
+                        <tr style="border-bottom:1px solid var(--c-border); transition:background .12s;"
                             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan->nama ?? '-' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
                             </td>
                             <td style="padding:14px 16px;">
-                                <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $p->kemahasiswaan->nim ?? '-' }}</span>
+                                <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $p->kemahasiswaan?->nim ?? '-' }}</span>
                             </td>
                             <td style="padding:14px 16px; min-width:180px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">{{ $p->nama_prestasi }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:300px;">{{ $p->nama_prestasi }}</p>
                             </td>
                             <td style="padding:14px 16px;"><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
-                            <td style="padding:14px 16px; white-space:nowrap;">
-                                @if($p->tanggal)
-                                    <span style="font-size:12px; font-weight:500; color:var(--c-fg-sec);">{{ \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') }}</span>
-                                @else
-                                    <span style="font-size:12px; color:var(--c-fg-muted);">-</span>
-                                @endif
-                            </td>
                             <td style="padding:14px 16px;">
-                                @if($p->buktiFiles && $p->buktiFiles->count() > 0)
-                                    <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                                        @foreach($p->buktiFiles as $bukti)
-                                            <a href="{{ $bukti->public_url }}" target="_blank" title="{{ $bukti->nama_file }}" style="text-decoration: none;">
-                                                @if($bukti->isImage())
-                                                    <img src="{{ $bukti->public_url }}" style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1px solid var(--c-border); cursor: pointer; transition: transform 0.15s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
-                                                @else
-                                                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 6px; background: #eef2ff; border: 1px solid var(--c-border); font-size: 16px; cursor: pointer;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></span>
-                                                @endif
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                @else
-                                    <span style="font-size: 11px; color: var(--c-fg-muted);">—</span>
-                                @endif
-                            </td>
-                            <td style="padding:14px 16px;">
+                                {{-- Badge saja — lihat catatan pada kolom Status tab Kegiatan --}}
                                 <span class="status-verif {{ $p->verification_status }}">
-                                    @if($p->verification_status === 'pending') Pending
+                                    @if($p->verification_status === 'pending') Menunggu Review
                                     @elseif($p->verification_status === 'approved') Disetujui
                                     @else Ditolak
                                     @endif
                                 </span>
-                                @if($p->verification_status === 'rejected' && $p->verification_note)
-                                    <p style="font-size:11px; color:var(--c-error); margin:4px 0 0 0; max-width:160px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.4;" title="{{ $p->verification_note }}">
-                                        "{{ Str::limit($p->verification_note, 40) }}"
-                                    </p>
-                                @endif
-                                @if($p->verification_status === 'approved' && $p->verification_note)
-                                    <p style="font-size:11px; color:var(--c-success); margin:4px 0 0 0; max-width:160px; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.4;" title="{{ $p->verification_note }}">
-                                        "{{ Str::limit($p->verification_note, 40) }}"
-                                    </p>
-                                @endif
                             </td>
                             <td style="padding:14px 16px;">
                                 @if($p->verification_status === 'approved')
                                     @if($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                        <span class="claim-badge diajukan">Menunggu</span>
+                                        <span class="claim-badge diajukan">Menunggu Review</span>
                                     @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
                                         <span class="claim-badge disetujui">Disetujui</span>
                                     @elseif($p->reward_status === $P::CLAIM_DITOLAK)
@@ -509,26 +560,17 @@
                                         <span style="font-size:11px; color:var(--c-fg-muted);">Belum diajukan</span>
                                     @endif
                                 @else
-                                    <span style="color:#d1d5db;">—</span>
+                                    <span style="color:var(--c-fg-placeholder);">—</span>
                                 @endif
                             </td>
                             <td style="padding:14px 16px; text-align:center;">
-                                @if($p->verification_status === 'pending')
-                                    <div style="display:flex; gap:6px; justify-content:center;">
-                                        <button type="button" class="btn-approve" title="Setujui"
-                                                onclick="openApproveModal('prestasi', {{ $p->id }}, '{{ addslashes($p->nama_prestasi) }}')">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                        </button>
-                                        <button type="button" class="btn-reject" title="Tolak"
-                                                onclick="openRejectModal('prestasi', {{ $p->id }}, '{{ addslashes($p->nama_prestasi) }}')">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                                        </button>
-                                    </div>
-                                @else
-                                    <span style="font-size: 11px; color: var(--c-fg-muted);">
-                                        @if($p->verifiedBy) {{ $p->verifiedBy->name }} @endif
-                                    </span>
-                                @endif
+                                {{-- Satu pintu masuk untuk semua baris & semua role: bukti hanya dilihat
+                                     dari dalam modal. Baris yang sudah diverifikasi dan pengunjung
+                                     read-only mendapat modal mode baca-saja. --}}
+                                <button type="button" class="btn-tinjau" onclick="openTinjau(@js($tinjauPayload))">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    Tinjau
+                                </button>
                             </td>
                         </tr>
                     @endforeach
@@ -536,57 +578,12 @@
             </table>
         </div>
 
-        <!-- Pagination (Global Style) -->
-        @php
-            $pFrom = $prestasiData->firstItem() ?? 0;
-            $pTo   = $prestasiData->lastItem() ?? 0;
-            $pTotal = $prestasiData->total();
-            $pCurrentPage = $prestasiData->currentPage();
-            $pLastPage = $prestasiData->lastPage();
-        @endphp
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#fff; border-top:1px solid #e5e7eb; flex-wrap:wrap; gap:10px;">
-            <span style="font-size:12px; color:var(--c-fg-sec);">
-                Showing <strong style="color:var(--c-fg); font-weight:700;">{{ $pFrom }}</strong>
-                to <strong style="color:var(--c-fg); font-weight:700;">{{ $pTo }}</strong>
-                of <strong style="color:var(--c-fg); font-weight:700;">{{ number_format($pTotal) }}</strong> results
-            </span>
-            @if($pLastPage > 1)
-            <div style="display:flex; align-items:center; gap:4px;">
-                @if($pCurrentPage > 1)
-                <a href="{{ $prestasiData->appends(request()->query())->previousPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg></span>
-                @endif
-
-                @php $range = 2; $start = max(1, $pCurrentPage - $range); $end = min($pLastPage, $pCurrentPage + $range); @endphp
-                @if($start > 1)
-                    <a href="{{ $prestasiData->appends(request()->query())->url(1) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">1</a>
-                    @if($start > 2)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                @endif
-                @for($p_page = $start; $p_page <= $end; $p_page++)
-                <a href="{{ $prestasiData->appends(request()->query())->url($p_page) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:12px; font-weight:{{ $p_page === $pCurrentPage ? '700' : '500' }}; text-decoration:none; transition:all .15s; {{ $p_page === $pCurrentPage ? 'background:var(--c-primary); color:#fff; border:1px solid var(--c-primary); box-shadow:0 2px 6px rgba(11,38,110,0.25);' : 'border:1px solid var(--c-border); background:#fff; color:var(--c-fg-sec);' }}">{{ $p_page }}</a>
-                @endfor
-                @if($end < $pLastPage)
-                    @if($end < $pLastPage - 1)<span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--c-fg-muted);">…</span>@endif
-                    <a href="{{ $prestasiData->appends(request()->query())->url($pLastPage) }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; font-size:12px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">{{ $pLastPage }}</a>
-                @endif
-
-                @if($pCurrentPage < $pLastPage)
-                <a href="{{ $prestasiData->appends(request()->query())->nextPageUrl() }}" style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid var(--c-border); border-radius:6px; background:#fff; color:var(--c-fg-sec); text-decoration:none; transition:all .15s;" onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg>
-                </a>
-                @else
-                <span style="width:28px; height:28px; display:flex; align-items:center; justify-content:center; border:1px solid #F3F4F6; border-radius:6px; background:#FAFAFA; color:#D1D5DB; cursor:not-allowed;"><svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></span>
-                @endif
-            </div>
-            @endif
-        </div>
+        {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman --}}
+        @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
     @else
         <div class="empty-state">
             <div class="empty-icon">
-                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;" stroke="currentColor" stroke-width="1.5">
+                <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border-strong);" stroke="currentColor" stroke-width="1.5">
                     <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z"></path><path d="M5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"></path>
                 </svg>
             </div>
@@ -598,95 +595,77 @@
 
 </div> {{-- End Main Table Card --}}
 
-<!-- Reject Modal -->
-<div class="modal fade" id="rejectModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="rejectForm" method="POST">
-                @csrf @method('PATCH')
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: #0D0D12;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-                        Tolak Pengajuan
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p style="font-size: 14px; color: #666D80; margin-bottom: 16px;">
-                        Anda akan menolak: <strong id="rejectItemName" style="color: #1f2937;"></strong>
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Alasan Penolakan <span style="color: #dc2626;">*</span></label>
-                        <span class="text-muted" style="font-size: 11px;" id="charCount_reject">0 / 200 huruf</span>
+{{-- Modal tersedia untuk semua role — bukti hanya bisa dilihat dari sini sejak
+     kolom Bukti dihapus dari tabel. Aksi setujui/tolak tetap khusus verifikator.
+
+     Kerangka & perilaku modalnya tinggal di partial karena dipakai bersama
+     halaman pengajuan mahasiswa; halaman ini hanya menyusun daftar fieldnya. --}}
+@include('manajemenmahasiswa::verifikasi.partials.tinjau-modal', [
+    'tinjauAksi' => $canVerify ?? true,
+])
+
+@if($canVerify ?? true)
+    {{-- Konfirmasi Batalkan Verifikasi — mengembalikan baris yang sudah diputus
+         ke daftar menunggu. Dikonfirmasi karena keputusan verifikator ikut
+         terhapus (nama, waktu, dan catatannya), bukan sekadar status berubah. --}}
+    <div class="modal fade" id="batalVerifModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+            <div class="modal-content">
+                <form method="POST" id="batalVerifForm">
+                    @csrf @method('PATCH')
+                    <div class="modal-body" style="padding: 28px 24px 20px; text-align: center;">
+                        <div style="width:60px; height:60px; border-radius:50%; background:var(--c-warning-subtle); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+                        </div>
+                        <h5 class="fw-bold mb-2" style="color:var(--c-fg);">Batalkan Verifikasi</h5>
+                        <p style="color:var(--c-fg-muted); font-size:14px; line-height:1.5; margin-bottom:0;">
+                            Kembalikan <strong id="bvNama"></strong> ke daftar menunggu?
+                            Keputusan sebelumnya beserta catatannya akan dihapus, dan pengajuan ini perlu diverifikasi ulang.
+                        </p>
                     </div>
-                    <textarea name="verification_note" class="form-control" rows="3" required maxlength="200"
-                              placeholder="Contoh: Data kurang lengkap, bukti tidak valid, dll."
-                              style="border-radius: 10px; font-size: 14px;" oninput="document.getElementById('charCount_reject').innerText = this.value.length + ' / 200 huruf'"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Batal</button>
-                    <button type="submit" style="padding: 8px 20px; border-radius: 10px; border: none; background: #dc2626; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">Tolak</button>
-                </div>
-            </form>
+                    <div class="modal-footer" style="justify-content:center; gap:8px;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                                style="border-radius:10px; font-weight:600; padding:10px 20px;">Batal</button>
+                        <button type="submit" id="bvConfirmBtn"
+                                style="border-radius:10px; font-weight:600; font-size:14px; padding:10px 20px; border:none; cursor:pointer; color:#fff; background:var(--c-warning);">
+                            Ya, Batalkan Verifikasi
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Approve Modal -->
-<div class="modal fade" id="approveModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="approveForm" method="POST">
-                @csrf @method('PATCH')
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: #0D0D12;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;"><circle cx="12" cy="12" r="10"></circle><polyline points="9 12 11 14 15 10"></polyline></svg>
-                        Setujui Pengajuan
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p style="font-size: 14px; color: #666D80; margin-bottom: 16px;">
-                        Anda akan menyetujui: <strong id="approveItemName" style="color: #1f2937;"></strong>
-                    </p>
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Catatan Persetujuan <span style="font-weight: 400; color: #666D80;">(opsional)</span></label>
-                        <span class="text-muted" style="font-size: 11px;" id="charCount_approve">0 / 200 huruf</span>
-                    </div>
-                    <textarea name="verification_note" class="form-control" rows="3" maxlength="200"
-                              placeholder="Contoh: Dokumen lengkap dan valid. Disetujui."
-                              style="border-radius: 10px; font-size: 14px; border-color: #bbf7d0;"
-                              onfocus="this.style.borderColor='#16a34a';this.style.boxShadow='0 0 0 3px rgba(22,163,74,0.1)'"
-                              onblur="this.style.borderColor='#bbf7d0';this.style.boxShadow='none'" oninput="document.getElementById('charCount_approve').innerText = this.value.length + ' / 200 huruf'"></textarea>
-                    <p style="display: none;" aria-hidden="true">Catatan akan terlihat di halaman status mahasiswa.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Batal</button>
-                    <button type="submit" style="padding: 8px 20px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        Setujui
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+    <script>
+        // Dipanggil modal Tinjau lewat nama fungsi global (payload "aksi"),
+        // pola yang sama dengan pembatalan klaim reward di halaman mahasiswa.
+        (function () {
+            const baseUrl = '{{ url("manajemen-mahasiswa/verifikasi") }}';
+            const modalEl = document.getElementById('batalVerifModal');
+            const form    = document.getElementById('batalVerifForm');
+            const namaEl  = document.getElementById('bvNama');
+            const btnEl   = document.getElementById('bvConfirmBtn');
+            if (!modalEl || !form) return;
 
-<script>
-function openRejectModal(type, id, itemName) {
-    const baseUrl = '{{ url("manajemen-mahasiswa/verifikasi") }}';
-    document.getElementById('rejectForm').action = `${baseUrl}/${type}/${id}/reject`;
-    document.getElementById('rejectItemName').textContent = itemName;
-    document.getElementById('rejectForm').querySelector('textarea').value = '';
-    new bootstrap.Modal(document.getElementById('rejectModal')).show();
-}
-function openApproveModal(type, id, itemName) {
-    const baseUrl = '{{ url("manajemen-mahasiswa/verifikasi") }}';
-    document.getElementById('approveForm').action = `${baseUrl}/${type}/${id}/approve`;
-    document.getElementById('approveItemName').textContent = itemName;
-    document.getElementById('approveForm').querySelector('textarea').value = '';
-    new bootstrap.Modal(document.getElementById('approveModal')).show();
-}
-</script>
+            window.openBatalVerifikasi = function (jenis, id, nama) {
+                form.action = baseUrl + '/' + jenis + '/' + id + '/batal-verifikasi';
+                // textContent — nama datang dari input mahasiswa
+                namaEl.textContent = '"' + nama + '"';
+                btnEl.disabled = false;
+                new bootstrap.Modal(modalEl).show();
+            };
+
+            form.addEventListener('submit', function () {
+                btnEl.disabled = true;
+                btnEl.style.opacity = '0.65';
+            });
+
+            modalEl.addEventListener('hidden.bs.modal', function () {
+                btnEl.disabled = false;
+                btnEl.style.opacity = '';
+            });
+        })();
+    </script>
+@endif
 
 </x-dynamic-component>

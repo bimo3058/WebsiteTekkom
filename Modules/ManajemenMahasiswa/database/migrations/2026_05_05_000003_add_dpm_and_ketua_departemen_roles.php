@@ -10,7 +10,6 @@ return new class extends Migration
         $roles = [
             ['name' => 'dpm',               'module' => 'manajemen_mahasiswa', 'is_academic' => true],
             ['name' => 'ketua_departemen',   'module' => 'manajemen_mahasiswa', 'is_academic' => false],
-            ['name' => 'bendahara',          'module' => 'manajemen_mahasiswa', 'is_academic' => false],
         ];
 
         foreach ($roles as $role) {
@@ -30,6 +29,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::table('roles')->whereIn('name', ['dpm', 'ketua_departemen', 'bendahara'])->delete();
+        DB::table('roles')->whereIn('name', ['dpm', 'ketua_departemen'])->delete();
     }
 };

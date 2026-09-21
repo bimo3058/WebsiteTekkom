@@ -44,7 +44,6 @@ class ForumController extends Controller
         }
 
         $threads = $this->threadService->listThreads($request->all(), 15);
-        $leaderboard = $this->gamificationService->getLeaderboard(10);
         $userStats = $this->gamificationService->getUserStats($user->id);
         $categories = Thread::KATEGORI_LABELS;
 
@@ -69,9 +68,105 @@ class ForumController extends Controller
                 ->get()
             : collect();
 
-        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'forumReports', 'showRulesOverlay');
+        $viewData = compact('threads', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'forumReports', 'showRulesOverlay');
 
         return view('manajemenmahasiswa::forum.index', $viewData);
+    }
+
+    /**
+     * Halaman "Forum Saya" — listing thread milik user yang sedang login.
+     */
+    public function myThreads(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = Thread::with(['author.roles', 'poll.options', 'poll.votes'])
+            ->withCount('comments')
+            ->where('mk_threads.user_id', $user->id);
+
+        if ($request->filled('search')) {
+            $query->search($request->search);
+        }
+
+        if ($request->filled('kategori') && $request->kategori !== 'semua') {
+            $query->byKategori($request->kategori);
+        }
+
+        $sort = $request->input('sort', 'terbaru');
+        match ($sort) {
+            'hot', 'top' => $query->orderByDesc('vote_count'),
+            default      => $query->orderByDesc('mk_threads.created_at'),
+        };
+
+        $threads = $query->paginate(15)->withQueryString();
+
+        $totalThreads  = Thread::where('user_id', $user->id)->count();
+        $totalVotes    = Thread::where('user_id', $user->id)->sum('vote_count');
+        $totalComments = Thread::where('user_id', $user->id)->sum('comment_count');
+        $categories    = Thread::KATEGORI_LABELS;
+
+        return view('manajemenmahasiswa::forum.my-threads', compact(
+            'threads', 'user', 'totalThreads', 'totalVotes', 'totalComments', 'categories'
+        ));
+    }
+
+    /**
+     * Halaman Laporan Forum — inbox laporan thread (admin only).
+     */
+    public function forumReports(Request $request)
+    {
+        $user   = Auth::user();
+        $status = $request->input('status', 'pending');
+
+        $query = \Modules\ManajemenMahasiswa\Models\ForumReport::with(['reporter', 'thread.author'])
+            ->latest();
+
+        if ($status !== 'semua') {
+            $query->where('status', $status);
+        }
+
+        $forumReports = $query->paginate(20)->withQueryString();
+        $pendingCount = \Modules\ManajemenMahasiswa\Models\ForumReport::where('status', 'pending')->count();
+        $totalCount   = \Modules\ManajemenMahasiswa\Models\ForumReport::count();
+
+        return view('manajemenmahasiswa::forum.reports', compact(
+            'forumReports', 'user', 'status', 'pendingCount', 'totalCount'
+        ));
+    }
+
+    /**
+     * Halaman Leaderboard forum — top kontributor berdasarkan XP.
+     */
+    public function leaderboard()
+    {
+        $user      = Auth::user();
+        $userStats = $this->gamificationService->getUserStats($user->id);
+
+        $leaderboard = $this->gamificationService->getLeaderboard(50);
+
+        // Attach user object (with roles) ke setiap entry — 1 extra query
+        $userIds      = $leaderboard->pluck('user_id')->toArray();
+        $usersWithRoles = \App\Models\User::with('roles')
+            ->whereIn('id', $userIds)
+            ->get()
+            ->keyBy('id');
+
+        $streaks = \Modules\ManajemenMahasiswa\Models\Streak::whereIn('user_id', $userIds)
+            ->pluck('current_streak', 'user_id');
+
+        $leaderboard = $leaderboard->map(function ($entry) use ($usersWithRoles, $streaks) {
+            $entry->user           = $usersWithRoles[$entry->user_id] ?? null;
+            $entry->current_streak = $streaks[$entry->user_id] ?? 0;
+            return $entry;
+        });
+
+        // Posisi user saat ini dalam leaderboard (0-based index → 1-based)
+        $userPosition = $leaderboard->search(fn($e) => $e->user_id === $user->id);
+        $userRankInList = $userPosition !== false ? $userPosition + 1 : null;
+
+        return view('manajemenmahasiswa::forum.leaderboard', compact(
+            'leaderboard', 'userStats', 'user', 'userRankInList'
+        ));
     }
 
     /**
