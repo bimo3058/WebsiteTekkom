@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -28,6 +29,7 @@
     @stack('styles')
     <x-mobile-navigation-assets />
 </head>
+
 <body class="font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
@@ -38,7 +40,8 @@
         <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
 
             <!-- Topbar -->
-            <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 z-10">
+            <header
+                class="bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center text-sm font-medium text-slate-600">
                     <span class="mr-2">SIBASO</span>
                     @hasSection('breadcrumbs')
@@ -53,11 +56,14 @@
                     <div class="h-6 w-px bg-slate-200 mx-1"></div>
 
                     <div class="flex items-center gap-3 cursor-pointer group">
-                        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 overflow-hidden border border-slate-300 group-hover:border-primary transition-colors">
-                            <span class="font-bold text-sm">{{ strtoupper(substr(auth()->user()->name ?? 'D', 0, 1)) }}</span>
+                        <div
+                            class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 overflow-hidden border border-slate-300 group-hover:border-primary transition-colors">
+                            <span
+                                class="font-bold text-sm">{{ strtoupper(substr(auth()->user()->name ?? 'D', 0, 1)) }}</span>
                         </div>
                         <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-800 leading-tight">{{ auth()->user()->name ?? 'Dosen' }}</span>
+                            <span
+                                class="text-sm font-bold text-slate-800 leading-tight">{{ auth()->user()->name ?? 'Dosen' }}</span>
                             <span class="text-[11px] text-slate-500 font-medium">Dosen Pengampu</span>
                         </div>
                     </div>
@@ -87,4 +93,5 @@
     @stack('scripts')
     <x-mobile-navigation />
 </body>
+
 </html>

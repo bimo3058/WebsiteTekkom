@@ -12,7 +12,7 @@
     <x-banksoal::notification.alerts />
     <x-banksoal::ui.page-header title="Revisi RPS" subtitle="Lakukan revisi atau tinjau ulang perbaikan RPS">
         <x-slot:actions>
-            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" onclick="window.history.back()">
+            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" @click="window.history.back()">
                 <i class="fas fa-arrow-left"></i> Kembali
             </button>
         </x-slot:actions>

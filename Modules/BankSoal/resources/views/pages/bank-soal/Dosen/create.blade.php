@@ -13,38 +13,114 @@
     <x-banksoal::ui.panel title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
         <form action="{{ route('banksoal.soal.dosen.store') }}" method="POST" id="formSoal">
             @csrf
-            <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
-                <div>
-                    <label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
-                    <select name="mk_id" id="mk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
-                        <option value="">Pilih Mata Kuliah...</option>
-                        @foreach($mataKuliahDosen as $mk)
-                            <option value="{{ $mk->id }}" {{ old('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>
-                        @endforeach
-                    </select>
+            <div x-data="soalForm()" class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
+                <!-- Mata Kuliah -->
+                <div class="relative" @click.outside="mkOpen = false">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
+                    <input type="text" name="mk_id" x-model="mkId" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1" oninvalid="this.setCustomValidity('Pilih mata kuliah')" oninput="this.setCustomValidity('')">
+                    <button type="button" @click="mkOpen = !mkOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="mkOpen ? 'border-primary ring-2 ring-primary/20' : ''">
+                        <span x-text="getLabel(mkOptions, mkId, 'Pilih Mata Kuliah...')" :class="mkId ? 'text-slate-800' : 'text-slate-500'"></span>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="mkOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="mkOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
+                        <ul class="py-1 text-sm text-slate-700">
+                            <li>
+                                <button type="button" @click="mkId = ''; mkOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih Mata Kuliah...</button>
+                            </li>
+                            <template x-for="opt in mkOptions" :key="opt.id">
+                                <li>
+                                    <button type="button" @click="mkId = opt.id; mkOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="mkId === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
+                                        <span x-text="opt.label"></span>
+                                        <i class="fas fa-check text-primary text-xs" x-show="mkId === opt.id"></i>
+                                    </button>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
                     @error('mk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
-                <div>
-                    <label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
-                    <select name="cpl_id" id="cpl_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPL...</option></select>
+
+                <!-- CPL -->
+                <div class="relative" @click.outside="cplOpen = false">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
+                    <input type="text" name="cpl_id" x-model="cplId" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1" oninvalid="this.setCustomValidity('Pilih CPL')" oninput="this.setCustomValidity('')">
+                    <button type="button" @click="cplOpen = !cplOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="cplOpen ? 'border-primary ring-2 ring-primary/20' : ''" :disabled="!mkId || cplLoading">
+                        <span x-text="cplLoading ? 'Memuat CPL...' : getLabel(cplOptions, cplId, 'Pilih CPL...')" :class="cplId ? 'text-slate-800' : 'text-slate-500'"></span>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="cplOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="cplOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
+                        <ul class="py-1 text-sm text-slate-700">
+                            <li>
+                                <button type="button" @click="cplId = ''; cplOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih CPL...</button>
+                            </li>
+                            <template x-for="opt in cplOptions" :key="opt.id">
+                                <li>
+                                    <button type="button" @click="cplId = opt.id; cplOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="cplId === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
+                                        <span x-text="opt.label"></span>
+                                        <i class="fas fa-check text-primary text-xs" x-show="cplId === opt.id"></i>
+                                    </button>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
                     @error('cpl_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
-                <div>
-                    <label for="cpmk_id" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
-                    <select name="cpmk_id" id="cpmk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPMK...</option></select>
+
+                <!-- CPMK -->
+                <div class="relative" @click.outside="cpmkOpen = false">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
+                    <input type="text" name="cpmk_id" x-model="cpmkId" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1" oninvalid="this.setCustomValidity('Pilih CPMK')" oninput="this.setCustomValidity('')">
+                    <button type="button" @click="cpmkOpen = !cpmkOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="cpmkOpen ? 'border-primary ring-2 ring-primary/20' : ''" :disabled="!cplId || cpmkLoading">
+                        <span x-text="cpmkLoading ? 'Memuat CPMK...' : getLabel(cpmkOptions, cpmkId, 'Pilih CPMK...')" :class="cpmkId ? 'text-slate-800' : 'text-slate-500'"></span>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="cpmkOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="cpmkOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
+                        <ul class="py-1 text-sm text-slate-700">
+                            <li>
+                                <button type="button" @click="cpmkId = ''; cpmkOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih CPMK...</button>
+                            </li>
+                            <template x-for="opt in cpmkOptions" :key="opt.id">
+                                <li>
+                                    <button type="button" @click="cpmkId = opt.id; cpmkOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="cpmkId === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
+                                        <span x-text="opt.label"></span>
+                                        <i class="fas fa-check text-primary text-xs" x-show="cpmkId === opt.id"></i>
+                                    </button>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
                     @error('cpmk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
-                <div>
-                    <label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
-                    <select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
-                        <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Easy</option>
-                        <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
-                        <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Advanced</option>
-                    </select>
+
+                <!-- Tingkat Kesulitan -->
+                <div class="relative" @click.outside="kesulitanOpen = false">
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
+                    <input type="text" name="kesulitan" x-model="kesulitan" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1">
+                    <button type="button" @click="kesulitanOpen = !kesulitanOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="kesulitanOpen ? 'border-primary ring-2 ring-primary/20' : ''">
+                        <span x-text="getLabel(kesulitanOptions, kesulitan, 'Pilih Tingkat Kesulitan...')" :class="kesulitan ? 'text-slate-800' : 'text-slate-500'"></span>
+                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="kesulitanOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="kesulitanOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
+                        <ul class="py-1 text-sm text-slate-700">
+                            <li>
+                                <button type="button" @click="kesulitan = ''; kesulitanOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih Tingkat Kesulitan...</button>
+                            </li>
+                            <template x-for="opt in kesulitanOptions" :key="opt.id">
+                                <li>
+                                    <button type="button" @click="kesulitan = opt.id; kesulitanOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="kesulitan === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
+                                        <span x-text="opt.label"></span>
+                                        <i class="fas fa-check text-primary text-xs" x-show="kesulitan === opt.id"></i>
+                                    </button>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
                 </div>
+
+                <!-- Bobot / Skor -->
                 <div>
                     <label for="bobot" class="mb-2 block text-sm font-semibold text-slate-700">Bobot / Skor</label>
-                    <input type="number" id="bobot" name="bobot" min="1" max="10" value="{{ old('bobot', 10) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none" required oninput="if(this.value > 10) this.value = 10; if(this.value < 1) this.value = 1;">
+                    <input type="number" id="bobot" name="bobot" min="1" max="10" value="{{ old('bobot', 10) }}" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" required oninput="if(this.value > 10) this.value = 10; if(this.value < 1) this.value = 1;">
                 </div>
             </div>
 
@@ -192,54 +268,93 @@
                 }
             });
 
-            const mkSelect = document.getElementById('mk_id');
-            const cplSelect = document.getElementById('cpl_id');
-            const cpmkSelect = document.getElementById('cpmk_id');
-            const oldCplId = "{{ old('cpl_id') }}";
-            const oldCpmkId = "{{ old('cpmk_id') }}";
-            
-            mkSelect.addEventListener('change', function() {
-                const mkId = this.value;
-                cplSelect.innerHTML = '<option value="">Memuat CPL...</option>';
-                cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                if (mkId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${mkId}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            cplSelect.innerHTML = '<option value="">Pilih CPL...</option>';
-                            data.forEach(c => {
-                                const selected = oldCplId == c.id ? 'selected' : '';
-                                cplSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
-                            });
-                            // Trigger change on CPL to load CPMK if old value exists
-                            if (oldCplId) cplSelect.dispatchEvent(new Event('change'));
-                        })
-                        .catch(() => { cplSelect.innerHTML = '<option value="">Gagal memuat cpl</option>'; });
-                } else {
-                    cplSelect.innerHTML = '<option value="">Pilih CPL...</option>';
-                }
-            });
+            // Soal Form Alpine Logic
+            window.soalForm = function() {
+                return {
+                    mkId: '{{ old('mk_id', '') }}',
+                    mkOptions: [
+                        @foreach($mataKuliahDosen as $mk)
+                        { id: '{{ $mk->id }}', label: '{{ $mk->kode }} - {{ addslashes($mk->nama) }}' },
+                        @endforeach
+                    ],
+                    mkOpen: false,
 
-            cplSelect.addEventListener('change', function() {
-                const cplId = this.value;
-                cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
-                if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkSelect.value}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                            data.forEach(c => {
-                                const selected = oldCpmkId == c.id ? 'selected' : '';
-                                cpmkSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
-                            });
-                        })
-                        .catch(() => { cpmkSelect.innerHTML = '<option value="">Gagal memuat cpmk</option>'; });
-                } else {
-                    cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                }
-            });
+                    cplId: '{{ old('cpl_id', '') }}',
+                    cplOptions: [],
+                    cplLoading: false,
+                    cplOpen: false,
 
-            if (mkSelect.value) { mkSelect.dispatchEvent(new Event('change')); }
+                    cpmkId: '{{ old('cpmk_id', '') }}',
+                    cpmkOptions: [],
+                    cpmkLoading: false,
+                    cpmkOpen: false,
+
+                    kesulitan: '{{ old('kesulitan', '') }}',
+                    kesulitanOpen: false,
+                    kesulitanOptions: [
+                        { id: 'easy', label: 'Easy' },
+                        { id: 'intermediate', label: 'Intermediate' },
+                        { id: 'advanced', label: 'Advanced' }
+                    ],
+
+                    init() {
+                        this.$watch('mkId', (value) => {
+                            this.cplId = '';
+                            this.cpmkId = '';
+                            this.cplOptions = [];
+                            this.cpmkOptions = [];
+                            if (value) this.fetchCpl(value);
+                        });
+
+                        this.$watch('cplId', (value) => {
+                            this.cpmkId = '';
+                            this.cpmkOptions = [];
+                            if (value && this.mkId) this.fetchCpmk(value, this.mkId);
+                        });
+
+                        if (this.mkId) {
+                            this.fetchCpl(this.mkId, true);
+                        }
+                    },
+
+                    fetchCpl(mkId, isInitial = false) {
+                        this.cplLoading = true;
+                        fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${mkId}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                this.cplOptions = data.map(c => ({
+                                    id: c.id.toString(),
+                                    label: `${c.kode} - ${c.deskripsi.substring(0, 60)}...`
+                                }));
+                                this.cplLoading = false;
+                                if (isInitial && this.cplId) {
+                                    this.fetchCpmk(this.cplId, mkId, true);
+                                }
+                            })
+                            .catch(() => { this.cplLoading = false; });
+                    },
+
+                    fetchCpmk(cplId, mkId, isInitial = false) {
+                        this.cpmkLoading = true;
+                        fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkId}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                this.cpmkOptions = data.map(c => ({
+                                    id: c.id.toString(),
+                                    label: `${c.kode} - ${c.deskripsi.substring(0, 60)}...`
+                                }));
+                                this.cpmkLoading = false;
+                            })
+                            .catch(() => { this.cpmkLoading = false; });
+                    },
+                    
+                    getLabel(options, id, defaultLabel) {
+                        if (!id) return defaultLabel;
+                        const opt = options.find(o => o.id == id);
+                        return opt ? opt.label : defaultLabel;
+                    }
+                }
+            };
             const container = document.getElementById('optionsContainer');
             const addBtn = document.getElementById('addOptionBtn');
             function updateStyles() {

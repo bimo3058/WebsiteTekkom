@@ -15,7 +15,7 @@
         <x-slot:actions>
             <button type="button"
                 class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300 cursor-pointer transition-all shadow-sm hover:shadow-md"
-                onclick="window.history.back()">
+                @click="window.history.back()">
                 <i class="fas fa-arrow-left"></i> Kembali
             </button>
         </x-slot:actions>

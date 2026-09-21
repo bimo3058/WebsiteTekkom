@@ -1,13 +1,85 @@
 @section('hide_global_errors', true)
 
 @section('breadcrumbs')
-    <a href="#" class="hover:text-primary transition-colors text-slate-500">Sistem Ujian</a>
+    <a href="#" class="hover:text-primary transition-colors text-slate-500">Ujian Komprehensif</a>
     <span class="mx-2 text-slate-300">/</span>
     <span class="text-slate-800 font-semibold">Setup Periode</span>
 @endsection
 
 <x-banksoal::layouts.admin>
-    <div x-data="periodeManagerApp()" class="w-full">
+    {{-- Style Box Wrap khas SITKOM (Mengadopsi Dashboard Admin Bank Soal) --}}
+    <style>
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+        main.overflow-y-auto { overflow: hidden !important; }
+        #banksoal-main-content { padding: 0 !important; max-width: 100% !important; height: 100% !important; display: flex; flex-direction: column; }
+
+        .dash-wrap {
+            display: flex; flex-direction: column; height: 100%;
+            padding: 16px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+        }
+
+        .dash-box {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            background: #fff; border: 1px solid var(--c-border);
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden; width: 100%; box-sizing: border-box;
+        }
+
+        .dash-box-header {
+            background: #fff;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0; width: 100%; box-sizing: border-box;
+            padding: 16px 24px;
+        }
+
+        .dash-box-body {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+
+        .dash-box-body > * {
+            flex-shrink: 0;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb {
+            background: var(--c-border-strong);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .dash-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .dash-box {
+                border-radius: 10px;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .dash-box-header {
+                padding: 12px 14px;
+                position: sticky; top: 0; z-index: 20;
+            }
+            .dash-box-body {
+                padding: 14px;
+                overflow-y: visible;
+                display: block;
+            }
+        }
+    </style>
+
+    <div x-data="periodeManagerApp()" class="dash-wrap">
         {{-- PHP data passed safely via JSON script tag --}}
         <script id="periode-init-data" type="application/json">
         {
@@ -26,27 +98,36 @@
         }
         </script>
 
+        <div class="dash-box">
 
-        <!-- Page Header -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">Manajemen Periode Ujian</h1>
-                <p class="text-[13px] text-gray-500 mt-0.5">Atur periode pelaksanaan ujian komprehensif mahasiswa.</p>
+        <!-- Box Header -->
+        <div class="dash-box-header">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">Manajemen Periode Ujian</h1>
+                    <p class="text-[13px] text-gray-500 mt-0.5">Atur periode pelaksanaan ujian komprehensif mahasiswa.</p>
+                </div>
+
+                <button @click="openModal = true"
+                    class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 text-white font-medium text-[13px] shadow-sm">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    Buat Periode Ujian
+                </button>
             </div>
-
-            <button @click="openModal = true"
-                class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 text-white font-medium text-[13px] shadow-sm">
-                <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Buat Periode Ujian
-            </button>
         </div>
 
-        {{-- Table Container --}}
-        <div class="mb-8">
-            @include('banksoal::periode._table')
+        <!-- Box Body -->
+        <div class="dash-box-body">
+            {{-- Table Container --}}
+            <div class="mb-8">
+                @include('banksoal::periode._table')
+            </div>
         </div>
+
+        </div> {{-- end .dash-box --}}
+
 <!-- Modal Popup: Setup Periode Baru -->
         <div x-show="openModal" tabindex="-1"
             class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" style="display: none;">
