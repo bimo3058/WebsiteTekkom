@@ -1,6 +1,6 @@
 @php
-    $perPageOptions = [5, 10, 25, 50, 100];
-    $currentPerPage = request('perPage', 10);
+    $perPageOptions = [5, 10, 25, 50];
+    $currentPerPage = request('perPage', 5);
     $from = $periodes->firstItem() ?? 0;
     $to   = $periodes->lastItem()  ?? 0;
     $totalPageData = $periodes->total();

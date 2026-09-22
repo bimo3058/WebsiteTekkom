@@ -1,5 +1,4 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
-@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 @include('manajemenmahasiswa::partials.filter-popover')
@@ -200,20 +199,20 @@
     }
 </style>
 
-{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
-<div class="mm-frame-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
-    <div>
-        <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Manajemen Kegiatan</h1>
-        <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
-    </div>
-    @if($canTambahKegiatan)
-        <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
-           class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Tambah Kegiatan
-        </a>
-    @endif
-</div>
+<!-- Page Header -->
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Manajemen Kegiatan"
+    subtitle="Daftar kegiatan terbaru dari berbagai bidang kepengurusan">
+    <x-slot:actions>
+        @if($canTambahKegiatan)
+            <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
+               class="mk-btn mk-btn--primary mk-btn--sm">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Tambah Kegiatan
+            </a>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
 @if(session('success'))
@@ -280,7 +279,7 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterBidang">Bidang</label>
-                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidang">
                                 <option value="semua">Semua Bidang</option>
                                 <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
                                 @foreach($bidangList as $bidang)
@@ -288,12 +287,12 @@
                                         {{ $bidang->nama_bidang }}
                                     </option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterTahun">Tahun</label>
-                            <select name="tahun" id="filterTahun" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="tahun" id="filterTahun">
                                 <option value="semua">Semua Tahun</option>
                                 @foreach($tahunList as $t)
                                     <option value="{{ $t }}" {{ request('tahun') == $t ? 'selected' : '' }}>
@@ -308,7 +307,7 @@
                                         Belum ada tanggal
                                     </option>
                                 @endif
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">

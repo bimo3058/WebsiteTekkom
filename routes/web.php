@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\MicrosoftController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserStatusController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
@@ -60,12 +61,15 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
 
+    Route::post('/user/heartbeat', [UserStatusController::class, 'heartbeat'])->name('user.heartbeat');
     Route::middleware('role:superadmin')->prefix('superadmin')->name('superadmin.')->group(function () {
 
         Route::get('/dashboard', [SuperAdminController::class, 'index'])
             ->name('dashboard');
         Route::get('/notifications', [\App\Http\Controllers\SuperAdminNotificationController::class, 'index'])
             ->name('notifications.index');
+        Route::patch('/notifications/{id}/read', [\App\Http\Controllers\SuperAdminNotificationController::class, 'markAsRead'])
+            ->name('notifications.read');
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');

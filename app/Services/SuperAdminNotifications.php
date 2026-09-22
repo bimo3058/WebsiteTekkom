@@ -26,52 +26,23 @@ class SuperAdminNotifications
 
     public function recent(User $user): Collection
     {
-        $preferences = $this->preferences($user);
-        $since = now()->subDays(7);
-        $modules = [];
-        if ($preferences['authentication']) {
-            $modules[] = 'auth';
-        }
-        if ($preferences['user_management']) {
-            $modules[] = 'user_management';
-        }
-        if ($preferences['module_activity']) {
-            $modules = array_merge($modules, ['bank_soal', 'capstone', 'eoffice', 'manajemen_mahasiswa']);
-        }
+        return \App\Models\SuperAdminNotification::query()
+            ->whereNull('read_at')
+            ->orderByDesc('last_occurred_at')
+            ->limit(10)
+            ->get()
+            ->map(fn ($notif) => [
+                'id' => 'notif-'.$notif->id,
+                'title' => $notif->title,
+                'description' => $notif->message,
+                'time' => $notif->last_occurred_at->diffForHumans(),
+                'timestamp' => $notif->last_occurred_at->timestamp,
+                'url' => route('superadmin.notifications.index'), // Default URL
+            ]);
+    }
 
-        $items = collect();
-        if ($modules !== []) {
-            $items = AuditLog::query()->whereIn('module', $modules)
-                ->where('created_at', '>=', $since)
-                ->where(function ($query) {
-                    $query->where('module', '!=', 'auth')->orWhereIn('action', ['LOGIN', 'LOGOUT']);
-                })
-                ->orderByDesc('created_at')->orderByDesc('id')->limit(10)->get()
-                ->map(fn ($log) => [
-                    'id' => 'audit-'.$log->id,
-                    'title' => $log->module_label.' · '.$log->action,
-                    'description' => $log->description,
-                    'time' => $log->created_at->diffForHumans(),
-                    'timestamp' => $log->created_at->timestamp,
-                    'url' => route('superadmin.audit-logs', ['module' => $log->module, 'action' => $log->action]),
-                ]);
-        }
-
-        if ($preferences['imports']) {
-            $imports = ImportStatus::query()->where('user_id', $user->id)
-                ->whereIn('status', ['completed', 'failed'])->where('updated_at', '>=', $since)
-                ->orderByDesc('updated_at')->orderByDesc('id')->limit(10)->get()
-                ->map(fn ($import) => [
-                    'id' => 'import-'.$import->id,
-                    'title' => $import->status === 'completed' ? 'Impor pengguna selesai' : 'Impor pengguna gagal',
-                    'description' => $import->filename,
-                    'time' => $import->updated_at->diffForHumans(),
-                    'timestamp' => $import->updated_at->timestamp,
-                    'url' => route('superadmin.dashboard'),
-                ]);
-            $items = $items->concat($imports);
-        }
-
-        return $items->sortByDesc('timestamp')->take(10)->values();
+    public function countRecent(User $user): int
+    {
+        return \App\Models\SuperAdminNotification::whereNull('read_at')->count();
     }
 }

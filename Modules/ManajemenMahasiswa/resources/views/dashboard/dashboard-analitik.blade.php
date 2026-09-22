@@ -31,7 +31,7 @@
     /* Dash wrap styles appended */
     .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-    .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); overflow: hidden; width: 100%; box-sizing: border-box; }
+    .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
     .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
     .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 2px; }
     /* min-width:0 wajib agar Chart.js bisa menghitung lebar canvas di dalam flex container */
@@ -46,25 +46,31 @@
         .dash-box-body { overflow-y: visible !important; flex: none !important; padding: 14px; }
     }
 
-    .main-wrapper { background:transparent !important; box-shadow:none !important; padding:0 !important; }
+    /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+       jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+    .main-wrapper {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
 
     /* Wadah section dashboard — urutan diatur per-scope via CSS order (lihat blok PHP $isGpm) */
     .da-sections { display:flex; flex-direction:column; }
     .da-section { display:block; }
 
     /* ─── Header ─────────────────────────────────────────── */
-    .da-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:10px; }
-    .da-header h4 { font-size:1.45rem; font-weight:800; color:#0D0D12; margin-bottom:2px; letter-spacing:-.02em; }
-    .da-header-meta { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:4px; }
     .da-tier-badge {
         display:inline-flex; align-items:center; gap:5px; padding:3px 10px;
-        border-radius:50px; font-size:.72rem; font-weight:700; letter-spacing:.02em;
+        border-radius:50px; font-size:11px; font-weight:700; letter-spacing:.02em;
     }
 
     .da-refresh-btn {
         display:inline-flex; align-items:center; gap:6px; padding:9px 18px;
         border:1px solid #DFE1E7; border-radius:10px; background:#fff;
-        color:#666D80; font-size:.85rem; font-weight:600; cursor:pointer;
+        color:#666D80; font-size:13px; font-weight:600; cursor:pointer;
         transition:all .2s; text-decoration:none; flex-shrink:0;
     }
     .da-refresh-btn:hover { border-color:#0B266E; color:#0B266E; background:#EEF1F8; }
@@ -214,11 +220,11 @@
         display:flex; align-items:center; gap:12px; padding:18px 22px;
         border-bottom:1px solid #f3f4f6; flex-shrink:0;
     }
-    .dm-head h5 { font-size:1rem; font-weight:700; color:#0D0D12; margin:0; flex:1; }
-    .dm-badge { font-size:.75rem; font-weight:600; color:#808897; background:#f3f4f6; padding:3px 10px; border-radius:50px; flex-shrink:0; }
+    .dm-head h5 { font-size:16px; font-weight:700; color:#0D0D12; margin:0; flex:1; }
+    .dm-badge { font-size:12px; font-weight:600; color:#808897; background:#f3f4f6; padding:3px 10px; border-radius:50px; flex-shrink:0; }
     .dm-close {
         width:30px; height:30px; border-radius:50%; border:none; background:#f3f4f6;
-        color:#666D80; font-size:1.1rem; display:flex; align-items:center; justify-content:center;
+        color:#666D80; font-size:18px; display:flex; align-items:center; justify-content:center;
         cursor:pointer; flex-shrink:0; transition:all .15s;
     }
     .dm-close:hover { background:#DFE1E7; color:#0D0D12; }
@@ -228,7 +234,7 @@
     }
     .dm-search {
         flex:1; min-width:180px; padding:8px 14px 8px 36px; border:1px solid #DFE1E7;
-        border-radius:10px; font-size:.85rem; color:#353849; background:#F6F8FA;
+        border-radius:10px; font-size:13px; color:#353849; background:#F6F8FA;
         outline:none; transition:all .2s; position:relative;
     }
     .dm-search:focus { border-color:#0B266E; background:#fff; box-shadow:0 0 0 3px rgba(11,38,110,.1); }
@@ -237,7 +243,7 @@
     .dm-filter-chips { display:flex; flex-wrap:wrap; gap:5px; }
     .dm-chip {
         padding:4px 12px; border-radius:50px; border:1.5px solid #DFE1E7;
-        background:#fff; color:#666D80; font-size:.78rem; font-weight:600;
+        background:#fff; color:#666D80; font-size:12px; font-weight:600;
         cursor:pointer; transition:all .15s;
     }
     .dm-chip:hover { border-color:#0B266E; color:#0B266E; background:#EEF1F8; }
@@ -315,24 +321,14 @@
 <div class="dash-wrap">
     <div class="dash-box">
         <div class="dash-box-header">
-<div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:0;">
-    {{-- Left: Title + badge --}}
-    <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-        <div>
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-                <h1 style="font-size:22px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:-0.02em; line-height:1.2; margin:0;">Dashboard Analitik</h1>
-                <span style="font-size:10px; font-weight:600; color:var(--c-primary, #0B266E); background:rgba(11,38,110,0.09); border:1px solid rgba(11,38,110,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Modul Mahasiswa</span>
-            </div>
-            <p style="font-size:12px; color:var(--c-fg-muted, #666D80); margin:0;">
-                Selamat datang kembali, <span style="color:var(--c-fg, #0D0D12); font-weight:600;">{{ auth()->user()->name ?? 'Admin' }}</span>
-                <span style="margin-left:4px; color:var(--c-fg-placeholder, #808897);">·</span>
-                <span style="margin-left:4px; color:var(--c-fg-muted, #666D80);">Diperbarui: {{ $genAt->format('d M Y, H:i') }} WIB</span>
-            </p>
-        </div>
-    </div>
+<x-manajemenmahasiswa::ui.page-header
+    title="Dashboard Analitik"
+    badge="Modul Mahasiswa">
+    Selamat datang kembali, <span style="color:var(--c-fg, #0D0D12); font-weight:600;">{{ auth()->user()->name ?? 'Admin' }}</span>
+    <span style="margin-left:4px; color:var(--c-fg-placeholder, #808897);">·</span>
+    <span style="margin-left:4px; color:var(--c-fg-muted, #666D80);">Diperbarui: {{ $genAt->format('d M Y, H:i') }} WIB</span>
 
-    {{-- Right: action buttons --}}
-    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+    <x-slot:actions>
         <a href="{{ route('manajemenmahasiswa.dashboard') }}"
            style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:8px; font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849); text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,.04);"
            onmouseover="this.style.background='var(--c-bg, #F6F8FA)'; this.style.borderColor='var(--c-border-strong, #C1C7CF)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,.07)'"
@@ -342,8 +338,8 @@
             </svg>
             <span>Refresh Data</span>
         </a>
-    </div>
-</div>
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
         </div> <!-- end dash-box-header -->
         <div class="dash-box-body">
 
@@ -393,16 +389,16 @@
             <div style="display:flex;flex-direction:column;gap:8px;">
                 @foreach($dpmHimpunan['per_divisi'] as $divisi => $total)
                     <div style="display:flex;align-items:center;gap:12px;">
-                        <span style="font-size:.82rem;font-weight:600;color:#353849;width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $divisi }}</span>
+                        <span style="font-size:13px;font-weight:600;color:#353849;width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $divisi }}</span>
                         <div style="flex:1;height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;">
                             <div style="height:100%;width:{{ round($total / $maxDivisiDpm * 100) }}%;background:var(--c-primary, #0B266E);border-radius:6px;min-width:24px;"></div>
                         </div>
-                        <span style="font-size:.82rem;font-weight:700;color:#0D0D12;width:32px;text-align:right;flex-shrink:0;">{{ $total }}</span>
+                        <span style="font-size:13px;font-weight:700;color:#0D0D12;width:32px;text-align:right;flex-shrink:0;">{{ $total }}</span>
                     </div>
                 @endforeach
             </div>
         @else
-            <div style="text-align:center;padding:24px;color:#808897;font-size:.85rem;">Belum ada data pengurus himpunan</div>
+            <div style="text-align:center;padding:24px;color:#808897;font-size:13px;">Belum ada data pengurus himpunan</div>
         @endif
     </div>
 
@@ -422,7 +418,7 @@
                     @endphp
                     <tr>
                         <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($namaPengurus,0,2)) }}</div><span style="font-weight:600;color:#0D0D12;">{{ $namaPengurus }}</span></div></td>
-                        <td style="font-family:monospace;color:#808897;font-size:.82rem;">{{ $pengurus['nim'] ?? '-' }}</td>
+                        <td style="font-family:monospace;color:#808897;font-size:13px;">{{ $pengurus['nim'] ?? '-' }}</td>
                         <td>{{ $pengurus['jabatan'] ?? '-' }}</td>
                         <td><span class="badge {{ $statusPengurusKey === 'aktif' ? 'badge-bekerja' : 'badge-belum' }}">{{ ucfirst($statusPengurus) }}</span></td>
                     </tr>
@@ -489,7 +485,7 @@
                 @endforeach
             </div>
         @else
-            <div style="text-align:center;padding:24px;color:#808897;font-size:.85rem;">Belum ada bidang proker</div>
+            <div style="text-align:center;padding:24px;color:#808897;font-size:13px;">Belum ada bidang proker</div>
         @endif
     </div>
 
@@ -657,16 +653,16 @@
             <div style="display:flex;flex-direction:column;gap:8px;">
                 @foreach($dpmPartisipasi['per_angkatan'] as $angkatan => $total)
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <span style="font-size:.8rem;font-weight:700;color:#353849;width:48px;flex-shrink:0;">{{ $angkatan }}</span>
+                        <span style="font-size:13px;font-weight:700;color:#353849;width:48px;flex-shrink:0;">{{ $angkatan }}</span>
                         <div style="flex:1;height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;">
                             <div style="height:100%;width:{{ round($total / $maxAngkatanDpm * 100) }}%;background:var(--c-primary, #0B266E);border-radius:6px;min-width:24px;"></div>
                         </div>
-                        <span style="font-size:.82rem;font-weight:700;color:#0D0D12;width:36px;text-align:right;flex-shrink:0;">{{ $total }}</span>
+                        <span style="font-size:13px;font-weight:700;color:#0D0D12;width:36px;text-align:right;flex-shrink:0;">{{ $total }}</span>
                     </div>
                 @endforeach
             </div>
         @else
-            <div style="text-align:center;padding:24px;color:#808897;font-size:.85rem;">Belum ada riwayat kegiatan mahasiswa</div>
+            <div style="text-align:center;padding:24px;color:#808897;font-size:13px;">Belum ada riwayat kegiatan mahasiswa</div>
         @endif
     </div>
 
@@ -685,7 +681,7 @@
                     @endphp
                     <tr>
                         <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($namaAktif,0,2)) }}</div><span style="font-weight:600;color:#0D0D12;">{{ $namaAktif }}</span></div></td>
-                        <td style="font-family:monospace;color:#808897;font-size:.82rem;">{{ $student?->student_number ?? '-' }}</td>
+                        <td style="font-family:monospace;color:#808897;font-size:13px;">{{ $student?->student_number ?? '-' }}</td>
                         <td style="font-weight:700;color:#0B266E;">{{ number_format($row->total ?? 0) }}</td>
                     </tr>
                 @empty
@@ -931,19 +927,19 @@
                 ['label'=>'Selesai', 'val'=>$ops['pengaduan_selesai'] ?? 0, 'color'=>'#059669'],
             ] as $row)
             <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
-                <div style="font-size:1.25rem;font-weight:800;color:{{ $row['color'] }};">{{ number_format($row['val']) }}</div>
-                <div style="font-size:.75rem;color:#666D80;font-weight:600;">{{ $row['label'] }}</div>
+                <div style="font-size:20px;font-weight:800;color:{{ $row['color'] }};">{{ number_format($row['val']) }}</div>
+                <div style="font-size:12px;color:#666D80;font-weight:600;">{{ $row['label'] }}</div>
             </div>
             @endforeach
         </div>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.82rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:13px;">
             <span style="font-weight:700;color:#0D0D12;">Responsivitas Pengaduan</span>
             <span style="font-weight:800;color:#059669;">{{ $ops['responsivitas_pengaduan'] ?? 0 }}%</span>
         </div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;">
             <div style="width:{{ min(100, $ops['responsivitas_pengaduan'] ?? 0) }}%;height:100%;background:#059669;border-radius:999px;"></div>
         </div>
-        <div style="margin-top:10px;font-size:.72rem;color:#808897;">
+        <div style="margin-top:10px;font-size:11px;color:#808897;">
             SLA {{ $ops['sla_hari'] ?? 7 }} hari, {{ number_format($ops['pengaduan_belum_dibaca'] ?? 0) }} pengaduan belum dibaca.
         </div>
     </div>
@@ -970,7 +966,7 @@
                 @endforeach
             </tbody>
         </table>
-        <div style="margin-top:10px;font-size:.72rem;color:#808897;">
+        <div style="margin-top:10px;font-size:11px;color:#808897;">
             Potensi reward pending: {{ number_format($ops['reward_mk_pending'] ?? 0) }} MK / {{ number_format($ops['reward_sks_pending'] ?? 0) }} SKS.
         </div>
     </div>
@@ -993,16 +989,16 @@
                 ['label'=>'Selesai', 'val'=>$ops['kegiatan_selesai'] ?? 0],
             ] as $row)
             <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
-                <div style="font-size:1.25rem;font-weight:800;color:#0B266E;">{{ number_format($row['val']) }}</div>
-                <div style="font-size:.75rem;color:#666D80;font-weight:600;">{{ $row['label'] }}</div>
+                <div style="font-size:20px;font-weight:800;color:#0B266E;">{{ number_format($row['val']) }}</div>
+                <div style="font-size:12px;color:#666D80;font-weight:600;">{{ $row['label'] }}</div>
             </div>
             @endforeach
         </div>
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.82rem;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0) }} / {{ number_format($ops['target_peserta'] ?? 0) }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0) }} / {{ number_format($ops['target_peserta'] ?? 0) }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin-bottom:10px;"><div style="width:{{ $pesertaPct }}%;height:100%;background:#2563eb;border-radius:999px;"></div></div>
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.82rem;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span></div>
         <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;"><div style="width:{{ $anggaranPct }}%;height:100%;background:#059669;border-radius:999px;"></div></div>
-        <div style="margin-top:10px;font-size:.72rem;color:#808897;">
+        <div style="margin-top:10px;font-size:11px;color:#808897;">
             {{ number_format($ops['kegiatan_selesai_belum_realisasi'] ?? 0) }} kegiatan selesai belum lengkap realisasinya.
         </div>
     </div>
@@ -1112,7 +1108,7 @@
     $nMasaStudi    = $eval['sample_masa_studi'] ?? 0;
     $nWaktuTunggu  = $eval['sample_waktu_tunggu'] ?? 0;
     // Teks abu-abu "Data belum cukup" untuk metrik dengan sampel di bawah ambang
-    $dataKurang    = '<span style="font-size:1.05rem;font-weight:700;color:#808897;">Data belum cukup</span>';
+    $dataKurang    = '<span style="font-size:16px;font-weight:700;color:#808897;">Data belum cukup</span>';
 
     // Badge status terhadap target mutu (FASE 3A): tercapai/tidak/kurang + label target
     $qTargets = $eval['targets'] ?? [];
@@ -1126,8 +1122,8 @@
         ];
         $c = $map[$t['status']] ?? $map['kurang'];
         return '<div style="display:inline-flex;align-items:center;gap:6px;">'
-            . '<span style="display:inline-block;width:fit-content;padding:1px 8px;border-radius:50px;font-size:.66rem;font-weight:700;background:'.$c['bg'].';color:'.$c['color'].';">'.$c['txt'].'</span>'
-            . '<span style="font-size:.64rem;color:#808897;">'.$t['label'].'</span>'
+            . '<span style="display:inline-block;width:fit-content;padding:1px 8px;border-radius:50px;font-size:10px;font-weight:700;background:'.$c['bg'].';color:'.$c['color'].';">'.$c['txt'].'</span>'
+            . '<span style="font-size:10px;color:#808897;">'.$t['label'].'</span>'
             . '</div>';
     };
 @endphp
@@ -1139,10 +1135,10 @@
         </div>
         <div>
             <div class="kpi-mini-val" style="color:#2563eb;">
-                @if($nMasaStudi < $minSampel){!! $dataKurang !!}@else{{ $eval['rata_masa_studi'] }} <span style="font-size:.8rem;font-weight:600;">thn</span>@endif
+                @if($nMasaStudi < $minSampel){!! $dataKurang !!}@else{{ $eval['rata_masa_studi'] }} <span style="font-size:13px;font-weight:600;">thn</span>@endif
             </div>
             <div class="kpi-mini-label">Rata-rata Masa Studi</div>
-            <div style="font-size:.68rem;color:#808897;margin-top:2px;">dari {{ $nMasaStudi }} lulusan</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">dari {{ $nMasaStudi }} lulusan</div>
             {!! $targetBadge('masa_studi') !!}
         </div>
     </div>
@@ -1153,10 +1149,10 @@
         </div>
         <div>
             <div class="kpi-mini-val" style="color:#d97706;">
-                @if($nWaktuTunggu < $minSampel){!! $dataKurang !!}@else{{ $eval['rata_waktu_tunggu'] }} <span style="font-size:.8rem;font-weight:600;">thn</span>@endif
+                @if($nWaktuTunggu < $minSampel){!! $dataKurang !!}@else{{ $eval['rata_waktu_tunggu'] }} <span style="font-size:13px;font-weight:600;">thn</span>@endif
             </div>
             <div class="kpi-mini-label">Waktu Tunggu Kerja</div>
-            <div style="font-size:.68rem;color:#808897;margin-top:2px;">{{ $nWaktuTunggu }} dari {{ $almTotal }} alumni terdata</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $nWaktuTunggu }} dari {{ $almTotal }} alumni terdata</div>
             {!! $targetBadge('waktu_tunggu_kerja') !!}
         </div>
     </div>
@@ -1170,7 +1166,7 @@
                 @if($almTerdata < $minSampel){!! $dataKurang !!}@else{{ $eval['serapan_kerja'] }}%@endif
             </div>
             <div class="kpi-mini-label">Serapan Kerja Alumni</div>
-            <div style="font-size:.68rem;color:#808897;margin-top:2px;">{{ $almTerdata }} dari {{ $almTotal }} alumni terdata</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $almTerdata }} dari {{ $almTotal }} alumni terdata</div>
             {!! $targetBadge('serapan_kerja') !!}
         </div>
     </div>
@@ -1184,7 +1180,7 @@
                 @if($nMasaStudi < $minSampel){!! $dataKurang !!}@else{{ $eval['kelulusan_tepat_waktu'] ?? 0 }}%@endif
             </div>
             <div class="kpi-mini-label">Kelulusan Tepat Waktu</div>
-            <div style="font-size:.68rem;color:#808897;margin-top:2px;">lulus ≤ 4 thn · dari {{ $nMasaStudi }} lulusan</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">lulus ≤ 4 thn · dari {{ $nMasaStudi }} lulusan</div>
             {!! $targetBadge('kelulusan_tepat_waktu') !!}
         </div>
     </div>
@@ -1196,7 +1192,7 @@
         <div>
             <div class="kpi-mini-val" style="color:#0B266E;">{{ $eval['kelengkapan_data_alumni'] ?? 0 }}%</div>
             <div class="kpi-mini-label">Kelengkapan Data Alumni</div>
-            <div style="font-size:.68rem;color:#808897;margin-top:2px;">{{ $almTerdata }} dari {{ $almTotal }} mengisi data karir</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $almTerdata }} dari {{ $almTotal }} mengisi data karir</div>
         </div>
     </div>
     {{-- Responsivitas Pengaduan --}}
@@ -1207,7 +1203,7 @@
         <div>
             <div class="kpi-mini-val" style="color:#0C4D6E;">{{ $eval['responsivitas'] }}%</div>
             <div class="kpi-mini-label" title="Persentase pengaduan (non-draft) yang dijawab dalam ≤ {{ $eval['sla_hari'] ?? 7 }} hari sejak dibuat.">Responsivitas Pengaduan (SLA)</div>
-            <div style="font-size:.68rem;color:#808897;margin-top:2px;">{{ $eval['pengaduan_sla_terpenuhi'] ?? 0 }} dari {{ $eval['pengaduan_total'] ?? 0 }} dijawab ≤ {{ $eval['sla_hari'] ?? 7 }} hari</div>
+            <div style="font-size:11px;color:#808897;margin-top:2px;">{{ $eval['pengaduan_sla_terpenuhi'] ?? 0 }} dari {{ $eval['pengaduan_total'] ?? 0 }} dijawab ≤ {{ $eval['sla_hari'] ?? 7 }} hari</div>
         </div>
     </div>
 </div>
@@ -1222,34 +1218,34 @@
         <table class="da-table" style="width:100%;border-collapse:collapse;">
             <thead>
                 <tr>
-                    <th style="text-align:left;font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Angkatan</th>
-                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Total</th>
-                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Lulus</th>
-                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% Kelulusan</th>
-                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Drop Out</th>
-                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% DO</th>
+                    <th style="text-align:left;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Angkatan</th>
+                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Total</th>
+                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Lulus</th>
+                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% Kelulusan</th>
+                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Drop Out</th>
+                    <th style="text-align:center;font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% DO</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($eval['kelulusan_per_angkatan'] as $angkatan => $row)
                     <tr style="border-bottom:1px solid #F6F8FA;">
-                        <td style="padding:9px 12px;font-size:.85rem;font-weight:700;color:#0D0D12;">{{ $angkatan }}</td>
-                        <td style="padding:9px 12px;text-align:center;font-size:.85rem;color:#353849;">{{ $row['total'] }}</td>
-                        <td style="padding:9px 12px;text-align:center;font-size:.85rem;color:#059669;font-weight:600;">{{ $row['lulus'] }}</td>
+                        <td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0D0D12;">{{ $angkatan }}</td>
+                        <td style="padding:9px 12px;text-align:center;font-size:13px;color:#353849;">{{ $row['total'] }}</td>
+                        <td style="padding:9px 12px;text-align:center;font-size:13px;color:#059669;font-weight:600;">{{ $row['lulus'] }}</td>
                         <td style="padding:9px 12px;text-align:center;">
                             @if(empty($row['jatuh_tempo']))
-                                <span style="display:inline-block;padding:2px 10px;border-radius:50px;font-size:.72rem;font-weight:600;background:#f3f4f6;color:#808897;" title="Angkatan belum mencapai masa studi normal (4 tahun)">Belum jatuh tempo</span>
+                                <span style="display:inline-block;padding:2px 10px;border-radius:50px;font-size:11px;font-weight:600;background:#f3f4f6;color:#808897;" title="Angkatan belum mencapai masa studi normal (4 tahun)">Belum jatuh tempo</span>
                             @else
-                                <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:.78rem;font-weight:700;background:#ecfdf5;color:#059669;">{{ $row['rate_lulus'] }}%</span>
+                                <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:12px;font-weight:700;background:#ecfdf5;color:#059669;">{{ $row['rate_lulus'] }}%</span>
                             @endif
                         </td>
-                        <td style="padding:9px 12px;text-align:center;font-size:.85rem;color:#dc2626;font-weight:600;">{{ $row['do'] }}</td>
+                        <td style="padding:9px 12px;text-align:center;font-size:13px;color:#dc2626;font-weight:600;">{{ $row['do'] }}</td>
                         <td style="padding:9px 12px;text-align:center;">
-                            <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:.78rem;font-weight:700;background:{{ $row['rate_do'] > 0 ? '#fef2f2' : '#f3f4f6' }};color:{{ $row['rate_do'] > 0 ? '#dc2626' : '#808897' }};">{{ $row['rate_do'] }}%</span>
+                            <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:12px;font-weight:700;background:{{ $row['rate_do'] > 0 ? '#fef2f2' : '#f3f4f6' }};color:{{ $row['rate_do'] > 0 ? '#dc2626' : '#808897' }};">{{ $row['rate_do'] }}%</span>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="6" style="padding:24px;text-align:center;color:#808897;font-size:.85rem;">Belum ada data angkatan</td></tr>
+                    <tr><td colspan="6" style="padding:24px;text-align:center;color:#808897;font-size:13px;">Belum ada data angkatan</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -1327,13 +1323,13 @@
             @foreach($perStatus as $st => $cnt)
                 @php $cfg = $statusLabelMap[$st] ?? [ucfirst(str_replace('_',' ',$st)), '#666D80', '#f3f4f6']; @endphp
                 <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:10px;background:{{ $cfg[2] }};">
-                    <span style="font-size:1.2rem;font-weight:800;color:{{ $cfg[1] }};line-height:1;">{{ number_format($cnt) }}</span>
-                    <span style="font-size:.78rem;font-weight:600;color:{{ $cfg[1] }};">{{ $cfg[0] }}</span>
+                    <span style="font-size:20px;font-weight:800;color:{{ $cfg[1] }};line-height:1;">{{ number_format($cnt) }}</span>
+                    <span style="font-size:12px;font-weight:600;color:{{ $cfg[1] }};">{{ $cfg[0] }}</span>
                 </div>
             @endforeach
         </div>
     @else
-        <div style="text-align:center;padding:20px;color:#808897;font-size:.85rem;">Belum ada kegiatan</div>
+        <div style="text-align:center;padding:20px;color:#808897;font-size:13px;">Belum ada kegiatan</div>
     @endif
 </div>
 
@@ -1349,16 +1345,16 @@
         <div style="display:flex;flex-direction:column;gap:8px;">
             @foreach($eval['kegiatan_per_kategori'] as $kategori => $jml)
                 <div style="display:flex;align-items:center;gap:12px;">
-                    <span style="font-size:.82rem;font-weight:600;color:#353849;width:160px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $kategori }}</span>
+                    <span style="font-size:13px;font-weight:600;color:#353849;width:160px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $kategori }}</span>
                     <div style="flex:1;height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;">
                         <div style="height:100%;width:{{ round($jml / $maxKat * 100) }}%;background:var(--c-primary, #0B266E);border-radius:6px;min-width:24px;"></div>
                     </div>
-                    <span style="font-size:.82rem;font-weight:700;color:#0D0D12;width:32px;text-align:right;flex-shrink:0;">{{ $jml }}</span>
+                    <span style="font-size:13px;font-weight:700;color:#0D0D12;width:32px;text-align:right;flex-shrink:0;">{{ $jml }}</span>
                 </div>
             @endforeach
         </div>
     @else
-        <div style="text-align:center;padding:24px;color:#808897;font-size:.85rem;">Belum ada kegiatan berkategori</div>
+        <div style="text-align:center;padding:24px;color:#808897;font-size:13px;">Belum ada kegiatan berkategori</div>
     @endif
 </div>
 </div>{{-- /da-section evaluasi_kegiatan --}}
@@ -1458,7 +1454,7 @@
                     class="angkatan-filter-btn active"
                     data-status="{{ $key }}"
                     onclick="toggleAngkatanLine('{{ $key }}', this)"
-                    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;border:1.5px solid {{ $cfg['border'] }};background:{{ $cfg['bg'] }};color:{{ $cfg['color'] }};font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;">
+                    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;border:1.5px solid {{ $cfg['border'] }};background:{{ $cfg['bg'] }};color:{{ $cfg['color'] }};font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;">
                     <span style="width:8px;height:8px;border-radius:50%;background:{{ $cfg['color'] }};display:inline-block;flex-shrink:0;"></span>
                     {{ $cfg['label'] }}
                 </button>
@@ -1499,16 +1495,16 @@
         {{-- KPI Mini Row --}}
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
             <div style="background:#EEF1F8;border-radius:10px;padding:10px 12px;text-align:center;">
-                <div style="font-size:1.4rem;font-weight:800;color:#0B266E;line-height:1;">{{ $mhs['total_prestasi'] }}</div>
-                <div style="font-size:.72rem;color:#808897;font-weight:500;margin-top:2px;">Terverifikasi</div>
+                <div style="font-size:22px;font-weight:800;color:#0B266E;line-height:1;">{{ $mhs['total_prestasi'] }}</div>
+                <div style="font-size:11px;color:#808897;font-weight:500;margin-top:2px;">Terverifikasi</div>
             </div>
             <div style="background:{{ $pendingPrestasi > 0 ? '#fff7ed' : '#F6F8FA' }};border-radius:10px;padding:10px 12px;text-align:center;">
-                <div style="font-size:1.4rem;font-weight:800;color:{{ $pendingPrestasi > 0 ? '#ea580c' : '#C1C7CF' }};line-height:1;">{{ $pendingPrestasi }}</div>
-                <div style="font-size:.72rem;color:#808897;font-weight:500;margin-top:2px;">Menunggu Review</div>
+                <div style="font-size:22px;font-weight:800;color:{{ $pendingPrestasi > 0 ? '#ea580c' : '#C1C7CF' }};line-height:1;">{{ $pendingPrestasi }}</div>
+                <div style="font-size:11px;color:#808897;font-weight:500;margin-top:2px;">Menunggu Review</div>
             </div>
             <div style="background:#f0fdf4;border-radius:10px;padding:10px 12px;text-align:center;">
-                <div style="font-size:.9rem;font-weight:700;color:#059669;line-height:1.3;">{{ $tingkatTertinggi ? ucfirst($tingkatTertinggi) : '—' }}</div>
-                <div style="font-size:.72rem;color:#808897;font-weight:500;margin-top:2px;">Tingkat Tertinggi</div>
+                <div style="font-size:14px;font-weight:700;color:#059669;line-height:1.3;">{{ $tingkatTertinggi ? ucfirst($tingkatTertinggi) : '—' }}</div>
+                <div style="font-size:11px;color:#808897;font-weight:500;margin-top:2px;">Tingkat Tertinggi</div>
             </div>
         </div>
 
@@ -1524,8 +1520,8 @@
                         @php $cnt = $mhs['prestasi_per_tingkat'][$tk] ?? 0; @endphp
                         <div class="legend-item" style="{{ $cnt === 0 ? 'opacity:.35;' : '' }}">
                             <div class="legend-dot" style="background:{{ $pColors[$pi % 5] }};"></div>
-                            <span style="font-size:.8rem;">{{ $tingkatLabels[$tk] ?? ucfirst($tk) }}</span>
-                            <span class="legend-val" style="font-size:.82rem;">{{ $cnt }}</span>
+                            <span style="font-size:13px;">{{ $tingkatLabels[$tk] ?? ucfirst($tk) }}</span>
+                            <span class="legend-val" style="font-size:13px;">{{ $cnt }}</span>
                         </div>
                         @php $pi++; @endphp
                     @endforeach
@@ -1538,9 +1534,9 @@
             {{-- Recent Prestasi List --}}
             <div>
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                    <div style="font-size:.75rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;">Terbaru Diverifikasi</div>
+                    <div style="font-size:12px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;">Terbaru Diverifikasi</div>
                     <button onclick="openPrestasiModal()"
-                        style="display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:700;color:#0B266E;background:none;border:none;cursor:pointer;padding:0;transition:opacity .15s;"
+                        style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:#0B266E;background:none;border:none;cursor:pointer;padding:0;transition:opacity .15s;"
                         onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
                         Lihat Semua
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -1565,15 +1561,15 @@
                         <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:#F6F8FA;border-radius:10px;border:1px solid #f3f4f6;">
                             <div class="avatar-sm" style="width:28px;height:28px;font-size:10px;flex-shrink:0;">{{ $initials }}</div>
                             <div style="flex:1;min-width:0;">
-                                <div style="font-size:.82rem;font-weight:600;color:#0D0D12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $pr->nama_prestasi }}</div>
-                                <div style="font-size:.75rem;color:#808897;">{{ $studentName }}</div>
+                                <div style="font-size:13px;font-weight:600;color:#0D0D12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $pr->nama_prestasi }}</div>
+                                <div style="font-size:12px;color:#808897;">{{ $studentName }}</div>
                             </div>
-                            <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:50px;font-size:.7rem;font-weight:700;background:{{ $bc['bg'] }};color:{{ $bc['color'] }};border:1px solid {{ $bc['border'] }};white-space:nowrap;flex-shrink:0;">
+                            <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:50px;font-size:11px;font-weight:700;background:{{ $bc['bg'] }};color:{{ $bc['color'] }};border:1px solid {{ $bc['border'] }};white-space:nowrap;flex-shrink:0;">
                                 {{ ucfirst($pr->tingkat) }}
                             </span>
                         </div>
                     @empty
-                        <div style="text-align:center;padding:12px;color:#808897;font-size:.82rem;">—</div>
+                        <div style="text-align:center;padding:12px;color:#808897;font-size:13px;">—</div>
                     @endforelse
                 </div>
             </div>
@@ -1584,12 +1580,12 @@
                     <span style="display:inline-flex;width:26px;height:26px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/star.svg'))) !!}</span>
                 </div>
                 <div style="text-align:center;">
-                    <div style="font-size:.9rem;font-weight:600;color:#353849;margin-bottom:3px;">Belum ada prestasi terverifikasi</div>
-                    <div style="font-size:.8rem;color:#808897;">Prestasi mahasiswa yang disetujui akan tampil di sini</div>
+                    <div style="font-size:14px;font-weight:600;color:#353849;margin-bottom:3px;">Belum ada prestasi terverifikasi</div>
+                    <div style="font-size:13px;color:#808897;">Prestasi mahasiswa yang disetujui akan tampil di sini</div>
                 </div>
                 @if($pendingPrestasi > 0 && $canAccessVerifikasi)
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
-                        style="display:inline-flex;align-items:center;gap:5px;padding:7px 16px;background:#EEF1F8;color:#0B266E;border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;border:1px solid #5C78B8;">
+                        style="display:inline-flex;align-items:center;gap:5px;padding:7px 16px;background:#EEF1F8;color:#0B266E;border-radius:8px;font-size:13px;font-weight:600;text-decoration:none;border:1px solid #5C78B8;">
                         <span style="display:inline-flex;width:13px;height:13px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/check.svg'))) !!}</span>
                         Review {{ $pendingPrestasi }} Pengajuan Pending
                     </a>
@@ -1614,7 +1610,7 @@
                     @php $nm = $m->nama ?? $m->user?->name ?? '-'; @endphp
                     <tr>
                         <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($nm,0,2)) }}</div><span style="font-weight:600;color:#0D0D12;">{{ $nm }}</span></div></td>
-                        <td style="font-family:monospace;color:#808897;font-size:.82rem;">{{ $m->nim ?? '-' }}</td>
+                        <td style="font-family:monospace;color:#808897;font-size:13px;">{{ $m->nim ?? '-' }}</td>
                         <td>{{ $m->angkatan ?? '-' }}</td>
                     </tr>
                 @empty
@@ -1642,13 +1638,13 @@
     {{-- Evaluasi Calon DO --}}
     @if($hasSection('calon_do') && !empty($cdo))
     @php $cdoTotal = $cdo['total_count'] ?? 0; @endphp
-    <div class="chart-card" style="{{ $cdoTotal > 0 ? 'border:1px solid #fde68a;' : '' }}">
+    <div class="chart-card">
         <div class="chart-title">
-            <span style="display:inline-flex;width:15px;height:15px;color:#d97706;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-triangle.svg'))) !!}</span>
+            <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-triangle.svg'))) !!}</span>
             Deteksi Dini Drop Out
             @if($cdoTotal > 0)
                 <button onclick="openDashModal('calon-do',{},'Deteksi Dini Drop Out (Semester ≥ 9)')"
-                    style="margin-left:auto;font-size:.78rem;font-weight:700;color:#d97706;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                    style="margin-left:auto;font-size:12px;font-weight:700;color:#0B266E;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                     Lihat Detail
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </button>
@@ -1658,37 +1654,37 @@
         {{-- Dua tier deteksi dini (FASE 3B) --}}
         <div style="display:flex;gap:10px;margin-bottom:10px;">
             <div style="flex:1;text-align:center;padding:12px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;">
-                <div style="font-size:2rem;font-weight:900;line-height:1;color:#dc2626;">{{ $cdo['kritis_count'] ?? 0 }}</div>
-                <div style="font-size:.72rem;color:#dc2626;font-weight:700;margin-top:4px;">Kritis · Smt ≥ 12</div>
+                <div style="font-size:32px;font-weight:900;line-height:1;color:#dc2626;">{{ $cdo['kritis_count'] ?? 0 }}</div>
+                <div style="font-size:11px;color:#dc2626;font-weight:700;margin-top:4px;">Kritis · Smt ≥ 12</div>
             </div>
             <div style="flex:1;text-align:center;padding:12px;border-radius:14px;background:#fffbeb;border:1px solid #fde68a;">
-                <div style="font-size:2rem;font-weight:900;line-height:1;color:#d97706;">{{ $cdo['pantau_count'] ?? 0 }}</div>
-                <div style="font-size:.72rem;color:#d97706;font-weight:700;margin-top:4px;">Perlu Pemantauan · Smt 9–11</div>
+                <div style="font-size:32px;font-weight:900;line-height:1;color:#d97706;">{{ $cdo['pantau_count'] ?? 0 }}</div>
+                <div style="font-size:11px;color:#d97706;font-weight:700;margin-top:4px;">Perlu Pemantauan · Smt 9–11</div>
             </div>
         </div>
-        <div style="font-size:.78rem;color:#808897;line-height:1.5;margin-bottom:10px;">
+        <div style="font-size:12px;color:#808897;line-height:1.5;margin-bottom:10px;">
             Mahasiswa <strong>aktif</strong> pada semester lanjut (angkatan ≤ {{ $cdo['threshold_pantau'] ?? '-' }}). Perlu evaluasi &amp; pendampingan akademik bertingkat.
         </div>
 
         @if(!empty($cdo['list']) && count($cdo['list']) > 0)
-        <div style="border-top:1px solid #f3f4f6;padding-top:10px;">
-            <div style="font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Perlu Perhatian</div>
+        <div style="border-top:1px solid var(--c-border, #DFE1E7);padding-top:10px;">
+            <div style="font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Perlu Perhatian</div>
             <div style="display:flex;flex-direction:column;gap:6px;">
                 @foreach($cdo['list'] as $m)
                     @php $isKritis = ($m['tier'] ?? '') === 'kritis'; @endphp
                     <div style="display:flex;align-items:center;gap:9px;padding:6px 10px;background:#F6F8FA;border-radius:8px;">
                         <div class="avatar-sm" style="width:26px;height:26px;font-size:9px;flex-shrink:0;">{{ strtoupper(substr($m['nama'],0,2)) }}</div>
                         <div style="flex:1;min-width:0;">
-                            <div style="font-size:.8rem;font-weight:600;color:#0D0D12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $m['nama'] }}</div>
-                            <div style="font-size:.72rem;color:#808897;">{{ $m['nim'] }} · Angkatan {{ $m['angkatan'] }}</div>
+                            <div style="font-size:13px;font-weight:600;color:#0D0D12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $m['nama'] }}</div>
+                            <div style="font-size:11px;color:#808897;">{{ $m['nim'] }} · Angkatan {{ $m['angkatan'] }}</div>
                         </div>
-                        <span style="font-size:.72rem;font-weight:700;color:{{ $isKritis ? '#dc2626' : '#d97706' }};background:{{ $isKritis ? '#fef2f2' : '#fffbeb' }};padding:2px 8px;border-radius:50px;white-space:nowrap;flex-shrink:0;">Smt {{ $m['semester'] }}</span>
+                        <span style="font-size:11px;font-weight:700;color:{{ $isKritis ? '#dc2626' : '#d97706' }};background:{{ $isKritis ? '#fef2f2' : '#fffbeb' }};padding:2px 8px;border-radius:50px;white-space:nowrap;flex-shrink:0;">Smt {{ $m['semester'] }}</span>
                     </div>
                 @endforeach
             </div>
         </div>
         @else
-        <div style="text-align:center;padding:16px;color:#059669;font-size:.85rem;font-weight:600;">✓ Tidak ada mahasiswa pada kategori pemantauan</div>
+        <div style="text-align:center;padding:16px;color:#059669;font-size:13px;font-weight:600;">✓ Tidak ada mahasiswa pada kategori pemantauan</div>
         @endif
     </div>
     @endif
@@ -1700,7 +1696,7 @@
             <span style="display:inline-flex;width:15px;height:15px;color:#0B266E;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bank-02.svg'))) !!}</span>
             Lulusan per Periode
             <button onclick="openDashModal('lulusan-periode',{},'Lulusan Mahasiswa per Periode')"
-                style="margin-left:auto;font-size:.78rem;font-weight:700;color:#0B266E;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                style="margin-left:auto;font-size:12px;font-weight:700;color:#0B266E;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
                 Lihat Detail
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
             </button>
@@ -1710,12 +1706,12 @@
         @if(($lulus['belum_sinkron'] ?? 0) > 0)
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:10px;">
             <span style="display:inline-flex;width:18px;height:18px;color:#d97706;flex-shrink:0;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-circle.svg'))) !!}</span>
-            <div style="flex:1;font-size:.8rem;color:#92400e;line-height:1.5;">
+            <div style="flex:1;font-size:13px;color:#92400e;line-height:1.5;">
                 <strong>{{ $lulus['belum_sinkron'] }}</strong> mahasiswa berstatus lulus belum tersinkron ke direktori alumni.
             </div>
         </div>
         @else
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:10px;font-size:.8rem;color:#166534;font-weight:600;">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:10px;font-size:13px;color:#166534;font-weight:600;">
             ✓ Semua lulusan sudah tersinkron ke direktori alumni
         </div>
         @endif
@@ -1726,16 +1722,16 @@
             <div style="display:flex;flex-direction:column;gap:8px;">
                 @foreach($lulus['per_tahun'] as $tahun => $jml)
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <span style="font-size:.8rem;font-weight:700;color:#353849;width:46px;flex-shrink:0;">{{ $tahun }}</span>
+                        <span style="font-size:13px;font-weight:700;color:#353849;width:46px;flex-shrink:0;">{{ $tahun }}</span>
                         <div style="flex:1;height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;position:relative;">
                             <div style="height:100%;width:{{ round($jml / $maxLulus * 100) }}%;background:var(--c-primary, #0B266E);border-radius:6px;min-width:24px;"></div>
                         </div>
-                        <span style="font-size:.82rem;font-weight:700;color:#0D0D12;width:32px;text-align:right;flex-shrink:0;">{{ $jml }}</span>
+                        <span style="font-size:13px;font-weight:700;color:#0D0D12;width:32px;text-align:right;flex-shrink:0;">{{ $jml }}</span>
                     </div>
                 @endforeach
             </div>
         @else
-            <div style="text-align:center;padding:24px;color:#808897;font-size:.85rem;">Belum ada data lulusan</div>
+            <div style="text-align:center;padding:24px;color:#808897;font-size:13px;">Belum ada data lulusan</div>
         @endif
     </div>
     @endif
@@ -1833,7 +1829,7 @@
                 </div>
             </div>
         @else
-            <div style="text-align:center;padding:36px 0;color:#808897;font-size:.87rem;">Belum ada data industri</div>
+            <div style="text-align:center;padding:36px 0;color:#808897;font-size:14px;">Belum ada data industri</div>
         @endif
     </div>
 
@@ -1853,7 +1849,7 @@
                 <div class="progress-item">
                     <div class="progress-row">
                         <span class="progress-label">{{ $cfg['label'] }}</span>
-                        <span class="progress-count" style="color:{{ $cfg['color'] }};">{{ number_format($cnt) }} <span style="color:#808897;font-weight:500;font-size:.78rem;">({{ $pct }}%)</span></span>
+                        <span class="progress-count" style="color:{{ $cfg['color'] }};">{{ number_format($cnt) }} <span style="color:#808897;font-weight:500;font-size:12px;">({{ $pct }}%)</span></span>
                     </div>
                     <div class="progress-bar-bg">
                         <div class="progress-bar-fill" style="width:{{ $pct }}%;background:{{ $cfg['color'] }};"></div>
@@ -1883,9 +1879,9 @@
                     $badge = $bm[$al->status_karir ?? ''] ?? 'badge-belum';
                 @endphp
                 <tr>
-                    <td style="color:#C1C7CF;font-size:.8rem;">{{ $i+1 }}</td>
+                    <td style="color:#C1C7CF;font-size:13px;">{{ $i+1 }}</td>
                     <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($nm,0,2)) }}</div><span style="font-weight:600;color:#0D0D12;">{{ $nm }}</span></div></td>
-                    <td style="font-family:monospace;color:#808897;font-size:.82rem;">{{ $al->nim ?? '-' }}</td>
+                    <td style="font-family:monospace;color:#808897;font-size:13px;">{{ $al->nim ?? '-' }}</td>
                     <td>{{ $al->angkatan ?? '-' }}</td>
                     <td>{{ $al->tahun_lulus ?? '-' }}</td>
                     <td>{{ $al->perusahaan ?? '-' }}</td>
@@ -2243,11 +2239,11 @@ function renderTable(rows, type) {
     const configs = {
         mahasiswa: {
             headers: ['Nama', 'NIM', 'Angkatan', 'Email'],
-            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td style="color:#666D80;font-size:.82rem;">${escHtml(r.email)}</td>`,
+            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:13px;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td style="color:#666D80;font-size:13px;">${escHtml(r.email)}</td>`,
         },
         alumni: {
             headers: ['Nama', 'NIM', 'Angkatan', 'Th. Lulus', 'Status Karir', 'Perusahaan'],
-            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td>${escHtml(r.tahun_lulus)}</td><td>${escHtml(r.status_karir)}</td><td style="color:#666D80;">${escHtml(r.perusahaan)}</td>`,
+            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:13px;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td>${escHtml(r.tahun_lulus)}</td><td>${escHtml(r.status_karir)}</td><td style="color:#666D80;">${escHtml(r.perusahaan)}</td>`,
         },
         kegiatan: {
             headers: ['Judul Kegiatan', 'Tanggal Mulai', 'Lokasi'],
@@ -2259,7 +2255,7 @@ function renderTable(rows, type) {
         },
         thread: {
             headers: ['Judul Thread', 'Kategori', 'Pembuat', '👍', '💬', 'Dibuat'],
-            cells: r => `<td style="font-weight:600;color:#0D0D12;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.judul)}</td><td style="color:#666D80;font-size:.8rem;">${escHtml(r.kategori)}</td><td style="color:#666D80;">${escHtml(r.author)}</td><td style="color:#666D80;">${escHtml(r.vote_count)}</td><td style="color:#666D80;">${escHtml(r.comment_count)}</td><td style="color:#808897;white-space:nowrap;font-size:.8rem;">${escHtml(r.created_at)}</td>`,
+            cells: r => `<td style="font-weight:600;color:#0D0D12;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.judul)}</td><td style="color:#666D80;font-size:13px;">${escHtml(r.kategori)}</td><td style="color:#666D80;">${escHtml(r.author)}</td><td style="color:#666D80;">${escHtml(r.vote_count)}</td><td style="color:#666D80;">${escHtml(r.comment_count)}</td><td style="color:#808897;white-space:nowrap;font-size:13px;">${escHtml(r.created_at)}</td>`,
         },
         'calon-do': {
             headers: ['Nama', 'NIM', 'Angkatan', 'Semester', 'Status', 'Email'],
@@ -2267,12 +2263,12 @@ function renderTable(rows, type) {
                 const kritis = String(r.tier || '').toLowerCase().includes('kritis');
                 const c = kritis ? '#dc2626' : '#d97706';
                 const bg = kritis ? '#fef2f2' : '#fffbeb';
-                return `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td><span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:.75rem;font-weight:700;background:${bg};color:${c};">Smt ${escHtml(r.semester)}</span></td><td><span style="font-size:.75rem;font-weight:700;color:${c};">${escHtml(r.tier)}</span></td><td style="color:#666D80;font-size:.82rem;">${escHtml(r.email)}</td>`;
+                return `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:13px;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td><span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:12px;font-weight:700;background:${bg};color:${c};">Smt ${escHtml(r.semester)}</span></td><td><span style="font-size:12px;font-weight:700;color:${c};">${escHtml(r.tier)}</span></td><td style="color:#666D80;font-size:13px;">${escHtml(r.email)}</td>`;
             },
         },
         'lulusan-periode': {
             headers: ['Nama', 'NIM', 'Angkatan', 'Th. Lulus', 'Sinkron Alumni'],
-            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td style="font-weight:600;color:#0D0D12;">${escHtml(r.tahun_lulus)}</td><td>${r.tersinkron ? '<span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:.72rem;font-weight:700;background:#ecfdf5;color:#059669;">✓ Tersinkron</span>' : '<span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:.72rem;font-weight:700;background:#fffbeb;color:#d97706;">Belum</span>'}</td>`,
+            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#808897;font-size:13px;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td style="font-weight:600;color:#0D0D12;">${escHtml(r.tahun_lulus)}</td><td>${r.tersinkron ? '<span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:11px;font-weight:700;background:#ecfdf5;color:#059669;">✓ Tersinkron</span>' : '<span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:11px;font-weight:700;background:#fffbeb;color:#d97706;">Belum</span>'}</td>`,
         },
     };
 
@@ -2408,11 +2404,11 @@ function renderPrestasiList(rows) {
 
         const buktiBtns = r.bukti.length
             ? `<button onclick="toggleBukti(${idx})"
-                   style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:.73rem;font-weight:600;color:#0B266E;background:#EEF1F8;border:1px solid #5C78B8;border-radius:6px;padding:3px 9px;cursor:pointer;transition:all .15s;">
+                   style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:12px;font-weight:600;color:#0B266E;background:#EEF1F8;border:1px solid #5C78B8;border-radius:6px;padding:3px 9px;cursor:pointer;transition:all .15s;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                     ${r.bukti.length} Bukti
                </button>`
-            : `<span style="font-size:.72rem;color:#C1C7CF;margin-top:4px;display:inline-block;">Tidak ada bukti</span>`;
+            : `<span style="font-size:11px;color:#C1C7CF;margin-top:4px;display:inline-block;">Tidak ada bukti</span>`;
 
         const buktiItems = r.bukti.map(b => {
             if (b.is_image) {
@@ -2422,7 +2418,7 @@ function renderPrestasiList(rows) {
                 </a>`;
             }
             return `<a href="${escHtml(b.url)}" target="_blank"
-                       style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F6F8FA;border:1px solid #DFE1E7;border-radius:8px;text-decoration:none;color:#353849;font-size:.8rem;font-weight:600;transition:background .15s;"
+                       style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#F6F8FA;border:1px solid #DFE1E7;border-radius:8px;text-decoration:none;color:#353849;font-size:13px;font-weight:600;transition:background .15s;"
                        onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='#F6F8FA'">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         ${escHtml(b.nama)}
@@ -2434,17 +2430,17 @@ function renderPrestasiList(rows) {
             <div style="display:flex;align-items:flex-start;gap:10px;">
                 <div class="avatar-sm" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${ini}</div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-size:.88rem;font-weight:700;color:#0D0D12;line-height:1.3;margin-bottom:2px;">${escHtml(r.nama_prestasi)}</div>
-                    <div style="font-size:.78rem;color:#666D80;">${escHtml(r.student_name)} <span style="color:#C1C7CF;">·</span> ${escHtml(r.nim)} <span style="color:#C1C7CF;">·</span> Angkatan ${r.angkatan || '-'}</div>
-                    <div style="font-size:.74rem;color:#808897;margin-top:2px;">Diverifikasi: ${escHtml(r.verified_at)}</div>
+                    <div style="font-size:14px;font-weight:700;color:#0D0D12;line-height:1.3;margin-bottom:2px;">${escHtml(r.nama_prestasi)}</div>
+                    <div style="font-size:12px;color:#666D80;">${escHtml(r.student_name)} <span style="color:#C1C7CF;">·</span> ${escHtml(r.nim)} <span style="color:#C1C7CF;">·</span> Angkatan ${r.angkatan || '-'}</div>
+                    <div style="font-size:12px;color:#808897;margin-top:2px;">Diverifikasi: ${escHtml(r.verified_at)}</div>
                     ${buktiBtns}
                 </div>
-                <span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:50px;font-size:.7rem;font-weight:700;background:${bc.bg};color:${bc.color};border:1px solid ${bc.border};white-space:nowrap;flex-shrink:0;">
+                <span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:50px;font-size:11px;font-weight:700;background:${bc.bg};color:${bc.color};border:1px solid ${bc.border};white-space:nowrap;flex-shrink:0;">
                     ${escHtml(r.tingkat.charAt(0).toUpperCase() + r.tingkat.slice(1))}
                 </span>
             </div>
             <div id="bukti-${idx}" style="display:none;margin-top:10px;display:none;flex-direction:column;gap:6px;">
-                ${buktiItems || '<div style="font-size:.8rem;color:#808897;text-align:center;padding:8px;">Tidak ada bukti terlampir</div>'}
+                ${buktiItems || '<div style="font-size:13px;color:#808897;text-align:center;padding:8px;">Tidak ada bukti terlampir</div>'}
             </div>
         </div>`;
     }).join('');
@@ -2491,12 +2487,12 @@ document.getElementById('prestasiModal')?.addEventListener('click', e => {
             </div>
             {{-- Filter Angkatan --}}
             <div>
-                <div style="font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Angkatan</div>
+                <div style="font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Angkatan</div>
                 <div class="dm-filter-chips" id="prestasiAngkatanChips"></div>
             </div>
             {{-- Filter Tingkat --}}
             <div>
-                <div style="font-size:.72rem;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Tingkat</div>
+                <div style="font-size:11px;font-weight:700;color:#808897;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Tingkat</div>
                 <div class="dm-filter-chips" id="prestasiTingkatChips">
                     @php $tingkatList = ['semua'=>'Semua','internasional'=>'Internasional','nasional'=>'Nasional','regional'=>'Regional','universitas'=>'Universitas','prodi'=>'Prodi']; @endphp
                     @foreach($tingkatList as $val => $lbl)

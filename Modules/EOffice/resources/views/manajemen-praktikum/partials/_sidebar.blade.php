@@ -55,7 +55,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $iGear }}"/></svg>
             <span x-show="sidebarOpen">Pengaturan Profil</span>
         </a>
-        <form method="POST" action="{{ route('logout') }}" data-no-loader>
+        <form method="POST" action="{{ route('logout') }}">
             @csrf
             <button type="submit" class="mp-nav-link mp-nav-logout" title="Keluar" aria-label="Keluar dari akun">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ $iLogout }}"/></svg>

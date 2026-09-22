@@ -150,13 +150,13 @@
         </div>
         <div class="detail-toolbar-right">
             @if($canDownloadCv ?? false)
-                <a href="{{ route('manajemenmahasiswa.direktori.alumni.cv', $alumni->id) }}" target="_blank" class="btn-detail btn-detail-outline">
+                <a href="{{ route('manajemenmahasiswa.direktori.alumni.cv', $alumni->id) }}" target="_blank" class="mk-btn mk-btn--secondary mk-btn--sm">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Download CV
                 </a>
             @endif
             @if($isAdmin)
-                <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alumni->id) }}" class="btn-detail btn-detail-solid">
+                <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alumni->id) }}" class="mk-btn mk-btn--primary mk-btn--sm">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     Edit Data
                 </a>
@@ -350,9 +350,9 @@
                     @if($canManageHistory)
                         <form method="POST"
                               action="{{ route('manajemenmahasiswa.direktori.alumni.prestasi.destroy', $p->id) }}"
-                              onsubmit="return confirm('Hapus prestasi ini?')">
+                              onsubmit="return mkConfirmSubmit(this, 'Hapus prestasi ini?', { title: 'Hapus Prestasi', confirmText: 'Ya, Hapus' })">
                             @csrf @method('DELETE')
-                            <button type="submit" class="btn-del-sm">Hapus</button>
+                            <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">Hapus</button>
                         </form>
                     @endif
                 </div>
@@ -385,14 +385,14 @@
                     </div>
                     <div class="mb-3">
                         <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Tingkat</label>
-                        <select name="tingkat" class="form-select" style="border-radius:8px;font-size:14px;" required>
+                        <x-manajemenmahasiswa::ui.select name="tingkat" size="md" required>
                             <option value="">-- Pilih Tingkat --</option>
                             <option value="internasional">Internasional</option>
                             <option value="nasional">Nasional</option>
                             <option value="regional">Regional</option>
                             <option value="universitas">Universitas</option>
                             <option value="prodi">Program Studi</option>
-                        </select>
+                        </x-manajemenmahasiswa::ui.select>
                     </div>
                     <div class="mb-3">
                         <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Tanggal</label>
@@ -401,9 +401,8 @@
                     </div>
                 </div>
                 <div class="modal-footer" style="border-top:1px solid var(--c-border);padding:16px 24px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius:8px;font-size:13px;font-weight:600;">Batal</button>
-                    <button type="submit" class="btn-add-riwayat">Simpan Prestasi</button>
+                    <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Simpan Prestasi</button>
                 </div>
             </form>
         </div>
@@ -486,9 +485,9 @@
                                 @if(!$isAutoEntry && $rw->id)
                                     <form method="POST"
                                           action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.destroy', $rw->id) }}"
-                                          onsubmit="return confirm('Hapus riwayat ini?')">
+                                          onsubmit="return mkConfirmSubmit(this, 'Hapus riwayat ini?', { title: 'Hapus Riwayat', confirmText: 'Ya, Hapus' })">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn-del-sm">Hapus</button>
+                                        <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">Hapus</button>
                                     </form>
                                 @endif
                             </td>
@@ -546,9 +545,9 @@
                                 @if($rw->id)
                                     <form method="POST"
                                           action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.destroy', $rw->id) }}"
-                                          onsubmit="return confirm('Hapus riwayat ini?')">
+                                          onsubmit="return mkConfirmSubmit(this, 'Hapus riwayat ini?', { title: 'Hapus Riwayat', confirmText: 'Ya, Hapus' })">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn-del-sm">Hapus</button>
+                                        <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">Hapus</button>
                                     </form>
                                 @else
                                     <span style="font-size:11px;color:var(--c-border-strong);">Auto</span>
@@ -600,21 +599,21 @@
                     <div id="section-dropdown-alumni">
                         <div class="mb-3">
                             <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Kegiatan</label>
-                            <select name="kegiatan_id" class="form-select" style="border-radius:8px;font-size:14px;">
+                            <x-manajemenmahasiswa::ui.select name="kegiatan_id" size="md">
                                 <option value="">-- Pilih Kegiatan --</option>
                                 @foreach($semuaKegiatan as $kg)
                                     <option value="{{ $kg->id }}">{{ $kg->judul }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
                         <div class="mb-3">
                             <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Peran</label>
-                            <select name="peran" class="form-select" style="border-radius:8px;font-size:14px;">
+                            <x-manajemenmahasiswa::ui.select name="peran" size="md">
                                 <option value="ketua">Ketua</option>
                                 <option value="anggota">Anggota</option>
                                 <option value="panitia">Panitia</option>
                                 <option value="peserta">Peserta</option>
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
                     </div>
 
@@ -647,9 +646,8 @@
                 </div>
 
                 <div class="modal-footer" style="border-top:1px solid var(--c-border);padding:16px 24px;">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
-                            style="border-radius:8px;font-size:13px;font-weight:600;">Batal</button>
-                    <button type="submit" class="btn-add-riwayat">Simpan Riwayat</button>
+                    <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Simpan Riwayat</button>
                 </div>
             </form>
         </div>

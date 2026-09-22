@@ -139,7 +139,7 @@
                 </span>
             @endforeach
             @if($panitiaCount > 2)
-                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--pill" onclick="openPanitiaModal()">
+                <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm" onclick="openPanitiaModal()">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     {{ $panitiaCount - 2 }} lainnya
                 </button>
@@ -158,7 +158,7 @@
                     </div>
                     <div style="font-size:12px;color:var(--c-fg-muted);margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
                 </div>
-                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="closePanitiaModal()" aria-label="Tutup daftar panitia">&times;</button>
+                <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="closePanitiaModal()" aria-label="Tutup daftar panitia">&times;</button>
             </div>
             <div style="overflow-y:auto;padding:16px 24px 24px;flex:1;">
                 <div style="display:flex;flex-direction:column;gap:10px;">

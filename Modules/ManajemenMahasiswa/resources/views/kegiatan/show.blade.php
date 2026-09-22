@@ -1,16 +1,9 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
-@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 
 <style>
     /* ── Back Button & Header ── */
-    .detail-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
     .btn-back {
         width: 32px;
         min-width: 32px;
@@ -476,6 +469,47 @@
     }
 </style>
 
+<!-- Header with back button -->
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Detail Kegiatan"
+    subtitle="Informasi lengkap tentang kegiatan ini">
+    <x-slot:leading>
+        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+    </x-slot:leading>
+
+    <x-slot:actions>
+        @if($canEdit || $canDelete)
+            @if($canEdit)
+            <a href="{{ route('manajemenmahasiswa.kegiatan.edit', $kegiatan->id) }}"
+               class="mk-btn mk-btn--primary mk-btn--sm">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit
+            </a>
+            @endif
+            @if($canDelete)
+            <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm"
+                    onclick="document.getElementById('deleteModal').style.display='flex'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Hapus
+            </button>
+            @endif
+        @elseif($pesanBukanPengelola)
+            {{-- Role-nya boleh mengelola, tapi bukan pengelola kegiatan ini (KegiatanPolicy) --}}
+            <p class="mb-0 text-end" style="max-width:340px;font-size:12px;color:var(--c-fg-muted);font-weight:500;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{ $pesanBukanPengelola }}
+            </p>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
+
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -494,48 +528,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-<!-- Header with back button -->
-<div class="d-flex justify-content-between align-items-start">
-    <div class="detail-header">
-        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-back" aria-label="Kembali">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-        </a>
-        <div>
-            <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Detail Kegiatan</h3>
-            <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Informasi lengkap tentang kegiatan ini</p>
-        </div>
-    </div>
-    @if($canEdit || $canDelete)
-        <div class="d-flex gap-2">
-            @if($canEdit)
-            <a href="{{ route('manajemenmahasiswa.kegiatan.edit', $kegiatan->id) }}"
-               class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                Edit
-            </a>
-            @endif
-            @if($canDelete)
-            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--compact d-flex align-items-center gap-2"
-                    onclick="document.getElementById('deleteModal').style.display='flex'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-                Hapus
-            </button>
-            @endif
-        </div>
-    @elseif($pesanBukanPengelola)
-        {{-- Role-nya boleh mengelola, tapi bukan pengelola kegiatan ini (KegiatanPolicy) --}}
-        <p class="mb-0 text-end" style="max-width:340px;font-size:.78rem;color:var(--c-fg-muted);font-weight:500;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>{{ $pesanBukanPengelola }}
-        </p>
-    @endif
-</div>
 
 <!-- Banner -->
 @if($kegiatan->banner)
@@ -677,7 +669,7 @@
                 </span>
             @endforeach
             @if($panitiaCount > 2)
-                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--pill" onclick="openPanitiaModal()">
+                <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm" onclick="openPanitiaModal()">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
                     {{ $panitiaCount - 2 }} lainnya
                 </button>
@@ -696,7 +688,7 @@
                     </div>
                     <div style="font-size:12px;color:var(--c-fg-muted);margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
                 </div>
-                <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="closePanitiaModal()" aria-label="Tutup daftar panitia">&times;</button>
+                <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="closePanitiaModal()" aria-label="Tutup daftar panitia">&times;</button>
             </div>
             <div style="overflow-y:auto;padding:16px 24px 24px;flex:1;">
                 <div style="display:flex;flex-direction:column;gap:10px;">
@@ -902,15 +894,15 @@
             Kegiatan <strong>{{ $kegiatan->judul }}</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.
         </p>
         <div class="d-flex gap-3 justify-content-center">
-            <button type="button" class="mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--modal"
+            <button type="button" class="mk-btn mk-btn--secondary"
                     onclick="document.getElementById('deleteModal').style.display='none'">
                 Batal
             </button>
             <form action="{{ route('manajemenmahasiswa.kegiatan.destroy', $kegiatan->id) }}" method="POST">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="mk-kegiatan-btn mk-kegiatan-btn--danger-solid mk-kegiatan-btn--modal">
-                    Hapus
+                <button type="submit" class="mk-btn mk-btn--primary">
+                    Ya, Hapus
                 </button>
             </form>
         </div>

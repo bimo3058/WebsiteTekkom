@@ -1,6 +1,5 @@
 <style>
     /* ── Back Button & Header ── */
-    .detail-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
     .btn-back { width: 40px; height: 40px; border-radius: 50%; background: var(--c-surface); border: 1px solid var(--c-border); display: flex; align-items: center; justify-content: center; text-decoration: none; color: var(--c-fg-sec); font-size: 18px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); transition: all 0.2s; flex-shrink: 0; }
     .btn-back:hover { background: var(--c-surface-muted); border-color: var(--c-border-strong); color: var(--c-fg); }
 

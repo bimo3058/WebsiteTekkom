@@ -26,12 +26,21 @@
             --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
         }
 
-        .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+        /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+           jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+        .main-wrapper {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+        }
 
         /* ── Shell kotak: mengikuti dashboard Super Admin ───────────── */
         .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
         .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-        .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); overflow: hidden; width: 100%; box-sizing: border-box; }
+        .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
         .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
         .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
         .dash-box-body::-webkit-scrollbar { width: 6px; }
@@ -162,7 +171,7 @@
 
         .request-meta {
             display: flex; flex-wrap: wrap; gap: 12px;
-            font-size: 11.5px; color: var(--c-fg-muted, #666D80);
+            font-size: 11px; color: var(--c-fg-muted, #666D80);
         }
         .request-meta-item { display: flex; align-items: center; gap: 5px; }
         .request-meta-item svg { color: var(--c-fg-placeholder, #808897); flex-shrink: 0; }
@@ -200,7 +209,7 @@
             color: var(--c-error, #DF1C41);
         }
         .info-box-label {
-            font-weight: 700; font-size: 11.5px; margin-bottom: 4px;
+            font-weight: 700; font-size: 11px; margin-bottom: 4px;
             display: flex; align-items: center; gap: 5px;
         }
 
@@ -211,8 +220,8 @@
             padding-top: 12px; margin-top: 12px;
             border-top: 1px solid var(--c-border, #DFE1E7);
         }
-        .footer-hint { font-size: 11.5px; color: var(--c-fg-muted, #666D80); }
-        .footer-note { font-size: 11.5px; color: var(--c-fg-placeholder, #808897); font-style: italic; }
+        .footer-hint { font-size: 11px; color: var(--c-fg-muted, #666D80); }
+        .footer-note { font-size: 11px; color: var(--c-fg-placeholder, #808897); font-style: italic; }
         .footer-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 
         .btn-sm-action {
@@ -284,24 +293,19 @@
 
             {{-- ── Header ─────────────────────────────────── --}}
             <div class="dash-box-header">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-                            <h1 style="font-size:22px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:-0.02em; line-height:1.2; margin:0;">Status Verifikasi</h1>
-                            <span style="font-size:10px; font-weight:600; color:var(--c-primary, #0B266E); background:rgba(11,38,110,0.09); border:1px solid rgba(11,38,110,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Modul Mahasiswa</span>
-                        </div>
-                        <p style="font-size:12px; color:var(--c-fg-muted, #666D80); margin:0;">
-                            Pantau status pengajuan verifikasi pengumuman yang pernah Anda kirimkan
-                        </p>
-                    </div>
-
-                    <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-sm-action">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
-                        </svg>
-                        <span>Kembali</span>
-                    </a>
-                </div>
+                <x-manajemenmahasiswa::ui.page-header
+                    title="Status Verifikasi"
+                    badge="Modul Mahasiswa"
+                    subtitle="Pantau status pengajuan verifikasi pengumuman yang pernah Anda kirimkan">
+                    <x-slot:actions>
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+                            </svg>
+                            <span>Kembali</span>
+                        </a>
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
             </div>
 
             <div class="dash-box-body">
@@ -462,7 +466,7 @@
                                 @elseif(in_array($req->status, ['rejected', 'cancelled']) && $req->pengumuman)
                                     {{-- Edit dulu, lalu ajukan ulang dari halaman ini --}}
                                     <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $req->pengumuman_id) }}"
-                                        class="btn-sm-action">
+                                        class="mk-btn mk-btn--secondary mk-btn--sm">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
@@ -473,9 +477,9 @@
                                     {{-- Ajukan kembali langsung tanpa edit --}}
                                     <form action="{{ route('manajemenmahasiswa.pengumuman.publish', $req->pengumuman_id) }}"
                                           method="POST" style="margin:0;"
-                                          onsubmit="return confirm('Ajukan kembali pengumuman ini untuk diverifikasi?')">
+                                          onsubmit="return mkConfirmSubmit(this, 'Ajukan kembali pengumuman ini untuk diverifikasi?', { title: 'Ajukan Ulang', variant: 'primary', confirmText: 'Ya, Ajukan' })">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="btn-sm-action btn-sm-primary">
+                                        <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                                 <path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
                                             </svg>
@@ -487,9 +491,9 @@
                                 @if($req->status === 'pending' && $req->pengumuman)
                                     <form action="{{ route('manajemenmahasiswa.pengumuman.verification.cancel', $req->pengumuman_id) }}"
                                         method="POST" style="margin:0;"
-                                        onsubmit="return confirm('Batalkan pengajuan ini? Pengumuman akan kembali ke status draft.')">
+                                        onsubmit="return mkConfirmSubmit(this, 'Batalkan pengajuan ini? Pengumuman akan kembali ke status draft.', { title: 'Batalkan Pengajuan', variant: 'warning', confirmText: 'Ya, Batalkan' })">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn-sm-action btn-sm-danger">
+                                        <button type="submit" class="mk-btn mk-btn--secondary mk-btn--sm">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                                 <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                                             </svg>
@@ -522,7 +526,7 @@
                                 Tidak ada pengajuan yang dibatalkan.
                             @endif
                         </p>
-                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-sm-action">
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
                                 stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>

@@ -9,10 +9,19 @@ use Illuminate\Http\Request;
 
 class SuperAdminNotificationController extends Controller
 {
-    public function index(Request $request, SuperAdminNotifications $notifications): JsonResponse
+    public function index(Request $request, SuperAdminNotifications $notifications)
     {
-        return response()->json(['notifications' => $notifications->recent($request->user())])
-            ->header('Cache-Control', 'private, no-store');
+        $notificationsData = $notifications->recent($request->user());
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'notifications' => $notificationsData,
+            ]);
+        }
+
+        return view('superadmin.notifications.index', [
+            'notifications' => $notificationsData,
+        ]);
     }
 
     public function update(Request $request): RedirectResponse
@@ -31,5 +40,16 @@ class SuperAdminNotificationController extends Controller
 
         return redirect()->route('profile.edit', ['tab' => 'notifikasi'])
             ->with('status', 'notifications-updated');
+    }
+
+    public function markAsRead(Request $request, $id)
+    {
+        $result = app(\App\Services\NotificationService::class)->markAsRead($id);
+
+        if ($request->expectsJson()) {
+            return response()->json(['success' => $result]);
+        }
+
+        return back()->with($result ? 'success' : 'error', $result ? 'Notifikasi ditandai sebagai terbaca.' : 'Gagal memperbarui notifikasi.');
     }
 }

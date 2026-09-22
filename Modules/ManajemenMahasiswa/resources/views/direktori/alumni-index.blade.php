@@ -1,7 +1,6 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
-@include('manajemenmahasiswa::partials.card-frame')
 @include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
@@ -24,7 +23,7 @@
         border-radius: 8px;
         height: 34px;
         padding-left: 34px;
-        font-size: 12.5px;
+        font-size: 12px;
         font-weight: 500;
         width: 100%;
         color: var(--c-fg);
@@ -133,61 +132,8 @@
         white-space: nowrap;
     }
 
-    /* ── Kolom Aksi: tombol "..." + dropdown menu, disamakan dengan kolom Action
-       User Management global ── */
-    .action-menu-btn {
-        width: 28px;
-        height: 28px;
-        border-radius: 6px;
-        border: 1px solid var(--c-border);
-        background: #ffffff;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        color: var(--c-fg-muted);
-        transition: all 0.15s;
-        margin: 0 auto;
-    }
-    .action-menu-btn:hover {
-        background: var(--c-bg);
-        border-color: var(--c-border-strong);
-    }
-    .action-menu-panel {
-        position: absolute;
-        right: 0;
-        top: calc(100% + 5px);
-        background: #ffffff;
-        border: 1px solid var(--c-border);
-        border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-        min-width: 150px;
-        z-index: 40;
-        overflow: hidden;
-        padding: 5px;
-    }
-    .action-menu-item {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 7px 10px;
-        border: none;
-        border-radius: 6px;
-        background: none;
-        font-size: 11px;
-        font-weight: 500;
-        color: var(--c-fg-sec);
-        text-decoration: none !important;
-        cursor: pointer;
-        font-family: inherit;
-        text-align: left;
-        transition: background 0.12s;
-    }
-    .action-menu-item:hover {
-        background: var(--c-bg);
-        color: var(--c-fg-sec);
-    }
+    /* Kolom Aksi memakai tombol .mk-btn--icon + panel .mk-menu milik modul
+       (resources/views/partials/button-theme.blade.php). */
 
     /* ── Stat Cards ── */
     /* Border, bayangan, dan efek hover sama dengan kartu statistik dashboard global */
@@ -228,13 +174,10 @@
     }
 </style>
 
-{{-- Band judul + area isi kartu bertumpuk (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
-<div class="mm-frame-header">
-    <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Direktori Alumni</h1>
-    <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Daftar dan profil karir seluruh lulusan program studi</p>
-</div>
-
-<div class="mm-frame-body">
+<!-- Page Header -->
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Direktori Alumni"
+    subtitle="Daftar dan profil karir seluruh lulusan program studi" />
 
 <!-- Flash Messages -->
 @if(session('success'))
@@ -361,34 +304,34 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
-                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
                                 <option value="semua">Semua Angkatan</option>
                                 @foreach($angkatanList as $ank)
                                     <option value="{{ $ank }}" {{ request('angkatan') == $ank ? 'selected' : '' }}>
                                         Angkatan {{ $ank }}
                                     </option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterStatusKarir">Status</label>
-                            <select name="status_karir" id="filterStatusKarir" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="status_karir" id="filterStatusKarir">
                                 <option value="semua">Semua Status</option>
                                 @foreach($statusKarirOptions as $val => $label)
                                     <option value="{{ $val }}" {{ request('status_karir') == $val ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterIndustri">Industri</label>
-                            <select name="bidang_industri" id="filterIndustri" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="bidang_industri" id="filterIndustri">
                                 <option value="semua">Semua Industri</option>
                                 @foreach($bidangIndustriOptions as $val => $label)
                                     <option value="{{ $val }}" {{ request('bidang_industri') == $val ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -461,20 +404,20 @@
                              User Management global (Alpine.js sudah dimuat di layout admin/dosen/mahasiswa) --}}
                         <td style="text-align: center;">
                             <div style="position: relative; display: inline-block;" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" @click.outside="open = false" class="action-menu-btn">
+                                <button type="button" @click="open = !open" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">
                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </button>
                                 <div x-show="open" x-cloak
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100"
-                                     class="action-menu-panel" style="display: none;">
-                                    <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alm->id) }}" class="action-menu-item">
+                                     class="mk-menu" style="display: none;">
+                                    <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alm->id) }}" class="mk-menu-item">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                         Detail
                                     </a>
                                     @if($isAdmin)
-                                        <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alm->id) }}" class="action-menu-item">
+                                        <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alm->id) }}" class="mk-menu-item">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                             Edit
                                         </a>
@@ -502,11 +445,103 @@
         </table>
     </div>
 
-    {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama) --}}
-    @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $alumni])
-</div>
+    {{-- Pagination --}}
+    @if($alumni->hasPages())
+        <div style="padding: 14px 16px; border-top: 1px solid var(--c-border); display: flex; flex-direction: column; align-items: center; gap: 8px;">
+            <div class="d-flex align-items-center gap-1">
 
-</div>{{-- end mm-frame-body --}}
+                {{-- Prev --}}
+                @if($alumni->onFirstPage())
+                    <span class="page-btn page-btn-nav disabled">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                @else
+                    <a href="{{ $alumni->withQueryString()->previousPageUrl() }}" class="page-btn page-btn-nav">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </a>
+                @endif
+
+                {{-- Page Numbers --}}
+                @foreach($alumni->withQueryString()->links()->offsetGet('elements') as $element)
+                    @if(is_string($element))
+                        <span class="page-btn page-btn-dots">…</span>
+                    @endif
+                    @if(is_array($element))
+                        @foreach($element as $page => $url)
+                            @if($page == $alumni->currentPage())
+                                <span class="page-btn page-btn-active">{{ $page }}</span>
+                            @else
+                                <a href="{{ $url }}" class="page-btn">{{ $page }}</a>
+                            @endif
+                        @endforeach
+                    @endif
+                @endforeach
+
+                {{-- Next --}}
+                @if($alumni->hasMorePages())
+                    <a href="{{ $alumni->withQueryString()->nextPageUrl() }}" class="page-btn page-btn-nav">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                @else
+                    <span class="page-btn page-btn-nav disabled">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+                @endif
+
+            </div>
+            {{-- Info teks --}}
+            <div style="font-size: 12px; color: var(--c-fg-muted); font-weight: 500;">
+                Menampilkan {{ $alumni->firstItem() }}–{{ $alumni->lastItem() }} dari {{ $alumni->total() }} alumni
+            </div>
+        </div>
+
+        <style>
+            .page-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 34px;
+                height: 34px;
+                padding: 0 10px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: var(--c-fg-sec);
+                background: #ffffff;
+                border: 1px solid var(--c-border);
+                text-decoration: none !important;
+                transition: all 0.15s;
+                cursor: pointer;
+            }
+            .page-btn:hover:not(.disabled):not(.page-btn-active) {
+                background: var(--c-bg);
+                border-color: var(--c-primary);
+                color: var(--c-primary);
+            }
+            .page-btn-active {
+                background: var(--c-primary);
+                border-color: var(--c-primary);
+                color: #ffffff !important;
+                cursor: default;
+            }
+            .page-btn-nav {
+                color: var(--c-fg-muted);
+            }
+            .page-btn-nav.disabled {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
+            .page-btn-dots {
+                border: none;
+                background: transparent;
+                color: var(--c-fg-muted);
+                cursor: default;
+                min-width: 24px;
+                padding: 0;
+            }
+        </style>
+    @endif
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-dynamic-component>

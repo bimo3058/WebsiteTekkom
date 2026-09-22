@@ -208,7 +208,8 @@
             <!-- Status -->
             <div class="col-md-6">
                 <label class="form-label-custom">Status <span style="color: var(--c-error);">*</span></label>
-                <select name="status" id="statusSelect" class="form-select form-select-custom" required>
+                <x-manajemenmahasiswa::ui.select name="status" id="statusSelect" size="md" required
+                    :invalid="$errors->has('status')">
                     <option value="aktif" {{ old('status', $mhs->status) == 'aktif' ? 'selected' : '' }}>Aktif</option>
                     <option value="cuti" {{ old('status', $mhs->status) == 'cuti' ? 'selected' : '' }}>Cuti</option>
                     {{-- Opsi "Alumni" sebelumnya tidak ada. Akibatnya, saat admin membuka form
@@ -220,7 +221,7 @@
                     <option value="pindah_studi" {{ old('status', $mhs->status) == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
                     <option value="wafat" {{ old('status', $mhs->status) == 'wafat' ? 'selected' : '' }}>Wafat</option>
                     <option value="mangkir" {{ old('status', $mhs->status) == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
-                </select>
+                </x-manajemenmahasiswa::ui.select>
                 <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1" style="color: var(--c-warning);"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     Memilih <strong>Alumni (Lulus)</strong> memindahkan mahasiswa ini ke <strong>Direktori Alumni</strong>.
@@ -306,23 +307,27 @@
 // Pengaman terakhir: memindahkan mahasiswa KELUAR dari status Alumni akan menghapus
 // datanya di Direktori Alumni, jadi minta konfirmasi eksplisit lebih dulu.
 document.getElementById('formEditBiodata')?.addEventListener('submit', function (e) {
-    const statusAwal = this.dataset.statusAwal;
-    const select     = this.querySelector('#statusSelect');
+    const form       = this;
+    const statusAwal = form.dataset.statusAwal;
+    const select     = form.querySelector('#statusSelect');
 
     if (statusAwal !== 'alumni' || !select || select.value === 'alumni') {
         return;
     }
 
-    const labelBaru = select.options[select.selectedIndex].text;
-    const lanjut = window.confirm(
-        'Mahasiswa ini berstatus ALUMNI.\n\n' +
-        'Mengubah status menjadi "' + labelBaru + '" akan menghapus datanya dari Direktori Alumni.\n\n' +
-        'Lanjutkan menyimpan?'
-    );
+    // Dialog modul bersifat asinkron, jadi submit selalu ditahan dulu lalu form dikirim
+    // sendiri bila disetujui. form.submit() tidak memicu ulang listener ini.
+    e.preventDefault();
 
-    if (!lanjut) {
-        e.preventDefault();
-    }
+    const labelBaru = select.options[select.selectedIndex].text;
+
+    mkConfirm({
+        title: 'Keluarkan dari Direktori Alumni',
+        subtitle: 'Mahasiswa ini berstatus ALUMNI',
+        message: 'Mengubah status menjadi "' + labelBaru + '" akan menghapus datanya dari Direktori Alumni.\n\n' +
+                 'Lanjutkan menyimpan?',
+        confirmText: 'Ya, Simpan',
+    }).then(function (ok) { if (ok) form.submit(); });
 });
 
 document.addEventListener('alpine:init', () => {

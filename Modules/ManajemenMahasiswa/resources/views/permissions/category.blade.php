@@ -18,21 +18,18 @@
 
             {{-- ── Header ─────────────────────────────────── --}}
             <div class="user-box-header">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <h1 style="font-size:22px; font-weight:700; color:var(--c-fg); letter-spacing:-0.02em; line-height:1.2; margin:0;">{{ $category }}</h1>
-                        <p style="font-size:12px; color:var(--c-fg-muted); margin:3px 0 0;">
-                            Total <span style="color:var(--c-primary); font-weight:600;">{{ number_format($users->total()) }}</span> pengguna dalam kategori ini
-                        </p>
-                    </div>
-
-                    <a href="{{ route('manajemenmahasiswa.pengguna.index') }}" class="mp-btn-outline">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                        <span>Kembali</span>
-                    </a>
-                </div>
+                <x-manajemenmahasiswa::ui.page-header
+                    title="{{ $category }}">
+                    Total <span style="color:var(--c-primary); font-weight:600;">{{ number_format($users->total()) }}</span> pengguna dalam kategori ini
+                    <x-slot:actions>
+                        <a href="{{ route('manajemenmahasiswa.pengguna.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            <span>Kembali</span>
+                        </a>
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
             </div>
 
             <div class="user-box-body">
@@ -116,7 +113,7 @@
                         </div>
 
                         <div class="mp-field">
-                            <button type="submit" class="mp-btn-primary" style="height:32px;padding:0 16px;">Filter</button>
+                            <button type="submit" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm" style="height:32px;padding:0 16px;">Filter</button>
                         </div>
                     </div>
                 </form>

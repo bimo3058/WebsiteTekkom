@@ -408,12 +408,6 @@
     }
 
     /* ── Back Button ── */
-    .detail-header {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 24px;
-    }
     .btn-back {
         width: 32px;
         min-width: 32px;
@@ -622,15 +616,15 @@
 </style>
 
 <!-- Header -->
-<div class="detail-header">
-    <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--icon mk-kegiatan-btn--icon-back" aria-label="Kembali">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-    </a>
-    <div>
-        <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Tambah Kegiatan Baru</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Isi formulir berikut untuk menambahkan kegiatan baru</p>
-    </div>
-</div>
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Tambah Kegiatan Baru"
+    subtitle="Isi formulir berikut untuk menambahkan kegiatan baru">
+    <x-slot:leading>
+        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-back mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+    </x-slot:leading>
+</x-manajemenmahasiswa::ui.page-header>
 
 <!-- Validation Errors -->
 @if($errors->any())
@@ -923,8 +917,8 @@
 
     <!-- Action Buttons -->
     <div class="d-flex gap-3 justify-content-end mt-2">
-        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-cancel mk-kegiatan-btn mk-kegiatan-btn--secondary mk-kegiatan-btn--form">Batal</a>
-        <button type="submit" class="btn-submit mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form">
+        <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="mk-btn mk-btn--secondary">Batal</a>
+        <button type="submit" class="mk-btn mk-btn--primary">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Simpan Kegiatan
         </button>
     </div>
@@ -1051,7 +1045,7 @@ function renderFotoPreviews() {
         const reader = new FileReader();
         reader.onload = function(e) {
             item.innerHTML = `
-                <button type="button" class="btn-remove-file mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeFoto(${i})" title="Hapus foto" aria-label="Hapus foto ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <button type="button" class="btn-remove-file mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeFoto(${i})" title="Hapus foto" aria-label="Hapus foto ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 <img src="${e.target.result}" alt="${file.name}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                 <div class="file-info">${file.name}<br><span class="file-size">${formatFileSize(file.size)}</span></div>
             `;
@@ -1101,7 +1095,7 @@ function renderDokumenPreviews() {
                 <div class="doc-name">${file.name}</div>
                 <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
             </div>
-            <button type="button" class="btn-remove-doc mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         list.appendChild(item);
     });

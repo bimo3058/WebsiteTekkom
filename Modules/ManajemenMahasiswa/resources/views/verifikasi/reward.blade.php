@@ -1,5 +1,4 @@
 <x-dynamic-component :component="$layout">
-@include('manajemenmahasiswa::partials.card-frame')
 @php
     $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
     $canReview = $canReview ?? true;
@@ -17,8 +16,8 @@
        (admin.blade.php) — jangan diberi hex sendiri, nanti melenceng lagi. */
     .admin-stat-card { background: var(--c-card); border: 1px solid var(--c-border); border-radius: 12px; padding: 16px 18px; display: flex; align-items: center; gap: 14px; position: relative; overflow: hidden; }
     .admin-stat-card .stat-icon { width: 42px; height: 42px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .admin-stat-card .stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 1px; }
-    .admin-stat-card .stat-lbl { font-size: .78rem; color: var(--c-fg-muted); font-weight: 500; }
+    .admin-stat-card .stat-num { font-size: 24px; font-weight: 800; line-height: 1; margin-bottom: 1px; }
+    .admin-stat-card .stat-lbl { font-size: 12px; color: var(--c-fg-muted); font-weight: 500; }
     .admin-stat-card.pending .stat-icon { background: var(--c-warning-subtle); color: var(--c-warning); }
     .admin-stat-card.pending .stat-num { color: var(--c-warning); }
     .admin-stat-card.approved .stat-icon { background: var(--c-success-subtle); color: var(--c-success); }
@@ -27,29 +26,29 @@
     .admin-stat-card.rejected .stat-num { color: var(--c-error); }
     .filter-chip {
         padding: 7px 16px; border-radius: 8px; border: 1px solid #DFE1E7;
-        background: #fff; color: #666D80; font-size: .82rem; font-weight: 600;
+        background: #fff; color: #666D80; font-size: 13px; font-weight: 600;
         cursor: pointer; transition: all .15s; text-decoration: none !important;
         display: inline-flex; align-items: center; gap: 8px;
     }
     .filter-chip:hover { border-color: #0B266E; color: #0B266E; background: rgba(11,38,110,0.06); }
     .filter-chip.active { background: #0B266E; color: #fff !important; border-color: #0B266E; }
-    .tab-badge { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 50px; background: #FFFBEB; color: #d97706; min-width: 20px; text-align: center; }
+    .tab-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 50px; background: #FFFBEB; color: #d97706; min-width: 20px; text-align: center; }
     .filter-chip.active .tab-badge { background: #fff; color: #0B266E; }
     .tab-badge.zero { background: #f3f4f6; color: #666D80; }
 
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #666D80; }
-    .search-input { background-color: #fff; border: 1px solid #DFE1E7; border-radius: 8px; height: 34px; padding-left: 36px; font-size: .85rem; font-weight: 500; width: 100%; color: var(--c-fg); }
+    .search-input { background-color: #fff; border: 1px solid #DFE1E7; border-radius: 8px; height: 34px; padding-left: 36px; font-size: 13px; font-weight: 500; width: 100%; color: var(--c-fg); }
     .search-input:focus { background-color: #fff; border-color: #0B266E; box-shadow: 0 0 0 3px rgba(11,38,110,.1); outline: none; }
 
     .verif-table { width: 100%; border-collapse: collapse; }
     /* Header, garis antar baris, dan warna teks sel disamakan dengan tabel di
        Verifikasi Prestasi & Kegiatan (admin.blade.php). */
     .verif-table thead th { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); padding: 11px 12px; text-align: left; background: var(--c-bg); border-bottom: 1px solid var(--c-border); white-space: nowrap; }
-    .verif-table tbody td { padding: 11px 12px; font-size: .87rem; color: var(--c-fg); border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+    .verif-table tbody td { padding: 11px 12px; font-size: 14px; color: var(--c-fg); border-bottom: 1px solid var(--c-border); vertical-align: middle; }
     .verif-table tbody tr:last-child td { border-bottom: none; }
     .verif-table tbody tr:hover td { background: #FAFAFA; }
 
-    .tingkat-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase; }
+    .tingkat-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 50px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
     /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
        di kolom sebelahnya, sehingga keduanya tampak sama. */
     .tingkat-badge.internasional { background: var(--c-primary); color: #fff; }
@@ -58,29 +57,29 @@
     .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
     .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
 
-    .claim-badge { font-size: .73rem; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
+    .claim-badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
     .claim-badge.belum { background: var(--c-bg); color: var(--c-fg-muted); }
     .claim-badge.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
     .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
     .claim-badge.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
-    .reward-mini { font-size: .72rem; color: var(--c-fg-muted); margin-top: 4px; max-width: 220px; line-height: 1.4; }
+    .reward-mini { font-size: 11px; color: var(--c-fg-muted); margin-top: 4px; max-width: 220px; line-height: 1.4; }
 
-    .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .73rem; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
+    .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
     .detail-status-pill.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
     .detail-status-pill.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
     .detail-status-pill.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
 
     /* MK pilihan mahasiswa (read-only) */
-    .mk-by-mhs { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 2px 8px; margin-left: 4px; }
+    .mk-by-mhs { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 2px 8px; margin-left: 4px; }
     .mk-readonly { display: flex; flex-wrap: wrap; gap: 6px; background: #fafafa; border: 1px solid #DFE1E7; border-radius: 10px; padding: 10px 12px; min-height: 42px; }
-    .mk-tag { display: inline-flex; align-items: center; font-size: .8rem; font-weight: 600; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 4px 12px; }
+    .mk-tag { display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 4px 12px; }
 
     .empty-state { text-align: center; padding: 50px 20px; color: #666D80; }
     .empty-state-icon { display: flex; justify-content: center; margin-bottom: 12px; color: #C1C7CF; }
 
     .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
     .modal-header { border-bottom: 1px solid #f3f4f6; padding: 18px 22px; }
-    .modal-header .modal-title { font-size: 1rem; font-weight: 700; color: #0D0D12; }
+    .modal-header .modal-title { font-size: 16px; font-weight: 700; color: #0D0D12; }
     .modal-body { padding: 22px; }
     .modal-footer { border-top: 1px solid #f3f4f6; padding: 14px 22px; }
 
@@ -110,21 +109,24 @@
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 @include('manajemenmahasiswa::partials.filter-popover')
 
-{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
-<div class="mm-frame-header">
-    <div style="display:flex; align-items:center; gap:16px; margin-bottom:4px;">
+<!-- Page Header -->
+<x-manajemenmahasiswa::ui.page-header bordered title="Klaim Reward Prestasi">
+    @if($canReview)
+        Tinjau &amp; setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.
+    @else
+        Pantau pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.
+        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:#eef2ff; color:#0B266E; font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Mode Pemantauan — hanya melihat (tanpa tinjau/setujui/tolak)
+        </span>
+    @endif
+
+    <x-slot:leading>
         <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Verifikasi Prestasi">
             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
         </a>
-        <h4 style="font-size:22px; font-weight:700; color:var(--c-fg); margin:0; letter-spacing:-.02em; line-height:1.2;">Klaim Reward Prestasi</h4>
-    </div>
-    @if($canReview)
-        <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Tinjau & setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
-    @else
-        <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Pantau pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
-    @endif
-</div>
-
+    </x-slot:leading>
+</x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
 @if(session('success'))
@@ -141,7 +143,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
 
 
 <!-- Stat Cards (status klaim) — ringkasan angka saja, bukan tombol filter -->
@@ -231,22 +232,22 @@
                         <!-- Status Klaim — pengganti kartu statistik yang dulu bisa diklik -->
                         <div>
                             <label class="filter-pop-label" for="filterReward">Status</label>
-                            <select name="reward" id="filterReward" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="reward" id="filterReward">
                                 <option value="semua" {{ $reward === 'semua' ? 'selected' : '' }}>Semua Status</option>
                                 <option value="menunggu" {{ $reward === 'menunggu' ? 'selected' : '' }}>Menunggu Review</option>
                                 <option value="disetujui" {{ $reward === 'disetujui' ? 'selected' : '' }}>Disetujui</option>
                                 <option value="ditolak" {{ $reward === 'ditolak' ? 'selected' : '' }}>Ditolak</option>
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
-                            <select name="angkatan" id="filterAngkatan" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
                                 <option value="semua">Semua Angkatan</option>
                                 @foreach($angkatanList as $a)
                                     <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -338,7 +339,7 @@
                             <div class="d-flex gap-1 flex-wrap">
                                 {{-- Semua baris memakai tombol & modal yang sama; klaim yang sudah
                                      diputus tinggal membuka modal itu tanpa panel keputusan. --}}
-                                <button type="button" class="btn-tinjau" onclick="openTinjauReward(@js($rewardPayload))">
+                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjauReward(@js($rewardPayload))">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                     Tinjau
                                 </button>
@@ -384,7 +385,7 @@
                             <div id="trPreview" style="width: 100%; display: flex; align-items: center; justify-content: center;"></div>
                             <div id="trThumbs" class="tp-thumbs"></div>
                             <a id="trOpenTab" href="#" target="_blank" rel="noopener"
-                               style="font-size: 11.5px; font-weight: 600; color: var(--c-primary, #0B266E); text-decoration: none;">
+                               style="font-size: 11px; font-weight: 600; color: var(--c-primary, #0B266E); text-decoration: none;">
                                 Buka bukti di tab baru &#8599;
                             </a>
                         </div>
@@ -420,24 +421,23 @@
 
                             <div id="trActions" style="margin-top: auto; padding-top: 18px;">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label fw-bold mb-0" style="font-size: 12.5px;">Catatan <span style="font-weight: 400; color: #666D80;">(wajib untuk menolak)</span></label>
+                                    <label class="form-label fw-bold mb-0" style="font-size: 12px;">Catatan <span style="font-weight: 400; color: #666D80;">(wajib untuk menolak)</span></label>
                                     <span class="text-muted" style="font-size: 11px;" id="charCount_tr">0 / 300 huruf</span>
                                 </div>
                                 <textarea name="reward_note" id="trNote" class="form-control" rows="3" maxlength="300"
                                           placeholder="Catatan persetujuan / alasan penolakan"
-                                          style="border-radius: 10px; font-size: 13.5px;"
+                                          style="border-radius: 10px; font-size: 13px;"
                                           oninput="document.getElementById('charCount_tr').innerText = this.value.length + ' / 300 huruf'; document.getElementById('trError').style.display = 'none';"></textarea>
                                 <div id="trError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                 <div class="tp-aksi">
-                                    <button type="button" id="trTolakBtn" class="tp-btn-tolak">Tolak</button>
-                                    <button type="button" id="trSetujuiBtn" class="tp-btn-setujui">Setujui</button>
+                                    <button type="button" id="trTolakBtn" class="mk-btn mk-btn--secondary">Tolak</button>
+                                    <button type="button" id="trSetujuiBtn" class="mk-btn mk-btn--primary">Setujui</button>
                                 </div>
                             </div>
 
                             <div id="trReadonly" style="display: none; margin-top: auto; padding-top: 18px;">
                                 <div id="trReviewArea"></div>
-                                <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal"
-                                        style="border-radius: 10px; margin-top: 14px; font-weight: 600; font-size: 13.5px;">Tutup</button>
+                                <button type="button" class="mk-btn mk-btn--secondary mk-btn--block" data-bs-dismiss="modal" style="margin-top: 14px;">Tutup</button>
                             </div>
                         </div>
                     </div>

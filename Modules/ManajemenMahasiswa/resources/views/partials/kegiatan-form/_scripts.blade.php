@@ -127,7 +127,7 @@ function renderFotoPreviews() {
         const reader = new FileReader();
         reader.onload = function(e) {
             item.innerHTML = `
-                <button type="button" class="btn-remove-file mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeFoto(${i})" title="Hapus foto" aria-label="Hapus foto ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                <button type="button" class="btn-remove-file mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeFoto(${i})" title="Hapus foto" aria-label="Hapus foto ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 <img src="${e.target.result}" alt="${file.name}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                 <div class="file-info">${file.name}<br><span class="file-size">${formatFileSize(file.size)}</span></div>
             `;
@@ -177,7 +177,7 @@ function renderDokumenPreviews() {
                 <div class="doc-name">${file.name}</div>
                 <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
             </div>
-            <button type="button" class="btn-remove-doc mk-kegiatan-btn mk-kegiatan-btn--danger-subtle mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="removeDokumen(${i})" title="Hapus dokumen" aria-label="Hapus dokumen ${file.name}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         list.appendChild(item);
     });

@@ -26,12 +26,21 @@
         --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
     }
 
-    .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+    /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+       jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+    .main-wrapper {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
 
     /* ── Shell kotak: mengikuti dashboard Super Admin ───────────────── */
     .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
     .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-    .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border); border-radius: 12px; box-shadow: var(--shadow-card); overflow: hidden; width: 100%; box-sizing: border-box; }
+    .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
     .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
     .dash-box-body { flex: 1; overflow-y: auto; padding: 16px; }
     .dash-box-body::-webkit-scrollbar { width: 6px; }
@@ -157,7 +166,7 @@
     .content-section ul, .content-section ol { padding-left: 22px; margin: 8px 0; }
     .content-section li { margin-bottom: 3px; }
     .content-section hr { border: none; border-top: 1px solid var(--c-border); margin: 14px 0; }
-    .content-section table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12.5px; }
+    .content-section table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 12px; }
     .content-section table td,
     .content-section table th { border: 1px solid var(--c-border); padding: 8px 12px; text-align: left; }
     .content-section table th { background: #FBFBFC; font-weight: 600; color: var(--c-fg); }
@@ -176,7 +185,7 @@
     }
     .dt-info-label { font-size: 11px; color: var(--c-fg-muted); margin: 0; line-height: 1.2; }
     .dt-info-value {
-        font-size: 12.5px; font-weight: 600; color: var(--c-fg);
+        font-size: 12px; font-weight: 600; color: var(--c-fg);
         margin: 1px 0 0; line-height: 1.3; word-break: break-word;
     }
 
@@ -201,7 +210,7 @@
     }
     .lampiran-info { flex-grow: 1; overflow: hidden; }
     .lampiran-name {
-        font-weight: 600; font-size: 12.5px; color: var(--c-fg);
+        font-weight: 600; font-size: 12px; color: var(--c-fg);
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .lampiran-action {
@@ -277,6 +286,6 @@
     .lightbox-info .lightbox-title { color: #fff; font-size: 13px; font-weight: 600; }
 
     @media (max-width: 640px) {
-        .dt-title { font-size: 19px; }
+        .dt-title { font-size: 18px; }
     }
 </style>

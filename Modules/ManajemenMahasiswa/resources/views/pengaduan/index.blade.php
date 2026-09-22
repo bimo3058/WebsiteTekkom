@@ -24,7 +24,7 @@
     }
     .search-input {
         background: #ffffff; border: 1px solid var(--c-border); border-radius: 8px;
-        height: 34px; padding-left: 34px; font-size: 12.5px; font-weight: 500;
+        height: 34px; padding-left: 34px; font-size: 12px; font-weight: 500;
         width: 100%; color: var(--c-fg);
     }
     .search-input:focus {
@@ -32,7 +32,7 @@
     }
 
     .btn-reset {
-        height: 34px; padding: 0 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600;
+        height: 34px; padding: 0 14px; border-radius: 8px; font-size: 12px; font-weight: 600;
         display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap;
         text-decoration: none !important; border: 1px solid var(--c-border);
         background: #ffffff; color: var(--c-fg-sec); box-shadow: 0 1px 2px rgba(0,0,0,.04);
@@ -94,28 +94,27 @@
     .tercatat-check:disabled { opacity: .5; cursor: progress; }
 
     /* ── Menu aksi ── */
-    .action-menu-btn {
-        width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--c-border);
-        background: #ffffff; display: inline-flex; align-items: center; justify-content: center;
-        cursor: pointer; color: var(--c-fg-muted); transition: all .15s; margin: 0 auto;
-    }
-    .action-menu-btn:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
-    .action-menu-panel {
-        position: absolute; right: 0; top: calc(100% + 5px); background: #ffffff;
-        border: 1px solid var(--c-border); border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(0,0,0,.1); min-width: 150px; z-index: 40;
-        overflow: hidden; padding: 5px;
-    }
-    .action-menu-item {
-        width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px;
-        border: none; border-radius: 6px; background: none; font-size: 11px; font-weight: 500;
-        color: var(--c-fg-sec); text-decoration: none !important; cursor: pointer;
-        font-family: inherit; text-align: left; transition: background .12s;
-    }
-    .action-menu-item:hover { background: var(--c-bg); color: var(--c-fg-sec); }
-    .action-menu-item.is-danger { color: var(--c-error-200); }
-    .action-menu-item.is-danger:hover { background: var(--c-error-0); color: var(--c-error-200); }
 </style>
+
+{{-- ── Header ── --}}
+<x-manajemenmahasiswa::ui.page-header bordered title="Layanan Pengaduan">
+    @if($isStaff)
+        {{ number_format($pengaduan->total()) }} pengaduan
+        @if($baruCount > 0)
+            · <span style="color:#2563eb;font-weight:700;">{{ $baruCount }} baru</span>
+        @endif
+    @else
+        Sampaikan keluhan Anda; tim akan mencatat dan menindaklanjutinya.
+    @endif
+
+    <x-slot:actions>
+        @if($canCreate)
+            <button type="button" class="mk-btn mk-btn--primary" data-bs-toggle="modal" data-bs-target="#buatPengaduanModal">
+                <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
+            </button>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
 
 {{-- ── Flash ── --}}
 @if(session('success'))
@@ -132,28 +131,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-{{-- ── Header ── --}}
-<div class="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Layanan Pengaduan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">
-            @if($isStaff)
-                {{ number_format($pengaduan->total()) }} pengaduan
-                @if($baruCount > 0)
-                    · <span style="color:#2563eb;font-weight:700;">{{ $baruCount }} baru</span>
-                @endif
-            @else
-                Sampaikan keluhan Anda; tim akan mencatat dan menindaklanjutinya.
-            @endif
-        </p>
-    </div>
-    @if($canCreate)
-        <button type="button" class="btn-post" data-bs-toggle="modal" data-bs-target="#buatPengaduanModal">
-            <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
-        </button>
-    @endif
-</div>
 
 @php
     $adaFilter = ($filters['q'] ?? '') !== '' || ($filters['kategori'] ?? '') !== '' || ($filters['sort'] ?? 'terbaru') !== 'terbaru';
@@ -206,20 +183,20 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterKategori">Kategori</label>
-                            <select name="kategori" id="filterKategori" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="kategori" id="filterKategori">
                                 <option value="">Semua Kategori</option>
                                 @foreach($kategoriOptions as $value => $meta)
                                     <option value="{{ $value }}" {{ $filters['kategori'] === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterSort">Urutkan</label>
-                            <select name="sort" id="filterSort" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="sort" id="filterSort">
                                 <option value="terbaru" {{ $filters['sort'] === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
                                 <option value="terlama" {{ $filters['sort'] === 'terlama' ? 'selected' : '' }}>Terlama</option>
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -309,20 +286,21 @@
                         @if($isStaff)
                             <td style="text-align: center;">
                                 <div style="position: relative; display: inline-block;" x-data="{ open: false }">
-                                    <button type="button" @click="open = !open" @click.outside="open = false" class="action-menu-btn" aria-label="Aksi">
+                                    <button type="button" @click="open = !open" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Aksi">
                                         <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                     </button>
                                     <div x-show="open" x-cloak
                                          x-transition:enter="transition ease-out duration-100"
                                          x-transition:enter-start="opacity-0 scale-95"
                                          x-transition:enter-end="opacity-100 scale-100"
-                                         class="action-menu-panel" style="display: none;">
-                                        <a href="{{ $detailUrl }}" class="action-menu-item">
+                                         class="mk-menu" style="display: none;">
+                                        <a href="{{ $detailUrl }}" class="mk-menu-item">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                             Lihat Detail
                                         </a>
                                         @if($canDelete)
-                                            <button type="button" class="action-menu-item is-danger js-hapus"
+                                            <div class="mk-menu-sep"></div>
+                                            <button type="button" class="mk-menu-item js-hapus"
                                                     data-action="{{ route('manajemenmahasiswa.pengaduan.destroy', $item->id) }}"
                                                     data-judul="{{ $judul }}">
                                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
@@ -344,7 +322,7 @@
                                 @if($adaFilter)
                                     <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted); margin: 0;">Tidak ada pengaduan yang cocok</p>
                                     <p style="font-size: 12px; color: var(--c-fg-placeholder); margin: 0;">Coba kata kunci lain, atau kosongkan filternya.</p>
-                                    <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-reset mt-1">Reset pencarian &amp; filter</a>
+                                    <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm mt-1">Reset pencarian &amp; filter</a>
                                 @else
                                     <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted); margin: 0;">Belum ada pengaduan</p>
                                     <p style="font-size: 12px; color: var(--c-fg-placeholder); margin: 0;">Data pengaduan akan muncul di sini.</p>
@@ -375,10 +353,8 @@
                         @csrf
                         @method('DELETE')
                         <div class="d-flex justify-content-center gap-3">
-                            <button type="button" class="btn btn-light px-4 py-2" data-bs-dismiss="modal"
-                                style="border: 1px solid #d1d5db; border-radius: 8px; font-weight: 600; color: #4b5563;">Batal</button>
-                            <button type="submit" class="btn px-4 py-2"
-                                style="background-color: #dc2626; color: white; border-radius: 8px; font-weight: 600;">Hapus</button>
+                            <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="mk-btn mk-btn--primary">Hapus</button>
                         </div>
                     </form>
                 </div>
@@ -425,7 +401,7 @@
                 cb.closest('tr').querySelector('.js-baru-dot').style.display = data.status === 'baru' ? '' : 'none';
             } catch (e) {
                 cb.checked = !dicentang;
-                alert('Gagal memperbarui status pengaduan. Silakan coba lagi.');
+                mkNotify({ title: 'Gagal Memperbarui', message: 'Gagal memperbarui status pengaduan. Silakan coba lagi.', variant: 'danger' });
             } finally {
                 cb.disabled = false;
             }

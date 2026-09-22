@@ -13,10 +13,10 @@
 
         /* ── Page Title ── */
         .page-title h3 {
-            font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
+            font-size: 24px; font-weight: 700; color: #1e1b4b;
             margin: 0 0 4px; letter-spacing: -.02em;
         }
-        .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
+        .page-title p { font-size: 15px; color: #6b7280; margin: 0; }
 
         /* ── Tags ── */
         .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }

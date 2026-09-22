@@ -28,12 +28,21 @@
             --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
         }
 
-        .main-wrapper { background:transparent !important; box-shadow:none !important; padding:0 !important; }
+        /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+           jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+        .main-wrapper {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+        }
 
         /* ── Shell kotak: mengikuti dashboard Super Admin ───────────── */
         .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
         .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-        .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); overflow: hidden; width: 100%; box-sizing: border-box; }
+        .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
         .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
         .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
         .dash-box-body::-webkit-scrollbar { width: 6px; }
@@ -64,12 +73,6 @@
         .pg-search-wrap input::placeholder { color:var(--c-fg-placeholder, #808897); }
         .pg-search-wrap input:focus { border-color:var(--c-primary, #0B266E); box-shadow:0 0 0 3px rgba(11,38,110,.1); }
 
-        .pg-perpage {
-            height:36px; padding:0 10px; border:1px solid var(--c-border, #DFE1E7); border-radius:8px;
-            background:#fff; font-size:12px; font-weight:600; color:var(--c-fg-sec, #353849);
-            cursor:pointer; outline:none; transition:all .15s; box-shadow:0 1px 2px rgba(0,0,0,.04);
-        }
-        .pg-perpage:hover { border-color:var(--c-border-strong, #C1C7CF); }
 
         .btn-buat-post {
             display:inline-flex; align-items:center; gap:6px; padding:8px 16px;
@@ -143,7 +146,7 @@
             display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
         }
         .pg-card-excerpt {
-            font-size:11.5px; color:var(--c-fg-muted, #666D80); line-height:1.5; margin:0; flex:1;
+            font-size:11px; color:var(--c-fg-muted, #666D80); line-height:1.5; margin:0; flex:1;
             display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
         }
 
@@ -239,25 +242,20 @@
 
             {{-- ── Header ─────────────────────────────────── --}}
             <div class="dash-box-header">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-                            <h1 style="font-size:22px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:-0.02em; line-height:1.2; margin:0;">Pengumuman &amp; Informasi</h1>
-                            <span style="font-size:10px; font-weight:600; color:var(--c-primary, #0B266E); background:rgba(11,38,110,0.09); border:1px solid rgba(11,38,110,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Modul Mahasiswa</span>
-                        </div>
-                        <p style="font-size:12px; color:var(--c-fg-muted, #666D80); margin:0;">
-                            Wadah informasi untuk mahasiswa dan alumni
-                        </p>
-                    </div>
-
-                    <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-buat-post">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        <span>Buat Post</span>
-                    </a>
-                </div>
+                <x-manajemenmahasiswa::ui.page-header
+                    title="Pengumuman & Informasi"
+                    badge="Modul Mahasiswa"
+                    subtitle="Wadah informasi untuk mahasiswa dan alumni">
+                    <x-slot:actions>
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="mk-btn mk-btn--primary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            <span>Buat Post</span>
+                        </a>
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
             </div>
 
             <div class="dash-box-body">
@@ -274,14 +272,14 @@
                                 placeholder="Cari pengumuman..." value="{{ request('search') }}">
                         </div>
 
-                        <select name="per_page" class="pg-perpage"
+                        <x-manajemenmahasiswa::ui.select name="per_page" size="md" :block="false"
                             onchange="document.getElementById('pgFilterForm').submit()">
                             @foreach([9, 18, 27] as $opt)
                                 <option value="{{ $opt }}" {{ request('per_page', 9) == $opt ? 'selected' : '' }}>
                                     {{ $opt }} / hal
                                 </option>
                             @endforeach
-                        </select>
+                        </x-manajemenmahasiswa::ui.select>
                     </div>
 
                     @include('manajemenmahasiswa::pengumuman._filter-kategori', [
@@ -430,9 +428,9 @@
                                     @if($canDelete)
                                         <form method="POST"
                                             action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}"
-                                            onsubmit="return confirm('Hapus pengumuman ini?')" style="margin:0;">
+                                            onsubmit="return mkConfirmSubmit(this, 'Hapus pengumuman ini?', { title: 'Hapus Pengumuman', confirmText: 'Ya, Hapus' })" style="margin:0;">
                                             @csrf @method('DELETE')
-                                            <button type="submit" class="pg-action-btn danger" title="Hapus">
+                                            <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" title="Hapus">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
                                                     stroke="currentColor" stroke-width="2">
                                                     <polyline points="3 6 5 6 21 6"/>

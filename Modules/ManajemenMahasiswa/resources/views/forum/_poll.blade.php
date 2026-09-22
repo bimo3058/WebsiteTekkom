@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 btn.disabled = false;
                 btn.style.opacity = '';
                 if (!data.success) {
-                    alert(data.error || 'Gagal mengubah status polling.');
+                    mkNotify({ title: 'Gagal', message: data.error || 'Gagal mengubah status polling.', variant: 'danger' });
                     return;
                 }
 
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(() => {
                 btn.disabled = false;
                 btn.style.opacity = '';
-                alert('Terjadi kesalahan. Coba lagi.');
+                mkNotify({ title: 'Terjadi Kesalahan', message: 'Terjadi kesalahan. Coba lagi.', variant: 'danger' });
             });
         });
     });
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 if (!data.success) {
-                    alert(data.error || 'Gagal memilih.');
+                    mkNotify({ title: 'Gagal Memilih', message: data.error || 'Gagal memilih.', variant: 'danger' });
                     return;
                 }
 
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     o.style.pointerEvents = '';
                     o.style.opacity = '';
                 });
-                alert('Terjadi kesalahan. Coba lagi.');
+                mkNotify({ title: 'Terjadi Kesalahan', message: 'Terjadi kesalahan. Coba lagi.', variant: 'danger' });
             });
         });
     });

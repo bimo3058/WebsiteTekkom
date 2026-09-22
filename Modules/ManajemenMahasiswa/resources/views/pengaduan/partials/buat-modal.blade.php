@@ -14,7 +14,7 @@
 <style>
     #buatPengaduanModal .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
     #buatPengaduanModal .modal-header { border-bottom: 1px solid #f3f4f6; padding: 18px 22px; }
-    #buatPengaduanModal .modal-title { font-size: 1rem; font-weight: 700; color: var(--c-fg); }
+    #buatPengaduanModal .modal-title { font-size: 16px; font-weight: 700; color: var(--c-fg); }
     #buatPengaduanModal .modal-body { padding: 22px; }
 
     .bp-jalur-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -133,7 +133,7 @@
                         Pastikan Anda menyalinnya sebelum membuka form.
                     </p>
 
-                    <a href="#" target="_blank" rel="noopener" class="bp-btn-primary" id="bpBukaForm">
+                    <a href="#" target="_blank" rel="noopener" class="mk-btn mk-btn--primary" id="bpBukaForm">
                         Buka Form Pengaduan (Tab Baru)
                     </a>
                 </div>

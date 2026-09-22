@@ -46,7 +46,8 @@
             background-color: var(--c-bg);
             font-family: 'Inter Tight', sans-serif;
             display: flex;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
 
         .simenma-main {
@@ -54,6 +55,7 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            min-height: 0;
             overflow: hidden;
         }
 
@@ -209,17 +211,62 @@
             width: 100%;
         }
 
+        /* Area konten — setara .sitkom-content pada shell global SITKOM
+           (resources/views/components/sidebar.blade.php). Padding 0 supaya
+           halaman bisa menggambar kotak setinggi viewport sendiri, persis
+           pola .*-wrap/.*-box di halaman Super Admin. */
         .content {
-            padding: 24px 28px 48px;
+            display: flex;
+            flex-direction: column;
             flex: 1;
+            min-height: 0;
+            padding: 0;
+            overflow: hidden;
         }
 
+        /* Kotak konten bawaan — setara .*-box pada shell global SITKOM
+           (lihat resources/views/superadmin/users/index.blade.php).
+           Halaman yang sudah menggambar kotaknya sendiri mematikan blok ini. */
         .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            box-sizing: border-box;
+            margin: 10px;
             background: var(--c-card);
+            border: 1px solid var(--c-border);
             border-radius: 12px;
-            padding: 25px;
-            min-height: calc(100vh - 50px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            padding: 20px 24px;
+            overflow-y: auto;
+        }
+
+        /* ── Mobile: kembalikan scroll natif halaman ── */
+        @media (max-width: 767px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            .simenma-main {
+                overflow: visible;
+            }
+            .content {
+                display: block;
+                flex: none;
+                overflow: visible;
+                padding: 8px 8px 80px;
+            }
+            .main-wrapper {
+                display: block;
+                flex: none;
+                min-height: 0;
+                margin: 0;
+                overflow: visible;
+                border-radius: 10px;
+                padding: 12px 14px;
+            }
         }
 
         /* Sidebar Dropdown */
@@ -311,6 +358,10 @@
     </style>
 
     @stack('styles')
+
+    {{-- Sistem tombol modul; sengaja SETELAH @stack('styles') supaya menang atas
+         sisa gaya tombol lama yang masih menempel di masing-masing halaman. --}}
+    @include('manajemenmahasiswa::partials.button-theme')
     <x-mobile-navigation-assets />
 </head>
 
@@ -335,6 +386,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {{-- Dialog konfirmasi/pemberitahuan global; pengganti confirm() & alert() bawaan browser.
+         Dipasang sebelum @stack('scripts') supaya mkConfirm/mkNotify sudah ada saat skrip
+         halaman dijalankan. --}}
+    <x-manajemenmahasiswa::ui.dialog />
+
     @stack('scripts')
     <x-mobile-navigation />
 </body>

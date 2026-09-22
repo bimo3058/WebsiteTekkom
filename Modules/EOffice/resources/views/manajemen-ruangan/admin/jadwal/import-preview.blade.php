@@ -189,15 +189,45 @@
                                                 Tidak Dikenal: <span
                                                     class="bg-orange-100 px-1 rounded">{{ $row[11] ?? '?' }}</span>
                                             </div>
-                                            <select
-                                                class="mp-input !py-1 !px-2 !text-xs !bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-900 cursor-pointer"
-                                                onchange="updateRuangan({{ $loop->index }}, this.value)"
-                                                style="width: 100%; border-radius: 6px;">
-                                                <option value="">-- Pilih Manual --</option>
-                                                @foreach($ruangans as $r)
-                                                    <option value="{{ $r->id }}">{{ $r->nama }}</option>
-                                                @endforeach
-                                            </select>
+                                            <div x-data="{ 
+                                                    open: false,
+                                                    ruanganId: '',
+                                                    get selectedName() {
+                                                        const room = [
+                                                            @foreach($ruangans as $r)
+                                                                {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }}'},
+                                                            @endforeach
+                                                        ].find(r => r.id == this.ruanganId);
+                                                        return room ? room.name : '-- Pilih Manual --';
+                                                    },
+                                                    selectItem(id) { 
+                                                        this.ruanganId = id;
+                                                        this.open = false; 
+                                                        updateRuangan({{ $loop->index }}, id);
+                                                    } 
+                                                }" class="relative w-full" @click.away="open = false">
+
+                                                <button type="button" @click="open = !open" 
+                                                    class="w-full flex items-center justify-between mp-input !py-1 !px-2 !text-xs !bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-900 focus:outline-none transition-colors rounded-md h-[26px]">
+                                                    <span x-text="selectedName" class="truncate font-semibold"></span>
+                                                    <svg class="w-3 h-3 text-orange-700 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </button>
+                                                
+                                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                    class="absolute left-0 top-full mt-1 w-full min-w-[150px] bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto" style="display: none;">
+                                                    <div class="p-1">
+                                                        <button type="button" @click="selectItem('')" class="w-full text-left px-2 py-1.5 text-xs font-medium rounded-md transition-colors" :class="{'bg-orange-50 text-orange-900 font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">-- Pilih Manual --</button>
+                                                        
+                                                        @foreach($ruangans as $r)
+                                                            <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-2 py-1.5 mt-0.5 text-xs font-medium rounded-md transition-colors" :class="{'bg-orange-50 text-orange-900 font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
+                                                                {{ $r->nama }}
+                                                            </button>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
                                         @endif
                                     </td>
                                     <td style="text-align:center; min-width: 90px;">
@@ -345,25 +375,83 @@
                         <div>
                             <label
                                 class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Hari</label>
-                            <select x-model="editData.hari" class="mp-input text-[14px]">
-                                <option value="1">Senin</option>
-                                <option value="2">Selasa</option>
-                                <option value="3">Rabu</option>
-                                <option value="4">Kamis</option>
-                                <option value="5">Jumat</option>
-                                <option value="6">Sabtu</option>
-                                <option value="7">Minggu</option>
-                            </select>
+                            <div x-data="{ 
+                                    open: false,
+                                    get selectedName() {
+                                        const map = {
+                                            1: 'Senin', 2: 'Selasa', 3: 'Rabu',
+                                            4: 'Kamis', 5: 'Jumat', 6: 'Sabtu', 7: 'Minggu'
+                                        };
+                                        return map[editData.hari] || 'Pilih Hari...';
+                                    },
+                                    selectItem(val) { 
+                                        editData.hari = val;
+                                        this.open = false; 
+                                    } 
+                                }" class="relative w-full" @click.away="open = false">
+
+                                <button type="button" @click="open = !open" 
+                                    class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                    <span x-text="selectedName" class="truncate text-gray-800"></span>
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                
+                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[80] overflow-hidden" style="display: none;">
+                                    <div class="p-1">
+                                        <button type="button" @click="selectItem(1)" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.hari == 1, 'text-gray-700 hover:bg-gray-50': editData.hari != 1}">Senin</button>
+                                        <button type="button" @click="selectItem(2)" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.hari == 2, 'text-gray-700 hover:bg-gray-50': editData.hari != 2}">Selasa</button>
+                                        <button type="button" @click="selectItem(3)" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.hari == 3, 'text-gray-700 hover:bg-gray-50': editData.hari != 3}">Rabu</button>
+                                        <button type="button" @click="selectItem(4)" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.hari == 4, 'text-gray-700 hover:bg-gray-50': editData.hari != 4}">Kamis</button>
+                                        <button type="button" @click="selectItem(5)" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.hari == 5, 'text-gray-700 hover:bg-gray-50': editData.hari != 5}">Jumat</button>
+                                        <button type="button" @click="selectItem(6)" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.hari == 6, 'text-gray-700 hover:bg-gray-50': editData.hari != 6}">Sabtu</button>
+                                        <button type="button" @click="selectItem(7)" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.hari == 7, 'text-gray-700 hover:bg-gray-50': editData.hari != 7}">Minggu</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label
                                 class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Ruangan</label>
-                            <select x-model="editData.ruangan_id" class="mp-input text-[14px]">
-                                <option value="">-- Kosong / Pilih Nanti --</option>
-                                @foreach($ruangans as $r)
-                                    <option value="{{ $r->id }}">{{ $r->nama }}</option>
-                                @endforeach
-                            </select>
+                            <div x-data="{ 
+                                    open: false,
+                                    get selectedName() {
+                                        const room = [
+                                            @foreach($ruangans as $r)
+                                                {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }}'},
+                                            @endforeach
+                                        ].find(r => r.id == editData.ruangan_id);
+                                        return room ? room.name : '-- Kosong / Pilih Nanti --';
+                                    },
+                                    selectItem(id) { 
+                                        editData.ruangan_id = id;
+                                        this.open = false; 
+                                    } 
+                                }" class="relative w-full" @click.away="open = false">
+                                
+                                <button type="button" @click="open = !open" 
+                                    class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                    <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !editData.ruangan_id, 'text-gray-800': editData.ruangan_id}"></span>
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                    </svg>
+                                </button>
+                                
+                                <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                    class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[80] max-h-48 overflow-y-auto" style="display: none;">
+                                    <div class="p-1">
+                                        <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.ruangan_id == '', 'text-gray-700 hover:bg-gray-50': editData.ruangan_id != ''}">-- Kosong / Pilih Nanti --</button>
+                                        
+                                        @foreach($ruangans as $r)
+                                            <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': editData.ruangan_id == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': editData.ruangan_id != '{{ $r->id }}'}">
+                                                {{ $r->nama }}
+                                            </button>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div>
                             <label class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Mata

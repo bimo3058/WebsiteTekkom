@@ -85,20 +85,34 @@
     document.addEventListener('submit', function (e) {
         if (!e.target.id || !e.target.id.startsWith('role-form-')) return;
 
-        var checked = Array.from(e.target.querySelectorAll('input[name="roles[]"]:checked'));
+        var form = e.target;
+
+        var checked = Array.from(form.querySelectorAll('input[name="roles[]"]:checked'));
         if (checked.length === 0) {
             e.preventDefault();
-            alert('Pilih minimal satu role.');
+            mkNotify({
+                title: 'Role Belum Dipilih',
+                message: 'Pilih minimal satu role.',
+                variant: 'warning',
+            });
             return;
         }
 
         var values = checked.map(function (cb) { return cb.value; });
 
         if (values.includes('mahasiswa')) {
-            var holder   = e.target.closest('[data-name]');
+            // Dialog modul bersifat asinkron, jadi submit selalu ditahan dulu lalu form
+            // dikirim sendiri bila disetujui. form.submit() tidak memicu ulang listener ini.
+            e.preventDefault();
+
+            var holder   = form.closest('[data-name]');
             var userName = (holder && holder.getAttribute('data-name')) || 'pengguna ini';
-            var ok = confirm('Yakin ingin mengembalikan ' + userName + ' ke Mahasiswa Biasa?\nSemua role himpunan akan dicabut.');
-            if (!ok) e.preventDefault();
+
+            mkConfirm({
+                title: 'Kembalikan ke Mahasiswa Biasa',
+                message: 'Yakin ingin mengembalikan ' + userName + ' ke Mahasiswa Biasa?\nSemua role himpunan akan dicabut.',
+                confirmText: 'Ya, Kembalikan',
+            }).then(function (ok) { if (ok) form.submit(); });
         }
     });
 })();

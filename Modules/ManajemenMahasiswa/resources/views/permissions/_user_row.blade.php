@@ -203,8 +203,8 @@
             </div>
 
             <div class="uc-actions">
-                <button type="button" class="mp-btn-outline" onclick="mkToggleCard({{ $user->id }})">Batal</button>
-                <button type="submit" class="mp-btn-primary">
+                <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm" onclick="mkToggleCard({{ $user->id }})">Batal</button>
+                <button type="submit" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                          stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>

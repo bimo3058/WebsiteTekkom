@@ -26,12 +26,21 @@
                 --shadow-card: 0px 1px 2px 0px rgba(228, 229, 231, 0.5);
             }
 
-            .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+            /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+               jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+            .main-wrapper {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
 
             /* ── Shell kotak: mengikuti dashboard Super Admin ───────────── */
             .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
             .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: var(--shadow-card, 0px 1px 2px 0px rgba(228,229,231,0.5)); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
             .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
             .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
             .dash-box-body::-webkit-scrollbar { width: 6px; }
@@ -136,7 +145,7 @@
 
             .request-meta {
                 display: flex; flex-wrap: wrap; gap: 12px;
-                font-size: 11.5px; color: var(--c-fg-muted, #666D80);
+                font-size: 11px; color: var(--c-fg-muted, #666D80);
             }
             .request-meta-item { display: flex; align-items: center; gap: 5px; }
             .request-meta-item svg { color: var(--c-fg-placeholder, #808897); flex-shrink: 0; }
@@ -151,7 +160,7 @@
             }
             .request-pesan .pesan-label {
                 font-weight: 700; color: var(--c-fg, #0D0D12);
-                font-size: 11.5px; margin-bottom: 4px;
+                font-size: 11px; margin-bottom: 4px;
                 display: flex; align-items: center; gap: 5px;
             }
 
@@ -254,24 +263,19 @@
 
             {{-- ── Header ─────────────────────────────────── --}}
             <div class="dash-box-header">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
-                            <h1 style="font-size:22px; font-weight:700; color:var(--c-fg, #0D0D12); letter-spacing:-0.02em; line-height:1.2; margin:0;">Verifikasi Pengumuman</h1>
-                            <span style="font-size:10px; font-weight:600; color:var(--c-primary, #0B266E); background:rgba(11,38,110,0.09); border:1px solid rgba(11,38,110,0.18); padding:2px 8px; border-radius:9999px; letter-spacing:0.03em;">Modul Mahasiswa</span>
-                        </div>
-                        <p style="font-size:12px; color:var(--c-fg-muted, #666D80); margin:0;">
-                            Kelola pengajuan verifikasi pengumuman dari staff himpunan
-                        </p>
-                    </div>
-
-                    @if($pendingCount > 0)
-                        <div class="pending-counter">
-                            <div class="counter-num">{{ $pendingCount }}</div>
-                            <span>Menunggu Verifikasi</span>
-                        </div>
-                    @endif
-                </div>
+                <x-manajemenmahasiswa::ui.page-header
+                    title="Verifikasi Pengumuman"
+                    badge="Modul Mahasiswa"
+                    subtitle="Kelola pengajuan verifikasi pengumuman dari staff himpunan">
+                    <x-slot:actions>
+                        @if($pendingCount > 0)
+                            <div class="pending-counter">
+                                <div class="counter-num">{{ $pendingCount }}</div>
+                                <span>Menunggu Verifikasi</span>
+                            </div>
+                        @endif
+                    </x-slot:actions>
+                </x-manajemenmahasiswa::ui.page-header>
             </div>
 
             <div class="dash-box-body">
@@ -381,7 +385,7 @@
                                         onsubmit="return handleReject(this, {{ $req->id }})">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="catatan" class="catatan-hidden-{{ $req->id }}">
-                                        <button type="submit" class="btn-reject">
+                                        <button type="submit" class="mk-btn mk-btn--secondary">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                             Tolak
                                         </button>
@@ -390,7 +394,7 @@
                                         onsubmit="return handleApprove(this, {{ $req->id }})">
                                         @csrf @method('PATCH')
                                         <input type="hidden" name="catatan" class="catatan-hidden-{{ $req->id }}">
-                                        <button type="submit" class="btn-approve">
+                                        <button type="submit" class="mk-btn mk-btn--primary">
                                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                                             Setujui
                                         </button>
@@ -442,14 +446,25 @@
             });
         }
 
+        /**
+         * Menyetujui pengumuman: meminta konfirmasi lewat dialog modul, lalu mengirim form.
+         *
+         * Selalu mengembalikan false supaya submit bawaan tertahan — mkConfirmSubmit yang
+         * mengirim formnya sendiri setelah pengguna menyetujui.
+         */
         function handleApprove(form, reqId) {
             syncCatatan(reqId);
-            if (!confirm('Setujui pengumuman ini? Pengumuman akan langsung dipublikasikan.')) {
-                return false;
-            }
-            return true;
+
+            return mkConfirmSubmit(form, 'Setujui pengumuman ini? Pengumuman akan langsung dipublikasikan.', {
+                title: 'Setujui Pengumuman',
+                variant: 'success',
+                confirmText: 'Ya, Setujui',
+            });
         }
 
+        /**
+         * Menolak pengumuman: catatan wajib diisi lebih dulu, lalu konfirmasi.
+         */
         function handleReject(form, reqId) {
             syncCatatan(reqId);
             const textarea = document.getElementById('catatan-' + reqId);
@@ -457,13 +472,18 @@
                 textarea.focus();
                 textarea.style.borderColor = '#DF1C41';
                 textarea.style.boxShadow = '0 0 0 3px rgba(223,28,65,0.12)';
-                alert('Catatan wajib diisi saat menolak pengumuman.');
+                mkNotify({
+                    title: 'Catatan Belum Diisi',
+                    message: 'Catatan wajib diisi saat menolak pengumuman.',
+                    variant: 'warning',
+                });
                 return false;
             }
-            if (!confirm('Tolak pengumuman ini? Pengumuman akan dikembalikan ke status draft.')) {
-                return false;
-            }
-            return true;
+
+            return mkConfirmSubmit(form, 'Tolak pengumuman ini? Pengumuman akan dikembalikan ke status draft.', {
+                title: 'Tolak Pengumuman',
+                confirmText: 'Ya, Tolak',
+            });
         }
     </script>
     @endpush

@@ -1,5 +1,4 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
-@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 @include('manajemenmahasiswa::partials.filter-popover')
@@ -24,7 +23,6 @@
     .card-body { padding:16px 18px 18px;display:flex;flex-direction:column;flex:1; }
     .badge-bidang { font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--c-primary-subtle);color:var(--c-primary); }
     .card-title { font-weight:700;font-size:15px;color:var(--c-fg);margin:8px 0 10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
-    .card-desc { font-size:12px;color:var(--c-fg-muted);line-height:1.55;margin:-4px 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
     .card-meta { display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--c-fg-muted);font-weight:500;padding-top:10px;border-top:1px solid var(--c-surface-muted);margin-top:auto; }
     .card-meta span { display:inline-flex;align-items:center;gap:4px; }
 
@@ -37,12 +35,9 @@
     .empty-state h5 { color:var(--c-fg-muted);font-weight:600;margin-bottom:4px; }
 </style>
 
-{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
-<div class="mm-frame-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
-    <div>
-        <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Pelaksanaan Kegiatan</h1>
-        <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Proker yang sudah disetujui — lengkapi data pelaksanaan di sini</p>
-    </div></div>
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Pelaksanaan Kegiatan"
+    subtitle="Proker yang sudah disetujui — lengkapi data pelaksanaan di sini" />
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
@@ -103,23 +98,23 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterBidang">Bidang</label>
-                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidang">
                                 <option value="semua">Semua Bidang</option>
                                 <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
                                 @foreach($bidangList as $bidang)
                                     <option value="{{ $bidang->id }}" {{ request('bidang') == $bidang->id ? 'selected' : '' }}>{{ $bidang->nama_bidang }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div>
                             <label class="filter-pop-label" for="filterTahun">Tahun</label>
-                            <select name="tahun" id="filterTahun" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="tahun" id="filterTahun">
                                 <option value="semua">Semua Tahun</option>
                                 @foreach($tahunList as $t)
                                     <option value="{{ $t }}" {{ request('tahun')==$t?'selected':'' }}>{{ $t }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -158,9 +153,6 @@
                             @endif
                         </div>
                         <div class="card-title">{{ $item->judul }}</div>
-                        @if($item->deskripsi)
-                            <div class="card-desc">{{ Str::limit(html_entity_decode(strip_tags($item->deskripsi)), 100) }}</div>
-                        @endif
 
                         <div class="card-meta">
                             <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> {{ $item->tanggal_mulai ? $item->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}</span>
@@ -188,7 +180,7 @@
         <div style="font-size:48px;margin-bottom:12px;opacity:0.5;">&#127939;</div>
         <h5>Belum ada proker yang siap dilaksanakan</h5>
         <p>Proker yang sudah disetujui admin akan muncul di sini</p>
-        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form mt-2">
+        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-btn mk-btn--primary mt-2">
             Lihat Rencana Proker
         </a>
     </div>

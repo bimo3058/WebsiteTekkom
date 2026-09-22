@@ -65,26 +65,22 @@
     </div>
 
     <div class="space-y-8 flex flex-col">
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden order-1" x-data="{ expandedGroups: [] }">
-            <div class="px-8 py-6 border-b border-slate-100 bg-white">
-                <div class="flex flex-col gap-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-3">
-                                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-navy text-white shadow-lg shadow-navy/20">
-                                    <i class="fas fa-archive text-sm"></i>
-                                </span>
-                                Daftar Arsip Final
-                            </h3>
-                        </div>
-                        <span class="px-3 py-1 rounded-full bg-navy/5 text-navy text-xs font-bold">{{ $stats['total_arsip'] }} Arsip</span>
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden order-1" x-data="{ expandedGroups: [] }">
+            <div class="px-6 py-5 border-b border-slate-200">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900">Daftar Arsip Final</h3>
+                        <p class="mt-1 text-sm text-slate-500">Kelola arsip soal final berdasarkan mata kuliah.</p>
                     </div>
+                    <span class="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">{{ $stats['total_arsip'] }} Arsip</span>
+                </div>
+            </div>
 
-                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <form action="{{ route('banksoal.arsip.dosen.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 w-full" id="filterForm">
+            <div class="mx-4 mt-4 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <form action="{{ route('banksoal.arsip.dosen.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 w-full" id="filterForm">
                             <div class="relative w-full md:w-96">
                                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-                                <input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Cari nama arsip atau MK..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-navy/5 focus:border-navy transition-all outline-none">
+                                <input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Cari nama arsip atau MK..." class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none">
                             </div>
 
                             <x-banksoal::ui.filter-panel formId="filterForm" :hasActiveFilter="request('years') || request('semesters') ? true : false" resetRoute="{{ route('banksoal.arsip.dosen.index') }}" applyLabel="Terapkan">
@@ -115,24 +111,22 @@
                             @if($filters['search'] || request('years') || request('semesters'))
                             <a href="{{ route('banksoal.arsip.dosen.index') }}" class="text-rose-500 hover:text-rose-700 text-xs font-bold underline px-2">Reset</a>
                             @endif
-                        </form>
-                    </div>
-                </div>
+                </form>
             </div>
 
             <div class="p-0">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="min-w-full text-sm text-left">
                         <thead>
-                            <tr class="bg-primary text-[10px] font-bold text-white uppercase tracking-widest">
-                                <th class="w-12 px-8 py-4"></th>
+                            <tr class="bg-slate-50 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-y border-slate-200">
+                                <th class="w-12 px-6 py-4"></th>
                                 <th class="px-4 py-4">Mata Kuliah</th>
-                                <th class="px-8 py-4">Jumlah Arsip</th>
-                                <th class="px-8 py-4">Status</th>
-                                <th class="px-8 py-4 text-right">Aksi</th>
+                                <th class="px-6 py-4">Jumlah Arsip</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
+                        <tbody class="divide-y divide-slate-200 bg-white">
                             <?php $arsipGroups = $arsipPaginated->groupBy('mk_id'); ?>
                             <?php if($arsipGroups->isNotEmpty()): ?>
                                 <?php foreach($arsipGroups as $mkId => $items): ?>
@@ -171,7 +165,14 @@
                                                     </div>
                                                 <?php endforeach; ?>
                                             </div>
-                                            <i class="fas fa-ellipsis-v text-slate-300 group-hover:text-slate-600 transition-colors p-2"></i>
+                                            <button
+                                                type="button"
+                                                @click.stop="expandedGroups.includes({{ $mkId }}) ? expandedGroups = expandedGroups.filter(i => i !== {{ $mkId }}) : expandedGroups.push({{ $mkId }})"
+                                                class="rounded-lg p-2 text-slate-300 transition-colors hover:bg-slate-100 hover:text-slate-600"
+                                                aria-label="Lihat aksi arsip {{ $first->mataKuliah->nama }}"
+                                            >
+                                                <i class="fas fa-ellipsis-v"></i>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -215,7 +216,7 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
-                                                    <button @click="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
+                                                    <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
                                                         <i class="fas fa-ellipsis-h"></i>
                                                     </button>
                                                     <div x-show="menuOpen" @click.away="menuOpen = false" class="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-100 shadow-xl z-50 p-2 space-y-1 text-left">
@@ -247,7 +248,7 @@
                     </table>
                 </div>
 
-                <div class="px-8 py-6 border-t border-slate-100 bg-slate-50/30">
+                <div class="px-6 py-4 border-t border-slate-200 bg-white">
                     {{ $arsipPaginated->appends(request()->all())->links('banksoal::components.ui.laravel-pagination') }}
                 </div>
             </div>
@@ -300,7 +301,7 @@
                                 </td>
                                 <td class="px-8 py-5 text-right">
                                     <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
-                                        <button @click="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
+                                        <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
                                             <i class="fas fa-ellipsis-h"></i>
                                         </button>
                                         <div x-show="menuOpen" @click.away="menuOpen = false" class="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-100 shadow-xl z-50 p-2 space-y-1 text-left">

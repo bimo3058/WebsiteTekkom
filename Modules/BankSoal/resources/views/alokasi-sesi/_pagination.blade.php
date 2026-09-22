@@ -5,8 +5,8 @@
     $totalPageData = $isPaginated ? $jadwals->total() : $jadwals->count();
     $currentPage = $isPaginated ? $jadwals->currentPage() : 1;
     $lastPage    = $isPaginated ? $jadwals->lastPage() : 1;
-    $currentPerPage = request('perPage', 10);
-    $perPageOptions = [5, 10, 25, 50, 100];
+    $currentPerPage = request('perPage', 5);
+    $perPageOptions = [5, 10, 25, 50];
 @endphp
 <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#fff; border-top:1px solid var(--c-border); flex-wrap:wrap; gap:10px;">
 

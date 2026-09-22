@@ -90,3 +90,4 @@ Modules/BankSoal/vendor/composer/autoload_psr4.php
 Modules/BankSoal/vendor/composer/autoload_static.php
 Modules/BankSoal/vendor/composer/ClassLoader.php
 .agents/
+/Modules/EOffice/node_modules

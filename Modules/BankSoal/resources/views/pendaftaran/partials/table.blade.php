@@ -31,6 +31,7 @@
     confirmIsBulk: false,
     confirmData: [],
     confirmStatus: null,
+    isConfirmSubmitting: false,
 
     openConfirm(action, method, title, text, btnColor, iconColor, iconBg, isBulk = false, data = [], status = null) {
         this.confirmAction = action;
@@ -43,9 +44,11 @@
         this.confirmIsBulk = isBulk;
         this.confirmData = data;
         this.confirmStatus = status;
+        this.isConfirmSubmitting = false;
         this.confirmModal = true;
     },
     closeConfirm() {
+        if (this.isConfirmSubmitting) return;
         this.confirmModal = false;
     }
 }">
@@ -161,10 +164,49 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center justify-center gap-2">
-                                    {{-- Detail — selalu tampil --}}
-                                    <button type="button" title="Lihat Detail" onclick="openDetailModal({
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="relative inline-block text-left"
+                                    x-data="{
+                                        actionOpen: false,
+                                        menuStyle: {},
+                                        toggleMenu() {
+                                            if (this.actionOpen) { this.actionOpen = false; return; }
+                                            const r = this.$refs.trigger.getBoundingClientRect();
+                                            const style = { position: 'fixed', right: (window.innerWidth - r.right) + 'px' };
+                                            if ((window.innerHeight - r.bottom) < 220) {
+                                                style.bottom = (window.innerHeight - r.top + 6) + 'px';
+                                            } else {
+                                                style.top = (r.bottom + 6) + 'px';
+                                            }
+                                            this.menuStyle = style;
+                                            this.actionOpen = true;
+                                        }
+                                    }"
+                                    @click.outside="actionOpen = false"
+                                    @keydown.escape.window="actionOpen = false"
+                                    @scroll.window.capture="actionOpen = false"
+                                    @resize.window="actionOpen = false">
+                                    {{-- Trigger Kebab --}}
+                                    <button type="button" x-ref="trigger" @click="toggleMenu()" title="Aksi"
+                                        class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-transparent text-gray-400 hover:text-[#2A3A7C] hover:bg-[#2A3A7C]/5 transition-colors">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                            <circle cx="5" cy="12" r="2"></circle>
+                                            <circle cx="12" cy="12" r="2"></circle>
+                                            <circle cx="19" cy="12" r="2"></circle>
+                                        </svg>
+                                    </button>
+
+                                    {{-- Dropdown Kebab --}}
+                                    <div x-show="actionOpen" x-cloak
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="opacity-0 scale-95"
+                                        x-transition:enter-end="opacity-100 scale-100"
+                                        :style="menuStyle"
+                                        class="fixed z-50 min-w-[175px] bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                                        style="display:none">
+                                        <div class="p-1.5 text-left">
+                                            {{-- Detail — selalu tampil --}}
+                                            <button type="button" @click="openDetailModal({
                                                             nim: '{{ $item->nim }}',
                                                             nama: '{{ addslashes($item->nama_lengkap) }}',
                                                             semester: '{{ $item->semester_aktif }}',
@@ -174,36 +216,42 @@
                                                             dosen1: '{{ addslashes($item->dosenPembimbing1->name ?? '-') }}',
                                                             dosen2: '{{ addslashes($item->dosenPembimbing2->name ?? '-') }}',
                                                             ujian_count: {{ $item->sesi_selesai_count ?? 0 }}
-                                                        })"
-                                        class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-transparent text-gray-400 hover:text-[#2A3A7C] hover:bg-[#2A3A7C]/5 transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        }); actionOpen = false"
+                                        class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-gray-700 hover:bg-gray-50 transition-colors text-left">
+                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
                                             </path>
                                         </svg>
+                                        Lihat Detail
                                     </button>
 
                                     @if ($isPending)
-                                        {{-- Approve satu --}}
-                                        <button type="button" title="Setujui"
-                                            @click="openConfirm('{{ route('banksoal.pendaftaran.updateStatus', $item->id) }}', 'PATCH', 'Setujui Pendaftaran?', 'Setujui pendaftaran {{ addslashes($item->nama_lengkap) }}? Aksi ini tidak dapat dibatalkan.', 'bg-emerald-600 hover:bg-emerald-700', 'text-emerald-500', 'bg-emerald-50', false, [], 'approved')"
-                                            class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-transparent text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="h-px bg-gray-100 mx-1.5 my-1"></div>
+                                        {{-- Setujui --}}
+                                        <button type="button"
+                                            @click="openConfirm('{{ route('banksoal.pendaftaran.updateStatus', $item->id) }}', 'PATCH', 'Setujui Pendaftaran?', 'Setujui pendaftaran {{ addslashes($item->nama_lengkap) }}? Aksi ini tidak dapat dibatalkan.', 'bg-emerald-600 hover:bg-emerald-700', 'text-emerald-500', 'bg-emerald-50', false, [], 'approved'); actionOpen = false"
+                                            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-emerald-600 hover:bg-emerald-50 transition-colors text-left">
+                                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                                             </svg>
+                                            Setujui Pendaftaran
                                         </button>
 
                                         {{-- Tolak & Hapus --}}
-                                        <button type="button" title="Tolak & Hapus"
-                                            @click="openConfirm('{{ route('banksoal.pendaftaran.destroy', $item->id) }}', 'DELETE', 'Tolak & Hapus?', 'Tolak dan hapus pendaftar {{ addslashes($item->nama_lengkap) }}? Data akan dihapus dari daftar.', 'bg-red-500 hover:bg-rose-600', 'text-red-500', 'bg-red-50')"
-                                            class="inline-flex items-center justify-center w-7 h-7 rounded-md bg-transparent text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <button type="button"
+                                            @click="openConfirm('{{ route('banksoal.pendaftaran.destroy', $item->id) }}', 'DELETE', 'Tolak & Hapus?', 'Tolak dan hapus pendaftar {{ addslashes($item->nama_lengkap) }}? Data akan dihapus dari daftar.', 'bg-red-500 hover:bg-rose-600', 'text-red-500', 'bg-red-50'); actionOpen = false"
+                                            class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] font-medium text-red-600 hover:bg-red-50 transition-colors text-left">
+                                            <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                             </svg>
+                                            Tolak & Hapus
                                         </button>
                                     @endif
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -245,7 +293,6 @@
                         <select onchange="document.getElementById('hidden-per-page').value = this.value; document.getElementById('filter-form').submit();" {{ !request('periode_id') ? 'disabled' : '' }} class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
                             <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
                             <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
-                            <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
                             <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
                             <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
                         </select>
@@ -282,7 +329,7 @@
 
             <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center gap-3">
                 <button type="button" @click="closeConfirm()" class="flex-1 px-4 py-2 text-[13px] font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">Batal</button>
-                <form :action="confirmAction" method="POST" class="flex-1 m-0">
+                <form :action="confirmAction" method="POST" class="flex-1 m-0" id="form-confirm-action" @submit="if(isConfirmSubmitting){ $event.preventDefault(); return; } isConfirmSubmitting = true">
                     @csrf
                     <input type="hidden" name="_method" :value="confirmMethod">
                     
@@ -298,8 +345,9 @@
                         </template>
                     </template>
                     
-                    <button type="submit" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all ' + confirmBtnColor">
-                        Ya, Lanjutkan
+                    <button type="submit" :disabled="isConfirmSubmitting" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all flex justify-center items-center gap-2 ' + confirmBtnColor + (isConfirmSubmitting ? ' opacity-50 cursor-not-allowed' : '')">
+                        <svg x-show="isConfirmSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isConfirmSubmitting ? 'Memproses...' : 'Ya, Lanjutkan'"></span>
                     </button>
                 </form>
             </div>

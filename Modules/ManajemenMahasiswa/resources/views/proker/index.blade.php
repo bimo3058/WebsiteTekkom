@@ -1,5 +1,4 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
-@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 @include('manajemenmahasiswa::partials.filter-popover')
@@ -76,19 +75,18 @@
     .empty-state h5 { color: var(--c-fg-muted); font-weight: 600; margin-bottom: 4px; }
 </style>
 
-{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
-<div class="mm-frame-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
-    <div>
-        <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Rencana Program Kerja</h1>
-        <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Daftar rencana proker dari 8 bidang himpunan &amp; prodi</p>
-    </div>
-    @if($canManage)
-        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Buat Proker
-        </a>
-    @endif
-</div>
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Rencana Program Kerja"
+    subtitle="Daftar rencana proker dari 8 bidang himpunan & prodi">
+    <x-slot:actions>
+        @if($canManage)
+            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-btn mk-btn--primary mk-btn--sm">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Buat Proker
+            </a>
+        @endif
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
 
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -155,13 +153,13 @@
                     <div class="filter-pop-fields">
                         <div>
                             <label class="filter-pop-label" for="filterBidang">Bidang</label>
-                            <select name="bidang" id="filterBidang" class="filter-pop-select">
+                            <x-manajemenmahasiswa::ui.select name="bidang" id="filterBidang">
                                 <option value="semua">Semua Bidang</option>
                                 <option value="prodi" {{ request('bidang') === 'prodi' ? 'selected' : '' }}>Prodi</option>
                                 @foreach($bidangList as $bidang)
                                     <option value="{{ $bidang->id }}" {{ request('bidang') == $bidang->id ? 'selected' : '' }}>{{ $bidang->nama_bidang }}</option>
                                 @endforeach
-                            </select>
+                            </x-manajemenmahasiswa::ui.select>
                         </div>
 
                         <div class="filter-pop-actions">
@@ -245,7 +243,7 @@
         <h5>Belum ada rencana proker</h5>
         <p>Rencana program kerja yang dibuat akan muncul di sini</p>
         @if($canManage)
-            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form mt-2">+ Buat Proker Pertama</a>
+            <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-btn mk-btn--primary mt-2">+ Buat Proker Pertama</a>
         @endif
     </div>
 @endif

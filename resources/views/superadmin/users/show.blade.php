@@ -222,5 +222,20 @@
 
     @include('superadmin.users._modal_suspend')
 
+    <script>
+        function openModal(id) {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+        }
+        function closeModal(id) {
+            const el = document.getElementById(id);
+            if (el) { el.classList.add('hidden'); document.body.style.overflow = ''; }
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeModal('modalSuspend');
+            }
+        });
+    </script>
 </x-sidebar>
 </x-app-layout>

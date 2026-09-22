@@ -2,15 +2,20 @@
 
     @push('styles')
         <style>
+            /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+               jadi kotak bawaan .main-wrapper dari layout dimatikan. */
             .main-wrapper {
                 background: transparent !important;
+                border: none !important;
                 box-shadow: none !important;
+                margin: 0 !important;
                 padding: 0 !important;
+                overflow: visible !important;
             }
 
             .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
             .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; }
-            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
             .dash-box-header { background: #fff; border-bottom: 1px solid #DFE1E7; flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
             .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
             .dash-box-body::-webkit-scrollbar { width: 6px; }
@@ -186,8 +191,9 @@
     <div class="dash-wrap">
     <div class="dash-box">
     <div class="dash-box-header">
-        <h1 style="font-size:18px; font-weight:800; color:#0D0D12; margin:0 0 2px; letter-spacing:-0.02em;">Laporan Forum</h1>
-        <p style="font-size:12px; color:#666D80; font-weight:500; margin:0;">Inbox laporan thread dari pengguna</p>
+        <x-manajemenmahasiswa::ui.page-header
+            title="Laporan Forum"
+            subtitle="Inbox laporan thread dari pengguna" />
     </div>
     <div class="dash-box-body">
 
@@ -294,7 +300,7 @@
                         @if(!($report->thread->is_locked ?? false))
                             <form method="POST"
                                 action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}"
-                                style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
+                                style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'Kunci thread ini?', { title: 'Kunci Thread', variant: 'warning', confirmText: 'Ya, Kunci' })">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="report-btn warning">
                                     <x-manajemenmahasiswa::ui.icon name="locked-01" size="12" /> Kunci Thread
@@ -303,7 +309,7 @@
                         @endif
                         <form method="POST"
                             action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}"
-                            style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
+                            style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'HAPUS thread ini secara permanen?', { title: 'Hapus Permanen', confirmText: 'Ya, Hapus' })">
                             @csrf @method('DELETE')
                             <button type="submit" class="report-btn danger">
                                 <x-manajemenmahasiswa::ui.icon name="minus-circle" size="12" /> Hapus Thread
@@ -312,7 +318,7 @@
                     @endif
                     <form method="POST"
                         action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}"
-                        style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
+                        style="display:inline;" onsubmit="return mkConfirmSubmit(this, 'Abaikan laporan ini?', { title: 'Abaikan Laporan', variant: 'primary', confirmText: 'Ya, Abaikan' })">
                         @csrf @method('DELETE')
                         <button type="submit" class="report-btn">
                             <x-manajemenmahasiswa::ui.icon name="minus" size="12" /> Abaikan

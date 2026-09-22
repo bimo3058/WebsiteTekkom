@@ -101,11 +101,31 @@
                         </td>
 
                         <td style="padding:14px 16px; text-align:right;">
-                            <div style="position:relative; display:inline-block; text-align:left;" x-data="{ actionOpen: false }">
-                                <button type="button" @click="actionOpen = !actionOpen" @click.outside="actionOpen = false"
-                                        style="width:28px; height:28px; border-radius:6px; border:1px solid var(--c-border); background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg-muted); transition:all .15s; margin:0 auto;"
-                                        onmouseover="this.style.background='var(--c-bg)'; this.style.borderColor='var(--c-border-strong)'"
-                                        onmouseout="this.style.background='#fff'; this.style.borderColor='var(--c-border)'">
+                            <div style="position:relative; display:inline-block; text-align:left;"
+                                 x-data="{
+                                     actionOpen: false,
+                                     menuStyle: {},
+                                     toggleMenu() {
+                                         if (this.actionOpen) { this.actionOpen = false; return; }
+                                         const r = this.$refs.trigger.getBoundingClientRect();
+                                         const style = { position: 'fixed', right: (window.innerWidth - r.right) + 'px' };
+                                         if ((window.innerHeight - r.bottom) < 220) {
+                                             style.bottom = (window.innerHeight - r.top + 6) + 'px';
+                                         } else {
+                                             style.top = (r.bottom + 6) + 'px';
+                                         }
+                                         this.menuStyle = style;
+                                         this.actionOpen = true;
+                                     }
+                                 }"
+                                 @click.outside="actionOpen = false"
+                                 @keydown.escape.window="actionOpen = false"
+                                 @scroll.window.capture="actionOpen = false"
+                                 @resize.window="actionOpen = false">
+                                <button type="button" x-ref="trigger" @click="toggleMenu()"
+                                        style="width:28px; height:28px; border-radius:6px; border:none; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg-muted); transition:all .15s; margin:0 auto;"
+                                        onmouseover="this.style.background='var(--c-bg)'; this.style.color='var(--c-primary)'"
+                                        onmouseout="this.style.background='transparent'; this.style.color='var(--c-fg-muted)'">
                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </button>
 
@@ -113,7 +133,8 @@
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100"
-                                     style="position:absolute; right:0; top:calc(100% + 5px); background:#fff; border:1px solid var(--c-border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.1); min-width:160px; z-index:40; overflow:hidden; display:none;">
+                                     :style="menuStyle"
+                                     style="background:#fff; border:1px solid var(--c-border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.1); min-width:160px; z-index:50; overflow:hidden; display:none;">
                                     <div style="padding:5px;">
 
                                         {{-- Edit --}}
