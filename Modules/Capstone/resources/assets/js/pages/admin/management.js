@@ -80,6 +80,11 @@ export function finalizationAdmin(){return mergePage(basePage(),{
     rollbackIds:[],cancelTarget:null,forceTarget:null,biddingAction:'',autoFixMode:'safe',
     searchTimer:null,
     get isGroupView(){return this.tab!=='others'||this.subTab!=='no_group';},
+    get overloadedLecturers(){return (this.lecturers||[]).filter(l=>l.is_overloaded);},
+    get svOverloadWarning(){
+        const ids=[this.svForm.supervisor_1_id,this.svForm.supervisor_2_id].filter(Boolean).map(String);
+        return ids.some(id=>(this.lecturers||[]).some(l=>String(l.id)===id&&l.is_overloaded));
+    },
     async init(){
         try{
             const params=new URLSearchParams(location.search);
@@ -212,7 +217,7 @@ export function finalizationAdmin(){return mergePage(basePage(),{
     },
     openRollback(){this.reasonForm={reason:''};this.rollbackIds=[...this.selectedIds];dialog('fin-rollback').showModal();},
     async doRollback(){
-        if(!this.reasonForm.reason.trim())return;
+        if(!this.reasonForm.reason.trim()||this.reasonForm.reason.trim().length<10)return;
         if(await this.run(()=>api('/admin/finalization/rollback',{method:'POST',body:{period_id:Number(this.periodId),group_ids:this.rollbackIds,reason:this.reasonForm.reason.trim()}}),'Rollback berhasil.')){dialog('fin-rollback').close();await this.load();}
     },
     openCancel(item){this.cancelTarget=item;this.reasonForm={reason:''};dialog('fin-cancel').showModal();},
@@ -229,6 +234,7 @@ export function finalizationAdmin(){return mergePage(basePage(),{
     },
     openForceReady(item){this.forceTarget=item;this.reasonForm={reason:''};dialog('fin-force').showModal();},
     async doForceReady(){
+        if(!this.reasonForm.reason.trim()||this.reasonForm.reason.trim().length<10)return;
         if(await this.run(()=>api('/admin/finalization/force-ready',{method:'POST',body:{group_id:this.forceTarget.id,reason:this.reasonForm.reason.trim()||null}}),'Grup dipaksa ready.')){dialog('fin-force').close();await this.load();}
     },
     confirmBidding(action){this.biddingAction=action;dialog('fin-bidding').showModal();},
