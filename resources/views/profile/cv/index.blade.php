@@ -1,21 +1,56 @@
 <x-app-layout>
     <x-sidebar :user="auth()->user()">
-        <div class="min-h-screen" style="background: var(--c-bg);">
-            <div class="py-6" x-data="cvWizard()">
-                <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <div class="mb-6 flex items-center justify-between">
-                        <div class="flex items-center gap-4">
-                        <a href="{{ route('profile.edit') }}"
-                            class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
-                            style="border-color: var(--c-border);" title="Kembali" aria-label="Kembali ke Profil">
-                            <span class="material-symbols-outlined text-[18px]">chevron_left</span>
-                        </a>
-                        <div>
-                            <h2 class="page-title" style="font-size: 1.5rem;">CV Builder</h2>
-                            <p class="page-subtitle">Lengkapi data Anda untuk menghasilkan CV profesional.</p>
-                        </div>
-                        </div>
-                    </div>
+        {{--
+            Pola "wrap + box" full-height/full-width yang sudah dipakai di halaman
+            global lain (resources/views/superadmin/users/index.blade.php,
+            resources/views/profile/edit.blade.php) — header statis di atas,
+            body yang scroll di bawahnya, mengisi penuh area konten alih-alih
+            card sempit ter-center (max-w-4xl) seperti sebelumnya.
+        --}}
+        <style>
+            .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+            .cvb-wrap {
+                display: flex; flex-direction: column; height: calc(100vh - 60px);
+                padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+            }
+            .cvb-box {
+                display: flex; flex-direction: column; flex: 1; min-height: 0;
+                background: #fff; border: 1px solid var(--c-border);
+                border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                overflow: hidden; width: 100%; box-sizing: border-box;
+            }
+            .cvb-box-header {
+                background: #fff; border-bottom: 1px solid var(--c-border);
+                flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px;
+            }
+            .cvb-box-body {
+                flex: 1; overflow-y: auto; padding: 20px 24px;
+            }
+
+            @media (max-width: 767px) {
+                .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
+                .cvb-wrap { height: auto !important; min-height: 0 !important; padding: 0; }
+                .cvb-box { flex: none !important; min-height: 0 !important; overflow: visible !important; border-radius: 10px; }
+                .cvb-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+                .cvb-box-body { padding: 12px 14px; }
+            }
+        </style>
+
+        <div class="cvb-wrap" x-data="cvWizard()">
+            <div class="cvb-box">
+                <div class="cvb-box-header">
+                    <x-page-header title="CV Builder" subtitle="Lengkapi data Anda untuk menghasilkan CV profesional.">
+                        <x-slot:leading>
+                            <a href="{{ route('profile.edit') }}"
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
+                                style="border-color: var(--c-border);" title="Kembali" aria-label="Kembali ke Profil">
+                                <x-icon name="chevron-left" size="18" />
+                            </a>
+                        </x-slot:leading>
+                    </x-page-header>
+                </div>
+                <div class="cvb-box-body">
 
                     <!-- Stepper Header -->
                     <div class="card mb-6">
@@ -39,8 +74,7 @@
                                         ]"
                                             :style="step > index + 1 ? 'background: var(--c-primary);' : (step === index + 1 ? 'border: 4px solid var(--c-primary); color: var(--c-primary);' : '')"
                                             :disabled="index + 1 > maxStep">
-                                            <template x-if="step > index + 1"><span
-                                                    class="material-symbols-outlined text-[18px]">check</span></template>
+                                            <template x-if="step > index + 1"><x-icon name="check" size="18" /></template>
                                             <template x-if="step <= index + 1"><span x-text="index + 1"></span></template>
                                         </button>
                                         <span
@@ -70,10 +104,10 @@
                         <div x-show="error"
                             class="mb-6 p-4 rounded-xl flex items-start gap-3"
                             style="background: var(--c-error-subtle); border: 1px solid var(--c-error);">
-                            <span class="material-symbols-outlined" style="color: var(--c-error);">error</span>
+                            <span style="color: var(--c-error);"><x-icon name="alert-triangle" size="20" /></span>
                             <p class="text-sm font-medium" style="color: var(--c-error);" x-text="errorMsg"></p>
                             <button @click="error = false" class="ml-auto" style="color: var(--c-error); opacity: 0.6;">
-                                <span class="material-symbols-outlined text-[18px]">close</span>
+                                <x-icon name="close" size="18" />
                             </button>
                         </div>
 
@@ -116,7 +150,7 @@
                             :disabled="loading"
                             :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
                             class="btn-secondary text-sm">
-                            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                            <x-icon name="chevron-left" size="18" />
                             Sebelumnya
                         </button>
                         <div x-show="step === 1"></div>
@@ -126,9 +160,10 @@
                             :class="loading ? 'opacity-50 cursor-not-allowed' : ''"
                             class="btn-primary text-sm shadow-sm">
                             <span x-text="loading ? 'Menyimpan...' : 'Simpan & Lanjut'"></span>
-                            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                            <x-icon name="arrow-narrow-right" size="18" />
                         </button>
                     </div>
+
                 </div>
             </div>
         </div>

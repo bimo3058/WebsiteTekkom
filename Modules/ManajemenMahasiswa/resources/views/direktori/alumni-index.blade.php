@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.card-frame')
 @include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
@@ -445,103 +446,11 @@
         </table>
     </div>
 
-    {{-- Pagination --}}
-    @if($alumni->hasPages())
-        <div style="padding: 14px 16px; border-top: 1px solid var(--c-border); display: flex; flex-direction: column; align-items: center; gap: 8px;">
-            <div class="d-flex align-items-center gap-1">
-
-                {{-- Prev --}}
-                @if($alumni->onFirstPage())
-                    <span class="page-btn page-btn-nav disabled">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                    </span>
-                @else
-                    <a href="{{ $alumni->withQueryString()->previousPageUrl() }}" class="page-btn page-btn-nav">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                    </a>
-                @endif
-
-                {{-- Page Numbers --}}
-                @foreach($alumni->withQueryString()->links()->offsetGet('elements') as $element)
-                    @if(is_string($element))
-                        <span class="page-btn page-btn-dots">…</span>
-                    @endif
-                    @if(is_array($element))
-                        @foreach($element as $page => $url)
-                            @if($page == $alumni->currentPage())
-                                <span class="page-btn page-btn-active">{{ $page }}</span>
-                            @else
-                                <a href="{{ $url }}" class="page-btn">{{ $page }}</a>
-                            @endif
-                        @endforeach
-                    @endif
-                @endforeach
-
-                {{-- Next --}}
-                @if($alumni->hasMorePages())
-                    <a href="{{ $alumni->withQueryString()->nextPageUrl() }}" class="page-btn page-btn-nav">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </a>
-                @else
-                    <span class="page-btn page-btn-nav disabled">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                    </span>
-                @endif
-
-            </div>
-            {{-- Info teks --}}
-            <div style="font-size: 12px; color: var(--c-fg-muted); font-weight: 500;">
-                Menampilkan {{ $alumni->firstItem() }}–{{ $alumni->lastItem() }} dari {{ $alumni->total() }} alumni
-            </div>
-        </div>
-
-        <style>
-            .page-btn {
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                min-width: 34px;
-                height: 34px;
-                padding: 0 10px;
-                border-radius: 8px;
-                font-size: 13px;
-                font-weight: 600;
-                color: var(--c-fg-sec);
-                background: #ffffff;
-                border: 1px solid var(--c-border);
-                text-decoration: none !important;
-                transition: all 0.15s;
-                cursor: pointer;
-            }
-            .page-btn:hover:not(.disabled):not(.page-btn-active) {
-                background: var(--c-bg);
-                border-color: var(--c-primary);
-                color: var(--c-primary);
-            }
-            .page-btn-active {
-                background: var(--c-primary);
-                border-color: var(--c-primary);
-                color: #ffffff !important;
-                cursor: default;
-            }
-            .page-btn-nav {
-                color: var(--c-fg-muted);
-            }
-            .page-btn-nav.disabled {
-                opacity: 0.35;
-                cursor: not-allowed;
-            }
-            .page-btn-dots {
-                border: none;
-                background: transparent;
-                color: var(--c-fg-muted);
-                cursor: default;
-                min-width: 24px;
-                padding: 0;
-            }
-        </style>
-    @endif
+    {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama) --}}
+    @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $alumni])
 </div>
+
+</div>{{-- end mm-frame-body --}}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-dynamic-component>

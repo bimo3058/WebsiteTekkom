@@ -3,7 +3,7 @@
 
     <div class="p-4 mb-6 rounded-xl border" style="background: var(--c-primary-subtle); border-color: rgba(11,38,110,0.12);">
         <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-[20px] mt-0.5 flex-shrink-0" style="color: var(--c-primary);">info</span>
+            <span class="mt-0.5 flex-shrink-0" style="color: var(--c-primary);"><x-icon name="information-circle" size="20" /></span>
             <p class="text-sm" style="color: var(--c-fg-sec);">
                 Data dengan label <strong style="color: var(--c-primary);">Auto-Sync</strong> diambil secara otomatis dari rekam jejak akademik Anda. Jika ada kesalahan, silakan perbarui data Anda di menu Profil / Akademik terkait.
             </p>
@@ -13,7 +13,7 @@
     <!-- Auto-Sync Edu -->
     <div class="mb-8">
         <h4 class="text-sm font-bold text-slate-600 mb-4 flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px]">sync</span>
+            <x-icon name="sync" size="18" />
             Pendidikan dari Sistem
         </h4>
         <div class="space-y-3">
@@ -46,7 +46,7 @@
                         <p class="text-xs text-slate-500 mt-1" x-text="`${edu.tahun_masuk} - ${edu.tahun_lulus || 'Sekarang'}`"></p>
                     </div>
                     <button @click="removeEdu(index)" class="text-red-400 hover:text-red-600 transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        <x-icon name="trash" size="18" />
                     </button>
                 </div>
             </template>
@@ -92,7 +92,7 @@
                         <p class="text-xs text-slate-500 mt-1" x-show="lang.skor" x-text="`Skor / Nilai: ${lang.skor}`"></p>
                     </div>
                     <button @click="removeLang(index)" class="text-red-400 hover:text-red-600 transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        <x-icon name="trash" size="18" />
                     </button>
                 </div>
             </template>
