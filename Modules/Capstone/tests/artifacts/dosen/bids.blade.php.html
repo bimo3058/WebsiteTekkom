@@ -5,9 +5,9 @@
     <meta name="csrf-token" content="">
     <title>Bid Review | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1789736787">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["dosen"],"active_role":"dosen","nim":null,"nip":"TEST-NIP"},"role":"dosen","path":"\/dosen\/bids","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1789736787"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
     <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
 <script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
@@ -166,7 +166,8 @@ Logout</button></form>
                     <path  d="M7 10v12"  />
     </svg>
 Accept</button>
-                    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="recommend(bid,'REJECT')" :disabled="saving || !canRecommend(bid,'REJECT')"><span x-text="bid.lecturer_recommendation==='ACCEPT'?'Cancel Acceptance':'Reject'"></span></button>
+                    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" x-show="!bid.lecturer_recommendation" @click="recommend(bid,'REJECT')" :disabled="saving || !canRecommend(bid,'REJECT')">Reject</button>
+                    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" x-show="bid.lecturer_recommendation" @click="mutate('/dosen/bids/'+bid.id+'/recommend',{recommendation:'CANCEL'})" :disabled="saving || locked(bid)"><span x-text="bid.lecturer_recommendation==='ACCEPT'?'Cancel Acceptance':'Batalkan penolakan'"></span></button>
                 </div></div><p x-show="locked(bid)" class="mt-3 text-xs text-amber-700">Bidding is locked for this period. Recommendations cannot be changed.</p>
             </div></template></div>
         </article></template>

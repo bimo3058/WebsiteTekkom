@@ -329,7 +329,7 @@ class BladeCalendarAccessTest extends TestCase
     public function test_registered_missing_page_has_explicit_unavailable_response_and_period_routes_render(): void
     {
         $user = $this->actor('admin');
-        foreach (['/capstone/admin/users'=>503, '/capstone/admin/periods/new'=>200, '/capstone/admin/periods/17/edit'=>200] as $path=>$status) {
+        foreach (['/capstone/admin/assessments'=>503, '/capstone/admin/periods/new'=>200, '/capstone/admin/periods/17/edit'=>200] as $path=>$status) {
             $request = $this->requestFor($user, $path);
             $route = app('router')->getRoutes()->match($request);
             $request->setRouteResolver(fn()=>$route);

@@ -5,9 +5,9 @@
     <meta name="csrf-token" content="">
     <title>Detail Kelompok | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1789736787">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/groups\/_id_","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1789736787"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
     <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
 <script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
@@ -86,6 +86,8 @@
                                                                                             <a  href="http://localhost:8000/capstone/admin/sempro"  title="Sidang Proposal" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Sidang Proposal</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/ta-defense"  title="TA Defense" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">TA Defense</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/audit-logs"  title="Audit Log" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Audit Log</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/period-registrations"  title="Approval" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Approval</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -173,35 +175,271 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div x-data="adminGroups(true)" class="space-y-6"><div class="flex flex-wrap items-center justify-between gap-4"><h1 class="text-3xl font-bold tracking-tight">Detail Kelompok</h1><div class="flex gap-2"><a href="http://localhost:8000/capstone/admin/groups" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3">Kembali</a>
-</div></div>
-<div class="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
-    <label class="text-sm">Periode <select x-model="periodId" @change="page=1;load()" :disabled="saving" class="ml-2 rounded-md border bg-background px-3 py-2"><option value="">Semua periode</option><template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template></select></label>
-    <input type="search" x-model="search" @input="page=1" @keydown.enter="load()" placeholder="Cari..." aria-label="Cari data" class="min-w-48 flex-1 rounded-md border bg-background px-3 py-2 text-sm">
-    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="load()" :disabled="loading || saving"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
-                    <path  d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"  />
-                    <path  d="M21 3v5h-5"  />
-                    <path  d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"  />
-                    <path  d="M8 16H3v5"  />
-    </svg>
-Refresh</button>
-</div>
-<div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div x-data="adminGroups(true)" class="space-y-6">
+    <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
     <span class="capstone-loader text-primary" aria-hidden="true"></span>
     <span class="text-muted-foreground text-sm">Memuat data...</span>
 </div>
 <div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
-<div x-show="!loading && !error && group" x-cloak class="space-y-6"><section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-<div class="space-y-4 px-6"><h2 class="text-xl font-semibold" x-text="group?.title?.title || groupName(group)"></h2><div class="flex flex-wrap gap-4 text-sm"><span x-text="group?.period?.name"></span><span class="rounded-full border px-3" x-text="group?.status"></span></div><div class="grid gap-4 md:grid-cols-2"><div><h3 class="font-medium">Anggota</h3><template x-for="member in group?.members || []" :key="member.id"><p class="mt-2 text-sm" x-text="person(member.student)+(member.is_leader?' (Ketua)':'')+' - '+(member.student?.student_number||'')"></p></template></div><div><h3 class="font-medium">Pembimbing</h3><p x-text="person(group?.supervisor1)"></p><p x-text="person(group?.supervisor2)"></p><form @submit.prevent="assign()" class="mt-3 flex gap-2"><select x-model="supervisorId" required class="min-w-0 rounded border p-2"><option value="">Pembimbing 2...</option><template x-for="lecturer in lecturers" :key="lecturer.id"><option :value="lecturer.lecturer_id || lecturer.lecturer?.id || lecturer.id" x-text="person(lecturer)"></option></template></select><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit" :disabled="saving || !supervisorId">Simpan</button>
-</form></div></div></div>
-</section>
-<section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-<div class="grid auto-rows-min items-start gap-2 px-6"><h2 class="leading-none font-semibold">Dokumen</h2> </div><div class="px-6"><template x-for="doc in group?.documents || []" :key="doc.id"><div class="flex justify-between gap-3 border-b py-3 text-sm"><span x-text="doc.phase+' / '+doc.document_type"></span><span x-text="doc.status"></span></div></template><p x-show="!group?.documents?.length" class="text-muted-foreground">Belum ada dokumen.</p><a :href="url('/admin/document-uploads')+'?group_id='+group?.id" class="mt-4 inline-block text-primary underline">Lihat unggahan</a></div>
-</section>
-<section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm">
-<div class="grid auto-rows-min items-start gap-2 px-6"><h2 class="leading-none font-semibold">Jadwal</h2> </div><div class="px-6"><template x-for="schedule in group?.schedules || []" :key="schedule.id"><p class="border-b py-3 text-sm" x-text="schedule.type+' - '+date(schedule.date)+' - '+(schedule.room||'-')"></p></template><p x-show="!group?.schedules?.length">Belum ada jadwal.</p></div>
-</section>
-</div>
+
+    <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
+
+    <div x-show="!loading && !error && group" x-cloak class="space-y-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <a href="http://localhost:8000/capstone/admin/groups" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3 text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m15 18-6-6 6-6"  />
+    </svg>
+ Kembali</a>
+            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="openDelete()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M10 11v6"  />
+                    <path  d="M14 11v6"  />
+                    <path  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"  />
+                    <path  d="M3 6h18"  />
+                    <path  d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"  />
+    </svg>
+ Hapus Grup</button>
+        </div>
+
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900" x-text="group.code || ('Group '+group.id)"></h1>
+
+        <div class="grid gap-x-10 gap-y-4 md:grid-cols-2">
+            <div class="space-y-4">
+                <div class="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Periode</p>
+                    <p class="text-sm font-medium text-slate-800" x-text="group.period?.name || '—'"></p>
+                </div>
+                <div class="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Group Status</p>
+                    <p><span class="rounded-full px-2.5 py-0.5 text-xs font-semibold" :class="groupStatusClass(group.status)" x-text="groupStatusLabel(group)"></span></p>
+                </div>
+                <div class="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Progress</p>
+                    <p class="flex items-center gap-2 text-sm font-medium text-slate-800"><span x-text="progressPct+'%'"></span><span class="h-2 w-32 overflow-hidden rounded-full bg-slate-200"><span class="block h-full rounded-full bg-[#2f3d8a]" :style="'width:'+progressPct+'%'"></span></span></p>
+                </div>
+                <div class="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Ketua Kelompok</p>
+                    <template x-if="ketua(group)">
+                        <span class="inline-flex w-fit items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-0.5 pr-1.5">
+                            <input type="checkbox" :checked="selectedMembers.includes(ketua(group).id)" @change="toggleMember(ketua(group).id)" class="ml-1 h-3.5 w-3.5 rounded border-slate-300" aria-label="Pilih ketua">
+                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500" x-text="initials(memberName(ketua(group)))"></span>
+                            <span class="text-[13px] font-medium text-slate-800" x-text="memberName(ketua(group))"></span>
+                            <button type="button" @click="openFlag(ketua(group))" class="rounded-full p-1 text-slate-300 hover:bg-red-50 hover:text-red-500" :aria-label="'Flag '+memberName(ketua(group))" title="Flag mahasiswa"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"  />
+    </svg>
+</button>
+                        </span>
+                    </template>
+                </div>
+                <div class="grid grid-cols-[130px_1fr] items-start gap-3">
+                    <p class="pt-1 text-sm text-slate-500">Team Members</p>
+                    <span class="flex flex-wrap gap-2">
+                        <template x-for="m in (group.members||[]).filter(m=>!m.is_leader)" :key="m.id">
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-1 pr-1.5">
+                                <input type="checkbox" :checked="selectedMembers.includes(m.id)" @change="toggleMember(m.id)" class="h-3.5 w-3.5 rounded border-slate-300" :aria-label="'Pilih '+memberName(m)">
+                                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500" x-text="initials(memberName(m))"></span>
+                                <span class="text-[13px] font-medium text-slate-800" x-text="memberName(m)"></span>
+                                <button type="button" @click="openFlag(m)" class="rounded-full p-1 text-slate-300 hover:bg-red-50 hover:text-red-500" :aria-label="'Flag '+memberName(m)" title="Flag mahasiswa"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M4 22V4a1 1 0 0 1 .4-.8A6 6 0 0 1 8 2c3 0 5 2 7.333 2q2 0 3.067-.8A1 1 0 0 1 20 4v10a1 1 0 0 1-.4.8A6 6 0 0 1 16 16c-3 0-5-2-8-2a6 6 0 0 0-4 1.528"  />
+    </svg>
+</button>
+                            </span>
+                        </template>
+                        <span x-show="!(group.members||[]).filter(m=>!m.is_leader).length" class="text-sm text-slate-300">—</span>
+                    </span>
+                </div>
+                <div x-show="selectedMembers.length" class="grid grid-cols-[130px_1fr] items-center gap-3">
+                    <span></span>
+                    <span><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="openMessage()"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"  />
+                    <path  d="m21.854 2.147-10.94 10.939"  />
+    </svg>
+ Pesan (<span x-text="selectedMembers.length"></span>)</button>
+</span>
+                </div>
+                <div x-show="(group.flagged_members||[]).length" class="grid grid-cols-[130px_1fr] items-start gap-3">
+                    <p class="pt-1 text-sm text-red-500">Flagged</p>
+                    <span class="flex flex-wrap gap-2">
+                        <template x-for="m in group.flagged_members" :key="m.id">
+                            <span class="inline-flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 py-0.5 pl-1 pr-1.5">
+                                <span class="flex h-6 w-6 items-center justify-center rounded-full bg-red-200 text-[10px] font-bold text-red-600" x-text="initials(memberName(m))"></span>
+                                <span class="text-[13px] font-medium text-red-700" x-text="memberName(m)"></span>
+                                <button type="button" @click="openUnflag(m)" class="rounded-full p-1 text-red-400 hover:bg-red-100 hover:text-red-600" :aria-label="'Unflag '+memberName(m)" title="Kembalikan mahasiswa"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M9 14 4 9l5-5"  />
+                    <path  d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"  />
+    </svg>
+</button>
+                            </span>
+                        </template>
+                    </span>
+                </div>
+            </div>
+            <div class="space-y-4">
+                <div class="grid grid-cols-[150px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Dosen Pembimbing 1</p>
+                    <span><span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-0.5 pr-2.5">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500" x-text="initials(person(group.supervisor1))"></span>
+                        <span class="text-[13px] font-medium text-slate-800" x-text="person(group.supervisor1)"></span>
+                    </span></span>
+                </div>
+                <div class="grid grid-cols-[150px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Dosen Pembimbing 2</p>
+                    <span><span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-0.5 pr-2.5">
+                        <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500" x-text="initials(person(group.supervisor2))"></span>
+                        <span class="text-[13px] font-medium text-slate-800" x-text="person(group.supervisor2)"></span>
+                    </span></span>
+                </div>
+                <div class="grid grid-cols-[150px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Created at</p>
+                    <p class="text-sm font-medium text-slate-800" x-text="longDate(group.created_at)"></p>
+                </div>
+                <div class="grid grid-cols-[150px_1fr] items-center gap-3">
+                    <p class="text-sm text-slate-500">Judul Capstone</p>
+                    <p class="text-sm font-medium text-slate-800" x-text="group.title?.title || 'Belum ada judul'"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-xl border border-slate-200 p-3">
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <template x-for="ph in phases" :key="ph.phase">
+                    <div class="rounded-xl border bg-white" :class="group.workflow?.current_phase===ph.phase ? 'border-[#2f3d8a] shadow-sm' : 'border-slate-200'">
+                        <div class="flex items-center justify-between border-b border-slate-100 px-3.5 py-2.5">
+                            <p class="text-sm font-bold text-slate-900" x-text="phaseLabel(ph.phase)"></p>
+                            <span class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="phasePill(ph.status)" x-text="phasePillLabel(ph.status)"></span>
+                        </div>
+                        <div class="space-y-1.5 px-3.5 py-3 text-[13px]">
+                            <template x-for="doc in ph.documents" :key="doc.type">
+                                <p class="flex items-center gap-1.5" :class="docRowClass(doc.status)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="doc.status==='APPROVED'" class="text-[#2f3d8a]">
+                    <circle  cx="12"  cy="12"  r="10"  />
+                    <path  d="m9 12 2 2 4-4"  />
+    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="doc.status!=='APPROVED' && doc.status!=='missing'" class="text-amber-500">
+                    <circle  cx="12"  cy="12"  r="10"  />
+                    <line  x1="12"  x2="12"  y1="8"  y2="12"  />
+                    <line  x1="12"  x2="12.01"  y1="16"  y2="16"  />
+    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="doc.status==='missing'" class="text-slate-300">
+                    <circle  cx="12"  cy="12"  r="10"  />
+                    <path  d="m9 12 2 2 4-4"  />
+    </svg>
+                                    <span class="font-medium" x-text="doc.type"></span>
+                                </p>
+                            </template>
+                            <p x-show="!ph.documents.length" class="text-slate-300">—</p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+        <div class="grid gap-3 lg:grid-cols-2">
+            <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <h3 class="border-b border-slate-100 px-4 py-2.5 text-sm font-bold text-slate-900">Dokumen</h3>
+                <div class="divide-y divide-slate-100">
+                    <template x-for="doc in group.documents || []" :key="doc.id">
+                        <div class="flex items-center justify-between gap-3 px-4 py-2.5 text-[13px]"><span class="text-slate-600" x-text="doc.phase+' / '+doc.document_type"></span><span class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="doc.status==='APPROVED' ? 'bg-emerald-50 text-emerald-600' : doc.status==='REJECTED' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'" x-text="doc.status"></span></div>
+                    </template>
+                    <p x-show="!(group.documents||[]).length" class="px-4 py-6 text-center text-sm text-slate-400">Belum ada dokumen.</p>
+                </div>
+                <a :href="url('/admin/document-uploads')+'?group_id='+group.id" class="block px-4 py-2.5 text-[13px] font-medium text-[#2f3d8a] hover:underline">Lihat unggahan</a>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+                <h3 class="border-b border-slate-100 px-4 py-2.5 text-sm font-bold text-slate-900">Jadwal</h3>
+                <div class="divide-y divide-slate-100">
+                    <template x-for="schedule in group.schedules || []" :key="schedule.id">
+                        <p class="px-4 py-2.5 text-[13px] text-slate-600" x-text="(schedule.date || '').slice(0,10)+' '+(schedule.start_time || '').slice(0,5)+' — '+(schedule.type || '')+' '+(schedule.room || '')"></p>
+                    </template>
+                    <p x-show="!(group.schedules||[]).length" class="px-4 py-6 text-center text-sm text-slate-400">Belum ada jadwal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <dialog id="group-message" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg leading-none font-semibold pr-6">Kirim Pesan</h2><p class="text-muted-foreground mt-2 text-sm">Pesan terkirim sebagai notifikasi dalam aplikasi.</p><div class="mt-4 space-y-4">
+            <p class="text-sm text-slate-500">Kepada <span class="font-semibold text-slate-800" x-text="selectedMembers.length+' anggota'"></span></p>
+            <textarea x-model="messageText" rows="4" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis pesan..." aria-label="Isi pesan"></textarea>
+            <div class="flex justify-end gap-2">
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="$el.closest('dialog').close()">Batal</button>
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="sendMessage()" :disabled="saving || !messageText.trim()">Kirim</button>
+            </div>
+        </div>
+</dialog>
+
+    <dialog id="group-flag" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg leading-none font-semibold pr-6">Flag Mahasiswa</h2><div class="mt-4 space-y-4">
+            <p class="text-sm text-slate-600">Tandai <span class="font-semibold text-slate-900" x-text="flagTarget ? memberName(flagTarget) : ''"></span> dari periode ini?</p>
+            <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">Mahasiswa akan dikeluarkan dari kelompok dan periode. Nilai yang sudah ada tetap tersimpan. Tindakan ini dapat dibatalkan lewat Unflag.</p>
+            <textarea x-model="flagReason" rows="3" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Alasan flag (wajib)..." aria-label="Alasan flag"></textarea>
+            <div class="flex justify-end gap-2">
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="$el.closest('dialog').close()">Batal</button>
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="sendFlag()" :disabled="saving || !flagReason.trim()">Flag</button>
+            </div>
+        </div>
+</dialog>
+
+    <dialog id="group-unflag" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg leading-none font-semibold pr-6">Kembalikan Mahasiswa</h2><div class="mt-4 space-y-4">
+            <p class="text-sm text-slate-600">Kembalikan <span class="font-semibold text-slate-900" x-text="unflagTarget ? memberName(unflagTarget) : ''"></span> ke status aktif? Mahasiswa perlu bergabung kembali ke kelompok.</p>
+            <div class="flex justify-end gap-2">
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="$el.closest('dialog').close()">Batal</button>
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="sendUnflag()" :disabled="saving">Kembalikan</button>
+            </div>
+        </div>
+</dialog>
+
+    <dialog id="group-delete" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg leading-none font-semibold pr-6">Hapus Kelompok</h2><div class="mt-4 space-y-4">
+            <p class="text-sm text-slate-600">Hapus permanen <span class="font-semibold text-slate-900" x-text="deleteTarget ? (deleteTarget.code || ('Group '+deleteTarget.id)) : ''"></span> (<span x-text="(deleteTarget?.members||[]).length+' anggota'"></span>, status <span class="font-semibold" x-text="deleteTarget?.status"></span>)?</p>
+            <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">Seluruh data ikut terhapus permanen: anggota, judul usulan mahasiswa, pembimbing, dokumen, jadwal, dan penilaian. Tindakan ini <strong>tidak dapat dibatalkan</strong>.</p>
+            <textarea x-model="deleteReason" rows="3" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Alasan penghapusan (wajib, min. 10 karakter)..." aria-label="Alasan penghapusan"></textarea>
+            <p class="text-xs text-slate-400" x-text="deleteReason.trim().length+'/1000 (min. 10 karakter)'"></p>
+            <div class="flex justify-end gap-2">
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="closeDelete()">Batal</button>
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="confirmDelete()" :disabled="saving || !deleteReasonValid">Lanjut</button>
+            </div>
+        </div>
+</dialog>
+
+    <dialog id="group-delete-confirm" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+<button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+</button>
+<h2 class="text-lg leading-none font-semibold pr-6">Konfirmasi Terakhir</h2><div class="mt-4 space-y-4">
+            <p class="text-sm text-slate-600">Anda yakin ingin menghapus permanen <span class="font-semibold text-slate-900" x-text="deleteTarget ? (deleteTarget.code || ('Group '+deleteTarget.id)) : ''"></span>?</p>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[13px] text-slate-600">
+                <p class="font-medium text-slate-500">Alasan:</p>
+                <p class="mt-1 text-slate-800" x-text="deleteReason"></p>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="backToDeleteReason()">Kembali</button>
+                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="sendDelete()" :disabled="saving">Ya, Hapus Permanen</button>
+            </div>
+        </div>
+</dialog>
 </div>
 </div>
             </div>

@@ -3,10 +3,10 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="">
-    <title>Groups | SICATA</title>
+    <title>Approval | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
     <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
-    <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/groups","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
+    <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/period-registrations","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
     <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
     <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
 <script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
@@ -35,7 +35,7 @@
                     <rect  width="7"  height="5"  x="3"  y="16"  rx="1"  />
     </svg>
 <span x-show="!collapsed">Dashboard</span></a>
-                                                                                    <div x-data="{ expanded: true }">
+                                                                                    <div x-data="{ expanded: false }">
                         <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Master Data"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
                     <circle  cx="12"  cy="12"  r="3"  />
@@ -46,7 +46,7 @@
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
                                                                                             <a  href="http://localhost:8000/capstone/admin/users"  title="Users" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Users</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/groups"  title="Groups" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">Groups</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/groups"  title="Groups" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Groups</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/locations"  title="Locations" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Locations</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
@@ -72,7 +72,7 @@
                                                                                             <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
                                                     </div>
                     </div>
-                                                                                                    <div x-data="{ expanded: false }">
+                                                                                                    <div x-data="{ expanded: true }">
                         <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Management"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
                     <circle  cx="12"  cy="12"  r="3"  />
@@ -87,7 +87,7 @@
                                                                                             <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/ta-defense"  title="TA Defense" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">TA Defense</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/audit-logs"  title="Audit Log" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Audit Log</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/period-registrations"  title="Approval" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Approval</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/period-registrations"  title="Approval" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">Approval</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -136,7 +136,7 @@
                     <path  d="M4 19h16"  />
     </svg>
 </button>
-    <nav aria-label="breadcrumb"><ol class="flex flex-wrap items-center gap-2 text-sm"><li class="text-grey-400">SICATA</li><li class="text-grey-300">/</li><li class="text-grey-600 font-medium">Groups</li></ol></nav>
+    <nav aria-label="breadcrumb"><ol class="flex flex-wrap items-center gap-2 text-sm"><li class="text-grey-400">SICATA</li><li class="text-grey-300">/</li><li class="text-grey-600 font-medium">Period Registrations</li></ol></nav>
     <div class="flex items-center gap-2">
         <button type="button" class="h-9 w-9 inline-flex items-center justify-center text-grey-600 hover:bg-grey-25 rounded-full relative bg-white border" aria-label="Search"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5">
                     <path  d="m21 21-4.34-4.34"  />
@@ -175,9 +175,32 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div x-data="adminGroups(false)" class="space-y-6">
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div x-data="{tab:'join'}" class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold tracking-tight text-slate-900">Groups</h1>
+        <div>
+            <h1 class="text-xl font-bold tracking-tight text-slate-900">Approval</h1>
+            <p class="text-sm text-slate-500">Review student requests: period join requests and sidang TA registrations.</p>
+        </div>
+    </div>
+
+    <div class="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm w-fit" role="tablist" aria-label="Approval types">
+        <button type="button" role="tab" :aria-selected="tab==='join'" @click="tab='join'" class="rounded-lg px-4 py-1.5 text-[13px] font-semibold" :class="tab==='join'?'bg-slate-900 text-white':'text-slate-500 hover:bg-slate-50'">Join Requests</button>
+        <button type="button" role="tab" :aria-selected="tab==='sidang'" @click="tab='sidang'" class="rounded-lg px-4 py-1.5 text-[13px] font-semibold" :class="tab==='sidang'?'bg-slate-900 text-white':'text-slate-500 hover:bg-slate-50'">Sidang TA</button>
+    </div>
+
+    <div x-show="tab==='join'" x-data="adminPeriodRegistrations" class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h2 class="text-base font-semibold text-slate-900">Period Join Requests</h2>
+            <p class="text-sm text-slate-500">Review student requests to join an academic period. Approved students can create or join groups.</p>
+        </div>
+        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="load()" :disabled="loading"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"  />
+                    <path  d="M21 3v5h-5"  />
+                    <path  d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"  />
+                    <path  d="M8 16H3v5"  />
+    </svg>
+Refresh</button>
     </div>
 
     <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
@@ -189,128 +212,59 @@ Logout</button></form>
     <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
 
     <div x-show="!loading && !error" x-cloak class="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
-            <h2 class="text-sm font-bold text-slate-900">Total Groups</h2>
-            <div class="flex items-center gap-2">
-                <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+        <div class="flex flex-wrap items-center gap-2.5 border-b border-slate-100 p-3">
+            <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="m21 21-4.34-4.34"  />
                     <circle  cx="11"  cy="11"  r="8"  />
     </svg>
-                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Search" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Search groups">
-                </label>
-                <span x-data="{open:false}" @click.outside="open=false" @keydown.escape.window="open=false" class="relative">
-                    <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
-                    <path  d="M2 5h20"  />
-                    <path  d="M6 12h12"  />
-                    <path  d="M9 19h6"  />
-    </svg>
- Filter
-                    </button>
-                    <span x-show="open" x-cloak class="absolute right-0 z-20 mt-1 w-56 rounded-lg border border-slate-200 bg-white p-3 shadow-lg">
-                        <label class="mb-2 block text-xs font-medium text-slate-500">Periode
-                            <select x-model="periodId" @change="page=1;loadAll()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
-                                <option value="">Semua periode</option>
-                                <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
-                            </select>
-                        </label>
-                        <label class="block text-xs font-medium text-slate-500">Status
-                            <select x-model="status" @change="page=1;loadAll()" class="mt-1 w-full rounded-md border border-slate-200 bg-transparent px-2 py-1.5 text-[13px] text-slate-700 outline-none">
-                                <option value="">Semua status</option>
-                                <template x-for="s in ['FORMING','FORMING_SOLO','READY_FOR_BIDDING','TITLE_PROPOSED','TITLE_APPROVED','READY_FOR_FINALIZATION','KELOMPOK_FINAL','PDC1_ACTIVE','READY_FOR_SEMPRO','SEMPRO_DONE','PDC2_ACTIVE','EXPO_REGISTERED','READY_FOR_TA_INDIVIDUAL','CLOSED','DISSOLVED']"><option :value="s" x-text="s.replace(/_/g,' ')"></option></template>
-                            </select>
-                        </label>
-                    </span>
-                </span>
-                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500" title="Urutkan">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
-                    <path  d="m21 16-4 4-4-4"  />
-                    <path  d="M17 20V4"  />
-                    <path  d="m3 8 4-4 4 4"  />
-                    <path  d="M7 4v16"  />
-    </svg>
-                    <select x-model="sortBy" @change="page=1" class="max-w-24 bg-transparent outline-none" aria-label="Sort groups">
-                        <option value="">Sort by</option>
-                        <option value="">Terbaru</option>
-                        <option value="code">Kode</option>
-                        <option value="status">Status</option>
-                    </select>
-                </label>
-            </div>
+                <input x-model.debounce.300ms="search" @input="filter()" type="search" placeholder="Cari nama / NIM..." class="w-44 bg-transparent outline-none placeholder:text-slate-400" aria-label="Cari join request">
+            </label>
+            <select x-model="status" @change="filter()" class="rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-[13px] text-slate-600 outline-none" aria-label="Filter status">
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="all">Semua status</option>
+            </select>
+            <select x-model="periodId" @change="filter()" class="rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-[13px] text-slate-600 outline-none" aria-label="Filter periode">
+                <option value="">Semua periode</option>
+                <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
+            </select>
+            <button type="button" @click="reset()" class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">Reset</button>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full min-w-[900px] text-left text-[13px]">
+            <table class="w-full min-w-[820px] text-left text-[13px]">
                 <thead class="border-b border-slate-100 bg-slate-50/60 text-xs text-slate-500">
                     <tr>
-                        <th class="px-4 py-2.5 font-medium">No</th>
-                        <th class="px-4 py-2.5 font-medium">Kode</th>
-                        <th class="px-4 py-2.5 font-medium">Ketua</th>
-                        <th class="px-4 py-2.5 font-medium">Anggota</th>
-                        <th class="px-4 py-2.5 font-medium">Dosen Pembimbing</th>
+                        <th class="px-4 py-2.5 font-medium">Mahasiswa</th>
+                        <th class="px-4 py-2.5 font-medium">NIM</th>
+                        <th class="px-4 py-2.5 font-medium">Periode</th>
                         <th class="px-4 py-2.5 font-medium">Status</th>
-                        <th class="px-4 py-2.5 font-medium">Judul Capstone</th>
-                        <th class="px-4 py-2.5 text-right font-medium">Action</th>
+                        <th class="px-4 py-2.5 font-medium">Diminta</th>
+                        <th class="px-4 py-2.5 text-right font-medium">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <template x-for="(item,idx) in pagedGroups" :key="item.id">
-                        <tr class="hover:bg-slate-50/60">
-                            <td class="px-4 py-3 text-slate-500" x-text="(groupPage-1)*Number(pageSize)+idx+1"></td>
-                            <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700" x-text="item.code || ('Group '+item.id)"></td>
-                            <td class="px-4 py-3">
-                                <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-0.5 pr-2.5">
-                                    <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500" x-text="initials(ketuaName(item))"></span>
-                                    <span class="max-w-28 truncate text-xs font-medium text-slate-700" x-text="ketuaName(item)"></span>
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="flex items-center">
-                                    <template x-for="(m,mi) in (item.members||[]).slice(0,4)" :key="m.id">
-                                        <span class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-[10px] font-bold text-slate-500" :class="mi>0 && '-ml-2'" :title="memberName(m)" x-text="initials(memberName(m))"></span>
-                                    </template>
-                                    <span x-show="(item.members||[]).length>4" class="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-slate-100 text-[10px] font-bold text-slate-500 -ml-2" x-text="'+'+((item.members||[]).length-4)"></span>
-                                    <span x-show="!(item.members||[]).length" class="text-xs text-slate-300">—</span>
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="flex max-w-44 flex-col items-start gap-1">
-                                    <template x-for="name in supervisorNames(item)" :key="name">
-                                        <span class="inline-flex items-center gap-1.5 rounded-full border border-slate-200 py-0.5 pl-0.5 pr-2.5">
-                                            <span class="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-500" x-text="initials(name)"></span>
-                                            <span class="max-w-28 truncate text-xs font-medium text-slate-700" x-text="name"></span>
-                                        </span>
-                                    </template>
-                                    <span x-show="!supervisorNames(item).length" class="text-xs text-slate-300">—</span>
-                                </span>
-                            </td>
-                            <td class="px-4 py-3"><span class="whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="groupStatusClass(item.status)" x-text="groupStatusLabel(item)"></span></td>
-                            <td class="max-w-56 px-4 py-3 text-slate-700" x-text="item.title?.title || 'Belum ada Judul'"></td>
-                            <td class="px-4 py-3 text-right">
-                                <span x-data="{menu:false}" @click.outside="menu=false" @keydown.escape.window="menu=false" class="relative inline-block text-left">
-                                    <button type="button" @click="menu=!menu" :aria-expanded="menu" aria-label="Aksi group" class="rounded px-1 font-bold tracking-widest text-slate-400 hover:bg-slate-100 hover:text-slate-700">...</button>
-                                    <span x-show="menu" x-cloak class="absolute right-0 z-20 min-w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" :class="idx>=pagedGroups.length-2 ? 'bottom-full mb-1' : 'top-full mt-1'">
-                                        <a :href="url('/admin/groups/'+item.id)" @click="menu=false" class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-100"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
-                    <path  d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"  />
-                    <circle  cx="12"  cy="12"  r="3"  />
-    </svg>
-Lihat Detail</a>
-                                        <button type="button" @click="menu=false;openDelete(item)" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-red-600 hover:bg-red-50"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
-                    <path  d="M10 11v6"  />
-                    <path  d="M14 11v6"  />
-                    <path  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"  />
-                    <path  d="M3 6h18"  />
-                    <path  d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"  />
-    </svg>
-Hapus</button>
-                                    </span>
-                                </span>
+                    <template x-for="item in items" :key="item.id">
+                        <tr class="align-top hover:bg-slate-50/60">
+                            <td class="px-4 py-3 font-medium text-slate-800" x-text="studentName(item)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600" x-text="studentNim(item)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-700" x-text="item.period?.name || ('Period #'+item.period_id)"></td>
+                            <td class="whitespace-nowrap px-4 py-3"><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="statusClass(item.status)" x-text="item.status"></span><p x-show="item.status==='REJECTED' && item.rejection_reason" class="mt-1 max-w-64 whitespace-normal text-xs text-slate-500" x-text="item.rejection_reason"></p></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-500" x-text="shortDate(item.created_at)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right">
+                                <template x-if="canReview(item)">
+                                    <div class="inline-flex gap-2">
+                                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="review(item,'reject')" :disabled="saving">Reject</button>
+                                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="review(item,'approve')" :disabled="saving">Approve</button>
+                                    </div>
+                                </template>
+                                <span x-show="!canReview(item)" class="text-xs text-slate-400">Reviewed</span>
                             </td>
                         </tr>
                     </template>
-                    <tr x-show="!pagedGroups.length && !loading"><td colspan="8" class="px-3 py-10 text-center text-sm text-slate-400">Belum ada group.</td></tr>
-                    <tr x-show="loading"><td colspan="8" class="px-3 py-10 text-center text-sm text-slate-400">Memuat...</td></tr>
+                    <tr x-show="!items.length"><td colspan="6" class="px-3 py-10 text-center text-sm text-slate-400">Belum ada join request.</td></tr>
                 </tbody>
             </table>
         </div>
@@ -318,20 +272,17 @@ Hapus</button>
         <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-3 text-[13px]">
             <div class="flex items-center gap-2 text-slate-500">
                 <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per page
-                    <select x-model.number="pageSize" @change="page=1" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>10</option><option>25</option><option>50</option></select>
+                    <select x-model.number="pageSize" @change="page=1;load()" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>10</option><option>25</option><option>50</option></select>
                 </label>
-                <span x-text="'Showing '+groupFrom+' to '+groupTo+' of, '+groupTotal+' results'"></span>
+                <span x-text="'Total '+ (pagination.total ?? 0) +' request'"></span>
             </div>
             <div class="flex items-center gap-1">
-                <button type="button" @click="page=Math.max(1,groupPage-1)" :disabled="groupPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="m15 18-6-6 6-6"  />
     </svg>
 </button>
-                <template x-for="(p,i) in groupPageList" :key="i+'-'+p">
-                    <button type="button" x-show="p!=='…'" @click="page=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===groupPage ? 'border-[#2f3d8a] bg-[#2f3d8a] text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
-                    <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
-                </template>
-                <button type="button" @click="page=Math.min(groupLastPage,groupPage+1)" :disabled="groupPage>=groupLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                <span class="px-2 text-xs font-semibold text-slate-500" x-text="page+' / '+(pagination.last_page||1)"></span>
+                <button type="button" @click="gotoPage(page+1)" :disabled="page>=(pagination.last_page||1)" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="m9 18 6-6-6-6"  />
     </svg>
 </button>
@@ -339,42 +290,141 @@ Hapus</button>
         </div>
     </div>
 
-    <dialog id="group-delete" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+    <dialog id="join-review" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
 <button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M18 6 6 18"  />
                     <path  d="m6 6 12 12"  />
     </svg>
 </button>
-<h2 class="text-lg leading-none font-semibold pr-6">Hapus Kelompok</h2><div class="mt-4 space-y-4">
-            <p class="text-sm text-slate-600">Hapus permanen <span class="font-semibold text-slate-900" x-text="deleteTarget ? (deleteTarget.code || ('Group '+deleteTarget.id)) : ''"></span> (<span x-text="(deleteTarget?.members||[]).length+' anggota'"></span>, status <span class="font-semibold" x-text="deleteTarget?.status"></span>)?</p>
-            <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">Seluruh data ikut terhapus permanen: anggota, judul usulan mahasiswa, pembimbing, dokumen, jadwal, dan penilaian. Tindakan ini <strong>tidak dapat dibatalkan</strong>.</p>
-            <textarea x-model="deleteReason" rows="3" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Alasan penghapusan (wajib, min. 10 karakter)..." aria-label="Alasan penghapusan"></textarea>
-            <p class="text-xs text-slate-400" x-text="deleteReason.trim().length+'/1000 (min. 10 karakter)'"></p>
-            <div class="flex justify-end gap-2">
-                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="closeDelete()">Batal</button>
-                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="confirmDelete()" :disabled="saving || !deleteReasonValid">Lanjut</button>
-            </div>
-        </div>
+<h2 class="text-lg font-semibold" x-text="decision==='approve'?'Approve Join Request':'Reject Join Request'"></h2><p class="my-4 text-sm text-muted-foreground" x-text="selected ? studentName(selected)+' · '+studentNim(selected)+' · '+(selected.period?.name || '') : ''"></p><form @submit.prevent="submit()" class="space-y-4">
+        <p x-show="decision==='approve'" class="text-sm">Approve this request? The student will be able to create or join a group in this period.</p>
+        <div x-show="decision==='reject'" class="space-y-2"><label for="rejection-reason" class="text-sm font-medium">Rejection Reason</label><textarea id="rejection-reason" x-model="reason" :required="decision==='reject'" maxlength="1000" class="min-h-24 w-full rounded-md border bg-background p-3 text-sm" placeholder="Explain why this request is being rejected..."></textarea></div>
+        <p class="text-sm text-destructive" role="alert" x-text="errors.root"></p><div class="flex justify-end gap-2"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="$el.closest('dialog').close()">Cancel</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit" :disabled="saving || (decision==='reject' && !reason.trim())"><span x-text="saving?'Saving...':decision==='approve'?'Approve':'Reject'"></span></button>
+</div>
+    </form>
 </dialog>
+    </div>
 
-    <dialog id="group-delete-confirm" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
+    <div x-show="tab==='sidang'" x-data="adminTaRegistrations" class="space-y-6">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+            <h2 class="text-base font-semibold text-slate-900">Sidang TA Registrations</h2>
+            <p class="text-sm text-slate-500">Review student requests to enter the TA document-upload phase. Approved students can upload the required TA documents.</p>
+        </div>
+        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="load()" :disabled="loading"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"  />
+                    <path  d="M21 3v5h-5"  />
+                    <path  d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"  />
+                    <path  d="M8 16H3v5"  />
+    </svg>
+Refresh</button>
+    </div>
+
+    <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
+<div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
+
+    <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
+
+    <div x-show="!loading && !error" x-cloak class="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div class="flex flex-wrap items-center gap-2.5 border-b border-slate-100 p-3">
+            <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+                <input x-model.debounce.300ms="search" @input="filter()" type="search" placeholder="Cari nama / NIM..." class="w-44 bg-transparent outline-none placeholder:text-slate-400" aria-label="Cari pendaftaran sidang">
+            </label>
+            <select x-model="status" @change="filter()" class="rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-[13px] text-slate-600 outline-none" aria-label="Filter status">
+                <option value="PENDING">Pending</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+                <option value="all">Semua status</option>
+            </select>
+            <select x-model="periodId" @change="filter()" class="rounded-lg border border-slate-200 bg-transparent px-2.5 py-1.5 text-[13px] text-slate-600 outline-none" aria-label="Filter periode">
+                <option value="">Semua periode</option>
+                <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
+            </select>
+            <button type="button" @click="reset()" class="rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">Reset</button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[860px] text-left text-[13px]">
+                <thead class="border-b border-slate-100 bg-slate-50/60 text-xs text-slate-500">
+                    <tr>
+                        <th class="px-4 py-2.5 font-medium">Mahasiswa</th>
+                        <th class="px-4 py-2.5 font-medium">NIM</th>
+                        <th class="px-4 py-2.5 font-medium">Grup</th>
+                        <th class="px-4 py-2.5 font-medium">Periode</th>
+                        <th class="px-4 py-2.5 font-medium">Status</th>
+                        <th class="px-4 py-2.5 font-medium">Diminta</th>
+                        <th class="px-4 py-2.5 text-right font-medium">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    <template x-for="item in items" :key="item.id">
+                        <tr class="align-top hover:bg-slate-50/60">
+                            <td class="px-4 py-3 font-medium text-slate-800" x-text="studentName(item)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600" x-text="studentNim(item)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-700" x-text="groupName(item)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-700" x-text="item.period?.name || ('Period #'+item.period_id)"></td>
+                            <td class="whitespace-nowrap px-4 py-3"><span class="rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="statusClass(item.status)" x-text="item.status"></span><p x-show="item.status==='REJECTED' && item.rejection_reason" class="mt-1 max-w-64 whitespace-normal text-xs text-slate-500" x-text="item.rejection_reason"></p></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-500" x-text="shortDate(item.created_at)"></td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right">
+                                <template x-if="canReview(item)">
+                                    <div class="inline-flex gap-2">
+                                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="review(item,'reject')" :disabled="saving">Reject</button>
+                                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="review(item,'approve')" :disabled="saving">Approve</button>
+                                    </div>
+                                </template>
+                                <span x-show="!canReview(item)" class="text-xs text-slate-400">Reviewed</span>
+                            </td>
+                        </tr>
+                    </template>
+                    <tr x-show="!items.length"><td colspan="7" class="px-3 py-10 text-center text-sm text-slate-400">Belum ada pendaftaran sidang TA.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 p-3 text-[13px]">
+            <div class="flex items-center gap-2 text-slate-500">
+                <label class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2 py-1">Per page
+                    <select x-model.number="pageSize" @change="page=1;load()" class="bg-transparent font-semibold text-slate-700 outline-none" aria-label="Baris per halaman"><option>10</option><option>25</option><option>50</option></select>
+                </label>
+                <span x-text="'Total '+ (pagination.total ?? 0) +' request'"></span>
+            </div>
+            <div class="flex items-center gap-1">
+                <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m15 18-6-6 6-6"  />
+    </svg>
+</button>
+                <span class="px-2 text-xs font-semibold text-slate-500" x-text="page+' / '+(pagination.last_page||1)"></span>
+                <button type="button" @click="gotoPage(page+1)" :disabled="page>=(pagination.last_page||1)" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="m9 18 6-6-6-6"  />
+    </svg>
+</button>
+            </div>
+        </div>
+    </div>
+
+    <dialog id="sidang-review" class="fixed inset-0 m-auto w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto bg-background text-foreground gap-4 rounded-lg border p-6 shadow-lg max-w-lg" @click="if ($event.target === $event.currentTarget && ($event.offsetX < 0 || $event.offsetY < 0 || $event.offsetX > $event.currentTarget.clientWidth || $event.offsetY > $event.currentTarget.clientHeight)) $event.currentTarget.close()">
 <button type="button" class="absolute top-4 right-4 opacity-70 hover:opacity-100" aria-label="Close" @click="$el.closest('dialog').close()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M18 6 6 18"  />
                     <path  d="m6 6 12 12"  />
     </svg>
 </button>
-<h2 class="text-lg leading-none font-semibold pr-6">Konfirmasi Terakhir</h2><div class="mt-4 space-y-4">
-            <p class="text-sm text-slate-600">Anda yakin ingin menghapus permanen <span class="font-semibold text-slate-900" x-text="deleteTarget ? (deleteTarget.code || ('Group '+deleteTarget.id)) : ''"></span>?</p>
-            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[13px] text-slate-600">
-                <p class="font-medium text-slate-500">Alasan:</p>
-                <p class="mt-1 text-slate-800" x-text="deleteReason"></p>
-            </div>
-            <div class="flex justify-end gap-2">
-                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="backToDeleteReason()">Kembali</button>
-                <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="sendDelete()" :disabled="saving">Ya, Hapus Permanen</button>
-            </div>
-        </div>
+<h2 class="text-lg font-semibold" x-text="decision==='approve'?'Approve Sidang TA Registration':'Reject Sidang TA Registration'"></h2><p class="my-4 text-sm text-muted-foreground" x-text="selected ? studentName(selected)+' · '+studentNim(selected)+' · '+groupName(selected) : ''"></p><form @submit.prevent="submit()" class="space-y-4">
+        <p x-show="decision==='approve'" class="text-sm">Approve this request? The student will be able to upload the required TA documents.</p>
+        <div x-show="decision==='reject'" class="space-y-2"><label for="sidang-rejection-reason" class="text-sm font-medium">Rejection Reason</label><textarea id="sidang-rejection-reason" x-model="reason" :required="decision==='reject'" maxlength="1000" class="min-h-24 w-full rounded-md border bg-background p-3 text-sm" placeholder="Explain why this request is being rejected..."></textarea></div>
+        <p class="text-sm text-destructive" role="alert" x-text="errors.root"></p><div class="flex justify-end gap-2"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="$el.closest('dialog').close()">Cancel</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="submit" :disabled="saving || (decision==='reject' && !reason.trim())"><span x-text="saving?'Saving...':decision==='approve'?'Approve':'Reject'"></span></button>
+</div>
+    </form>
 </dialog>
+    </div>
 </div>
 </div>
             </div>

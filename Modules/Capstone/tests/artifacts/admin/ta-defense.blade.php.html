@@ -5,9 +5,9 @@
     <meta name="csrf-token" content="">
     <title>TA Defense Schedules | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1789736787">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/ta-defense","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1789736787"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
     <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
 <script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
@@ -86,6 +86,8 @@
                                                                                             <a  href="http://localhost:8000/capstone/admin/sempro"  title="Sidang Proposal" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Sidang Proposal</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/ta-defense"  title="TA Defense" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">TA Defense</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/audit-logs"  title="Audit Log" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Audit Log</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/period-registrations"  title="Approval" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Approval</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -273,9 +275,9 @@ Eval</a>
     <p class="text-destructive text-sm" x-show="errors['date']" x-text="errors['date']?.[0]"></p>
 </div>
 <div class="space-y-2 ">
-    <label for="field-location_id" class="text-sm font-medium leading-none">Location<span class="ml-0.5 text-red-500">*</span></label>
-    <select id="field-location_id" name="location_id" x-model="form.location_id" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" ><option value="">Select location...</option><template x-for="location in locations" :key="location.id"><option :value="String(location.id)" x-text="location.name"></option></template></select>
-        <p class="text-destructive text-sm" x-show="errors['location_id']" x-text="errors['location_id']?.[0]"></p>
+    <label for="field-eoffice_ruangan_id" class="text-sm font-medium leading-none">Location (Ruangan EOffice)<span class="ml-0.5 text-red-500">*</span></label>
+    <select id="field-eoffice_ruangan_id" name="eoffice_ruangan_id" x-model="form.eoffice_ruangan_id" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" ><option value="">Select room...</option><template x-for="room in eofficeRooms" :key="room.id"><option :value="String(room.id)" x-text="room.nama+(room.kapasitas?' ('+room.kapasitas+')':'')"></option></template></select>
+        <p class="text-destructive text-sm" x-show="errors['eoffice_ruangan_id']" x-text="errors['eoffice_ruangan_id']?.[0]"></p>
 </div>
 </div>
         <div class="grid grid-cols-2 gap-4"><div class="space-y-2 ">

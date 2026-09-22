@@ -35,6 +35,10 @@ bootstrap/providers.php
 /scratch
 
 # AI assistant files
+# Local agent tooling (untracked)
+.github/hooks/
+.github/skills/
+.impeccable/
 .claude/
 CLAUDE.md
 PLAN_*.md

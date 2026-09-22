@@ -5,9 +5,9 @@
     <meta name="csrf-token" content="">
     <title>My Group | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1789736787">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["mahasiswa"],"active_role":"mahasiswa","nim":null,"nip":"TEST-NIP"},"role":"mahasiswa","path":"\/mahasiswa\/group","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1789736787"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
     <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
 <script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
@@ -227,7 +227,11 @@ Leave Group</button>
                     <path  d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"  />
     </svg>
 <div><h3 class="font-medium" x-text="group.title?.title"></h3><p class="text-sm text-muted-foreground">Lecturer: <span x-text="person(group.title?.lecturer)"></span></p></div></div></div>
-            <div x-show="!group.title" class="p-4 bg-muted/50 rounded-lg border border-dashed flex items-center gap-3 text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+            <div x-show="!group.title && (group.bids||[]).some(b=>b.lecturer_recommendation==='ACCEPT' && b.status!=='ACCEPTED')" class="p-4 bg-green-50/60 rounded-lg border border-green-200 flex items-start gap-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 mt-0.5 text-green-700">
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<div><h3 class="font-medium" x-text="(group.bids||[]).filter(b=>b.lecturer_recommendation==='ACCEPT' && b.status!=='ACCEPTED').map(b=>b.title?.title).join(', ')"></h3><p class="text-sm text-muted-foreground">Direkomendasi dosen — menunggu <em>Mark Ready for Finalization</em> + penetapan judul oleh koordinator. Judul resmi muncul di sini setelah finalisasi admin.</p></div></div>
+            <div x-show="!group.title && !(group.bids||[]).some(b=>b.lecturer_recommendation==='ACCEPT' && b.status!=='ACCEPTED')" class="p-4 bg-muted/50 rounded-lg border border-dashed flex items-center gap-3 text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M13 21h8"  />
                     <path  d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"  />
     </svg>
