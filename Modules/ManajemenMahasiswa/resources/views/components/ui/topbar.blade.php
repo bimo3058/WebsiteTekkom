@@ -54,6 +54,14 @@
 
     // Get unread notification count
     $unreadNotifCount = \Modules\ManajemenMahasiswa\Models\ForumNotification::forUser($user->id)->unread()->count();
+
+    // Antrean tugas (verifikasi pengumuman/data, laporan forum). Dulu ditempel
+    // sebagai lingkaran merah di sidebar; sekarang jadi bagian lonceng ini.
+    $tugas = app(\Modules\ManajemenMahasiswa\Services\NotifikasiTugasService::class)->untuk($user);
+    $tugasTotal = array_sum(array_column($tugas, 'count'));
+
+    // Angka di lonceng menggabungkan notifikasi forum + tugas tertunda.
+    $notifBadgeTotal = $unreadNotifCount + $tugasTotal;
 @endphp
 
 <div class="simenma-topbar">
@@ -72,8 +80,8 @@
                     <path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9" />
                     <path d="M10 21a2 2 0 004 0" />
                 </svg>
-                @if($unreadNotifCount > 0)
-                    <span class="simenma-notif-badge" id="notifBadge">{{ $unreadNotifCount > 9 ? '9+' : $unreadNotifCount }}</span>
+                @if($notifBadgeTotal > 0)
+                    <span class="simenma-notif-badge" id="notifBadge">{{ $notifBadgeTotal > 9 ? '9+' : $notifBadgeTotal }}</span>
                 @else
                     <span class="simenma-notif-badge" id="notifBadge" style="display:none;"></span>
                 @endif
@@ -85,6 +93,25 @@
                     <span class="simenma-notif-title">Notifikasi</span>
                     <button class="simenma-notif-readall" id="notifReadAll" onclick="markAllNotifRead()">Tandai semua dibaca</button>
                 </div>
+
+                {{-- Antrean tugas: dirender dari server, bukan dari endpoint
+                     notifikasi forum, jadi tidak ikut tersapu "tandai dibaca". --}}
+                @if(count($tugas) > 0)
+                    <div class="simenma-tugas">
+                        <p class="simenma-tugas-title">Perlu Tindakan</p>
+                        @foreach($tugas as $t)
+                            <a href="{{ $t['url'] }}" class="simenma-tugas-item">
+                                <span class="simenma-tugas-dot simenma-tugas-dot--{{ $t['tone'] }}"></span>
+                                <span class="simenma-tugas-body">
+                                    <span class="simenma-tugas-label">{{ $t['label'] }}</span>
+                                    <span class="simenma-tugas-desc">{{ $t['count'] }} {{ $t['desc'] }}</span>
+                                </span>
+                                <span class="simenma-tugas-count simenma-tugas-count--{{ $t['tone'] }}">{{ $t['count'] }}</span>
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+
                 <div class="simenma-notif-list" id="notifList">
                     <div class="simenma-notif-empty">Memuat...</div>
                 </div>
@@ -321,6 +348,85 @@
         font-size: 13px;
     }
 
+    /* ─── Antrean tugas ──────────────────────────────────────
+       Blok tetap di atas daftar notifikasi forum. Latarnya sedikit
+       abu supaya terbaca sebagai bagian terpisah, bukan salah satu
+       item notifikasi. */
+    .simenma-tugas {
+        background: #FAFBFC;
+        border-bottom: 1px solid #F3F4F6;
+        padding: 8px 0 6px;
+        flex-shrink: 0;
+    }
+
+    .simenma-tugas-title {
+        margin: 0 0 2px;
+        padding: 0 18px;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #9CA3AF;
+    }
+
+    .simenma-tugas-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 18px;
+        text-decoration: none;
+        transition: background 0.15s;
+    }
+
+    .simenma-tugas-item:hover { background: #F3F4F6; }
+
+    .simenma-tugas-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .simenma-tugas-dot--danger  { background: #DF1C41; }
+    .simenma-tugas-dot--warning { background: #956321; }
+
+    .simenma-tugas-body {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .simenma-tugas-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #0D0D12;
+        line-height: 1.3;
+    }
+
+    .simenma-tugas-desc {
+        font-size: 11px;
+        color: #666D80;
+        line-height: 1.3;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .simenma-tugas-count {
+        flex-shrink: 0;
+        min-width: 20px;
+        padding: 1px 7px;
+        border-radius: 9999px;
+        font-size: 10px;
+        font-weight: 700;
+        text-align: center;
+        color: #fff;
+    }
+
+    .simenma-tugas-count--danger  { background: #DF1C41; }
+    .simenma-tugas-count--warning { background: #956321; }
+
     /* ─── User Area ──────────────────────────────────────── */
     .simenma-topbar-user {
         display: flex;
@@ -404,8 +510,26 @@ const NOTIF_READ_URL = '{{ route("manajemenmahasiswa.notifications.read", "__ID_
 const NOTIF_READ_ALL_URL = '{{ route("manajemenmahasiswa.notifications.read_all") }}';
 const CSRF_TOKEN = '{{ csrf_token() }}';
 
+// Antrean tugas dirender server-side dan tidak ikut endpoint notifikasi forum,
+// jadi jumlahnya disimpan terpisah lalu selalu ditambahkan ke angka lonceng.
+// Tanpa ini, auto-refresh 60 detik akan menimpa badge dengan angka forum saja.
+const TUGAS_COUNT = {{ $tugasTotal }};
+
 let _notifOpen = false;
 let _notifLoaded = false;
+let _unreadForum = {{ $unreadNotifCount }};
+
+function setNotifBadge() {
+    const badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    const total = _unreadForum + TUGAS_COUNT;
+    if (total > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = total > 9 ? '9+' : total;
+    } else {
+        badge.style.display = 'none';
+    }
+}
 
 function toggleNotifDropdown() {
     const dd = document.getElementById('notifDropdown');
@@ -443,15 +567,9 @@ function loadNotifications() {
 
 function renderNotifications(items, unreadCount) {
     const list = document.getElementById('notifList');
-    const badge = document.getElementById('notifBadge');
 
-    // Update badge
-    if (unreadCount > 0) {
-        badge.style.display = 'flex';
-        badge.textContent = unreadCount > 9 ? '9+' : unreadCount;
-    } else {
-        badge.style.display = 'none';
-    }
+    _unreadForum = unreadCount;
+    setNotifBadge();
 
     if (!items.length) {
         list.innerHTML = '<div class="simenma-notif-empty">Belum ada notifikasi</div>';
@@ -485,15 +603,8 @@ function markNotifRead(e, id) {
         const dot = item.querySelector('.simenma-notif-dot');
         if (dot) dot.remove();
 
-        // Decrement badge
-        const badge = document.getElementById('notifBadge');
-        let count = parseInt(badge.textContent) || 0;
-        count = Math.max(0, count - 1);
-        if (count > 0) {
-            badge.textContent = count > 9 ? '9+' : count;
-        } else {
-            badge.style.display = 'none';
-        }
+        _unreadForum = Math.max(0, _unreadForum - 1);
+        setNotifBadge();
 
         fetch(NOTIF_READ_URL.replace('__ID__', id), {
             method: 'POST',
@@ -520,8 +631,10 @@ function markAllNotifRead() {
             const dot = el.querySelector('.simenma-notif-dot');
             if (dot) dot.remove();
         });
-        const badge = document.getElementById('notifBadge');
-        badge.style.display = 'none';
+        // Hanya notifikasi forum yang bisa "dibaca"; antrean tugas tetap
+        // berdiri sampai pekerjaannya benar-benar diselesaikan.
+        _unreadForum = 0;
+        setNotifBadge();
     });
 }
 
@@ -530,13 +643,8 @@ setInterval(() => {
     fetch(NOTIF_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(r => r.json())
         .then(data => {
-            const badge = document.getElementById('notifBadge');
-            if (data.unread_count > 0) {
-                badge.style.display = 'flex';
-                badge.textContent = data.unread_count > 9 ? '9+' : data.unread_count;
-            } else {
-                badge.style.display = 'none';
-            }
+            _unreadForum = data.unread_count;
+            setNotifBadge();
             // Refresh list if dropdown is open
             if (_notifOpen) {
                 renderNotifications(data.notifications, data.unread_count);

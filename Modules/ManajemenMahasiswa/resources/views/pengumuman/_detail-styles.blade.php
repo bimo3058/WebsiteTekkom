@@ -56,8 +56,20 @@
     /* ── Layout: isi utama + sidebar informasi ────────────────────────
        Sidebar mengisi sisi kanan yang sebelumnya kosong, dan menumpuk
        di bawah isi utama saat layar menyempit. */
-    .dt-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 10px; align-items: start; }
-    @media (max-width: 1100px) { .dt-layout { grid-template-columns: 1fr; } }
+    /* Kolom kiri (artikel) dibuat memenuhi tinggi area konten supaya tidak
+       menyisakan ruang kosong saat isinya pendek; sidebar tetap menumpuk
+       kartunya dari atas. `min-height` bisa dipakai karena .dash-box-body
+       tingginya pasti (flex item dengan flex:1 di dalam .dash-box). */
+    .dt-layout {
+        display: grid; grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 10px; align-items: stretch; min-height: 100%;
+    }
+    .dt-main { display: flex; flex-direction: column; }
+    .dt-main > .dt-card { flex: 1; }
+    @media (max-width: 1100px) {
+        .dt-layout { grid-template-columns: 1fr; min-height: 0; }
+        .dt-main > .dt-card { flex: none; }
+    }
 
     /* ── Kartu: pola chart-card / table-card Super Admin ─────────────── */
     .dt-card {
@@ -190,7 +202,9 @@
     }
 
     /* ── Lampiran ───────────────────────────────────────────────────── */
-    .lampiran-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+    /* Satu kolom: kartu lampiran kini tinggal di sidebar 300px, jadi grid
+       auto-fill 240px tidak lagi relevan dan berisiko meluber. */
+    .lampiran-list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
     .lampiran-item {
         display: flex; align-items: center; gap: 10px;
         padding: 10px 12px; background: #fff;

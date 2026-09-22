@@ -14,6 +14,7 @@ use Modules\ManajemenMahasiswa\Models\PengumumanDraft;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PengumumanController extends Controller
 {
@@ -48,9 +49,13 @@ class PengumumanController extends Controller
         $isPengurusView = !$isAdminView && $roles->intersect($blogCardRoles)->isNotEmpty();
 
         if ($isAdminView || $isPengurusView) {
-            // Per-page default: list lama pakai 10, blog-card pakai 9
-            $defaultPerPage = $isAdminView ? 10 : 9;
-            $perPage = max(5, min(100, (int) $request->input('per_page', $defaultPerPage)));
+            // Admin melihat tabel baris (PerPage::TABEL), pengurus melihat grid
+            // kartu yang pilihannya kelipatan 6 (PerPage::KARTU) supaya baris
+            // terakhir tidak pincang. Daftarnya harus sama dengan dropdown
+            // "Per page" di partials/table-footer.
+            $perPage = $isAdminView
+                ? PerPage::resolve($request)
+                : PerPage::resolve($request, PerPage::KARTU, 12);
 
             $filters = $request->only(['status', 'search', 'audience']);
             if ($filterKategori && $filterKategori !== 'semua') {
@@ -67,7 +72,8 @@ class PengumumanController extends Controller
             return view($view, compact('pengumuman'));
         }
 
-        $perPage = max(5, min(100, (int) $request->input('per_page', 10)));
+        // Mahasiswa/alumni juga memakai tampilan grid kartu.
+        $perPage = PerPage::resolve($request, PerPage::KARTU, 12);
 
         // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
         $userAudience = $this->resolveAudience($roles);
@@ -770,7 +776,7 @@ class PengumumanController extends Controller
         $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm']);
 
         if ($isAdmin) {
-            $requests     = $this->pengumumanService->getAllRequests($statusFilter);
+            $requests     = $this->pengumumanService->getAllRequests($statusFilter, PerPage::resolve($request));
             $pendingCount = $this->pengumumanService->getAllPendingCount();
         } else {
             $requests     = $this->pengumumanService->getRequestsForVerifier($user->id, $statusFilter);

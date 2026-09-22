@@ -53,8 +53,8 @@
             <div class="dash-box-body">
                 <div class="dt-layout">
 
-                    {{-- ── Kolom utama: artikel + lampiran ────────── --}}
-                    <div>
+                    {{-- ── Kolom utama: artikel ───────────────────── --}}
+                    <div class="dt-main">
                         <div class="dt-card">
                             <div class="dt-card-body">
                                 @if($pengumuman->is_pinned || $isPersonalPinned)
@@ -87,42 +87,6 @@
                             </div>
                         </div>
 
-                        @if($lampiran->count() > 0)
-                            <div class="dt-card">
-                                <div class="dt-card-head">
-                                    <span class="dt-card-title">Lampiran File</span>
-                                    <span class="dt-card-count">{{ $lampiran->count() }} berkas</span>
-                                </div>
-                                <div class="dt-card-body">
-                                    <div class="lampiran-list">
-                                        @foreach($lampiran as $item)
-                                            <a href="{{ route('manajemenmahasiswa.pengumuman.lampiran.download', $item->id) }}"
-                                                class="lampiran-item" download>
-                                                <div class="lampiran-icon">
-                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                                    </svg>
-                                                </div>
-                                                <div class="lampiran-info">
-                                                    <div class="lampiran-name">{{ $item->judul_file ?? 'Lampiran' }}</div>
-                                                    <div class="lampiran-action">
-                                                        Unduh
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                                            <polyline points="7 10 12 15 17 10"></polyline>
-                                                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                                                        </svg>
-                                                    </div>
-                                                </div>
-                                            </a>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
                     </div>
 
                     {{-- ── Sidebar: informasi + aksi ──────────────── --}}
@@ -214,6 +178,44 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- ── Lampiran: berkas yang bisa diunduh ─────── --}}
+                        @if($lampiran->count() > 0)
+                            <div class="dt-card">
+                                <div class="dt-card-head">
+                                    <span class="dt-card-title">Lampiran File</span>
+                                    <span class="dt-card-count">{{ $lampiran->count() }} berkas</span>
+                                </div>
+                                <div class="dt-card-body">
+                                    <div class="lampiran-list">
+                                        @foreach($lampiran as $item)
+                                            <a href="{{ route('manajemenmahasiswa.pengumuman.lampiran.download', $item->id) }}"
+                                                class="lampiran-item" download>
+                                                <div class="lampiran-icon">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                                    </svg>
+                                                </div>
+                                                <div class="lampiran-info">
+                                                    <div class="lampiran-name">{{ $item->judul_file ?? 'Lampiran' }}</div>
+                                                    <div class="lampiran-action">
+                                                        Unduh
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </aside>
 
                 </div>
