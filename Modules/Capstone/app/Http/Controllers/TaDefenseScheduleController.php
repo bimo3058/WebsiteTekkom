@@ -10,6 +10,7 @@ use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\Location;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\TaDefenseEvaluation;
+use Modules\Capstone\Models\TaRegistration;
 use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\TaSubmission;
 use App\Models\Lecturer;
@@ -183,6 +184,18 @@ class TaDefenseScheduleController extends Controller
         if (! empty($invalidStatusStudents)) {
             return $this->errorResponse('All selected students must have TA_DOCUMENTS_APPROVED status', 400);
         }
+        // Validate all students have an APPROVED sidang TA registration
+        $approvedRegistrations = TaRegistration::whereIn('student_id', $studentIds)
+            ->where('group_id', $group->id)
+            ->where('status', TaRegistration::STATUS_APPROVED)
+            ->pluck('student_id')
+            ->toArray();
+
+        $unapprovedStudents = array_diff($studentIds, $approvedRegistrations);
+        if (! empty($unapprovedStudents)) {
+            return $this->errorResponse('All selected students must have an approved sidang TA registration', 400);
+        }
+
 
         // Check for existing scheduled defenses for these students
         $existingScheduled = TaDefenseSchedule::where(fn ($q) => $q->whereIn('student_id', $studentIds)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $studentIds)))
@@ -365,6 +378,8 @@ class TaDefenseScheduleController extends Controller
             $ready = TaSubmission::where('group_id', $group->id)->whereIn('student_id', $added)->where('status', 'TA_DOCUMENTS_APPROVED')->pluck('student_id')->all();
             if (array_diff($added, $ready)) return $this->errorResponse('All selected students must have TA_DOCUMENTS_APPROVED status', 400);
             $hasOtherDefense = TaDefenseSchedule::whereKeyNot($id)->whereIn('status', ['SCHEDULED','DONE','COMPLETED'])
+            $registered = TaRegistration::where('group_id', $group->id)->whereIn('student_id', $added)->where('status', TaRegistration::STATUS_APPROVED)->pluck('student_id')->all();
+            if (array_diff($added, $registered)) return $this->errorResponse('All selected students must have an approved sidang TA registration', 400);
                 ->where(fn ($q) => $q->whereIn('student_id', $added)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $added)))->exists();
             if ($hasOtherDefense) return $this->errorResponse('A selected student already has an active defense', 400);
             $examinerIds = [(int) ($validated['examiner_1_id'] ?? $schedule->examiner_1_id), (int) ($validated['examiner_2_id'] ?? $schedule->examiner_2_id)];
@@ -565,10 +580,17 @@ class TaDefenseScheduleController extends Controller
         }
 
         // Transform groups with ALL members
-        $result = $groups->map(function ($group) use ($submissions, $activeDefenseStudentIds, $currentScheduleStudentIds) {
+        $result = $groups->map(function ($group) use ($submissions, $activeDefenseStudentIds, $currentScheduleStudentIds, $approvedRegistrationIds) {
             return [
                 'id' => $group->id,
                 'name' => $group->code ?? 'Group #'.$group->id,
+        $approvedRegistrationIds = TaRegistration::whereIn('student_id', $memberIds)
+            ->where('status', TaRegistration::STATUS_APPROVED)
+            ->pluck('student_id')
+            ->unique()
+            ->values()
+            ->all();
+
                 'code' => $group->code ?? null,
                 'supervisors' => $group->supervisors->concat([$group->supervisor1, $group->supervisor2])->filter()->unique('id')->values()->map(function ($sv) {
                     return [
@@ -579,7 +601,7 @@ class TaDefenseScheduleController extends Controller
                         ],
                     ];
                 }),
-                'members' => $group->members->map(function ($member) use ($group, $submissions, $activeDefenseStudentIds, $currentScheduleStudentIds) {
+                'members' => $group->members->map(function ($member) use ($group, $submissions, $activeDefenseStudentIds, $currentScheduleStudentIds, $approvedRegistrationIds) {
                     $studentId = $member->student_id;
                     $submission = $submissions->get($studentId.':'.$group->id);
                     $hasActiveDefense = in_array($studentId, $activeDefenseStudentIds);
@@ -587,9 +609,10 @@ class TaDefenseScheduleController extends Controller
 
                     // Student is ready if:
                     // 1. Has TA_DOCUMENTS_APPROVED status
-                    // 2. Is NOT already in another active defense
-                    // 3. OR is already in current schedule (edit mode)
-                    $isReadyForSidang = ($submission && $submission->status === 'TA_DOCUMENTS_APPROVED' && ! $hasActiveDefense) || $isInCurrentSchedule;
+                    // 2. Has an APPROVED sidang TA registration
+                    // 3. Is NOT already in another active defense
+                    // 4. OR is already in current schedule (edit mode)
+                    $isReadyForSidang = ($submission && $submission->status === 'TA_DOCUMENTS_APPROVED' && in_array($studentId, $approvedRegistrationIds) && ! $hasActiveDefense) || $isInCurrentSchedule;
 
                     return [
                         'student' => [

@@ -1021,7 +1021,7 @@ class BladeCalendarAccessTest extends TestCase
     private function individualTaFixture(): array
     {
         $this->peerReviewSchema();
-        foreach (['2026_05_05_000012_create_capstone_phase_document_requirements_table.php','2026_05_05_000015_create_capstone_ta_submissions_table.php','2026_05_05_000028_create_capstone_notifications_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
+        foreach (['2026_05_05_000012_create_capstone_phase_document_requirements_table.php','2026_05_05_000015_create_capstone_ta_submissions_table.php','2026_05_05_000028_create_capstone_notifications_table.php','2026_09_19_000001_create_capstone_ta_registrations_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
         Schema::table('capstone_ta_submissions',fn(Blueprint $t)=>$t->unsignedBigInteger('period_id')->nullable());
         Schema::create('capstone_period_assessment_components', function(Blueprint $t){$t->id();$t->unsignedBigInteger('period_id');$t->string('type');});
         foreach(['nil_dosen'=>'nilai_dosen','milestone'=>'milestone','expo'=>'expo'] as $suffix) Schema::create('capstone_'.$suffix.'_scores', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id')->nullable();$t->unsignedBigInteger('period_component_id');$t->unsignedBigInteger('evaluator_id');$t->decimal('score',5,2);});
@@ -1061,6 +1061,7 @@ class BladeCalendarAccessTest extends TestCase
         $workflow=new \Modules\Capstone\Services\IndividualTaWorkflow;
         $storage=\Mockery::mock(\Modules\Capstone\Services\DocumentStorageService::class);
         $storage->shouldReceive('store')->once()->andReturn('individual/thesis.pdf');
+        \Modules\Capstone\Models\TaRegistration::create(['student_id'=>$student->student->id,'group_id'=>$group->id,'period_id'=>$group->period_id,'status'=>'APPROVED']);
         $storage->shouldNotReceive('get');
         $request=$this->requestFor($student,'/','POST',['document_type'=>'Thesis']);
         $request->files->set('file',\Illuminate\Http\UploadedFile::fake()->create('thesis.pdf',1,'application/pdf'));
@@ -1088,6 +1089,53 @@ class BladeCalendarAccessTest extends TestCase
     public function test_admin_ta_schedule_updates_examiners_atomically_and_locks_submitted_evaluations(): void
     {
         [$student,$other,$group,$supervisor]=$this->individualTaFixture();
+    public function test_ta_registration_approval_gates_document_upload(): void
+    {
+        [$student,$other,$group]=$this->individualTaFixture();
+        $workflow=new \Modules\Capstone\Services\IndividualTaWorkflow;
+        $state=$workflow->forStudent($student->student->id);
+        $this->assertTrue($state['can_access']);
+        $this->assertSame('TA_AWAITING_APPROVAL',$state['status']);
+        $this->assertFalse($state['can_upload']);
+        $this->assertFalse($state['sidang_approved']);
+        $controller=new \Modules\Capstone\Http\Controllers\TaRegistrationController;
+        $request=$this->requestFor($student,'/','POST',[]);
+        $this->assertSame(201,$controller->store($request,$workflow)->getStatusCode());
+        $this->assertSame('PENDING',\Modules\Capstone\Models\TaRegistration::first()->status);
+        // Duplicate request while pending is blocked.
+        $this->assertSame(400,$controller->store($request,$workflow)->getStatusCode());
+        // Upload stays locked while the request is pending.
+        $storage=\Mockery::mock(\Modules\Capstone\Services\DocumentStorageService::class);
+        $storage->shouldReceive('store')->once()->andReturn('individual/thesis.pdf');
+        $uploadRequest=$this->requestFor($student,'/','POST',['document_type'=>'Thesis']);
+        $uploadRequest->files->set('file',\Illuminate\Http\UploadedFile::fake()->create('thesis.pdf',1,'application/pdf'));
+        $individual=new \Modules\Capstone\Http\Controllers\IndividualTaController;
+        $this->assertWorkspaceDenied(fn()=>$individual->upload($uploadRequest,$workflow,$storage));
+        // Admin approval unlocks the upload.
+        $admin=$this->actor('admin');
+        $approval=new \Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
+        $approveRequest=$this->requestFor($admin,'/','PUT');
+        $this->assertSame(200,$approval->approve($approveRequest,\Modules\Capstone\Models\TaRegistration::first()->id)->getStatusCode());
+        $this->assertSame('APPROVED',\Modules\Capstone\Models\TaRegistration::first()->fresh()->status);
+        $unlocked=$workflow->forStudent($student->student->id);
+        $this->assertTrue($unlocked['can_upload']);
+        $this->assertSame('TA_DOCUMENTS_REQUIRED',$unlocked['status']);
+        $this->assertSame(201,$individual->upload($uploadRequest,$workflow,$storage)->getStatusCode());
+        // Approved registrations cannot be cancelled.
+        $this->assertSame(400,$controller->destroy($this->requestFor($student,'/','DELETE'))->getStatusCode());
+        // Rejected requests can be re-submitted.
+        \Modules\Capstone\Models\TaRegistration::query()->update(['status'=>'PENDING']);
+        $rejectRequest=$this->requestFor($admin,'/','PUT',['rejection_reason'=>'Incomplete prerequisites']);
+        $this->assertSame(200,$approval->reject($rejectRequest,\Modules\Capstone\Models\TaRegistration::first()->id)->getStatusCode());
+        $rejected=$workflow->forStudent($student->student->id);
+        $this->assertSame('TA_AWAITING_APPROVAL',$rejected['status']);
+        $this->assertSame('Incomplete prerequisites',$rejected['registration']->rejection_reason);
+        $this->assertSame(201,$controller->store($request,$workflow)->getStatusCode());
+        $this->assertSame('PENDING',\Modules\Capstone\Models\TaRegistration::first()->status);
+        $this->assertSame(200,$controller->destroy($this->requestFor($student,'/','DELETE'))->getStatusCode());
+        $this->assertSame(0,\Modules\Capstone\Models\TaRegistration::count());
+    }
+
         $admin=$this->actor('admin');$this->actingAs($admin);
         $examiner1=$this->actor('dosen');$examiner2=$this->actor('dosen');$replacement=$this->actor('dosen');
         Schema::create('capstone_ta_defense_evaluations', function(Blueprint $t){$t->id();$t->unsignedBigInteger('schedule_id');$t->unsignedBigInteger('examiner_id');$t->string('status');$t->timestamps();});
@@ -1135,6 +1183,7 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertSame(2,\Modules\Capstone\Models\TaDefenseExaminer::count());
         $this->assertSame('TA_READY_FOR_SIDANG',\Modules\Capstone\Models\TaSubmission::first()->status);
         $this->assertSame(400,$controller->store($request)->getStatusCode());
+        \Modules\Capstone\Models\TaRegistration::create(['student_id'=>$student->student->id,'group_id'=>$group->id,'period_id'=>$group->period_id,'status'=>'APPROVED']);
         $this->assertSame(1,\Modules\Capstone\Models\TaDefenseSchedule::count());
         $this->assertSame(0,DB::transactionLevel());
     }

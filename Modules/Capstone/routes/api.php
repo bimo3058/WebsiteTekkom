@@ -6,6 +6,7 @@ use Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
 use Modules\Capstone\Http\Controllers\Admin\BladeUserController;
 use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
 use Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController;
+use Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\StakeholderController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentController;
@@ -49,6 +50,7 @@ use Modules\Capstone\Http\Controllers\StudentStateController;
 use Modules\Capstone\Http\Controllers\SupervisorEvaluationController;
 use Modules\Capstone\Http\Controllers\TaDefenseController;
 use Modules\Capstone\Http\Controllers\TaDefenseScheduleController;
+use Modules\Capstone\Http\Controllers\TaRegistrationController;
 use Modules\Capstone\Http\Controllers\TaSubmissionController;
 use Modules\Capstone\Http\Controllers\TitleApprovalController;
 use Modules\Capstone\Http\Controllers\TitleController;
@@ -108,6 +110,9 @@ Route::prefix('capstone')->group(function () {
             Route::get('/period-registrations', [PeriodRegistrationApprovalController::class, 'index']);
             Route::put('/period-registrations/{id}/approve', [PeriodRegistrationApprovalController::class, 'approve']);
             Route::put('/period-registrations/{id}/reject', [PeriodRegistrationApprovalController::class, 'reject']);
+            Route::get('/ta-registrations', [TaRegistrationApprovalController::class, 'index']);
+            Route::put('/ta-registrations/{id}/approve', [TaRegistrationApprovalController::class, 'approve']);
+            Route::put('/ta-registrations/{id}/reject', [TaRegistrationApprovalController::class, 'reject']);
             Route::get('/users', [UserController::class, 'index']);
             Route::apiResource('user-management', BladeUserController::class)->parameters(['user-management' => 'user'])->except(['store', 'update', 'destroy']);
             Route::apiResource('expo-events', ExpoEventController::class);
@@ -412,6 +417,8 @@ Route::prefix('capstone')->group(function () {
             Route::post('/ta/upload', [TaSubmissionController::class, 'upload']);
             Route::put('/ta/revise', [TaSubmissionController::class, 'revise']);
             Route::post('/ta/register', [TaSubmissionController::class, 'register']);
+            Route::post('/ta-registrations', [TaRegistrationController::class, 'store']);
+            Route::delete('/ta-registrations', [TaRegistrationController::class, 'destroy']);
         });
 
         // â”€â”€ Shared (Admin + Dosen) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
