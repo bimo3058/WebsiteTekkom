@@ -3,6 +3,7 @@ import {adminGroups,expoAdmin,semproAdmin,finalizationAdmin} from './pages/admin
 import {progressAdmin,peerDashboard,documentUploads,auditLogsAdmin} from './pages/admin/monitoring.js';
 import {reportsAdmin} from './pages/admin/reports.js';
 import {periodRegistrationsAdmin} from './pages/admin/period-registrations.js';
+import {taRegistrationsAdmin} from './pages/admin/ta-registrations.js';
 import {adminUsers} from './pages/admin/users.js';
 import {studentGroup} from './pages/mahasiswa/group.js';
 import {studentMarketplace} from './pages/mahasiswa/marketplace.js';
@@ -30,7 +31,7 @@ import {lecturerEvaluations,lecturerSupervisorEvaluations,lecturerEvaluationForm
 export function registerPages(Alpine) {
     Alpine.data('adminUsers',adminUsers);
     for(const [name,factory] of Object.entries({lecturerTitles,lecturerTitleDetail,lecturerApprovals,lecturerBids,lecturerGroups,lecturerDocuments,lecturerRequests,lecturerEvaluations,lecturerSupervisorEvaluations,lecturerEvaluationForm}))Alpine.data(name,factory);
-    for(const [name,factory] of Object.entries({adminAssessmentConfig:assessmentConfig,adminGradeConfig:gradeConfig,adminGroups,adminExpo:expoAdmin,adminSempro:semproAdmin,adminFinalization:finalizationAdmin,adminProgress:progressAdmin,adminPeerDashboard:peerDashboard,adminDocumentUploads:documentUploads,adminAuditLogs:auditLogsAdmin,adminReports:reportsAdmin,adminPeriodRegistrations:periodRegistrationsAdmin}))Alpine.data(name,factory);
+    for(const [name,factory] of Object.entries({adminAssessmentConfig:assessmentConfig,adminGradeConfig:gradeConfig,adminGroups,adminExpo:expoAdmin,adminSempro:semproAdmin,adminFinalization:finalizationAdmin,adminProgress:progressAdmin,adminPeerDashboard:peerDashboard,adminDocumentUploads:documentUploads,adminAuditLogs:auditLogsAdmin,adminReports:reportsAdmin,adminPeriodRegistrations:periodRegistrationsAdmin,adminTaRegistrations:taRegistrationsAdmin}))Alpine.data(name,factory);
     Alpine.data('studentGroup', studentGroup);
     Alpine.data('studentMarketplace', studentMarketplace);
     Alpine.data('studentTitleDetail', studentTitleDetail);
@@ -53,7 +54,7 @@ export function registerPages(Alpine) {
         config,items:[],loading:true,error:'',search:'',filters:{},sortKey:'',sortDirection:1,page:1,pageSize:10,editing:null,form:{},errors:{},saving:false,deleting:null,expanded:null,
         async init(){await this.load();},
         async load(){this.loading=true;this.error='';try{this.items=rows(await api(config.endpoint));}catch(e){this.error=e.message;}finally{this.loading=false;}},
-        get filtered(){let result=this.items.filter(item=>(!this.search || JSON.stringify(item).toLowerCase().includes(this.search.toLowerCase())) && Object.entries(this.filters).every(([key,value])=>!value || value==='all' || String(get(item,key,''))===String(value)));if(this.sortKey)result=[...result].sort((a,b)=>{const left=get(a,this.sortKey,''),right=get(b,this.sortKey,'');return (typeof left==='number' ? left-right : String(left).localeCompare(String(right),'id',{numeric:true}))*this.sortDirection;});return result;},
+        get filtered(){const fixed=config.fixedFilter || {};let result=this.items.filter(item=>(!this.search || JSON.stringify(item).toLowerCase().includes(this.search.toLowerCase())) && Object.entries({...fixed,...this.filters}).every(([key,value])=>!value || value==='all' || String(get(item,key,''))===String(value)));if(this.sortKey)result=[...result].sort((a,b)=>{const left=get(a,this.sortKey,''),right=get(b,this.sortKey,'');return (typeof left==='number' ? left-right : String(left).localeCompare(String(right),'id',{numeric:true}))*this.sortDirection;});return result;},
         get pageCount(){return Math.max(1,Math.ceil(this.filtered.length/this.pageSize));},
         get visible(){const start=(Math.min(this.page,this.pageCount)-1)*this.pageSize;return this.filtered.slice(start,start+Number(this.pageSize));},
         sort(key){this.sortDirection=this.sortKey===key ? -this.sortDirection : 1;this.sortKey=key;},
