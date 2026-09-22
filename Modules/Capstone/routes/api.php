@@ -431,6 +431,7 @@ Route::prefix('capstone')->group(function () {
         Route::get('/locations/online', [LocationController::class, 'online']);
         Route::get('/locations/all', [LocationController::class, 'index']);
         Route::get('/locations/available', [LocationController::class, 'available']);
+        Route::get('/locations/eoffice-rooms', [LocationController::class, 'eofficeRooms']);
         Route::middleware(['capstone.role:admin'])->group(function () {
             Route::apiResource('locations', LocationController::class)->except(['index']);
         });
