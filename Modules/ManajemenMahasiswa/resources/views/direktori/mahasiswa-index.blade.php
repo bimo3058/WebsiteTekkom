@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.card-frame')
 @include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
@@ -216,15 +217,8 @@
         grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
         gap: 12px;
     }
-    .stat-note {
-        font-size: 11px;
-        color: var(--c-fg-muted);
-        font-weight: 500;
-        margin: 10px 0 0 2px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
+    /* Jarak antarkartu diatur .mm-frame-body (gap 16px), bukan margin masing-masing */
+    .mm-frame-body > .alert { margin: 0; }
     /* Border, bayangan, dan efek hover sama dengan kartu statistik dashboard global */
     .stat-card {
         background: #ffffff;
@@ -262,17 +256,16 @@
         font-weight: 500;
     }
 
-    .sso-badge {
-        font-size: 9px;
-        font-weight: 700;
-        padding: 2px 6px;
-        border-radius: 6px;
-        background: var(--c-primary-subtle);
-        color: var(--c-primary);
-        letter-spacing: 0.05em;
-    }
-
 </style>
+
+{{-- Band judul: garis pemisah selebar kotak, sama dengan header User Management /
+     Role & Permission SITKOM. Kartu-kartu di bawahnya ada di .mm-frame-body. --}}
+<div class="mm-frame-header">
+    <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Direktori Mahasiswa</h1>
+    <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Daftar seluruh mahasiswa yang terdaftar di program studi</p>
+</div>
+
+<div class="mm-frame-body">
 
 <!-- Flash Messages -->
 @if(session('success'))
@@ -297,16 +290,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
-
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Direktori Mahasiswa</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar seluruh mahasiswa yang terdaftar di program studi
-            <span class="sso-badge ms-1">SSO UNDIP</span>
-        </p>
-    </div>
-</div>
 
     <!-- Stat Cards -->
 <div class="stat-grid">
@@ -416,11 +399,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<div class="stat-note mb-4">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-    <span>Angka pada kartu mengikuti filter <strong>Angkatan</strong> dan <strong>pencarian</strong>, tetapi sengaja tidak mengikuti filter <strong>Status</strong> — supaya rincian tiap status tetap terlihat. Alumni tidak dihitung di sini (lihat Direktori Alumni).</span>
 </div>
 
 <!-- Mahasiswa Table -->
@@ -645,6 +623,8 @@
     {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama) --}}
     @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $mahasiswa])
 </div>
+
+</div>{{-- end mm-frame-body --}}
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-dynamic-component>

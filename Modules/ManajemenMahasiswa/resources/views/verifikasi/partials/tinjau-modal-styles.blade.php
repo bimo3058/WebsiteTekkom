@@ -117,18 +117,22 @@
         font-size: 11.5px; font-weight: 600; line-height: 1.45;
     }
 
-    /* Tombol keputusan — Tolak sengaja dibuat outline agar tidak bersaing
-       menarik perhatian dengan jalur utamanya */
+    /* Tombol keputusan — keduanya memakai biru standar SITKOM (--c-primary):
+       Setujui solid, Tolak versi subtle-outline (pola sama dengan .btn-tinjau)
+       agar tidak bersaing menarik perhatian dengan jalur utamanya */
     .tp-aksi { display: flex; gap: 10px; margin-top: 14px; }
     .tp-btn-tolak {
-        flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid var(--c-error-subtle, #FADAE1);
-        background: var(--c-error-subtle, #FADAE1); color: var(--c-error, #DF1C41);
-        font-weight: 700; font-size: 13.5px; cursor: pointer;
+        flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid var(--c-primary-border, #5C78B8);
+        background: var(--c-primary-subtle, rgba(11,38,110,0.08)); color: var(--c-primary, #0B266E);
+        font-weight: 700; font-size: 13.5px; cursor: pointer; transition: all .15s;
     }
+    .tp-btn-tolak:hover { border-color: var(--c-primary, #0B266E); }
     .tp-btn-setujui {
         flex: 1; padding: 9px 0; border-radius: 10px; border: none;
-        background: var(--c-success, #287F6E); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer;
+        background: var(--c-primary, #0B266E); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer;
+        transition: background .15s;
     }
+    .tp-btn-setujui:hover:not(:disabled) { background: var(--c-primary-hover, #091958); }
     /* Dikelabukan saat langkahnya memang sudah tidak bisa diambil (mis. kuota
        reward mahasiswa penuh), bukan dihilangkan — panel keputusan tetap utuh
        bentuknya dan alasannya terbaca pada rambu kuota di atasnya. */

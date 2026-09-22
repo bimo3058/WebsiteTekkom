@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.card-frame')
 
 <style>
     /* Samakan shell card dengan form Edit Alumni. */
@@ -195,7 +196,7 @@
             <div class="col-12">
                 <small class="d-block" style="font-size: 11px; color: var(--c-fg-muted);">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    Nama, NIM, dan Angkatan mengikuti data <strong>SSO UNDIP</strong> dan tidak dapat diubah dari sini.
+                    Nama, NIM, dan Angkatan tidak dapat diubah dari sini.
                 </small>
             </div>
 

@@ -275,7 +275,12 @@
     // Dipakai untuk urutan section (FASE 2A) serta chart/tren khusus GPM (2C/2D).
     $isGpm = in_array('evaluasi_mutu', $sections, true);
     $isDpm = ($dashboard['scope'] ?? null) === 'dpm';
-    $canAccessVerifikasi = !$isGpm;
+    // GPM & Ketua Departemen boleh MELIHAT Verifikasi Data (read-only, lihat
+    // VerifikasiController::isPengawas()) — pintasan ini tidak disembunyikan
+    // untuk scope itu. DPM TIDAK — ia dicabut total dari bab Verifikasi Data
+    // (22 Sep 2026), jadi pintasannya harus tetap disembunyikan di sini juga,
+    // kalau tidak klik "Verifikasi →" berujung 403.
+    $canAccessVerifikasi = !$isDpm;
     $useBarDistribusiMahasiswa = $isGpm || $isDpm || $hasSection('admin_operasional');
 
     // Akses data null-safe — sebagian scope (mis. DPM) tidak punya semua section

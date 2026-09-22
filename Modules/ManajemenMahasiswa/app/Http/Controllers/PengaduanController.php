@@ -9,10 +9,15 @@ use Modules\ManajemenMahasiswa\Http\Requests\PengaduanPayloadRequest;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
 use Modules\ManajemenMahasiswa\Models\PengaduanLog;
 use Modules\ManajemenMahasiswa\Services\PengaduanService;
+use Modules\ManajemenMahasiswa\Support\PengaduanBukti;
+use Modules\ManajemenMahasiswa\Support\PengaduanQuota;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PengaduanController extends Controller
 {
+    /** Kunci bukti "pending" di session untuk jalur reguler (lihat PengaduanBukti). */
+    private const BUKTI_SCOPE = 'reguler';
+
     /**
      * Role yang berstatus mahasiswa dan boleh membuat pengaduan. Pengurus
      * himpunan tetap mahasiswa; harus sama dengan whitelist route pembuatan.
@@ -177,6 +182,12 @@ class PengaduanController extends Controller
             return redirect()->route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]);
         }
 
+        if (PengaduanQuota::exhausted($user->id)) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengaduan.index')
+                ->with('error', PengaduanQuota::message($user->id));
+        }
+
         $isStaff = false;
 
         $kategoriList = $this->kategoriMetaNew();
@@ -193,13 +204,49 @@ class PengaduanController extends Controller
             'Hampir Setiap Pertemuan Kuliah' => 'Hampir Setiap Pertemuan Kuliah',
         ];
 
-        return view('manajemenmahasiswa::pengaduan.create', compact('kategoriList', 'dosenList', 'frekuensiList', 'isStaff'));
+        $buktiPendingItems = $this->buktiPendingItems();
+
+        return view('manajemenmahasiswa::pengaduan.create', compact('kategoriList', 'dosenList', 'frekuensiList', 'isStaff', 'buktiPendingItems'));
+    }
+
+    /**
+     * Pratinjau bukti yang sudah diunggah tetapi belum dikirim (pengunggahnya sendiri).
+     */
+    public function buktiPending(Request $request, int $index)
+    {
+        $this->ensureMahasiswa($request->user());
+
+        return PengaduanBukti::respondPending(self::BUKTI_SCOPE, $index);
+    }
+
+    /**
+     * @return array<int, array{url:string,kind:string,size:int,label:string}> baris daftar tiap bukti pending
+     */
+    private function buktiPendingItems(): array
+    {
+        return PengaduanBukti::toItems(
+            PengaduanBukti::pending(self::BUKTI_SCOPE),
+            fn (int $i) => route('manajemenmahasiswa.pengaduan.bukti.pending', ['index' => $i])
+        );
     }
 
 
     public function confirm(PengaduanPayloadRequest $request)
     {
-        $this->ensureMahasiswa($request->user());
+        $user = $request->user();
+
+        $this->ensureMahasiswa($user);
+
+        if (PengaduanQuota::exhausted($user->id)) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengaduan.index')
+                ->with('error', PengaduanQuota::message($user->id));
+        }
+
+        // Berkas baru menggantikan bukti pending; tanpa berkas baru, yang lama dipertahankan.
+        if ($request->hasFile('bukti')) {
+            PengaduanBukti::stage($request->file('bukti'), self::BUKTI_SCOPE);
+        }
 
         $request->flash();
 
@@ -208,6 +255,7 @@ class PengaduanController extends Controller
                 'is_anonim' => $request->isAnonim(),
                 'kategori' => $request->validated('kategori'),
                 'template' => $request->normalizedTemplate(),
+                'bukti_items' => $this->buktiPendingItems(),
             ],
         ]);
     }
@@ -218,12 +266,27 @@ class PengaduanController extends Controller
 
         $this->ensureMahasiswa($user);
 
+        if (PengaduanQuota::exhausted($user->id)) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengaduan.index')
+                ->with('error', PengaduanQuota::message($user->id));
+        }
+
+        $template = $request->normalizedTemplate();
+
+        $bukti = PengaduanBukti::commit(self::BUKTI_SCOPE);
+        if ($bukti !== []) {
+            $template['bukti'] = $bukti;
+        }
+
         $pengaduan = $this->pengaduanService->create(
             userId: $user->id,
             kategori: $request->validated('kategori'),
             isAnonim: $request->isAnonim(),
-            template: $request->normalizedTemplate(),
+            template: $template,
         );
+
+        PengaduanQuota::consume($user->id);
 
         if ($pengaduan->is_anonim) {
             return redirect()
@@ -280,6 +343,24 @@ class PengaduanController extends Controller
         return view('manajemenmahasiswa::pengaduan.show', compact(
             'pengaduan', 'isStaff', 'canDelete', 'kategoriLabel'
         ));
+    }
+
+    /**
+     * Membuka satu bukti dukung. Staf boleh membuka semua tiket; pelapor hanya
+     * tiket reguler miliknya (tiket konfidensial tak punya user_id, pelapornya
+     * memakai route magic link di AnonPengaduanController::bukti).
+     */
+    public function bukti(Request $request, Pengaduan $pengaduan, int $index)
+    {
+        $user = $request->user();
+
+        $this->ensureViewer($user);
+
+        if (!$this->isStaffViewer($user) && $pengaduan->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
+        }
+
+        return PengaduanBukti::respond($pengaduan, $index);
     }
 
 

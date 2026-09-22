@@ -57,27 +57,33 @@ class VerifikasiController extends Controller
 
     private function isVerificator(): bool
     {
-        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'dpm');
+        return $this->hasRole('superadmin', 'admin_kemahasiswaan');
     }
 
     /**
-     * Pengawas (read-only): Ketua Departemen.
+     * Pengawas (read-only): GPM & Ketua Departemen.
      * Boleh MELIHAT seluruh daftar verifikasi, tetapi TIDAK boleh menyetujui/menolak.
      *
-     * GPM tidak termasuk. Penjaminan mutu bekerja pada angka agregat — itu sudah
-     * disediakan dashboard analitik scope evaluasi mutu — bukan pada berkas
-     * verifikasi milik mahasiswa per orang. Batas ini ditegakkan berlapis: route
-     * verifikasi menolak GPM, sidebar tidak menampilkan menunya, dan pintasan
-     * "Verifikasi →" pada dashboard analitik disembunyikan untuk scope GPM.
+     * GPM sempat dikecualikan total (2 Sep 2026), lalu dikembalikan read-only
+     * (22 Sep 2026) disamakan dengan Ketua Departemen.
+     *
+     * DPM sempat singgah di sini juga (read-only, 22 Sep 2026) setelah
+     * sebelumnya berstatus verifikator penuh — tapi pemilik modul langsung
+     * mengoreksi: DPM tidak perlu bisa melihat bab Verifikasi Data mahasiswa
+     * SAMA SEKALI, bukan sekadar dibuat read-only. Jadi DPM dicabut total,
+     * bukan dipindah ke sini — disamakan dengan bagaimana GPM pernah
+     * dikecualikan total sebelum 22 Sep 2026. Batasnya ditegakkan berlapis:
+     * middleware route menolak DPM, sidebar tidak menampilkan menunya, dan
+     * method ini tidak menyertakannya.
      */
     private function isPengawas(): bool
     {
-        return $this->hasRole('ketua_departemen');
+        return $this->hasRole('ketua_departemen', 'gpm');
     }
 
     /**
      * Boleh membuka halaman Klaim Reward Prestasi.
-     * Verifikator (kelola) + Ketua Departemen (read-only).
+     * Verifikator (kelola) + pengawas — GPM & Ketua Departemen (read-only).
      */
     private function canAccessReward(): bool
     {
@@ -90,16 +96,16 @@ class VerifikasiController extends Controller
      *
      * Sengaja lebih sempit dari isVerificator(). Yang diputus di sini bukan
      * benar-tidaknya sebuah prestasi, melainkan kenaikan nilai mata kuliah
-     * (SK FT 774) — kewenangan admin kemahasiswaan. DPM & Ketua Departemen
-     * tetap boleh membuka daftar klaimnya untuk memantau, dan DPM tetap
-     * memverifikasi prestasi & riwayat kegiatan seperti biasa.
+     * (SK FT 774) — kewenangan admin kemahasiswaan. Ketua Departemen & GPM
+     * tetap boleh membuka daftar klaimnya untuk memantau (lihat isPengawas());
+     * DPM tidak bisa sama sekali — lihat catatan di isPengawas().
      *
      * Dipakai untuk menyembunyikan tombolnya; penjaga sebenarnya ada di
      * middleware route, dengan daftar role yang sama persis.
      */
     private function canReviewReward(): bool
     {
-        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        return $this->hasRole('superadmin', 'admin_kemahasiswaan');
     }
 
     private function resolveLayout(): string
@@ -107,9 +113,12 @@ class VerifikasiController extends Controller
         $user  = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)
-            || \in_array('ketua_departemen', $roles)) {
-            // Ketua Departemen melihat tabel monitoring read-only → gunakan shell admin
+        // DPM sengaja TIDAK dicek di sini — ia tidak boleh membuka bab Verifikasi
+        // Data sama sekali (lihat isPengawas()), jadi tidak pernah sampai ke
+        // method ini lewat controller ini.
+        if (\in_array('superadmin', $roles) || \in_array('admin_kemahasiswaan', $roles)
+            || \in_array('ketua_departemen', $roles) || \in_array('gpm', $roles)) {
+            // Ketua Departemen & GPM melihat tabel monitoring read-only → gunakan shell admin
             return 'manajemenmahasiswa::layouts.admin';
         }
 
@@ -285,8 +294,9 @@ class VerifikasiController extends Controller
             return $this->adminIndex($request);
         }
 
-        // GPM & Ketua Departemen — pengawas mutu: lihat seluruh daftar verifikasi
+        // GPM & Ketua Departemen — pengawas: lihat seluruh daftar verifikasi
         // dalam mode read-only (tanpa tombol setujui/tolak/klaim reward).
+        // DPM TIDAK termasuk di sini — lihat isPengawas().
         if ($this->isPengawas()) {
             return $this->adminIndex($request, readOnly: true);
         }
@@ -560,7 +570,9 @@ class VerifikasiController extends Controller
             ->pluck('angkatan');
 
         // Hanya admin kemahasiswaan yang memutus konversi SKS — sembunyikan
-        // tinjau/setujui/tolak/batalkan dari DPM maupun Ketua Departemen.
+        // tinjau/setujui/tolak/batalkan dari Ketua Departemen & GPM (satu-
+        // satunya pengawas yang bisa sampai ke halaman ini; DPM sudah dicabut
+        // total sebelum sampai sini — lihat isPengawas()).
         $canReview = $this->canReviewReward();
 
         return view('manajemenmahasiswa::verifikasi.reward', compact(
@@ -765,7 +777,6 @@ class VerifikasiController extends Controller
             'nama_prestasi'       => $request->nama_prestasi,
             'tingkat'             => $request->tingkat,
             'tanggal'             => $request->tanggal,
-            'tahun'               => date('Y', strtotime($request->tanggal)),
             'verification_status' => 'pending',
             'claim_status'        => Prestasi::CLAIM_BELUM_AJUKAN,
         ]);

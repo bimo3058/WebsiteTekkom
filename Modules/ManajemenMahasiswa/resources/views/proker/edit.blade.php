@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 

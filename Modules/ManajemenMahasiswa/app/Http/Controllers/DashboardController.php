@@ -182,7 +182,7 @@ class DashboardController extends Controller
                             'id'            => $p->id,
                             'nama_prestasi' => $p->nama_prestasi,
                             'tingkat'       => $p->tingkat,
-                            'tahun'         => $p->tahun,
+                            'tahun'         => $p->tanggal?->year,
                             'tanggal'       => $p->tanggal?->translatedFormat('d M Y') ?? '-',
                             'verified_at'   => $p->verified_at?->translatedFormat('d M Y') ?? '-',
                             'student_name'  => $student?->user?->name ?? $student?->nama ?? 'Mahasiswa',

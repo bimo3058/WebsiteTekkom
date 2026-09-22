@@ -71,7 +71,6 @@
         $status = strtolower($pengaduan->status);
         $waktuKejadian = data_get($pengaduan, 'data_template.waktu_kejadian')
             ?? data_get($pengaduan, 'data_template.tanggal_kejadian');
-        $linkBukti = data_get($pengaduan, 'data_template.link_bukti');
     @endphp
 
     @if (session('success'))
@@ -127,15 +126,17 @@
             <span>Detail Pengaduan</span>
         </div>
 
-        {{-- Hal Aduan --}}
-        <div class="mb-4">
-            <div class="section-label">Hal Aduan</div>
-            <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
-        </div>
+        {{-- Hal Aduan sudah tidak ditanyakan; tampil hanya untuk tiket lama yang masih menyimpannya. --}}
+        @if(data_get($pengaduan, 'data_template.hal_aduan'))
+            <div class="mb-4">
+                <div class="section-label">Hal Aduan</div>
+                <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan') }}</div>
+            </div>
+        @endif
 
-        {{-- Kronologi --}}
+        {{-- Pesan --}}
         <div class="mb-4">
-            <div class="section-label">Kronologi / Isi Pengaduan</div>
+            <div class="section-label">Pesan</div>
             <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
         </div>
 
@@ -165,12 +166,7 @@
             <div>
                 <div class="info-item-label">Bukti Dukung</div>
                 <div class="info-item-value">
-                    @if($linkBukti)
-                        <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer"
-                           style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
-                    @else
-                        <span style="color: #cbd5e1;">—</span>
-                    @endif
+                    @include('manajemenmahasiswa::pengaduan.partials.bukti-list', ['pengaduan' => $pengaduan, 'token' => $pengaduan->anon_token])
                 </div>
             </div>
         </div>

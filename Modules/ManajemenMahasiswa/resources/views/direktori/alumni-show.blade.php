@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.card-frame')
 
 @push('styles')
 <style>
@@ -469,10 +470,9 @@
                             <td style="color:var(--c-fg-muted);">{{ $i + 1 }}</td>
                             <td>
                                 @if($hasKegiatan)
-                                    <a href="{{ route('manajemenmahasiswa.kegiatan.show', $rw->kegiatan->id) }}"
-                                       style="color:var(--c-primary);font-weight:600;text-decoration:none;">
+                                    <span style="color:var(--c-fg);font-weight:600;">
                                         {{ $rw->kegiatan->judul }}
-                                    </a>
+                                    </span>
                                 @else
                                     <span style="color:var(--c-fg-muted);">Kegiatan tidak ditemukan</span>
                                 @endif

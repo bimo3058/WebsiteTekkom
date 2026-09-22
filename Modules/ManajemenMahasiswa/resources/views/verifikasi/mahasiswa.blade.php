@@ -1,4 +1,5 @@
 <x-dynamic-component :component="$layout">
+@include('manajemenmahasiswa::partials.card-frame')
 
     <style>
         /* ── Header ── */
@@ -604,6 +605,25 @@
 
     @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 
+    {{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
+    <div class="mm-frame-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div>
+            @if($tab === 'prestasi')
+                <h4 style="font-size:22px; font-weight:700; color:var(--c-fg); margin:0 0 3px; letter-spacing:-.02em; line-height:1.2;">
+                    Prestasi Saya</h4>
+                <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Ajukan prestasi lomba untuk diverifikasi
+                    admin. Prestasi yang sudah disetujui bisa Anda ajukan rewardnya (konversi nilai mata kuliah, SK FT 774).
+                </p>
+            @else
+                <h4 style="font-size:22px; font-weight:700; color:var(--c-fg); margin:0 0 3px; letter-spacing:-.02em; line-height:1.2;">
+                    Riwayat Kegiatan Saya</h4>
+                <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Ajukan riwayat keikutsertaan kegiatan untuk
+                    diverifikasi admin.</p>
+            @endif
+        </div>
+    </div>
+
+
     <!-- Flash Messages -->
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -631,26 +651,6 @@
         </div>
     @endif
 
-    <!-- Page Header -->
-    <div
-        style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
-        <div>
-            @if($tab === 'prestasi')
-                <h4
-                    style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">
-                    Prestasi Saya</h4>
-                <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Ajukan prestasi lomba untuk diverifikasi
-                    admin. Prestasi yang sudah disetujui bisa Anda ajukan rewardnya (konversi nilai mata kuliah, SK FT 774).
-                </p>
-            @else
-                <h4
-                    style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">
-                    Riwayat Kegiatan Saya</h4>
-                <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Ajukan riwayat keikutsertaan kegiatan untuk
-                    diverifikasi admin.</p>
-            @endif
-        </div>
-    </div>
     @php
         // Dipakai juga oleh modal pengajuan yang berada di luar blok per-tab,
         // jadi didefinisikan di sini — bukan di dalam @if($tab === 'prestasi').

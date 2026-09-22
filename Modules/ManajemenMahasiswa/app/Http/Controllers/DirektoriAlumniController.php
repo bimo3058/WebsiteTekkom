@@ -14,6 +14,7 @@ use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Services\AlumniService;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class DirektoriAlumniController extends Controller
 {
@@ -88,11 +89,11 @@ class DirektoriAlumniController extends Controller
         $roles = $this->getUserRoles();
 
         // Admin group + DPM → layout admin
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
+        if (\in_array('superadmin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
         // GPM, Dosen, Ketua Departemen → layout dosen
-        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles) || \in_array('ketua_departemen', $roles)) {
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('ketua_departemen', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
         // Semua jenis pengurus himpunan → layout admin
@@ -130,11 +131,9 @@ class DirektoriAlumniController extends Controller
     {
         return $this->hasRole(
             'superadmin',
-            'admin',
             'admin_kemahasiswaan',
             'gpm',
             'dosen',
-            'dosen_koordinator',
             'pengurus_himpunan',
             'ketua_departemen'
         );
@@ -148,7 +147,6 @@ class DirektoriAlumniController extends Controller
     {
         return $this->hasRole(
             'superadmin',
-            'admin',
             'admin_kemahasiswaan'
             // Tambahkan role lain di sini jika suatu saat dibutuhkan:
             // 'gpm',
@@ -350,21 +348,24 @@ class DirektoriAlumniController extends Controller
         $filters = $request->only(['tahun_lulus', 'status_karir', 'bidang_industri', 'search']);
         $filters = array_filter($filters, fn($v) => $v !== 'semua' && $v !== null && $v !== '');
 
+        // Jumlah baris per halaman — pilihan yang sama dengan Direktori Mahasiswa.
+        $perPage = PerPage::resolve($request);
+
         try {
             [
                 $alumni,
                 $angkatanList,
                 $tahunLulusList,
                 $summary,
-            ] = $this->withRetry(function () use ($filters) {
-                $alumni = $this->alumniService->listAlumni($filters, 15);
+            ] = $this->withRetry(function () use ($filters, $perPage) {
+                $alumni = $this->alumniService->listAlumni($filters, $perPage);
                 $angkatanList = Alumni::select('angkatan')->distinct()->orderByDesc('angkatan')->pluck('angkatan');
                 $tahunLulusList = Alumni::select('tahun_lulus')->distinct()->orderByDesc('tahun_lulus')->pluck('tahun_lulus');
                 $summary = $this->alumniService->getSummary();
                 return [$alumni, $angkatanList, $tahunLulusList, $summary];
             });
         } catch (\Throwable) {
-            $alumni = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
+            $alumni = new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage);
             $angkatanList = collect();
             $tahunLulusList = collect();
             $summary = ['total' => 0, 'per_status' => []];
@@ -372,7 +373,7 @@ class DirektoriAlumniController extends Controller
 
         $statusKarirOptions = Alumni::STATUS_LABELS;
         $bidangIndustriOptions = Alumni::BIDANG_INDUSTRI_LIST;
-        $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isAdmin = $this->hasRole('superadmin', 'admin_kemahasiswaan');
 
         $totalAlumni = $summary['total'];
         $bekerja = $summary['per_status']['bekerja'] ?? 0;
@@ -422,7 +423,7 @@ class DirektoriAlumniController extends Controller
             );
 
             // Permission flags — mudah diperluas lewat canSeeHistory() / canManageHistory()
-            $isAdmin         = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+            $isAdmin         = $this->hasRole('superadmin', 'admin_kemahasiswaan');
             $canSeeHistory   = $this->canSeeHistory();
             $canManageHistory = $this->canManageHistory();
             // Role yang boleh mengunduh CV alumni — sumber kebenarannya CvProfilePolicy,

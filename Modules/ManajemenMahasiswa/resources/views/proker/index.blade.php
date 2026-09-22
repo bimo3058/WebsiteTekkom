@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 @include('manajemenmahasiswa::partials.filter-popover')
@@ -75,6 +76,20 @@
     .empty-state h5 { color: var(--c-fg-muted); font-weight: 600; margin-bottom: 4px; }
 </style>
 
+{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
+<div class="mm-frame-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
+    <div>
+        <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Rencana Program Kerja</h1>
+        <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Daftar rencana proker dari 8 bidang himpunan &amp; prodi</p>
+    </div>
+    @if($canManage)
+        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Buat Proker
+        </a>
+    @endif
+</div>
+
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
          style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
@@ -90,19 +105,6 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
-
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Rencana Program Kerja</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar rencana proker dari 8 bidang himpunan &amp; prodi</p>
-    </div>
-    @if($canManage)
-        <a href="{{ route('manajemenmahasiswa.proker.create') }}" class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Buat Proker
-        </a>
-    @endif
-</div>
 
 
 {{-- Filter --}}

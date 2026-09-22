@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.card-frame')
 
 @push('styles')
 <style>
@@ -221,7 +222,7 @@
                 <label class="form-label">Email Pribadi</label>
                 <input type="email" name="personal_email" class="form-control @error('personal_email') is-invalid @enderror" value="{{ old('personal_email', $alumni->user->personal_email ?? '') }}" placeholder="nama@email.com">
                 @error('personal_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
-                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Email pribadi alumni (di luar email SSO UNDIP).</small>
+                <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Email pribadi alumni (di luar email kampus).</small>
             </div>
         </div>
 

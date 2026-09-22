@@ -29,9 +29,9 @@
         --c-success-border: rgba(40, 127, 110, 0.25);
         --c-warning: #956321;
         --c-warning-subtle: #F9ECCB;
-        --c-error: #DF1C41;
-        --c-error-hover: #95122B;
-        --c-error-subtle: #FADAE1;
+        --c-error: #DC2626;
+        --c-error-hover: #B91C1C;
+        --c-error-subtle: #FEE2E2;
         --c-sky: #0C4D6E;
         --c-sky-subtle: #D1F0F9;
 
@@ -144,7 +144,7 @@
     }
 
     .mk-kegiatan-btn--danger-subtle:focus-visible {
-        box-shadow: 0 0 0 3px rgba(223, 28, 65, 0.24);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.24);
     }
 
     .mk-kegiatan-btn--danger,
@@ -172,7 +172,7 @@
 
     .mk-kegiatan-btn--danger:focus-visible,
     .mk-kegiatan-btn--danger-solid:focus-visible {
-        box-shadow: 0 0 0 3px rgba(223, 28, 65, 0.24);
+        box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.24);
     }
 
     .mk-kegiatan-btn--download {

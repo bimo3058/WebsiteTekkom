@@ -1,4 +1,5 @@
 <x-dynamic-component :component="$layout">
+@include('manajemenmahasiswa::partials.card-frame')
 @php
     $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
     $canReview = $canReview ?? true;
@@ -109,6 +110,22 @@
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 @include('manajemenmahasiswa::partials.filter-popover')
 
+{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
+<div class="mm-frame-header">
+    <div style="display:flex; align-items:center; gap:16px; margin-bottom:4px;">
+        <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Verifikasi Prestasi">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h4 style="font-size:22px; font-weight:700; color:var(--c-fg); margin:0; letter-spacing:-.02em; line-height:1.2;">Klaim Reward Prestasi</h4>
+    </div>
+    @if($canReview)
+        <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Tinjau & setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
+    @else
+        <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Pantau pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
+    @endif
+</div>
+
+
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -125,24 +142,6 @@
     </div>
 @endif
 
-<!-- Page Header -->
-<div style="margin-bottom:24px;">
-    <div style="display:flex; align-items:center; gap:16px; margin-bottom:8px;">
-        <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Verifikasi Prestasi">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-        </a>
-        <h4 style="font-size:1.45rem; font-weight:700; color:#0D0D12; margin:0; letter-spacing:-.02em;">Klaim Reward Prestasi</h4>
-    </div>
-    @if($canReview)
-        <p style="font-size:.82rem; color:#666D80; margin:0;">Tinjau & setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
-    @else
-        <p style="font-size:.82rem; color:#666D80; margin:0;">Pantau pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
-        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:#eef2ff; color:#0B266E; font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Mode Pemantauan — hanya melihat (tanpa tinjau/setujui/tolak)
-        </span>
-    @endif
-</div>
 
 
 <!-- Stat Cards (status klaim) — ringkasan angka saja, bukan tombol filter -->

@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 @include('manajemenmahasiswa::partials.filter-popover')
@@ -199,22 +200,12 @@
     }
 </style>
 
-<!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
+{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
+<div class="mm-frame-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
     <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Manajemen Kegiatan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
+        <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Manajemen Kegiatan</h1>
+        <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
     </div>
-
     @if($canTambahKegiatan)
         <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
            class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact d-flex align-items-center gap-2">
@@ -223,6 +214,15 @@
         </a>
     @endif
 </div>
+
+<!-- Flash Messages -->
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 <!-- Search & Filter Area (matching forum layout) -->
 <form method="GET" action="{{ route('manajemenmahasiswa.kegiatan.index') }}" id="filterForm">

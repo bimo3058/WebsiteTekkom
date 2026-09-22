@@ -166,12 +166,12 @@ class DirektoriMahasiswaController extends Controller
         $roles = $this->getUserRoles();
 
         // Admin group + DPM → layout admin
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
+        if (\in_array('superadmin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
 
         // GPM, Dosen, Ketua Departemen → layout dosen
-        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles) || \in_array('ketua_departemen', $roles)) {
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('ketua_departemen', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
 
@@ -417,7 +417,7 @@ class DirektoriMahasiswaController extends Controller
             $statusCounts = collect();
         }
 
-        $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isAdmin    = $this->hasRole('superadmin', 'admin_kemahasiswaan');
         $isGpm      = $this->hasRole('gpm');
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
@@ -429,7 +429,7 @@ class DirektoriMahasiswaController extends Controller
             $error = 'Koneksi database sedang tidak stabil sehingga data mahasiswa belum bisa ditampilkan. '
                 . 'Data Anda aman — silakan muat ulang halaman dalam beberapa saat.';
         } elseif ($syncFailed) {
-            $error = 'Sinkronisasi data dari SSO UNDIP sedang bermasalah. '
+            $error = 'Sinkronisasi data mahasiswa sedang bermasalah. '
                 . 'Daftar di bawah menampilkan data yang sudah tersimpan, mahasiswa terbaru mungkin belum muncul.';
         }
 
@@ -483,7 +483,7 @@ class DirektoriMahasiswaController extends Controller
         // bukan dilempar diam-diam ke halaman daftar tanpa penjelasan.
         abort_if(!$mhs, 404, 'Data mahasiswa tidak ditemukan.');
 
-        $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isAdmin    = $this->hasRole('superadmin', 'admin_kemahasiswaan');
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isGpm      = $this->hasRole('gpm');
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;

@@ -26,7 +26,7 @@ class KegiatanPolicy
      */
     public const PEMBUAT_PROKER = [
         'ketua_bidang', 'ketua_unit', 'ketua_himpunan',
-        'superadmin', 'admin', 'admin_kemahasiswaan',
+        'superadmin', 'admin_kemahasiswaan',
     ];
 
     /**
@@ -35,7 +35,7 @@ class KegiatanPolicy
      * menambahkan orang.
      */
     public const PENGELOLA_SEMUA = [
-        'superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan',
+        'superadmin', 'admin_kemahasiswaan', 'ketua_himpunan',
     ];
 
     /**

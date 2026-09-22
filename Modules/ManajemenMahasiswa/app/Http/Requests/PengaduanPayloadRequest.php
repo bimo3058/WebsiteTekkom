@@ -2,9 +2,12 @@
 
 namespace Modules\ManajemenMahasiswa\Http\Requests;
 
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
+use Modules\ManajemenMahasiswa\Support\Honeypot;
+use Modules\ManajemenMahasiswa\Support\PengaduanBukti;
 
 /**
  * Aturan validasi tunggal untuk KEDUA jalur pengaduan (Reguler & Konfidensial).
@@ -32,7 +35,6 @@ class PengaduanPayloadRequest extends FormRequest
             'kategori'                  => ['required', 'string', 'in:' . implode(',', Pengaduan::KATEGORI_LIST)],
             'template'                  => ['required', 'array'],
             'template.judul'            => ['required', 'string', 'max:255'],
-            'template.hal_aduan'        => ['required', 'string', 'max:1000'],
             'template.kronologi'        => ['required', 'string', 'min:20', 'max:5000'],
             'template.angkatan'         => ['nullable', 'string', 'max:20'],
             'template.lokasi'           => ['nullable', 'string', 'max:255'],
@@ -43,8 +45,10 @@ class PengaduanPayloadRequest extends FormRequest
             'template.nama_dosen'       => ['nullable', 'string', 'max:255'],
             'template.nama_tendik'      => ['nullable', 'string', 'max:255'],
             'template.frekuensi'        => ['nullable', 'string', 'max:100'],
-            // url:http,https menolak skema lain (mis. javascript:) secara eksplisit
-            'template.link_bukti'       => ['nullable', 'url:http,https', 'max:2048'],
+            // Bukti berupa berkas PDF (bukan link Drive yang membocorkan akun
+            // pemilik). Hanya diunggah pada langkah konfirmasi; lihat PengaduanBukti.
+            'bukti'                     => ['nullable', 'array', 'max:' . PengaduanBukti::MAX_FILES],
+            'bukti.*'                   => ['file', 'mimes:' . implode(',', PengaduanBukti::MIMES), 'max:' . PengaduanBukti::MAX_KB],
         ];
     }
 
@@ -52,21 +56,40 @@ class PengaduanPayloadRequest extends FormRequest
     {
         return [
             'kategori.in'                => 'Kategori pengaduan tidak dikenali.',
-            'template.kronologi.min'     => 'Kronologi minimal 20 karakter agar dapat ditindaklanjuti.',
-            'template.link_bukti.url'    => 'Link bukti harus berupa tautan http:// atau https:// yang valid.',
+            'template.kronologi.min'     => 'Pesan minimal 20 karakter agar dapat ditindaklanjuti.',
             'template.waktu_kejadian.date' => 'Waktu kejadian harus berupa tanggal yang valid.',
+            'bukti.max'                  => 'Bukti dukung maksimal ' . PengaduanBukti::MAX_FILES . ' berkas.',
+            'bukti.*.mimes'              => 'Bukti dukung harus berupa berkas PDF.',
+            'bukti.*.max'                => 'Ukuran tiap bukti dukung maksimal ' . (PengaduanBukti::MAX_KB / 1024) . ' MB.',
+            'bukti.*.uploaded'           => 'Bukti dukung gagal diunggah. Coba lagi dengan berkas yang lebih kecil.',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'template.judul'          => 'judul',
-            'template.hal_aduan'      => 'hal aduan',
-            'template.kronologi'      => 'kronologi',
+            'template.judul'          => 'subjek',
+            'template.kronologi'      => 'pesan',
             'template.waktu_kejadian' => 'waktu kejadian',
-            'template.link_bukti'     => 'link bukti',
+            'bukti'                   => 'bukti dukung',
+            'bukti.*'                 => 'bukti dukung',
         ];
+    }
+
+    /**
+     * Honeypot: field jebakan harus kosong dan cap waktu form harus sah.
+     * Pesannya sengaja generik agar tidak memberi petunjuk kepada bot.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            if (! Honeypot::passes($this->input(Honeypot::FIELD), $this->input(Honeypot::STAMP_FIELD))) {
+                $validator->errors()->add(
+                    Honeypot::STAMP_FIELD,
+                    'Permintaan tidak dapat diproses. Muat ulang halaman lalu coba lagi.'
+                );
+            }
+        });
     }
 
     /**
@@ -77,7 +100,6 @@ class PengaduanPayloadRequest extends FormRequest
     {
         $template = Arr::only((array) $this->validated('template'), [
             'judul',
-            'hal_aduan',
             'kronologi',
             'angkatan',
             'lokasi',
@@ -87,7 +109,6 @@ class PengaduanPayloadRequest extends FormRequest
             'nama_dosen',
             'nama_tendik',
             'frekuensi',
-            'link_bukti',
         ]);
 
         if (!isset($template['waktu_kejadian']) && isset($template['tanggal_kejadian'])) {

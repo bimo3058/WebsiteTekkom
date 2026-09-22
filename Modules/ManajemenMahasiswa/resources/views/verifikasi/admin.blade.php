@@ -1,4 +1,5 @@
 <x-dynamic-component :component="$layout">
+@include('manajemenmahasiswa::partials.card-frame')
 
 <style>
     /* ── Stat Cards (Admin KPI) ── */
@@ -100,6 +101,31 @@
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 @include('manajemenmahasiswa::partials.filter-popover')
 
+{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
+<div class="mm-frame-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+    <div>
+        @if($tab === 'prestasi')
+            <h4 style="font-size:22px; font-weight:700; color:var(--c-fg); margin:0 0 3px; letter-spacing:-.02em; line-height:1.2;">Verifikasi Prestasi</h4>
+            <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Review & verifikasi prestasi lomba yang diajukan mahasiswa</p>
+        @else
+            <h4 style="font-size:22px; font-weight:700; color:var(--c-fg); margin:0 0 3px; letter-spacing:-.02em; line-height:1.2;">Verifikasi Riwayat Kegiatan</h4>
+            <p style="font-size:12px; color:var(--c-fg-muted); margin:0;">Review & verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa</p>
+        @endif
+    </div>
+    @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
+        <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
+           style="background:var(--c-primary); color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
+           onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
+            Klaim Reward
+            @if($pendingPrestasiReward > 0)
+                <span style="background:var(--c-card); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
+            @endif
+        </a>
+    @endif
+</div>
+
+
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
@@ -129,35 +155,6 @@
     </div>
 @endif
 
-<!-- Page Header -->
-<div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
-    <div>
-        @if($tab === 'prestasi')
-            <h4 style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">Verifikasi Prestasi</h4>
-            <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Review & verifikasi prestasi lomba yang diajukan mahasiswa</p>
-        @else
-            <h4 style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">Verifikasi Riwayat Kegiatan</h4>
-            <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Review & verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa</p>
-        @endif
-        @unless($canVerify ?? true)
-            <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
-            </span>
-        @endunless
-    </div>
-    @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
-        <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
-           style="background:var(--c-primary); color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
-           onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
-            Klaim Reward
-            @if($pendingPrestasiReward > 0)
-                <span style="background:var(--c-card); color:var(--c-primary); font-size:.72rem; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
-            @endif
-        </a>
-    @endif
-</div>
 
 <!-- Admin Stat Cards — ringkasan angka saja, bukan tombol filter -->
 <div class="admin-stats">

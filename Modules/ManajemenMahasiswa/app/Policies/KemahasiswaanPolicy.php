@@ -29,7 +29,6 @@ class KemahasiswaanPolicy
      */
     public const PENGELOLA = [
         'superadmin',
-        'admin',
         'admin_kemahasiswaan',
     ];
 

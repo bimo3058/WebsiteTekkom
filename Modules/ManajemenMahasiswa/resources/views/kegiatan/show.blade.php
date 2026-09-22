@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 
@@ -909,7 +910,7 @@
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="mk-kegiatan-btn mk-kegiatan-btn--danger-solid mk-kegiatan-btn--modal">
-                    Ya, Hapus
+                    Hapus
                 </button>
             </form>
         </div>

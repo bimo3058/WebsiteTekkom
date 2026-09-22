@@ -125,6 +125,13 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: var(--c-error-0); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 {{-- ── Header ── --}}
 <div class="d-flex justify-content-between align-items-start mb-4 gap-3 flex-wrap">

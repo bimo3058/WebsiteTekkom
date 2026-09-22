@@ -302,7 +302,7 @@
         <div x-show="sidebarOpen" class="sb-section-label">Direktori Mahasiswa</div>
         @php
             $isDirektoriActive = request()->routeIs('manajemenmahasiswa.direktori.*');
-            $canViewAll = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen', 'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
+            $canViewAll = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen', 'dosen', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
             $mahasiswaRoute = $canViewAll ? route('manajemenmahasiswa.direktori.mahasiswa.index') : route('manajemenmahasiswa.direktori.mahasiswa.profil');
             $alumniRoute = $canViewAll ? route('manajemenmahasiswa.direktori.alumni.index') : route('manajemenmahasiswa.direktori.alumni.profil');
 
@@ -351,7 +351,7 @@
             $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
             // Rencana Proker & Pelaksanaan kini punya daftar akses yang sama —
             // satu variabel supaya keduanya tidak lepas sinkron dari route middleware.
-            $canViewKegiatanHimpunan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
+            $canViewKegiatanHimpunan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
         @endphp
         <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
@@ -391,13 +391,17 @@
         "dosen" + "gpm" sekaligus, sehingga menunya hilang karena role dosennya,
         bukan karena keputusan tentang GPM. Daftar putih membuat yang boleh masuk
         tertulis eksplisit, dan role di luar daftar (mis. dosen_koor) tidak lagi
-        melihat menu yang berujung 403. --}}
+        melihat menu yang berujung 403.
+
+        DPM sengaja TIDAK termasuk (22 Sep 2026) — pemilik modul memutuskan DPM
+        tidak perlu bisa melihat bab Verifikasi Data mahasiswa sama sekali,
+        bukan sekadar dibuat read-only. Lihat VerifikasiController::isPengawas(). --}}
         @php
             $canViewVerifikasi = (bool) array_intersect($sidebarRoles, [
                 'mahasiswa', 'alumni',
                 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan',
-                'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
-                'ketua_departemen',
+                'superadmin', 'admin_kemahasiswaan',
+                'ketua_departemen', 'gpm',
             ]);
         @endphp
         @if($canViewVerifikasi)
@@ -406,12 +410,13 @@
                 $verifTab = request('tab', 'prestasi');
 
                 // Badge jumlah pending — untuk semua yang berwenang memutus.
-                // Daftarnya disalin dari middleware route approve/reject, bukan
-                // ditulis ulang: DPM sempat tertinggal di sini, sehingga ia boleh
-                // menyetujui/menolak tapi tidak pernah tahu ada antrean menunggu.
+                // Daftarnya disalin dari middleware route approve/reject. DPM
+                // sempat termasuk di sini selagi masih verifikator penuh, lalu
+                // dicabut — sekarang jadi moot juga karena DPM tidak lagi lolos
+                // $canViewVerifikasi di atas (dicabut total dari bab ini).
                 $verifPendingRiwayat = 0;
                 $verifPendingPrestasi = 0;
-                if (array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])) {
+                if (array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan'])) {
                     $verifPendingRiwayat = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count();
                     $verifPendingPrestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
                 }

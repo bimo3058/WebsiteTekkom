@@ -1,4 +1,5 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
+@include('manajemenmahasiswa::partials.card-frame')
 
 @include('manajemenmahasiswa::partials.kegiatan-theme')
 @include('manajemenmahasiswa::partials.filter-popover')
@@ -23,6 +24,7 @@
     .card-body { padding:16px 18px 18px;display:flex;flex-direction:column;flex:1; }
     .badge-bidang { font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--c-primary-subtle);color:var(--c-primary); }
     .card-title { font-weight:700;font-size:15px;color:var(--c-fg);margin:8px 0 10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    .card-desc { font-size:12px;color:var(--c-fg-muted);line-height:1.55;margin:-4px 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
     .card-meta { display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--c-fg-muted);font-weight:500;padding-top:10px;border-top:1px solid var(--c-surface-muted);margin-top:auto; }
     .card-meta span { display:inline-flex;align-items:center;gap:4px; }
 
@@ -35,18 +37,18 @@
     .empty-state h5 { color:var(--c-fg-muted);font-weight:600;margin-bottom:4px; }
 </style>
 
+{{-- Band judul selebar kotak (pola sama dengan Direktori Mahasiswa / SITKOM) --}}
+<div class="mm-frame-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
+    <div>
+        <h1 style="font-size:22px;font-weight:700;color:var(--c-fg);letter-spacing:-.02em;line-height:1.2;margin:0;">Pelaksanaan Kegiatan</h1>
+        <p style="font-size:12px;color:var(--c-fg-muted);margin:3px 0 0;">Proker yang sudah disetujui — lengkapi data pelaksanaan di sini</p>
+    </div></div>
+
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
         {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
-
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div>
-        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:var(--c-fg);letter-spacing:-.02em;">Pelaksanaan Kegiatan</h3>
-        <p class="mb-0" style="font-size:.82rem;color:var(--c-fg-muted);font-weight:500;">Proker yang sudah disetujui — lengkapi data pelaksanaan di sini</p>
-    </div>
-</div>
 
 
 {{-- Filter --}}
@@ -156,6 +158,9 @@
                             @endif
                         </div>
                         <div class="card-title">{{ $item->judul }}</div>
+                        @if($item->deskripsi)
+                            <div class="card-desc">{{ Str::limit(html_entity_decode(strip_tags($item->deskripsi)), 100) }}</div>
+                        @endif
 
                         <div class="card-meta">
                             <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> {{ $item->tanggal_mulai ? $item->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}</span>

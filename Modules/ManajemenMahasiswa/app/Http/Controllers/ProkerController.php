@@ -49,13 +49,13 @@ class ProkerController extends Controller
         $roles   = $user->roles->pluck('name');
         // DPM disertakan agar flag $isAdmin konsisten antar-subbab (Proker show, Pelaksanaan, Arsip).
         // Sebelumnya 'dpm' hilang di sini sehingga DPM diperlakukan berbeda di daftar Rencana Proker.
-        $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
+        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
         // $canManage merender tombol "Buat Proker". WAJIB whitelist eksplisit, JANGAN
         // pakai $isPengurus: staff_himpunan boleh masuk & mengedit Rencana Proker,
         // tapi TIDAK boleh membuat proker baru — proker dibuat oleh ketua.
         $canManage = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan',
+            'superadmin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
 
@@ -112,7 +112,7 @@ class ProkerController extends Controller
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
-        $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
+        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
         // Hanya role tertentu yang boleh menekan tombol "Ajukan Proker"
         // (staff_himpunan, dosen_dpm, dosen_gpm TIDAK termasuk)
@@ -127,19 +127,19 @@ class ProkerController extends Controller
         // Admin tetap melihatnya dalam keadaan nonaktif supaya jelas bahwa
         // pengajuan adalah kewenangan ketua (sinkron dengan whitelist ajukan()).
         $canSeeAjukan = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan',
+            'superadmin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
         // Role yang boleh edit proker (sinkron dengan route middleware edit) — GPM, Kadep & DPM view-only.
         // staff_himpunan ikut di sini: pengurus himpunan melengkapi rencana yang dibuat ketua.
         $canEdit = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan',
+            'superadmin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan',
         ])->isNotEmpty();
         // Role yang boleh hapus proker (sinkron dengan route middleware destroy) — GPM, Kadep & DPM view-only.
         // staff_himpunan TIDAK termasuk: menghapus proker tetap kewenangan ketua.
         $canDelete = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan',
+            'superadmin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
         // Lapis kedua di belakang role: proker hanya boleh diubah pemiliknya,

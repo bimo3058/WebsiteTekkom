@@ -18,7 +18,6 @@ class Prestasi extends Model
         'nama_prestasi',
         'tingkat',
         'tanggal',
-        'tahun',
         'verification_status',
         'verified_by',
         'verified_at',

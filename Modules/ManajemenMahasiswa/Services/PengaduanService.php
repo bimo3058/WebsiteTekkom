@@ -34,7 +34,9 @@ class PengaduanService
         $anonToken = $isAnonim ? Str::random(32) : null;
 
         $pengaduan = Pengaduan::create([
-            'user_id'       => $userId,
+            // Tiket konfidensial tidak menyimpan pelapor sama sekali (bukan sekadar
+            // disembunyikan di tampilan): pelapor hanya memegang magic link.
+            'user_id'       => $isAnonim ? null : $userId,
             'kategori'      => $kategori,
             'is_anonim'     => $isAnonim,
             'anon_token'    => $anonToken,

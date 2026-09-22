@@ -27,17 +27,15 @@ class CvProfilePolicy
      * pribadi, nomor WhatsApp, serta domisili pemiliknya. Mereka tetap bisa
      * membuka CV sendiri lewat route /profil/cv seperti mahasiswa biasa.
      *
-     * Catatan: yang benar adalah `dosen_koor` — role `dosen_koordinator` yang
-     * sempat tertulis di beberapa gerbang lain tidak ada di tabel roles, jadi
-     * selama ini tidak pernah cocok dengan siapa pun.
+     * Keputusan pemilik modul (20 Sep 2026): role `admin` biasa dan dosen
+     * koordinator (`dosen_koor`) tidak dipakai di bab Direktori Mahasiswa,
+     * jadi keduanya tidak boleh masuk daftar ini. Jangan ditambahkan kembali.
      */
     public const PENGELOLA_CV = [
         'superadmin',
-        'admin',
         'admin_kemahasiswaan',
         'ketua_departemen',
         'dosen',
-        'dosen_koor',
         'dpm',
         'gpm',
     ];

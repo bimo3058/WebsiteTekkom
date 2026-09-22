@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.card-frame')
 
 @push('styles')
 <style>
