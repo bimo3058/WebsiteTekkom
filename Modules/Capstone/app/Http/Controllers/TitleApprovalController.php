@@ -94,10 +94,13 @@ class TitleApprovalController extends Controller
             ]);
 
             // Return group to READY_FOR_BIDDING (from WAITING_SUPERVISOR_APPROVAL)
-            // Guard: only transition if currently waiting for approval
+            // Guard: only transition if currently waiting for approval.
+            // The pending proposal is resolved, so clear the active-proposal flag.
+            $updates = ['has_active_proposal' => false];
             if ($group->status === 'WAITING_SUPERVISOR_APPROVAL') {
-                $group->update(['status' => 'READY_FOR_BIDDING']);
+                $updates['status'] = 'READY_FOR_BIDDING';
             }
+            $group->update($updates);
 
             // NO title_id assignment â€” admin finalization only
             // NO assignment_type write â€” admin finalization only
@@ -165,6 +168,7 @@ class TitleApprovalController extends Controller
 
             $group->update([
                 'status' => 'READY_FOR_BIDDING',
+                'has_active_proposal' => false,
             ]);
 
             // Notify all group members

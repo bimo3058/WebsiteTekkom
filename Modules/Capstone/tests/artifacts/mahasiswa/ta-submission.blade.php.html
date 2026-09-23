@@ -5,14 +5,19 @@
     <meta name="csrf-token" content="">
     <title>Tugas Akhir (TA) | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["mahasiswa"],"active_role":"mahasiswa","nim":null,"nip":"TEST-NIP"},"role":"mahasiswa","path":"\/mahasiswa\/ta-submission","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
+    <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
+<script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
 <body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div x-show="pendingRequests > 0" x-cloak class="capstone-progress" role="status" aria-label="Sedang memproses permintaan">
+    <span class="capstone-progress-bar" aria-hidden="true"></span>
+</div>
 <div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
     <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+<aside data-mobile-sidebar class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
     <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
         <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
         <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
@@ -163,11 +168,11 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="px-3 sm:px-6 pt-6 pb-6"><div x-data="capstoneTaSubmission" class="space-y-6 max-w-5xl mx-auto">
-    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
-                    <circle  cx="12"  cy="12"  r="10"  />
-    </svg>
-<span class="sr-only">Loading</span></div>
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div x-data="capstoneTaSubmission" class="space-y-6 max-w-5xl mx-auto">
+    <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
 <div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
     <div x-show="!loading && !error" x-cloak class="space-y-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4"><div><h1 class="text-3xl font-bold tracking-tight">Tugas Akhir (TA)</h1><p class="text-muted-foreground" x-text="locked?'Individual thesis phase.':'Individual thesis submission and defense.'"></p></div><span x-show="!locked" class="inline-flex items-center rounded-md px-3 py-1 text-sm font-medium" :class="config.color"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-4 h-4 mr-1" x-show="config.icon==='Lock'">
@@ -208,7 +213,7 @@ Logout</button></form>
                 <p x-show="!readiness.nilai_dosen.configured" class="mb-2">Komponen NILAI_DOSEN belum dikonfigurasi admin untuk periode ini.</p><div x-show="readiness.nilai_dosen.configured && !readiness.nilai_dosen.completed" class="mb-2"><p class="font-medium">Menunggu NILAI_DOSEN dosen pembimbing:</p><ul class="mt-1 space-y-1"><template x-for="supervisor in readiness.nilai_dosen.supervisors.filter(s=>s.status==='pending')" :key="supervisor.id"><li><span x-text="supervisor.name+' ('+roleLabel(supervisor.role)+')'"></span><span class="text-sm text-muted-foreground ml-2" x-text="'- '+supervisor.submitted_components+'/'+supervisor.total_components+' komponen'"></span></li></template></ul></div>
                 <p x-show="!readiness.milestone.configured" class="mb-2">Komponen MILESTONE belum dikonfigurasi admin untuk periode ini.</p><div x-show="readiness.milestone.configured && !readiness.milestone.completed" class="mb-2"><p class="font-medium">Menunggu penilaian MILESTONE dosen pembimbing:</p><ul class="mt-1 space-y-1"><template x-for="supervisor in readiness.milestone.supervisors.filter(s=>s.status==='pending')" :key="supervisor.id"><li><span x-text="supervisor.name+' ('+roleLabel(supervisor.role)+')'"></span><span class="text-sm text-muted-foreground ml-2" x-text="'- '+supervisor.submitted_components+'/'+supervisor.total_components+' komponen'"></span></li></template></ul></div>
                 <p x-show="!readiness.expo_evaluation.configured" class="mb-2">Komponen evaluasi EXPO belum dikonfigurasi admin untuk periode ini.</p><div x-show="readiness.expo_evaluation.configured && !readiness.expo_evaluation.completed" class="mb-2"><p class="font-medium">Menunggu evaluasi EXPO dari dosen pembimbing:</p><ul class="mt-1 space-y-1"><template x-for="supervisor in readiness.expo_evaluation.supervisors.filter(s=>s.status==='pending')" :key="supervisor.id"><li><span x-text="supervisor.name+' ('+roleLabel(supervisor.role)+')'"></span><span class="text-sm text-muted-foreground ml-2" x-text="'- '+supervisor.submitted_components+'/'+supervisor.total_components+' komponen'"></span></li></template></ul></div>
-                <p x-show="!readiness.peer_review.configured" class="mb-2">Indikator peer review belum diset oleh admin pada Evaluation Setup.</p><div x-show="readiness.peer_review.configured && !readiness.peer_review.completed"><p class="font-medium">Peer review belum lengkap:</p><p class="text-sm text-muted-foreground mt-1" x-text="'Progress: '+readiness.peer_review.completed_members+'/'+readiness.peer_review.total_members+' mahasiswa selesai.'"></p><ul class="mt-1 space-y-1"><template x-for="student in readiness.peer_review.incomplete_students" :key="student.student_id"><li x-text="student.student_name+' ('+student.student_nim+')'"></li></template></ul></div>
+                <p x-show="!readiness.peer_review.configured" class="mb-2">Indikator peer review belum diset oleh admin pada Period Setup.</p><div x-show="readiness.peer_review.configured && !readiness.peer_review.completed"><p class="font-medium">Peer review belum lengkap:</p><p class="text-sm text-muted-foreground mt-1" x-text="'Progress: '+readiness.peer_review.completed_members+'/'+readiness.peer_review.total_members+' mahasiswa selesai.'"></p><ul class="mt-1 space-y-1"><template x-for="student in readiness.peer_review.incomplete_students" :key="student.student_id"><li x-text="student.student_name+' ('+student.student_nim+')'"></li></template></ul></div>
     </div></div></template>
     <section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-red-200 bg-red-50" x-show="!readiness">
 <div class="px-6"><h2 class="font-semibold text-red-800 flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 text-red-600">
@@ -286,6 +291,35 @@ Student Information</h2></div><div class="px-6 flex flex-col md:flex-row gap-6">
                     <path  d="M7 11V7a5 5 0 0 1 10 0v4"  />
     </svg>
 <div><h2 class="font-semibold" x-text="config.label"></h2><p class="text-sm" x-text="config.description"></p></div></div>
+            <template x-if="currentStatus==='TA_AWAITING_APPROVAL' && !isPending && !isRejected"><section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm bg-amber-50 border-amber-200">
+<h2 class="px-6 text-lg font-semibold flex items-center gap-2 text-amber-800"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5">
+                    <rect  width="8"  height="4"  x="8"  y="2"  rx="1"  ry="1"  />
+                    <path  d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"  />
+                    <path  d="m9 14 2 2 4-4"  />
+    </svg>
+Daftar Sidang TA</h2><p class="px-6 text-amber-700">You meet the TA prerequisites. Register for sidang TA first — after admin approval, the document upload section will open.</p><div class="px-6"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="register()" :disabled="registering"><span x-text="registering?'Sending...':'Daftar Sidang TA'"></span></button>
+</div>
+</section>
+</template>
+            <template x-if="isPending"><section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm bg-amber-50 border-amber-200">
+<h2 class="px-6 text-lg font-semibold flex items-center gap-2 text-amber-800"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5">
+                    <path  d="M12 6v6l4 2"  />
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+Menunggu Persetujuan Admin</h2><p class="px-6 text-amber-700">Your sidang TA registration was sent <span x-text="registration?.created_at ? shortDate(registration.created_at) : ''"></span>. Document upload will open after admin approval.</p><div class="px-6"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="cancelRegistration()" :disabled="registering"><span x-text="registering?'Cancelling...':'Batalkan Pendaftaran'"></span></button>
+</div>
+</section>
+</template>
+            <template x-if="isRejected"><section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm bg-red-50 border-red-200">
+<h2 class="px-6 text-lg font-semibold flex items-center gap-2 text-red-800"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5">
+                    <circle  cx="12"  cy="12"  r="10"  />
+                    <path  d="m15 9-6 6"  />
+                    <path  d="m9 9 6 6"  />
+    </svg>
+Pendaftaran Ditolak</h2><p class="px-6 text-red-700" x-text="'Reason: '+(registration?.rejection_reason || '-')"></p><div class="px-6"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="register()" :disabled="registering"><span x-text="registering?'Sending...':'Daftar Ulang'"></span></button>
+</div>
+</section>
+</template>
             <section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm" x-show="showDocuments">
 <div class="px-6 flex flex-col md:flex-row md:items-center justify-between gap-4"><div><h2 class="text-lg font-semibold flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="w-5 h-5">
                     <path  d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"  />
@@ -433,8 +467,33 @@ Important Information</h2><ul class="px-6 space-y-2 text-sm text-muted-foregroun
         </div>
     </main>
 </div>
-<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
-    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+<div aria-live="polite" aria-relevant="additions" class="capstone-notices fixed bottom-5 right-5 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id">
+        <div role="status" class="capstone-notice bg-popover text-popover-foreground flex items-start gap-3 rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300' : 'border-green-200'">
+            <template x-if="!notice.error">
+                <span class="capstone-success-icon flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+                </span>
+            </template>
+            <template x-if="notice.error">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+                </span>
+            </template>
+            <span class="min-w-0 flex-1 break-words pt-0.5" x-text="notice.message"></span>
+            <button type="button" class="text-muted-foreground shrink-0 rounded p-1 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Tutup notifikasi" @click="notices=notices.filter(item=>item.id!==notice.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+            </button>
+        </div>
+    </template>
 </div>
-</body>
+    </body>
 </html>
