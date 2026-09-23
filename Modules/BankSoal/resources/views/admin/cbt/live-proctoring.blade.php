@@ -5,9 +5,84 @@
         <span class="text-gray-900 font-semibold">Live Pengawasan</span>
     @endsection
 
-    <div x-data="{ confirmModal: false, targetSession: null, isSubmitting: false, openForceConfirm(s) { this.targetSession = s; this.confirmModal = true; document.body.style.overflow = 'hidden'; }, closeForceConfirm() { if (this.isSubmitting) return; this.confirmModal = false; document.body.style.overflow = ''; setTimeout(() => { this.targetSession = null; }, 300); }, submitForce() { if (!this.targetSession || this.isSubmitting) return; this.isSubmitting = true; const f = document.getElementById('form-force-submit'); f.action = '{{ route('banksoal.admin.cbt.force-submit', 'REPLACE_ID') }}'.replace('REPLACE_ID', this.targetSession.id); f.submit(); } }" class="w-full">
-        <!-- Header -->
-        <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+   
+    <style>
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+        main.overflow-y-auto { overflow: hidden !important; }
+        #banksoal-main-content { padding: 0 !important; max-width: 100% !important; height: 100% !important; display: flex; flex-direction: column; }
+
+        .dash-wrap {
+            display: flex; flex-direction: column; height: 100%;
+            padding: 16px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+        }
+
+        .dash-box {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            background: #fff; border: 1px solid var(--c-border);
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden; width: 100%; box-sizing: border-box;
+        }
+
+        .dash-box-header {
+            background: #fff;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0; width: 100%; box-sizing: border-box;
+            padding: 16px 24px;
+        }
+
+        .dash-box-body {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+
+        .dash-box-body > * {
+            flex-shrink: 0;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb {
+            background: var(--c-border-strong);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .dash-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .dash-box {
+                border-radius: 10px;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .dash-box-header {
+                padding: 12px 14px;
+                position: sticky; top: 0; z-index: 20;
+            }
+            .dash-box-body {
+                padding: 14px;
+                overflow-y: visible;
+                display: block;
+            }
+        }
+    </style>
+
+    <div x-data="{ confirmModal: false, targetSession: null, isSubmitting: false, openForceConfirm(s) { this.targetSession = s; this.confirmModal = true; document.body.style.overflow = 'hidden'; }, closeForceConfirm() { if (this.isSubmitting) return; this.confirmModal = false; document.body.style.overflow = ''; setTimeout(() => { this.targetSession = null; }, 300); }, submitForce() { if (!this.targetSession || this.isSubmitting) return; this.isSubmitting = true; const f = document.getElementById('form-force-submit'); f.action = '{{ route('banksoal.admin.cbt.force-submit', 'REPLACE_ID') }}'.replace('REPLACE_ID', this.targetSession.id); f.submit(); } }" class="dash-wrap">
+        <div class="dash-box">
+
+        <!-- Box Header -->
+        <div class="dash-box-header">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">Live Pengawasan Ujian</h1>
                 <p class="text-[13px] text-gray-500 mt-0.5">Pantau mahasiswa yang sedang mengerjakan ujian secara real-time.</p>
@@ -21,7 +96,11 @@
                     Refresh Data
                 </button>
             </div>
+            </div>
         </div>
+
+        <!-- Box Body -->
+        <div class="dash-box-body">
 
         @if(session('success'))
             <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl flex items-center gap-3 shadow-sm">
@@ -169,6 +248,9 @@
                 </table>
             </div>
         </div>
+
+        </div> {{-- end .dash-box-body --}}
+        </div> {{-- end .dash-box --}}
 
         <!-- Modal Popup: Konfirmasi Force Submit (gaya alokasi-sesi) -->
         <div x-show="confirmModal" tabindex="-1" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="display: none;" x-cloak>

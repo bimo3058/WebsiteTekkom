@@ -43,6 +43,7 @@
                     <label class="block text-sm font-medium text-slate-700 mb-2">Mata Kuliah</label>
                     <div class="relative">
                         <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" style="appearance: none; -webkit-appearance: none; background-image: none;" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" style="appearance: none; -webkit-appearance: none; background-image: none;" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
                             <option value="">Pilih  Mata Kuliah</option>
                             @foreach($mataKuliahDosen as $mk)
                                 <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>

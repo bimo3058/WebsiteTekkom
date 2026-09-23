@@ -6,17 +6,92 @@
     @endsection
 
     @section('hide_global_errors', true)
-        <div id="alokasiSesiRoot" x-data="alokasiSesiApp()" class="w-full relative"
+
+    {{-- Style Box Wrap khas SITKOM (Mengadopsi Dashboard Admin Bank Soal) --}}
+    <style>
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+        main.overflow-y-auto { overflow: hidden !important; }
+        #banksoal-main-content { padding: 0 !important; max-width: 100% !important; height: 100% !important; display: flex; flex-direction: column; }
+
+        .dash-wrap {
+            display: flex; flex-direction: column; height: 100%;
+            padding: 16px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+        }
+
+        .dash-box {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            background: #fff; border: 1px solid var(--c-border);
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden; width: 100%; box-sizing: border-box;
+        }
+
+        .dash-box-header {
+            background: #fff;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0; width: 100%; box-sizing: border-box;
+            padding: 16px 24px;
+        }
+
+        .dash-box-body {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+
+        .dash-box-body > * {
+            flex-shrink: 0;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb {
+            background: var(--c-border-strong);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .dash-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .dash-box {
+                border-radius: 10px;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .dash-box-header {
+                padding: 12px 14px;
+                position: sticky; top: 0; z-index: 20;
+            }
+            .dash-box-body {
+                padding: 14px;
+                overflow-y: visible;
+                display: block;
+            }
+        }
+    </style>
+
+        <div id="alokasiSesiRoot" x-data="alokasiSesiApp()" class="dash-wrap"
             data-open-modal="{{ $errors->any() ? '1' : '0' }}"
             data-jadwals='@json($jadwals ?? [])'
             data-pendaftars='@json($pendaftars ?? [])'>
         
-        <!-- Page Header -->
-        <div class="mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+        <div class="dash-box">
+
+        <!-- Box Header -->
+        <div class="dash-box-header">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Jadwal & Sesi</h1>
-                    <p class="text-sm text-slate-500 mt-1">Mengatur sesi ujian dan membagi jadwal peserta ujian komprehensif.</p>
+                    <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">Manajemen Jadwal & Sesi</h1>
+                    <p class="text-[13px] text-gray-500 mt-0.5">Mengatur sesi ujian dan membagi jadwal peserta ujian komprehensif.</p>
                 </div>
 
                 <!-- ============================================================= -->
@@ -127,6 +202,9 @@
 
 
 
+        <!-- Box Body -->
+        <div class="dash-box-body">
+
         <!-- Rentang tanggal periode terpilih -->
         @if($selectedPeriode)
         <div class="flex items-center gap-2 mb-6">
@@ -216,6 +294,9 @@
             </div>
             @endif
         @endif
+
+        </div> {{-- end .dash-box-body --}}
+        </div> {{-- end .dash-box --}}
 
         <!-- Modal Kelola Peserta -->
         <div x-show="openDrawer" tabindex="-1" class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6" style="display: none;" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
@@ -461,22 +542,73 @@
                             @enderror
                         </div>
 
-                        <!-- Dropdown Tanggal Ujian -->
+                        <!-- Dropdown Tanggal Ujian (Alpine) -->
+                        @php
+                            $tanggalOptions = [];
+                            if ($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian) {
+                                $startDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->startOfDay();
+                                $endDate   = \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->startOfDay();
+                                for ($d = $startDate->copy(); $d->lte($endDate); $d->addDay()) {
+                                    $tanggalOptions[] = ['value' => $d->format('Y-m-d'), 'label' => $d->translatedFormat('d F Y')];
+                                }
+                            }
+                        @endphp
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Tanggal Ujian (Berdasarkan Rentang Periode)</label>
-                            <div class="relative">
-                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow cursor-pointer {{ $errors->has('tanggal_ujian') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
-                                    <option value="">Pilih Tanggal Ujian...</option>
-                                    @if($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
-                                        @php
-                                            $startDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian);
-                                            $endDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian);
-                                            for($d = $startDate; $d->lte($endDate); $d->addDay()) {
-                                                echo '<option value="' . $d->format('Y-m-d') . '"' . (old('tanggal_ujian') == $d->format('Y-m-d') ? ' selected' : '') . '>' . $d->translatedFormat('d F Y') . '</option>';
-                                            }
-                                        @endphp
-                                    @endif
-                                </select>
+                            <div class="relative"
+                                 x-data="{
+                                     open: false,
+                                     value: @js(old('tanggal_ujian', '')),
+                                     options: @js($tanggalOptions),
+                                     get selectedLabel() {
+                                         const found = this.options.find(o => o.value === this.value);
+                                         return found ? found.label : '';
+                                     },
+                                     choose(val) { this.value = val; this.open = false; },
+                                     close() { this.open = false; }
+                                 }"
+                                 @click.outside="close()"
+                                 @keydown.escape.window="close()">
+
+                                {{-- Nilai yang dikirim saat form submit --}}
+                                <input type="hidden" name="tanggal_ujian" :value="value">
+
+                                {{-- Trigger --}}
+                                <button type="button" @click="open = !open"
+                                        class="w-full flex items-center justify-between gap-3 pl-4 pr-3 py-2.5 bg-white rounded-xl text-sm text-left transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary {{ $errors->has('tanggal_ujian') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                                    <span x-text="selectedLabel || 'Pilih Tanggal Ujian...'"
+                                          :class="value ? 'text-slate-800' : 'text-slate-400'" class="truncate"></span>
+                                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400 transition-transform duration-200"
+                                         :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+
+                                {{-- Panel Opsi --}}
+                                <div x-show="open"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                                     class="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden"
+                                     style="display:none">
+                                    <div class="overflow-y-auto max-h-52 py-1.5">
+                                        <template x-for="opt in options" :key="opt.value">
+                                            <button type="button" @click="choose(opt.value)"
+                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-slate-50"
+                                                    :class="value === opt.value ? 'bg-primary/10 text-primary' : 'text-slate-700'">
+                                                <span x-text="opt.label" class="flex-1 text-left"></span>
+                                                <svg x-show="value === opt.value" class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                            </button>
+                                        </template>
+
+                                        <div x-show="options.length === 0" class="px-4 py-8 text-center">
+                                            <p class="text-[13px] text-slate-400 font-medium">Tidak ada tanggal ujian dalam rentang periode ini.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             @error('tanggal_ujian')
                                 <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">

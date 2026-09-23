@@ -53,9 +53,11 @@
                     </select>
                     </x-banksoal::ui.alpine-select>
                 </div>
+
+                <!-- Bobot / Skor -->
                 <div>
                     <label for="bobot" class="mb-2 block text-sm font-semibold text-slate-700">Bobot / Skor</label>
-                    <input type="number" id="bobot" name="bobot" min="1" max="10" value="{{ old('bobot', 10) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none" required oninput="if(this.value > 10) this.value = 10; if(this.value < 1) this.value = 1;">
+                    <input type="number" id="bobot" name="bobot" min="1" max="10" value="{{ old('bobot', 10) }}" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" required oninput="if(this.value > 10) this.value = 10; if(this.value < 1) this.value = 1;">
                 </div>
             </div>
 
@@ -205,54 +207,93 @@
                 }
             });
 
-            const mkSelect = document.getElementById('mk_id');
-            const cplSelect = document.getElementById('cpl_id');
-            const cpmkSelect = document.getElementById('cpmk_id');
-            const oldCplId = "{{ old('cpl_id') }}";
-            const oldCpmkId = "{{ old('cpmk_id') }}";
-            
-            mkSelect.addEventListener('change', function() {
-                const mkId = this.value;
-                cplSelect.innerHTML = '<option value="">Memuat CPL...</option>';
-                cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                if (mkId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${mkId}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            cplSelect.innerHTML = '<option value="">Pilih CPL...</option>';
-                            data.forEach(c => {
-                                const selected = oldCplId == c.id ? 'selected' : '';
-                                cplSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
-                            });
-                            // Trigger change on CPL to load CPMK if old value exists
-                            if (oldCplId) cplSelect.dispatchEvent(new Event('change'));
-                        })
-                        .catch(() => { cplSelect.innerHTML = '<option value="">Gagal memuat cpl</option>'; });
-                } else {
-                    cplSelect.innerHTML = '<option value="">Pilih CPL...</option>';
-                }
-            });
+            // Soal Form Alpine Logic
+            window.soalForm = function() {
+                return {
+                    mkId: '{{ old('mk_id', '') }}',
+                    mkOptions: [
+                        @foreach($mataKuliahDosen as $mk)
+                        { id: '{{ $mk->id }}', label: '{{ $mk->kode }} - {{ addslashes($mk->nama) }}' },
+                        @endforeach
+                    ],
+                    mkOpen: false,
 
-            cplSelect.addEventListener('change', function() {
-                const cplId = this.value;
-                cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
-                if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkSelect.value}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                            data.forEach(c => {
-                                const selected = oldCpmkId == c.id ? 'selected' : '';
-                                cpmkSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
-                            });
-                        })
-                        .catch(() => { cpmkSelect.innerHTML = '<option value="">Gagal memuat cpmk</option>'; });
-                } else {
-                    cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                }
-            });
+                    cplId: '{{ old('cpl_id', '') }}',
+                    cplOptions: [],
+                    cplLoading: false,
+                    cplOpen: false,
 
-            if (mkSelect.value) { mkSelect.dispatchEvent(new Event('change')); }
+                    cpmkId: '{{ old('cpmk_id', '') }}',
+                    cpmkOptions: [],
+                    cpmkLoading: false,
+                    cpmkOpen: false,
+
+                    kesulitan: '{{ old('kesulitan', '') }}',
+                    kesulitanOpen: false,
+                    kesulitanOptions: [
+                        { id: 'easy', label: 'Easy' },
+                        { id: 'intermediate', label: 'Intermediate' },
+                        { id: 'advanced', label: 'Advanced' }
+                    ],
+
+                    init() {
+                        this.$watch('mkId', (value) => {
+                            this.cplId = '';
+                            this.cpmkId = '';
+                            this.cplOptions = [];
+                            this.cpmkOptions = [];
+                            if (value) this.fetchCpl(value);
+                        });
+
+                        this.$watch('cplId', (value) => {
+                            this.cpmkId = '';
+                            this.cpmkOptions = [];
+                            if (value && this.mkId) this.fetchCpmk(value, this.mkId);
+                        });
+
+                        if (this.mkId) {
+                            this.fetchCpl(this.mkId, true);
+                        }
+                    },
+
+                    fetchCpl(mkId, isInitial = false) {
+                        this.cplLoading = true;
+                        fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${mkId}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                this.cplOptions = data.map(c => ({
+                                    id: c.id.toString(),
+                                    label: `${c.kode} - ${c.deskripsi.substring(0, 60)}...`
+                                }));
+                                this.cplLoading = false;
+                                if (isInitial && this.cplId) {
+                                    this.fetchCpmk(this.cplId, mkId, true);
+                                }
+                            })
+                            .catch(() => { this.cplLoading = false; });
+                    },
+
+                    fetchCpmk(cplId, mkId, isInitial = false) {
+                        this.cpmkLoading = true;
+                        fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkId}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                this.cpmkOptions = data.map(c => ({
+                                    id: c.id.toString(),
+                                    label: `${c.kode} - ${c.deskripsi.substring(0, 60)}...`
+                                }));
+                                this.cpmkLoading = false;
+                            })
+                            .catch(() => { this.cpmkLoading = false; });
+                    },
+                    
+                    getLabel(options, id, defaultLabel) {
+                        if (!id) return defaultLabel;
+                        const opt = options.find(o => o.id == id);
+                        return opt ? opt.label : defaultLabel;
+                    }
+                }
+            };
             const container = document.getElementById('optionsContainer');
             const addBtn = document.getElementById('addOptionBtn');
             function updateStyles() {

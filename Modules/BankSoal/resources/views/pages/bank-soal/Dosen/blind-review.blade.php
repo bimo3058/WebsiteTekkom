@@ -14,230 +14,231 @@
     </x-banksoal::ui.page-header>
     </x-slot:header>
 
-    @if(session('info'))
-        <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-800">
-            <i class="fas fa-info-circle mr-2"></i> {{ session('info') }}
-        </div>
-    @endif
+            @if(session('info'))
+                <div class="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-800">
+                    <i class="fas fa-info-circle mr-2"></i> {{ session('info') }}
+                </div>
+            @endif
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <p class="text-xs text-slate-500 uppercase tracking-wide">Pending</p>
-            <p class="text-2xl font-bold text-amber-600 mt-1">{{ $pendingCount }}</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <p class="text-xs text-slate-500 uppercase tracking-wide">Approved</p>
-            <p class="text-2xl font-bold text-emerald-600 mt-1">{{ $approvedCount }}</p>
-        </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-4">
-            <p class="text-xs text-slate-500 uppercase tracking-wide">Rejected</p>
-            <p class="text-2xl font-bold text-rose-600 mt-1">{{ $rejectedCount }}</p>
-        </div>
-    </div>
+            {{-- Stat Cards --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-white border border-slate-200 rounded-xl p-4">
+                    <p class="text-xs text-slate-500 uppercase tracking-wide">Pending</p>
+                    <p class="text-2xl font-bold text-amber-600 mt-1">{{ $pendingCount }}</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4">
+                    <p class="text-xs text-slate-500 uppercase tracking-wide">Approved</p>
+                    <p class="text-2xl font-bold text-emerald-600 mt-1">{{ $approvedCount }}</p>
+                </div>
+                <div class="bg-white border border-slate-200 rounded-xl p-4">
+                    <p class="text-xs text-slate-500 uppercase tracking-wide">Rejected</p>
+                    <p class="text-2xl font-bold text-rose-600 mt-1">{{ $rejectedCount }}</p>
+                </div>
+            </div>
 
-    {{-- Inbox: soal dari dosen lain yang harus saya review --}}
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <h2 class="text-lg font-semibold text-slate-900">
-                Inbox Review
-                <span class="text-sm font-normal text-slate-500">(soal yang perlu Anda review)</span>
-            </h2>
-        </div>
+            {{-- Inbox: soal dari dosen lain yang harus saya review --}}
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+                    <h2 class="text-lg font-semibold text-slate-900">
+                        Inbox Review
+                        <span class="text-sm font-normal text-slate-500">(soal yang perlu Anda review)</span>
+                    </h2>
+                </div>
 
-        <div class="divide-y divide-slate-200" x-data="{ openGroup: 0 }">
-            @forelse($items->groupBy(fn ($item) => $item->round?->mataKuliah?->id ?? $item->round?->mataKuliah?->kode ?? 'lainnya') as $groupKey => $groupItems)
-                @php
-                    $groupMk = $groupItems->first()->round?->mataKuliah;
-                    $groupId = 'blind-review-mk-' . $loop->index;
-                @endphp
-                <div class="bg-white">
-                    <button type="button"
-                            class="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-slate-50"
-                            @click="openGroup = openGroup === {{ $loop->index }} ? null : {{ $loop->index }}"
-                            :aria-expanded="openGroup === {{ $loop->index }}"
-                            aria-controls="{{ $groupId }}">
-                        <span class="flex min-w-0 items-center gap-3">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <i class="fas fa-book text-sm"></i>
-                            </span>
-                            <span class="min-w-0">
-                                <span class="block truncate text-sm font-semibold text-slate-900">{{ $groupMk?->nama ?? '-' }}</span>
-                                <span class="block text-xs text-slate-500">{{ $groupMk?->kode ?? '-' }} · {{ $groupItems->count() }} soal perlu direview</span>
-                            </span>
-                        </span>
-                        <i class="fas fa-chevron-down shrink-0 text-xs text-slate-400 transition-transform duration-200"
-                           :class="openGroup === {{ $loop->index }} ? 'rotate-180 text-primary' : ''"></i>
-                    </button>
-
-                    <div id="{{ $groupId }}" x-show="openGroup === {{ $loop->index }}" x-cloak
-                        x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2"
-                        class="border-t border-slate-100">
-                        @foreach($groupItems as $item)
-                <div class="p-6">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <p class="text-sm text-slate-500">Mata Kuliah</p>
-                            <p class="font-semibold text-slate-900">{{ $item->round?->mataKuliah?->nama ?? '-' }}</p>
-                            <p class="text-xs text-slate-500 mt-1">Status:
-                                @if($item->status === 'pending')
-                                    <span class="font-semibold text-amber-600">Pending</span>
-                                @elseif($item->status === 'approved')
-                                    <span class="font-semibold text-emerald-600">Approved</span>
-                                @else
-                                    <span class="font-semibold text-rose-600">Rejected</span>
-                                @endif
-                            </p>
-                            @if($item->round?->deadline_at)
-                                <p class="text-xs text-slate-400 mt-0.5">
-                                    Deadline: {{ $item->round->deadline_at->locale('id')->translatedFormat('d M Y H:i') }}
-                                    @if($item->round->deadline_at->isPast())
-                                        <span class="text-rose-500 font-semibold">(Expired)</span>
-                                    @endif
-                                </p>
-                            @endif
-                        </div>
-                        <div class="text-right text-xs text-slate-500">
-                            <p>Round: #{{ $item->round_id }}</p>
-                            <p>Soal: #{{ $item->pertanyaan_id }}</p>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                        <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Konten Soal</p>
-                        <div class="prose prose-sm max-w-none text-slate-700">{!! $item->pertanyaan?->soal !!}</div>
-                    </div>
-
-                      <form action="{{ route('banksoal.soal.dosen.blind-review.submit', $item->id) }}" method="POST"
-                          class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 items-start">
-                        @csrf
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Keputusan</label>
-                            <select name="status" class="h-[76px] w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                    required {{ $item->status !== 'pending' ? 'disabled' : '' }}>
-                                <option value="approved" {{ $item->status === 'approved' ? 'selected' : '' }}>Approve</option>
-                                <option value="rejected" {{ $item->status === 'rejected' ? 'selected' : '' }}>Reject</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-600 mb-1">Catatan / Masukan</label>
-                            <textarea name="catatan" rows="2"
-                                      class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
-                                      style="height: 76px; min-height: 76px; max-height: 76px; resize: none;"
-                                      placeholder="Tambahkan masukan untuk pembuat soal"
-                                      {{ $item->status !== 'pending' ? 'disabled' : '' }}>{{ old('catatan', $item->catatan) }}</textarea>
-                        </div>
-                        <div class="md:col-span-1">
-                            <span class="mb-1 block h-4 text-xs font-semibold text-transparent" aria-hidden="true">Aksi</span>
-                            <button type="submit"
-                                    class="h-[76px] w-full rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:cursor-not-allowed disabled:bg-slate-300"
-                                    {{ $item->status !== 'pending' ? 'disabled' : '' }}>
-                                Simpan Review
+                <div class="divide-y divide-slate-200" x-data="{ openGroup: 0 }">
+                    @forelse($items->groupBy(fn ($item) => $item->round?->mataKuliah?->id ?? $item->round?->mataKuliah?->kode ?? 'lainnya') as $groupKey => $groupItems)
+                        @php
+                            $groupMk = $groupItems->first()->round?->mataKuliah;
+                            $groupId = 'blind-review-mk-' . $loop->index;
+                        @endphp
+                        <div class="bg-white">
+                            <button type="button"
+                                    class="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-slate-50"
+                                    @click="openGroup = openGroup === {{ $loop->index }} ? null : {{ $loop->index }}"
+                                    :aria-expanded="openGroup === {{ $loop->index }}"
+                                    aria-controls="{{ $groupId }}">
+                                <span class="flex min-w-0 items-center gap-3">
+                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                        <i class="fas fa-book text-sm"></i>
+                                    </span>
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-sm font-semibold text-slate-900">{{ $groupMk?->nama ?? '-' }}</span>
+                                        <span class="block text-xs text-slate-500">{{ $groupMk?->kode ?? '-' }} · {{ $groupItems->count() }} soal perlu direview</span>
+                                    </span>
+                                </span>
+                                <i class="fas fa-chevron-down shrink-0 text-xs text-slate-400 transition-transform duration-200"
+                                   :class="openGroup === {{ $loop->index }} ? 'rotate-180 text-primary' : ''"></i>
                             </button>
-                        </div>
-                    </form>
-                </div>
-                        @endforeach
-                    </div>
-                </div>
-            @empty
-                <div class="p-10 text-center text-slate-500">
-                    <i class="fas fa-inbox text-3xl text-slate-300 mb-2"></i>
-                    <p>Tidak ada tugas blind review untuk saat ini.</p>
-                </div>
-            @endforelse
-        </div>
-    </div>
 
-    {{-- Status & Feedback untuk soal yang saya buat --}}
-    @if($myRounds->isNotEmpty())
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-            <h2 class="text-lg font-semibold text-slate-900">
-                Status Review Soal Saya
-                <span class="text-sm font-normal text-slate-500">(feedback dari reviewer untuk soal yang Anda buat)</span>
-            </h2>
-        </div>
+                            <div id="{{ $groupId }}" x-show="openGroup === {{ $loop->index }}" x-cloak
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 -translate-y-2"
+                                x-transition:enter-end="opacity-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 -translate-y-2"
+                                class="border-t border-slate-100">
+                                @foreach($groupItems as $item)
+                                    <div class="p-6">
+                                        <div class="flex items-start justify-between gap-4">
+                                            <div>
+                                                <p class="text-sm text-slate-500">Mata Kuliah</p>
+                                                <p class="font-semibold text-slate-900">{{ $item->round?->mataKuliah?->nama ?? '-' }}</p>
+                                                <p class="text-xs text-slate-500 mt-1">Status:
+                                                    @if($item->status === 'pending')
+                                                        <span class="font-semibold text-amber-600">Pending</span>
+                                                    @elseif($item->status === 'approved')
+                                                        <span class="font-semibold text-emerald-600">Approved</span>
+                                                    @else
+                                                        <span class="font-semibold text-rose-600">Rejected</span>
+                                                    @endif
+                                                </p>
+                                                @if($item->round?->deadline_at)
+                                                    <p class="text-xs text-slate-400 mt-0.5">
+                                                        Deadline: {{ $item->round->deadline_at->locale('id')->translatedFormat('d M Y H:i') }}
+                                                        @if($item->round->deadline_at->isPast())
+                                                            <span class="text-rose-500 font-semibold">(Expired)</span>
+                                                        @endif
+                                                    </p>
+                                                @endif
+                                            </div>
+                                            <div class="text-right text-xs text-slate-500">
+                                                <p>Round: #{{ $item->round_id }}</p>
+                                                <p>Soal: #{{ $item->pertanyaan_id }}</p>
+                                            </div>
+                                        </div>
 
-        <div class="divide-y divide-slate-200" x-data="{ openStatusGroup: 0 }">
-            @foreach($myRounds->groupBy(fn ($round) => $round->mataKuliah?->id ?? $round->mataKuliah?->kode ?? 'lainnya') as $groupKey => $roundGroup)
-                @php
-                    $groupMk = $roundGroup->first()->mataKuliah;
-                    $groupId = 'blind-review-status-mk-' . $loop->index;
-                @endphp
-                <div class="bg-white">
-                    <button type="button"
-                            class="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-slate-50"
-                            @click="openStatusGroup = openStatusGroup === {{ $loop->index }} ? null : {{ $loop->index }}"
-                            :aria-expanded="openStatusGroup === {{ $loop->index }}"
-                            aria-controls="{{ $groupId }}">
-                        <span class="flex min-w-0 items-center gap-3">
-                            <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                <i class="fas fa-book text-sm"></i>
-                            </span>
-                            <span class="min-w-0">
-                                <span class="block truncate text-sm font-semibold text-slate-900">{{ $groupMk?->nama ?? '-' }}</span>
-                                <span class="block text-xs text-slate-500">{{ $groupMk?->kode ?? '-' }} · {{ $roundGroup->count() }} round review</span>
-                            </span>
-                        </span>
-                        <i class="fas fa-chevron-down shrink-0 text-xs text-slate-400 transition-transform duration-200"
-                           :class="openStatusGroup === {{ $loop->index }} ? 'rotate-180 text-primary' : ''"></i>
-                    </button>
+                                        <div class="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                            <p class="text-xs font-semibold text-slate-500 uppercase mb-2">Konten Soal</p>
+                                            <div class="prose prose-sm max-w-none text-slate-700">{!! $item->pertanyaan?->soal !!}</div>
+                                        </div>
 
-                    <div id="{{ $groupId }}" x-show="openStatusGroup === {{ $loop->index }}" x-cloak
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 -translate-y-2"
-                         x-transition:enter-end="opacity-100 translate-y-0"
-                         x-transition:leave="transition ease-in duration-150"
-                         x-transition:leave-start="opacity-100 translate-y-0"
-                         x-transition:leave-end="opacity-0 -translate-y-2"
-                         class="border-t border-slate-100">
-            @foreach($roundGroup as $round)
-                <div class="p-6">
-                    <div class="flex items-start justify-between gap-4 mb-4">
-                        <div>
-                            <p class="font-semibold text-slate-900">{{ $round->mataKuliah?->nama ?? '-' }}</p>
-                            <p class="text-xs text-slate-500">
-                                Round #{{ $round->id }} &bull; {{ $round->created_at->locale('id')->diffForHumans() }}
-                            </p>
-                            @if($round->deadline_at)
-                                <p class="text-xs text-slate-400">
-                                    Deadline: {{ $round->deadline_at->locale('id')->translatedFormat('d M Y H:i') }}
-                                </p>
-                            @endif
+                                        <form action="{{ route('banksoal.soal.dosen.blind-review.submit', $item->id) }}" method="POST"
+                                              class="mt-4">
+                                            @csrf
+                                            @php
+                                                $isPending   = $item->status === 'pending';
+                                                $disabledBg  = $isPending ? '#fff' : '#f8fafc';
+                                                $disabledCur = $isPending ? 'pointer' : 'not-allowed';
+                                                $btnBg       = $isPending ? 'rgb(11,38,110)' : '#cbd5e1';
+                                            @endphp
+                                            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                                                <select name="status"
+                                                        style="height:38px; width:140px; flex-shrink:0; border:1px solid #e2e8f0; border-radius:8px; padding:0 10px; font-size:13px; background:{{ $disabledBg }}; cursor:{{ $disabledCur }}; color:#334155;"
+                                                        required {{ $isPending ? '' : 'disabled' }}>
+                                                    <option value="approved" {{ $item->status === 'approved' ? 'selected' : '' }}>Approve</option>
+                                                    <option value="rejected" {{ $item->status === 'rejected' ? 'selected' : '' }}>Reject</option>
+                                                </select>
+                                                <input type="text" name="catatan"
+                                                       style="height:38px; flex:1; min-width:160px; border:1px solid #e2e8f0; border-radius:8px; padding:0 12px; font-size:13px; background:{{ $disabledBg }};"
+                                                       placeholder="Catatan / masukan untuk pembuat soal"
+                                                       value="{{ old('catatan', $item->catatan) }}"
+                                                       {{ $isPending ? '' : 'disabled' }}>
+                                                <button type="submit"
+                                                        style="height:38px; flex-shrink:0; border-radius:8px; background:{{ $btnBg }}; color:#fff; border:none; padding:0 18px; font-size:13px; font-weight:600; cursor:{{ $disabledCur }}; display:inline-flex; align-items:center; gap:6px;"
+                                                        {{ $isPending ? '' : 'disabled' }}>
+                                                    <i class="fas fa-check" style="font-size:11px;"></i> Simpan Review
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            @if($round->status === 'completed')
-                                <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
-                                    <i class="fas fa-check-circle"></i> Selesai – Siap Cetak
-                                </span>
-                                <form method="POST" action="{{ route('banksoal.soal.dosen.cetak-ujian-approved') }}" target="_blank">
-                                    @csrf
-                                    <input type="hidden" name="round_id" value="{{ $round->id }}">
-                                    @foreach($round->items->pluck('pertanyaan_id')->unique() as $soalId)
-                                        <input type="hidden" name="soal_ids[]" value="{{ $soalId }}">
-                                    @endforeach
-                                    <input type="hidden" name="mk_id" value="{{ $round->mk_id }}">
-                                    <button type="submit"
-                                            class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
-                                        <i class="fas fa-print"></i> Cetak Soal Ujian
-                                    </button>
-                                </form>
-                            @elseif($round->status === 'in_review')
-                                <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                                    <i class="fas fa-clock"></i> Sedang Direview
-                                </span>
-                            @else
-                                <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-                                    Pending
-                                </span>
-                            @endif
+                    @empty
+                        <div class="p-10 text-center text-slate-500">
+                            <i class="fas fa-inbox text-3xl text-slate-300 mb-2"></i>
+                            <p>Tidak ada tugas blind review untuk saat ini.</p>
                         </div>
-                    </div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Status & Feedback untuk soal yang saya buat --}}
+            @if($myRounds->isNotEmpty())
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
+                    <h2 class="text-lg font-semibold text-slate-900">
+                        Status Review Soal Saya
+                        <span class="text-sm font-normal text-slate-500">(feedback dari reviewer untuk soal yang Anda buat)</span>
+                    </h2>
+                </div>
+
+                <div class="divide-y divide-slate-200" x-data="{ openStatusGroup: 0 }">
+                    @foreach($myRounds->groupBy(fn ($round) => $round->mataKuliah?->id ?? $round->mataKuliah?->kode ?? 'lainnya') as $groupKey => $roundGroup)
+                        @php
+                            $groupMk = $roundGroup->first()->mataKuliah;
+                            $groupId = 'blind-review-status-mk-' . $loop->index;
+                        @endphp
+                        <div class="bg-white">
+                            <button type="button"
+                                    class="flex w-full items-center justify-between gap-4 px-6 py-4 text-left transition-colors hover:bg-slate-50"
+                                    @click="openStatusGroup = openStatusGroup === {{ $loop->index }} ? null : {{ $loop->index }}"
+                                    :aria-expanded="openStatusGroup === {{ $loop->index }}"
+                                    aria-controls="{{ $groupId }}">
+                                <span class="flex min-w-0 items-center gap-3">
+                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                                        <i class="fas fa-book text-sm"></i>
+                                    </span>
+                                    <span class="min-w-0">
+                                        <span class="block truncate text-sm font-semibold text-slate-900">{{ $groupMk?->nama ?? '-' }}</span>
+                                        <span class="block text-xs text-slate-500">{{ $groupMk?->kode ?? '-' }} · {{ $roundGroup->count() }} round review</span>
+                                    </span>
+                                </span>
+                                <i class="fas fa-chevron-down shrink-0 text-xs text-slate-400 transition-transform duration-200"
+                                   :class="openStatusGroup === {{ $loop->index }} ? 'rotate-180 text-primary' : ''"></i>
+                            </button>
+
+                            <div id="{{ $groupId }}" x-show="openStatusGroup === {{ $loop->index }}" x-cloak
+                                 x-transition:enter="transition ease-out duration-200"
+                                 x-transition:enter-start="opacity-0 -translate-y-2"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 x-transition:leave="transition ease-in duration-150"
+                                 x-transition:leave-start="opacity-100 translate-y-0"
+                                 x-transition:leave-end="opacity-0 -translate-y-2"
+                                 class="border-t border-slate-100">
+                                @foreach($roundGroup as $round)
+                                    <div class="p-6">
+                                        <div class="flex items-start justify-between gap-4 mb-4">
+                                            <div>
+                                                <p class="font-semibold text-slate-900">{{ $round->mataKuliah?->nama ?? '-' }}</p>
+                                                <p class="text-xs text-slate-500">
+                                                    Round #{{ $round->id }} &bull; {{ $round->created_at->locale('id')->diffForHumans() }}
+                                                </p>
+                                                @if($round->deadline_at)
+                                                    <p class="text-xs text-slate-400">
+                                                        Deadline: {{ $round->deadline_at->locale('id')->translatedFormat('d M Y H:i') }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                @if($round->status === 'completed')
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                                        <i class="fas fa-check-circle"></i> Selesai – Siap Cetak
+                                                    </span>
+                                                    <form method="POST" action="{{ route('banksoal.soal.dosen.cetak-ujian-approved') }}" target="_blank">
+                                                        @csrf
+                                                        <input type="hidden" name="round_id" value="{{ $round->id }}">
+                                                        @foreach($round->items->pluck('pertanyaan_id')->unique() as $soalId)
+                                                            <input type="hidden" name="soal_ids[]" value="{{ $soalId }}">
+                                                        @endforeach
+                                                        <input type="hidden" name="mk_id" value="{{ $round->mk_id }}">
+                                                        <button type="submit"
+                                                                class="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">
+                                                            <i class="fas fa-print"></i> Cetak Soal Ujian
+                                                        </button>
+                                                    </form>
+                                                @elseif($round->status === 'in_review')
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                                                        <i class="fas fa-clock"></i> Sedang Direview
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                                                        Pending
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        </div>
 
                     @if($round->items->isNotEmpty())
                         <div class="space-y-3">

@@ -151,11 +151,11 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const baseDonutData = @json($donutData);
-            const baseCplData = @json($cplDist);
-            const baseMkData = @json($mkDist);
+            const baseCplData   = @json($cplDist);
+            const baseMkData    = @json($mkDist);
 
             setTimeout(() => {
-                if(typeof DosenDashboard !== 'undefined') {
+                if (typeof DosenDashboard !== 'undefined') {
                     DosenDashboard.updateDonutChart('donutChart', baseDonutData);
                     DosenDashboard.updateCplBarChart('cplChart', baseCplData);
                     DosenDashboard.updateMkBarChart('mkChart', baseMkData);
