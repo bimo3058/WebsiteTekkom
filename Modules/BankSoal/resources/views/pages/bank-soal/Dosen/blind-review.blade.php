@@ -1,8 +1,10 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <span class="text-slate-800 font-semibold">Blind Review</span>
     @endsection
 
+    <x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
     <x-banksoal::ui.page-header title="Blind Review Soal" subtitle="Tinjau soal dari dosen lain, dan pantau status review soal Anda.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
@@ -10,6 +12,7 @@
             </a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
+    </x-slot:header>
 
     @if(session('info'))
         <div class="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-800">
@@ -291,4 +294,6 @@
         </div>
     </div>
     @endif
+    </x-banksoal::ui.bank-soal-page>
+
 </x-banksoal::layouts.dosen-admin>

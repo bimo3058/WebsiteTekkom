@@ -1,3 +1,4 @@
+@props(['bankSoal' => false])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -26,47 +27,27 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('styles')
+    @if($bankSoal)
+        <link href="{{ asset('modules/banksoal/css/dosen-bank-soal.css') }}" rel="stylesheet">
+    @endif
     <x-mobile-navigation-assets />
+    <link href="{{ asset('modules/banksoal/css/dosen-topbar.css') }}" rel="stylesheet">
 </head>
-<body class="font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
+<body class="{{ $bankSoal ? 'banksoal-management' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
         <!-- Sidebar Component -->
         <x-banksoal::ui.sidebar-dosen />
 
         <!-- Main Content Wrapper -->
-        <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <div class="bs-workspace flex-1 flex flex-col h-screen overflow-hidden relative">
 
             <!-- Topbar -->
-            <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 z-10">
-                <div class="flex items-center text-sm font-medium text-slate-600">
-                    <span class="mr-2">SIBASO</span>
-                    @hasSection('breadcrumbs')
-                        <span class="mx-2 text-slate-300">/</span>
-                        @yield('breadcrumbs')
-                    @endif
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <x-banksoal::ui.dosen-notification-bell />
-
-                    <div class="h-6 w-px bg-slate-200 mx-1"></div>
-
-                    <div class="flex items-center gap-3 cursor-pointer group">
-                        <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 overflow-hidden border border-slate-300 group-hover:border-primary transition-colors">
-                            <span class="font-bold text-sm">{{ strtoupper(substr(auth()->user()->name ?? 'D', 0, 1)) }}</span>
-                        </div>
-                        <div class="flex flex-col">
-                            <span class="text-sm font-bold text-slate-800 leading-tight">{{ auth()->user()->name ?? 'Dosen' }}</span>
-                            <span class="text-[11px] text-slate-500 font-medium">Dosen Pengampu</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <x-banksoal::ui.topbar-dosen />
 
             <!-- Main Content Area -->
-            <main class="w-full flex-1 overflow-y-auto">
-                <div class="p-8 w-full max-w-screen-2xl mx-auto">
+            <main class="bs-main w-full flex-1 overflow-y-auto">
+                <div class="bs-content p-8 w-full max-w-screen-2xl mx-auto">
                     {{ $slot }}
                 </div>
             </main>

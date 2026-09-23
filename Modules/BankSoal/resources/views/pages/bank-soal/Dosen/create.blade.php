@@ -1,46 +1,57 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
         <span class="mx-2 text-slate-300">/</span>
         <span class="text-slate-800 font-semibold">Buat Soal Baru</span>
     @endsection
+    <x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
     <x-banksoal::ui.page-header title="Buat Soal Baru" subtitle="Lengkapi formulir untuk menambahkan butir soal ke bank soal.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
+    </x-slot:header>
 
-    <x-banksoal::ui.panel title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
+    <x-banksoal::ui.panel class="bs-question-form-panel" title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
         <form action="{{ route('banksoal.soal.dosen.store') }}" method="POST" id="formSoal">
             @csrf
             <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
                 <div>
-                    <label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
+                    <label for="mk_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
+                    <x-banksoal::ui.alpine-select id="mk_id" label="Mata Kuliah">
                     <select name="mk_id" id="mk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
                         <option value="">Pilih Mata Kuliah...</option>
                         @foreach($mataKuliahDosen as $mk)
                             <option value="{{ $mk->id }}" {{ old('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>
                         @endforeach
                     </select>
+                    </x-banksoal::ui.alpine-select>
                     @error('mk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
+                    <label for="cpl_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
+                    <x-banksoal::ui.alpine-select id="cpl_id" label="CPL">
                     <select name="cpl_id" id="cpl_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPL...</option></select>
+                    </x-banksoal::ui.alpine-select>
                     @error('cpl_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="cpmk_id" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
+                    <label for="cpmk_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
+                    <x-banksoal::ui.alpine-select id="cpmk_id" label="CPMK">
                     <select name="cpmk_id" id="cpmk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPMK...</option></select>
+                    </x-banksoal::ui.alpine-select>
                     @error('cpmk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
+                    <label for="kesulitan-trigger" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
+                    <x-banksoal::ui.alpine-select id="kesulitan" label="Tingkat Kesulitan">
                     <select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
                         <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Easy</option>
                         <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
                         <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Advanced</option>
                     </select>
+                    </x-banksoal::ui.alpine-select>
                 </div>
                 <div>
                     <label for="bobot" class="mb-2 block text-sm font-semibold text-slate-700">Bobot / Skor</label>
@@ -90,6 +101,8 @@
             </div>
         </form>
     </x-banksoal::ui.panel>
+
+    </x-banksoal::ui.bank-soal-page>
 
     @push('styles')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
