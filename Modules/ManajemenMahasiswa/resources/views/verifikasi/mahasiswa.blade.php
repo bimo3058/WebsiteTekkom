@@ -356,7 +356,7 @@
        di modul ini detail selalu dibaca lewat modal (pemicunya .btn-tinjau),
        jadi angka "2/2" tetap bisa diperiksa tanpa mendorong tabel keluar
        layar. Isinya memakai kelas yang sudah ada — .tinjau-info, .kuota-pill,
-       .kuota-dipakai-*, .tp-chip — supaya tidak lahir pola baru. */
+       .tp-chip — supaya tidak lahir pola baru. */
         .kuota-grup+.kuota-grup {
             margin-top: 18px;
         }
@@ -399,13 +399,13 @@
             margin-top: 10px;
         }
 
-        /* Chip ringkas untuk sel tabel. Lebarnya dibatasi supaya klaim 3 MK
-           tidak meregangkan kolom lain; daftar utuhnya ada di modal Tinjau. */
+        /* Chip ringkas untuk sel tabel. Dibiarkan satu baris (tidak wrap) supaya
+           nama MK panjang tidak pecah jadi beberapa baris; kolom melebar dan
+           tabel sudah bisa discroll horizontal. Daftar utuhnya ada di modal Tinjau. */
         .mk-sel {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 4px;
-            max-width: 230px;
         }
 
         .mk-sel-tag {
@@ -418,6 +418,8 @@
             border: 1px solid rgba(11, 38, 110, 0.18);
             border-radius: 50px;
             padding: 2px 8px;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .mk-chip {
@@ -532,28 +534,12 @@
             white-space: nowrap;
         }
 
+        /* Hanya posisi; warna & ukuran dari .mk-btn. */
         .preview-item .preview-remove {
             position: absolute;
-            top: -6px;
-            right: -6px;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--c-error);
-            color: #fff;
-            border: 2px solid #fff;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            line-height: 1;
+            top: 4px;
+            right: 4px;
             z-index: 2;
-        }
-
-        .preview-item .preview-remove:hover {
-            background: #b91c1c;
         }
 
         .doc-preview-list {
@@ -616,23 +602,7 @@
         }
 
         .doc-preview-item .doc-remove {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: var(--c-error-subtle);
-            color: var(--c-error);
-            border: 1px solid #fecaca;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             flex-shrink: 0;
-        }
-
-        .doc-preview-item .doc-remove:hover {
-            background: #fee2e2;
         }
 
         /* Lightbox */
@@ -1314,10 +1284,10 @@
                                                 . ($p->reward_is_invention ? ' · invention/expo/fair' : '')
                                             ] : null,
                                             $p->reward_tahun_ajaran_label ? ['Tahun Ajaran', $p->reward_tahun_ajaran_label] : null,
-                                            $p->reward_jml_mk_max ? ['Jatah', $p->reward_jml_mk_max . ' MK · maks ' . $p->reward_sks_max . ' SKS'] : null,
+                                            $p->reward_jml_mk_max ? ['Jatah', $p->reward_jml_mk_max . ' mata kuliah, maksimal ' . $p->reward_sks_max . ' SKS'] : null,
                                             $p->reward_sks_diajukan !== null ? ['SKS diklaim', $p->reward_sks_diajukan . ' SKS'] : null,
-                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'MK disetujui' : 'MK usulan'), $mkUsulan] : null,
-                                            (!count($mkUsulan) && $p->reward_mk_disetujui) ? ['MK disetujui', $p->reward_mk_disetujui] : null,
+                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'Mata kuliah disetujui' : 'Mata kuliah usulan'), $mkUsulan] : null,
+                                            (!count($mkUsulan) && $p->reward_mk_disetujui) ? ['Mata kuliah disetujui', $p->reward_mk_disetujui] : null,
                                             $p->reward_note ? [($p->reward_status === $P::CLAIM_DITOLAK ? 'Alasan' : 'Catatan'), $p->reward_note] : null,
                                             $p->reward_status === $P::CLAIM_BELUM_AJUKAN
                                             ? ['Keterangan', 'Reward belum diajukan. Tekan "Ajukan Reward" pada kolom Aksi.']
@@ -1520,114 +1490,36 @@
 
                         @php
                             $maksInvention = $P::KUOTA_MAKS[$P::KUOTA_INVENTION];
-                            $maksLainnya   = $P::KUOTA_MAKS[$P::KUOTA_UMUM];
                         @endphp
                         <div class="kuota-grup">
                             <p class="tp-pane-heading" style="margin-bottom:7px;">Aturan</p>
                             <div class="tinjau-info">
                                 <ul class="kuota-aturan">
                                     <li>
-                                        @if($maksLainnya === null)
-                                            Prestasi apa pun bisa diajukan lebih dari sekali — jumlahnya tidak dibatasi.
-                                        @else
-                                            Reward prestasi maksimal {{ $maksLainnya }} kali selama kuliah.
-                                        @endif
+                                        Aturan ini mengacu pada Surat Keputusan (SK) Nomor 774 tentang pemberian reward
+                                        prestasi mahasiswa.
                                     </li>
                                     <li>
-                                        Khusus kegiatan <b>invention/expo/fair</b> (judulnya memuat kata seperti
-                                        "invention", "expo", atau "fair"):
+                                        Peningkatan nilai mata kuliah dapat dilakukan pada prestasi yang memenuhi syarat
+                                        dengan kuota tidak terbatas tiap mahasiswa, kecuali untuk prestasi dengan kategori
+                                        invention/expo/fair.
+                                    </li>
+                                    <li>
+                                        Khusus kegiatan dengan kategori <b>invention/expo/fair</b>, mahasiswa berhak
+                                        mengklaim
                                         @if($maksInvention === null)
-                                            jumlahnya juga tidak dibatasi.
+                                            tanpa batas jumlah selama kuliah.
                                         @else
                                             maksimal {{ $maksInvention }} kali selama kuliah.
                                         @endif
                                     </li>
-                                    <li>Setiap mata kuliah hanya bisa dinaikkan nilainya sekali, dan harus bernilai minimal C.</li>
-                                    <li>Pengajuan yang masih menunggu ikut memakai kuota; pengajuan yang ditolak tidak.</li>
+                                    <li>Setiap mata kuliah hanya bisa dinaikkan nilainya satu tingkat lebih tinggi, dan harus bernilai minimal C.</li>
+                                    <li>Hanya mata kuliah yang sudah pernah diambil yang bisa diajukan kenaikan nilainya.</li>
+                                    <li>Klaim kenaikan nilai paling lambat diajukan 1 tahun sejak tanggal lomba diadakan.</li>
+                                    <li>Khusus kuota invention/expo/fair, pengajuan yang masih dalam tahap menunggu review tetap memakai jatah kuota tersebut selama belum diproses.</li>
                                 </ul>
                             </div>
                         </div>
-
-                        {{-- Semua kelompok selalu tampil, termasuk yang belum terpakai:
-                        kuota yang masih utuh adalah jawaban yang sama pentingnya. Yang
-                        dibatasi lebih dulu — itulah yang bisa habis. --}}
-                        @foreach(collect($P::KUOTA_MAKS)->sortBy(fn ($m) => $m === null ? 1 : 0) as $grup => $maks)
-                            @php
-                                $daftar  = $kuotaDipakai[$grup] ?? [];
-                                $antre   = $kuotaMenungguDipakai[$grup] ?? [];
-                                $terisi  = count($daftar) + count($antre);
-                                $sisa    = $maks === null ? null : max($maks - $terisi, 0);
-                            @endphp
-                            <div class="kuota-grup">
-                                <div class="kuota-grup-judul">
-                                    <p class="tp-pane-heading">{{ ucfirst($P::KUOTA_LABELS[$grup]) }}</p>
-                                    {{-- Angka yang sama dengan ringkasan di toolbar tabel: yang
-                                         menunggu ikut memesan slot, jadi ikut dihitung. --}}
-                                    <span class="kuota-pill {{ $sisa === 0 ? 'penuh' : ($sisa === 1 && $maks > 1 ? 'hampir' : '') }}">
-                                        @if($maks === null)
-                                            tanpa batas
-                                        @else
-                                            {{ $sisa === 0 ? 'habis' : "sisa {$sisa} dari {$maks}" }}
-                                        @endif
-                                    </span>
-                                </div>
-
-                                @if(count($antre))
-                                    <div class="tinjau-info" style="margin-bottom:8px;">
-                                        <p style="font-size:11px; font-weight:700; color:#1e40af; margin:0 0 6px;">
-                                            Sedang menunggu persetujuan{{ $maks === null ? '' : ' — memesan ' . count($antre) . ' slot' }}
-                                        </p>
-                                        @foreach($antre as $a)
-                                            <div class="kuota-dipakai-item">
-                                                <div class="kuota-dipakai-nama">{{ $a['nama'] }}</div>
-                                                @if($a['tanggal'])
-                                                    <div class="kuota-dipakai-ket">Diajukan {{ $a['tanggal'] }}</div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                        @if($maks !== null)
-                                            <p style="font-size:11px; color:var(--c-fg-muted); margin:8px 0 0;">
-                                                Batalkan salah satunya lewat tombol Tinjau pada barisnya bila Anda ingin
-                                                memakai jatah ini untuk prestasi lain.
-                                            </p>
-                                        @endif
-                                    </div>
-                                @endif
-
-                                @if(count($daftar))
-                                    <div class="tinjau-info">
-                                        @foreach($daftar as $k)
-                                            <div class="kuota-dipakai-item">
-                                                <div class="kuota-dipakai-nama">{{ $k['nama'] }}</div>
-                                                @if(!empty($k['mk_list']))
-                                                    <div class="tp-chips" style="margin-top:5px;">
-                                                        @foreach($k['mk_list'] as $mk)
-                                                            <span class="tp-chip">{{ $mk }}</span>
-                                                        @endforeach
-                                                    </div>
-                                                @elseif($k['mk'])
-                                                    <div class="kuota-dipakai-ket">Mata kuliah: {{ $k['mk'] }}</div>
-                                                @endif
-                                                @if($k['tanggal'])
-                                                    <div class="kuota-dipakai-ket">Disetujui {{ $k['tanggal'] }}</div>
-                                                @endif
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                @elseif(!count($antre))
-                                    <div class="tinjau-info" style="color:var(--c-fg-muted);">
-                                        {{ $maks === null ? 'Belum ada reward dari kelompok ini.' : 'Belum terpakai — jatah kelompok ini masih utuh.' }}
-                                    </div>
-                                @endif
-                            </div>
-                        @endforeach
-
-                        @if(collect($kuotaDipakai ?? [])->flatten(1)->isNotEmpty())
-                            <p style="font-size:11px; color:var(--c-fg-muted); line-height:1.5; margin:16px 0 0;">
-                                Ini mata kuliah yang nilainya sudah dinaikkan lewat reward prestasi — bukan daftar mata
-                                kuliah yang Anda ambil di KRS.
-                            </p>
-                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Tutup</button>
@@ -1957,8 +1849,7 @@
                 </div>
                 <div class="modal-footer" style="justify-content: center; gap: 8px;">
                     <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="button" id="claimConfirmBtn"
-                        style="border-radius: 10px; font-weight: 600; font-size: 14px; padding: 10px 20px; border: none; cursor: pointer; color: #fff;"></button>
+                    <button type="button" id="claimConfirmBtn" class="mk-btn mk-btn--primary"></button>
                 </div>
             </div>
         </div>
@@ -1982,6 +1873,8 @@
         // =========================================================================
         // File Preview Manager — handles image thumbnails + doc list with remove
         // =========================================================================
+        const ICON_HAPUS_BERKAS = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
         class FilePreviewManager {
             constructor(inputId, previewId, type) {
                 this.input = document.getElementById(inputId);
@@ -2019,9 +1912,12 @@
                         reader.onload = (e) => {
                             const item = document.createElement('div');
                             item.className = 'preview-item';
-                            const removeBtn = document.createElement('span');
-                            removeBtn.className = 'preview-remove';
-                            removeBtn.innerHTML = '&times;';
+                            const removeBtn = document.createElement('button');
+                            removeBtn.type = 'button';
+                            removeBtn.className = 'preview-remove mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon';
+                            removeBtn.title = 'Hapus foto';
+                            removeBtn.setAttribute('aria-label', 'Hapus foto ' + file.name);
+                            removeBtn.innerHTML = ICON_HAPUS_BERKAS;
                             removeBtn.onclick = () => this.removeFile(idx);
 
                             const img = document.createElement('img');
@@ -2063,9 +1959,12 @@
                         nameEl.title = file.name;
                         nameEl.textContent = file.name;
 
-                        const removeBtn = document.createElement('span');
-                        removeBtn.className = 'doc-remove';
-                        removeBtn.innerHTML = '&times;';
+                        const removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'doc-remove mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon';
+                        removeBtn.title = 'Hapus dokumen';
+                        removeBtn.setAttribute('aria-label', 'Hapus dokumen ' + file.name);
+                        removeBtn.innerHTML = ICON_HAPUS_BERKAS;
                         removeBtn.onclick = () => this.removeFile(idx);
 
                         item.appendChild(icon);
@@ -2131,7 +2030,6 @@
                 const namaEl = textEl.querySelector('.cc-nama');
                 if (namaEl) namaEl.textContent = '"' + namaPrestasi + '"';
                 btnEl.textContent = 'Ya, Batalkan';
-                btnEl.style.background = '#dc2626';
                 ccModal.show();
             };
 
@@ -2146,7 +2044,6 @@
                 const namaEl = textEl.querySelector('.cc-nama');
                 if (namaEl) namaEl.textContent = '"' + nama + '"';
                 btnEl.textContent = 'Ya, Tarik';
-                btnEl.style.background = '#dc2626';
                 ccModal.show();
             };
 
@@ -2155,8 +2052,6 @@
                 const form = document.getElementById(activeFormId);
                 if (form) {
                     btnEl.disabled = true;
-                    btnEl.style.opacity = '0.65';
-                    btnEl.style.cursor = 'not-allowed';
                     form.submit();
                 }
             });
@@ -2164,8 +2059,6 @@
             // Reset tombol konfirmasi tiap kali modal ditutup
             modalEl.addEventListener('hidden.bs.modal', function () {
                 btnEl.disabled = false;
-                btnEl.style.opacity = '';
-                btnEl.style.cursor = 'pointer';
             });
         })();
 
@@ -2283,7 +2176,7 @@
                 const totalSks = currentTotalSks();
                 const valid = arKuotaOk && arJatahOk && taEl.value !== ''
                     && arMkList.length >= 1 && arMkList.length <= arCap && totalSks <= arSksMax;
-                // Tampilan nonaktifnya diatur .tp-btn-utama:disabled, jadi cukup flagnya
+                // Tampilan nonaktifnya diatur .mk-btn:disabled, jadi cukup flagnya
                 submitBtn.disabled = !valid;
             }
 
@@ -2307,14 +2200,7 @@
                 const penuh = sisa === 0;
                 arKuotaOk = !penuh;
 
-                // Tetap ditampilkan untuk kelompok tanpa batas: tidak adanya
-                // rambu justru membuat mahasiswa menebak apakah ada batasnya.
-                const pill = document.createElement('span');
-                pill.className = 'kuota-pill' + (penuh ? ' penuh' : (sisa === 1 && maks > 1 ? ' hampir' : ''));
-                pill.textContent = 'Kuota ' + (KUOTA_LABEL[grup] || grup) + ': '
-                    + (maks === null ? 'tanpa batas' : (penuh ? 'habis' : 'sisa ' + sisa + ' dari ' + maks));
-                kuotaEl.appendChild(pill);
-
+                // Hanya muncul saat kuota habis — alasan tombol Ajukan terkunci
                 if (penuh) {
                     const ket = document.createElement('div');
                     ket.className = 'sk-lawas';
@@ -2323,7 +2209,7 @@
                     kuotaEl.appendChild(ket);
                 }
 
-                kuotaEl.style.display = 'block';
+                kuotaEl.style.display = penuh ? 'block' : 'none';
             }
 
             mkAddBtn.addEventListener('click', function () {

@@ -118,7 +118,7 @@
             <div style="font-size:14px;color:var(--c-primary);font-weight:500;">Cek kesesuaian data dengan realisasi di halaman Pelaksanaan Kegiatan.</div>
         </div>
         <a href="{{ route('manajemenmahasiswa.pelaksanaan.show', $proker->id) }}"
-           class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form">
+           class="mk-btn mk-btn--primary">
             Lihat di Pelaksanaan &rarr;
         </a>
     </div>
@@ -133,7 +133,7 @@
             <div style="font-size:14px;color:var(--c-success);font-weight:500;">Laporan akhir kegiatan ini ada di halaman Laporan &amp; Arsip.</div>
         </div>
         <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
-           class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--form">
+           class="mk-btn mk-btn--primary">
             Lihat di Arsip &rarr;
         </a>
     </div>

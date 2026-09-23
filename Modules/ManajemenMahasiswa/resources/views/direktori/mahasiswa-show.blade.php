@@ -25,23 +25,6 @@
     }
     .detail-toolbar-left { display: flex; align-items: center; gap: 16px; }
     .detail-toolbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
-    .detail-back {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        min-width: 32px;
-        height: 32px;
-        padding: 0;
-        color: var(--c-fg-sec);
-        background: #fff;
-        border: 1px solid var(--c-border);
-        border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0,0,0,.05);
-        text-decoration: none;
-        transition: all 0.2s;
-    }
-    .detail-back:hover { background: var(--c-bg); color: var(--c-fg); }
     .detail-title {
         font-size: 14px;
         font-weight: 800;
@@ -50,21 +33,6 @@
         text-transform: uppercase;
         letter-spacing: 0.02em;
     }
-    .btn-detail {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        font-size: 11px;
-        font-weight: 700;
-        border-radius: 8px;
-        text-decoration: none !important;
-        transition: all 0.2s;
-    }
-    .btn-detail-outline { color: var(--c-fg-sec); background: #fff; border: 1px solid var(--c-border); }
-    .btn-detail-outline:hover { background: var(--c-bg); color: var(--c-fg); }
-    .btn-detail-solid { color: #fff; background: var(--c-primary); border: 1px solid var(--c-primary); }
-    .btn-detail-solid:hover { background: var(--c-primary-hover); color: #fff; }
     .detail-profile { padding: 20px; display: flex; gap: 20px; align-items: flex-start; }
     /* Avatar inisial netral, sama dengan komponen user-avatar global ukuran xl */
     .detail-avatar {
@@ -178,64 +146,6 @@
     .peran-badge.panitia { background: var(--c-sky-subtle); color: var(--c-sky); }
     .peran-badge.peserta { background: var(--c-success-subtle); color: var(--c-success); }
 
-    .btn-primary-custom {
-        background: var(--c-primary);
-        color: #fff;
-        border: none;
-        padding: 8px 18px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none !important;
-    }
-    .btn-primary-custom:hover {
-        background: var(--c-primary-hover);
-        color: #fff;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
-    }
-    /* Tombol sekunder: sama dengan tombol outline "Audit Logs"/"Users" di dashboard global
-       dan tombol Kembali di Detail Alumni. */
-    .btn-outline-custom {
-        background: #fff;
-        color: var(--c-fg-sec);
-        border: 1px solid var(--c-border);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-        padding: 8px 18px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        text-decoration: none !important;
-    }
-    .btn-outline-custom:hover {
-        background: var(--c-bg);
-        border-color: var(--c-border-strong);
-        color: var(--c-fg);
-    }
-    .btn-danger-sm {
-        background: var(--c-error-0);
-        color: var(--c-error);
-        border: 1px solid var(--c-error-subtle);
-        padding: 4px 10px;
-        border-radius: 6px;
-        font-size: 11px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-danger-sm:hover {
-        background: var(--c-error-subtle);
-    }
     .prestasi-item {
         background: var(--c-grey-0);
         border: 1px solid var(--c-border);
@@ -289,7 +199,7 @@
     {{-- ── Toolbar ── --}}
     <div class="detail-toolbar">
         <div class="detail-toolbar-left">
-            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="detail-back" title="Kembali" aria-label="Kembali">
+            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" title="Kembali" aria-label="Kembali">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
             </a>
             <h1 class="detail-title">Detail Mahasiswa</h1>

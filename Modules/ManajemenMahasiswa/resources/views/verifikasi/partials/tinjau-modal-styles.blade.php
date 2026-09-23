@@ -96,21 +96,6 @@
     /* Sisa satu jatah — kuning seperti .sk-lawas: belum menghalangi, tapi layak disadari */
     .kuota-pill.hampir { background: var(--c-warning-subtle, #F9ECCB); color: var(--c-warning, #956321); }
 
-    /* Rincian klaim yang memakan kuota. Kotaknya memakai .tinjau-info dan
-       pemisah antar barisnya memakai garis putus-putus seperti .tp-field —
-       dua pola yang sudah ada, supaya blok ini tidak jadi pola ketiga. */
-    .kuota-dipakai-blok { margin-bottom: 12px; }
-    .kuota-dipakai-item { padding: 7px 0; border-bottom: 1px dashed var(--c-border, #DFE1E7); }
-    .kuota-dipakai-item:first-child { padding-top: 0; }
-    .kuota-dipakai-item:last-child { padding-bottom: 0; border-bottom: none; }
-    .kuota-dipakai-nama {
-        font-size: 12.5px; font-weight: 600; line-height: 1.4;
-        color: var(--c-fg, #0D0D12); word-break: break-word;
-    }
-    .kuota-dipakai-ket {
-        font-size: 11px; line-height: 1.4; color: var(--c-fg-muted, #666D80); margin-top: 2px;
-    }
-
     /* Penanda klaim yang diajukan di bawah SK lama — sengaja kuning, bukan merah:
        ini bukan kesalahan, hanya konteks yang harus disadari sebelum memutuskan */
     .sk-lawas {
@@ -119,52 +104,19 @@
         font-size: 11.5px; font-weight: 600; line-height: 1.45;
     }
 
-    /* Tombol keputusan — keduanya memakai biru standar SITKOM (--c-primary):
-       Setujui solid, Tolak versi subtle-outline (pola sama dengan .btn-tinjau)
-       agar tidak bersaing menarik perhatian dengan jalur utamanya */
-    .tp-aksi { display: flex; gap: 10px; margin-top: 14px; }
-    .tp-btn-tolak {
-        flex: 1; padding: 9px 0; border-radius: 10px; border: 1px solid var(--c-primary-border, #5C78B8);
-        background: var(--c-primary-subtle, rgba(11,38,110,0.08)); color: var(--c-primary, #0B266E);
-        font-weight: 700; font-size: 13.5px; cursor: pointer; transition: all .15s;
-    }
-    .tp-btn-tolak:hover { border-color: var(--c-primary, #0B266E); }
-    .tp-btn-setujui {
-        flex: 1; padding: 9px 0; border-radius: 10px; border: none;
-        background: var(--c-primary, #0B266E); color: #fff; font-weight: 700; font-size: 13.5px; cursor: pointer;
-        transition: background .15s;
-    }
-    .tp-btn-setujui:hover:not(:disabled) { background: var(--c-primary-hover, #091958); }
-    /* Dikelabukan saat langkahnya memang sudah tidak bisa diambil (mis. kuota
-       reward mahasiswa penuh), bukan dihilangkan — panel keputusan tetap utuh
-       bentuknya dan alasannya terbaca pada rambu kuota di atasnya. */
-    .tp-btn-setujui:disabled { background: var(--c-border-strong, #C1C7CF); cursor: not-allowed; }
+    /* Baris tombol keputusan Tolak/Setujui; bentuk tombolnya dari .mk-btn. */
+    .tp-aksi { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
 
-    /* Tombol pengiriman formulir di dalam kerangka yang sama (mis. Ajukan
-       Reward) — bentuknya menyamai tombol keputusan agar kedua modal terasa
-       satu keluarga meski isinya berbeda. */
-    .tp-btn-utama {
-        flex: 1; padding: 9px 0; border-radius: 10px; border: none;
-        background: var(--c-primary, #0B266E); color: #fff;
-        font-weight: 700; font-size: 13.5px; cursor: pointer;
-        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    /* Konfirmasi keputusan yang tidak bisa ditarik kembali (Setujui verifikasi,
+       Batalkan Persetujuan reward) — muncul di tempat tombol aksinya, bukan
+       sebagai modal kedua, supaya tidak ada backdrop Bootstrap yang bertumpuk. */
+    .tp-konfirmasi {
+        margin-top: 14px; padding: 12px 14px; border-radius: 10px;
+        background: var(--c-warning-subtle, #F9ECCB); border: 1px solid var(--c-warning, #956321);
+        color: var(--c-warning, #956321); font-size: 12.5px; font-weight: 600; line-height: 1.5;
     }
-    .tp-btn-utama:disabled { background: var(--c-border-strong, #C1C7CF); cursor: not-allowed; }
-    .tp-btn-netral {
-        flex: 0 0 auto; padding: 9px 20px; border-radius: 10px;
-        border: 1px solid var(--c-border, #DFE1E7); background: var(--c-card, #fff);
-        color: var(--c-fg-sec, #353849); font-weight: 600; font-size: 13.5px; cursor: pointer;
-    }
-    .tp-btn-netral:hover { background: var(--c-bg, #f6f7f9); }
-
-    /* Aksi mundur/destruktif pada modal baca-saja (mis. batalkan pengajuan) —
-       selebar panel & di bawah datanya, jadi hanya diambil setelah dibaca. */
-    .tp-btn-batal {
-        width: 100%; padding: 9px 0; border-radius: 10px; border: 1px solid var(--c-error-subtle, #FADAE1);
-        background: var(--c-error-subtle, #FADAE1); color: var(--c-error, #DF1C41);
-        font-weight: 700; font-size: 13.5px; cursor: pointer;
-    }
-    .tp-btn-batal:hover { background: var(--c-error, #DF1C41); color: #fff; }
+    .tp-konfirmasi p { margin: 0; }
+    .tp-konfirmasi .tp-aksi { margin-top: 10px; }
 
     @media (max-width: 991px) {
         .tp-grid { grid-template-columns: 1fr; }

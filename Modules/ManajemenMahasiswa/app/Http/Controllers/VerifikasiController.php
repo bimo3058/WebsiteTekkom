@@ -1071,69 +1071,6 @@ class VerifikasiController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Batalkan Verifikasi — kembalikan keputusan ke "menunggu"
-    //
-    // Persetujuan/penolakan sebelumnya bersifat final: satu klik keliru tidak
-    // punya jalan pulang, termasuk untuk pengajuan yang ternyata disetujui tanpa
-    // berkas bukti. Keputusan dikosongkan seluruhnya (verifikator, waktu, catatan)
-    // supaya barisnya kembali seperti belum pernah ditinjau.
-    // -------------------------------------------------------------------------
-
-    public function batalkanVerifikasiRiwayat(int $id)
-    {
-        $riwayat = RiwayatKegiatan::findOrFail($id);
-
-        if ($riwayat->verification_status === RiwayatKegiatan::VERIF_PENDING) {
-            return redirect()
-                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
-                ->with('error', 'Pengajuan ini memang masih menunggu verifikasi.');
-        }
-
-        $riwayat->update([
-            'verification_status' => RiwayatKegiatan::VERIF_PENDING,
-            'verified_by'         => null,
-            'verified_at'         => null,
-            'verification_note'   => null,
-        ]);
-
-        return redirect()
-            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
-            ->with('success', 'Verifikasi dibatalkan. Pengajuan kembali ke daftar menunggu.');
-    }
-
-    public function batalkanVerifikasiPrestasi(int $id)
-    {
-        $prestasi = Prestasi::findOrFail($id);
-
-        if ($prestasi->verification_status === Prestasi::VERIF_PENDING) {
-            return redirect()
-                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
-                ->with('error', 'Pengajuan ini memang masih menunggu verifikasi.');
-        }
-
-        // Reward hanya boleh lahir dari prestasi yang sudah disetujui. Kalau
-        // rewardnya sudah berjalan, urutannya dibalik dulu dari halaman Klaim
-        // Reward — kalau tidak, akan ada klaim yang menggantung pada prestasi
-        // yang statusnya kembali menunggu.
-        if ($prestasi->reward_status !== Prestasi::CLAIM_BELUM_AJUKAN) {
-            return redirect()
-                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
-                ->with('error', 'Prestasi ini sudah punya klaim reward. Batalkan klaim rewardnya lebih dulu di halaman Klaim Reward.');
-        }
-
-        $prestasi->update([
-            'verification_status' => Prestasi::VERIF_PENDING,
-            'verified_by'         => null,
-            'verified_at'         => null,
-            'verification_note'   => null,
-        ]);
-
-        return redirect()
-            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
-            ->with('success', 'Verifikasi dibatalkan. Pengajuan kembali ke daftar menunggu.');
-    }
-
-    // -------------------------------------------------------------------------
     // Ajukan Reward — Mahasiswa pemilik mengajukan reward prestasinya
     // (Request Bu Bellia / B.2 — dasar SK FT 774/2025)
     // -------------------------------------------------------------------------

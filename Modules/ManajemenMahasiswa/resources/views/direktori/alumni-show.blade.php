@@ -30,23 +30,6 @@
     }
     .detail-toolbar-left { display: flex; align-items: center; gap: 16px; }
     .detail-toolbar-right { display: flex; gap: 10px; flex-wrap: wrap; }
-    .detail-back {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 32px;
-        min-width: 32px;
-        height: 32px;
-        padding: 0;
-        color: var(--c-fg-sec);
-        background: #fff;
-        border: 1px solid var(--c-border);
-        border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0,0,0,.05);
-        text-decoration: none;
-        transition: all 0.2s;
-    }
-    .detail-back:hover { background: var(--c-bg); color: var(--c-fg); }
     .detail-title {
         font-size: 14px;
         font-weight: 800;
@@ -55,21 +38,6 @@
         text-transform: uppercase;
         letter-spacing: 0.02em;
     }
-    .btn-detail {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        font-size: 11px;
-        font-weight: 700;
-        border-radius: 8px;
-        text-decoration: none !important;
-        transition: all 0.2s;
-    }
-    .btn-detail-outline { color: var(--c-fg-sec); background: #fff; border: 1px solid var(--c-border); }
-    .btn-detail-outline:hover { background: var(--c-bg); color: var(--c-fg); }
-    .btn-detail-solid { color: #fff; background: var(--c-primary); border: 1px solid var(--c-primary); }
-    .btn-detail-solid:hover { background: var(--c-primary-hover); color: #fff; }
     .detail-profile { padding: 20px; display: flex; gap: 20px; align-items: flex-start; }
     /* Avatar inisial netral, sama dengan komponen user-avatar global ukuran xl */
     .detail-avatar {
@@ -143,7 +111,7 @@
     {{-- ── Toolbar ── --}}
     <div class="detail-toolbar">
         <div class="detail-toolbar-left">
-            <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}" class="detail-back" title="Kembali" aria-label="Kembali">
+            <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" title="Kembali" aria-label="Kembali">
                 <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
             </a>
             <h1 class="detail-title">Detail Alumni</h1>
@@ -352,7 +320,7 @@
                               action="{{ route('manajemenmahasiswa.direktori.alumni.prestasi.destroy', $p->id) }}"
                               onsubmit="return mkConfirmSubmit(this, 'Hapus prestasi ini?', { title: 'Hapus Prestasi', confirmText: 'Ya, Hapus' })">
                             @csrf @method('DELETE')
-                            <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">Hapus</button>
+                            <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Hapus</button>
                         </form>
                     @endif
                 </div>
@@ -487,7 +455,7 @@
                                           action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.destroy', $rw->id) }}"
                                           onsubmit="return mkConfirmSubmit(this, 'Hapus riwayat ini?', { title: 'Hapus Riwayat', confirmText: 'Ya, Hapus' })">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">Hapus</button>
+                                        <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Hapus</button>
                                     </form>
                                 @endif
                             </td>
@@ -547,7 +515,7 @@
                                           action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.destroy', $rw->id) }}"
                                           onsubmit="return mkConfirmSubmit(this, 'Hapus riwayat ini?', { title: 'Hapus Riwayat', confirmText: 'Ya, Hapus' })">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">Hapus</button>
+                                        <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Hapus</button>
                                     </form>
                                 @else
                                     <span style="font-size:11px;color:var(--c-border-strong);">Auto</span>

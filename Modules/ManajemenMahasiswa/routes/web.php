@@ -568,13 +568,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::patch('/prestasi/{id}/reject', [VerifikasiController::class, 'rejectPrestasi'])
                     ->name('prestasi.reject')->where('id', '[0-9]+');
 
-                // Kembalikan keputusan ke "menunggu". Persetujuan/penolakan
-                // sebelumnya final tanpa jalan pulang, sehingga satu klik keliru
-                // tidak bisa dibetulkan lewat aplikasi.
-                Route::patch('/riwayat/{id}/batal-verifikasi', [VerifikasiController::class, 'batalkanVerifikasiRiwayat'])
-                    ->name('riwayat.batal')->where('id', '[0-9]+');
-                Route::patch('/prestasi/{id}/batal-verifikasi', [VerifikasiController::class, 'batalkanVerifikasiPrestasi'])
-                    ->name('prestasi.batal')->where('id', '[0-9]+');
+                // Keputusan verifikasi prestasi & kegiatan FINAL (23 Sep 2026):
+                // route "batal-verifikasi" dicabut. Verifikasi adalah keputusan
+                // internal departemen — tidak ada pihak luar yang bisa
+                // membaliknya — jadi salah klik dicegah di depan lewat
+                // konfirmasi sebelum menyetujui, bukan dibalik di belakang.
+                // Salah tolak tetap bisa pulih: mahasiswa cukup mengajukan ulang.
+                // Pembatalan hanya ada di Klaim Prestasi (lihat grup di bawah).
             });
 
             // Keputusan reward prestasi — admin kemahasiswaan saja.

@@ -62,9 +62,19 @@
                                               style="border-radius: 10px; font-size: 13px;"
                                               oninput="document.getElementById('charCount_tp').innerText = this.value.length + ' / 200 huruf'; document.getElementById('tpError').style.display = 'none';"></textarea>
                                     <div id="tpError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
-                                    <div class="tp-aksi">
+                                    <div class="tp-aksi" id="tpAksiUtama">
                                         <button type="button" id="tpTolakBtn" class="mk-btn mk-btn--secondary">Tolak</button>
                                         <button type="button" id="tpSetujuiBtn" class="mk-btn mk-btn--primary">Setujui</button>
+                                    </div>
+                                    {{-- Persetujuan verifikasi final (tidak ada "Batalkan Verifikasi"),
+                                         jadi salah klik dicegah di sini. Penolakan tidak perlu
+                                         dikonfirmasi: mahasiswa masih bisa mengajukan ulang. --}}
+                                    <div id="tpKonfirmasi" class="tp-konfirmasi" style="display: none;">
+                                        <p>Keputusan verifikasi bersifat final dan tidak dapat dibatalkan. Setujui pengajuan ini?</p>
+                                        <div class="tp-aksi">
+                                            <button type="button" id="tpKembaliBtn" class="mk-btn mk-btn--secondary">Kembali</button>
+                                            <button type="button" id="tpYaSetujuiBtn" class="mk-btn mk-btn--primary">Ya, Setujui</button>
+                                        </div>
                                     </div>
                                 </div>
                             </form>
@@ -233,7 +243,7 @@ function openTinjau(data) {
     if (!bolehAksi && data.aksi && typeof window[data.aksi.panggil] === 'function') {
         const btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = data.aksi.gaya === 'tolak' ? 'tp-btn-batal' : 'tp-btn-utama';
+        btn.className = 'mk-btn mk-btn--block ' + (data.aksi.gaya === 'tolak' ? 'mk-btn--secondary' : 'mk-btn--primary');
         btn.textContent = data.aksi.label;
         btn.onclick = function () {
             const lanjut = function () { window[data.aksi.panggil].apply(null, data.aksi.args || []); };
@@ -252,9 +262,20 @@ function openTinjau(data) {
         noteEl.value = '';
         document.getElementById('charCount_tp').innerText = '0 / 200 huruf';
         document.getElementById('tpError').style.display = 'none';
+        tpTampilKonfirmasi(false);
     }
 
     new bootstrap.Modal(modalEl).show();
+}
+
+// Tukar tombol Tolak/Setujui dengan kotak konfirmasi "keputusan final"
+function tpTampilKonfirmasi(tampil) {
+    const utama = document.getElementById('tpAksiUtama');
+    const konf  = document.getElementById('tpKonfirmasi');
+    if (!utama || !konf) return;
+    utama.style.display = tampil ? 'none' : 'flex';
+    konf.style.display  = tampil ? 'block' : 'none';
+    document.getElementById('tpYaSetujuiBtn').disabled = false;
 }
 
 @if($tinjauAksi)
@@ -276,7 +297,13 @@ function openTinjau(data) {
         form.submit();
     }
 
-    document.getElementById('tpSetujuiBtn').addEventListener('click', function () { kirim('approve'); });
+    // Setujui baru terkirim setelah dikonfirmasi — keputusannya tidak bisa dibatalkan
+    document.getElementById('tpSetujuiBtn').addEventListener('click', function () { tpTampilKonfirmasi(true); });
+    document.getElementById('tpKembaliBtn').addEventListener('click', function () { tpTampilKonfirmasi(false); });
+    document.getElementById('tpYaSetujuiBtn').addEventListener('click', function () {
+        this.disabled = true;
+        kirim('approve');
+    });
     document.getElementById('tpTolakBtn').addEventListener('click', function () { kirim('reject'); });
 })();
 @endif

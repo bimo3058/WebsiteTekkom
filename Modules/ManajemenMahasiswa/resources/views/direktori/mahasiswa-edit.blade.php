@@ -56,56 +56,13 @@
         border-color: var(--c-primary);
         box-shadow: 0 0 0 3px var(--c-primary-subtle);
     }
-    .btn-primary-custom {
-        background: var(--c-primary);
-        color: #fff;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-    /* Hover sama dengan tombol Simpan di Edit Alumni & tombol "Permissions" global */
-    .btn-primary-custom:hover {
-        background: var(--c-primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
-    }
-    /* Tombol sekunder: sama dengan tombol outline "Audit Logs"/"Users" di dashboard global
-       dan tombol Batal di Edit Alumni. */
-    .btn-outline-custom {
-        background: #fff;
-        color: var(--c-fg-sec);
-        border: 1px solid var(--c-border);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-        padding: 10px 24px;
-        border-radius: 10px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-decoration: none !important;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .btn-outline-custom:hover {
-        background: var(--c-bg);
-        border-color: var(--c-border-strong);
-        color: var(--c-fg);
-    }
 </style>
 
 <!-- Back Button -->
 <div class="mb-3">
-    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="detail-back" title="Kembali" aria-label="Kembali">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-        <span class="detail-back-label">Kembali</span>
+    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm" title="Kembali" aria-label="Kembali">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        Kembali
     </a>
 </div>
 
@@ -291,11 +248,11 @@
 
         <!-- Submit -->
         <div class="d-flex justify-content-end gap-3 mt-4 pt-3" style="border-top: 1px solid var(--c-border);">
-            <button type="submit" class="btn-primary-custom">
+            <button type="submit" class="mk-btn mk-btn--primary">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                 Simpan Perubahan
             </button>
-            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="btn-outline-custom">
+            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-btn mk-btn--secondary">
                 Batal
             </a>
         </div>
