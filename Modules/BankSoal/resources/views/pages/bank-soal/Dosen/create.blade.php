@@ -1,120 +1,57 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
         <span class="mx-2 text-slate-300">/</span>
         <span class="text-slate-800 font-semibold">Buat Soal Baru</span>
     @endsection
+    <x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
     <x-banksoal::ui.page-header title="Buat Soal Baru" subtitle="Lengkapi formulir untuk menambahkan butir soal ke bank soal.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
+    </x-slot:header>
 
-    <x-banksoal::ui.panel title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
+    <x-banksoal::ui.panel class="bs-question-form-panel" title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
         <form action="{{ route('banksoal.soal.dosen.store') }}" method="POST" id="formSoal">
             @csrf
-            <div x-data="soalForm()" class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
-                <!-- Mata Kuliah -->
-                <div class="relative" @click.outside="mkOpen = false">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
-                    <input type="text" name="mk_id" x-model="mkId" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1" oninvalid="this.setCustomValidity('Pilih mata kuliah')" oninput="this.setCustomValidity('')">
-                    <button type="button" @click="mkOpen = !mkOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="mkOpen ? 'border-primary ring-2 ring-primary/20' : ''">
-                        <span x-text="getLabel(mkOptions, mkId, 'Pilih Mata Kuliah...')" :class="mkId ? 'text-slate-800' : 'text-slate-500'"></span>
-                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="mkOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div x-show="mkOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
-                        <ul class="py-1 text-sm text-slate-700">
-                            <li>
-                                <button type="button" @click="mkId = ''; mkOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih Mata Kuliah...</button>
-                            </li>
-                            <template x-for="opt in mkOptions" :key="opt.id">
-                                <li>
-                                    <button type="button" @click="mkId = opt.id; mkOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="mkId === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
-                                        <span x-text="opt.label"></span>
-                                        <i class="fas fa-check text-primary text-xs" x-show="mkId === opt.id"></i>
-                                    </button>
-                                </li>
-                            </template>
-                        </ul>
-                    </div>
+            <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
+                <div>
+                    <label for="mk_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
+                    <x-banksoal::ui.alpine-select id="mk_id" label="Mata Kuliah">
+                    <select name="mk_id" id="mk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
+                        <option value="">Pilih Mata Kuliah...</option>
+                        @foreach($mataKuliahDosen as $mk)
+                            <option value="{{ $mk->id }}" {{ old('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>
+                        @endforeach
+                    </select>
+                    </x-banksoal::ui.alpine-select>
                     @error('mk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
-
-                <!-- CPL -->
-                <div class="relative" @click.outside="cplOpen = false">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
-                    <input type="text" name="cpl_id" x-model="cplId" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1" oninvalid="this.setCustomValidity('Pilih CPL')" oninput="this.setCustomValidity('')">
-                    <button type="button" @click="cplOpen = !cplOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="cplOpen ? 'border-primary ring-2 ring-primary/20' : ''" :disabled="!mkId || cplLoading">
-                        <span x-text="cplLoading ? 'Memuat CPL...' : getLabel(cplOptions, cplId, 'Pilih CPL...')" :class="cplId ? 'text-slate-800' : 'text-slate-500'"></span>
-                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="cplOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div x-show="cplOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
-                        <ul class="py-1 text-sm text-slate-700">
-                            <li>
-                                <button type="button" @click="cplId = ''; cplOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih CPL...</button>
-                            </li>
-                            <template x-for="opt in cplOptions" :key="opt.id">
-                                <li>
-                                    <button type="button" @click="cplId = opt.id; cplOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="cplId === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
-                                        <span x-text="opt.label"></span>
-                                        <i class="fas fa-check text-primary text-xs" x-show="cplId === opt.id"></i>
-                                    </button>
-                                </li>
-                            </template>
-                        </ul>
-                    </div>
+                <div>
+                    <label for="cpl_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
+                    <x-banksoal::ui.alpine-select id="cpl_id" label="CPL">
+                    <select name="cpl_id" id="cpl_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPL...</option></select>
+                    </x-banksoal::ui.alpine-select>
                     @error('cpl_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
-
-                <!-- CPMK -->
-                <div class="relative" @click.outside="cpmkOpen = false">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
-                    <input type="text" name="cpmk_id" x-model="cpmkId" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1" oninvalid="this.setCustomValidity('Pilih CPMK')" oninput="this.setCustomValidity('')">
-                    <button type="button" @click="cpmkOpen = !cpmkOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="cpmkOpen ? 'border-primary ring-2 ring-primary/20' : ''" :disabled="!cplId || cpmkLoading">
-                        <span x-text="cpmkLoading ? 'Memuat CPMK...' : getLabel(cpmkOptions, cpmkId, 'Pilih CPMK...')" :class="cpmkId ? 'text-slate-800' : 'text-slate-500'"></span>
-                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="cpmkOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div x-show="cpmkOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
-                        <ul class="py-1 text-sm text-slate-700">
-                            <li>
-                                <button type="button" @click="cpmkId = ''; cpmkOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih CPMK...</button>
-                            </li>
-                            <template x-for="opt in cpmkOptions" :key="opt.id">
-                                <li>
-                                    <button type="button" @click="cpmkId = opt.id; cpmkOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="cpmkId === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
-                                        <span x-text="opt.label"></span>
-                                        <i class="fas fa-check text-primary text-xs" x-show="cpmkId === opt.id"></i>
-                                    </button>
-                                </li>
-                            </template>
-                        </ul>
-                    </div>
+                <div>
+                    <label for="cpmk_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
+                    <x-banksoal::ui.alpine-select id="cpmk_id" label="CPMK">
+                    <select name="cpmk_id" id="cpmk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPMK...</option></select>
+                    </x-banksoal::ui.alpine-select>
                     @error('cpmk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
-
-                <!-- Tingkat Kesulitan -->
-                <div class="relative" @click.outside="kesulitanOpen = false">
-                    <label class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
-                    <input type="text" name="kesulitan" x-model="kesulitan" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1">
-                    <button type="button" @click="kesulitanOpen = !kesulitanOpen" class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all" :class="kesulitanOpen ? 'border-primary ring-2 ring-primary/20' : ''">
-                        <span x-text="getLabel(kesulitanOptions, kesulitan, 'Pilih Tingkat Kesulitan...')" :class="kesulitan ? 'text-slate-800' : 'text-slate-500'"></span>
-                        <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="kesulitanOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div x-show="kesulitanOpen" x-transition class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto" style="display: none;">
-                        <ul class="py-1 text-sm text-slate-700">
-                            <li>
-                                <button type="button" @click="kesulitan = ''; kesulitanOpen = false" class="w-full text-left px-4 py-2 hover:bg-slate-50 text-slate-500">Pilih Tingkat Kesulitan...</button>
-                            </li>
-                            <template x-for="opt in kesulitanOptions" :key="opt.id">
-                                <li>
-                                    <button type="button" @click="kesulitan = opt.id; kesulitanOpen = false" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between" :class="kesulitan === opt.id ? 'bg-primary/5 text-slate-800 font-medium' : ''">
-                                        <span x-text="opt.label"></span>
-                                        <i class="fas fa-check text-primary text-xs" x-show="kesulitan === opt.id"></i>
-                                    </button>
-                                </li>
-                            </template>
-                        </ul>
-                    </div>
+                <div>
+                    <label for="kesulitan-trigger" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
+                    <x-banksoal::ui.alpine-select id="kesulitan" label="Tingkat Kesulitan">
+                    <select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
+                        <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Easy</option>
+                        <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
+                        <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Advanced</option>
+                    </select>
+                    </x-banksoal::ui.alpine-select>
                 </div>
 
                 <!-- Bobot / Skor -->
@@ -166,6 +103,8 @@
             </div>
         </form>
     </x-banksoal::ui.panel>
+
+    </x-banksoal::ui.bank-soal-page>
 
     @push('styles')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">

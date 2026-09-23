@@ -27,7 +27,10 @@
 }" x-init="loadNotifications()" @click.outside="open = false" @keydown.escape.stop="open = false; $refs.bell.focus()">
     <button type="button" x-ref="bell" class="dosen-notification-button" title="Notifikasi" aria-label="Notifikasi Dosen"
             :aria-expanded="open" aria-controls="dosen-notification-panel" @click="toggle()">
-        <i class="fas fa-bell"></i>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10 21a2 2 0 004 0" />
+        </svg>
         <span class="dosen-notification-dot" x-show="items.length > 0" x-cloak></span>
     </button>
 
