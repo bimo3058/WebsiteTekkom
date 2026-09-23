@@ -114,20 +114,6 @@
             Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
         </span>
     @endunless
-
-    <x-slot:actions>
-        @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
-            <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
-               style="background:var(--c-primary); color:#fff; font-weight:600; font-size:13px; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
-               onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
-                Klaim Reward
-                @if($pendingPrestasiReward > 0)
-                    <span style="background:var(--c-card); color:var(--c-primary); font-size:11px; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
-                @endif
-            </a>
-        @endif
-    </x-slot:actions>
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->

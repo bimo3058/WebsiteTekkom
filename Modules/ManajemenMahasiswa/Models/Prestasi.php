@@ -32,8 +32,10 @@ class Prestasi extends Model
         // Dibekukan saat klaim diajukan — lihat SK_BERLAKU
         'reward_kuota_grup',
         'reward_sk_ref',
+        'reward_tahun_ajaran',
         'reward_jml_mk_max',
         'reward_sks_max',
+        'reward_sks_diajukan',
         'reward_mk_diajukan',
         'reward_mk_disetujui',
         'reward_reviewed_by',
@@ -119,6 +121,18 @@ class Prestasi extends Model
      */
     const SK_BERLAKU = 'SK FT Undip No. 774/2025';
 
+    /**
+     * Tanggal mulai berlaku tiap SK (SK 774 poin 9: terhitung Januari 2025).
+     *
+     * Dikunci per SK, bukan satu tanggal tunggal: klaim lama dibaca dengan
+     * tanggal milik SK yang dicap padanya, jadi tanda "sebelum masa berlaku"
+     * tidak ikut bergeser saat SK_BERLAKU diganti. Saat SK berganti, tambahkan
+     * barisnya di sini — jangan ubah baris yang sudah ada.
+     */
+    const SK_MULAI_BERLAKU = [
+        self::SK_BERLAKU => '2025-01-01',
+    ];
+
     const PENYELENGGARA_BELMAWA = 'belmawa_puspresnas'; // Ditjen Belmawa / Puspresnas (poin 1)
     const PENYELENGGARA_LAINNYA = 'lainnya';            // Selain Belmawa/Puspresnas (poin 2)
 
@@ -169,20 +183,35 @@ class Prestasi extends Model
         ],
     ];
 
-    // Grup kuota (SK 774 poin 4 & 5)
-    const KUOTA_UMUM      = 'umum';      // maks 2x
-    const KUOTA_INVENTION = 'invention'; // maks 1x
+    // Grup kuota. Kode 'umum' sudah tersimpan di reward_kuota_grup klaim lama,
+    // jadi kodenya tetap; yang berubah hanya sebutan dan batasnya.
+    const KUOTA_UMUM      = 'umum';
+    const KUOTA_INVENTION = 'invention';
 
+    /**
+     * Batas jumlah reward per mahasiswa selama studi, per kelompok. null = tanpa batas.
+     *
+     * Kebijakan departemen (23 Sep 2026) melonggarkan SK 774: reward biasa tanpa
+     * batas, invention/expo/fair maks 5×. Batas asli SK disimpan terpisah di
+     * SK_BATAS_* — tidak memblokir, hanya memicu peringatan di modal Tinjau
+     * admin, karena keputusan final di fakultas masih mengacu ke SK.
+     */
     const KUOTA_MAKS = [
-        self::KUOTA_UMUM      => 2,
-        self::KUOTA_INVENTION => 1,
+        self::KUOTA_UMUM      => null,
+        self::KUOTA_INVENTION => 5,
     ];
+
+    // SK 774 poin 4: maks 2× selama kuliah (semua jenis); poin 5: 2.e–2.f maks 1×
+    const SK_BATAS_TOTAL     = 2;
+    const SK_BATAS_INVENTION = 1;
 
     // Sebutan grup kuota untuk mahasiswa & admin. Satu tempat, karena label ini
     // muncul di pesan guard, rambu kuota modal, dan banner kuota mahasiswa —
-    // ketiganya harus menyebut grup yang sama dengan nama yang sama.
+    // ketiganya harus menyebut grup yang sama dengan nama yang sama. Kelompok
+    // tanpa batas sengaja tidak diberi nama khusus ("umum" dulu membingungkan):
+    // ia hanya "prestasi lainnya" di samping kelompok yang dibatasi.
     const KUOTA_LABELS = [
-        self::KUOTA_UMUM      => 'umum',
+        self::KUOTA_UMUM      => 'prestasi lainnya',
         self::KUOTA_INVENTION => 'invention/expo/fair',
     ];
 
@@ -305,6 +334,99 @@ class Prestasi extends Model
     }
 
     // -------------------------------------------------------------------------
+    // Tahun ajaran — semester yang dipilih mahasiswa saat mengajukan klaim
+    // -------------------------------------------------------------------------
+
+    /** Tahun ajaran paling awal yang boleh dipilih (ganjil 2022/2023). */
+    const TA_TAHUN_MULAI = 2022;
+
+    const SEMESTER_GANJIL = 'ganjil';
+    const SEMESTER_GENAP  = 'genap';
+
+    /**
+     * Tahun ajaran yang sedang berjalan, dalam bentuk kode "2023-ganjil".
+     *
+     * Kode memakai tahun pembuka, jadi urutan abjadnya sama dengan urutan waktu
+     * ("2023-ganjil" < "2023-genap" < "2024-ganjil") dan bisa langsung diurutkan
+     * di query tanpa kolom bantu.
+     */
+    public static function tahunAjaranSekarang(): string
+    {
+        $bulan = (int) now()->month;
+        $tahun = (int) now()->year;
+
+        // Ganjil berjalan Agustus–Januari, genap Februari–Juli. Januari masih
+        // milik tahun ajaran yang dibuka Agustus tahun sebelumnya.
+        if ($bulan >= 8) {
+            return $tahun . '-' . self::SEMESTER_GANJIL;
+        }
+
+        return $bulan === 1
+            ? ($tahun - 1) . '-' . self::SEMESTER_GANJIL
+            : ($tahun - 1) . '-' . self::SEMESTER_GENAP;
+    }
+
+    /**
+     * Pilihan tahun ajaran [kode => label], terbaru lebih dulu.
+     *
+     * Dihitung dari tanggal hari ini, bukan disimpan di tabel atau seeder —
+     * itulah yang membuat daftarnya bertambah sendiri tiap semester berganti
+     * tanpa ada yang perlu dijalankan.
+     */
+    public static function tahunAjaranList(): array
+    {
+        [$tahunKini, $semKini] = self::uraikanTahunAjaran(self::tahunAjaranSekarang());
+
+        $list = [];
+        for ($tahun = self::TA_TAHUN_MULAI; $tahun <= $tahunKini; $tahun++) {
+            foreach ([self::SEMESTER_GANJIL, self::SEMESTER_GENAP] as $semester) {
+                // Genap tahun ajaran berjalan belum dibuka bila sekarang masih ganjil
+                if ($tahun === $tahunKini && $semester === self::SEMESTER_GENAP && $semKini === self::SEMESTER_GANJIL) {
+                    continue;
+                }
+
+                $kode        = $tahun . '-' . $semester;
+                $list[$kode] = self::tahunAjaranLabel($kode);
+            }
+        }
+
+        return array_reverse($list, true);
+    }
+
+    /**
+     * Label tampilan, mis. "Ganjil 2023/2024".
+     *
+     * Sengaja bisa memformat kode apa pun yang pernah tersimpan, termasuk yang
+     * sudah jatuh di luar tahunAjaranList() — kalau TA_TAHUN_MULAI digeser,
+     * klaim lama tetap punya keterangan yang terbaca.
+     */
+    public static function tahunAjaranLabel(?string $kode): ?string
+    {
+        if (!$kode) {
+            return null;
+        }
+
+        $bagian = self::uraikanTahunAjaran($kode);
+        if (!$bagian) {
+            return $kode;
+        }
+
+        [$tahun, $semester] = $bagian;
+
+        return ucfirst($semester) . ' ' . $tahun . '/' . ($tahun + 1);
+    }
+
+    /** @return array{0:int,1:string}|null */
+    private static function uraikanTahunAjaran(string $kode): ?array
+    {
+        if (!preg_match('/^(\d{4})-(' . self::SEMESTER_GANJIL . '|' . self::SEMESTER_GENAP . ')$/', $kode, $cocok)) {
+            return null;
+        }
+
+        return [(int) $cocok[1], $cocok[2]];
+    }
+
+    // -------------------------------------------------------------------------
     // Relations
     // -------------------------------------------------------------------------
 
@@ -399,6 +521,11 @@ class Prestasi extends Model
             : null;
     }
 
+    public function getRewardTahunAjaranLabelAttribute(): ?string
+    {
+        return self::tahunAjaranLabel($this->reward_tahun_ajaran);
+    }
+
     public function isRewardDiajukan(): bool
     {
         return $this->reward_status === self::CLAIM_DIAJUKAN;
@@ -442,10 +569,15 @@ class Prestasi extends Model
      */
     public static function hitungJatahReward(string $penyelenggara, string $capaian, bool $isInvention = false): array
     {
-        // Kategori B (Lainnya) + kegiatan invention/expo/fair (SK 2.e & 2.f):
-        // ketentuan 2.b–2.d tidak berlaku, jatah tetap 1-2 MK / maks 2 SKS.
+        // Kategori B (Lainnya) + kegiatan invention/expo/fair: SK 2.e menggugurkan
+        // 2.b–2.d, lalu 2.f hanya memberi 1-2 MK / maks 2 SKS kepada peraih
+        // juara/medali. Finalis kegiatan jenis ini tidak mendapat reward.
         if ($penyelenggara === self::PENYELENGGARA_LAINNYA && $isInvention) {
-            return ['jml_mk_max' => 2, 'sks_max' => 2];
+            $dapat = \in_array($capaian, [self::CAPAIAN_JUARA1_EMAS, self::CAPAIAN_JUARA23_PERAK_PERUNGGU], true);
+
+            return $dapat
+                ? ['jml_mk_max' => 2, 'sks_max' => 2]
+                : ['jml_mk_max' => 0, 'sks_max' => 0];
         }
 
         $matrix = [
@@ -473,7 +605,46 @@ class Prestasi extends Model
         return ['jml_mk_max' => $entry[0], 'sks_max' => $entry[1]];
     }
 
-    /** Grup kuota untuk nilai mentah (poin 4 = umum maks 2x, poin 5 = invention maks 1x). */
+    /** Apakah kelompok ini sudah habis. Kelompok tanpa batas tidak pernah habis. */
+    public static function kuotaPenuh(string $grup, int $terpakai): bool
+    {
+        $maks = self::KUOTA_MAKS[$grup] ?? null;
+
+        return $maks !== null && $terpakai >= $maks;
+    }
+
+    /**
+     * Peringatan untuk admin bila menyetujui klaim ini melewati batas SK 774.
+     *
+     * Kebijakan departemen lebih longgar dari SK (lihat KUOTA_MAKS), jadi ini
+     * bukan penghalang — hanya pengingat bahwa fakultas bisa menolaknya.
+     *
+     * @param int $rewardLain      reward lain milik mahasiswa yang sudah disetujui (semua kelompok)
+     * @param int $inventionLain   bagian dari $rewardLain yang invention/expo/fair
+     */
+    public static function peringatanBatasSk(int $rewardLain, int $inventionLain, bool $isInvention): ?string
+    {
+        $alasan = [];
+
+        if ($rewardLain >= self::SK_BATAS_TOTAL) {
+            $alasan[] = "mahasiswa ini sudah menerima {$rewardLain} reward lain, sedangkan SK 774 poin 4 membatasi "
+                . self::SK_BATAS_TOTAL . "× selama kuliah";
+        }
+
+        if ($isInvention && $inventionLain >= self::SK_BATAS_INVENTION) {
+            $alasan[] = "sudah ada {$inventionLain} reward invention/expo/fair, sedangkan SK 774 poin 5 membatasi "
+                . self::SK_BATAS_INVENTION . "×";
+        }
+
+        if (!$alasan) {
+            return null;
+        }
+
+        return 'Di luar batas SK 774: ' . implode('; ', $alasan)
+            . '. Kebijakan departemen mengizinkannya, tetapi keputusan final di Bidang Akademik Fakultas masih mengacu ke SK.';
+    }
+
+    /** Grup kuota untuk nilai mentah: invention/expo/fair (poin 2.e–2.f) atau selainnya. */
     public static function tentukanKuotaGrup(?string $penyelenggara, bool $isInvention): string
     {
         return ($penyelenggara === self::PENYELENGGARA_LAINNYA && $isInvention)
@@ -498,5 +669,20 @@ class Prestasi extends Model
     public function rewardSkSudahDiganti(): bool
     {
         return $this->reward_sk_ref !== null && $this->reward_sk_ref !== self::SK_BERLAKU;
+    }
+
+    /**
+     * Prestasi ini terjadi sebelum SK yang jadi dasar klaimnya mulai berlaku.
+     *
+     * Hanya penanda untuk peninjau, bukan penghalang: prestasi sebelum 2025
+     * masih diatur SE 176/2020, dan keputusannya diserahkan ke departemen.
+     */
+    public function rewardSebelumMasaBerlaku(): bool
+    {
+        $mulai = self::SK_MULAI_BERLAKU[$this->reward_sk_ref ?? self::SK_BERLAKU] ?? null;
+
+        return $mulai !== null
+            && $this->tanggal !== null
+            && $this->tanggal->toDateString() < $mulai;
     }
 }

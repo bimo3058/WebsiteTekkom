@@ -93,6 +93,8 @@
         background: var(--c-primary-subtle, rgba(11,38,110,0.08)); color: var(--c-primary, #0B266E);
     }
     .kuota-pill.penuh { background: var(--c-error-subtle, #FADAE1); color: var(--c-error, #DF1C41); }
+    /* Sisa satu jatah — kuning seperti .sk-lawas: belum menghalangi, tapi layak disadari */
+    .kuota-pill.hampir { background: var(--c-warning-subtle, #F9ECCB); color: var(--c-warning, #956321); }
 
     /* Rincian klaim yang memakan kuota. Kotaknya memakai .tinjau-info dan
        pemisah antar barisnya memakai garis putus-putus seperti .tp-field —

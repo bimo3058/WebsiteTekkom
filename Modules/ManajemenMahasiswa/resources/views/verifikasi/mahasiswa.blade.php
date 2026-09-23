@@ -265,29 +265,91 @@
             font-weight: 700;
         }
 
-        .kuota-info {
-            font-size: 13px;
-            color: var(--c-fg-muted);
-            background: #fafafa;
-            border: 1px solid var(--c-border);
-            border-radius: 10px;
-            padding: 8px 12px;
-            margin-bottom: 12px;
+        /* Kombinasi yang tidak berhak reward (finalis kegiatan invention/expo/fair) */
+        .jatah-preview--kosong {
+            background: var(--c-error-subtle, #FADAE1);
+            border-color: var(--c-error, #DF1C41);
+            color: var(--c-error, #DF1C41);
         }
 
-        .kuota-info b {
-            color: var(--c-primary);
-        }
-
-        /* Baris kedua banner: keterangan di kiri, pemicu rincian di kanan.
-       Memakai ruang mendatar yang memang kosong, bukan menambah tinggi. */
-        .kuota-info-baris {
+        /* Ringkasan kuota di kanan toolbar tabel — mirip badge "N/3 slots used"
+       di Title Bidding Capstone (SICATA): sisa jatah dibaca sejajar judul,
+       bukan sebagai strip tambahan di atas tabel. Toolbar-nya sudah
+       space-between + flex-wrap, jadi di layar sempit kelompok ini turun
+       sendiri ke baris berikutnya. */
+        .kuota-toolbar {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
-            margin-top: 8px;
+            min-width: 0;
+        }
+
+        .kuota-ringkas {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .kuota-ringkas-label {
+            font-size: 12px;
+            color: var(--c-fg-muted);
+            font-weight: 500;
+        }
+
+        /* Aturan dibaca sebagai kalimat ("tanpa batas, kecuali …"), bukan nama
+       kelompok: kelompok tanpa batas tidak perlu diberi nama sendiri. */
+        .kuota-ringkas-teks {
+            font-size: 12px;
+            color: var(--c-fg);
+            font-weight: 600;
+        }
+
+        /* Daftar aturan di modal Aturan & rincian — isi .tinjau-info biasa */
+        .kuota-aturan {
+            margin: 0;
+            padding-left: 18px;
+            font-size: 12.5px;
+            line-height: 1.6;
+        }
+
+        .kuota-aturan li+li {
+            margin-top: 4px;
+        }
+
+        /* Callout "Kuota reward penuh" — padanan alert "Limit Reached" di Title
+       Bidding Capstone: ikon, judul, satu kalimat jalan keluar. Strukturnya menyalin
+       .alert-info di halaman Pengumuman, warnanya token warning. Hanya tampil
+       bila ada kelompok yang penuh, jadi tidak jadi hiasan permanen. */
+        .kuota-callout {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            border-radius: 10px;
+            background: var(--c-warning-subtle, #F9ECCB);
+            border: 1px solid var(--c-warning, #956321);
+            color: var(--c-warning, #956321);
+        }
+
+        .kuota-callout svg {
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .kuota-callout-judul {
+            font-size: 13px;
+            font-weight: 700;
+            margin: 0 0 2px;
+        }
+
+        .kuota-callout-isi {
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.5;
+            margin: 0;
         }
 
         /* Rincian kuota tinggal di dalam modal, bukan menumpuk di atas tabel:
@@ -335,6 +397,27 @@
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 10px;
+        }
+
+        /* Chip ringkas untuk sel tabel. Lebarnya dibatasi supaya klaim 3 MK
+           tidak meregangkan kolom lain; daftar utuhnya ada di modal Tinjau. */
+        .mk-sel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            max-width: 230px;
+        }
+
+        .mk-sel-tag {
+            display: inline-flex;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--c-primary);
+            background: var(--c-primary-subtle);
+            border: 1px solid rgba(11, 38, 110, 0.18);
+            border-radius: 50px;
+            padding: 2px 8px;
         }
 
         .mk-chip {
@@ -604,12 +687,47 @@
 
     @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 
+    @php
+        // Dipakai juga oleh modal pengajuan yang berada di luar blok per-tab,
+        // jadi didefinisikan di sini — bukan di dalam @if($tab === 'prestasi').
+        $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
+
+        // Kuota reward dihitung di awal karena dipakai callout di atas kartu,
+        // toolbar tabel, dan kolom Aksi. Variabel kuota hanya
+        // dikirim controller untuk tab klaim.
+        //
+        // Yang dihitung penuh adalah disetujui + yang masih menunggu: slot
+        // yang sudah dipesan pengajuan lain bukan slot yang tersisa.
+        $kuotaSemuaPenuh = false;
+        $grupPenuh       = [];
+        $adaMenunggu     = false;
+        // Ada kelompok tanpa batas → toolbar membaca "tanpa batas, kecuali …"
+        $adaTanpaBatas   = in_array(null, $P::KUOTA_MAKS, true);
+        if ($tab === 'klaim') {
+            foreach ($P::KUOTA_MAKS as $grupCek => $maksCek) {
+                if ($P::kuotaPenuh($grupCek, $kuotaTerpakai[$grupCek] ?? 0)) {
+                    $grupPenuh[] = $P::KUOTA_LABELS[$grupCek];
+                }
+            }
+            // Semua grup habis = tidak ada kategori apa pun yang masih bisa
+            // lolos, jadi tombol Ajukan Reward di kolom Aksi boleh dikelabukan.
+            // Selama ada kelompok tanpa batas, keadaan ini tidak pernah terjadi.
+            // Kalau hanya salah satu yang habis, grupnya baru ketahuan setelah
+            // mahasiswa memilih kategori — rambunya menyusul di dalam modal.
+            $kuotaSemuaPenuh = count($grupPenuh) === count($P::KUOTA_MAKS);
+            $adaMenunggu     = array_sum($kuotaMenunggu ?? []) > 0;
+        }
+    @endphp
+
 <!-- Page Header -->
     <x-manajemenmahasiswa::ui.page-header bordered
-        :title="$tab === 'prestasi' ? 'Prestasi Saya' : 'Riwayat Kegiatan Saya'">
+        :title="match($tab) { 'klaim' => 'Klaim Prestasi', 'riwayat' => 'Riwayat Kegiatan Saya', default => 'Prestasi Saya' }">
         @if($tab === 'prestasi')
-            Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda ajukan
-            rewardnya (konversi nilai mata kuliah, SK FT 774).
+            Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda lihat &amp;
+            ajukan rewardnya (konversi nilai mata kuliah, SK FT 774) di subbab Klaim Prestasi.
+        @elseif($tab === 'klaim')
+            Ajukan reward untuk prestasi Anda yang sudah disetujui. Reward berupa peningkatan nilai mata kuliah
+            (SK FT 774); mata kuliah final ditetapkan departemen.
         @else
             Ajukan riwayat keikutsertaan kegiatan untuk diverifikasi admin.
         @endif
@@ -642,10 +760,6 @@
         </div>
     @endif
     @php
-        // Dipakai juga oleh modal pengajuan yang berada di luar blok per-tab,
-        // jadi didefinisikan di sini — bukan di dalam @if($tab === 'prestasi').
-        $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
-
         // Batasnya diambil dari controller, satu angka untuk form & validasinya
         $maksNama  = \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_NAMA;
         $maksPeran = \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_PERAN;
@@ -876,73 +990,9 @@
                 @endif
             </div>
 
-            <!-- Info & Aturan (inside card, above table) -->
-            @php
-                $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
-                // Kedua grup penuh = tidak ada pilihan kategori apa pun yang masih bisa
-                // lolos, jadi tombol Ajukan Reward di kolom Aksi boleh dikelabukan.
-                // Kalau hanya salah satu yang penuh, grupnya baru ketahuan setelah
-                // mahasiswa memilih kategori — rambunya menyusul di dalam modal.
-                //
-                // Yang dihitung penuh adalah disetujui + yang masih menunggu: slot
-                // yang sudah dipesan pengajuan lain bukan slot yang tersisa.
-                $kuotaSemuaPenuh = true;
-                foreach ($P::KUOTA_MAKS as $grupCek => $maksCek) {
-                    if (($kuotaTerpakai[$grupCek] ?? 0) < $maksCek) {
-                        $kuotaSemuaPenuh = false;
-                        break;
-                    }
-                }
-                // Rinciannya layak dibuka begitu ada yang memakai ATAU memesan slot
-                $kuotaAdaIsi = collect($kuotaDipakai ?? [])->flatten(1)->isNotEmpty()
-                    || collect($kuotaMenungguDipakai ?? [])->flatten(1)->isNotEmpty();
-            @endphp
-            <div style="padding:14px 16px; border-bottom:1px solid #e5e7eb;">
-                <div class="kuota-info" style="margin-bottom:10px;">
-                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-                        <span>Kuota reward Anda (SK FT 774):</span>
-                        @foreach($P::KUOTA_MAKS as $grup => $maks)
-                            @php
-                                $pakai   = $kuota[$grup] ?? 0;
-                                $tunggu  = $kuotaMenunggu[$grup] ?? 0;
-                                $terisi  = $kuotaTerpakai[$grup] ?? $pakai;
-                            @endphp
-                            {{-- Disetujui & menunggu ditulis terpisah: keduanya beda arti
-                                 bagi mahasiswa, tapi sama-sama mengunci slot. --}}
-                            <span class="kuota-pill {{ $terisi >= $maks ? 'penuh' : '' }}">
-                                {{ $P::KUOTA_LABELS[$grup] }} {{ $terisi }}/{{ $maks }}{{ $tunggu > 0 ? " ({$pakai} disetujui + {$tunggu} menunggu)" : '' }}{{ $terisi >= $maks ? ' — penuh' : '' }}
-                            </span>
-                        @endforeach
-                    </div>
-                    <div class="kuota-info-baris">
-                        <span>Reward = peningkatan nilai mata kuliah; mata kuliah final ditetapkan departemen.</span>
-
-                        {{-- Pemicu rincian. Bentuknya .btn-tinjau — di modul ini tombol
-                        pembuka modal detail selalu berbentuk itu, dan rinciannya tidak
-                        boleh menambah tinggi banner karena tabelnya tepat di bawah. --}}
-                        @if($kuotaAdaIsi)
-                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" data-bs-toggle="modal"
-                                data-bs-target="#rincianKuotaModal">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="8" y1="6" x2="21" y2="6" />
-                                    <line x1="8" y1="12" x2="21" y2="12" />
-                                    <line x1="8" y1="18" x2="21" y2="18" />
-                                    <line x1="3" y1="6" x2="3.01" y2="6" />
-                                    <line x1="3" y1="12" x2="3.01" y2="12" />
-                                    <line x1="3" y1="18" x2="3.01" y2="18" />
-                                </svg>
-                                Rincian kuota
-                            </button>
-                        @endif
-                    </div>
-                </div>
-
-            </div>
-
             @if($prestasiData->count() > 0)
                 <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; min-width:920px;">
+                    <table style="width:100%; border-collapse:collapse; min-width:680px;">
                         <thead>
                             <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
                                 <th
@@ -960,21 +1010,17 @@
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     Status Verifikasi</th>
-                                <th
-                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
-                                    Reward</th>
                                 {{-- Rata kanan: tombol Tinjau jadi elemen paling kanan di setiap baris,
                                 sehingga kolomnya membentuk satu rel lurus meski lebar tombol
                                 utamanya berbeda-beda (atau tidak ada sama sekali). --}}
                                 <th
-                                    style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:290px;">
+                                    style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:170px;">
                                     Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($prestasiData as $i => $p)
                                 @php
-                                    $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
                                     $pDiputus = $p->verification_status !== 'pending';
                                     $pDisetujui = $p->verification_status === 'approved';
                                     $pBukti = ($p->buktiFiles ?? collect())->map(fn($b) => [
@@ -983,8 +1029,6 @@
                                         'is_image' => $b->isImage(),
                                     ])->values()->all();
 
-                                    // Satu baris = satu prestasi, jadi satu tempat melihatnya: blok data
-                                    // pengajuan dan blok klaim rewardnya berada di modal yang sama.
                                     $blokPengajuan = [
                                         'judul' => 'Data yang Anda ajukan',
                                         'items' => array_values(array_filter([
@@ -1003,39 +1047,11 @@
                                             ],
                                             $pDiputus && $p->verified_at ? ['Diverifikasi', $p->verified_at->translatedFormat('d M Y, H:i')] : null,
                                             $pDiputus && $p->verification_note ? ['Catatan', $p->verification_note] : null,
+                                            // Reward sekarang dikelola di subbab Klaim Prestasi — modal
+                                            // Tinjau di sini cukup mengarahkan, tanpa menduplikasi datanya.
+                                            $pDisetujui ? ['Reward', 'Lihat & ajukan di subbab Klaim Prestasi'] : null,
                                         ])),
                                     ];
-
-                                    // Blok reward hanya ada setelah prestasinya disetujui — sama persis
-                                    // dengan syarat munculnya isi kolom Reward di tabel.
-                                    $mkUsulan = $p->reward_mk_diajukan ?? [];
-                                    // Nama kelas badge mengikuti .claim-badge di tabel, bukan nilai
-                                    // statusnya — 'belum_ajukan' tidak punya padanan kelas.
-                                    $rewardKelas = match ($p->reward_status) {
-                                            $P::CLAIM_DIAJUKAN => 'diajukan',
-                                            $P::CLAIM_DISETUJUI => 'disetujui',
-                                            $P::CLAIM_DITOLAK => 'ditolak',
-                                        default => 'belum',
-                                    };
-                                    $blokReward = $pDisetujui ? [
-                                        'judul' => 'Reward (SK FT 774)',
-                                        'items' => array_values(array_filter([
-                                            ['Status', $p->reward_status_label, 'claim-badge ' . $rewardKelas],
-                                            $p->reward_penyelenggara_label ? ['Penyelenggara', $p->reward_penyelenggara_label] : null,
-                                            $p->reward_capaian_label ? [
-                                                'Capaian',
-                                                $p->reward_capaian_label
-                                                . ($p->reward_is_invention ? ' · invention/expo/fair' : '')
-                                            ] : null,
-                                            $p->reward_jml_mk_max ? ['Jatah', $p->reward_jml_mk_max . ' MK · maks ' . $p->reward_sks_max . ' SKS'] : null,
-                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'MK disetujui' : 'MK usulan'), $mkUsulan] : null,
-                                            (!count($mkUsulan) && $p->reward_mk_disetujui) ? ['MK disetujui', $p->reward_mk_disetujui] : null,
-                                            $p->reward_note ? [($p->reward_status === $P::CLAIM_DITOLAK ? 'Alasan' : 'Catatan'), $p->reward_note] : null,
-                                            $p->reward_status === $P::CLAIM_BELUM_AJUKAN
-                                            ? ['Keterangan', 'Reward belum diajukan. Tekan "Ajukan Reward" pada kolom Aksi.']
-                                            : null,
-                                        ])),
-                                    ] : null;
 
                                     // Payload modal Tinjau — modal yang sama dengan halaman admin,
                                     // hanya tanpa panel keputusan dan tanpa identitas mahasiswa
@@ -1046,48 +1062,15 @@
                                         'readonly' => $pDiputus
                                             ? 'Pengajuan ini sudah diverifikasi admin.'
                                             : 'Pengajuan ini masih menunggu verifikasi admin.',
-                                        'sections' => array_values(array_filter([$blokPengajuan, $blokReward])),
-                                        'bukti' => $pBukti,
-                                        // Aksi mundur diletakkan di bawah datanya, bukan di baris tabel.
-                                        // Keduanya tidak pernah bertabrakan: menarik pengajuan hanya
-                                        // selama menunggu, membatalkan reward hanya setelah disetujui.
-                                        'aksi' => match (true) {
-                                            $p->reward_status === $P::CLAIM_DIAJUKAN => [
-                                                'label' => 'Batalkan Pengajuan Reward',
-                                                'gaya' => 'tolak',
-                                                'panggil' => 'openBatalConfirm',
-                                                'args' => ['batalRewardForm' . $p->id, $p->nama_prestasi],
-                                            ],
-                                            !$pDiputus && $canSubmit => [
-                                                'label' => 'Tarik Pengajuan',
-                                                'gaya' => 'tolak',
-                                                'panggil' => 'openTarikConfirm',
-                                                'args' => ['tarikPrestasiForm' . $p->id, $p->nama_prestasi],
-                                            ],
-                                            default => null,
-                                        },
-                                    ];
-
-                                    // Payload modal Ajukan/Ajukan Ulang Reward — kerangkanya sama dengan
-                                    // modal Tinjau (bukti di kiri, data di kanan), isinya formulir.
-                                    $ajukanRewardPayload = [
-                                        'id' => $p->id,
-                                        'judul' => $p->reward_status === $P::CLAIM_DITOLAK
-                                            ? 'Ajukan Ulang Reward Prestasi'
-                                            : 'Ajukan Reward Prestasi',
                                         'sections' => [$blokPengajuan],
                                         'bukti' => $pBukti,
+                                        'aksi' => (!$pDiputus && $canSubmit) ? [
+                                            'label' => 'Tarik Pengajuan',
+                                            'gaya' => 'tolak',
+                                            'panggil' => 'openTarikConfirm',
+                                            'args' => ['tarikPrestasiForm' . $p->id, $p->nama_prestasi],
+                                        ] : null,
                                     ];
-
-                                    // Langkah maju yang benar-benar bisa diambil pada baris ini. Dipakai
-                                    // kolom Aksi; labelnya menyebut "Reward" karena tombolnya sudah tidak
-                                    // berada di bawah header kolom Reward lagi.
-                                    $rewardBisaDiajukan = $pDisetujui
-                                        && !($isAlumni ?? false)
-                                        && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true);
-                                    $rewardLabelAksi = $p->reward_status === $P::CLAIM_DITOLAK
-                                        ? 'Ajukan Ulang Reward'
-                                        : 'Ajukan Reward';
                                 @endphp
                                 <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
@@ -1119,39 +1102,7 @@
                                             @endif
                                         </span>
                                     </td>
-                                    <td style="padding:14px 16px;">
-                                        {{-- Kolom status murni, sebangun dengan kolom Status Verifikasi di
-                                        sebelahnya: badge saja, tinggi barisnya ikut rata. Tombolnya
-                                        pindah ke kolom Aksi. --}}
-                                        @if($pDisetujui)
-                                            @if($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                                <span class="claim-badge diajukan">Menunggu Review</span>
-                                                {{-- Tombol Batalkan tinggal di dalam modal Tinjau; formnya
-                                                tetap di sini karena satu form milik satu baris. --}}
-                                                <form method="POST" id="batalRewardForm{{ $p->id }}"
-                                                    action="{{ route('manajemenmahasiswa.verifikasi.prestasi.reward.batal', $p->id) }}"
-                                                    style="display:none;">
-                                                    @csrf @method('PATCH')
-                                                </form>
-                                            @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
-                                                <span class="claim-badge disetujui">Reward disetujui</span>
-                                            @elseif($p->reward_status === $P::CLAIM_DITOLAK)
-                                                <span class="claim-badge ditolak">Reward ditolak</span>
-                                            @else
-                                                <span class="claim-badge belum">Belum diajukan</span>
-                                            @endif
-                                        @else
-                                            <span style="color: #d1d5db;">—</span>
-                                            <div style="font-size: 11px; color: var(--c-fg-muted); margin-top: 4px;">Tersedia setelah
-                                                disetujui</div>
-                                        @endif
-                                    </td>
                                     <td style="padding:14px 16px; text-align:right;">
-                                        {{-- Semua aksi baris berkumpul di sini, seperti halaman admin.
-                                        Langkah maju (kalau ada) jadi satu-satunya tombol navy pekat;
-                                        Tinjau — pintu masuk ke bukti, tanggal, catatan verifikasi, dan
-                                        pembatalan reward — tetap berlabel dengan gaya yang sama persis
-                                        seperti di tabel Riwayat Kegiatan dan halaman admin. --}}
                                         @if(!$pDiputus && $canSubmit)
                                             {{-- Lihat catatan pada form tarik di tabel Riwayat Kegiatan --}}
                                             <form method="POST" id="tarikPrestasiForm{{ $p->id }}" style="display:none;"
@@ -1160,20 +1111,6 @@
                                             </form>
                                         @endif
                                         <div class="aksi-rail">
-                                            @if($rewardBisaDiajukan)
-                                                @if($kuotaSemuaPenuh)
-                                                    {{-- Kedua kelompok kuota habis: kategori apa pun yang
-                                                    dipilih pasti tertahan, jadi jangan biarkan mahasiswa
-                                                    mengisi formulir lalu menunggu penolakan. --}}
-                                                    <button type="button" class="mk-btn mk-btn--primary" disabled
-                                                        title="Kuota reward Anda sudah penuh untuk kedua kelompok. Buka &quot;Rincian kuota&quot; di atas tabel untuk melihat prestasi mana yang memakainya.">
-                                                        Kuota reward penuh
-                                                    </button>
-                                                @else
-                                                    <button type="button" class="mk-btn mk-btn--primary"
-                                                        onclick="openAjukanReward(@js($ajukanRewardPayload))">{{ $rewardLabelAksi }}</button>
-                                                @endif
-                                            @endif
                                             <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
                                                 onclick="openTinjau(@js($tinjauPrestasiPayload))">
                                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1209,16 +1146,354 @@
         </div>
     @endif
 
+    @if($tab === 'klaim' && count($grupPenuh))
+        {{-- Callout kuota penuh — padanan "Limit Reached" di Title Bidding Capstone:
+             muncul hanya saat jatah habis, dan selalu memberi jalan keluar. --}}
+        <div class="kuota-callout" role="status">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+                <path d="M12 9v4" />
+                <path d="M12 17h.01" />
+            </svg>
+            <div>
+                @if($kuotaSemuaPenuh)
+                    <p class="kuota-callout-judul">Kuota reward habis</p>
+                    <p class="kuota-callout-isi">
+                        Semua jatah reward Anda sudah terpakai, jadi belum ada prestasi yang bisa diajukan.
+                        @if($adaMenunggu)
+                            Bila ingin memakai jatahnya untuk prestasi lain, batalkan pengajuan yang masih menunggu
+                            lewat tombol Tinjau pada barisnya.
+                        @else
+                            Buka Aturan &amp; rincian untuk melihat prestasi mana yang memakainya.
+                        @endif
+                    </p>
+                @else
+                    <p class="kuota-callout-judul">Kuota {{ implode(' & ', $grupPenuh) }} habis</p>
+                    <p class="kuota-callout-isi">
+                        Prestasi lain tetap bisa diajukan. Buka Aturan &amp; rincian untuk melihat prestasi
+                        mana yang memakai jatah ini.
+                    </p>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    @if($tab === 'klaim')
+        <!-- Klaim Prestasi - Global Style Table Card -->
+        <div
+            style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
+            <!-- Table Toolbar -->
+            <div
+                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+                <h2
+                    style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; display:flex; align-items:center; gap:8px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" />
+                        <path d="M9 12l2 2 4-4" />
+                        <path d="M16 5h6M19 2v6" />
+                    </svg>
+                    Klaim Prestasi
+                </h2>
+
+                {{-- Ringkasan kuota di kanan toolbar, sejajar judul tabel — mengisi
+                     ruang kosong di sebelah judul, bukan strip tambahan di atas
+                     tabel. Dibaca sebagai kalimat aturan: "tanpa batas, kecuali
+                     [kelompok terbatas: sisa X dari N]". Penjelasan lengkapnya di
+                     modal lewat tombol sekunder — bukan tooltip, yang tidak
+                     muncul di HP. --}}
+                <div class="kuota-toolbar">
+                    <div class="kuota-ringkas">
+                        <span class="kuota-ringkas-label">Kuota reward:</span>
+                        @if($adaTanpaBatas)
+                            <span class="kuota-ringkas-teks">tanpa batas, kecuali</span>
+                        @endif
+                        @foreach($P::KUOTA_MAKS as $grup => $maks)
+                            @continue($maks === null)
+                            @php
+                                // Disetujui + menunggu: keduanya sama-sama mengunci slot
+                                $sisa = max($maks - ($kuotaTerpakai[$grup] ?? 0), 0);
+                            @endphp
+                            <span class="kuota-pill {{ $sisa === 0 ? 'penuh' : ($sisa === 1 && $maks > 1 ? 'hampir' : '') }}">
+                                {{ ucfirst($P::KUOTA_LABELS[$grup]) }}: {{ $sisa === 0 ? 'habis' : "sisa {$sisa} dari {$maks}" }}
+                            </span>
+                        @endforeach
+                    </div>
+                    <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm" data-bs-toggle="modal"
+                        data-bs-target="#rincianKuotaModal">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6" />
+                            <line x1="8" y1="12" x2="21" y2="12" />
+                            <line x1="8" y1="18" x2="21" y2="18" />
+                            <line x1="3" y1="6" x2="3.01" y2="6" />
+                            <line x1="3" y1="12" x2="3.01" y2="12" />
+                            <line x1="3" y1="18" x2="3.01" y2="18" />
+                        </svg>
+                        Aturan &amp; rincian
+                    </button>
+                </div>
+            </div>
+
+            {{-- Peringatan kuota penuh ada di callout di atas kartu ini. --}}
+            @if($prestasiData->count() > 0)
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; min-width:1100px;">
+                        <thead>
+                            <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                                <th
+                                    style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">
+                                    No</th>
+                                <th
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:180px;">
+                                    Nama Prestasi</th>
+                                <th
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
+                                    Tingkat</th>
+                                <th
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
+                                    Tanggal</th>
+                                <th
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
+                                    Tahun Ajaran</th>
+                                <th
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
+                                    SKS Diklaim</th>
+                                <th
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted);">
+                                    Mata Kuliah</th>
+                                <th
+                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
+                                    Status Reward</th>
+                                <th
+                                    style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:290px;">
+                                    Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($prestasiData as $i => $p)
+                                @php
+                                    $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
+                                    $pBukti = ($p->buktiFiles ?? collect())->map(fn($b) => [
+                                        'url' => $b->url_akses,
+                                        'nama' => $b->nama_file,
+                                        'is_image' => $b->isImage(),
+                                    ])->values()->all();
+
+                                    // Semua baris di sini sudah pasti approved (difilter di
+                                    // controller), jadi cukup ringkasan data prestasinya saja —
+                                    // status verifikasi ada di subbab Verifikasi Prestasi.
+                                    $blokPengajuan = [
+                                        'judul' => 'Data Prestasi',
+                                        'items' => array_values(array_filter([
+                                            ['Prestasi', $p->nama_prestasi],
+                                            ['Tingkat', ucfirst($p->tingkat)],
+                                            ['Tgl Raih', $p->tanggal?->translatedFormat('d M Y')],
+                                            $p->verified_at ? ['Diverifikasi', $p->verified_at->translatedFormat('d M Y, H:i')] : null,
+                                        ])),
+                                    ];
+
+                                    $mkUsulan = $p->reward_mk_diajukan ?? [];
+                                    // Nama kelas badge mengikuti .claim-badge di tabel, bukan nilai
+                                    // statusnya — 'belum_ajukan' tidak punya padanan kelas.
+                                    $rewardKelas = match ($p->reward_status) {
+                                            $P::CLAIM_DIAJUKAN => 'diajukan',
+                                            $P::CLAIM_DISETUJUI => 'disetujui',
+                                            $P::CLAIM_DITOLAK => 'ditolak',
+                                        default => 'belum',
+                                    };
+                                    $blokReward = [
+                                        'judul' => 'Reward (SK FT 774)',
+                                        'items' => array_values(array_filter([
+                                            ['Status', $p->reward_status_label, 'claim-badge ' . $rewardKelas],
+                                            $p->reward_penyelenggara_label ? ['Penyelenggara', $p->reward_penyelenggara_label] : null,
+                                            $p->reward_capaian_label ? [
+                                                'Capaian',
+                                                $p->reward_capaian_label
+                                                . ($p->reward_is_invention ? ' · invention/expo/fair' : '')
+                                            ] : null,
+                                            $p->reward_tahun_ajaran_label ? ['Tahun Ajaran', $p->reward_tahun_ajaran_label] : null,
+                                            $p->reward_jml_mk_max ? ['Jatah', $p->reward_jml_mk_max . ' MK · maks ' . $p->reward_sks_max . ' SKS'] : null,
+                                            $p->reward_sks_diajukan !== null ? ['SKS diklaim', $p->reward_sks_diajukan . ' SKS'] : null,
+                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'MK disetujui' : 'MK usulan'), $mkUsulan] : null,
+                                            (!count($mkUsulan) && $p->reward_mk_disetujui) ? ['MK disetujui', $p->reward_mk_disetujui] : null,
+                                            $p->reward_note ? [($p->reward_status === $P::CLAIM_DITOLAK ? 'Alasan' : 'Catatan'), $p->reward_note] : null,
+                                            $p->reward_status === $P::CLAIM_BELUM_AJUKAN
+                                            ? ['Keterangan', 'Reward belum diajukan. Tekan "Ajukan Reward" pada kolom Aksi.']
+                                            : null,
+                                        ])),
+                                    ];
+
+                                    // Payload modal Tinjau — sama kerangkanya dengan modal di subbab
+                                    // Verifikasi Prestasi (partial yang sama), tapi fokus ke data reward.
+                                    $tinjauKlaimPayload = [
+                                        'judul' => 'Detail Klaim Reward',
+                                        'pending' => false,
+                                        'readonly' => 'Prestasi ini sudah diverifikasi admin.',
+                                        'sections' => [$blokPengajuan, $blokReward],
+                                        'bukti' => $pBukti,
+                                        'aksi' => $p->reward_status === $P::CLAIM_DIAJUKAN ? [
+                                            'label' => 'Batalkan Pengajuan Reward',
+                                            'gaya' => 'tolak',
+                                            'panggil' => 'openBatalConfirm',
+                                            'args' => ['batalRewardForm' . $p->id, $p->nama_prestasi],
+                                        ] : null,
+                                    ];
+
+                                    // Payload modal Ajukan/Ajukan Ulang Reward — kerangkanya sama dengan
+                                    // modal Tinjau (bukti di kiri, data di kanan), isinya formulir.
+                                    $ajukanRewardPayload = [
+                                        'id' => $p->id,
+                                        'judul' => $p->reward_status === $P::CLAIM_DITOLAK
+                                            ? 'Ajukan Ulang Reward Prestasi'
+                                            : 'Ajukan Reward Prestasi',
+                                        'sections' => [$blokPengajuan],
+                                        'bukti' => $pBukti,
+                                        // SK 774 poin 9 — hanya penanda, pengajuan tetap boleh
+                                        'pra_sk' => $p->rewardSebelumMasaBerlaku(),
+                                    ];
+
+                                    // Langkah maju yang benar-benar bisa diambil pada baris ini.
+                                    $rewardBisaDiajukan = !($isAlumni ?? false)
+                                        && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true);
+                                    $rewardLabelAksi = $p->reward_status === $P::CLAIM_DITOLAK
+                                        ? 'Ajukan Ulang Reward'
+                                        : 'Ajukan Reward';
+                                @endphp
+                                <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                                    onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                                    <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
+                                        {{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}
+                                    </td>
+                                    <td style="padding:14px 16px; min-width:180px;">
+                                        <p
+                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">
+                                            {{ $p->nama_prestasi }}</p>
+                                    </td>
+                                    <td style="padding:14px 16px;"><span
+                                            class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
+                                    <td style="padding:14px 16px; white-space:nowrap;">
+                                        @if($p->tanggal)
+                                            <span
+                                                style="font-size:12px; font-weight:500; color:var(--c-fg-sec);">{{ \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') }}</span>
+                                        @else
+                                            <span style="font-size:12px; color:var(--c-fg-muted);">-</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
+                                        @if($p->reward_tahun_ajaran_label)
+                                            {{ $p->reward_tahun_ajaran_label }}
+                                        @else
+                                            <span style="color:#d1d5db;">—</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
+                                        @if($p->reward_sks_diajukan !== null)
+                                            <span style="font-weight:600;">{{ $p->reward_sks_diajukan }} SKS</span>
+                                            @if($p->reward_sks_max)
+                                                <div style="font-size:11px; color:var(--c-fg-muted);">maks
+                                                    {{ $p->reward_sks_max }}</div>
+                                            @endif
+                                        @else
+                                            <span style="color:#d1d5db;">—</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:14px 16px;">
+                                        @if(count($mkUsulan))
+                                            <div class="mk-sel">
+                                                @foreach(array_slice($mkUsulan, 0, 2) as $mkNama)
+                                                    <span class="mk-sel-tag">{{ $mkNama }}</span>
+                                                @endforeach
+                                                @if(count($mkUsulan) > 2)
+                                                    <span class="mk-sel-tag">+{{ count($mkUsulan) - 2 }}</span>
+                                                @endif
+                                            </div>
+                                        @else
+                                            <span style="color:#d1d5db;">—</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:14px 16px;">
+                                        @if($p->reward_status === $P::CLAIM_DIAJUKAN)
+                                            <span class="claim-badge diajukan">Menunggu Review</span>
+                                            {{-- Tombol Batalkan tinggal di dalam modal Tinjau; formnya
+                                            tetap di sini karena satu form milik satu baris. --}}
+                                            <form method="POST" id="batalRewardForm{{ $p->id }}"
+                                                action="{{ route('manajemenmahasiswa.verifikasi.prestasi.reward.batal', $p->id) }}"
+                                                style="display:none;">
+                                                @csrf @method('PATCH')
+                                            </form>
+                                        @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
+                                            <span class="claim-badge disetujui">Reward disetujui</span>
+                                        @elseif($p->reward_status === $P::CLAIM_DITOLAK)
+                                            <span class="claim-badge ditolak">Reward ditolak</span>
+                                        @else
+                                            <span class="claim-badge belum">Belum diajukan</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding:14px 16px; text-align:right;">
+                                        <div class="aksi-rail">
+                                            @if($rewardBisaDiajukan)
+                                                @if($kuotaSemuaPenuh)
+                                                    {{-- Kedua kelompok kuota habis: kategori apa pun yang
+                                                    dipilih pasti tertahan, jadi jangan biarkan mahasiswa
+                                                    mengisi formulir lalu menunggu penolakan. --}}
+                                                    <button type="button" class="mk-btn mk-btn--primary" disabled
+                                                        title="Semua kuota reward Anda sudah habis. Buka &quot;Aturan &amp; rincian&quot; di kanan atas tabel untuk melihat prestasi mana yang memakainya.">
+                                                        Kuota reward habis
+                                                    </button>
+                                                @else
+                                                    <button type="button" class="mk-btn mk-btn--primary"
+                                                        onclick="openAjukanReward(@js($ajukanRewardPayload))">{{ $rewardLabelAksi }}</button>
+                                                @endif
+                                            @endif
+                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
+                                                onclick="openTinjau(@js($tinjauKlaimPayload))">
+                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                    <circle cx="12" cy="12" r="3" />
+                                                </svg>
+                                                Tinjau
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
+            @else
+                <div class="empty-state">
+                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
+                            stroke="currentColor" stroke-width="1.5">
+                            <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" />
+                            <path d="M9 12l2 2 4-4" />
+                            <path d="M16 5h6M19 2v6" />
+                        </svg></div>
+                    <p
+                        style="font-size:12px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:0.06em; margin:0;">
+                        Belum ada prestasi yang bisa diklaim</p>
+                    <p style="font-size:11px; color:var(--c-fg-placeholder); margin:4px 0 0 0;">Prestasi yang sudah disetujui
+                        admin akan muncul di sini untuk diajukan rewardnya</p>
+                </div>
+            @endif
+        </div>
+    @endif
+
     {{-- Modal Tinjau — kerangka & perilakunya sama persis dengan halaman admin
     (partial yang sama), hanya tanpa panel keputusan: mahasiswa membaca, tidak
     memutus. Sejak kolom Bukti dihapus dari tabel, berkas bukti dilihat di sini. --}}
     @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal', ['tinjauAksi' => false])
 
-    {{-- Modal Rincian Kuota Reward — isi dari banner kuota di atas tabel.
-    Ditaruh di modal, bukan dibentang inline, karena tabel Prestasi berada tepat
-    di bawah banner: rincian yang dibuka inline akan mendorong tabel itu keluar
-    layar, padahal rinciannya dibaca justru untuk dibandingkan dengan tabel. --}}
-    @if($tab === 'prestasi' && ($kuotaAdaIsi ?? false))
+    {{-- Modal Aturan & Rincian Kuota Reward — dibuka dari ringkasan kuota di
+    toolbar tabel. Ditaruh di modal, bukan dibentang inline, karena rincian yang
+    dibuka inline akan mendorong tabel keluar layar, padahal rinciannya dibaca
+    justru untuk dibandingkan dengan tabel. Selalu tersedia, juga sebelum ada
+    klaim: aturannya justru paling dibutuhkan sebelum mengajukan. --}}
+    @if($tab === 'klaim')
         <div class="modal fade" id="rincianKuotaModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
@@ -1234,37 +1509,73 @@
                                 <line x1="3" y1="12" x2="3.01" y2="12" />
                                 <line x1="3" y1="18" x2="3.01" y2="18" />
                             </svg>
-                            Rincian Kuota Reward
+                            Aturan &amp; Rincian Kuota Reward
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <p style="font-size:11px; color:var(--c-fg-muted); margin:0 0 16px;">
-                            Dasar aturan: {{ $P::SK_BERLAKU }}
+                            Dasar aturan: {{ $P::SK_BERLAKU }}, dengan batas kuota dari kebijakan departemen.
                         </p>
 
-                        {{-- Kedua kelompok selalu tampil, termasuk yang belum terpakai:
-                        kuota yang masih utuh adalah jawaban yang sama pentingnya. --}}
-                        @foreach($P::KUOTA_MAKS as $grup => $maks)
+                        @php
+                            $maksInvention = $P::KUOTA_MAKS[$P::KUOTA_INVENTION];
+                            $maksLainnya   = $P::KUOTA_MAKS[$P::KUOTA_UMUM];
+                        @endphp
+                        <div class="kuota-grup">
+                            <p class="tp-pane-heading" style="margin-bottom:7px;">Aturan</p>
+                            <div class="tinjau-info">
+                                <ul class="kuota-aturan">
+                                    <li>
+                                        @if($maksLainnya === null)
+                                            Prestasi apa pun bisa diajukan lebih dari sekali — jumlahnya tidak dibatasi.
+                                        @else
+                                            Reward prestasi maksimal {{ $maksLainnya }} kali selama kuliah.
+                                        @endif
+                                    </li>
+                                    <li>
+                                        Khusus kegiatan <b>invention/expo/fair</b> (judulnya memuat kata seperti
+                                        "invention", "expo", atau "fair"):
+                                        @if($maksInvention === null)
+                                            jumlahnya juga tidak dibatasi.
+                                        @else
+                                            maksimal {{ $maksInvention }} kali selama kuliah.
+                                        @endif
+                                    </li>
+                                    <li>Setiap mata kuliah hanya bisa dinaikkan nilainya sekali, dan harus bernilai minimal C.</li>
+                                    <li>Pengajuan yang masih menunggu ikut memakai kuota; pengajuan yang ditolak tidak.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Semua kelompok selalu tampil, termasuk yang belum terpakai:
+                        kuota yang masih utuh adalah jawaban yang sama pentingnya. Yang
+                        dibatasi lebih dulu — itulah yang bisa habis. --}}
+                        @foreach(collect($P::KUOTA_MAKS)->sortBy(fn ($m) => $m === null ? 1 : 0) as $grup => $maks)
                             @php
                                 $daftar  = $kuotaDipakai[$grup] ?? [];
                                 $antre   = $kuotaMenungguDipakai[$grup] ?? [];
                                 $terisi  = count($daftar) + count($antre);
+                                $sisa    = $maks === null ? null : max($maks - $terisi, 0);
                             @endphp
                             <div class="kuota-grup">
                                 <div class="kuota-grup-judul">
-                                    <p class="tp-pane-heading">Kelompok {{ $P::KUOTA_LABELS[$grup] }}</p>
-                                    {{-- Angka yang sama dengan banner di atas tabel: yang
+                                    <p class="tp-pane-heading">{{ ucfirst($P::KUOTA_LABELS[$grup]) }}</p>
+                                    {{-- Angka yang sama dengan ringkasan di toolbar tabel: yang
                                          menunggu ikut memesan slot, jadi ikut dihitung. --}}
-                                    <span class="kuota-pill {{ $terisi >= $maks ? 'penuh' : '' }}">
-                                        {{ $terisi }}/{{ $maks }}{{ $terisi >= $maks ? ' — penuh' : '' }}
+                                    <span class="kuota-pill {{ $sisa === 0 ? 'penuh' : ($sisa === 1 && $maks > 1 ? 'hampir' : '') }}">
+                                        @if($maks === null)
+                                            tanpa batas
+                                        @else
+                                            {{ $sisa === 0 ? 'habis' : "sisa {$sisa} dari {$maks}" }}
+                                        @endif
                                     </span>
                                 </div>
 
                                 @if(count($antre))
                                     <div class="tinjau-info" style="margin-bottom:8px;">
                                         <p style="font-size:11px; font-weight:700; color:#1e40af; margin:0 0 6px;">
-                                            Sedang menunggu persetujuan — memesan {{ count($antre) }} slot
+                                            Sedang menunggu persetujuan{{ $maks === null ? '' : ' — memesan ' . count($antre) . ' slot' }}
                                         </p>
                                         @foreach($antre as $a)
                                             <div class="kuota-dipakai-item">
@@ -1274,10 +1585,12 @@
                                                 @endif
                                             </div>
                                         @endforeach
-                                        <p style="font-size:11px; color:var(--c-fg-muted); margin:8px 0 0;">
-                                            Batalkan salah satunya lewat tombol Tinjau pada barisnya bila Anda ingin
-                                            memakai jatah ini untuk prestasi lain.
-                                        </p>
+                                        @if($maks !== null)
+                                            <p style="font-size:11px; color:var(--c-fg-muted); margin:8px 0 0;">
+                                                Batalkan salah satunya lewat tombol Tinjau pada barisnya bila Anda ingin
+                                                memakai jatah ini untuk prestasi lain.
+                                            </p>
+                                        @endif
                                     </div>
                                 @endif
 
@@ -1303,16 +1616,18 @@
                                     </div>
                                 @elseif(!count($antre))
                                     <div class="tinjau-info" style="color:var(--c-fg-muted);">
-                                        Belum terpakai — jatah kelompok ini masih utuh.
+                                        {{ $maks === null ? 'Belum ada reward dari kelompok ini.' : 'Belum terpakai — jatah kelompok ini masih utuh.' }}
                                     </div>
                                 @endif
                             </div>
                         @endforeach
 
-                        <p style="font-size:11px; color:var(--c-fg-muted); line-height:1.5; margin:16px 0 0;">
-                            Ini mata kuliah yang nilainya sudah dinaikkan lewat reward prestasi — bukan daftar mata
-                            kuliah yang Anda ambil di KRS.
-                        </p>
+                        @if(collect($kuotaDipakai ?? [])->flatten(1)->isNotEmpty())
+                            <p style="font-size:11px; color:var(--c-fg-muted); line-height:1.5; margin:16px 0 0;">
+                                Ini mata kuliah yang nilainya sudah dinaikkan lewat reward prestasi — bukan daftar mata
+                                kuliah yang Anda ambil di KRS.
+                            </p>
+                        @endif
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Tutup</button>
@@ -1494,6 +1809,11 @@
 
                                 <div class="tp-section">
                                     <p class="tp-pane-heading">Formulir reward</p>
+                                    {{-- SK 774 poin 9 — penanda saja, pengajuan tetap bisa dikirim --}}
+                                    <div id="arPraSk" class="sk-lawas" style="display:none; margin:0 0 12px;">
+                                        Prestasi ini bertanggal sebelum SK 774 berlaku (1 Januari 2025). Menurut poin 9,
+                                        prestasi tersebut masih diatur SE 176/2020, jadi departemen dapat menolaknya.
+                                    </div>
                                     <div class="mb-3">
                                         <label class="form-label-custom">Kategori Penyelenggara <span
                                                 style="color:#dc2626;">*</span></label>
@@ -1513,14 +1833,29 @@
                                             <option value="">Pilih penyelenggara dulu...</option>
                                         </x-manajemenmahasiswa::ui.select>
                                     </div>
+                                    <div class="mb-3">
+                                        <label class="form-label-custom">Tahun Ajaran <span
+                                                style="color:#dc2626;">*</span></label>
+                                        {{-- Daftarnya dihitung dari tanggal hari ini, jadi bertambah
+                                        sendiri tiap semester berganti. --}}
+                                        <x-manajemenmahasiswa::ui.select name="reward_tahun_ajaran" id="arTahunAjaran"
+                                            size="lg" required>
+                                            <option value="">Pilih tahun ajaran...</option>
+                                            @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::tahunAjaranList() as $taKode => $taLabel)
+                                                <option value="{{ $taKode }}">{{ $taLabel }}</option>
+                                            @endforeach
+                                        </x-manajemenmahasiswa::ui.select>
+                                    </div>
                                     <div class="mb-3" id="arInventionWrap" style="display:none;">
                                         <label
                                             style="font-size:13px; color:#374151; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
                                             <input type="checkbox" name="reward_is_invention" id="arInvention" value="1"
                                                 style="margin-top:3px;">
-                                            <span>Kegiatan bertema <b>invention / innovation / exhibition / convention /
-                                                    expo / inventor / fair</b> dsb. (SK 774 poin 2.e–2.f). Jika
-                                                dicentang, jatah maks 2 SKS &amp; kuota khusus 1×.</span>
+                                            @php $maksInv = $P::KUOTA_MAKS[$P::KUOTA_INVENTION]; @endphp
+                                            <span>Kegiatan bertema <b>invention / innovation / innovative / exhibition /
+                                                    convention / expo / inventor / fair</b> dsb. (SK 774 poin 2.e–2.f). Jika
+                                                dicentang, hanya juara/medali yang mendapat jatah (maks 2 SKS{{ $maksInv !== null ? ", kuota khusus maks. {$maksInv}× selama kuliah" : '' }});
+                                                finalis tidak mendapat reward.</span>
                                         </label>
                                     </div>
                                     {{-- Rambu kuota tampil begitu kelompoknya ketahuan (kategori,
@@ -1557,14 +1892,15 @@
                                         <div id="arMkCounter" class="mk-counter"></div>
                                         <div id="arMkHidden"></div>
                                         <small class="text-muted" style="font-size:11px;">Pilih MK kurikulum Teknik
-                                            Komputer yang nilainya ingin dinaikkan (syarat min. C). Ini usulan; MK final
-                                            ditetapkan departemen.</small>
+                                            Komputer yang nilainya ingin dinaikkan (syarat min. C). MK yang sudah dipakai
+                                            di klaim lain tidak bisa dipilih lagi.</small>
                                     </div>
 
                                     <div style="font-size:11px; color:#666D80; margin-top:10px; line-height:1.5;">
-                                        Catatan: mata kuliah yang dinaikkan nilainya ditetapkan departemen/prodi saat
-                                        persetujuan. Reward hanya untuk MK bernilai minimal C, maks 2× (atau 1× untuk
-                                        invention) selama studi.
+                                        Catatan: departemen berwenang menyetujui atau menolak usulan MK ini (SK 774
+                                        poin 7). Kalau ditolak, ajukan ulang dengan MK lain. Reward hanya untuk MK
+                                        bernilai minimal C, dan setiap MK hanya bisa dinaikkan sekali. Aturan kuota
+                                        lengkapnya ada di "Aturan &amp; rincian" di kanan atas tabel.
                                     </div>
                                 </div>
 
@@ -1598,11 +1934,13 @@
                 $rewardJatahMap[$peny][$cap] = \Modules\ManajemenMahasiswa\Models\Prestasi::hitungJatahReward($peny, $cap, false);
             }
         }
-        $rewardJatahInvention = \Modules\ManajemenMahasiswa\Models\Prestasi::hitungJatahReward(
-            \Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LAINNYA,
-            \Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_FINALIS,
-            true
-        );
+        // Jatah invention per capaian (SK 2.e–2.f): juara/medali dapat, finalis 0.
+        $rewardJatahInvention = [];
+        foreach (\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_BY_PENYELENGGARA[\Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LAINNYA] as $cap) {
+            $rewardJatahInvention[$cap] = \Modules\ManajemenMahasiswa\Models\Prestasi::hitungJatahReward(
+                \Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LAINNYA, $cap, true
+            );
+        }
     @endphp
 
     <!-- Modal Konfirmasi Batalkan Pengajuan Reward -->
@@ -1845,10 +2183,12 @@
             const submitLabelEl = document.getElementById('arSubmitLabel');
             const penyEl = document.getElementById('arPenyelenggara');
             const capEl = document.getElementById('arCapaian');
+            const taEl = document.getElementById('arTahunAjaran');
             const invWrap = document.getElementById('arInventionWrap');
             const invEl = document.getElementById('arInvention');
             const previewEl = document.getElementById('arJatahPreview');
             const kuotaEl = document.getElementById('arKuotaWarn');
+            const praSkEl = document.getElementById('arPraSk');
             const submitBtn = document.getElementById('arSubmitBtn');
 
             // Picker usulan mata kuliah
@@ -1875,6 +2215,18 @@
             const KUOTA_LABEL = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_LABELS);
             const KUOTA_UMUM = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_UMUM);
             const KUOTA_INV = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::KUOTA_INVENTION);
+
+            // SK 774 poin 4: MK yang sudah dipakai klaim lain (disetujui/menunggu)
+            // tidak boleh diusulkan lagi — daftarnya sama dengan yang dicek server.
+            const MK_TERPAKAI = @json($mkTerpakai ?? []);
+
+            Array.from(mkSelect.options).forEach(function (opt) {
+                if (opt.value && MK_TERPAKAI.indexOf(opt.value) !== -1) {
+                    opt.disabled = true;
+                    opt.textContent = opt.textContent.trim() + ' — sudah dipakai';
+                }
+            });
+            syncSelect(mkSelect);
 
             /**
              * Memberi tahu dropdown Alpine (x-manajemenmahasiswa::ui.select) bahwa isi atau
@@ -1929,7 +2281,8 @@
 
             function refreshSubmit() {
                 const totalSks = currentTotalSks();
-                const valid = arKuotaOk && arJatahOk && arMkList.length >= 1 && arMkList.length <= arCap && totalSks <= arSksMax;
+                const valid = arKuotaOk && arJatahOk && taEl.value !== ''
+                    && arMkList.length >= 1 && arMkList.length <= arCap && totalSks <= arSksMax;
                 // Tampilan nonaktifnya diatur .tp-btn-utama:disabled, jadi cukup flagnya
                 submitBtn.disabled = !valid;
             }
@@ -1949,21 +2302,24 @@
 
                 const grup = (peny === PENY_LAINNYA && invEl.checked) ? KUOTA_INV : KUOTA_UMUM;
                 const pakai = KUOTA_PAKAI[grup] || 0;
-                const maks = KUOTA_MAKS[grup] || 0;
-                const penuh = pakai >= maks;
+                const maks = KUOTA_MAKS[grup];   // null = tanpa batas
+                const sisa = maks === null ? null : Math.max(maks - pakai, 0);
+                const penuh = sisa === 0;
                 arKuotaOk = !penuh;
 
+                // Tetap ditampilkan untuk kelompok tanpa batas: tidak adanya
+                // rambu justru membuat mahasiswa menebak apakah ada batasnya.
                 const pill = document.createElement('span');
-                pill.className = 'kuota-pill' + (penuh ? ' penuh' : '');
-                pill.textContent = 'Kuota ' + (KUOTA_LABEL[grup] || grup) + ': ' + pakai + '/' + maks
-                    + (penuh ? ' — PENUH' : ' terpakai');
+                pill.className = 'kuota-pill' + (penuh ? ' penuh' : (sisa === 1 && maks > 1 ? ' hampir' : ''));
+                pill.textContent = 'Kuota ' + (KUOTA_LABEL[grup] || grup) + ': '
+                    + (maks === null ? 'tanpa batas' : (penuh ? 'habis' : 'sisa ' + sisa + ' dari ' + maks));
                 kuotaEl.appendChild(pill);
 
                 if (penuh) {
                     const ket = document.createElement('div');
                     ket.className = 'sk-lawas';
-                    ket.textContent = 'Kelompok kuota ini sudah habis, jadi pengajuannya tidak bisa dikirim. '
-                        + 'Buka "Rincian kuota" di atas tabel untuk melihat prestasi mana yang memakainya.';
+                    ket.textContent = 'Kuota ' + (KUOTA_LABEL[grup] || grup) + ' Anda sudah habis, jadi pengajuan ini tidak bisa dikirim. '
+                        + 'Buka "Aturan & rincian" di kanan atas tabel untuk melihat prestasi mana yang memakainya.';
                     kuotaEl.appendChild(ket);
                 }
 
@@ -1973,6 +2329,7 @@
             mkAddBtn.addEventListener('click', function () {
                 const v = mkSelect.value;
                 if (!v) return;
+                if (MK_TERPAKAI.indexOf(v) !== -1) return;   // sudah dipakai klaim lain
                 if (arMkList.indexOf(v) !== -1) { mkSelect.value = ''; syncSelect(mkSelect); return; }
                 if (arMkList.length >= arCap) return;   // jumlah MK sudah penuh
                 if (currentTotalSks() + (MK_SKS[v] || 0) > arSksMax) return;   // melebihi plafon SKS
@@ -2002,11 +2359,14 @@
                     : 'Ajukan Reward';
                 tpRenderSections(fieldsEl, data.sections);
                 tpRenderBukti(modalEl.querySelector('[data-tp-bukti]'), data.bukti, 0);
+                praSkEl.style.display = data.pra_sk ? 'block' : 'none';
                 penyEl.value = '';
                 capEl.innerHTML = '<option value="">Pilih penyelenggara dulu...</option>';
                 capEl.disabled = true;
+                taEl.value = '';
                 syncSelect(penyEl);
                 syncSelect(capEl);
+                syncSelect(taEl);
                 invWrap.style.display = 'none';
                 invEl.checked = false;
                 previewEl.style.display = 'none';
@@ -2052,12 +2412,24 @@
                 let jatah = null;
                 if (peny && cap) {
                     if (peny === PENY_LAINNYA && invEl.checked) {
-                        jatah = JATAH_INV;
+                        jatah = JATAH_INV[cap] || null;
                     } else {
                         jatah = (JATAH[peny] && JATAH[peny][cap]) ? JATAH[peny][cap] : null;
                     }
                 }
-                if (jatah) {
+                previewEl.classList.remove('jatah-preview--kosong');
+                if (jatah && jatah.jml_mk_max === 0) {
+                    // SK 2.e–2.f: finalis kegiatan invention/expo/fair tidak berhak reward
+                    previewEl.classList.add('jatah-preview--kosong');
+                    previewEl.innerHTML = '<strong>Tidak mendapat reward.</strong> Pada kegiatan invention/expo/fair, hanya juara/medali yang berhak (SK 774 poin 2.e–2.f).';
+                    previewEl.style.display = 'block';
+                    arJatahOk = false;
+                    arCap = 0;
+                    arSksMax = 0;
+                    arMkList = [];
+                    renderMk();
+                    mkWrap.style.display = 'none';
+                } else if (jatah) {
                     previewEl.innerHTML = 'Jatah reward: maksimal <strong>' + jatah.jml_mk_max + ' mata kuliah</strong> dengan total <strong>' + jatah.sks_max + ' SKS</strong> (nilai dinaikkan satu tingkat).';
                     previewEl.style.display = 'block';
                     arJatahOk = true;
@@ -2080,6 +2452,7 @@
 
             penyEl.addEventListener('change', function () { rebuildCapaian(); updatePreview(); });
             capEl.addEventListener('change', updatePreview);
+            taEl.addEventListener('change', refreshSubmit);
             invEl.addEventListener('change', updatePreview);
         })();
 

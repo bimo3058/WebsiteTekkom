@@ -538,12 +538,15 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('prestasi.reward.batal')->where('id', '[0-9]+');
             });
 
-            // Halaman daftar klaim reward prestasi (Request Bu Bellia / B.2) —
-            // admin kemahasiswaan (kelola) + Ketua Departemen & GPM (read-only,
-            // tanpa tinjau/setujui/tolak: keputusan konversi SKS bukan kewenangan
-            // mereka — lihat grup route di bawah). DPM TIDAK termasuk — sama
-            // dengan route index/bukti di atas, ia dicabut total dari bab ini.
-            Route::middleware('role:superadmin|admin_kemahasiswaan|ketua_departemen|gpm')
+            // Klaim Prestasi — subbab ke-3 Verifikasi Data (dulu cuma tombol
+            // "Klaim Reward" di header Verifikasi Prestasi, sekarang halaman
+            // sendiri). Daftar rolenya disamakan persis dengan route index di
+            // atas: audiens subbab ini sama dengan 2 subbab lain di bab yang
+            // sama — mahasiswa/pengurus/alumni melihat & mengajukan reward
+            // miliknya sendiri, admin kemahasiswaan mengelola, Ketua Departemen
+            // & GPM memantau read-only (lihat VerifikasiController::rewardIndex()).
+            // DPM TIDAK termasuk — sama dengan route index/bukti di atas.
+            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin_kemahasiswaan|ketua_departemen|gpm')
                 ->get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
                 ->name('reward.index');
 

@@ -73,6 +73,11 @@
     .mk-by-mhs { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 2px 8px; margin-left: 4px; }
     .mk-readonly { display: flex; flex-wrap: wrap; gap: 6px; background: #fafafa; border: 1px solid #DFE1E7; border-radius: 10px; padding: 10px 12px; min-height: 42px; }
     .mk-tag { display: inline-flex; align-items: center; font-size: 13px; font-weight: 600; color: #0B266E; background: rgba(11,38,110,0.06); border: 1px solid rgba(11,38,110,0.18); border-radius: 50px; padding: 4px 12px; }
+    /* Versi kecil untuk sel tabel. Lebarnya dibatasi supaya klaim 3 MK tidak
+       meregangkan kolom lain; daftar utuhnya tetap ada di modal Tinjau. */
+    .mk-tag--sm { font-size: 11px; padding: 2px 8px; }
+    .mk-cell { display: flex; flex-wrap: wrap; gap: 4px; max-width: 230px; }
+    .sel-kosong { color: #666D80; }
 
     .empty-state { text-align: center; padding: 50px 20px; color: #666D80; }
     .empty-state-icon { display: flex; justify-content: center; margin-bottom: 12px; color: #C1C7CF; }
@@ -110,22 +115,16 @@
 @include('manajemenmahasiswa::partials.filter-popover')
 
 <!-- Page Header -->
-<x-manajemenmahasiswa::ui.page-header bordered title="Klaim Reward Prestasi">
+<x-manajemenmahasiswa::ui.page-header bordered title="Klaim Prestasi">
     @if($canReview)
-        Tinjau &amp; setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.
+        Tinjau pengajuan klaim prestasi mahasiswa, lalu setujui atau tolak konversinya menjadi nilai mata kuliah sesuai SK FT 774.
     @else
-        Pantau pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.
+        Pantau pengajuan klaim prestasi mahasiswa untuk dikonversi menjadi nilai mata kuliah sesuai SK FT 774.
         <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:#eef2ff; color:#0B266E; font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Mode Pemantauan — hanya melihat (tanpa tinjau/setujui/tolak)
         </span>
     @endif
-
-    <x-slot:leading>
-        <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Verifikasi Prestasi">
-            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-        </a>
-    </x-slot:leading>
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
@@ -181,7 +180,7 @@
 
     <!-- Table Toolbar -->
     <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border, #DFE1E7); gap:10px; flex-wrap:wrap;">
-        <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0; flex-shrink:0;">Klaim Reward</h2>
+        <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0; flex-shrink:0;">Klaim Prestasi</h2>
 
         <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}" id="filterForm"
               style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
@@ -273,6 +272,9 @@
                     <th>NIM</th>
                     <th>Nama Prestasi</th>
                     <th>Tingkat</th>
+                    <th>Tahun Ajaran</th>
+                    <th>SKS Diklaim</th>
+                    <th>Mata Kuliah</th>
                     <th>Status</th>
                     <th style="width: 160px;">Aksi</th>
                 </tr>
@@ -285,7 +287,17 @@
                         // dari daftar yang sama, jadi angka & rinciannya tidak bisa beda.
                         $kuotaDipakai = $kuotaMap[$p->kemahasiswaan_id][$grup] ?? [];
                         $kuotaTerpakai = count($kuotaDipakai);
-                        $kuotaMaks = $P::KUOTA_MAKS[$grup];
+                        $kuotaMaks = $P::KUOTA_MAKS[$grup];   // null = tanpa batas
+                        // Batas SK 774 lebih ketat dari kebijakan departemen — dihitung
+                        // dari reward lain yang sudah disetujui (klaim ini tidak ikut).
+                        $rewardLain = collect($kuotaMap[$p->kemahasiswaan_id] ?? [])
+                            ->map(fn ($daftar) => collect($daftar)->where('id', '!=', $p->id)->count());
+                        $peringatanSk = $P::peringatanBatasSk(
+                            $rewardLain->sum(),
+                            $rewardLain[$P::KUOTA_INVENTION] ?? 0,
+                            $grup === $P::KUOTA_INVENTION
+                        );
+                        $mkRingkas = $p->reward_mk_diajukan ?? [];
                         // Satu payload untuk semua baris. Klaim yang masih menunggu membuka
                         // modal dengan panel keputusan; yang sudah diputus membuka modal yang
                         // sama dalam mode baca-saja — jadi tidak ada dua tampilan berbeda.
@@ -298,17 +310,23 @@
                             "penyelenggara"  => $p->reward_penyelenggara_label,
                             "capaian"        => $p->reward_capaian_label,
                             "invention"      => (bool) $p->reward_is_invention,
+                            "tahun_ajaran"   => $p->reward_tahun_ajaran_label,
                             "jml_mk_max"     => $p->reward_jml_mk_max,
                             "sks_max"        => $p->reward_sks_max,
-                            "mk_diajukan"    => $p->reward_mk_diajukan ?? [],
+                            "sks_diajukan"   => $p->reward_sks_diajukan,
+                            "mk_diajukan"    => $mkRingkas,
                             "mk_disetujui"   => $p->reward_mk_disetujui,
                             "kuota_terpakai" => $kuotaTerpakai,
                             "kuota_maks"     => $kuotaMaks,
                             "kuota_dipakai"  => $kuotaDipakai,
                             "grup"           => $grup,
+                            "grup_label"     => $P::KUOTA_LABELS[$grup] ?? $grup,
+                            "peringatan_sk"  => $peringatanSk,
                             // Dasar aturan yang dicap saat klaim diajukan
                             "sk_ref"         => $p->reward_sk_ref,
                             "sk_lawas"       => $p->rewardSkSudahDiganti(),
+                            // SK 774 poin 9 — prestasi sebelum SK berlaku
+                            "pra_sk"         => $p->rewardSebelumMasaBerlaku(),
                             "status"         => $p->reward_status,
                             "note"           => $p->reward_note,
                             "reviewer"       => $p->reviewedBy->name ?? null,
@@ -326,6 +344,37 @@
                         <td style="font-family: monospace; font-size: 13px; color: #0B266E;">{{ $p->kemahasiswaan->nim ?? '-' }}</td>
                         <td style="font-weight: 600;">{{ $p->nama_prestasi }}</td>
                         <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
+                        <td style="white-space: nowrap;">
+                            @if($p->reward_tahun_ajaran_label)
+                                {{ $p->reward_tahun_ajaran_label }}
+                            @else
+                                <span class="sel-kosong">&ndash;</span>
+                            @endif
+                        </td>
+                        <td style="white-space: nowrap;">
+                            @if($p->reward_sks_diajukan !== null)
+                                <span style="font-weight: 600;">{{ $p->reward_sks_diajukan }} SKS</span>
+                                @if($p->reward_sks_max)
+                                    <div style="font-size: 11px; color: #666D80;">maks {{ $p->reward_sks_max }}</div>
+                                @endif
+                            @else
+                                <span class="sel-kosong">&ndash;</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if(count($mkRingkas))
+                                <div class="mk-cell">
+                                    @foreach(array_slice($mkRingkas, 0, 2) as $mkNama)
+                                        <span class="mk-tag mk-tag--sm">{{ $mkNama }}</span>
+                                    @endforeach
+                                    @if(count($mkRingkas) > 2)
+                                        <span class="mk-tag mk-tag--sm">+{{ count($mkRingkas) - 2 }}</span>
+                                    @endif
+                                </div>
+                            @else
+                                <span class="sel-kosong">&ndash;</span>
+                            @endif
+                        </td>
                         <td>
                             @if($p->reward_status === $P::CLAIM_DISETUJUI)
                                 <span class="claim-badge disetujui">Disetujui</span>
@@ -384,10 +433,6 @@
                         <div class="tp-pane-bukti">
                             <div id="trPreview" style="width: 100%; display: flex; align-items: center; justify-content: center;"></div>
                             <div id="trThumbs" class="tp-thumbs"></div>
-                            <a id="trOpenTab" href="#" target="_blank" rel="noopener"
-                               style="font-size: 11px; font-weight: 600; color: var(--c-primary, #0B266E); text-decoration: none;">
-                                Buka bukti di tab baru &#8599;
-                            </a>
                         </div>
 
                         {{-- Kanan: rambu keputusan lebih dulu, baru datanya --}}
@@ -409,6 +454,10 @@
                             {{-- Muncul bila klaim ini diajukan di bawah SK yang kini
                                  sudah diganti — keputusannya tetap memakai aturan lama --}}
                             <div id="trSkLawas" class="sk-lawas" style="display: none;"></div>
+                            <div id="trPraSk" class="sk-lawas" style="display: none;"></div>
+                            {{-- Melewati batas SK 774 — diizinkan kebijakan departemen,
+                                 tapi fakultas masih mengacu ke SK --}}
+                            <div id="trSkBatas" class="sk-lawas" style="display: none;"></div>
 
                             <div style="margin-top: 14px;">
                                 <label class="form-label fw-bold mb-1" style="font-size: 13px;">
@@ -457,14 +506,20 @@ let trData = null;
 function openTinjauReward(data) {
     trData = data;
 
-    // Kuota tampil paling atas — inilah yang menentukan boleh tidaknya disetujui
-    const penuh   = data.kuota_terpakai >= data.kuota_maks;
+    // Kuota tampil paling atas — inilah yang menentukan boleh tidaknya disetujui.
+    // kuota_maks null = kelompok tanpa batas, tidak pernah habis.
+    const maks    = data.kuota_maks;
+    const sisa    = maks === null ? null : Math.max(maks - data.kuota_terpakai, 0);
+    const penuh   = sisa === 0;
     const kuotaEl = document.getElementById('trKuotaWarn');
     kuotaEl.innerHTML = '';
     const pill = document.createElement('span');
-    pill.className = 'kuota-pill' + (penuh ? ' penuh' : '');
-    pill.textContent = 'Kuota ' + data.grup + ': ' + data.kuota_terpakai + '/' + data.kuota_maks
-                     + (penuh && data.pending ? ' — PENUH, tidak bisa disetujui' : '');
+    pill.className = 'kuota-pill' + (penuh ? ' penuh' : (sisa === 1 && maks > 1 ? ' hampir' : ''));
+    pill.textContent = 'Kuota ' + data.grup_label + ': '
+                     + (maks === null
+                         ? 'tanpa batas (' + data.kuota_terpakai + ' disetujui)'
+                         : (penuh ? 'habis' : 'sisa ' + sisa + ' dari ' + maks))
+                     + (penuh && data.pending ? ' — tidak bisa disetujui' : '');
     kuotaEl.appendChild(pill);
 
     trRenderKuotaDipakai(data);
@@ -478,7 +533,11 @@ function openTinjauReward(data) {
         ['Prestasi',       data.nama],
         ['Penyelenggara',  data.penyelenggara || '-'],
         ['Capaian',        (data.capaian || '-') + (data.invention ? ' (invention/expo/fair)' : '')],
+        ['Tahun ajaran',   data.tahun_ajaran || '-'],
         ['Maks. konversi', data.jml_mk_max + ' mata kuliah (setara ' + data.sks_max + ' SKS)'],
+        ['SKS diklaim',    (data.sks_diajukan === null || data.sks_diajukan === undefined)
+                               ? '-'
+                               : data.sks_diajukan + ' SKS'],
         ['Dasar aturan',   data.sk_ref || '-'],
     ].forEach(function (pair) {
         const baris = document.createElement('div');
@@ -498,6 +557,20 @@ function openTinjauReward(data) {
         ? 'SK ini sudah diganti. Klaim tetap dinilai dengan aturan yang berlaku saat diajukan.'
         : '';
     skEl.style.display = data.sk_lawas ? 'block' : 'none';
+
+    // SK 774 poin 9: aturan berlaku mulai Januari 2025. Prestasi yang lebih tua
+    // tetap boleh diajukan, tapi peninjau harus sadar dasar aturannya berbeda.
+    const praSkEl = document.getElementById('trPraSk');
+    praSkEl.textContent = data.pra_sk
+        ? 'Prestasi ini bertanggal sebelum SK 774 berlaku (1 Januari 2025). Menurut poin 9, prestasi tersebut masih diatur SE 176/2020. Periksa sebelum menyetujui.'
+        : '';
+    praSkEl.style.display = data.pra_sk ? 'block' : 'none';
+
+    // Kebijakan departemen lebih longgar dari SK 774 poin 4 & 5 — tidak
+    // menghalangi persetujuan, hanya mengingatkan bahwa fakultas bisa menolak.
+    const skBatasEl = document.getElementById('trSkBatas');
+    skBatasEl.textContent = data.peringatan_sk || '';
+    skBatasEl.style.display = data.peringatan_sk ? 'block' : 'none';
 
     // MK pilihan mahasiswa — tampil read-only sebagai chip
     const mkView = document.getElementById('trMkView');
@@ -535,7 +608,7 @@ function openTinjauReward(data) {
         const setujuiBtn = document.getElementById('trSetujuiBtn');
         setujuiBtn.disabled = penuh;
         setujuiBtn.title = penuh
-            ? 'Kuota reward mahasiswa ini sudah penuh, klaim tidak dapat disetujui.'
+            ? 'Kuota reward mahasiswa ini sudah habis, klaim tidak dapat disetujui.'
             : '';
     } else {
         trRenderHasil(data);
@@ -559,7 +632,9 @@ function trRenderKuotaDipakai(data) {
 
     const judul = document.createElement('p');
     judul.className = 'tp-pane-heading';
-    judul.textContent = 'Kuota terpakai untuk';
+    judul.textContent = data.kuota_maks === null
+        ? 'Reward ' + data.grup_label + ' yang sudah disetujui'
+        : 'Kuota terpakai untuk';
     wadah.appendChild(judul);
 
     // Kotak yang sama persis dengan blok "Data klaim reward" di bawahnya
@@ -649,7 +724,6 @@ function trBarisHasil(label, isi, warna, berkotak) {
 function trRenderBukti(idx) {
     const pane    = document.getElementById('trPreview');
     const thumbs  = document.getElementById('trThumbs');
-    const openTab = document.getElementById('trOpenTab');
     const bukti   = (trData && trData.bukti) || [];
 
     pane.innerHTML   = '';
@@ -660,7 +734,6 @@ function trRenderBukti(idx) {
         kosong.style.cssText = 'padding: 70px 0; text-align: center; font-size: 13px; color: #666D80;';
         kosong.textContent = 'Tidak ada bukti dilampirkan';
         pane.appendChild(kosong);
-        openTab.style.display = 'none';
         return;
     }
 
@@ -678,9 +751,6 @@ function trRenderBukti(idx) {
         frame.className = 'tp-viewer';
         pane.appendChild(frame);
     }
-
-    openTab.href = b.url;
-    openTab.style.display = 'inline';
 
     // Selector hanya perlu bila klaim punya lebih dari satu berkas
     if (bukti.length > 1) {

@@ -98,7 +98,6 @@ function tpRenderBukti(pane, bukti, idx) {
     if (!pane) return;
     const preview = pane.querySelector('[data-tp-preview]');
     const thumbs  = pane.querySelector('[data-tp-thumbs]');
-    const openTab = pane.querySelector('[data-tp-opentab]');
     bukti = bukti || [];
 
     preview.innerHTML = '';
@@ -109,7 +108,6 @@ function tpRenderBukti(pane, bukti, idx) {
         kosong.style.cssText = 'padding: 70px 0; text-align: center; font-size: 13px; color: var(--c-fg-muted);';
         kosong.textContent = 'Tidak ada bukti dilampirkan';
         preview.appendChild(kosong);
-        openTab.style.display = 'none';
         return;
     }
 
@@ -127,9 +125,6 @@ function tpRenderBukti(pane, bukti, idx) {
         frame.className = 'tp-viewer';
         preview.appendChild(frame);
     }
-
-    openTab.href = b.url;
-    openTab.style.display = 'inline';
 
     // Selector hanya perlu bila pengajuan punya lebih dari satu berkas
     if (bukti.length > 1) {

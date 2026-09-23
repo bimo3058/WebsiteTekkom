@@ -406,7 +406,14 @@
         @endphp
         @if($canViewVerifikasi)
             @php
+                // Dropdown terbuka/toggle aktif kalau berada di salah satu dari
+                // ketiga subbab. $verifIndexActive & $verifRewardActive dipakai
+                // terpisah untuk state aktif per-link, supaya Klaim Prestasi
+                // (route sendiri, tanpa query "tab") tidak ikut ke-highlight
+                // sebagai Verifikasi Prestasi begitu juga sebaliknya.
                 $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
+                $verifIndexActive = request()->routeIs('manajemenmahasiswa.verifikasi.index');
+                $verifRewardActive = request()->routeIs('manajemenmahasiswa.verifikasi.reward.*');
                 $verifTab = request('tab', 'prestasi');
 
                 // Badge jumlah pending — untuk semua yang berwenang memutus.
@@ -416,9 +423,21 @@
                 // $canViewVerifikasi di atas (dicabut total dari bab ini).
                 $verifPendingRiwayat = 0;
                 $verifPendingPrestasi = 0;
+                $verifPendingReward = 0;
+
+                // Alumni cuma bisa lihat (tidak lagi verifikasi/klaim aktif),
+                // jadi labelnya dibuat "Riwayat ..." biar tidak menyesatkan.
+                // Role lain (mahasiswa, pengurus, superadmin, dst) tetap pakai
+                // istilah "Verifikasi"/"Klaim" karena mereka memang jadi aktor.
+                $isAlumniSidebar = in_array('alumni', $sidebarRoles);
+                $verifLabelPrestasi = $isAlumniSidebar ? 'Riwayat Prestasi' : 'Verifikasi Prestasi';
+                $verifLabelKlaim = $isAlumniSidebar ? 'Riwayat Klaim Prestasi' : 'Klaim Prestasi';
+                $verifLabelKegiatan = $isAlumniSidebar ? 'Riwayat Kegiatan' : 'Verifikasi Kegiatan';
+
                 if (array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan'])) {
                     $verifPendingRiwayat = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count();
                     $verifPendingPrestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
+                    $verifPendingReward = \Modules\ManajemenMahasiswa\Models\Prestasi::rewardDiajukan()->count();
                 }
             @endphp
             <div class="sidebar-dropdown {{ $verifActive ? 'open' : '' }}">
@@ -428,9 +447,9 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/check-square-1.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Verifikasi Data</span>
-                    @if($verifPendingRiwayat + $verifPendingPrestasi > 0)
+                    @if($verifPendingRiwayat + $verifPendingPrestasi + $verifPendingReward > 0)
                         <span class="nav-label"
-                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi }}</span>
+                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi + $verifPendingReward }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -439,16 +458,24 @@
                 </a>
                 <div class="sidebar-dropdown-menu">
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}"
-                        class="sub-item {{ $verifActive && $verifTab === 'prestasi' ? 'active' : '' }}">
-                        <span class="nav-label">Verifikasi Prestasi</span>
+                        class="sub-item {{ $verifIndexActive && $verifTab === 'prestasi' ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelPrestasi }}</span>
                         @if($verifPendingPrestasi > 0)
                             <span
                                 style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
                         @endif
                     </a>
+                    <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
+                        class="sub-item {{ $verifRewardActive ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelKlaim }}</span>
+                        @if($verifPendingReward > 0)
+                            <span
+                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingReward }}</span>
+                        @endif
+                    </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']) }}"
-                        class="sub-item {{ $verifActive && $verifTab === 'riwayat' ? 'active' : '' }}">
-                        <span class="nav-label">Verifikasi Kegiatan</span>
+                        class="sub-item {{ $verifIndexActive && $verifTab === 'riwayat' ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelKegiatan }}</span>
                         @if($verifPendingRiwayat > 0)
                             <span
                                 style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
