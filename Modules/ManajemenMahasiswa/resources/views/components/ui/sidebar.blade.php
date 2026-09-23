@@ -200,23 +200,8 @@
 
             $pengumumanDropdownActive = request()->routeIs('manajemenmahasiswa.pengumuman.*');
 
-            // Counter pending verifikasi pengumuman
-            $pendingVerifCount = 0;
-            if ($isKetua) {
-                // Ketua: hanya request yang ditujukan ke mereka
-                $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('verifier_id', auth()->id())
-                    ->where('status', 'pending')->count();
-            } elseif ($isAdminVerifier) {
-                // Admin: semua request pending (bisa override siapapun)
-                $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('status', 'pending')->count();
-            }
-
-            // Counter untuk staff: berapa pengajuan milik dia yang masih pending
-            $staffPendingCount = 0;
-            if ($isStaffHimpunan) {
-                $staffPendingCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('requester_id', auth()->id())
-                    ->where('status', 'pending')->count();
-            }
+            // Hitungan pending pengumuman tidak lagi dipakai di sini — semuanya
+            // pindah ke lonceng notifikasi topbar (NotifikasiTugasService).
         @endphp
 
         @if($isKetua || $isAdminVerifier)
@@ -228,10 +213,6 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
-                    @if($pendingVerifCount > 0)
-                        <span class="nav-label"
-                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $pendingVerifCount }}</span>
-                    @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                         <path d="m6 9 6 6 6-6" />
@@ -245,10 +226,6 @@
                     <a href="{{ route('manajemenmahasiswa.pengumuman.verifikasi.index') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.verifikasi.*') ? 'active' : '' }}">
                         <span class="nav-label">Verifikasi Pengumuman</span>
-                        @if($pendingVerifCount > 0)
-                            <span
-                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
-                        @endif
                     </a>
                 </div>
             </div>
@@ -262,10 +239,6 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
-                    @if($staffPendingCount > 0)
-                        <span class="nav-label"
-                            style="background:var(--c-warning, #956321);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $staffPendingCount }}</span>
-                    @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                         <path d="m6 9 6 6 6-6" />
@@ -279,10 +252,6 @@
                     <a href="{{ route('manajemenmahasiswa.pengumuman.riwayat.verifikasi') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.riwayat.verifikasi') ? 'active' : '' }}">
                         <span class="nav-label">Status Verifikasi</span>
-                        @if($staffPendingCount > 0)
-                            <span
-                                style="background:var(--c-warning, #956321);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
-                        @endif
                     </a>
                 </div>
             </div>
@@ -416,14 +385,8 @@
                 $verifRewardActive = request()->routeIs('manajemenmahasiswa.verifikasi.reward.*');
                 $verifTab = request('tab', 'prestasi');
 
-                // Badge jumlah pending — untuk semua yang berwenang memutus.
-                // Daftarnya disalin dari middleware route approve/reject. DPM
-                // sempat termasuk di sini selagi masih verifikator penuh, lalu
-                // dicabut — sekarang jadi moot juga karena DPM tidak lagi lolos
-                // $canViewVerifikasi di atas (dicabut total dari bab ini).
-                $verifPendingRiwayat = 0;
-                $verifPendingPrestasi = 0;
-                $verifPendingReward = 0;
+                // Jumlah pending prestasi/riwayat/klaim reward kini dihitung oleh
+                // NotifikasiTugasService dan tampil di lonceng topbar.
 
                 // Alumni cuma bisa lihat (tidak lagi verifikasi/klaim aktif),
                 // jadi labelnya dibuat "Riwayat ..." biar tidak menyesatkan.
@@ -433,12 +396,6 @@
                 $verifLabelPrestasi = $isAlumniSidebar ? 'Riwayat Prestasi' : 'Verifikasi Prestasi';
                 $verifLabelKlaim = $isAlumniSidebar ? 'Riwayat Klaim Prestasi' : 'Klaim Prestasi';
                 $verifLabelKegiatan = $isAlumniSidebar ? 'Riwayat Kegiatan' : 'Verifikasi Kegiatan';
-
-                if (array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan'])) {
-                    $verifPendingRiwayat = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count();
-                    $verifPendingPrestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
-                    $verifPendingReward = \Modules\ManajemenMahasiswa\Models\Prestasi::rewardDiajukan()->count();
-                }
             @endphp
             <div class="sidebar-dropdown {{ $verifActive ? 'open' : '' }}">
                 <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $verifActive ? 'active' : '' }}"
@@ -447,10 +404,6 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/check-square-1.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Verifikasi Data</span>
-                    @if($verifPendingRiwayat + $verifPendingPrestasi + $verifPendingReward > 0)
-                        <span class="nav-label"
-                            style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi + $verifPendingReward }}</span>
-                    @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                         <path d="m6 9 6 6 6-6" />
@@ -460,26 +413,14 @@
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}"
                         class="sub-item {{ $verifIndexActive && $verifTab === 'prestasi' ? 'active' : '' }}">
                         <span class="nav-label">{{ $verifLabelPrestasi }}</span>
-                        @if($verifPendingPrestasi > 0)
-                            <span
-                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
-                        @endif
                     </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
                         class="sub-item {{ $verifRewardActive ? 'active' : '' }}">
                         <span class="nav-label">{{ $verifLabelKlaim }}</span>
-                        @if($verifPendingReward > 0)
-                            <span
-                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingReward }}</span>
-                        @endif
                     </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']) }}"
                         class="sub-item {{ $verifIndexActive && $verifTab === 'riwayat' ? 'active' : '' }}">
                         <span class="nav-label">{{ $verifLabelKegiatan }}</span>
-                        @if($verifPendingRiwayat > 0)
-                            <span
-                                style="background:var(--c-error, #DF1C41);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
-                        @endif
                     </a>
                 </div>
             </div>
@@ -490,7 +431,6 @@
         @endphp
         @php
             $canSeeForumReports = in_array('superadmin', $sidebarRoles) || in_array('admin', $sidebarRoles) || in_array('admin_kemahasiswaan', $sidebarRoles) || in_array('gpm', $sidebarRoles) || in_array('dpm', $sidebarRoles) || in_array('ketua_departemen', $sidebarRoles);
-            $pendingReportsCount = $canSeeForumReports ? \Modules\ManajemenMahasiswa\Models\ForumReport::where('status','pending')->count() : 0;
         @endphp
         <div class="sidebar-dropdown {{ $forumDropdownActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $forumDropdownActive ? 'active' : '' }}"
@@ -499,9 +439,6 @@
                     {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}
                 </span>
                 <span class="nav-label" style="flex-grow: 1;">Forum Diskusi</span>
-                @if($pendingReportsCount > 0)
-                    <span style="background:#ef4444; color:#fff; font-size:9px; font-weight:700; padding:1px 5px; border-radius:20px; margin-right:4px; flex-shrink:0;">{{ $pendingReportsCount }}</span>
-                @endif
                 <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                     <path d="m6 9 6 6 6-6" />
@@ -530,9 +467,6 @@
                     <a href="{{ route('manajemenmahasiswa.forum.reports') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.reports') ? 'active' : '' }}">
                         <span class="nav-label">Laporan</span>
-                        @if($pendingReportsCount > 0)
-                            <span style="background:#ef4444; color:#fff; font-size:9px; font-weight:700; padding:1px 5px; border-radius:20px; margin-left:auto;">{{ $pendingReportsCount }}</span>
-                        @endif
                     </a>
                 @endif
             </div>

@@ -44,7 +44,7 @@
         .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
         .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
         .dash-box-header { background: #fff; border-bottom: 1px solid var(--c-border, #DFE1E7); flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
-        .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+        .dash-box-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 24px; }
         .dash-box-body::-webkit-scrollbar { width: 6px; }
         .dash-box-body::-webkit-scrollbar-thumb { background: var(--c-border-strong, #C1C7CF); border-radius: 10px; }
         @media (max-width: 767px) {
@@ -155,7 +155,6 @@
         .pagination .page-link:hover { background:var(--c-primary-subtle, #EEF1F8); border-color:var(--c-primary-border, #5C78B8); }
         .pagination .page-item.active .page-link { background:var(--c-primary, #0B266E); border-color:var(--c-primary, #0B266E); color:#fff; }
         .pagination .page-item.disabled .page-link { color:var(--c-border-strong, #C1C7CF); border-color:var(--c-border, #DFE1E7); }
-        .pagination-info-text { font-size:12px; color:var(--c-fg-muted, #666D80); font-weight:500; }
 
         /* ── Empty state ────────────────────────────────────────────── */
         .pengumuman-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:44px 20px; text-align:center; }
@@ -238,15 +237,10 @@
                                 value="{{ request('search') }}">
                         </div>
 
-                        <x-manajemenmahasiswa::ui.select name="per_page" size="md" :block="false"
-                            onchange="document.getElementById('pengumumanFilterForm').submit()">
-                            @foreach([5,10,20,50] as $opt)
-                                <option value="{{ $opt }}" {{ request('per_page',10) == $opt ? 'selected' : '' }}>
-                                    {{ $opt }} / hal
-                                </option>
-                            @endforeach
-                        </x-manajemenmahasiswa::ui.select>
                     </div>
+
+                    {{-- Pemilih jumlah baris sengaja tidak ditaruh di sini: sudah ada
+                         "Per page" di footer tabel, sama seperti tabel global SITKOM. --}}
 
                     @include('manajemenmahasiswa::pengumuman._filter-kategori', [
                         'selectedKategori' => $selectedKategori,
@@ -428,20 +422,12 @@
                     @endforelse
                 </div>
 
-                {{-- ── Pagination ───────────────────────────── --}}
-                @if($pengumuman->total() > 0)
-                    <div class="mb-2">
-                        <span class="pagination-info-text">
-                            Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
-                            dari {{ $pengumuman->total() }} pengumuman
-                        </span>
-                    </div>
-                @endif
-                @if($pengumuman->hasPages())
-                    <div class="d-flex justify-content-center mt-2 mb-2">
-                        {{ $pengumuman->appends(request()->query())->links('pagination::bootstrap-5') }}
-                    </div>
-                @endif
+                {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman
+                     (partial bersama, bentuknya sama dengan tabel global SITKOM). --}}
+                @include('manajemenmahasiswa::partials.table-footer', [
+                    'paginator'  => $pengumuman,
+                    'standalone' => true,
+                ])
 
             </div> <!-- end dash-box-body -->
         </div> <!-- end dash-box -->

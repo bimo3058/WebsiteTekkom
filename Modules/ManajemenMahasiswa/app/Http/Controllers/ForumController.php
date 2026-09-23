@@ -17,6 +17,7 @@ use Modules\ManajemenMahasiswa\Services\ContentModerationService;
 use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Models\ForumNotification;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class ForumController extends Controller
 {
@@ -43,7 +44,7 @@ class ForumController extends Controller
             session()->put('forum_rules_shown', true);
         }
 
-        $threads = $this->threadService->listThreads($request->all(), 15);
+        $threads = $this->threadService->listThreads($request->all(), PerPage::resolve($request));
         $userStats = $this->gamificationService->getUserStats($user->id);
         $categories = Thread::KATEGORI_LABELS;
 
@@ -98,7 +99,7 @@ class ForumController extends Controller
             default      => $query->orderByDesc('mk_threads.created_at'),
         };
 
-        $threads = $query->paginate(15)->withQueryString();
+        $threads = $query->paginate(PerPage::resolve($request))->withQueryString();
 
         $totalThreads  = Thread::where('user_id', $user->id)->count();
         $totalVotes    = Thread::where('user_id', $user->id)->sum('vote_count');
@@ -125,7 +126,7 @@ class ForumController extends Controller
             $query->where('status', $status);
         }
 
-        $forumReports = $query->paginate(20)->withQueryString();
+        $forumReports = $query->paginate(PerPage::resolve($request))->withQueryString();
         $pendingCount = \Modules\ManajemenMahasiswa\Models\ForumReport::where('status', 'pending')->count();
         $totalCount   = \Modules\ManajemenMahasiswa\Models\ForumReport::count();
 
@@ -422,7 +423,7 @@ class ForumController extends Controller
 
         $thread = $this->threadService->findThread($id);
         $thread->load(['poll.options', 'poll.votes']);
-        $comments = $this->commentService->listComments($id);
+        $comments = $this->commentService->listComments($id, PerPage::resolve($request));
 
         // Kumpulkan semua comment ID yang tampil (termasuk nested replies) untuk filter vote (Fix #14)
         $commentIds = collect($comments->items())->pluck('id');

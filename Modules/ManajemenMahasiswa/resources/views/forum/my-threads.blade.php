@@ -17,7 +17,7 @@
             .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; }
             .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
             .dash-box-header { background: #fff; border-bottom: 1px solid #DFE1E7; flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
-            .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+            .dash-box-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; padding: 20px 24px; }
             .dash-box-body::-webkit-scrollbar { width: 6px; }
             .dash-box-body::-webkit-scrollbar-thumb { background: #C1C7CF; border-radius: 10px; }
             @media (max-width: 767px) {
@@ -257,13 +257,7 @@
 
             .empty-state h5 { color: #374151; font-weight: 700; }
 
-            .pagination-container nav > .d-sm-flex {
-                flex-direction: column-reverse;
-                align-items: center !important;
-                gap: 0.75rem;
-            }
 
-            .pagination-container .pagination { margin-bottom: 0; }
         </style>
     @endpush
 
@@ -476,11 +470,12 @@
     @endforelse
 
     {{-- Pagination --}}
-    @if($threads->hasPages())
-        <div class="d-flex justify-content-center mt-4 mb-4 pagination-container">
-            {{ $threads->appends(request()->query())->links('pagination::bootstrap-5') }}
-        </div>
-    @endif
+    {{-- Footer bersama: Per page + Showing X to Y of Z results + nomor halaman --}}
+    @include('manajemenmahasiswa::partials.table-footer', [
+        'paginator'      => $threads,
+        'perPageOptions' => \Modules\ManajemenMahasiswa\Support\PerPage::TABEL,
+        'standalone'     => true,
+    ])
 
     </div>{{-- /dash-box-body --}}
     </div>{{-- /dash-box --}}

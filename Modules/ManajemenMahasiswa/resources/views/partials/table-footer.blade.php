@@ -14,7 +14,11 @@
                        untuk grid kartu pakai PerPage::KARTU
       $perPageParam    nama parameter query; bawaan 'per_page'
       $standalone      true = bilah berdiri sendiri (bergaris + membulat) untuk daftar kartu
-                       yang tidak dibungkus kartu tabel; bawaan false
+                       yang tidak dibungkus kartu tabel; bawaan false.
+                       Varian ini didahului .tbl-foot-spacer: kalau induknya kolom flex
+                       (mis. .dash-box-body / .user-box-body), pengganjal itu memuai
+                       sehingga bilahnya menempel ke dasar kotak walau isinya pendek —
+                       tidak lagi menggantung di tengah dengan ruang kosong di bawahnya.
 
     Controller wajib memakai PerPage::resolve() dengan daftar yang sama.
 --}}
@@ -52,10 +56,19 @@
             .tbl-foot:last-child:not(.tbl-foot--standalone) { border-radius: 0 0 13px 13px; }
             /* Bilah mandiri di bawah grid kartu / daftar kartu (tanpa kartu tabel pembungkus) */
             .tbl-foot--standalone {
-                margin: 20px 0 8px;
+                margin: 0 0 8px;
                 border: 1px solid var(--c-border);
                 border-radius: 12px;
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            }
+
+            /* Pengganjal sebelum bilah mandiri. Di induk kolom flex (mis. .dash-box-body)
+               ia memuai mengisi sisa ruang, jadi bilahnya menempel ke dasar kotak walau
+               isinya cuma satu-dua baris. Di induk biasa, `flex` diabaikan dan yang
+               tersisa hanya jarak 20px — sama seperti margin lamanya. */
+            .tbl-foot-spacer {
+                flex: 1 1 auto;
+                min-height: 20px;
             }
             .tbl-foot-info {
                 display: flex;
@@ -184,6 +197,10 @@
             }
         </style>
     @endonce
+
+    @if($tfStandalone)
+        <div class="tbl-foot-spacer" aria-hidden="true"></div>
+    @endif
 
     <div class="tbl-foot {{ $tfStandalone ? 'tbl-foot--standalone' : '' }}">
         <div class="tbl-foot-info">

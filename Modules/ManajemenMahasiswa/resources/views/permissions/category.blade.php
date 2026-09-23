@@ -1,6 +1,8 @@
 <x-manajemenmahasiswa::layouts.admin>
     @push('styles')
         @include('manajemenmahasiswa::permissions._styles')
+        {{-- Gaya tombol + panel "Filter" (dipakai bersama Direktori, Kegiatan, Pengaduan) --}}
+        @include('manajemenmahasiswa::partials.filter-popover')
     @endpush
 
     @php
@@ -91,30 +93,65 @@
                             </div>
                         @endif
 
-                        {{-- Per Page --}}
-                        <div class="mp-field" style="width:120px;"
-                             x-data="{ open: false, selected: '{{ $perPage }}', options: ['10','25','50','100'] }">
-                            <label class="mp-label">Limit</label>
-                            <input type="hidden" name="per_page" :value="selected">
-                            <button type="button" class="mp-select-btn" :class="open ? 'open' : ''"
-                                    @click="open = !open" @click.outside="open = false">
-                                <span x-text="selected + ' baris'"></span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            </button>
-                            <div x-show="open" x-transition.opacity.duration.150ms class="mp-select-menu" style="display:none;">
-                                <template x-for="opt in options" :key="opt">
-                                    <button type="button" class="mp-select-option"
-                                            :class="selected === opt ? 'selected' : ''"
-                                            @click="selected = opt; open = false">
-                                        <span x-text="opt + ' baris'"></span>
-                                    </button>
-                                </template>
+                        {{-- Pemilih jumlah baris ada di footer tabel ("Per page"),
+                             mengikuti pola tabel global SITKOM. --}}
+
+                        {{-- Tombol Filter membuka panel angkatan; pola & gaya sama dengan
+                             halaman utama Permission (partials/filter-popover). --}}
+                        <div class="mp-field">
+                            <div class="filter-pop" x-data="{ filterOpen: false }"
+                                 @keydown.escape.window="filterOpen = false">
+                                <button type="button" class="filter-pop-btn"
+                                        @click="filterOpen = !filterOpen"
+                                        :class="{ 'is-open': filterOpen }">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;">
+                                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                                    </svg>
+                                    <span style="line-height:1;">Filter</span>
+                                    @if($angkatan)
+                                        <span class="filter-pop-dot"></span>
+                                    @endif
+                                </button>
+
+                                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display:none;"
+                                     @click="filterOpen = false"></div>
+
+                                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display:none;"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95">
+
+                                    <p class="filter-pop-title">Advanced Filters</p>
+
+                                    <div class="filter-pop-fields">
+                                        <div>
+                                            <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
+                                            <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
+                                                <option value="">Semua Angkatan</option>
+                                                @foreach($angkatanList as $ank)
+                                                    <option value="{{ $ank }}" @selected((string) $angkatan === (string) $ank)>
+                                                        Angkatan {{ $ank }}
+                                                    </option>
+                                                @endforeach
+                                            </x-manajemenmahasiswa::ui.select>
+                                        </div>
+
+                                        <div class="filter-pop-actions">
+                                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mp-field">
-                            <button type="submit" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm" style="height:32px;padding:0 16px;">Filter</button>
-                        </div>
+                        @if($isFiltered)
+                            <div class="mp-field">
+                                <a href="{{ url()->current() }}" class="mk-btn mk-btn--secondary mk-btn--sm" style="height:32px;padding:0 14px;">Reset</a>
+                            </div>
+                        @endif
                     </div>
                 </form>
 
@@ -127,56 +164,11 @@
                         'emptyText'       => 'Tidak ada pengguna dalam kategori ini',
                     ])
                 </div>
-
-                {{-- ── Pagination ───────────────────────────── --}}
-                @if($users->hasPages())
-                    <div class="d-flex flex-column align-items-center gap-2 mt-3">
-                        <div class="d-flex align-items-center gap-1">
-
-                            {{-- Prev --}}
-                            @if($users->onFirstPage())
-                                <span class="page-btn page-btn-nav disabled">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                                </span>
-                            @else
-                                <a href="{{ $users->withQueryString()->previousPageUrl() }}" class="page-btn page-btn-nav">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-                                </a>
-                            @endif
-
-                            {{-- Page Numbers --}}
-                            @foreach($users->withQueryString()->links()->offsetGet('elements') as $element)
-                                @if(is_string($element))
-                                    <span class="page-btn page-btn-dots">…</span>
-                                @endif
-                                @if(is_array($element))
-                                    @foreach($element as $page => $url)
-                                        @if($page == $users->currentPage())
-                                            <span class="page-btn page-btn-active">{{ $page }}</span>
-                                        @else
-                                            <a href="{{ $url }}" class="page-btn">{{ $page }}</a>
-                                        @endif
-                                    @endforeach
-                                @endif
-                            @endforeach
-
-                            {{-- Next --}}
-                            @if($users->hasMorePages())
-                                <a href="{{ $users->withQueryString()->nextPageUrl() }}" class="page-btn page-btn-nav">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                                </a>
-                            @else
-                                <span class="page-btn page-btn-nav disabled">
-                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
-                                </span>
-                            @endif
-
-                        </div>
-                        <div class="mp-page-info">
-                            Menampilkan {{ $users->firstItem() }}–{{ $users->lastItem() }} dari {{ $users->total() }} pengguna
-                        </div>
-                    </div>
-                @endif
+                {{-- Footer bersama: Per page + Showing X to Y of Z results + nomor halaman --}}
+                @include('manajemenmahasiswa::partials.table-footer', [
+                    'paginator'  => $users,
+                    'standalone' => true,
+                ])
 
             </div> <!-- end user-box-body -->
         </div> <!-- end user-box -->

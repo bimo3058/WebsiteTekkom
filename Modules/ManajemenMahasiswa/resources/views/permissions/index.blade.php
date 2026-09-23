@@ -1,6 +1,8 @@
 <x-manajemenmahasiswa::layouts.admin>
     @push('styles')
         @include('manajemenmahasiswa::permissions._styles')
+        {{-- Gaya tombol + panel "Filter" (dipakai bersama Direktori, Kegiatan, Pengaduan) --}}
+        @include('manajemenmahasiswa::partials.filter-popover')
         <style>
             /* ── Stat cards: pola _stats dashboard Super Admin ───────── */
             .mp-stat-row {
@@ -117,11 +119,58 @@
                             </div>
                         </div>
 
+                        {{-- Tombol Filter membuka panel angkatan; pola & gaya sama dengan
+                             Direktori/Pengaduan (partials/filter-popover). --}}
                         <div class="mp-field">
-                            <button type="submit" class="mp-btn-primary mk-btn mk-btn--primary mk-btn--sm" style="height:32px;padding:0 16px;">Filter</button>
+                            <div class="filter-pop" x-data="{ filterOpen: false }"
+                                 @keydown.escape.window="filterOpen = false">
+                                <button type="button" class="filter-pop-btn"
+                                        @click="filterOpen = !filterOpen"
+                                        :class="{ 'is-open': filterOpen }">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;">
+                                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                                    </svg>
+                                    <span style="line-height:1;">Filter</span>
+                                    @if($angkatan)
+                                        <span class="filter-pop-dot"></span>
+                                    @endif
+                                </button>
+
+                                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display:none;"
+                                     @click="filterOpen = false"></div>
+
+                                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display:none;"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95"
+                                     x-transition:enter-end="opacity-100 scale-100"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100"
+                                     x-transition:leave-end="opacity-0 scale-95">
+
+                                    <p class="filter-pop-title">Advanced Filters</p>
+
+                                    <div class="filter-pop-fields">
+                                        <div>
+                                            <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
+                                            <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
+                                                <option value="">Semua Angkatan</option>
+                                                @foreach($angkatanList as $ank)
+                                                    <option value="{{ $ank }}" @selected((string) $angkatan === (string) $ank)>
+                                                        Angkatan {{ $ank }}
+                                                    </option>
+                                                @endforeach
+                                            </x-manajemenmahasiswa::ui.select>
+                                        </div>
+
+                                        <div class="filter-pop-actions">
+                                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        @if($search)
+                        @if($isFiltered)
                             <div class="mp-field">
                                 <a href="{{ route('manajemenmahasiswa.pengguna.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm" style="height:32px;padding:0 14px;">Reset</a>
                             </div>
