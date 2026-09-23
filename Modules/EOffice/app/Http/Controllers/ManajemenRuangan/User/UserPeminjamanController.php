@@ -109,7 +109,7 @@ class UserPeminjamanController extends Controller
         // Pengecekan Bentrok Jadwal Peminjaman (Global Checks)
         $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
             ->where('tanggal_pinjam', $request->tanggal_pinjam)
-            ->where('status', 'disetujui')
+            ->whereIn('status', ['menunggu', 'disetujui'])
             ->where(function ($query) use ($request) {
                 // Logika Overlap: Waktu yang diajukan bertabrakan dengan rentang jam sistem
                 $query->where(function ($q) use ($request) {
@@ -147,7 +147,7 @@ class UserPeminjamanController extends Controller
         if ($isConflict) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan dan DISETUJUI oleh pihak lain pada rentang jam tersebut.']);
+                ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan atau sedang dalam proses antrean (menunggu persetujuan) pada rentang jam tersebut.']);
         }
         if ($isInternalConflict) {
             return redirect()->back()
@@ -379,5 +379,28 @@ class UserPeminjamanController extends Controller
         }
 
         return redirect()->to($url);
+    }
+
+    /**
+     * Get the current unread notification count
+     */
+    public function getUnreadCount()
+    {
+        $count = auth()->check() ? auth()->user()->unreadNotifications->count() : 0;
+        return response()->json(['count' => $count]);
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead(Request $request)
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return redirect()->back()->with('success', 'Semua notifikasi telah ditandai sebagai dibaca');
     }
 }

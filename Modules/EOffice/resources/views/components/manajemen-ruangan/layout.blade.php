@@ -777,7 +777,7 @@
                                     $notifCount = $unreadNotifications->count();
                                 @endphp
                                 @if($notifCount > 0)
-                                    <span class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">
+                                    <span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">
                                         {{ $notifCount > 99 ? '99+' : $notifCount }}
                                     </span>
                                 @endif
@@ -785,44 +785,45 @@
 
                             {{-- Dropdown Notifikasi --}}
                             <div x-show="openNotif" x-transition.opacity.duration.200ms
-                                class="absolute right-0 mt-2 w-[320px] bg-white border border-[#DFE1E7] rounded-[12px] shadow-lg overflow-hidden z-[99]"
+                                class="absolute right-0 mt-2 w-[340px] bg-white border border-[#DFE1E7] rounded-[16px] shadow-lg overflow-hidden z-[99]"
                                 style="display: none;">
-                                <div class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-center bg-[#F8FAFC]">
-                                    <h3 class="font-bold text-[13px] text-[#0D0D12]">Notifikasi</h3>
+                                <div class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-start bg-white">
+                                    <div class="flex flex-col gap-1">
+                                        <h3 class="font-bold text-[13px] text-gray-900 leading-none mt-0.5">Notifikasi</h3>
+                                        <p class="text-[11px] text-gray-500">Aktivitas Terkini</p>
+                                    </div>
                                     @if($notifCount > 0)
-                                        <span class="bg-[#DF1C41] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $notifCount }} Baru</span>
+                                    <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}" class="m-0" id="mark-all-read-form">
+                                        @csrf
+                                        <button type="submit" class="text-[12px] text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0">Tandai semua dibaca</button>
+                                    </form>
                                     @endif
                                 </div>
-                                <div class="max-h-[320px] overflow-y-auto">
+                                <div class="max-h-[350px] overflow-y-auto bg-white">
                                     @forelse($user->notifications()->limit(5)->get() as $notification)
                                         <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read', $notification->id) }}" class="m-0 border-b border-[#F0F1F4] last:border-b-0">
                                             @csrf
-                                            <button type="submit" class="w-full text-left p-4 hover:bg-[#F8FAFC] transition-colors cursor-pointer {{ $notification->read_at ? 'opacity-60' : 'bg-[#F0F9FF]' }}">
-                                                <div class="flex items-start gap-3">
-                                                    <div class="flex-shrink-0 mt-0.5">
-                                                        @if(isset($notification->data['status']) && $notification->data['status'] == 'disetujui')
-                                                            <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                                            </div>
-                                                        @elseif(isset($notification->data['status']) && in_array($notification->data['status'], ['ditolak', 'dibatalkan']))
-                                                            <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-600">
-                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                                                            </div>
-                                                        @else
-                                                            <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                                                            </div>
+                                            <button type="submit" class="w-full text-left px-4 py-3 transition-colors cursor-pointer {{ $notification->read_at ? 'bg-white opacity-60 hover:bg-gray-50' : 'bg-[#EFF6FF] hover:bg-[#E0F2FE] unread-item' }}">
+                                                <div class="flex flex-col gap-1">
+                                                    <div class="flex justify-between items-start gap-2">
+                                                        <h4 class="text-[13px] font-bold text-gray-900">{{ $notification->data['title'] ?? 'Pemberitahuan Sistem' }}</h4>
+                                                        @if(!$notification->read_at)
+                                                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1 blue-dot"></span>
                                                         @endif
                                                     </div>
-                                                    <div>
-                                                        <div class="text-[12px] font-semibold text-[#0D0D12] leading-[1.4] mb-1">{{ $notification->data['message'] ?? 'Pemberitahuan Baru' }}</div>
-                                                        <div class="text-[10px] text-[#666D80]">{{ $notification->created_at->diffForHumans() }}</div>
-                                                    </div>
+                                                    @php
+                                                        $notifMessage = htmlspecialchars($notification->data['message'] ?? 'Pemberitahuan Baru');
+                                                        $notifMessage = preg_replace('/(disetujui)/i', '<span class="font-bold text-emerald-600">$1</span>', $notifMessage);
+                                                        $notifMessage = preg_replace('/(ditolak)/i', '<span class="font-bold text-rose-600">$1</span>', $notifMessage);
+                                                        $notifMessage = preg_replace('/(dibatalkan(?: oleh admin)?)/i', '<span class="font-bold text-rose-600">$1</span>', $notifMessage);
+                                                    @endphp
+                                                    <p class="text-[12px] text-gray-600 leading-snug">{!! $notifMessage !!}</p>
+                                                    <span class="text-[11px] text-gray-400 mt-0.5">{{ $notification->created_at->diffForHumans() }}</span>
                                                 </div>
                                             </button>
                                         </form>
                                     @empty
-                                        <div class="p-6 text-center text-[12px] text-[#808897]">
+                                        <div class="p-5 text-center text-[12px] text-gray-500">
                                             Belum ada notifikasi
                                         </div>
                                     @endforelse
@@ -941,6 +942,79 @@
             'currentRoute' => $currentRoute
         ])
     @endif
-</body>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const markAllForm = document.getElementById('mark-all-read-form');
+            if (markAllForm) {
+                markAllForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    // Optimistic UI updates
+                    // 1. Hilangkan badge angka merah di atas lonceng
+                    const badge = document.getElementById('notif-badge');
+                    if (badge) badge.style.display = 'none';
+                    
+                    // 2. Ubah semua notif biru terang menjadi abu-abu pudar
+                    const unreadItems = document.querySelectorAll('.unread-item');
+                    unreadItems.forEach(item => {
+                        item.classList.remove('bg-[#EFF6FF]', 'hover:bg-[#E0F2FE]', 'unread-item');
+                        item.classList.add('bg-white', 'opacity-60', 'hover:bg-gray-50');
+                        
+                        // Sembunyikan titik biru (dot)
+                        const dot = item.querySelector('.blue-dot');
+                        if (dot) dot.style.display = 'none';
+                    });
+                    
+                    // 3. Sembunyikan tombol "Tandai semua dibaca"
+                    markAllForm.style.display = 'none';
+                    
+                    // 4. Sembunyikan pill merah "X Baru" di header dropdown (jika ada)
+                    const newCountPill = document.querySelector('span.bg-\\[\\#DF1C41\\]');
+                    if (newCountPill) newCountPill.style.display = 'none';
+
+                    // 5. Kirim request di belakang layar
+                    fetch(markAllForm.action, {
+                        method: 'POST',
+                        body: new FormData(markAllForm),
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    }).catch(err => console.error(err));
+                });
+            }
+
+            // AJAX Polling khusus Notifikasi tiap 10 detik
+            setInterval(() => {
+                fetch('{{ route('eoffice.peminjaman.user.notifikasi.count') }}', {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    const count = data.count;
+                    let badge = document.getElementById('notif-badge');
+                    
+                    if (count > 0) {
+                        let displayCount = count > 99 ? '99+' : count;
+                        if (badge) {
+                            badge.innerText = displayCount;
+                            badge.style.display = 'flex';
+                        } else {
+                            // Buat badge jika belum ada (dari state 0 ke >0)
+                            const btn = document.querySelector('[x-data="{ openNotif: false }"] button');
+                            if (btn) {
+                                btn.insertAdjacentHTML('beforeend', `<span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">${displayCount}</span>`);
+                            }
+                        }
+                    } else {
+                        // Hilangkan jika 0
+                        if (badge) badge.style.display = 'none';
+                    }
+                })
+                .catch(err => console.error('Notif Polling Error:', err));
+            }, 10000);
+        });
+    </script>
+</body>
 </html>

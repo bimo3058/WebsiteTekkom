@@ -62,7 +62,7 @@
                                 <span class="text-[11px] font-semibold text-blue-400 tracking-wide uppercase">Foto segera hadir</span>
                             </div>
                         @endif
-                        <span class="absolute top-3 right-3 bg-white text-[11px] font-bold text-[#0B266E] border border-gray-200 rounded-full px-2.5 py-0.5 shadow-sm">
+                        <span class="absolute top-3 right-3 bg-white text-[12px] font-bold text-[#0B266E] border border-gray-200 rounded-full px-3 py-[3px] shadow-sm">
                             {{ $room->kapasitas }} orang
                         </span>
                     </a>

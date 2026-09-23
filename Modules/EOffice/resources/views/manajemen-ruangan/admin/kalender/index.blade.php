@@ -398,7 +398,7 @@
                 $minTWidth = 64 + (7 * $ruangans->count() * 75);
             @endphp
             {{-- Calendar Grid --}}
-            <div class="mp-card overflow-hidden">
+            <div id="calendar-grid-wrapper" class="mp-card overflow-hidden">
                 <div style="overflow-x: auto; width: 100%;">
                     <table
                         style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; min-width: {{ max(900, $minTWidth) }}px;">
@@ -1135,7 +1135,47 @@
     </div>
     </div>
 
+    <script src="//unpkg.com/alpinejs" defer></script>
     <script>
+        // AJAX Polling setiap 30 detik untuk update Real-time
+        document.addEventListener('DOMContentLoaded', () => {
+            setInterval(() => {
+                const kalenderDiv = document.querySelector('[x-data="bookingKalender()"]');
+                if (kalenderDiv && kalenderDiv.__x) {
+                    const data = Alpine.$data(kalenderDiv);
+                    // Jangan update UI jika admin sedang berinteraksi dengan modal atau dragging
+                    if (data && (data.showModal || data.showDetailModal || data.showBlockModal || data.isDragging)) return;
+                }
+                
+                fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newContainer = doc.getElementById('calendar-grid-wrapper');
+                    const currentContainer = document.getElementById('calendar-grid-wrapper');
+                    
+                    if (newContainer && currentContainer) {
+                        // Simpan posisi scroll sebelum replace
+                        let scrollWrapper = currentContainer.querySelector('div[style*="overflow-x"]');
+                        let currentScroll = scrollWrapper ? scrollWrapper.scrollLeft : 0;
+
+                        currentContainer.innerHTML = newContainer.innerHTML;
+
+                        // Kembalikan posisi scroll setelah replace
+                        let newScrollWrapper = currentContainer.querySelector('div[style*="overflow-x"]');
+                        if (newScrollWrapper) {
+                            newScrollWrapper.scrollLeft = currentScroll;
+                        }
+                    }
+                })
+                .catch(err => console.error('Polling error:', err));
+            }, 30000);
+        });
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('bookingKalender', () => ({
                 isDragging: false,

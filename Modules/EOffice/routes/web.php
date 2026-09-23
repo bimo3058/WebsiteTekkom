@@ -738,6 +738,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
 
                 // Notifikasi
+                Route::get('/notifikasi/count', [$MRUserPeminjamanController, 'getUnreadCount'])->name('notifikasi.count');
+                Route::post('/notifikasi/read-all', [$MRUserPeminjamanController, 'markAllNotificationsAsRead'])->name('notifikasi.read-all');
                 Route::post('/notifikasi/{id}/read', [$MRUserPeminjamanController, 'markNotificationAsRead'])->name('notifikasi.read');
             });
 
