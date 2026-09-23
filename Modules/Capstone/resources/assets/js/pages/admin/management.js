@@ -232,8 +232,9 @@ export function finalizationAdmin(){return mergePage(basePage(),{
     async doAutoFix(){
         if(await this.run(()=>api('/admin/finalization/auto-fix',{method:'POST',body:{period_id:Number(this.periodId),mode:this.autoFixMode}}),'Auto-fix selesai.')){dialog('fin-autofix').close();await this.load();}
     },
-    openForceReady(item){this.forceTarget=item;this.reasonForm={reason:''};dialog('fin-force').showModal();},
+    openForceReady(item){if(item.status!=='TITLE_APPROVED'){notify('Hanya kelompok Title Approved yang bisa dipaksa siap.',true);return;}this.forceTarget=item;this.reasonForm={reason:''};dialog('fin-force').showModal();},
     async doForceReady(){
+        if(this.forceTarget?.status!=='TITLE_APPROVED')return;
         if(!this.reasonForm.reason.trim()||this.reasonForm.reason.trim().length<10)return;
         if(await this.run(()=>api('/admin/finalization/force-ready',{method:'POST',body:{group_id:this.forceTarget.id,reason:this.reasonForm.reason.trim()||null}}),'Grup dipaksa ready.')){dialog('fin-force').close();await this.load();}
     },

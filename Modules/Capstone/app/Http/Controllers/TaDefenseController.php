@@ -71,7 +71,16 @@ class TaDefenseController extends Controller
             return response()->json(['message' => 'Student must have a TA submission in TA_REGISTERED status.'], 400);
         }
 
-        $group = Group::findOrFail($taSubmission->group_id);
+        $group = Group::with(['supervisors'])->findOrFail($taSubmission->group_id);
+
+        // Examiner cannot be the same as the group supervisor.
+        $constraintError = $this->schedulingService->validateExaminerConstraints(
+            $group,
+            [(int) $request->examiner_1_id, (int) $request->examiner_2_id]
+        );
+        if ($constraintError !== null) {
+            return response()->json(['message' => $constraintError], 400);
+        }
 
         // Validate examiners are dosen
         foreach (['examiner_1_id', 'examiner_2_id'] as $field) {

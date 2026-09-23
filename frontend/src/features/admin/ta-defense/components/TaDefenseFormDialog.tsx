@@ -17,7 +17,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Lock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Field, FieldLabel, FieldError } from '@/components/ui/field';
-import { taDefenseSchema, type TaDefenseFormData } from '@/lib/validations/ta-defense';
+import { taDefenseSchema, isExaminerSupervisor, type TaDefenseFormData } from '@/lib/validations/ta-defense';
 import type { Period, Dosen, Location, TaDefenseSchedule, EligibleStudentData } from '../types';
 
 interface TaDefenseFormDialogProps {
@@ -140,11 +140,11 @@ export function TaDefenseFormDialog({
             return false;
         }
         const supervisorIds = getSupervisorIds();
-        if (supervisorIds.includes(parseInt(watchedExaminer1))) {
+        if (isExaminerSupervisor(watchedExaminer1, supervisorIds)) {
             setExaminerError('Examiner 1 cannot be a supervisor of this group');
             return false;
         }
-        if (supervisorIds.includes(parseInt(watchedExaminer2))) {
+        if (isExaminerSupervisor(watchedExaminer2, supervisorIds)) {
             setExaminerError('Examiner 2 cannot be a supervisor of this group');
             return false;
         }
@@ -240,6 +240,15 @@ export function TaDefenseFormDialog({
                                         onValueChange={(val) => {
                                             field.onChange(val);
                                             form.setValue('student_ids', []);
+                                            const nextGroup = eligibleGroups.find((g) => g.id.toString() === val);
+                                            const nextSupervisorIds = nextGroup?.supervisors?.map((s) => s.id) ?? [];
+                                            if (isExaminerSupervisor(form.getValues('examiner_1_id'), nextSupervisorIds)) {
+                                                form.setValue('examiner_1_id', '');
+                                            }
+                                            if (isExaminerSupervisor(form.getValues('examiner_2_id'), nextSupervisorIds)) {
+                                                form.setValue('examiner_2_id', '');
+                                            }
+                                            setExaminerError('');
                                         }}
                                         disabled={!watchedPeriodId}
                                     >
@@ -415,9 +424,11 @@ export function TaDefenseFormDialog({
                                                 <SelectValue placeholder="Select examiner" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {dosens.map(d => (
-                                                    <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                                ))}
+                                                {dosens
+                                                    .filter((d) => !getSupervisorIds().includes(d.id))
+                                                    .map(d => (
+                                                        <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                         {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}
@@ -435,9 +446,11 @@ export function TaDefenseFormDialog({
                                                 <SelectValue placeholder="Select examiner" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {dosens.map(d => (
-                                                    <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                                ))}
+                                                {dosens
+                                                    .filter((d) => !getSupervisorIds().includes(d.id) && d.id.toString() !== watchedExaminer1)
+                                                    .map(d => (
+                                                        <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
+                                                    ))}
                                             </SelectContent>
                                         </Select>
                                         {fieldState.error && <FieldError>{fieldState.error.message}</FieldError>}

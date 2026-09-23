@@ -1330,8 +1330,8 @@ class FinalizationController extends Controller
             return response()->json(['success' => false, 'message' => 'Cannot force ready: period is finalized.'], 400);
         }
 
-        if (in_array($group->status, array_merge(self::FINAL_STATUSES, self::POST_FINALIZATION_STATUSES), true)) {
-            return response()->json(['success' => false, 'message' => 'Group is already past finalization.'], 400);
+        if ($group->status !== 'TITLE_APPROVED') {
+            return response()->json(['success' => false, 'message' => 'Cannot force ready: only groups with Title Approved status can be forced to Ready for Finalization.'], 400);
         }
 
         // Same gates as promote-to-ready: concrete title + member count in range.

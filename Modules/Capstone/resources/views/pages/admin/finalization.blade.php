@@ -182,7 +182,7 @@
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_assign_title" @click="openAssignTitle(item)">Tetapkan Judul</x-capstone::button>
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_promote_to_ready_for_finalization" @click="promote(item)">Promosikan ke Siap</x-capstone::button>
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_cancel_kelompok_final" @click="openCancel(item)">Batalkan Final</x-capstone::button>
-                                <x-capstone::button size="sm" variant="ghost" x-show="!['READY_FOR_FINALIZATION','KELOMPOK_FINAL','PDC1_ACTIVE','PDC2_ACTIVE','CLOSED'].includes(item.status)" @click="openForceReady(item)">Paksa Siap</x-capstone::button>
+                                <x-capstone::button size="sm" variant="ghost" x-show="item.status==='TITLE_APPROVED'" @click="openForceReady(item)">Paksa Siap</x-capstone::button>
                             </div></td>
                         </tr>
                     </template>

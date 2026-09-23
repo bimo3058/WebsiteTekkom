@@ -58,12 +58,21 @@ class SchedulingService
             }
         }
 
-        // Examiner ≠ Supervisor
+        // Examiner ≠ Supervisor (check both supervisor_1_id/supervisor_2_id
+        // columns AND the capstone_supervisions pivot table, which is the
+        // source of truth per Group::isSupervisedBy()).
         $supervisorIds = array_filter([
             $group->supervisor_1_id,
             $group->supervisor_2_id,
         ]);
-        $overlap = array_intersect($examinerIds, $supervisorIds);
+        try {
+            $pivotIds = $group->supervisions()->pluck('supervisor_id')->all();
+            $supervisorIds = array_merge($supervisorIds, $pivotIds);
+        } catch (\Throwable $e) {
+            // Relation may be unavailable in some contexts; fall back to columns.
+        }
+        $supervisorIds = array_unique(array_map('intval', array_filter($supervisorIds)));
+        $overlap = array_intersect(array_map('intval', $examinerIds), $supervisorIds);
         if (!empty($overlap)) {
             return 'Examiner cannot be the same as the group supervisor.';
         }

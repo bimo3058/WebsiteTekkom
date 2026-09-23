@@ -96,10 +96,19 @@ class SemproController extends Controller
             'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
 
-        $group = Group::findOrFail($request->group_id);
+        $group = Group::with(['supervisors'])->findOrFail($request->group_id);
 
         if ($group->status !== 'READY_FOR_SEMPRO') {
             return response()->json(['message' => 'Group must be in READY_FOR_SEMPRO status.'], 400);
+        }
+
+        // Examiner cannot be the same as the group supervisor.
+        $constraintError = $this->schedulingService->validateExaminerConstraints(
+            $group,
+            [(int) $request->examiner_1_id, (int) $request->examiner_2_id]
+        );
+        if ($constraintError !== null) {
+            return response()->json(['message' => $constraintError], 400);
         }
 
         // Check existing SEMPRO schedule
