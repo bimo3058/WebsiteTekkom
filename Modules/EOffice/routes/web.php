@@ -485,7 +485,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Pengumuman (lihat)
                 Route::get('pengumuman', [MhsPengumumanController::class, 'index'])
                     ->name('pengumuman.index');
-                
+
                 // Daftar Praktikan (Classmates)
                 Route::get('daftar-praktikan', [MhsDaftarPraktikanController::class, 'index'])
                     ->name('daftar-praktikan.index');
@@ -687,9 +687,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Persetujuan Peminjaman & Riwayat...
                 Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');
                 Route::get('/riwayat-peminjaman', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'riwayat'])->name('riwayat.index');
+                Route::get('/riwayat/export-pdf', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportPdf'])->name('riwayat.export-pdf');
+                Route::get('/riwayat/export-excel', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'exportExcel'])->name('riwayat.export-excel');
                 Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
                 Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
                 Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');
+                Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])->name('riwayat.destroy');
 
                 // Jadwal Akademik (Filter dari tabel Internal)
                 Route::get('jadwal-akademik', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'index'])->name('jadwal-akademik.index');

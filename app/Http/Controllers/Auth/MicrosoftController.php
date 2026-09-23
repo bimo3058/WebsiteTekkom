@@ -66,6 +66,12 @@ class MicrosoftController extends Controller
                 ->contains(fn ($domain) => str_ends_with($email, $domain));
 
             if (! $isAllowed) {
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "Percobaan login dari domain tidak diizinkan: {$email}",
+                    userId: null
+                );
                 return redirect()->route('login')->withErrors([
                     'email' => 'Akses hanya untuk civitas akademika UNDIP.',
                 ]);
@@ -86,6 +92,12 @@ class MicrosoftController extends Controller
             );
 
             if ($resolution['ambiguous']) {
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "Akun ambigu terdeteksi untuk email: {$email}",
+                    userId: null
+                );
                 return redirect()->route('login')->withErrors([
                     'email' => 'Ada lebih dari satu akun impor dengan identitas yang sama. Hubungi Administrator agar akun dapat ditautkan dengan aman.',
                 ]);
@@ -136,6 +148,13 @@ class MicrosoftController extends Controller
                     $message .= ' Alasan: '.$user->suspension_reason;
                 }
 
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "Percobaan login user tersuspend: {$user->name} ({$user->email})",
+                    userId: $user->id
+                );
+
                 return redirect()->route('login')->withErrors(['email' => $message]);
             }
 
@@ -156,6 +175,12 @@ class MicrosoftController extends Controller
             $roleNames = $userRoles->pluck('name')->map(fn ($role) => strtolower($role));
 
             if ($roleNames->isEmpty()) {
+                \App\Services\AuditLogger::log(
+                    module: 'auth',
+                    action: 'AUTH_FAILED',
+                    description: "User login tanpa role: {$user->name} ({$user->email})",
+                    userId: $user->id
+                );
                 return redirect()->route('login')->withErrors([
                     'email' => 'Akun belum memiliki akses (Role). Silakan hubungi Administrator.',
                 ]);

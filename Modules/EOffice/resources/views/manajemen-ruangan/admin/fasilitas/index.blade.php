@@ -175,16 +175,36 @@
             class="border-t border-slate-200 bg-slate-50/50 px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-b-[12px]">
             <div class="flex flex-col md:flex-row md:items-center gap-3">
                 <div
-                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-xs shadow-sm">
-                    <span class="px-2.5 py-1.5 bg-slate-50 border-r border-slate-200 text-slate-500 font-medium">Per
+                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-visible text-xs shadow-sm">
+                    <span class="px-2.5 py-1.5 bg-slate-50 border-r border-slate-200 text-slate-500 font-medium shrink-0">Per
                         halaman</span>
-                    <select aria-label="Per halaman" onchange="window.location.href=this.value"
-                        class="px-2.5 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat"
-                        style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;">
-                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 10]) }}" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 25]) }}" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
-                        <option value="{{ request()->fullUrlWithQuery(['per_page' => 50]) }}" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
-                    </select>
+                        
+                    <div x-data="{ 
+                        open: false, 
+                        value: '{{ request('per_page', 10) }}', 
+                        select(val, url) { 
+                            this.value = val; 
+                            window.location.href = url; 
+                        } 
+                    }" class="relative w-[65px]" @click.away="open = false">
+                        
+                        <button type="button" @click="open = !open" 
+                            class="w-full flex items-center justify-between px-2.5 py-1.5 text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-r-md">
+                            <span x-text="value"></span>
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
+                            class="absolute left-0 bottom-full mb-1 w-full min-w-[70px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
+                            <div class="py-1">
+                                <button type="button" @click="select('10', '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '10'}">10</button>
+                                <button type="button" @click="select('25', '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '25'}">25</button>
+                                <button type="button" @click="select('50', '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '50'}">50</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="text-[13px] text-slate-500 font-medium">
                     @if ($fasilitas->total() > 0)

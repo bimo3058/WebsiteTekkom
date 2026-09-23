@@ -59,7 +59,7 @@ class RuanganController extends Controller
             $urutan = 0;
             $supabase = app(\App\Services\SupabaseStorage::class);
             foreach ($request->file('fotos') as $file) {
-                $path = $supabase->upload($file, 'mr-foto-ruangan');
+                $path = $supabase->upload($file, 'mr-foto-ruangan', 'eoffice');
                 if ($path) {
                     RuanganFoto::create([
                         'ruangan_id' => $ruangan->id,
@@ -123,7 +123,7 @@ class RuanganController extends Controller
             $supabase = app(\App\Services\SupabaseStorage::class);
 
             foreach ($request->file('fotos') as $file) {
-                $path = $supabase->upload($file, 'mr-foto-ruangan');
+                $path = $supabase->upload($file, 'mr-foto-ruangan', 'eoffice');
                 if ($path) {
                     RuanganFoto::create([
                         'ruangan_id' => $ruangan->id,
@@ -148,7 +148,7 @@ class RuanganController extends Controller
     public function destroyFoto($id)
     {
         $foto = RuanganFoto::findOrFail($id);
-        app(\App\Services\SupabaseStorage::class)->delete($foto->path_foto);
+        app(\App\Services\SupabaseStorage::class)->delete($foto->path_foto, 'eoffice');
         $foto->delete();
         return redirect()->back()->with('success', 'Foto ruangan berhasil dihapus.');
     }

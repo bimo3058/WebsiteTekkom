@@ -16,10 +16,16 @@
     }
 }" @click.outside="open = false" @keydown.escape.stop="open = false; $refs.bell.focus()">
     <button type="button" x-ref="bell" class="sitkom-icon-btn" title="Notifikasi" aria-label="Notifikasi superadmin"
-            :aria-expanded="open" aria-controls="superadmin-notification-panel" @click="toggle()">
+            :aria-expanded="open" aria-controls="superadmin-notification-panel" @click="toggle()" style="position:relative;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 004 0"/>
         </svg>
+        @if($notificationCount > 0)
+            <span style="position:absolute; top:-4px; right:-4px; background:#EF4444; color:#fff; font-size:9px; font-weight:800; padding:2px 4px; border-radius:99px; line-height:1; border:1px solid #fff;">
+                {{ $notificationCount > 99 ? '99+' : $notificationCount }}
+            </span>
+        @endif
+    </button>
     </button>
     <section id="superadmin-notification-panel" class="sa-notification-panel" x-show="open" x-cloak aria-label="Notifikasi terbaru">
         <header><strong>Notifikasi</strong><a href="{{ route('profile.edit', ['tab' => 'notifikasi']) }}">Pengaturan</a></header>
@@ -29,7 +35,14 @@
             <p class="sa-notification-state" role="alert" x-show="error">Notifikasi gagal dimuat. Tutup lalu buka kembali untuk mencoba lagi.</p>
             <p class="sa-notification-state" x-show="!loading && !error && !items.length">Belum ada aktivitas sesuai pilihan notifikasi Anda.</p>
             <template x-for="item in items" :key="item.id">
-                <a class="sa-notification-item" :href="item.url">
+                <a class="sa-notification-item"
+                   :href="item.url"
+                   @click.prevent="async (e) => {
+                       try {
+                           await fetch(`/superadmin/notifications/${item.id}/read`, { method: 'PATCH', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
+                       } catch (err) { console.error(err); }
+                       window.location.href = item.url;
+                   }">
                     <strong x-text="item.title"></strong>
                     <span x-text="item.description"></span>
                     <small x-text="item.time"></small>

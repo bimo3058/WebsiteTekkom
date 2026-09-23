@@ -1,153 +1,161 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
+    @push('styles')
+        <link href="{{ asset('modules/banksoal/css/dosen-dashboard.css') }}" rel="stylesheet">
+    @endpush
+
     @section('breadcrumbs')
         <span class="text-slate-800 font-semibold">Dashboard</span>
     @endsection
-    <x-banksoal::ui.page-header title="Dashboard Dosen" subtitle="Ringkasan performa bank soal, RPS, dan distribusi soal aktif." />
 
-    {{-- Alert RPS --}}
-    @if(count($mkTanpaRps) > 0)
-    <div class="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 sm:p-4">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="flex items-center gap-3">
-                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
-                    <i class="fas fa-exclamation-triangle text-xs"></i>
+    <x-banksoal::ui.bank-soal-page class="bs-dashboard-page">
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Dashboard</h1>
+                        <span class="bs-role-badge">Dosen</span>
+                    </div>
+                    <p>Ringkasan performa bank soal, RPS, dan distribusi soal aktif.</p>
                 </div>
-                <div x-data="{
+                <a href="{{ route('banksoal.soal.dosen.index') }}" class="dosen-management-btn dosen-management-btn-primary">
+                    <i class="fas fa-layer-group" aria-hidden="true"></i> Kelola Bank Soal
+                </a>
+            </div>
+        </x-slot:header>
+
+        @if(count($mkTanpaRps) > 0)
+            <div class="bs-dashboard-alert" role="status">
+                <span class="bs-dashboard-alert-icon"><i class="fas fa-exclamation-triangle" aria-hidden="true"></i></span>
+                <div class="bs-dashboard-alert-copy" x-data="{
                     items: {{ json_encode($mkTanpaRps) }},
                     limit: 5,
                     get visibleItems() { return this.items.slice(0, this.limit); },
                     get remaining() { return this.items.length - this.limit; }
                 }">
-                    <p class="text-sm font-semibold text-amber-900">
-                        Peringatan: Anda belum mengupload RPS Mata Kuliah 
+                    <strong>Lengkapi RPS mata kuliah</strong>
+                    <p>
+                        Anda belum mengunggah RPS untuk
                         <template x-for="(mk, index) in visibleItems" :key="index">
-                            <span>
-                                <span x-text="mk"></span><span x-show="index < visibleItems.length - 1 || remaining > 0">, </span>
-                            </span>
+                            <span><span x-text="mk"></span><span x-show="index < visibleItems.length - 1 || remaining > 0">, </span></span>
                         </template>
-                        <button type="button" x-show="remaining > 0" @click="limit += 5" class="text-amber-700 hover:text-amber-900 underline font-bold cursor-pointer" x-text="'+' + remaining"></button><span x-show="remaining <= 0">.</span>
+                        <button type="button" x-show="remaining > 0" @click="limit += 5" x-text="'+' + remaining" aria-label="Tampilkan mata kuliah lainnya"></button><span x-show="remaining <= 0">.</span>
+                        Unggah RPS untuk mulai mengelola soal mata kuliah tersebut.
                     </p>
-                    <p class="text-xs text-amber-800">Segera upload RPS sebelum Anda bisa mengelola bank soal untuk mata kuliah tersebut.</p>
                 </div>
+                <a href="{{ route('banksoal.rps.dosen.index') }}" class="dosen-management-btn">Upload RPS <i class="fas fa-arrow-right" aria-hidden="true"></i></a>
             </div>
-            <a href="{{ route('banksoal.rps.dosen.index') }}" class="inline-flex items-center justify-center rounded-xl bg-amber-600 px-3 py-2 text-xs font-semibold text-white hover:bg-amber-700 whitespace-nowrap">
-                Upload Sekarang
-            </a>
+        @endif
+
+        @php
+            $dashboardStats = [
+                ['label' => 'Total Soal', 'value' => $totalSoal, 'icon' => 'fa-layer-group', 'tone' => 'primary'],
+                ['label' => 'Disetujui', 'value' => $approved, 'icon' => 'fa-circle-check', 'tone' => 'success'],
+                ['label' => 'Dalam Pengajuan', 'value' => $perluReview, 'icon' => 'fa-clock-rotate-left', 'tone' => 'primary'],
+                ['label' => 'Revisi / Ditolak', 'value' => $revisi + $ditolak, 'icon' => 'fa-circle-xmark', 'tone' => 'danger'],
+            ];
+        @endphp
+        <div class="bs-dashboard-stats">
+            @foreach($dashboardStats as $stat)
+                <div class="bs-dashboard-stat">
+                    <div class="bs-dashboard-stat-label">
+                        <span class="bs-dashboard-stat-icon bs-dashboard-tone-{{ $stat['tone'] }}"><i class="fas {{ $stat['icon'] }}" aria-hidden="true"></i></span>
+                        <p>{{ $stat['label'] }}</p>
+                    </div>
+                    <strong>{{ number_format($stat['value']) }}</strong>
+                </div>
+            @endforeach
         </div>
-    </div>
-    @endif
 
-    {{-- Stat Cards --}}
-    <div class="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <x-banksoal::ui.stat-card label="Total Soal"   :value="$totalSoal" icon="fa-layer-group"      tone="blue"  />
-        <x-banksoal::ui.stat-card label="Approved"     :value="$approved"  icon="fa-circle-check"     tone="green" />
-        <x-banksoal::ui.stat-card label="Dalam Pengajuan" :value="$perluReview"  icon="fa-clock-rotate-left" tone="blue" />
-        <x-banksoal::ui.stat-card label="Revisi / Ditolak" :value="$revisi + $ditolak" icon="fa-circle-xmark" tone="red" />
-    </div>
-
-    {{-- Row: Analytics / Academic Period / Lecturer Profile --}}
-    <div class="mb-3 grid grid-cols-1 gap-2 md:grid-cols-3">
-
-        {{-- Question Analytics --}}
-        <x-banksoal::ui.panel title="Question Analytics" subtitle="Komposisi status soal saat ini" padding="p-3">
-            <div class="flex items-center gap-3">
-                {{-- Donut --}}
-                <div class="relative shrink-0" style="width:80px;height:80px">
-                    <svg width="80" height="80" viewBox="0 0 80 80" id="donutChart"></svg>
-                    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                        <strong class="text-sm font-bold text-slate-900">{{ $totalSoal }}</strong>
-                        <span class="text-[9px] uppercase tracking-wider text-slate-500">Total</span>
+        <div class="bs-dashboard-overview">
+            <x-banksoal::ui.panel class="bs-dashboard-panel" title="Status Soal" subtitle="Komposisi status soal saat ini" padding="bs-dashboard-panel-body">
+                <div class="bs-dashboard-analytics">
+                    <div class="bs-dashboard-donut">
+                        <svg width="112" height="112" viewBox="0 0 80 80" id="donutChart" role="img" aria-label="Komposisi status soal; rincian tersedia pada legenda"></svg>
+                        <div class="bs-dashboard-donut-total">
+                            <strong>{{ number_format($totalSoal) }}</strong>
+                            <span>Total soal</span>
+                        </div>
                     </div>
+                    <dl class="bs-dashboard-legend">
+                        <div><dt><span class="bs-dashboard-dot bs-dashboard-dot-approved"></span>Disetujui</dt><dd>{{ number_format($approved) }}</dd></div>
+                        <div><dt><span class="bs-dashboard-dot bs-dashboard-dot-submitted"></span>Diajukan</dt><dd>{{ number_format($perluReview) }}</dd></div>
+                        <div><dt><span class="bs-dashboard-dot bs-dashboard-dot-revision"></span>Revisi</dt><dd>{{ number_format($revisi) }}</dd></div>
+                        <div><dt><span class="bs-dashboard-dot bs-dashboard-dot-rejected"></span>Ditolak</dt><dd>{{ number_format($ditolak) }}</dd></div>
+                    </dl>
                 </div>
-                {{-- Legend --}}
-                <div class="flex-1 space-y-0.5 text-[11px]">
-                    <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>Disetujui</span><span>{{ $approved }}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Diajukan</span><span>{{ $perluReview }}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>Revisi</span><span>{{ $revisi }}</span>
-                    </div>
-                </div>
-            </div>
-        </x-banksoal::ui.panel>
+            </x-banksoal::ui.panel>
 
-        {{-- Academic Period --}}
-        <x-banksoal::ui.panel title="Academic Period" subtitle="Informasi semester dan MK aktif" padding="p-3">
-            <div class="text-center">
-                @if(count($mkTanpaRps) > 0)
-                    <span class="inline-flex rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-semibold text-rose-700">RPS: NOT UPLOADED</span>
-                @else
-                    <span class="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">RPS: UPLOADED</span>
-                @endif
-                <p class="mt-2 text-[10px] uppercase tracking-wider text-slate-500">Academic Year</p>
-                <p class="text-sm font-bold text-slate-900">Semester Berjalan</p>
-                <p class="mt-2 text-[10px] uppercase tracking-wider text-slate-500">Active Courses</p>
-                <div class="mt-1.5 flex justify-center gap-1.5 flex-wrap" x-data="{
-                    mks: {{ json_encode($mataKuliah->map(fn($mk) => $mk->kode)) }},
-                    limit: 5,
-                    get visible() { return this.mks.slice(0, this.limit); },
-                    get rem() { return this.mks.length - this.limit; }
-                }">
-                    <template x-for="kode in visible" :key="kode">
-                        <span class="rounded-lg bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary" x-text="kode"></span>
-                    </template>
-                    
-                    <button x-show="rem > 0" @click="limit += 5" class="rounded-lg bg-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-700 hover:bg-slate-300 cursor-pointer" x-text="'+' + rem"></button>
-                    
-                    @if($mataKuliah->isEmpty())
-                        <span class="text-xs text-slate-400">Belum ada mata kuliah</span>
+            <x-banksoal::ui.panel class="bs-dashboard-panel" title="Periode Akademik" subtitle="Informasi semester dan mata kuliah aktif" padding="bs-dashboard-panel-body">
+                <div class="bs-dashboard-period">
+                    <div><span class="bs-dashboard-caption">Periode</span><strong>Semester Berjalan</strong></div>
+                    @if(count($mkTanpaRps) > 0)
+                        <span class="bs-dashboard-badge bs-dashboard-tone-warning"><i class="fas fa-clock" aria-hidden="true"></i>RPS belum lengkap</span>
+                    @else
+                        <span class="bs-dashboard-badge bs-dashboard-tone-success"><i class="fas fa-check-circle" aria-hidden="true"></i>RPS terunggah</span>
                     @endif
                 </div>
-            </div>
-        </x-banksoal::ui.panel>
-
-        {{-- Lecturer Profile --}}
-        <x-banksoal::ui.panel title="Lecturer Profile" subtitle="Ringkasan profil dosen" padding="p-3">
-            <div class="text-center">
-                <div class="mx-auto mb-1.5 flex h-10 w-10 items-center justify-center rounded-full bg-slate-200 text-sm font-bold text-slate-700">
-                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                <div class="bs-dashboard-courses">
+                    <span class="bs-dashboard-caption">Mata kuliah aktif</span>
+                    <div class="bs-dashboard-course-list" x-data="{
+                        mks: {{ json_encode($mataKuliah->map(fn($mk) => $mk->kode)) }},
+                        limit: 5,
+                        get visible() { return this.mks.slice(0, this.limit); },
+                        get rem() { return this.mks.length - this.limit; }
+                    }">
+                        <template x-for="kode in visible" :key="kode">
+                            <span class="bs-dashboard-course" x-text="kode"></span>
+                        </template>
+                        <button type="button" x-show="rem > 0" @click="limit += 5" class="bs-dashboard-course bs-dashboard-course-more" x-text="'+' + rem" aria-label="Tampilkan mata kuliah lainnya"></button>
+                        @if($mataKuliah->isEmpty())
+                            <p class="bs-dashboard-muted">Belum ada mata kuliah</p>
+                        @endif
+                    </div>
                 </div>
-                <p class="text-xs font-semibold text-slate-900">{{ auth()->user()->name }}</p>
-                <p class="text-[11px] text-slate-600">{{ auth()->user()->lecturer?->employee_number ?? auth()->user()->email }}</p>
-                <p class="text-[11px] text-slate-500">{{ auth()->user()->lecturer?->department ?? 'Teknik Komputer' }}</p>
-                <a href="/profile" class="mt-2 inline-flex items-center rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50">
-                    Lihat Profil
-                </a>
-            </div>
-        </x-banksoal::ui.panel>
-    </div>
+            </x-banksoal::ui.panel>
 
-    {{-- Row: Charts --}}
-    <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
-        <x-banksoal::ui.panel title="Question Distribution per CPL" subtitle="Berdasarkan Capaian Pembelajaran (CPL)" padding="p-4">
-            <x-slot:actions>
-                <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-xs font-medium text-primary hover:text-primary/90">Details <i class="fas fa-arrow-up-right-from-square text-xs"></i></a>
-            </x-slot:actions>
-            <div class="h-64 flex items-end gap-4" id="cplChart"></div>
-        </x-banksoal::ui.panel>
+            <x-banksoal::ui.panel class="bs-dashboard-panel" title="Profil Dosen" subtitle="Ringkasan profil pengampu" padding="bs-dashboard-panel-body">
+                <div class="bs-dashboard-profile">
+                    <span class="bs-dashboard-avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
+                    <div>
+                        <strong>{{ auth()->user()->name }}</strong>
+                        <p>{{ auth()->user()->lecturer?->employee_number ?? auth()->user()->email }}</p>
+                        <p>{{ auth()->user()->lecturer?->department ?? 'Teknik Komputer' }}</p>
+                    </div>
+                </div>
+                <a href="/profile" class="dosen-management-btn bs-dashboard-profile-link">Lihat Profil <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+            </x-banksoal::ui.panel>
+        </div>
 
-        <x-banksoal::ui.panel title="Question Count per MK" subtitle="Distribusi seluruh bank soal dosen" padding="p-4">
-            <x-slot:actions>
-                <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-xs font-medium text-primary hover:text-primary/90">Details <i class="fas fa-arrow-up-right-from-square text-xs"></i></a>
-            </x-slot:actions>
-            <div class="h-64 flex items-end gap-4" id="mkChart"></div>
-        </x-banksoal::ui.panel>
-    </div>
+        <div class="bs-dashboard-charts">
+            <x-banksoal::ui.panel class="bs-dashboard-panel" title="Distribusi Soal per CPL" subtitle="Berdasarkan Capaian Pembelajaran Lulusan" padding="bs-dashboard-chart-body">
+                <x-slot:actions>
+                    <a href="{{ route('banksoal.soal.dosen.index') }}" class="bs-dashboard-detail">Detail <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                </x-slot:actions>
+                <div class="bs-dashboard-chart-scroll" tabindex="0" role="region" aria-label="Grafik jumlah soal per CPL">
+                    <div id="cplChart"></div>
+                </div>
+            </x-banksoal::ui.panel>
+
+            <x-banksoal::ui.panel class="bs-dashboard-panel" title="Jumlah Soal per Mata Kuliah" subtitle="Distribusi seluruh bank soal dosen" padding="bs-dashboard-chart-body">
+                <x-slot:actions>
+                    <a href="{{ route('banksoal.soal.dosen.index') }}" class="bs-dashboard-detail">Detail <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+                </x-slot:actions>
+                <div class="bs-dashboard-chart-scroll" tabindex="0" role="region" aria-label="Grafik jumlah soal per mata kuliah">
+                    <div id="mkChart"></div>
+                </div>
+            </x-banksoal::ui.panel>
+        </div>
+    </x-banksoal::ui.bank-soal-page>
 
     <script src="{{ asset('modules/banksoal/js/Banksoal/components/DosenDashboard.js') }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Data dinamis dari server
             const baseDonutData = @json($donutData);
-            const baseCplData = @json($cplDist);
-            const baseMkData = @json($mkDist);
+            const baseCplData   = @json($cplDist);
+            const baseMkData    = @json($mkDist);
 
-            // Update menggunakan method pada DosenDashboardComponent (Global Instance)
             setTimeout(() => {
-                if(typeof DosenDashboard !== 'undefined') {
+                if (typeof DosenDashboard !== 'undefined') {
                     DosenDashboard.updateDonutChart('donutChart', baseDonutData);
                     DosenDashboard.updateCplBarChart('cplChart', baseCplData);
                     DosenDashboard.updateMkBarChart('mkChart', baseMkData);

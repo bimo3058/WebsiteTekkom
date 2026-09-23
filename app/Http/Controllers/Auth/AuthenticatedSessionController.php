@@ -80,13 +80,8 @@ class AuthenticatedSessionController extends Controller
             }
         }
 
-        // Dosen → langsung ke halaman Manajemen Praktikum
-        if ($roleNames->contains('dosen')) {
-            return redirect()->intended(route('eoffice.manprak.dosen.dashboard'));
-        }
-
-        // Mahasiswa, GPM, DPM, Ketua Departemen ke dashboard global
-        if ($roleNames->intersect(['mahasiswa', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])->isNotEmpty()) {
+        // Mahasiswa, Dosen, GPM, DPM, Ketua Departemen ke dashboard global
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 

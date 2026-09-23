@@ -39,7 +39,7 @@ class EOfficeController extends Controller
             ->get();
 
         $recentActivities = EoAuditLog::with('user')
-            ->latest()
+            ->latest('id')
             ->take(6)
             ->get()
             ->map(function ($log) {
@@ -49,26 +49,29 @@ class EOfficeController extends Controller
                     'delete' => 'warning',
                 ];
 
-                $modelLabel = match ($log->model) {
+                $actionKey = strtolower($log->action ?? '');
+
+                $subjectType = $log->subject_type ?? '';
+                $modelLabel = match ($subjectType) {
                     'Praktikum'    => 'Praktikum',
                     'EoMaster'     => 'Surat',
                     'EoPeminjaman' => 'Peminjaman',
-                    default        => $log->model,
+                    default        => $subjectType,
                 };
 
-                $actionLabel = match ($log->action) {
+                $actionLabel = match ($actionKey) {
                     'create' => 'dibuat',
                     'update' => 'diperbarui',
                     'delete' => 'dihapus',
-                    default  => $log->action,
+                    default  => $log->action ?? '',
                 };
 
-                $newValues = is_array($log->new_values) ? $log->new_values : [];
-                $name      = $newValues['nama'] ?? $newValues['name'] ?? ('#' . substr($log->model_id ?? '', 0, 8));
+                $newData = is_array($log->new_data) ? $log->new_data : [];
+                $name    = $log->description ?: ($newData['nama'] ?? $newData['name'] ?? ($log->subject_id ? '#' . substr((string) $log->subject_id, 0, 8) : null));
 
                 return [
-                    'type' => $typeMap[$log->action] ?? 'blue',
-                    'text' => '<strong>' . e($log->user?->name ?? 'Sistem') . '</strong> ' . $actionLabel . ' ' . $modelLabel,
+                    'type' => $typeMap[$actionKey] ?? 'blue',
+                    'text' => '<strong>' . e($log->user?->name ?? 'Sistem') . '</strong> ' . $actionLabel . ($modelLabel ? ' ' . $modelLabel : ''),
                     'desc' => $name ?: null,
                     'time' => $log->created_at?->diffForHumans() ?? '—',
                 ];

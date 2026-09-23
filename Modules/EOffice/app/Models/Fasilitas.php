@@ -12,8 +12,4 @@ class Fasilitas extends Model
         'nama_fasilitas'
     ];
 
-    public function ruangans()
-    {
-        return $this->belongsToMany(Ruangan::class, 'eo_mr_ruangan_fasilitas', 'fasilitas_id', 'ruangan_id');
-    }
 }

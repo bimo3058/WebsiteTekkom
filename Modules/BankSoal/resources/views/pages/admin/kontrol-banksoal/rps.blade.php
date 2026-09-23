@@ -541,5 +541,5 @@
 
         document.addEventListener('DOMContentLoaded', loadData);
 
-    </script>
+    </script>   
 </x-banksoal::layouts.admin>

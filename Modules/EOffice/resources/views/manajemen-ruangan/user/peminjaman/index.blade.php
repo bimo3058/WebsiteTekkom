@@ -64,7 +64,7 @@
                                         </td>
                                         <td>
                                             @if($booking->berkas_pendukung)
-                                                <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($booking->berkas_pendukung) }}"
+                                                <a href="{{ $booking->berkas_url ?? app(\App\Services\SupabaseStorage::class)->getPublicUrl($booking->berkas_pendukung, 'eoffice') }}"
                                                     target="_blank"
                                                     class="inline-flex items-center gap-1.5 text-[12px] font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
                                                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -101,7 +101,7 @@
                                                 @if(!in_array(strtolower($booking->status), ['dibatalkan', 'ditolak', 'selesai']))
                                                     <button type="button"
                                                         @click="openModal('{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}')"
-                                                        class="h-8 px-3 rounded-md bg-white border border-red-200 text-[12px] font-medium text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-red-100">
+                                                        class="h-8 px-3 rounded-md bg-white border border-red-200 text-[12px] font-medium text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm transition-all focus:ring-2 focus:ring-offset-1 focus:ring-red-100 cursor-pointer">
                                                         Batal
                                                     </button>
                                                 @else
@@ -143,7 +143,7 @@
         <div x-show="modalBatal" style="display: none;"
             class="fixed inset-0 z-[100] flex items-center justify-center p-4">
             <div x-show="modalBatal" x-transition.opacity
-                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" @click="closeModal()">
+                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity cursor-pointer" @click="closeModal()">
             </div>
 
             <div x-show="modalBatal" x-transition:enter="ease-out duration-300"
@@ -170,9 +170,9 @@
                         @csrf
                         <div class="flex gap-3 w-full">
                             <button type="button" @click="closeModal()"
-                                class="flex-1 py-2 px-4 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors">Tutup</button>
+                                class="flex-1 py-2 px-4 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer">Tutup</button>
                             <button type="submit"
-                                class="flex-1 py-2 px-4 bg-red-600 text-white rounded-xl font-medium text-sm hover:bg-red-700 shadow-sm hover:shadow-md transition-all">Ya,
+                                class="flex-1 py-2 px-4 bg-red-600 text-white rounded-xl font-medium text-sm hover:bg-red-700 shadow-sm hover:shadow-md transition-all cursor-pointer">Ya,
                                 Batalkan</button>
                         </div>
                     </form>

@@ -120,9 +120,9 @@ Route::prefix('capstone')->group(function () {
             Route::apiResource('document-types', DocumentTypeController::class);
 
             Route::get('/groups', [GroupController::class, 'listGroups'])
-                ->middleware('permission:capstone.groups.view');
+                ->middleware('permission:capstone.view');
             Route::get('/groups/{group}', [GroupController::class, 'show'])
-                ->middleware('permission:capstone.groups.view');
+                ->middleware('permission:capstone.view');
             Route::get('/schedules', [ScheduleController::class, 'index']);
             Route::get('/all-schedules', [CalendarController::class, 'index']);
 
@@ -190,7 +190,7 @@ Route::prefix('capstone')->group(function () {
 
             // Group operations
             Route::post('/groups/{group}/assign-supervisor-2', [GroupController::class, 'assignSupervisor2'])
-                ->middleware('permission:capstone.groups.manage');
+                ->middleware('permission:capstone.edit');
 
             // Assessment Components
             Route::get('/assessment-components', [AssessmentComponentController::class, 'index']);
@@ -261,7 +261,7 @@ Route::prefix('capstone')->group(function () {
             Route::get('/audit-logs/action-types', [AuditLogController::class, 'actionTypes']);
             Route::get('/audit-logs', [AuditLogController::class, 'index']);
             Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
-            Route::middleware('permission:capstone.documents.review')->group(function () {
+            Route::middleware('permission:capstone.edit')->group(function () {
                 Route::get('/document-uploads/summary', [DocumentUploadController::class, 'summary']);
                 Route::get('/document-uploads', [DocumentUploadController::class, 'index']);
                 Route::get('/document-uploads/{id}/download', [DocumentUploadController::class, 'download']);
@@ -273,18 +273,18 @@ Route::prefix('capstone')->group(function () {
             Route::get('/dashboard', [DashboardController::class, 'dosen']);
             Route::apiResource('titles', TitleController::class);
 
-            Route::middleware('permission:capstone.documents.review')->group(function () {
+            Route::middleware('permission:capstone.edit')->group(function () {
                 Route::get('/documents', [DocumentController::class, 'index']);
                 Route::get('/documents/{id}/download', [DocumentController::class, 'download']);
                 Route::put('/documents/{id}', [DocumentController::class, 'update']);
             });
 
-            Route::middleware('permission:capstone.evaluations.submit')->group(function () {
+            Route::middleware('permission:capstone.edit')->group(function () {
                 Route::get('/evaluations', [EvaluationController::class, 'index']);
                 Route::post('/evaluations', [EvaluationController::class, 'store']);
             });
 
-            Route::middleware('permission:capstone.groups.view')->group(function () {
+            Route::middleware('permission:capstone.view')->group(function () {
                 Route::get('/groups/pending', [GroupController::class, 'pendingGroups']);
                 Route::get('/groups/supervised', [GroupController::class, 'supervisedGroups']);
                 Route::get('/groups', [GroupController::class, 'listGroups']);

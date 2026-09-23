@@ -23,8 +23,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('eo_kp_penilaian', function (Blueprint $table) {
-            $table->double('nilai_laporan_pembimbing')->nullable();
-        });
+        if (! Schema::hasColumn('eo_kp_penilaian', 'nilai_laporan_pembimbing')) {
+            Schema::table('eo_kp_penilaian', function (Blueprint $table) {
+                $table->double('nilai_laporan_pembimbing')->nullable();
+            });
+        }
     }
 };
