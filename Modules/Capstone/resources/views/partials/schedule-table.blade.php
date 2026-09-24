@@ -2,7 +2,7 @@
     <div class="flex flex-wrap items-center gap-2">
         <x-capstone::input x-model.debounce.200ms="search" @input="page=1" placeholder="Search schedules..." class="max-w-sm" aria-label="Search schedules" />
         <select x-model="typeFilter" @change="page=1" class="h-9 rounded-md border px-3 text-sm" aria-label="Schedule type"><option value="all">All Types</option>@foreach(['BIMBINGAN','SEMPRO','EXPO','TA_DEFENSE'] as $type)<option>{{ $type }}</option>@endforeach</select>
-        <select x-model="statusFilter" @change="page=1" class="h-9 rounded-md border px-3 text-sm" aria-label="Schedule status"><option value="all">All Statuses</option>@foreach(['PENDING','PENDING_APPROVAL','SCHEDULED','APPROVED','COMPLETED','CANCELLED','REJECTED'] as $status)<option>{{ $status }}</option>@endforeach</select>
+        <select x-model="statusFilter" @change="page=1" class="h-9 rounded-md border px-3 text-sm" aria-label="Schedule status"><option value="all">All Statuses</option>@foreach(['PENDING','PENDING_APPROVAL','SCHEDULED','APPROVED','COMPLETED','REJECTED'] as $status)<option>{{ $status }}</option>@endforeach</select>
     </div>
     <div class="rounded-md border overflow-x-auto"><table class="w-full text-sm"><thead><tr class="border-b text-left">
         <th class="p-4 font-medium">Type</th><th class="p-4 font-medium"><button type="button" @click="sortDirection*=-1">Date &amp; Time ↕</button></th>@foreach(['Period','Group','Student','Room','Status','Actions'] as $label)<th class="p-4 font-medium">{{ $label }}</th>@endforeach

@@ -19,8 +19,24 @@ class Group extends Model
         'period_id', 'status', 'supervisor_1_id', 'supervisor_2_id',
         'group_mode', 'has_existing_group', 'code', 'is_solo',
         'has_active_proposal', 'readiness_status', 'finalization_notes',
-        'finalized_at', 'finalized_by',
+        'finalized_at', 'finalized_by', 'nilai_dosen_deadline', 'milestone_deadline',
     ];
+
+    protected $casts = [
+        'nilai_dosen_deadline' => 'datetime',
+        'milestone_deadline' => 'datetime',
+    ];
+
+    /**
+     * Display name fallback — capstone_groups has no `name` column.
+     * Returns `code` so legacy `$group->name` callers never throw
+     * MissingAttributeException. Controllers should still prefer
+     * `$group->name ?? $group->code ?? 'Group '.$group->id`.
+     */
+    public function getNameAttribute(): ?string
+    {
+        return $this->attributes['name'] ?? $this->attributes['code'] ?? null;
+    }
 
     /**
      * Assign title_id — ONLY callable from FinalizationService.

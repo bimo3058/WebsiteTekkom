@@ -3,16 +3,19 @@
 namespace Modules\Capstone\Services;
 
 use App\Models\Lecturer;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\Location;
 use Modules\Capstone\Models\SeminarEvaluation;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaDefenseEvaluation;
 use Modules\Capstone\Models\TaDefenseExaminer;
 use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\TaSubmission;
-use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Support\EvaluationDeadline;
 
 class SchedulingService
 {
@@ -89,7 +92,7 @@ class SchedulingService
      * Queries BOTH seminar_schedules and ta_defense_schedules.
      * Filtered to non-CANCELLED schedules only.
      *
-     * @return array|null  The conflicting schedule info, or null if no conflict.
+     * @return array|null The conflicting schedule info, or null if no conflict.
      */
     public function checkDoubleBooking(
         int $examinerId,
@@ -108,7 +111,7 @@ class SchedulingService
                 $q->where('examiner_1_id', $examinerId)
                     ->orWhere('examiner_2_id', $examinerId);
             })
-            ->when($excludeSeminarId, fn($q) => $q->where('id', '!=', $excludeSeminarId))
+            ->when($excludeSeminarId, fn ($q) => $q->where('id', '!=', $excludeSeminarId))
             ->first();
 
         if ($seminarConflict) {
@@ -124,8 +127,8 @@ class SchedulingService
             ->where('status', '!=', 'CANCELLED')
             ->where('start_time', '<', $endTime)
             ->where('end_time', '>', $startTime)
-            ->whereHas('examiners', fn($q) => $q->where('examiner_id', $examinerId))
-            ->when($excludeTaDefenseId, fn($q) => $q->where('id', '!=', $excludeTaDefenseId))
+            ->whereHas('examiners', fn ($q) => $q->where('examiner_id', $examinerId))
+            ->when($excludeTaDefenseId, fn ($q) => $q->where('id', '!=', $excludeTaDefenseId))
             ->first();
 
         if ($taConflict) {
@@ -166,7 +169,7 @@ class SchedulingService
                 ->where('status', '!=', 'CANCELLED')
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTime)
-                ->when($excludeSeminarId, fn($q) => $q->where('id', '!=', $excludeSeminarId))
+                ->when($excludeSeminarId, fn ($q) => $q->where('id', '!=', $excludeSeminarId))
                 ->first();
 
             if ($seminarConflict) {
@@ -181,7 +184,7 @@ class SchedulingService
                 ->where('status', '!=', 'CANCELLED')
                 ->where('start_time', '<', $endTime)
                 ->where('end_time', '>', $startTime)
-                ->when($excludeTaDefenseId, fn($q) => $q->where('id', '!=', $excludeTaDefenseId))
+                ->when($excludeTaDefenseId, fn ($q) => $q->where('id', '!=', $excludeTaDefenseId))
                 ->first();
 
             if ($taConflict) {
@@ -242,7 +245,7 @@ class SchedulingService
                 $errors[] = $roomConflict['message'];
             }
         } elseif ($locationId || $eofficeId) {
-            $location = $locationId ? \Modules\Capstone\Models\Location::find($locationId) : null;
+            $location = $locationId ? Location::find($locationId) : null;
             if ($eofficeId || ($location && ! $location->isOnline())) {
                 $roomConflict = $this->checkRoomConflict($location?->name ?? '', $date, $startTime, $endTime, $excludeSeminarId, $excludeTaDefenseId, $locationId, $excludeEofficePeminjamanId, $eofficeId);
                 if ($roomConflict) {
@@ -292,8 +295,8 @@ class SchedulingService
     public function createTaDefenseEvaluations(TaDefenseSchedule $schedule, array $studentIds): void
     {
         foreach ([$schedule->examiner_1_id, $schedule->examiner_2_id] as $index => $examinerId) {
-            TaDefenseExaminer::firstOrCreate(['schedule_id'=>$schedule->id,'examiner_id'=>$examinerId], ['role'=>'EXAMINER_'.($index+1)]);
-            TaDefenseEvaluation::firstOrCreate(['schedule_id'=>$schedule->id,'examiner_id'=>$examinerId], ['status'=>'PENDING']);
+            TaDefenseExaminer::firstOrCreate(['schedule_id' => $schedule->id, 'examiner_id' => $examinerId], ['role' => 'EXAMINER_'.($index + 1)]);
+            TaDefenseEvaluation::firstOrCreate(['schedule_id' => $schedule->id, 'examiner_id' => $examinerId], ['status' => 'PENDING']);
         }
     }
 
@@ -314,21 +317,37 @@ class SchedulingService
         string $result, // PASS or FAIL
         int $userId
     ): array {
-        return DB::transaction(function () use ($evaluationId, $rubricJson, $score, $result, $userId) {
-            $evaluation = SeminarEvaluation::lockForUpdate()->findOrFail($evaluationId);
+        $lateCheck = null;
 
-            if ($evaluation->status === 'SUBMITTED') {
-                throw new \InvalidArgumentException('Evaluation already submitted.');
+        $out = DB::transaction(function () use ($evaluationId, $rubricJson, $score, $result, $userId, &$lateCheck) {
+            $evaluation = SeminarEvaluation::lockForUpdate()->findOrFail($evaluationId);
+            $schedule = SeminarSchedule::lockForUpdate()->findOrFail($evaluation->schedule_id);
+            $lateCheck = $schedule;
+            $isUpdate = $evaluation->status === 'SUBMITTED';
+            $scheduleCompleted = $schedule->status === 'COMPLETED';
+
+            if ($isUpdate && $scheduleCompleted && $evaluation->result !== null && $result !== $evaluation->result) {
+                throw new \InvalidArgumentException('Result is locked after the schedule is completed.');
             }
+
+            // Snapshot the pre-overwrite record: when the membership changed
+            // since the exam, a fresh submit replaces the old rubric keys
+            // entirely, so the previous scores are archived in the audit log.
+            $previousRecord = [
+                'rubric_json' => $evaluation->rubric_json,
+                'score' => $evaluation->score,
+                'result' => $evaluation->result,
+                'status' => $evaluation->status,
+            ];
 
             $evaluation->update([
                 'rubric_json' => $rubricJson,
                 'score' => $score,
+                'result' => $scheduleCompleted ? ($evaluation->result ?? $result) : $result,
                 'status' => 'SUBMITTED',
             ]);
 
             // Check if ALL evaluations for this schedule are submitted
-            $schedule = SeminarSchedule::lockForUpdate()->findOrFail($evaluation->schedule_id);
             $totalEvals = SeminarEvaluation::where('schedule_id', $schedule->id)->count();
             $submittedEvals = SeminarEvaluation::where('schedule_id', $schedule->id)
                 ->where('status', 'SUBMITTED')
@@ -336,25 +355,23 @@ class SchedulingService
 
             $allSubmitted = $submittedEvals >= $totalEvals;
 
-            if ($allSubmitted) {
+            if ($allSubmitted && ! $scheduleCompleted) {
                 $schedule->update(['status' => 'COMPLETED']);
 
-                // Determine group transition based on result
+                // Determine group transition based on result. Guarded: the
+                // group may already have moved past this stage (e.g. an old
+                // evaluation edited late), in which case the scores still
+                // save but the stale transition is skipped, never thrown.
                 $group = Group::findOrFail($schedule->group_id);
 
-                if ($schedule->type === 'SEMPRO') {
-                    if ($result === 'PASS') {
-                        $this->stateMachine->transition($group, 'SEMPRO_DONE');
-                    } else {
-                        $this->stateMachine->transition($group, 'PDC1_ACTIVE');
-                    }
-                } elseif ($schedule->type === 'EXPO') {
-                    if ($result === 'PASS') {
-                        $this->stateMachine->transition($group, 'EXPO_DONE');
-                    } else {
-                        $this->stateMachine->transition($group, 'PDC2_ACTIVE');
-                    }
-                }
+                $target = match (true) {
+                    $schedule->type === 'SEMPRO' && $result === 'PASS' => 'SEMPRO_DONE',
+                    $schedule->type === 'SEMPRO' => 'PDC1_ACTIVE',
+                    $schedule->type === 'EXPO' && $result === 'PASS' => 'EXPO_DONE',
+                    default => 'PDC2_ACTIVE',
+                };
+
+                $this->transitionGroupIfAllowed($group, $target, "{$schedule->type}_{$result}", $schedule->id);
 
                 AuditLog::create([
                     'user_id' => $userId,
@@ -364,6 +381,7 @@ class SchedulingService
                     'payload' => [
                         'group_id' => $group->id,
                         'avg_score' => SeminarEvaluation::where('schedule_id', $schedule->id)->avg('score'),
+                        'previous_record' => $isUpdate ? $previousRecord : null,
                     ],
                 ]);
             }
@@ -372,8 +390,13 @@ class SchedulingService
                 'evaluation' => $evaluation->fresh(),
                 'all_submitted' => $allSubmitted,
                 'result' => $allSubmitted ? $result : null,
+                'updated' => $isUpdate,
             ];
         });
+
+        $this->notifyLateSubmission($lateCheck->type ?? 'SEMPRO', $lateCheck, $userId);
+
+        return $out;
     }
 
     /**
@@ -387,21 +410,27 @@ class SchedulingService
         string $result, // PASS or FAIL
         int $userId
     ): array {
-        return DB::transaction(function () use ($evaluationId, $rubricJson, $score, $result, $userId) {
-            $evaluation = TaDefenseEvaluation::lockForUpdate()->findOrFail($evaluationId);
+        $lateCheck = null;
 
-            if ($evaluation->status === 'SUBMITTED') {
-                throw new \InvalidArgumentException('Evaluation already submitted.');
+        $out = DB::transaction(function () use ($evaluationId, $rubricJson, $score, $result, $userId, &$lateCheck) {
+            $evaluation = TaDefenseEvaluation::lockForUpdate()->findOrFail($evaluationId);
+            $schedule = TaDefenseSchedule::lockForUpdate()->findOrFail($evaluation->schedule_id);
+            $lateCheck = $schedule;
+            $isUpdate = $evaluation->status === 'SUBMITTED';
+            $scheduleCompleted = $schedule->status === 'COMPLETED';
+
+            if ($isUpdate && $scheduleCompleted && $evaluation->result !== null && $result !== $evaluation->result) {
+                throw new \InvalidArgumentException('Result is locked after the schedule is completed.');
             }
 
             $evaluation->update([
                 'rubric_json' => $rubricJson,
                 'score' => $score,
+                'result' => $scheduleCompleted ? ($evaluation->result ?? $result) : $result,
                 'status' => 'SUBMITTED',
             ]);
 
             // Check if ALL evaluations for this TA defense are submitted
-            $schedule = TaDefenseSchedule::lockForUpdate()->findOrFail($evaluation->schedule_id);
             $totalEvals = TaDefenseEvaluation::where('schedule_id', $schedule->id)->count();
             $submittedEvals = TaDefenseEvaluation::where('schedule_id', $schedule->id)
                 ->where('status', 'SUBMITTED')
@@ -409,7 +438,7 @@ class SchedulingService
 
             $allSubmitted = $submittedEvals >= $totalEvals;
 
-            if ($allSubmitted) {
+            if ($allSubmitted && ! $scheduleCompleted) {
                 $schedule->update(['status' => 'COMPLETED']);
 
                 // Update TA submission status
@@ -428,7 +457,7 @@ class SchedulingService
                         ->count();
 
                     if ($activeMemberCount > 0 && $defendedCount >= $activeMemberCount) {
-                        $this->stateMachine->transition($group, 'CLOSED');
+                        $this->transitionGroupIfAllowed($group, 'CLOSED', "TA_DEFENSE_{$result}", $schedule->id);
                     }
                 } else {
                     $taSubmission->update(['status' => 'TA_REVISED']);
@@ -450,7 +479,76 @@ class SchedulingService
                 'evaluation' => $evaluation->fresh(),
                 'all_submitted' => $allSubmitted,
                 'result' => $allSubmitted ? $result : null,
+                'updated' => $isUpdate,
             ];
         });
+
+        $this->notifyLateSubmission('TA_DEFENSE', $lateCheck, $userId);
+
+        return $out;
+    }
+
+    /**
+     * Attempt a group transition that is only valid from certain statuses.
+     *
+     * Late edits of old evaluations can complete a stale schedule after the
+     * group has already moved on (e.g. PDC2_ACTIVE with a SCHEDULED sempro).
+     * The scores must still save, so a disallowed transition is skipped with
+     * a warning instead of throwing and rolling back the submission.
+     */
+    private function transitionGroupIfAllowed(Group $group, string $target, string $context, int $scheduleId): void
+    {
+        if ($this->stateMachine->canTransition($group->status, $target)) {
+            $this->stateMachine->transition($group, $target);
+
+            return;
+        }
+
+        Log::warning("Skipped stale group transition {$group->status} → {$target} ({$context} on schedule {$scheduleId}, group {$group->id}).");
+    }
+
+    /**
+     * Soft deadline notice for examiner submissions (mirrors the
+     * supervisor path). A passed deadline never blocks the submit — the
+     * examiner is only notified their evaluation was recorded as late.
+     * Never throws; notification failures must not roll back the scores.
+     */
+    private function notifyLateSubmission(string $scheduleType, $schedule, int $userId): void
+    {
+        if (! $schedule) {
+            return;
+        }
+
+        $stored = EvaluationDeadline::storedDeadline($schedule);
+        $deadline = $stored ?? EvaluationDeadline::fromDate($schedule->date);
+
+        if (! EvaluationDeadline::isPassed($deadline)) {
+            return;
+        }
+
+        try {
+            $group = Group::find($schedule->group_id);
+            $groupName = $group?->name ?? $group?->code ?? 'Group '.$schedule->group_id;
+
+            $evaluationName = match ($scheduleType) {
+                'SEMPRO' => 'SEMPRO',
+                'EXPO' => 'Evaluasi EXPO',
+                'TA_DEFENSE' => 'TA Defense',
+                default => $scheduleType,
+            };
+
+            $deadlineFormatted = date('d M Y H:i', strtotime($deadline));
+
+            app(NotificationService::class)->send(
+                $userId,
+                'EVALUATION_DEADLINE_PASSED',
+                'Evaluation Submitted After Deadline',
+                "Your evaluation for {$groupName} - {$evaluationName} was submitted after the deadline (due: {$deadlineFormatted}).",
+                $scheduleType === 'TA_DEFENSE' ? 'TaDefenseSchedule' : 'SeminarSchedule',
+                $schedule->id
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to send deadline notification: '.$e->getMessage());
+        }
     }
 }

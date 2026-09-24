@@ -5,20 +5,20 @@ namespace Modules\Capstone\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PhaseDocumentRequirement;
+use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Services\DocumentStorageService;
 use Modules\Capstone\Services\GroupStateMachine;
-use Modules\Capstone\Services\NotificationService;
-use Modules\Capstone\Support\CapstoneActor;
-use Modules\Capstone\Support\BladeFeatureAccess;
-use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Services\IndividualTaWorkflow;
-use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Support\BladeFeatureAccess;
+use Modules\Capstone\Support\CapstoneActor;
 
 class DocumentController extends Controller
 {
@@ -178,12 +178,15 @@ class DocumentController extends Controller
                 'required_types' => $requiredTypes,
                 'document_count' => $phaseDocs->count(),
             ];
-            if ($groupReason) $phaseInfo['status'] = 'locked';
+            if ($groupReason) {
+                $phaseInfo['status'] = 'locked';
+            }
             $phaseInfo['locked_reason'] = $groupReason ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled);
             $phaseInfo['can_upload'] = $phaseInfo['locked_reason'] === null;
             $phaseInfo['documents'] = array_map(function ($document) use ($phaseInfo, $semproScheduled) {
                 $document['locked_reason'] = $phaseInfo['locked_reason'] ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled, $document['status']);
                 $document['can_upload'] = $document['locked_reason'] === null;
+
                 return $document;
             }, $typesStatus);
             $phases[] = $phaseInfo;
@@ -205,7 +208,7 @@ class DocumentController extends Controller
             'phases' => $phases,
             'current_phase' => $currentPhase,
             'is_graduated' => $allCompleted,
-            'seminar_schedule' => ['exists'=>$semproScheduled],
+            'seminar_schedule' => ['exists' => $semproScheduled],
         ]);
     }
 
@@ -294,7 +297,7 @@ class DocumentController extends Controller
         $documentInfo = collect($phaseInfo['documents'] ?? [])->firstWhere('type', $request->input('document_type', 'GENERAL'));
         $reason = $phaseInfo['locked_reason'] ?? $documentInfo['locked_reason'] ?? null;
         if (! $phaseInfo || ! ($phaseInfo['can_upload'] ?? false) || ($documentInfo && ! $documentInfo['can_upload'])) {
-            return response()->json(['message'=>$reason ?? 'Document upload is locked.'], 403);
+            return response()->json(['message' => $reason ?? 'Document upload is locked.'], 403);
         }
 
         $existingDoc = Document::where('group_id', $groupMember->group_id)
@@ -302,7 +305,7 @@ class DocumentController extends Controller
             ->where('document_type', $request->input('document_type', 'GENERAL'))
             ->first();
         if ($existingDoc?->status === 'APPROVED') {
-            return response()->json(['message'=>'Approved documents cannot be replaced.'], 403);
+            return response()->json(['message' => 'Approved documents cannot be replaced.'], 403);
         }
 
         $path = $this->documentStorage->store(
@@ -362,7 +365,9 @@ class DocumentController extends Controller
             $allowed = $student && GroupMember::where('group_id', $document->group_id)
                 ->where('student_id', $student->id)
                 ->exists();
-            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) $allowed = $allowed && $document->student_id === $student->id;
+            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) {
+                $allowed = $allowed && $document->student_id === $student->id;
+            }
         }
         if ($role === 'dosen') {
             $lecturer = CapstoneActor::lecturer($user);
@@ -433,7 +438,9 @@ class DocumentController extends Controller
                 ->filter()
                 ->values()
                 ->all();
-            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) $studentIds = array_filter([$document->student?->user_id]);
+            if ($document->phase === IndividualTaWorkflow::DOCUMENT_PHASE) {
+                $studentIds = array_filter([$document->student?->user_id]);
+            }
             $statusStr = strtolower($request->status);
             $notificationService->sendToMany(
                 $studentIds,
@@ -479,7 +486,7 @@ class DocumentController extends Controller
         try {
             if ($phase === 'PDC1' && $group->status === 'PDC1_ACTIVE') {
                 $this->stateMachine->transition($group, 'READY_FOR_SEMPRO');
-            } elseif ($phase === 'PDC2' && $group->status === 'PDC2_ACTIVE') {
+            } elseif ($phase === 'PDC2' && in_array($group->status, ['PDC2_ACTIVE', 'TA_DRAFT'], true)) {
                 $this->stateMachine->transition($group, 'PDC2_READY_FOR_EXPO');
             }
         } catch (\InvalidArgumentException $e) {

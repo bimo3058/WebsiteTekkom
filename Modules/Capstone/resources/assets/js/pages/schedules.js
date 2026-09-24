@@ -12,14 +12,16 @@ export function schedulePage() {
             this.loading=true;this.error='';
             try {
                 const role=context.role;
+                const quiet=promise=>promise.catch(()=>null);
                 const result=await Promise.all([
                     api(`/${role}/all-schedules`),
-                    role==='mahasiswa' ? [] : api(role==='admin' ? '/admin/periods' : '/periods-list'),
-                    role==='dosen' ? api('/dosen/groups/supervised') : [],
-                    role==='dosen' ? api('/locations/eoffice-rooms') : [],
+                    role==='mahasiswa' ? [] : quiet(api(role==='admin' ? '/admin/periods' : '/periods-list')),
+                    role==='dosen' ? quiet(api('/dosen/groups/supervised')) : [],
+                    role==='dosen' ? quiet(api('/locations/eoffice-rooms')) : [],
                 ]);
                 this.schedules=rows(result[0]).map(item=>normalizeSchedule(item,item.type)).filter(item=>localDateKey(item.date));
                 // Bimbingan stays free-text: map EOffice rooms to {id,name} suggestions.
+                // Aux calls fail soft so one bad picker feed can never blank the page.
                 this.periods=rows(result[1]);this.groups=rows(result[2]);this.locations=rows(result[3]).map(r=>r.nama!==undefined?{id:r.id,name:r.nama,type:'offline'}:r);
             } catch(e){this.error=e.message;} finally{this.loading=false;}
         },

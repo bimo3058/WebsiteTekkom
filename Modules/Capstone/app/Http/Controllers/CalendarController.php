@@ -15,9 +15,11 @@ class CalendarController extends Controller
     {
         $role = CapstoneActor::role($request->user(), $request->attributes->get('capstone_role'));
         abort_unless(in_array($role, ['admin', 'dosen', 'mahasiswa'], true), 403);
-        $request->validate(['period_id'=>'nullable|integer|min:1']);
-        $seminars = SeminarSchedule::query();
-        $defenses = TaDefenseSchedule::query();
+        $request->validate(['period_id' => 'nullable|integer|min:1']);
+        // Cancelled rows stay in the DB (audit trail) but must never render:
+        // dosen/mahasiswa learn about cancellations via notifications only.
+        $seminars = SeminarSchedule::query()->where('status', '!=', 'CANCELLED');
+        $defenses = TaDefenseSchedule::query()->where('status', '!=', 'CANCELLED');
 
         if ($role === 'dosen') {
             $lecturerId = CapstoneActor::lecturer($request->user())->id;
@@ -43,20 +45,20 @@ class CalendarController extends Controller
             $query->with(['group.title', 'group.period', 'group.members.student.user', 'examiner1.user', 'examiner2.user']);
         }
         $seminarEvents = $seminars->orderBy('date')->orderBy('start_time')->get()->map(fn ($s) => [
-            ...$s->toArray(), 'date'=>$s->date->format('Y-m-d'),
-            'id'=>$s->type === 'BIMBINGAN' ? 'bim_'.$s->id : $s->id,
-            'period_name'=>$s->group?->period?->name,
+            ...$s->toArray(), 'date' => $s->date->format('Y-m-d'),
+            'id' => $s->type === 'BIMBINGAN' ? 'bim_'.$s->id : $s->id,
+            'period_name' => $s->group?->period?->name,
         ]);
         $defenseEvents = $defenses->with(['student.user', 'students.user', 'examiners.examiner.user', 'location'])
             ->orderBy('date')->orderBy('start_time')->get()->map(fn ($s) => [
-                ...$s->toArray(), 'id'=>'ta_'.$s->id, 'type'=>'TA_DEFENSE',
-                'date'=>$s->date->format('Y-m-d'), 'period_name'=>$s->group?->period?->name,
-                'student_name'=>$s->students->isNotEmpty() ? $s->students->pluck('name')->join(', ') : $s->student?->name,
-                'examiners'=>$s->examiners->map(fn ($e) => ['name'=>$e->examiner?->name, 'role'=>$e->role]),
-                'room'=>$s->room ?: $s->location?->name,
+                ...$s->toArray(), 'id' => 'ta_'.$s->id, 'type' => 'TA_DEFENSE',
+                'date' => $s->date->format('Y-m-d'), 'period_name' => $s->group?->period?->name,
+                'student_name' => $s->students->isNotEmpty() ? $s->students->pluck('name')->join(', ') : $s->student?->name,
+                'examiners' => $s->examiners->map(fn ($e) => ['name' => $e->examiner?->name, 'role' => $e->role]),
+                'room' => $s->room ?: $s->location?->name,
             ]);
 
-        return response()->json(['data'=>$seminarEvents->concat($defenseEvents)->sortBy([
+        return response()->json(['data' => $seminarEvents->concat($defenseEvents)->sortBy([
             ['date', 'asc'], ['start_time', 'asc'],
         ])->values()]);
     }

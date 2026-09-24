@@ -9,7 +9,8 @@ export function lecturerEvaluations(){
         }catch(e){this.error=e.message;}finally{this.loading=false;}},
         get filtered(){return this.items.filter(item=>this.inPeriod(item.schedule.group?.period_id)&&this.matches(item)&&(this.type==='all'||item.type===this.type)&&(this.status==='all'||item.status===this.status));},
         count(status){return this.items.filter(i=>this.inPeriod(i.schedule.group?.period_id)&&(!status||i.status===status)).length;},
-        evaluationUrl(item){return this.url('/dosen/evaluation/'+item.evaluation.id+'?type='+item.type+(item.status==='COMPLETED'?'&mode=view':''));},
+        evaluationUrl(item,view=false){return this.url('/dosen/evaluation/'+item.evaluation.id+'?type='+item.type+(view?'&mode=view':''));},
+        late(item){const d=item.schedule?.evaluation_deadline;if(!d)return false;const t=new Date(d).getTime();return Number.isFinite(t)&&t<Date.now();},
     });
 }
 
@@ -24,13 +25,13 @@ export function lecturerSupervisorEvaluations(){
 }
 
 export function lecturerEvaluationForm(supervisor=false,ta=false){
-    return workspace({supervisor,data:null,students:[],components:[],scores:{},notes:{},result:'',viewOnly:false,type:'',evaluationLabels,
+    return workspace({supervisor,data:null,students:[],components:[],scores:{},notes:{},result:'',resultEditable:true,viewOnly:false,lockReason:'',type:'',evaluationLabels,
         async load(){this.loading=true;this.error='';try{
             const query=new URLSearchParams(window.location.search);this.viewOnly=query.get('mode')==='view';this.type=supervisor?(query.get('type')||'BIMBINGAN_SEMPRO'):(ta?'TA_DEFENSE':query.get('type')||'SEMINAR');
             const endpoint=supervisor?'/dosen/supervisor-evaluation/form/'+encodeURIComponent(context.params.groupId)+'?'+new URLSearchParams({type:this.type,...(query.get('student_id')?{student_id:query.get('student_id')}:{})}):'/dosen/evaluation-context/'+encodeURIComponent(this.type)+'/'+encodeURIComponent(context.params.id);
             this.data=unwrap(await api(endpoint));this.components=this.data.components||[];this.scores={};this.notes={};
-            if(supervisor){this.students=this.data.students||[];for(const student of this.students)for(const score of student.scores||[]){const key=score.period_component_id+'_'+student.id;this.scores[key]=score.score??'';this.notes[key]=score.notes||'';}}
-            else{const student=this.data.student||this.data.schedule?.student;this.students=this.type==='TA_DEFENSE'&&student?[student]:(this.data.group?.members||[]).map(m=>m.student).filter(Boolean);for(const component of this.components)for(const student of this.students){const key=component.id+'_'+student.id;this.scores[key]=this.data.existing_scores?.[key]?.score??'';this.notes[key]=this.data.existing_scores?.[key]?.notes||'';}this.result=this.data.evaluation?.result||'';this.viewOnly=this.viewOnly||['SUBMITTED','COMPLETED'].includes(this.data.evaluation?.status);}
+            if(supervisor){this.students=this.data.students||[];for(const student of this.students)for(const score of student.scores||[]){const key=score.period_component_id+'_'+student.id;this.scores[key]=score.score??'';this.notes[key]=score.notes||'';}if(this.data.editable===false){this.viewOnly=true;this.lockReason=this.data.editable_reason||'This evaluation is not submittable in the current group status.';}}
+            else{const student=this.data.student||this.data.schedule?.student;this.students=this.type==='TA_DEFENSE'&&student?[student]:(this.data.group?.members||[]).map(m=>m.student).filter(Boolean);for(const component of this.components)for(const student of this.students){const key=component.id+'_'+student.id;this.scores[key]=this.data.existing_scores?.[key]?.score??'';this.notes[key]=this.data.existing_scores?.[key]?.notes||'';}this.result=this.data.evaluation?.result||'';this.resultEditable=this.data.result_editable!==false;if(!this.resultEditable)this.lockReason='The PASS/FAIL result is locked because this schedule is completed. Scores can still be edited.';}
         }catch(e){this.error=e.message;}finally{this.loading=false;}},
         get backUrl(){return this.url(supervisor?'/dosen/supervisor-evaluation':'/dosen/evaluation');},
         get minimum(){return supervisor?1:0;},
@@ -45,11 +46,10 @@ export function lecturerEvaluationForm(supervisor=false,ta=false){
                 if(supervisor)await api('/dosen/supervisor-evaluation',{method:'POST',body:{group_id:this.data.group.id,evaluation_type:this.type,scores:this.scoreRows}});
                 else{
                     const evaluationType=this.type==='TA_DEFENSE'?'SIDANG_TA':this.data.schedule.type;
-                    await api('/dosen/assessment-scores',{method:'POST',body:{group_id:this.data.group.id,evaluation_type:evaluationType,scores:this.scoreRows}});
                     const endpoint=this.type==='TA_DEFENSE'?'ta-defense':evaluationType==='EXPO'?'expo':'sempro';
                     await api('/dosen/'+endpoint+'/'+this.data.schedule.id+'/evaluate',{method:'POST',body:{rubric_json:{scores:this.scores,notes:this.notes},score:this.students.reduce((sum,s)=>sum+Number(this.total(s.id)),0)/this.students.length,result:this.result}});
                 }
-                notify('Evaluation saved');await this.load();this.viewOnly=true;
+                notify('Evaluation saved');await this.load();if(supervisor)this.viewOnly=true;
             }catch(e){this.errors={...e.errors,root:e.message};notify(e.message,true);}finally{this.saving=false;}
         },
     });

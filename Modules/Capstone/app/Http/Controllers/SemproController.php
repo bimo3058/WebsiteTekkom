@@ -1,22 +1,26 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use App\Models\Lecturer;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarEvaluation;
 use Modules\Capstone\Models\SeminarSchedule;
-use App\Models\Lecturer;
+use Modules\Capstone\Services\EofficeAvailabilityService;
 use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Services\NotificationService;
 use Modules\Capstone\Services\SchedulingService;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
+use Modules\EOffice\Models\Ruangan;
 
 class SemproController extends Controller
 {
     protected GroupStateMachine $stateMachine;
+
     protected SchedulingService $schedulingService;
 
     public function __construct(GroupStateMachine $stateMachine, SchedulingService $schedulingService)
@@ -32,6 +36,7 @@ class SemproController extends Controller
     {
         $schedules = SeminarSchedule::with(['group.title', 'examiner1', 'examiner2', 'evaluations.examiner'])
             ->where('type', 'SEMPRO')
+            ->where('status', '!=', 'CANCELLED')
             ->orderByDesc('date')
             ->get();
 
@@ -41,42 +46,82 @@ class SemproController extends Controller
     public function update(Request $request, int $id)
     {
         $data = $request->validate([
-            'date'=>'required|date', 'start_time'=>'required|date_format:H:i',
-            'end_time'=>'required|date_format:H:i|after:start_time',
-            'eoffice_ruangan_id'=>'required|integer|exists:eo_mr_ruangans,id',
-            'examiner_1_id'=>'required|exists:lecturers,id',
-            'examiner_2_id'=>'required|exists:lecturers,id|different:examiner_1_id',
+            'date' => 'required|date', 'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'eoffice_ruangan_id' => 'required|integer|exists:eo_mr_ruangans,id',
+            'examiner_1_id' => 'required|exists:lecturers,id',
+            'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id, $data) {
+
+        return DB::transaction(function () use ($request, $id, $data) {
             $schedule = SeminarSchedule::where('type', 'SEMPRO')->lockForUpdate()->findOrFail($id);
             abort_unless($schedule->status === 'SCHEDULED', 422, 'Hanya jadwal aktif yang dapat diubah.');
             abort_if($schedule->evaluations()->where('status', '!=', 'PENDING')->exists(), 422, 'Jadwal yang sudah dinilai tidak dapat diubah.');
-            $ids = [(int)$data['examiner_1_id'], (int)$data['examiner_2_id']];
+            $ids = [(int) $data['examiner_1_id'], (int) $data['examiner_2_id']];
             $error = $this->schedulingService->validateExaminerConstraints($schedule->group, $ids);
             abort_if($error !== null, 422, $error ?? 'Penguji tidak valid.');
             // Single source of rooms: EOffice. `room` is only a display snapshot.
-            $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($data['eoffice_ruangan_id']);
+            $ruangan = Ruangan::findOrFail($data['eoffice_ruangan_id']);
             $data['room'] = $ruangan->nama;
             $conflicts = $this->schedulingService->validateScheduleConflicts($ids, $data['date'], $data['start_time'], $data['end_time'], $data['room'], $schedule->id, null, null, ($schedule->getAttributes()['eoffice_peminjaman_id'] ?? null), (int) $data['eoffice_ruangan_id']);
-            abort_if(count($conflicts)>0, 422, implode(' ', $conflicts));
+            abort_if(count($conflicts) > 0, 422, implode(' ', $conflicts));
             $schedule->update($data);
             $schedule->evaluations()->whereNotIn('examiner_id', $ids)->delete();
-            foreach ($ids as $examinerId) $schedule->evaluations()->firstOrCreate(['examiner_id'=>$examinerId], ['status'=>'PENDING']);
-            AuditLog::create(['user_id'=>$request->user()->id, 'action'=>'SEMPRO_UPDATED', 'target_type'=>'SeminarSchedule', 'target_id'=>$id, 'payload'=>$data]);
-            return response()->json(['data'=>$schedule->fresh(), 'message'=>'Jadwal diperbarui.']);
+            foreach ($ids as $examinerId) {
+                $schedule->evaluations()->firstOrCreate(['examiner_id' => $examinerId], ['status' => 'PENDING']);
+            }
+            AuditLog::create(['user_id' => $request->user()->id, 'action' => 'SEMPRO_UPDATED', 'target_type' => 'SeminarSchedule', 'target_id' => $id, 'payload' => $data]);
+
+            return response()->json(['data' => $schedule->fresh(), 'message' => 'Jadwal diperbarui.']);
         });
     }
 
     public function cancel(Request $request, int $id)
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($request, $id) {
+        return DB::transaction(function () use ($request, $id) {
             $schedule = SeminarSchedule::where('type', 'SEMPRO')->lockForUpdate()->findOrFail($id);
             abort_unless(in_array($schedule->status, ['SCHEDULED', 'PENDING_APPROVAL'], true), 422, 'Jadwal tidak dapat dibatalkan.');
             abort_if($schedule->evaluations()->where('status', '!=', 'PENDING')->exists(), 422, 'Jadwal yang sudah dinilai tidak dapat dibatalkan.');
-            $schedule->update(['status'=>'CANCELLED']);
-            AuditLog::create(['user_id'=>$request->user()->id, 'action'=>'SEMPRO_CANCELLED', 'target_type'=>'SeminarSchedule', 'target_id'=>$id]);
-            return response()->json(['message'=>'Jadwal dibatalkan.']);
+            $schedule->update(['status' => 'CANCELLED']);
+            AuditLog::create(['user_id' => $request->user()->id, 'action' => 'SEMPRO_CANCELLED', 'target_type' => 'SeminarSchedule', 'target_id' => $id]);
+
+            $this->notifySemproCancelled($schedule);
+
+            return response()->json(['message' => 'Jadwal dibatalkan.']);
         });
+    }
+
+    /**
+     * Notify group members and examiners that a SEMPRO schedule was cancelled.
+     * The CANCELLED row is hidden from student/dosen cards; this notification
+     * is the visible trace for both roles.
+     */
+    private function notifySemproCancelled(SeminarSchedule $schedule): void
+    {
+        $notificationService = app(NotificationService::class);
+        $group = Group::find($schedule->group_id);
+        $groupName = $group?->name ?? $group?->code ?? 'Group '.$schedule->group_id;
+
+        if ($group) {
+            $studentIds = $group->members()->with('student')->get()->pluck('student.user_id')->filter()->all();
+            $notificationService->sendToMany(
+                $studentIds,
+                'SEMPRO_CANCELLED',
+                'Jadwal Sidang Proposal Dibatalkan',
+                "Jadwal sidang proposal {$groupName} pada {$schedule->date} telah dibatalkan oleh admin.",
+                'SeminarSchedule',
+                $schedule->id
+            );
+        }
+
+        $notificationService->sendToMany(
+            Lecturer::whereIn('id', [$schedule->examiner_1_id, $schedule->examiner_2_id])->pluck('user_id')->filter()->all(),
+            'SEMPRO_CANCELLED',
+            'Jadwal Sidang Proposal Dibatalkan',
+            "Jadwal sidang proposal {$groupName} pada {$schedule->date} yang Anda uji telah dibatalkan oleh admin.",
+            'SeminarSchedule',
+            $schedule->id
+        );
     }
 
     /**
@@ -121,7 +166,7 @@ class SemproController extends Controller
         }
 
         // Double-booking & room conflict check (rooms come from EOffice only).
-        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($request->eoffice_ruangan_id);
+        $ruangan = Ruangan::findOrFail($request->eoffice_ruangan_id);
         $conflicts = $this->schedulingService->validateScheduleConflicts(
             [$request->examiner_1_id, $request->examiner_2_id],
             $request->date,
@@ -135,7 +180,7 @@ class SemproController extends Controller
             (int) $request->eoffice_ruangan_id
         );
 
-        if (!empty($conflicts)) {
+        if (! empty($conflicts)) {
             return response()->json(['message' => 'Scheduling conflicts detected.', 'conflicts' => $conflicts], 400);
         }
 
@@ -208,7 +253,7 @@ class SemproController extends Controller
             ->where('examiner_id', $lecturerId)
             ->first();
 
-        if (!$evaluation) {
+        if (! $evaluation) {
             return response()->json(['message' => 'You are not assigned as examiner for this schedule.'], 403);
         }
 
@@ -224,7 +269,9 @@ class SemproController extends Controller
             return response()->json([
                 'message' => $result['all_submitted']
                     ? "All evaluations submitted. SEMPRO result: {$result['result']}"
-                    : 'Evaluation submitted. Waiting for other examiner.',
+                    : ($result['updated'] ?? false
+                        ? 'Evaluation updated.'
+                        : 'Evaluation submitted. Waiting for other examiner.'),
                 'data' => $result,
             ]);
         } catch (\InvalidArgumentException $e) {
@@ -267,11 +314,11 @@ class SemproController extends Controller
         // Legacy compat: student requests submitted with a free-text room are resolved by name.
         $eofficeId = $request->eoffice_ruangan_id
             ? (int) $request->eoffice_ruangan_id
-            : app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->resolveEofficeId($request->room ?? $schedule->room);
+            : app(EofficeAvailabilityService::class)->resolveEofficeId($request->room ?? $schedule->room);
         if (! $eofficeId) {
             return response()->json(['message' => 'Ruangan tidak dikenali di EOffice. Pilih ruangan EOffice yang valid.'], 422);
         }
-        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($eofficeId);
+        $ruangan = Ruangan::findOrFail($eofficeId);
         $conflicts = $this->schedulingService->validateScheduleConflicts(
             $examinerIds,
             $request->date,
@@ -285,7 +332,7 @@ class SemproController extends Controller
             $ruangan->id
         );
 
-        if (!empty($conflicts)) {
+        if (! empty($conflicts)) {
             return response()->json(['message' => 'Scheduling conflicts detected.', 'conflicts' => $conflicts], 400);
         }
 
@@ -297,7 +344,7 @@ class SemproController extends Controller
             'eoffice_ruangan_id' => $ruangan->id,
             'examiner_1_id' => $request->examiner_1_id,
             'examiner_2_id' => $request->examiner_2_id,
-            'status' => 'SCHEDULED'
+            'status' => 'SCHEDULED',
         ]);
 
         // Auto-generate evaluation rows

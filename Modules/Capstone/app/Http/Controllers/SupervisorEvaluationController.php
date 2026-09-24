@@ -2,25 +2,31 @@
 
 namespace Modules\Capstone\Http\Controllers;
 
-use Modules\Capstone\Models\AssessmentComponent;
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\PeriodAssessmentComponent;
-use Modules\Capstone\Models\Schedule;
-use Modules\Capstone\Models\SeminarSchedule;
-use Modules\Capstone\Models\Supervision;
-use Modules\Capstone\Models\TaDefenseEvaluation;
-use Modules\Capstone\Models\TaDefenseExaminer;
-use Modules\Capstone\Models\TaDefenseSchedule;
-use Modules\Capstone\Repositories\AssessmentScoreRepository;
-use Modules\Capstone\Services\NotificationService;
-use Modules\Capstone\Support\CapstoneActor;
+use App\Models\Student;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Models\AssessmentComponent;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\PeriodAssessmentComponent;
+use Modules\Capstone\Models\Schedule;
+use Modules\Capstone\Models\SeminarEvaluation;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\Supervision;
+use Modules\Capstone\Models\TaDefenseEvaluation;
+use Modules\Capstone\Models\TaDefenseExaminer;
+use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Models\TaSubmission;
+use Modules\Capstone\Repositories\AssessmentScoreRepository;
+use Modules\Capstone\Services\GradeCalculationService;
+use Modules\Capstone\Services\GroupLifecycleService;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Support\CapstoneActor;
+use Modules\Capstone\Support\EvaluationDeadline;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SupervisorEvaluationController extends Controller
@@ -58,6 +64,7 @@ class SupervisorEvaluationController extends Controller
             foreach ($groupSchedules as $schedule) {
                 $evalType = $schedule['evaluation_type'];
                 if (! isset($evaluations[$evalType])) {
+                    $editableStatuses = GroupLifecycleService::EDITABLE_STATUSES[$evalType] ?? [];
                     $evaluations[$evalType] = [
                         'schedule_id' => $schedule['schedule_id'],
                         'schedule_type' => $schedule['schedule_type'],
@@ -65,14 +72,16 @@ class SupervisorEvaluationController extends Controller
                         'room' => $schedule['room'],
                         'deadline' => $schedule['deadline'],
                         'status' => strtolower((string) $schedule['status']),
+                        'editable' => in_array($group->status, $editableStatuses, true),
                     ];
                 }
             }
 
             return [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
+                'status' => $group->status,
                 'period' => [
                     'id' => $group->period->id,
                     'name' => $group->period->name,
@@ -207,9 +216,10 @@ class SupervisorEvaluationController extends Controller
     {
         $schedules = [];
 
-        // SEMPRO → BIMBINGAN_SEMPRO
+        // SEMPRO → BIMBINGAN_SEMPRO (cancelled stays hidden; notified only)
         $seminarSchedules = SeminarSchedule::where('group_id', $group->id)
             ->whereIn('type', ['SEMPRO'])
+            ->where('status', '!=', 'CANCELLED')
             ->get();
 
         foreach ($seminarSchedules as $sempro) {
@@ -265,7 +275,7 @@ class SupervisorEvaluationController extends Controller
                 $allStudentIds->push($student->id);
             }
         }
-        $submissionMap = \Modules\Capstone\Models\TaSubmission::whereIn('student_id', $allStudentIds->unique()->values())
+        $submissionMap = TaSubmission::whereIn('student_id', $allStudentIds->unique()->values())
             ->get()
             ->keyBy('student_id');
 
@@ -315,7 +325,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'students' => $group->members->map(fn ($m) => [
@@ -336,7 +346,7 @@ class SupervisorEvaluationController extends Controller
     /**
      * Format TA defense schedule data for supervisor response
      */
-    private function formatTaDefenseScheduleForSupervisor($taDefenseSchedule, string $scheduleType, string $evalType, $group, $supervision, int $supervisorId, ?\App\Models\Student $student = null): array
+    private function formatTaDefenseScheduleForSupervisor($taDefenseSchedule, string $scheduleType, string $evalType, $group, $supervision, int $supervisorId, ?Student $student = null): array
     {
         // Use provided student or fall back to backward-compat
         $student = $student ?? $taDefenseSchedule->student;
@@ -360,7 +370,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'student' => $student ? [
@@ -385,8 +395,7 @@ class SupervisorEvaluationController extends Controller
     {
         $status = $this->getEvaluationStatus($group, $supervisorId, 'NILAI_DOSEN');
 
-        // NILAI_DOSEN has no specific date - use current date + 7 days as soft deadline
-        $deadline = date('Y-m-d H:i:s', strtotime('+7 days'));
+        $deadline = $this->resolveSoftDeadline($group, 'NILAI_DOSEN');
 
         return [
             'schedule_id' => null,
@@ -399,7 +408,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'students' => $group->members->map(fn ($m) => [
@@ -436,7 +445,7 @@ class SupervisorEvaluationController extends Controller
             'deadline' => $deadline,
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'students' => $group->members->map(fn ($m) => [
@@ -478,6 +487,8 @@ class SupervisorEvaluationController extends Controller
         }
 
         $group = Group::with(['members.student', 'period'])->findOrFail($groupId);
+
+        $formAccess = app(GroupLifecycleService::class)->formAccess($group, $evaluationType);
 
         // Get components for this evaluation type (schema-aware)
         if ($this->usesPeriodAssessmentComponents()) {
@@ -574,10 +585,13 @@ class SupervisorEvaluationController extends Controller
         return $this->successResponse([
             'group' => [
                 'id' => $group->id,
-                'name' => $group->name,
+                'name' => $group->name ?? $group->code ?? 'Group '.$group->id,
                 'code' => $group->code,
             ],
             'evaluation_type' => $evaluationType,
+            'editable' => $formAccess['editable'],
+            'editable_reason' => $formAccess['reason'],
+            'group_status' => $formAccess['group_status'],
             'supervisor_role' => $supervision->role,
             'schedule' => $scheduleInfo,
             'components' => $components->toArray(),
@@ -595,7 +609,7 @@ class SupervisorEvaluationController extends Controller
         // Schema-aware validation - accept both field names for flexibility
         $usesPeriodComponents = $this->usesPeriodAssessmentComponents();
         $componentIdField = $usesPeriodComponents ? 'period_component_id' : 'component_id';
-        $componentTable = $usesPeriodComponents ? 'period_assessment_components' : 'assessment_components';
+        $componentTable = $usesPeriodComponents ? 'capstone_period_assessment_components' : 'capstone_assessment_components';
 
         Log::info('SupervisorEvaluationController::store', [
             'uses_period_components' => $usesPeriodComponents,
@@ -637,6 +651,14 @@ class SupervisorEvaluationController extends Controller
         }
 
         $group = Group::findOrFail($groupId);
+
+        // Enforce the submittable lifecycle window (form() exposes the same
+        // flag as `editable`, so legit clients never reach this branch).
+        $formAccess = app(GroupLifecycleService::class)->formAccess($group, $evaluationType);
+
+        if (! $formAccess['editable']) {
+            return $this->errorResponse($formAccess['reason'] ?? 'This evaluation is not submittable in the current group status.', 403);
+        }
 
         // Verify all students are members of this group
         $groupStudentIds = GroupMember::where('group_id', $groupId)->pluck('student_id')->toArray();
@@ -705,7 +727,7 @@ class SupervisorEvaluationController extends Controller
 
                     // Trigger grade recalculation
                     try {
-                        $gradeService = app(\Modules\Capstone\Services\GradeCalculationService::class);
+                        $gradeService = app(GradeCalculationService::class);
                         $gradeService->recalculateAndNotify($groupId, $evaluationType);
                     } catch (\Exception $e) {
                         Log::error("Failed to recalculate grades for group {$groupId}: ".$e->getMessage());
@@ -713,31 +735,15 @@ class SupervisorEvaluationController extends Controller
                 }
             }
 
-            // If EXPO-related evaluation submitted, check EXPO_DONE readiness
-            if (in_array($evaluationType, ['NILAI_DOSEN', 'EXPO', 'MILESTONE'], true)) {
-                $group = Group::find($groupId);
-                if ($group) {
-                    $schedulingService = app(\Modules\Capstone\Services\SchedulingService::class);
-                    $schedulingService->tryTransitionToExpoDone($group);
-                }
-            }
+            // Centralized lifecycle advancement (idempotent; never blocks the response)
+            try {
+                $advancedTo = app(GroupLifecycleService::class)->advanceIfComplete(Group::find($groupId));
 
-            // If BIMBINGAN_SEMPRO submitted, check SEMPRO completion (supervisor may submit after examiners)
-            if ($evaluationType === 'BIMBINGAN_SEMPRO') {
-                $group = Group::find($groupId);
-                if ($group && $group->status === 'READY_FOR_SEMPRO') {
-                    $schedulingService = app(\Modules\Capstone\Services\SchedulingService::class);
-                    $schedulingService->checkAndCompleteSempro($group);
+                if ($advancedTo) {
+                    Log::info("Group {$groupId} advanced to {$advancedTo} after {$evaluationType} submission");
                 }
-            }
-
-            // If NILAI_DOSEN or MILESTONE submitted, check PDC2_ACTIVE → TA_DRAFT readiness
-            if (in_array($evaluationType, ['NILAI_DOSEN', 'MILESTONE'], true)) {
-                $group = Group::find($groupId);
-                if ($group && $group->status === 'PDC2_ACTIVE') {
-                    $schedulingService = app(\Modules\Capstone\Services\SchedulingService::class);
-                    $schedulingService->tryTransitionToTaDraft($group);
-                }
+            } catch (\Exception $e) {
+                Log::error("Failed to advance lifecycle for group {$groupId}: ".$e->getMessage());
             }
 
             // Send notification if deadline has passed
@@ -838,7 +844,7 @@ class SupervisorEvaluationController extends Controller
 
         // Schema-aware component count
         if ($this->usesPeriodAssessmentComponents()) {
-            $componentCount = PeriodAssessmentComponent::whereHas('period.groups', fn ($q) => $q->where('groups.id', $groupId))
+            $componentCount = PeriodAssessmentComponent::where('period_id', $group->period_id)
                 ->where('type', $evaluationType)
                 ->count();
         } else {
@@ -946,6 +952,14 @@ class SupervisorEvaluationController extends Controller
                     $deadline = date('Y-m-d H:i:s', strtotime($schedule->date.' +2 days'));
                 }
 
+                // NILAI_DOSEN/MILESTONE share the EXPO schedule but carry
+                // their own persisted soft deadline so the value is stable
+                // across requests (display and late detection agree).
+                if (in_array($evaluationType, ['NILAI_DOSEN', 'MILESTONE'], true)) {
+                    $group = Group::find($groupId);
+                    $deadline = $group ? $this->resolveSoftDeadline($group, $evaluationType) : $deadline;
+                }
+
                 return [
                     'id' => $schedule->id,
                     'type' => 'EXPO',
@@ -960,16 +974,69 @@ class SupervisorEvaluationController extends Controller
     }
 
     /**
+     * Persisted soft deadline for schedule-less supervisor evaluations.
+     *
+     * Previously recomputed as now + 7 days on every request, so the value
+     * drifted forever and could never pass. Now resolved once and stored
+     * on the group: seeded from the EXPO schedule (date + 2 days) when one
+     * exists, otherwise now + 7 days.
+     */
+    private function resolveSoftDeadline(Group $group, string $evaluationType): ?string
+    {
+        $column = match ($evaluationType) {
+            'NILAI_DOSEN' => 'nilai_dosen_deadline',
+            'MILESTONE' => 'milestone_deadline',
+            default => null,
+        };
+
+        if (! $column) {
+            return null;
+        }
+
+        // Pre-migration fallback: columns missing → previous transient
+        // behavior (no persistence), so old databases keep working.
+        if (! Schema::hasColumn('capstone_groups', $column)) {
+            $expo = SeminarSchedule::where('group_id', $group->id)
+                ->where('type', 'EXPO')
+                ->orderByDesc('id')
+                ->first();
+
+            return ($expo && $expo->date)
+                ? EvaluationDeadline::fromDate($expo->date)
+                : date('Y-m-d H:i:s', strtotime('+7 days'));
+        }
+
+        if ($group->{$column}) {
+            return date('Y-m-d H:i:s', strtotime((string) $group->{$column}));
+        }
+
+        $expo = SeminarSchedule::where('group_id', $group->id)
+            ->where('type', 'EXPO')
+            ->orderByDesc('id')
+            ->first();
+
+        $deadline = ($expo && $expo->date)
+            ? EvaluationDeadline::fromDate($expo->date)
+            : date('Y-m-d H:i:s', strtotime('+7 days'));
+
+        $group->update([$column => $deadline]);
+
+        return $deadline;
+    }
+
+    /**
      * Admin: Get evaluation summary for a schedule
      */
     public function adminScheduleSummary(Request $request, int $scheduleId): JsonResponse
     {
-        $request->validate(['schedule_source'=>'nullable|in:schedule,seminar,ta']);
+        $request->validate(['schedule_source' => 'nullable|in:schedule,seminar,ta']);
         $source = $request->input('schedule_source');
         // Explicit sources prevent collisions between the independent schedule tables.
         $schedule = in_array($source, [null, 'schedule'], true)
             ? Schedule::with(['group.period', 'group.members.student'])->find($scheduleId) : null;
-        if (! $schedule && $source === 'schedule') return $this->notFoundResponse('Schedule not found');
+        if (! $schedule && $source === 'schedule') {
+            return $this->notFoundResponse('Schedule not found');
+        }
         $isTaDefense = false;
         $isSeminar = false;
         $taSchedule = null;
@@ -979,7 +1046,9 @@ class SupervisorEvaluationController extends Controller
             // Try TaDefenseSchedule for TA defense schedules
             $taSchedule = in_array($source, [null, 'ta'], true)
                 ? TaDefenseSchedule::with(['group.period', 'group.members.student', 'student', 'students'])->find($scheduleId) : null;
-            if (! $taSchedule && $source === 'ta') return $this->notFoundResponse('Schedule not found');
+            if (! $taSchedule && $source === 'ta') {
+                return $this->notFoundResponse('Schedule not found');
+            }
             if ($taSchedule) {
                 $isTaDefense = true;
                 $schedule = (object) [
@@ -1200,7 +1269,7 @@ class SupervisorEvaluationController extends Controller
         }
 
         // Check if examiner
-        $isSeminarExaminer = \Modules\Capstone\Models\SeminarEvaluation::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
+        $isSeminarExaminer = SeminarEvaluation::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
             ->where('examiner_id', $evaluatorId)
             ->exists();
 
@@ -1208,7 +1277,7 @@ class SupervisorEvaluationController extends Controller
             return 'Examiner';
         }
 
-        $isTaExaminer = \Modules\Capstone\Models\TaDefenseExaminer::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
+        $isTaExaminer = TaDefenseExaminer::whereHas('schedule', fn ($q) => $q->where('group_id', $groupId))
             ->where('examiner_id', $evaluatorId)
             ->exists();
 
@@ -1394,7 +1463,7 @@ class SupervisorEvaluationController extends Controller
         }
 
         $grades = [];
-        $gradeService = app(\Modules\Capstone\Services\GradeCalculationService::class);
+        $gradeService = app(GradeCalculationService::class);
 
         // For TA_DEFENSE, only get grades for the specific student
         if ($isTaDefense) {

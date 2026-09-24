@@ -6,9 +6,9 @@ use Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
 use Modules\Capstone\Http\Controllers\Admin\BladeUserController;
 use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
 use Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController;
-use Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\StakeholderController;
+use Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentTemplateController;
 use Modules\Capstone\Http\Controllers\AssessmentScoreController;
@@ -181,6 +181,7 @@ Route::prefix('capstone')->group(function () {
             Route::get('/expo/schedules', [ExpoController::class, 'index']);
             Route::put('/expo/schedules/{id}/approve', [ExpoController::class, 'approve']);
             Route::put('/expo/schedules/{id}/reject', [ExpoController::class, 'reject']);
+            Route::put('/expo/schedules/{id}/cancel', [ExpoController::class, 'cancel']);
 
             // TA Defense
             Route::get('/ta-defense/schedules', [TaDefenseController::class, 'index']);
