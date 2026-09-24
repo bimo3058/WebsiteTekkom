@@ -531,7 +531,7 @@
 
 <!-- Banner -->
 @if($kegiatan->banner)
-<div style="position:relative;width:100%;max-height:340px;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
+<div style="position:relative;width:100%;max-height:340px;flex-shrink:0;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
      onclick="openBannerLightbox()"
      onmouseover="this.style.transform='scale(1.005)'"
      onmouseout="this.style.transform='scale(1)'">
@@ -728,7 +728,6 @@
     </script>
     @endif
 </div>
-</div>
 
 <!-- Deskripsi -->
 <div class="detail-card">
@@ -907,7 +906,6 @@
             </form>
         </div>
     </div>
-</div>
 </div>
 @endif
 
