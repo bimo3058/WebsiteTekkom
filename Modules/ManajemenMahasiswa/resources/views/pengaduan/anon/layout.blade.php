@@ -47,9 +47,8 @@
             color: #111827;
         }
         .anon-container {
-            max-width: 720px;
-            margin: 40px auto;
-            padding: 0 20px;
+            margin: 40px 0 0;
+            padding: 0 32px;
             flex: 1;
             width: 100%;
         }
