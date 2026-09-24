@@ -3,16 +3,16 @@
 @section('content')
 <div x-data="adminGroups(false)" class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold tracking-tight text-slate-900">Groups</h1>
+        <h1 class="text-xl font-bold tracking-tight text-foreground">Groups</h1>
     </div>
 
     @include('capstone::partials.loading')
 
     <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
 
-    <div x-show="!loading && !error" x-cloak class="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div x-show="!loading && !error" x-cloak class="rounded-xl border border-border bg-card shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
-            <h2 class="text-sm font-bold text-slate-900">Total Groups</h2>
+            <h2 class="text-sm font-bold text-foreground">Total Groups</h2>
             <div class="flex items-center gap-2">
                 <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                     <x-capstone::icon name="Search" size="15" />
@@ -123,7 +123,7 @@
             <div class="flex items-center gap-1">
                 <button type="button" @click="page=Math.max(1,groupPage-1)" :disabled="groupPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
                 <template x-for="(p,i) in groupPageList" :key="i+'-'+p">
-                    <button type="button" x-show="p!=='…'" @click="page=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===groupPage ? 'border-[#2f3d8a] bg-[#2f3d8a] text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
+                    <button type="button" x-show="p!=='…'" @click="page=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===groupPage ? 'border-primary bg-primary text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
                     <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
                 </template>
                 <button type="button" @click="page=Math.min(groupLastPage,groupPage+1)" :disabled="groupPage>=groupLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>

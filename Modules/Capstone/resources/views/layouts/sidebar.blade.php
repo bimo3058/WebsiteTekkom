@@ -5,17 +5,16 @@
     $sidebarRoles = $combined ? ['admin','dosen'] : [$activeRole ?? 'mahasiswa'];
 @endphp
 <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside data-mobile-sidebar class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
-    <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
-        <a href="{{ url('/capstone/dashboard') }}" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="{{ url('/capstone/assets/logo.png') }}" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
-        <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
+<aside data-mobile-sidebar class="sitkom-sidebar-capstone fixed inset-y-0 left-0 z-40 flex h-svh shrink-0 flex-col md:relative md:translate-x-0" :class="[collapsed ? 'w-16 is-collapsed' : 'w-[240px]', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+    <div class="sb-brand">
+        <a href="{{ url('/capstone/dashboard') }}" x-show="!collapsed" class="sb-brand-link"><img src="{{ url('/capstone/assets/logo.png') }}" alt="Logo" class="sb-brand-logo"><span class="sb-brand-text"><span class="sb-brand-name">SICATA</span><span class="sb-brand-tag">Sistem Informasi Capstone &amp; TA</span></span></a>
+        <button type="button" aria-label="Toggle sidebar" title="Toggle Sidebar" @click="toggleSidebar" class="sb-collapse-btn"><span :style="collapsed ? 'transform:rotate(180deg)' : ''" style="transition:transform .25s ease;display:inline-flex"><x-capstone::icon name="ChevronLeft" /></span></button>
     </div>
-    </div>
-    <nav aria-label="Capstone navigation" class="min-h-0 flex-1 overflow-y-auto p-2 space-y-1">
-        <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">Menu</div>
+    <nav aria-label="Capstone navigation" class="sb-nav">
+        <div x-show="!collapsed" class="sb-section-label">Menu</div>
         @foreach($sidebarRoles as $navRole)
-            @if($combined)<div x-show="!collapsed" class="px-2 pt-4 pb-2 text-xs font-medium text-sidebar-foreground/70">{{ ucfirst($navRole) }}</div>@endif
-            <a href="{{ url('/capstone/'.$navRole.'/dashboard') }}" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent {{ ($pagePath ?? '') === '/'.$navRole.'/dashboard' ? 'bg-sidebar-accent font-medium' : '' }}" title="Dashboard"><x-capstone::icon name="LayoutDashboard" /><span x-show="!collapsed">Dashboard</span></a>
+            @if($combined)<div x-show="!collapsed" class="sb-section-label">{{ ucfirst($navRole) }}</div>@endif
+            <x-capstone::sb-link :href="url('/capstone/'.$navRole.'/dashboard')" icon="LayoutDashboard" label="Dashboard" :active="($pagePath ?? '') === '/'.$navRole.'/dashboard'" />
             @foreach($navigation[$navRole] ?? [] as $item)
                 @php
                     $parentPath = match ($item['title']) {
@@ -29,26 +28,27 @@
                 @if(isset($item['items']))
                     @php $expanded = collect($item['items'])->contains(fn($sub) => str_starts_with($pagePath ?? '', $sub['url'])); @endphp
                     <div x-data="{ expanded: {{ $expanded ? 'true' : 'false' }} }">
-                        <button type="button" @disabled($itemReason) aria-disabled="{{ $itemReason ? 'true' : 'false' }}" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent {{ $itemReason ? 'opacity-50' : '' }}" :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="{{ $itemReason ?? $item['title'] }}"><x-capstone::icon :name="$item['icon'] === 'CalendarIcon' ? 'Calendar' : $item['icon']" /><span x-show="!collapsed">{{ $item['title'] }}</span><x-capstone::icon name="ChevronRight" class="ml-auto size-4 transition-transform" x-show="!collapsed" ::class="expanded && 'rotate-90'" /></button>
-                        <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
+                        <button type="button" @disabled($itemReason) aria-disabled="{{ $itemReason ? 'true' : 'false' }}" class="sb-item w-full {{ $expanded ? 'is-active' : '' }} {{ $itemReason ? 'is-disabled' : '' }}" :class="collapsed ? 'is-collapsed' : ''" :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="{{ $itemReason ?? $item['title'] }}">@if($expanded)<span class="sb-item-pill"></span>@endif<x-capstone::icon :name="$item['icon'] === 'CalendarIcon' ? 'Calendar' : $item['icon']" /><span x-show="!collapsed" class="sb-item-label">{{ $item['title'] }}</span><x-capstone::icon name="ChevronRight" class="ml-auto size-4 transition-transform" x-show="!collapsed" ::class="expanded && 'rotate-90'" /></button>
+                        <div x-show="expanded && !collapsed" x-cloak class="sb-sublist">
                             @foreach($item['items'] as $sub)
                                 @php
                                     $reason = $navRole === 'mahasiswa' ? \Modules\Capstone\Support\BladeFeatureAccess::reason($sub['url'], $featureAccess ?? []) : null;
+                                    $subActive = ($pagePath ?? '') === $sub['url'];
                                 @endphp
-                                <a @if(!$reason) href="{{ url('/capstone'.$sub['url']) }}" @else aria-disabled="true" tabindex="-1" @endif title="{{ $reason ?? $sub['title'] }}" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent {{ $reason ? 'pointer-events-none opacity-50' : '' }} {{ ($pagePath ?? '') === $sub['url'] ? 'bg-sidebar-accent font-medium' : '' }}">{{ $sub['title'] }}</a>
+                                <a @if(!$reason) href="{{ url('/capstone'.$sub['url']) }}" @else aria-disabled="true" tabindex="-1" @endif title="{{ $reason ?? $sub['title'] }}" class="sb-subitem {{ $subActive ? 'is-active' : '' }} {{ $reason ? 'is-disabled' : '' }}">@if($subActive)<span class="sb-item-pill"></span>@endif{{ $sub['title'] }}</a>
                             @endforeach
                         </div>
                     </div>
                 @else
-                    <a @if(!$itemReason) href="{{ url('/capstone'.$item['url']) }}" @else aria-disabled="true" tabindex="-1" @endif class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent {{ $itemReason ? 'pointer-events-none opacity-50' : '' }} {{ ($pagePath ?? '') === $item['url'] ? 'bg-sidebar-accent font-medium' : '' }}" title="{{ $itemReason ?? $item['title'] }}"><x-capstone::icon :name="$item['icon'] === 'CalendarIcon' ? 'Calendar' : $item['icon']" /><span x-show="!collapsed">{{ $item['title'] }}</span></a>
+                    <x-capstone::sb-link :href="url('/capstone'.$item['url'])" :icon="$item['icon'] === 'CalendarIcon' ? 'Calendar' : $item['icon']" :label="$item['title']" :active="($pagePath ?? '') === $item['url']" :disabled="(bool) $itemReason" :title="$itemReason ?? $item['title']" />
                 @endif
             @endforeach
         @endforeach
-        <div x-show="!collapsed" class="flex h-8 items-center rounded-md px-2 text-xs font-medium text-sidebar-foreground/70">System</div>
-        <a href="{{ url('/capstone/notifications') }}" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><x-capstone::icon name="Bell" /><span x-show="!collapsed">Notifications</span><span x-show="unread > 0 && !collapsed" x-text="unread" class="ml-auto rounded-full bg-primary px-1.5 text-xs text-white"></span></a>
+        <div x-show="!collapsed" class="sb-section-label">System</div>
+        <x-capstone::sb-link :href="url('/capstone/notifications')" icon="Bell" label="Notifications" badge="unread > 0 ? unread : ''" />
     </nav>
-    <div class="p-2 border-t">
-        @if(in_array('admin', $roles))<x-capstone::feature-link href="/admin/settings" class="flex h-8 items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent"><x-capstone::icon name="Settings" /><span x-show="!collapsed">Settings</span></x-capstone::feature-link>@endif
-        <form method="POST" action="{{ route('capstone.logout') }}">@csrf<button class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm text-destructive hover:bg-sidebar-accent"><x-capstone::icon name="LogOut" /><span x-show="!collapsed">Logout</span></button></form>
+    <div class="sb-footer">
+        @if(in_array('admin', $roles))<x-capstone::feature-link href="/admin/settings" class="sb-item" ::class="collapsed ? 'is-collapsed' : ''"><x-capstone::icon name="Settings" /><span x-show="!collapsed" class="sb-item-label">Settings</span></x-capstone::feature-link>@endif
+        <form method="POST" action="{{ route('capstone.logout') }}" style="margin:0;">@csrf<button type="submit" class="sb-item sb-link-danger"><x-capstone::icon name="LogOut" /><span x-show="!collapsed" class="sb-item-label">Logout</span></button></form>
     </div>
 </aside>

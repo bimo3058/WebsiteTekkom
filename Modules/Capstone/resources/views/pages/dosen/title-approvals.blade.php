@@ -6,7 +6,7 @@
     <x-capstone::input type="search" x-model.debounce.200ms="search" @input="page=1" placeholder="Search titles, students, or groups..." aria-label="Search proposals" class="max-w-sm" />
     @include('capstone::partials.loading')
     <div x-show="!loading && !error" x-cloak class="space-y-4">
-        <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">Persetujuan pembimbing memvalidasi proposal. Penetapan judul dan kelompok dilanjutkan melalui finalisasi admin.</div>
+        <div class="rounded-lg border border-border bg-accent p-4 text-sm text-foreground">Persetujuan pembimbing memvalidasi proposal. Penetapan judul dan kelompok dilanjutkan melalui finalisasi admin.</div>
         <p x-show="!filtered.length" class="rounded-xl border border-dashed p-12 text-center text-muted-foreground">No pending proposals. Student proposals will appear here.</p>
         <template x-for="proposal in visible" :key="proposal.id"><article class="rounded-xl border bg-card p-6 shadow-sm">
             <div class="flex flex-wrap items-start justify-between gap-3"><div><h2 class="text-lg font-semibold" x-text="proposal.title"></h2><p class="mt-1 text-sm text-muted-foreground" x-text="'Group '+(proposal.proposed_by_group?.code||proposal.proposed_by_group_id||'-')+' · '+date(proposal.created_at)"></p></div><span class="rounded-full px-2 py-1 text-xs" :class="statusColor(proposal.supervisor_approval_status)" x-text="proposal.supervisor_approval_status"></span></div>

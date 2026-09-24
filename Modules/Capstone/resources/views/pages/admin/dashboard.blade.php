@@ -3,8 +3,8 @@
 @section('content')
 <div x-data="capstoneDashboard" class="space-y-6">
     <div class="flex flex-wrap items-center justify-between gap-3">
-        <h1 class="text-xl font-bold tracking-tight text-slate-900">Dashboard</h1>
-        <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm">
+        <h1 class="text-xl font-bold tracking-tight text-foreground">Dashboard</h1>
+        <label class="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-slate-700 shadow-sm">
             <span class="text-slate-400"><x-capstone::icon name="Calendar" size="16" /></span>
             <select x-model="selectedPeriod" @change="reloadAdmin()" class="bg-transparent font-semibold outline-none" aria-label="Semester">
                 <option value="all">Semua Semester</option>
@@ -21,43 +21,43 @@
 
     <div x-show="!loading && !error" x-cloak class="space-y-6">
         <div class="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
                 <div class="flex items-center gap-2.5">
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"><x-capstone::icon name="User" size="18" /></span>
                     <p class="text-[13px] font-medium text-slate-600">Periode Aktif</p>
                 </div>
-                <p class="mt-3 text-2xl font-bold text-slate-900" x-text="activePeriodsCount"></p>
+                <p class="mt-3 text-2xl font-bold text-foreground" x-text="activePeriodsCount"></p>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
                 <div class="flex items-center gap-2.5">
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"><x-capstone::icon name="Users" size="18" /></span>
                     <p class="text-[13px] font-medium text-slate-600">Dosen</p>
                 </div>
-                <p class="mt-3 text-2xl font-bold text-slate-900" x-text="data.total_lecturers ?? 0"></p>
+                <p class="mt-3 text-2xl font-bold text-foreground" x-text="data.total_lecturers ?? 0"></p>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div class="rounded-xl border border-border bg-card p-4 shadow-sm">
                 <div class="flex items-center gap-2.5">
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"><x-capstone::icon name="UserMinus" size="18" /></span>
                     <p class="text-[13px] font-medium text-slate-600">Mahasiswa</p>
                 </div>
-                <p class="mt-3 text-2xl font-bold text-slate-900" x-text="data.total_students ?? 0"></p>
+                <p class="mt-3 text-2xl font-bold text-foreground" x-text="data.total_students ?? 0"></p>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm" :title="'Finalisasi: '+(data.pending_breakdown?.finalization ?? 0)+', Judul: '+(data.pending_breakdown?.titles ?? 0)+', Dokumen: '+(data.pending_breakdown?.documents ?? 0)+', Join Request: '+(data.pending_breakdown?.join_requests ?? 0)">
+            <div class="rounded-xl border border-border bg-card p-4 shadow-sm" :title="'Finalisasi: '+(data.pending_breakdown?.finalization ?? 0)+', Judul: '+(data.pending_breakdown?.titles ?? 0)+', Dokumen: '+(data.pending_breakdown?.documents ?? 0)+', Join Request: '+(data.pending_breakdown?.join_requests ?? 0)">
                 <div class="flex items-center gap-2.5">
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-500"><x-capstone::icon name="Users" size="18" /></span>
                     <p class="text-[13px] font-medium text-slate-600">Butuh Persetujuan</p>
                 </div>
-                <p class="mt-3 text-2xl font-bold text-slate-900" x-text="pendingApproval"></p>
+                <p class="mt-3 text-2xl font-bold text-foreground" x-text="pendingApproval"></p>
             </div>
         </div>
 
         <section class="space-y-3">
             <div class="flex items-center gap-2">
-                <span class="h-5 w-1 rounded-full bg-[#2f3d8a]"></span>
-                <h2 class="text-[15px] font-bold text-slate-900">Jadwal</h2>
+                <span class="h-5 w-1 rounded-full bg-primary"></span>
+                <h2 class="text-[15px] font-bold text-foreground">Jadwal</h2>
                 <span class="h-px flex-1 bg-slate-200"></span>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div class="rounded-xl border border-border bg-card shadow-sm">
                 <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 p-3">
                     <div class="inline-flex items-center gap-1 rounded-lg bg-slate-100 p-1 text-[13px] font-medium">
                         <button type="button" @click="jadwalView='kanban'" class="rounded-md px-4 py-1.5 text-slate-500" :class="jadwalView==='kanban' && 'bg-white text-slate-900 shadow-sm font-semibold'">Kanban</button>
@@ -112,9 +112,9 @@
                             <template x-for="(day,index) in days" :key="day.key">
                                 <div @click="openDay(day)" tabindex="0" role="button" @keydown.enter="openDay(day)"
                                     class="min-h-[92px] min-w-0 cursor-pointer border-b border-r border-slate-100 p-1.5 align-top transition-colors hover:bg-slate-50 sm:min-h-[118px] sm:p-2"
-                                    :class="[!day.current && 'bg-slate-50/70', day.key===selectedDate && 'bg-blue-50/40', (index+1)%7===0 && 'border-r-0', index>=days.length-7 && 'border-b-0']">
+                                    :class="[!day.current && 'bg-slate-50/70', day.key===selectedDate && 'bg-accent/40', (index+1)%7===0 && 'border-r-0', index>=days.length-7 && 'border-b-0']">
                                     <div class="mb-1 flex justify-end">
-                                        <span class="inline-flex h-6 min-w-6 items-center justify-center px-1 text-xs" :class="day.key===selectedDate ? 'rounded-md bg-[#2f3d8a] font-bold text-white' : day.current ? 'font-medium text-slate-700' : 'text-slate-300'" x-text="day.number"></span>
+                                        <span class="inline-flex h-6 min-w-6 items-center justify-center px-1 text-xs" :class="day.key===selectedDate ? 'rounded-md bg-primary font-bold text-white' : day.current ? 'font-medium text-slate-700' : 'text-slate-300'" x-text="day.number"></span>
                                     </div>
                                     <div class="space-y-1">
                                         <template x-for="event in eventsFor(day).slice(0,2)" :key="event._key">
@@ -187,14 +187,14 @@
 
         <section class="space-y-3">
             <div class="flex items-center gap-2">
-                <span class="h-5 w-1 rounded-full bg-[#2f3d8a]"></span>
-                <h2 class="text-[15px] font-bold text-slate-900">Group</h2>
+                <span class="h-5 w-1 rounded-full bg-primary"></span>
+                <h2 class="text-[15px] font-bold text-foreground">Group</h2>
                 <span class="h-px flex-1 bg-slate-200"></span>
             </div>
             <div class="grid gap-3 xl:grid-cols-3">
-                <div class="rounded-xl border border-slate-200 bg-white shadow-sm xl:col-span-2">
+                <div class="rounded-xl border border-border bg-card shadow-sm xl:col-span-2">
                     <div class="flex flex-wrap items-center justify-between gap-2.5 border-b border-slate-100 p-3">
-                        <h3 class="text-sm font-bold text-slate-900">Tabel Groups</h3>
+                        <h3 class="text-sm font-bold text-foreground">Tabel Groups</h3>
                         <div class="flex items-center gap-2">
                             <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                                 <x-capstone::icon name="Search" size="15" />
@@ -283,7 +283,7 @@
                         <div class="flex items-center gap-1">
                             <button type="button" @click="groupPage=Math.max(1,groupPage-1)" :disabled="groupPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
                             <template x-for="(p,i) in groupPageList" :key="i+'-'+p">
-                                <button type="button" x-show="p!=='…'" @click="groupPage=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===groupPage ? 'border-[#2f3d8a] bg-[#2f3d8a] text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
+                                <button type="button" x-show="p!=='…'" @click="groupPage=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===groupPage ? 'border-primary bg-primary text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
                                 <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
                             </template>
                             <button type="button" @click="groupPage=Math.min(groupLastPage,groupPage+1)" :disabled="groupPage>=groupLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
@@ -291,8 +291,8 @@
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <h3 class="px-1 pb-2.5 text-sm font-bold text-slate-900">Akses Cepat</h3>
+                <div class="rounded-xl border border-border bg-card p-3 shadow-sm">
+                    <h3 class="px-1 pb-2.5 text-sm font-bold text-foreground">Akses Cepat</h3>
                     <div class="grid grid-cols-2 gap-2.5">
                         <x-capstone::feature-link href="/admin/finalization" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-emerald-300 hover:bg-emerald-50/40">
                             <span class="flex h-7 w-7 items-center justify-center text-emerald-500"><x-capstone::icon name="CircleCheck" size="22" /></span>
@@ -309,8 +309,8 @@
                             <p class="mt-2.5 text-[13px] font-bold text-slate-800">Manage Periode</p>
                             <p class="mt-0.5 text-xs text-slate-400">Periode</p>
                         </x-capstone::feature-link>
-                        <x-capstone::feature-link href="/admin/schedule" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-blue-300 hover:bg-blue-50/40">
-                            <span class="flex h-7 w-7 items-center justify-center text-blue-500"><x-capstone::icon name="Calendar" size="22" /></span>
+                        <x-capstone::feature-link href="/admin/schedule" class="rounded-xl border border-slate-200 p-3.5 transition-colors hover:border-primary/30 hover:bg-accent/40">
+                            <span class="flex h-7 w-7 items-center justify-center text-primary"><x-capstone::icon name="Calendar" size="22" /></span>
                             <p class="mt-2.5 text-[13px] font-bold text-slate-800">Jadwal</p>
                             <p class="mt-0.5 text-xs text-slate-400">Lihat Jadwal</p>
                         </x-capstone::feature-link>

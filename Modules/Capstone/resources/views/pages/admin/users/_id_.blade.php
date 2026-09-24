@@ -15,7 +15,7 @@
             <div class="flex items-center gap-4">
                 <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xl font-bold text-slate-500" x-text="initials(user)"></span>
                 <div>
-                    <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold tracking-tight text-slate-900"><span x-text="user.name"></span><span x-show="user.is_sso" class="rounded-full border border-violet-400 px-2.5 py-0.5 text-xs font-semibold text-violet-600">SSO</span></h1>
+                    <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold tracking-tight text-foreground"><span x-text="user.name"></span><span x-show="user.is_sso" class="rounded-full border border-violet-400 px-2.5 py-0.5 text-xs font-semibold text-violet-600">SSO</span></h1>
                     <p class="mt-1 text-sm text-slate-500" x-text="[user.nim,user.nip].filter(Boolean).join(' / ')||'—'"></p>
                 </div>
             </div>
@@ -55,15 +55,15 @@
                 </div>
             </div>
 
-            <div class="rounded-xl border border-slate-200 p-4 sm:p-5">
+            <div class="rounded-xl border border-border p-4 sm:p-5">
                 <div class="grid gap-6 md:grid-cols-2">
                     <div>
-                        <h2 class="text-base font-bold text-slate-900">Role &amp; Permissions</h2>
+                        <h2 class="text-base font-bold text-foreground">Role &amp; Permissions</h2>
                         <p class="mt-1.5 text-sm text-slate-500">Manage roles and module permissions for each user</p>
                     </div>
                     <div>
                         <p class="mb-2 text-sm text-slate-500">Acces Role</p>
-                        <div class="rounded-xl border border-[#2f3d8a] px-3 py-2" aria-label="Access Role (lihat saja)">
+                        <div class="rounded-xl border border-primary px-3 py-2" aria-label="Access Role (lihat saja)">
                             <span class="flex flex-wrap gap-1.5">
                                 <template x-for="slug in user.roles" :key="slug">
                                     <span class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[13px] font-medium text-slate-800" x-text="roleLabel(slug)"></span>

@@ -36,7 +36,7 @@
             <span class="text-sm text-slate-800">Showing <span x-text="docFrom"></span> to <span x-text="docTo"></span> of, <span x-text="docTotal"></span> results</span>
             <div class="ml-auto flex items-center gap-1.5">
                 <button type="button" @click="docPage=Math.max(1,docCurrentPage-1)" :disabled="docCurrentPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:text-slate-300" aria-label="Previous page"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
-                <template x-for="p in docPageList" :key="'doc-'+p"><button type="button" @click="typeof p === 'number' && (docPage=p)" :disabled="typeof p !== 'number'" class="rounded-lg px-3 py-1.5 text-sm font-medium" :class="p===docCurrentPage ? 'bg-[#2f3d8a] text-white' : 'border border-slate-200 text-slate-600'" x-text="p"></button></template>
+                <template x-for="p in docPageList" :key="'doc-'+p"><button type="button" @click="typeof p === 'number' && (docPage=p)" :disabled="typeof p !== 'number'" class="rounded-lg px-3 py-1.5 text-sm font-medium" :class="p===docCurrentPage ? 'bg-primary text-white' : 'border border-slate-200 text-slate-600'" x-text="p"></button></template>
                 <button type="button" @click="docPage=Math.min(docTotalPages,docCurrentPage+1)" :disabled="docCurrentPage>=docTotalPages" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:text-slate-300" aria-label="Next page"><x-capstone::icon name="ChevronRight" class="size-4" /></button>
             </div>
         </div>

@@ -18,7 +18,7 @@
                     <div @click="selectedDate=day.key" @keydown.enter.self="selectedDate=day.key" @keydown.space.self.prevent="selectedDate=day.key" tabindex="0" role="button"
                         :aria-label="day.key+', '+eventsFor(day.key).length+' events'" :aria-pressed="day.key===selectedDate"
                         class="min-h-[64px] sm:min-h-[100px] min-w-0 cursor-pointer border-r border-b p-1 sm:p-2 transition-colors hover:bg-gray-50"
-                        :class="[!day.current && 'bg-gray-50/50',day.key===selectedDate && 'bg-blue-50/50',(index+1)%7===0 && 'border-r-0',index>=days.length-7 && 'border-b-0']">
+                        :class="[!day.current && 'bg-gray-50/50',day.key===selectedDate && 'bg-accent/50',(index+1)%7===0 && 'border-r-0',index>=days.length-7 && 'border-b-0']">
                         <div class="mb-1 flex justify-center"><span class="inline-flex h-7 w-7 items-center justify-center text-sm font-medium" :class="day.today ? 'rounded-full bg-black text-white' : day.current ? 'text-gray-900' : 'text-gray-400'" x-text="day.number"></span></div>
                         <div class="space-y-1">
                             <template x-for="event in eventsFor(day.key).slice(0,3)" :key="event._key">

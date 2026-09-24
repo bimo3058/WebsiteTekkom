@@ -12,7 +12,7 @@
             <x-capstone::button variant="destructive" @click="openDelete()"><x-capstone::icon name="Trash2" size="16" /> Hapus Grup</x-capstone::button>
         </div>
 
-        <h1 class="text-2xl font-bold tracking-tight text-slate-900" x-text="group.code || ('Group '+group.id)"></h1>
+        <h1 class="text-2xl font-bold tracking-tight text-foreground" x-text="group.code || ('Group '+group.id)"></h1>
 
         <div class="grid gap-x-10 gap-y-4 md:grid-cols-2">
             <div class="space-y-4">
@@ -26,7 +26,7 @@
                 </div>
                 <div class="grid grid-cols-[130px_1fr] items-center gap-3">
                     <p class="text-sm text-slate-500">Progress</p>
-                    <p class="flex items-center gap-2 text-sm font-medium text-slate-800"><span x-text="progressPct+'%'"></span><span class="h-2 w-32 overflow-hidden rounded-full bg-slate-200"><span class="block h-full rounded-full bg-[#2f3d8a]" :style="'width:'+progressPct+'%'"></span></span></p>
+                    <p class="flex items-center gap-2 text-sm font-medium text-slate-800"><span x-text="progressPct+'%'"></span><span class="h-2 w-32 overflow-hidden rounded-full bg-slate-200"><span class="block h-full rounded-full bg-primary" :style="'width:'+progressPct+'%'"></span></span></p>
                 </div>
                 <div class="grid grid-cols-[130px_1fr] items-center gap-3">
                     <p class="text-sm text-slate-500">Ketua Kelompok</p>
@@ -96,18 +96,18 @@
             </div>
         </div>
 
-        <div class="rounded-xl border border-slate-200 p-3">
+        <div class="rounded-xl border border-border p-3">
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <template x-for="ph in phases" :key="ph.phase">
-                    <div class="rounded-xl border bg-white" :class="group.workflow?.current_phase===ph.phase ? 'border-[#2f3d8a] shadow-sm' : 'border-slate-200'">
+                    <div class="rounded-xl border bg-white" :class="group.workflow?.current_phase===ph.phase ? 'border-primary shadow-sm' : 'border-border'">
                         <div class="flex items-center justify-between border-b border-slate-100 px-3.5 py-2.5">
-                            <p class="text-sm font-bold text-slate-900" x-text="phaseLabel(ph.phase)"></p>
+                            <p class="text-sm font-bold text-foreground" x-text="phaseLabel(ph.phase)"></p>
                             <span class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="phasePill(ph.status)" x-text="phasePillLabel(ph.status)"></span>
                         </div>
                         <div class="space-y-1.5 px-3.5 py-3 text-[13px]">
                             <template x-for="doc in ph.documents" :key="doc.type">
                                 <p class="flex items-center gap-1.5" :class="docRowClass(doc.status)">
-                                    <x-capstone::icon name="CircleCheck" size="15" x-show="doc.status==='APPROVED'" class="text-[#2f3d8a]" />
+                                    <x-capstone::icon name="CircleCheck" size="15" x-show="doc.status==='APPROVED'" class="text-primary" />
                                     <x-capstone::icon name="CircleAlert" size="15" x-show="doc.status!=='APPROVED' && doc.status!=='missing'" class="text-amber-500" />
                                     <x-capstone::icon name="CircleCheck" size="15" x-show="doc.status==='missing'" class="text-slate-300" />
                                     <span class="font-medium" x-text="doc.type"></span>
@@ -121,18 +121,18 @@
         </div>
 
         <div class="grid gap-3 lg:grid-cols-2">
-            <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
-                <h3 class="border-b border-slate-100 px-4 py-2.5 text-sm font-bold text-slate-900">Dokumen</h3>
+            <div class="rounded-xl border border-border bg-card shadow-sm">
+                <h3 class="border-b border-slate-100 px-4 py-2.5 text-sm font-bold text-foreground">Dokumen</h3>
                 <div class="divide-y divide-slate-100">
                     <template x-for="doc in group.documents || []" :key="doc.id">
                         <div class="flex items-center justify-between gap-3 px-4 py-2.5 text-[13px]"><span class="text-slate-600" x-text="doc.phase+' / '+doc.document_type"></span><span class="rounded-full px-2 py-0.5 text-[11px] font-medium" :class="doc.status==='APPROVED' ? 'bg-emerald-50 text-emerald-600' : doc.status==='REJECTED' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'" x-text="doc.status"></span></div>
                     </template>
                     <p x-show="!(group.documents||[]).length" class="px-4 py-6 text-center text-sm text-slate-400">Belum ada dokumen.</p>
                 </div>
-                <a :href="url('/admin/document-uploads')+'?group_id='+group.id" class="block px-4 py-2.5 text-[13px] font-medium text-[#2f3d8a] hover:underline">Lihat unggahan</a>
+                <a :href="url('/admin/document-uploads')+'?group_id='+group.id" class="block px-4 py-2.5 text-[13px] font-medium text-primary hover:underline">Lihat unggahan</a>
             </div>
-            <div class="rounded-xl border border-slate-200 bg-white shadow-sm">
-                <h3 class="border-b border-slate-100 px-4 py-2.5 text-sm font-bold text-slate-900">Jadwal</h3>
+            <div class="rounded-xl border border-border bg-card shadow-sm">
+                <h3 class="border-b border-slate-100 px-4 py-2.5 text-sm font-bold text-foreground">Jadwal</h3>
                 <div class="divide-y divide-slate-100">
                     <template x-for="schedule in group.schedules || []" :key="schedule.id">
                         <p class="px-4 py-2.5 text-[13px] text-slate-600" x-text="(schedule.date || '').slice(0,10)+' '+(schedule.start_time || '').slice(0,5)+' — '+(schedule.type || '')+' '+(schedule.room || '')"></p>
@@ -156,7 +156,7 @@
 
     <x-capstone::dialog id="group-flag" title="Flag Mahasiswa">
         <div class="mt-4 space-y-4">
-            <p class="text-sm text-slate-600">Tandai <span class="font-semibold text-slate-900" x-text="flagTarget ? memberName(flagTarget) : ''"></span> dari periode ini?</p>
+            <p class="text-sm text-slate-600">Tandai <span class="font-semibold text-foreground" x-text="flagTarget ? memberName(flagTarget) : ''"></span> dari periode ini?</p>
             <p class="rounded-lg border border-red-200 bg-red-50 p-3 text-[13px] text-red-700">Mahasiswa akan dikeluarkan dari kelompok dan periode. Nilai yang sudah ada tetap tersimpan. Tindakan ini dapat dibatalkan lewat Unflag.</p>
             <textarea x-model="flagReason" rows="3" maxlength="1000" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Alasan flag (wajib)..." aria-label="Alasan flag"></textarea>
             <div class="flex justify-end gap-2">
@@ -168,7 +168,7 @@
 
     <x-capstone::dialog id="group-unflag" title="Kembalikan Mahasiswa">
         <div class="mt-4 space-y-4">
-            <p class="text-sm text-slate-600">Kembalikan <span class="font-semibold text-slate-900" x-text="unflagTarget ? memberName(unflagTarget) : ''"></span> ke status aktif? Mahasiswa perlu bergabung kembali ke kelompok.</p>
+            <p class="text-sm text-slate-600">Kembalikan <span class="font-semibold text-foreground" x-text="unflagTarget ? memberName(unflagTarget) : ''"></span> ke status aktif? Mahasiswa perlu bergabung kembali ke kelompok.</p>
             <div class="flex justify-end gap-2">
                 <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
                 <x-capstone::button @click="sendUnflag()" ::disabled="saving">Kembalikan</x-capstone::button>
