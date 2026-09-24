@@ -100,7 +100,7 @@
     font-size: 13px; font-weight: 500; color: var(--c-fg-sec);
     cursor: pointer; text-decoration: none; background: none; border: none;
     font-family: inherit; transition: background .12s, color .12s;
-    white-space: nowrap; overflow: hidden; width: 100%;
+    white-space: nowrap; overflow: hidden; width: 100%; text-align: left;
 }
 .sb-item svg { width: 16px; height: 16px; color: var(--c-fg-muted); flex-shrink: 0; }
 .sb-item:hover { background: var(--c-bg); }
@@ -165,5 +165,7 @@
     .sitkom-topbar-meta { display: none; }
     .sitkom-topbar-user { padding-left: 8px; gap: 6px; }
     .sitkom-topbar-avatar { width: 30px; height: 30px; font-size: 10px; }
+    /* Capstone mobile sidebar has no explicit close button; backdrop tap, Escape, or navigation closes it. */
+    .sitkom-shell-capstone .mobile-navigation-close { display: none !important; }
 }
 </style>
