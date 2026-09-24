@@ -37,7 +37,11 @@
     </div>
 
     <div>
-        <h2 class="text-base font-bold text-gray-900 border-l-4 border-primary pl-3 mb-4">Upload Document</h2>
+        <div class="flex items-center gap-2 mb-4">
+            <span class="h-5 w-1 rounded-full bg-primary"></span>
+            <h2 class="text-[15px] font-bold text-foreground">Upload Document</h2>
+            <span class="h-px flex-1 bg-slate-200"></span>
+        </div>
         <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
             @include('capstone::pages.mahasiswa.dashboard._documents')
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm">
