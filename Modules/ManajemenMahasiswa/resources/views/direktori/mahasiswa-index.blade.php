@@ -163,15 +163,6 @@
         grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
         gap: 12px;
     }
-    .stat-note {
-        font-size: 11px;
-        color: var(--c-fg-muted);
-        font-weight: 500;
-        margin: 10px 0 0 2px;
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
     /* Border, bayangan, dan efek hover sama dengan kartu statistik dashboard global */
     .stat-card {
         background: #ffffff;
@@ -208,17 +199,6 @@
         color: var(--c-fg-muted);
         font-weight: 500;
     }
-
-    .sso-badge {
-        font-size: 9px;
-        font-weight: 700;
-        padding: 2px 6px;
-        border-radius: 6px;
-        background: var(--c-primary-subtle);
-        color: var(--c-primary);
-        letter-spacing: 0.05em;
-    }
-
 </style>
 
 @php
@@ -229,7 +209,6 @@
 <!-- Page Header -->
 <x-manajemenmahasiswa::ui.page-header bordered title="Direktori Mahasiswa">
     Daftar seluruh mahasiswa yang terdaftar di program studi
-    <span class="sso-badge ms-1">SSO UNDIP</span>
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
@@ -252,7 +231,7 @@
 @endif
 
     <!-- Stat Cards -->
-<div class="stat-grid">
+<div class="stat-grid mb-4">
     <div class="col">
         <div class="stat-card p-3">
             <div class="stat-icon tone-primary">
@@ -359,11 +338,6 @@
             </div>
         </div>
     </div>
-</div>
-
-<div class="stat-note mb-4">
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-    <span>Angka pada kartu mengikuti filter <strong>Angkatan</strong> dan <strong>pencarian</strong>, tetapi sengaja tidak mengikuti filter <strong>Status</strong> — supaya rincian tiap status tetap terlihat. Alumni tidak dihitung di sini (lihat Direktori Alumni).</span>
 </div>
 
 <!-- Mahasiswa Table -->

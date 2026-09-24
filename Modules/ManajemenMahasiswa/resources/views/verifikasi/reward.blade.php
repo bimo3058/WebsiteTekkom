@@ -106,10 +106,6 @@
         Tinjau pengajuan klaim prestasi mahasiswa, lalu setujui atau tolak konversinya menjadi nilai mata kuliah sesuai SK FT 774.
     @else
         Pantau pengajuan klaim prestasi mahasiswa untuk dikonversi menjadi nilai mata kuliah sesuai SK FT 774.
-        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Mode Pemantauan — hanya melihat (tanpa tinjau/setujui/tolak)
-        </span>
     @endif
 </x-manajemenmahasiswa::ui.page-header>
 
