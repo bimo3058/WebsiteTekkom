@@ -9,30 +9,6 @@
        halaman ini sama dengan Edit Mahasiswa: konten di dalam kotak putih di atas
        latar abu, seperti dashboard Super Admin. */
 
-    .back-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    /* Tombol sekunder: sama dengan tombol outline "Audit Logs"/"Users" di dashboard global */
-    .btn-back {
-        font-weight: 600;
-        font-size: 13px;
-        text-decoration: none;
-        border-radius: 8px;
-        padding: 8px 16px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        background: #fff;
-        border: 1px solid var(--c-border);
-        color: var(--c-fg-sec);
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
-        transition: all 0.2s;
-    }
-    .btn-back:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-fg); }
-
     .edit-card {
         background: #fff;
         border-radius: 14px;
@@ -76,31 +52,14 @@
     .form-control.is-invalid, .form-select.is-invalid { border-color: var(--c-error); }
     .form-control.is-invalid:focus, .form-select.is-invalid:focus { box-shadow: 0 0 0 3px var(--c-error-subtle); }
     .invalid-feedback { color: var(--c-error); }
-    /* Tombol utama solid, sama dengan tombol "Permissions" di dashboard global */
-    .btn-save {
-        background: var(--c-primary);
-        color: #ffffff;
-        border: none;
-        padding: 11px 28px;
-        font-weight: 600;
-        font-size: 14px;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-save:hover {
-        background: var(--c-primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
-    }
 </style>
 @endpush
 
 <!-- Back Button -->
 <div class="mb-3">
-    <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="detail-back" title="Kembali" aria-label="Kembali">
-        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-        <span class="detail-back-label">Kembali</span>
+    <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm" title="Kembali" aria-label="Kembali">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        Kembali
     </a>
 </div>
 

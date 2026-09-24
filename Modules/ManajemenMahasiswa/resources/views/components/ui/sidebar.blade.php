@@ -375,11 +375,27 @@
         @endphp
         @if($canViewVerifikasi)
             @php
+                // Dropdown terbuka/toggle aktif kalau berada di salah satu dari
+                // ketiga subbab. $verifIndexActive & $verifRewardActive dipakai
+                // terpisah untuk state aktif per-link, supaya Klaim Prestasi
+                // (route sendiri, tanpa query "tab") tidak ikut ke-highlight
+                // sebagai Verifikasi Prestasi begitu juga sebaliknya.
                 $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
+                $verifIndexActive = request()->routeIs('manajemenmahasiswa.verifikasi.index');
+                $verifRewardActive = request()->routeIs('manajemenmahasiswa.verifikasi.reward.*');
                 $verifTab = request('tab', 'prestasi');
 
-                // Jumlah pending prestasi/riwayat kini dihitung oleh
+                // Jumlah pending prestasi/riwayat/klaim reward kini dihitung oleh
                 // NotifikasiTugasService dan tampil di lonceng topbar.
+
+                // Alumni cuma bisa lihat (tidak lagi verifikasi/klaim aktif),
+                // jadi labelnya dibuat "Riwayat ..." biar tidak menyesatkan.
+                // Role lain (mahasiswa, pengurus, superadmin, dst) tetap pakai
+                // istilah "Verifikasi"/"Klaim" karena mereka memang jadi aktor.
+                $isAlumniSidebar = in_array('alumni', $sidebarRoles);
+                $verifLabelPrestasi = $isAlumniSidebar ? 'Riwayat Prestasi' : 'Verifikasi Prestasi';
+                $verifLabelKlaim = $isAlumniSidebar ? 'Riwayat Klaim Prestasi' : 'Klaim Prestasi';
+                $verifLabelKegiatan = $isAlumniSidebar ? 'Riwayat Kegiatan' : 'Verifikasi Kegiatan';
             @endphp
             <div class="sidebar-dropdown {{ $verifActive ? 'open' : '' }}">
                 <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $verifActive ? 'active' : '' }}"
@@ -395,12 +411,16 @@
                 </a>
                 <div class="sidebar-dropdown-menu">
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}"
-                        class="sub-item {{ $verifActive && $verifTab === 'prestasi' ? 'active' : '' }}">
-                        <span class="nav-label">Verifikasi Prestasi</span>
+                        class="sub-item {{ $verifIndexActive && $verifTab === 'prestasi' ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelPrestasi }}</span>
+                    </a>
+                    <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
+                        class="sub-item {{ $verifRewardActive ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelKlaim }}</span>
                     </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']) }}"
-                        class="sub-item {{ $verifActive && $verifTab === 'riwayat' ? 'active' : '' }}">
-                        <span class="nav-label">Verifikasi Kegiatan</span>
+                        class="sub-item {{ $verifIndexActive && $verifTab === 'riwayat' ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelKegiatan }}</span>
                     </a>
                 </div>
             </div>

@@ -57,7 +57,7 @@
         @endif
         @if($proker->status === 'selesai')
             <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
-               class="mk-kegiatan-btn mk-kegiatan-btn--primary mk-kegiatan-btn--compact">
+               class="mk-btn mk-btn--primary mk-btn--sm">
                 Lihat di Arsip &rarr;
             </a>
         @endif

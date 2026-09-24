@@ -347,28 +347,11 @@
         color: var(--c-fg-muted);
         font-weight: 400;
     }
+    /* Hanya posisi; warna & ukuran dari .mk-btn. */
     .file-preview-item .btn-remove-file {
         position: absolute;
         top: 4px;
         right: 4px;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: var(--c-error-subtle);
-        color: var(--c-error);
-        border: 1px solid transparent;
-        font-size: 12px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s;
-        line-height: 1;
-    }
-    .file-preview-item .btn-remove-file:hover {
-        background: var(--c-error);
-        color: var(--c-surface);
-        transform: scale(1.1);
     }
     .doc-preview-item {
         display: flex;
@@ -402,23 +385,7 @@
         color: var(--c-fg-muted);
     }
     .doc-preview-item .btn-remove-doc {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background: var(--c-error-subtle);
-        color: var(--c-error);
-        border: 1px solid transparent;
-        font-size: 13px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         flex-shrink: 0;
-        transition: all 0.15s;
-    }
-    .doc-preview-item .btn-remove-doc:hover {
-        background: var(--c-error);
-        color: var(--c-surface);
     }
     .existing-file-label {
         font-size: 12px;
@@ -534,8 +501,8 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: var(--c-error-subtle);
-        color: var(--c-error);
+        background: transparent;
+        color: var(--c-primary);
         border: 1px solid transparent;
         font-size: 11px;
         cursor: pointer;
@@ -548,8 +515,8 @@
         flex-shrink: 0;
     }
     .panitia-chip-remove:hover {
-        background: var(--c-error);
-        color: var(--c-surface);
+        background: var(--c-primary);
+        color: #fff;
     }
     .panitia-search-input {
         border: none;
@@ -990,7 +957,7 @@
                         <div class="doc-name">{{ $doc->nama_file }}</div>
                         <div class="doc-size">{{ strtoupper($ext) }}</div>
                     </div>
-                    <a href="{{ $doc->url }}" target="_blank" class="mk-kegiatan-btn mk-kegiatan-btn--download mk-kegiatan-btn--icon mk-kegiatan-btn--icon-sm" title="Unduh dokumen" aria-label="Unduh dokumen {{ $doc->nama_file }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
+                    <a href="{{ $doc->url }}" target="_blank" class="mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" title="Unduh dokumen" aria-label="Unduh dokumen {{ $doc->nama_file }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>
                     <button type="button" class="btn-remove-doc mk-btn mk-btn--secondary mk-btn--sm mk-btn--icon" onclick="markFileForDeletion({{ $doc->id }})" title="Hapus dokumen" aria-label="Hapus dokumen {{ $doc->nama_file }}"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 </div>
             @endforeach

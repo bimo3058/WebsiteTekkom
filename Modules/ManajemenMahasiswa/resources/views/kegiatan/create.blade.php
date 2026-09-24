@@ -333,28 +333,11 @@
         color: var(--c-fg-muted);
         font-weight: 400;
     }
+    /* Hanya posisi; warna & ukuran dari .mk-btn. */
     .file-preview-item .btn-remove-file {
         position: absolute;
         top: 4px;
         right: 4px;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        background: var(--c-error-subtle);
-        color: var(--c-error);
-        border: 1px solid transparent;
-        font-size: 12px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.15s;
-        line-height: 1;
-    }
-    .file-preview-item .btn-remove-file:hover {
-        background: var(--c-error);
-        color: var(--c-surface);
-        transform: scale(1.1);
     }
     .doc-preview-item {
         display: flex;
@@ -388,23 +371,7 @@
         color: var(--c-fg-muted);
     }
     .doc-preview-item .btn-remove-doc {
-        width: 26px;
-        height: 26px;
-        border-radius: 50%;
-        background: var(--c-error-subtle);
-        color: var(--c-error);
-        border: 1px solid transparent;
-        font-size: 13px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         flex-shrink: 0;
-        transition: all 0.15s;
-    }
-    .doc-preview-item .btn-remove-doc:hover {
-        background: var(--c-error);
-        color: var(--c-surface);
     }
 
     /* ── Back Button ── */
@@ -511,8 +478,8 @@
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: var(--c-error-subtle);
-        color: var(--c-error);
+        background: transparent;
+        color: var(--c-primary);
         border: 1px solid transparent;
         font-size: 11px;
         cursor: pointer;
@@ -525,8 +492,8 @@
         flex-shrink: 0;
     }
     .panitia-chip-remove:hover {
-        background: var(--c-error);
-        color: var(--c-surface);
+        background: var(--c-primary);
+        color: #fff;
     }
     .panitia-search-input {
         border: none;

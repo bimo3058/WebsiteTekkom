@@ -96,6 +96,18 @@ class NotifikasiTugasService
                 'url'   => route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']),
                 'tone'  => 'danger',
             ];
+
+            // Klaim reward (konversi nilai MK, SK FT 774) antreannya terpisah dari
+            // verifikasi prestasi: yang diputus di sini pengajuan reward, bukan
+            // benar-tidaknya prestasi. Halaman tujuannya sudah menyaring "menunggu".
+            $tugas[] = [
+                'key'   => 'klaim-prestasi',
+                'label' => 'Klaim Prestasi',
+                'desc'  => 'klaim reward prestasi menunggu keputusan',
+                'count' => Prestasi::rewardDiajukan()->count(),
+                'url'   => route('manajemenmahasiswa.verifikasi.reward.index'),
+                'tone'  => 'danger',
+            ];
         }
 
         // ── Laporan forum ────────────────────────────────────────────────────

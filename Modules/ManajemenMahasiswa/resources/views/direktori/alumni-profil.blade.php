@@ -39,16 +39,6 @@
         margin: 0;
     }
     /* Tombol Download CV di atas banner navy — sama dengan Detail Mahasiswa & Detail Alumni */
-    .btn-banner-cv {
-        background: #fff;
-        border: 1px solid #fff;
-        color: var(--c-primary);
-    }
-    .btn-banner-cv:hover {
-        background: var(--c-grey-0);
-        color: var(--c-primary-hover);
-    }
-
     .card-section {
         background: #fff;
         border-radius: 14px;
@@ -153,23 +143,6 @@
     .form-control-custom.is-invalid, .form-select-custom.is-invalid { border-color: var(--c-error); }
     .form-control-custom.is-invalid:focus, .form-select-custom.is-invalid:focus { box-shadow: 0 0 0 3px var(--c-error-subtle); }
     .invalid-feedback { color: var(--c-error); }
-    /* Tombol utama solid, sama dengan tombol "Permissions" di dashboard global */
-    .btn-submit {
-        background: var(--c-primary);
-        color: #ffffff;
-        border: none;
-        padding: 11px 28px;
-        font-weight: 600;
-        font-size: 14px;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-submit:hover {
-        background: var(--c-primary-hover);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
-    }
 </style>
 @endpush
 
@@ -198,7 +171,7 @@
     </div>
     <div>
         <a href="{{ route('manajemenmahasiswa.direktori.alumni.profil.cv') }}" target="_blank"
-           class="btn-banner-cv" style="padding: 10px 20px; border-radius: 10px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 600; transition: all 0.2s;">
+           class="mk-btn mk-btn--secondary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Download CV
         </a>

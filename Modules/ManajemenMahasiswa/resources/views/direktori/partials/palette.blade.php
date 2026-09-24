@@ -38,34 +38,6 @@
         --c-error-200: #95122B;
     }
 
-    /* Tombol kembali standar untuk seluruh halaman Direktori. */
-    .detail-back {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: auto;
-        min-width: 0;
-        height: 32px;
-        padding: 0 12px;
-        color: var(--c-fg-sec);
-        background: #fff;
-        border: 1px solid var(--c-border);
-        border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
-        text-decoration: none;
-        transition: all .2s;
-    }
-    .detail-back:hover {
-        background: var(--c-bg);
-        color: var(--c-fg);
-    }
-    .detail-back-label {
-        color: inherit;
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 1.2;
-    }
-
     /* ── Nada ikon kartu statistik (SVG memakai stroke="currentColor") ── */
     .tone-primary { background: var(--c-primary-subtle); color: var(--c-primary); }
     .tone-success { background: var(--c-success-subtle); color: var(--c-success); }

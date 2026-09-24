@@ -114,20 +114,6 @@
             Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
         </span>
     @endunless
-
-    <x-slot:actions>
-        @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
-            <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
-               style="background:var(--c-primary); color:#fff; font-weight:600; font-size:13px; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
-               onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"/><path d="M9 12l2 2 4-4"/><path d="M16 5h6M19 2v6"/></svg>
-                Klaim Reward
-                @if($pendingPrestasiReward > 0)
-                    <span style="background:var(--c-card); color:var(--c-primary); font-size:11px; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
-                @endif
-            </a>
-        @endif
-    </x-slot:actions>
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
@@ -358,18 +344,10 @@
                                 'readonly' => $rwMilikSendiri
                                     ? 'Ini pengajuan Anda sendiri — verifikasinya harus dilakukan verifikator lain.'
                                     : ($rwDiputus
-                                        ? (($canVerify ?? true)
-                                            ? 'Pengajuan ini sudah diverifikasi. Gunakan "Batalkan Verifikasi" bila keputusannya perlu ditinjau ulang.'
-                                            : 'Pengajuan ini sudah diverifikasi.')
+                                        // Keputusan verifikasi final — tidak ada "Batalkan
+                                        // Verifikasi" lagi (lihat catatan di routes/web.php).
+                                        ? 'Pengajuan ini sudah diverifikasi. Keputusan verifikasi bersifat final.'
                                         : 'Anda hanya memiliki akses lihat — verifikasi dilakukan oleh admin kemahasiswaan.'),
-                                // Aksi mundur untuk baris yang sudah diputus — satu-satunya
-                                // jalan pulang dari persetujuan/penolakan yang keliru.
-                                'aksi'     => ($canVerify ?? true) && $rwDiputus && ! $rwMilikSendiri ? [
-                                    'label'   => 'Batalkan Verifikasi',
-                                    'gaya'    => 'tolak',
-                                    'panggil' => 'openBatalVerifikasi',
-                                    'args'    => ['riwayat', $rw->id, $rw->nama_kegiatan_manual ?? 'kegiatan ini'],
-                                ] : null,
                                 // Verifikator, waktu, & catatannya hanya ada pada baris yang sudah
                                 // diputus. Kolom Status di tabel kini memuat badge saja, jadi di
                                 // sinilah alasan keputusan dibaca — utuh, tanpa dipotong.
@@ -476,10 +454,6 @@
                             $pDiputus = $p->verification_status !== 'pending';
                             // Lihat catatan yang sama pada tab Riwayat Kegiatan
                             $pMilikSendiri = $p->kemahasiswaan?->user_id === auth()->id();
-                            // Prestasi yang rewardnya sudah berjalan tidak boleh dikembalikan
-                            // ke "menunggu" — klaimnya akan menggantung. Urutannya dibalik
-                            // dari halaman Klaim Reward lebih dulu.
-                            $pAdaKlaim = $p->reward_status !== $P::CLAIM_BELUM_AJUKAN;
                             $tinjauPayload = [
                                 'id'       => $p->id,
                                 'jenis'    => 'prestasi',
@@ -490,18 +464,10 @@
                                 'readonly' => $pMilikSendiri
                                     ? 'Ini pengajuan Anda sendiri — verifikasinya harus dilakukan verifikator lain.'
                                     : ($pDiputus
-                                        ? (!($canVerify ?? true)
-                                            ? 'Pengajuan ini sudah diverifikasi.'
-                                            : ($pAdaKlaim
-                                                ? 'Pengajuan ini sudah diverifikasi dan rewardnya sudah diklaim. Batalkan klaim rewardnya lebih dulu di halaman Klaim Reward bila keputusannya perlu ditinjau ulang.'
-                                                : 'Pengajuan ini sudah diverifikasi. Gunakan "Batalkan Verifikasi" bila keputusannya perlu ditinjau ulang.'))
+                                        // Final — yang bisa dibatalkan hanya klaim rewardnya,
+                                        // di halaman Klaim Prestasi (butuh persetujuan fakultas).
+                                        ? 'Pengajuan ini sudah diverifikasi. Keputusan verifikasi bersifat final.'
                                         : 'Anda hanya memiliki akses lihat — verifikasi dilakukan oleh admin kemahasiswaan.'),
-                                'aksi'     => ($canVerify ?? true) && $pDiputus && ! $pMilikSendiri && ! $pAdaKlaim ? [
-                                    'label'   => 'Batalkan Verifikasi',
-                                    'gaya'    => 'tolak',
-                                    'panggil' => 'openBatalVerifikasi',
-                                    'args'    => ['prestasi', $p->id, $p->nama_prestasi],
-                                ] : null,
                                 // Verifikator, waktu, & catatannya hanya ada pada baris yang sudah
                                 // diputus. Kolom Status di tabel kini memuat badge saja, jadi di
                                 // sinilah alasan keputusan dibaca — utuh, tanpa dipotong.
@@ -603,68 +569,5 @@
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal', [
     'tinjauAksi' => $canVerify ?? true,
 ])
-
-@if($canVerify ?? true)
-    {{-- Konfirmasi Batalkan Verifikasi — mengembalikan baris yang sudah diputus
-         ke daftar menunggu. Dikonfirmasi karena keputusan verifikator ikut
-         terhapus (nama, waktu, dan catatannya), bukan sekadar status berubah. --}}
-    <div class="modal fade" id="batalVerifModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
-            <div class="modal-content">
-                <form method="POST" id="batalVerifForm">
-                    @csrf @method('PATCH')
-                    <div class="modal-body" style="padding: 28px 24px 20px; text-align: center;">
-                        <div style="width:60px; height:60px; border-radius:50%; background:var(--c-warning-subtle); display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--c-warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-                        </div>
-                        <h5 class="fw-bold mb-2" style="color:var(--c-fg);">Batalkan Verifikasi</h5>
-                        <p style="color:var(--c-fg-muted); font-size:14px; line-height:1.5; margin-bottom:0;">
-                            Kembalikan <strong id="bvNama"></strong> ke daftar menunggu?
-                            Keputusan sebelumnya beserta catatannya akan dihapus, dan pengajuan ini perlu diverifikasi ulang.
-                        </p>
-                    </div>
-                    <div class="modal-footer" style="justify-content:center; gap:8px;">
-                        <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" id="bvConfirmBtn"
-                                style="border-radius:10px; font-weight:600; font-size:14px; padding:10px 20px; border:none; cursor:pointer; color:#fff; background:var(--c-warning);">
-                            Ya, Batalkan Verifikasi
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Dipanggil modal Tinjau lewat nama fungsi global (payload "aksi"),
-        // pola yang sama dengan pembatalan klaim reward di halaman mahasiswa.
-        (function () {
-            const baseUrl = '{{ url("manajemen-mahasiswa/verifikasi") }}';
-            const modalEl = document.getElementById('batalVerifModal');
-            const form    = document.getElementById('batalVerifForm');
-            const namaEl  = document.getElementById('bvNama');
-            const btnEl   = document.getElementById('bvConfirmBtn');
-            if (!modalEl || !form) return;
-
-            window.openBatalVerifikasi = function (jenis, id, nama) {
-                form.action = baseUrl + '/' + jenis + '/' + id + '/batal-verifikasi';
-                // textContent — nama datang dari input mahasiswa
-                namaEl.textContent = '"' + nama + '"';
-                btnEl.disabled = false;
-                new bootstrap.Modal(modalEl).show();
-            };
-
-            form.addEventListener('submit', function () {
-                btnEl.disabled = true;
-                btnEl.style.opacity = '0.65';
-            });
-
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                btnEl.disabled = false;
-                btnEl.style.opacity = '';
-            });
-        })();
-    </script>
-@endif
 
 </x-dynamic-component>
