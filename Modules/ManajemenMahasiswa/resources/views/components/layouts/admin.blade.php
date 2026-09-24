@@ -288,9 +288,10 @@
         .sidebar-dropdown.open .dropdown-arrow {
             transform: rotate(180deg);
         }
+        /* Ukuran huruf sengaja tidak ditimpa: sub-item ikut `.sidebar a` (13px)
+           supaya sama dengan menu induk. */
         .sidebar-dropdown .sub-item {
-            font-size: 14px !important;
-            padding: 9px 16px !important;
+            padding: 7px 10px 7px 38px !important;
         }
 
         /* Utils */
