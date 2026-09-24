@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Http\Requests\Admin;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StorePeerReviewRequest extends FormRequest
@@ -17,14 +18,14 @@ class StorePeerReviewRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
             'reviews' => ['required', 'array', 'min:1'],
             'reviews.*.reviewee_id' => ['required', 'exists:students,id'],
-            'reviews.*.period_indicator_id' => ['required', 'exists:period_peer_review_indicators,id'],
+            'reviews.*.period_indicator_id' => ['required', 'exists:capstone_period_peer_review_indicators,id'],
             'reviews.*.score' => ['required', 'numeric', 'min:1', 'max:4'],
             'reviews.*.comment' => ['nullable', 'string'],
         ];

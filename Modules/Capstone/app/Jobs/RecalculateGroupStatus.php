@@ -2,12 +2,12 @@
 
 namespace Modules\Capstone\Jobs;
 
-use Modules\Capstone\Models\Group;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Modules\Capstone\Models\Group;
 
 /**
  * Recalculate group status based on member count.
@@ -53,6 +53,7 @@ class RecalculateGroupStatus implements ShouldQueue
             'READY_FOR_SEMPRO',
             'SEMPRO_DONE',
             'PDC2_ACTIVE',
+            'TA_DRAFT',
             'PDC2_READY_FOR_EXPO',
             'EXPO_REGISTERED',
             'EXPO_DONE',
