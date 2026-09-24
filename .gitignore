@@ -35,7 +35,6 @@ bootstrap/providers.php
 /scratch
 
 # AI assistant files
-.agents/
 .claude/
 CLAUDE.md
 PLAN_*.md

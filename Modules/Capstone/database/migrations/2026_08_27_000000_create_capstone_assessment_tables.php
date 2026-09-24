@@ -8,6 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Idempotent: these tables are already created by earlier migrations
+        // (2026_05_05_000022/000023, 2026_08_08_000000). Only create when missing.
         if (! Schema::hasTable('capstone_assessment_component_templates')) {
             Schema::create('capstone_assessment_component_templates', function (Blueprint $table) {
                 $table->id();

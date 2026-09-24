@@ -38,21 +38,14 @@ interface Period {
   is_active: boolean;
 }
 
-interface EvaluationTypeConfig {
-  id: string;
-  name: string;
-  total_components: number;
-  components: string[];
-}
-
-const EVALUATION_TYPES: EvaluationTypeConfig[] = [
-  { id: 'BIMBINGAN_SEMPRO', name: 'BIMBINGAN SEMPRO', total_components: 3, components: ['CPL-1', 'CPL-2', 'CPL-3'] },
-  { id: 'SEMPRO', name: 'SEMINAR PROPOSAL', total_components: 1, components: ['CPL-1', 'CPL-2', 'CPL-3'] },
-  { id: 'NILAI_DOSEN', name: 'NILAI DOSEN', total_components: 2, components: ['CPL-1', 'CPL-2', 'CPL-3'] },
-  { id: 'MILESTONE', name: 'MILESTONE', total_components: 1, components: ['CPL-1', 'CPL-2', 'CPL-3'] },
-  { id: 'EXPO', name: 'EXPO TA', total_components: 2, components: ['CPL-1', 'CPL-2', 'CPL-3'] },
-  { id: 'BIMBINGAN_TA', name: 'BIMBINGAN TA', total_components: 1, components: ['CPL-1', 'CPL-2', 'CPL-3'] },
-  { id: 'SIDANG_TA', name: 'SIDANG TA', total_components: 1, components: ['CPL-1', 'CPL-2', 'CPL-3'] },
+const EVALUATION_TYPES = [
+  { id: 'BIMBINGAN_SEMPRO', name: 'BIMBINGAN SEMPRO' },
+  { id: 'SEMPRO', name: 'SEMINAR PROPOSAL' },
+  { id: 'NILAI_DOSEN', name: 'NILAI DOSEN' },
+  { id: 'MILESTONE', name: 'MILESTONE' },
+  { id: 'EXPO', name: 'EXPO TA' },
+  { id: 'BIMBINGAN_TA', name: 'BIMBINGAN TA' },
+  { id: 'SIDANG_TA', name: 'SIDANG TA' },
 ];
 
 export default function TipePenilaianPage() {
@@ -63,6 +56,8 @@ export default function TipePenilaianPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [configs, setConfigs] = useState<Record<string, { total_components: number; components: string[] }>>({});
+  const [configsLoading, setConfigsLoading] = useState(false);
 
   const fetchPeriods = useCallback(async () => {
     try {
@@ -82,6 +77,31 @@ export default function TipePenilaianPage() {
     fetchPeriods();
   }, [fetchPeriods]);
 
+  useEffect(() => {
+    if (!selectedPeriod) return;
+    setConfigsLoading(true);
+    Promise.allSettled(
+      EVALUATION_TYPES.map(async (type) => {
+        const res = await api.get(`/admin/periods/${selectedPeriod}/assessment-config`, {
+          params: { type: type.id },
+        });
+        const data = res.data?.data ?? res.data;
+        const selected = data.selected_components || [];
+        return { id: type.id, total_components: selected.length, components: selected.map((c: { code: string }) => c.code) };
+      })
+    ).then((results) => {
+      const entries: Record<string, { total_components: number; components: string[] }> = {};
+      results.forEach((result) => {
+        if (result.status === 'fulfilled') {
+          entries[result.value.id] = { total_components: result.value.total_components, components: result.value.components };
+        }
+      });
+      setConfigs(entries);
+    }).finally(() => {
+      setConfigsLoading(false);
+    });
+  }, [selectedPeriod]);
+
   const filteredTypes = EVALUATION_TYPES.filter((type) =>
     type.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -95,8 +115,6 @@ export default function TipePenilaianPage() {
   const handleEdit = (typeId: string) => {
     router.push(`/admin/period-assessment-config/${typeId}/edit`);
   };
-
-  const selectedPeriodName = periods.find(p => p.id.toString() === selectedPeriod)?.name || 'Pilih Periode';
 
   if (loading) {
     return (
@@ -177,41 +195,62 @@ export default function TipePenilaianPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginatedTypes.map((type, index) => (
-                  <TableRow key={type.id} className="hover:bg-muted/30">
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <input type="checkbox" className="rounded border-gray-300" />
-                        {startIndex + index + 1}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{type.name}</TableCell>
-                    <TableCell>{type.total_components} Komponen</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {type.components.map((comp, idx) => (
-                          <Badge key={idx} variant="secondary" className="font-normal">
-                            {comp}
-                          </Badge>
-                        ))}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(type.id)}>
-                            Edit
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                {paginatedTypes.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      Tidak ada data
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : paginatedTypes.map((type, index) => {
+                  const config = configs[type.id];
+                  const totalComponents = config?.total_components ?? 0;
+                  const components = config?.components ?? [];
+                  return (
+                    <TableRow key={type.id} className="hover:bg-muted/30">
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" className="rounded border-gray-300" />
+                          {startIndex + index + 1}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">{type.name}</TableCell>
+                      <TableCell>
+                        {configsLoading && !config ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        ) : (
+                          `${totalComponents} Komponen`
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {configsLoading && !config ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {components.map((comp, idx) => (
+                              <Badge key={idx} variant="secondary" className="font-normal">
+                                {comp}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(type.id)}>
+                              Edit
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

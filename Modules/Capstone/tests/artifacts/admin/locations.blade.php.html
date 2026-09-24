@@ -5,14 +5,19 @@
     <meta name="csrf-token" content="">
     <title>Locations | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/locations","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
+    <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
+<script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
 <body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div x-show="pendingRequests > 0" x-cloak class="capstone-progress" role="status" aria-label="Sedang memproses permintaan">
+    <span class="capstone-progress-bar" aria-hidden="true"></span>
+</div>
 <div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
     <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+<aside data-mobile-sidebar class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
     <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
         <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
         <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
@@ -40,30 +45,31 @@
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/users"  title="Users" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Users</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/groups"  title="Groups" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Groups</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/locations"  title="Locations" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  bg-sidebar-accent font-medium">Locations</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Requirements</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
-                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Evaluation Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Period Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M13 5h8"  />
                     <path  d="M13 12h8"  />
                     <path  d="M13 19h8"  />
                     <path  d="m3 17 2 2 4-4"  />
                     <path  d="m3 7 2 2 4-4"  />
     </svg>
-<span x-show="!collapsed">Evaluation Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+<span x-show="!collapsed">Period Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
                     <path  d="m9 18 6-6-6-6"  />
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/period-assessment-config"  title="Tipe Penilaian" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Tipe Penilaian</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/peer-review"  title="Peer Review" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Peer Review</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Requirements</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -76,11 +82,12 @@
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/schedule"  title="Schedule" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Schedule</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/sempro"  title="Sidang Proposal" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Sidang Proposal</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/ta-defense"  title="TA Defense" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">TA Defense</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/audit-logs"  title="Audit Log" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Audit Log</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/period-registrations"  title="Approval" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Approval</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -168,38 +175,101 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="px-3 sm:px-6 pt-6 pb-6"><div class="min-h-screen" x-data="capstoneTable({endpoint:'/locations/all',writeEndpoint:'/locations',defaults:{name:'',type:'offline',capacity:null,description:'',is_active:true}})"><div class="mx-auto max-w-7xl space-y-6">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><h1 class="text-xl font-bold text-gray-900">Locations</h1><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3 cursor-pointer gap-2" type="button" @click="edit()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
-                    <path  d="M5 12h14"  />
-                    <path  d="M12 5v14"  />
-    </svg>
-Tambah Lokasi</button>
-</div>
-    <div class="rounded-xl border">
-    <div class="border-b px-6 py-4"><div class="flex flex-col gap-4 sm:flex-row"><h2 class="text-lg font-semibold text-gray-900 flex items-center">Location Table</h2><div class="flex flex-1 flex-col gap-3 sm:flex-row sm:justify-end"><div class="relative w-full sm:w-72"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400">
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div class="min-h-screen"><div class="mx-auto max-w-7xl space-y-8">
+    <div><h1 class="text-xl font-bold text-gray-900">Locations</h1><p class="mt-1 text-sm text-gray-500">Ruangan fisik dikelola di EOffice (sumber tunggal, view-only). Lokasi online dikelola di bawah.</p></div>
+
+    <div x-data="capstoneTable({endpoint:'/locations/eoffice-rooms'})">
+        <div class="rounded-xl border">
+    <div class="border-b px-6 py-4"><div class="flex flex-col gap-4 sm:flex-row"><h2 class="text-lg font-semibold text-gray-900 flex items-center">Ruangan EOffice</h2><div class="flex flex-1 flex-col gap-3 sm:flex-row sm:justify-end"><div class="relative w-full sm:w-72"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400">
                     <path  d="m21 21-4.34-4.34"  />
                     <circle  cx="11"  cy="11"  r="8"  />
     </svg>
-<input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-10 pl-9" type="text" placeholder="Cari lokasi..." x-model.debounce.200ms="search" @input="page=1" aria-label="Cari lokasi...">
-</div><select x-model="filters.type" @change="page=1" class="h-10 rounded-md border px-3 text-sm" aria-label="Tipe"><option value="all">Semua Tipe</option><option value="offline">Offline</option><option value="online">Online</option></select><select x-model="filters.is_active" @change="page=1" class="h-10 rounded-md border px-3 text-sm" aria-label="Status"><option value="all">Semua Status</option><option value="true">Aktif</option><option value="false">Nonaktif</option></select></div></div></div>
+<input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-10 pl-9" type="text" placeholder="Cari ruangan..." x-model.debounce.200ms="search" @input="page=1" aria-label="Cari ruangan...">
+</div></div></div></div>
     
-    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
-                    <circle  cx="12"  cy="12"  r="10"  />
-    </svg>
-<span class="sr-only">Loading</span></div>
+    <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
 <div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
     <div x-show="!loading && !error && !filtered.length" x-cloak class="flex flex-col items-center justify-center py-16 px-4 text-center"><div class="mb-4 rounded-full bg-gray-100 p-4"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-8 w-8 text-gray-400">
-                    <path  d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"  />
-                    <circle  cx="12"  cy="10"  r="3"  />
+                    <path  d="M10 12h4"  />
+                    <path  d="M10 8h4"  />
+                    <path  d="M14 21v-3a2 2 0 0 0-4 0v3"  />
+                    <path  d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"  />
+                    <path  d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16"  />
     </svg>
-</div><p class="font-medium text-gray-500">Tidak ada lokasi ditemukan</p><p class="mt-1 text-sm text-gray-400">Coba ubah filter atau buat lokasi baru</p></div>
-    <div x-show="!loading && !error && filtered.length" x-cloak class="relative w-full overflow-x-auto"><table class="w-full caption-bottom text-sm"><thead class="[&_tr]:border-b"><tr class="bg-gray-50/50 border-b"><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('name')" class="inline-flex items-center gap-2 py-1.5">Nama<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+</div><p class="font-medium text-gray-500">Tidak ada ruangan</p><p class="mt-1 text-sm text-gray-400">Data ruangan dikelola di modul EOffice</p></div>
+    <div x-show="!loading && !error && filtered.length" x-cloak class="relative w-full overflow-x-auto"><table class="w-full caption-bottom text-sm"><thead class="[&_tr]:border-b"><tr class="bg-gray-50/50 border-b"><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('nama')" class="inline-flex items-center gap-2 py-1.5">Nama<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
                     <path  d="m21 16-4 4-4-4"  />
                     <path  d="M17 20V4"  />
                     <path  d="m3 8 4-4 4 4"  />
                     <path  d="M7 4v16"  />
     </svg>
-</button></th><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('type')" class="inline-flex items-center gap-2 py-1.5">Tipe<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+</button></th><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('lokasi')" class="inline-flex items-center gap-2 py-1.5">Lokasi<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="m21 16-4 4-4-4"  />
+                    <path  d="M17 20V4"  />
+                    <path  d="m3 8 4-4 4 4"  />
+                    <path  d="M7 4v16"  />
+    </svg>
+</button></th><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('kapasitas')" class="inline-flex items-center gap-2 py-1.5">Kapasitas<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="m21 16-4 4-4-4"  />
+                    <path  d="M17 20V4"  />
+                    <path  d="m3 8 4-4 4 4"  />
+                    <path  d="M7 4v16"  />
+    </svg>
+</button></th><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('is_active')" class="inline-flex items-center gap-2 py-1.5">Status<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="m21 16-4 4-4-4"  />
+                    <path  d="M17 20V4"  />
+                    <path  d="m3 8 4-4 4 4"  />
+                    <path  d="M7 4v16"  />
+    </svg>
+</button></th><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('upcoming_bookings_count')" class="inline-flex items-center gap-2 py-1.5">Booking Mendatang<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="m21 16-4 4-4-4"  />
+                    <path  d="M17 20V4"  />
+                    <path  d="m3 8 4-4 4 4"  />
+                    <path  d="M7 4v16"  />
+    </svg>
+</button></th><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap">Fasilitas</th></tr></thead><tbody class="[&_tr:last-child]:border-0"><template x-for="room in visible" :key="room.id"><tr class="border-b transition-colors hover:bg-muted/50"><td class="p-2 align-middle"><div class="pl-2"><div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4" :class="room.is_active ? 'text-blue-600' : 'text-gray-400'">
+                    <path  d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"  />
+                    <circle  cx="12"  cy="10"  r="3"  />
+    </svg>
+<span class="font-medium" x-text="room.nama"></span></div><p class="mt-0.5 ml-6 text-xs text-gray-500" x-text="(room.lokasi || '')+(room.lantai ? ' — Lt. '+room.lantai : '')"></p></div></td><td class="p-2 text-sm text-gray-600" x-text="room.lokasi || '—'"></td><td class="p-2 text-sm text-gray-600" x-text="room.kapasitas || '—'"></td><td class="p-2"><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground" :class="room.is_active ? 'border-green-600 text-green-800' : 'border-gray-600 text-gray-600'"><span class="mr-0.5 h-1.5 w-1.5 rounded-full" :class="room.is_active ? 'bg-green-600' : 'bg-gray-400'"></span><span x-text="room.is_active ? 'Aktif' : 'Nonaktif'"></span></span>
+</td><td class="p-2 text-sm text-gray-600" x-text="room.upcoming_bookings_count ?? '—'"></td><td class="p-2 text-xs text-gray-500" x-text="Array.isArray(room.fasilitas) ? room.fasilitas.join(', ') : (room.fasilitas || '—')"></td></tr></template></tbody></table></div>
+    <div x-show="!loading && !error && filtered.length" x-cloak class="flex flex-wrap items-center justify-between gap-4 border-t px-6 py-4 text-sm"><p class="text-muted-foreground"><span x-text="filtered.length"></span> data</p><div class="flex flex-wrap items-center gap-4"><label class="flex items-center gap-2">Rows per page<select x-model.number="pageSize" @change="page=1" class="rounded-md border h-8 px-2"><option>10</option><option>25</option><option>50</option><option>100</option></select></label><span>Page <span x-text="Math.min(page,pageCount)"></span> of <span x-text="pageCount"></span></span><div class="flex gap-2"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="page=1" :disabled="page<=1" aria-label="First page">«</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="page=Math.max(1,page-1)" :disabled="page<=1" aria-label="Previous page">‹</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="page=Math.min(pageCount,page+1)" :disabled="page>=pageCount" aria-label="Next page">›</button>
+<button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" type="button" @click="page=pageCount" :disabled="page>=pageCount" aria-label="Last page">»</button>
+</div></div></div>
+</div>
+    </div>
+
+    <div x-data="capstoneTable({endpoint:'/locations/all',writeEndpoint:'/locations',fixedFilter:{type:'online'},defaults:{name:'',type:'online',capacity:null,description:'',is_active:true}})">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><h2 class="text-lg font-bold text-gray-900">Lokasi Online</h2><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3 cursor-pointer gap-2" type="button" @click="edit()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                    <path  d="M5 12h14"  />
+                    <path  d="M12 5v14"  />
+    </svg>
+Tambah Lokasi Online</button>
+</div>
+    <div class="rounded-xl border">
+    <div class="border-b px-6 py-4"><div class="flex flex-col gap-4 sm:flex-row"><h2 class="text-lg font-semibold text-gray-900 flex items-center">Online Location Table</h2><div class="flex flex-1 flex-col gap-3 sm:flex-row sm:justify-end"><div class="relative w-full sm:w-72"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400">
+                    <path  d="m21 21-4.34-4.34"  />
+                    <circle  cx="11"  cy="11"  r="8"  />
+    </svg>
+<input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] h-10 pl-9" type="text" placeholder="Cari lokasi online..." x-model.debounce.200ms="search" @input="page=1" aria-label="Cari lokasi online...">
+</div><select x-model="filters.is_active" @change="page=1" class="h-10 rounded-md border px-3 text-sm" aria-label="Status"><option value="all">Semua Status</option><option value="true">Aktif</option><option value="false">Nonaktif</option></select></div></div></div>
+    
+    <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
+<div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
+    <div x-show="!loading && !error && !filtered.length" x-cloak class="flex flex-col items-center justify-center py-16 px-4 text-center"><div class="mb-4 rounded-full bg-gray-100 p-4"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-8 w-8 text-gray-400">
+                    <path  d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"  />
+                    <rect  x="2"  y="6"  width="14"  height="12"  rx="2"  />
+    </svg>
+</div><p class="font-medium text-gray-500">Tidak ada lokasi online</p><p class="mt-1 text-sm text-gray-400">Tambahkan platform meeting (Zoom, GMeet, ...)</p></div>
+    <div x-show="!loading && !error && filtered.length" x-cloak class="relative w-full overflow-x-auto"><table class="w-full caption-bottom text-sm"><thead class="[&_tr]:border-b"><tr class="bg-gray-50/50 border-b"><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap"><button type="button" @click="sort('name')" class="inline-flex items-center gap-2 py-1.5">Nama<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
                     <path  d="m21 16-4 4-4-4"  />
                     <path  d="M17 20V4"  />
                     <path  d="m3 8 4-4 4 4"  />
@@ -218,11 +288,11 @@ Tambah Lokasi</button>
                     <path  d="M7 4v16"  />
     </svg>
 </button></th><th class="h-10 px-2 text-left align-middle font-semibold text-gray-700 whitespace-nowrap">Action</th></tr></thead><tbody class="[&_tr:last-child]:border-0"><template x-for="item in visible" :key="item.id"><tr class="border-b transition-colors hover:bg-muted/50"><td class="p-2 align-middle"><div class="pl-2"><div class="flex items-center gap-2"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4" :class="item.is_active ? 'text-blue-600' : 'text-gray-400'">
-                    <path  d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"  />
-                    <circle  cx="12"  cy="10"  r="3"  />
+                    <path  d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"  />
+                    <rect  x="2"  y="6"  width="14"  height="12"  rx="2"  />
     </svg>
-<span class="font-medium" x-text="item.name"></span></div><p x-show="item.description" class="mt-0.5 ml-6 text-xs text-gray-500" x-text="item.description"></p></div></td><td class="p-2"><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 border-transparent bg-primary text-primary-foreground" x-text="item.type==='offline' ? 'Offline' : 'Online'"></span>
-</td><td class="p-2 text-sm text-gray-600" x-text="item.capacity || '—'"></td><td class="p-2"><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground" :class="item.is_active ? 'border-green-600 text-green-800' : 'border-gray-600 text-gray-600'"><span class="mr-0.5 h-1.5 w-1.5 rounded-full" :class="item.is_active ? 'bg-green-600' : 'bg-gray-400'"></span><span x-text="item.is_active ? 'Aktif' : 'Nonaktif'"></span></span>
+<span class="font-medium" x-text="item.name"></span><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground text-xs">Online</span>
+</div><p x-show="item.description" class="mt-0.5 ml-6 text-xs text-gray-500" x-text="item.description"></p></div></td><td class="p-2 text-sm text-gray-600" x-text="item.capacity || '—'"></td><td class="p-2"><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground" :class="item.is_active ? 'border-green-600 text-green-800' : 'border-gray-600 text-gray-600'"><span class="mr-0.5 h-1.5 w-1.5 rounded-full" :class="item.is_active ? 'bg-green-600' : 'bg-gray-400'"></span><span x-text="item.is_active ? 'Aktif' : 'Nonaktif'"></span></span>
 </td><td class="p-2"><div x-data="{menu:false}" @click.outside="menu=false" @keydown.escape.window="menu=false" class="relative text-center">
 <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 size-9 h-8 w-8" type="button" @click="menu=!menu" aria-label="Actions" :aria-expanded="menu"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4 text-gray-500">
                     <circle  cx="12"  cy="12"  r="1"  />
@@ -254,22 +324,17 @@ Hapus</button></div></div>
                     <path  d="m6 6 12 12"  />
     </svg>
 </button>
-<h2 class="text-lg font-semibold" x-text="editing ? 'Edit Location' : 'Add Location'"></h2><p class="mt-2 text-muted-foreground text-sm" x-text="editing ? 'Update the location details below.' : 'Create a new location for scheduling events and sessions.'"></p><form @submit.prevent="save"><div class="space-y-4 py-4"><div class="space-y-2 ">
+<h2 class="text-lg font-semibold" x-text="editing ? 'Edit Lokasi Online' : 'Tambah Lokasi Online'"></h2><p class="mt-2 text-muted-foreground text-sm">Platform meeting untuk jadwal online (Zoom, Google Meet, ...).</p><form @submit.prevent="save"><div class="space-y-4 py-4"><div class="space-y-2 ">
     <label for="field-name" class="text-sm font-medium leading-none">Name<span class="ml-0.5 text-red-500">*</span></label>
-    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]" type="text" id="field-name" name="name" x-model="form.name" placeholder="e.g., Lab IF-101, Zoom Meeting Room" required="required">
+    <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]" type="text" id="field-name" name="name" x-model="form.name" placeholder="e.g., Zoom Meeting Room" required="required">
     <p class="text-destructive text-sm" x-show="errors['name']" x-text="errors['name']?.[0]"></p>
-</div>
-<div class="grid grid-cols-2 gap-4"><div class="space-y-2 ">
-    <label for="field-type" class="text-sm font-medium leading-none">Type<span class="ml-0.5 text-red-500">*</span></label>
-    <select id="field-type" name="type" x-model="form.type" required class="border-input h-9 w-full rounded-md border bg-transparent px-3 text-sm shadow-xs" ><option value="offline">Offline</option><option value="online">Online</option></select>
-        <p class="text-destructive text-sm" x-show="errors['type']" x-text="errors['type']?.[0]"></p>
 </div>
 <div class="space-y-2 ">
     <label for="field-capacity" class="text-sm font-medium leading-none">Capacity</label>
     <input class="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]" type="number" id="field-capacity" name="capacity" x-model="form.capacity" placeholder="" min="1">
     <p class="text-destructive text-sm" x-show="errors['capacity']" x-text="errors['capacity']?.[0]"></p>
 </div>
-</div><div class="space-y-2 col-span-full">
+<div class="space-y-2 col-span-full">
     <label for="field-description" class="text-sm font-medium leading-none">Description</label>
     <textarea id="field-description" name="description" x-model="form.description" placeholder=""  class="border-input placeholder:text-muted-foreground min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none focus-visible:ring-2 focus-visible:ring-ring" ></textarea>
         <p class="text-destructive text-sm" x-show="errors['description']" x-text="errors['description']?.[0]"></p>
@@ -294,14 +359,40 @@ Hapus</button></div></div>
 <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60 h-9 px-4 py-2 has-[&gt;svg]:px-3" type="button" @click="remove()" :disabled="saving">Hapus</button>
 </div>
 </dialog>
+    </div>
 </div></div>
 </div>
             </div>
         </div>
     </main>
 </div>
-<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
-    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+<div aria-live="polite" aria-relevant="additions" class="capstone-notices fixed bottom-5 right-5 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id">
+        <div role="status" class="capstone-notice bg-popover text-popover-foreground flex items-start gap-3 rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300' : 'border-green-200'">
+            <template x-if="!notice.error">
+                <span class="capstone-success-icon flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+                </span>
+            </template>
+            <template x-if="notice.error">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+                </span>
+            </template>
+            <span class="min-w-0 flex-1 break-words pt-0.5" x-text="notice.message"></span>
+            <button type="button" class="text-muted-foreground shrink-0 rounded p-1 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Tutup notifikasi" @click="notices=notices.filter(item=>item.id!==notice.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+            </button>
+        </div>
+    </template>
 </div>
-</body>
+    </body>
 </html>
