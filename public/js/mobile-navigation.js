@@ -19,12 +19,19 @@
         const originalInert = menu.inert;
         const originalRole = menu.getAttribute('role');
         const originalTabindex = menu.getAttribute('tabindex');
-        const closeButton = document.createElement('button');
-        closeButton.type = 'button';
-        closeButton.className = 'mobile-navigation-close';
-        closeButton.dataset.mobileClose = '';
-        closeButton.innerHTML = '<span>Tutup menu</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
-        menu.prepend(closeButton);
+        // Capstone hides the explicit close button; backdrop tap, Escape, or navigation still closes the menu.
+        const hideCloseButton = !!document.querySelector('.sitkom-shell-capstone');
+        let closeButton = null;
+        if (!hideCloseButton) {
+            closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'mobile-navigation-close';
+            closeButton.dataset.mobileClose = '';
+            closeButton.innerHTML = '<span>Tutup menu</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>';
+            menu.prepend(closeButton);
+        }
+        // Focus target when the menu opens: the close button, or the menu itself when hidden (Capstone).
+        const closeFocusTarget = closeButton || menu;
 
         // Use the original rendered sidebar: permission gates and disabled links are never copied or replaced.
         function states() {
@@ -67,8 +74,8 @@
             button.setAttribute('aria-expanded', 'true');
             backdrop.hidden = false;
             body.classList.add('mobile-navigation-is-open');
-            closeButton.focus({preventScroll:true});
-            const focusMenu = () => requestAnimationFrame(() => { if (opened) closeButton.focus(); });
+            closeFocusTarget.focus({preventScroll:true});
+            const focusMenu = () => requestAnimationFrame(() => { if (opened) closeFocusTarget.focus(); });
             if (window.Alpine) window.Alpine.nextTick(focusMenu); else focusMenu();
         }
         function closeMenu(restoreFocus = true) {
@@ -144,9 +151,9 @@
         mobile.addEventListener('change', viewportChanged);
         button.addEventListener('click', () => opened ? closeMenu() : openMenu());
         backdrop.addEventListener('click', () => closeMenu());
-        closeButton.addEventListener('click', () => closeMenu());
+        if (closeButton) closeButton.addEventListener('click', () => closeMenu());
         menu.addEventListener('transitionend', () => {
-            if (opened && !menu.contains(document.activeElement)) closeButton.focus({preventScroll:true});
+            if (opened && !menu.contains(document.activeElement)) closeFocusTarget.focus({preventScroll:true});
         });
         document.addEventListener('keydown', event => {
             if (!opened) return;
@@ -158,7 +165,7 @@
             }
         }, true);
         document.addEventListener('focusin', event => {
-            if (opened && !menu.contains(event.target)) closeButton.focus();
+            if (opened && !menu.contains(event.target)) closeFocusTarget.focus();
         });
         document.addEventListener('click', event => {
             if (!mobile.matches || !sidebar) return;
