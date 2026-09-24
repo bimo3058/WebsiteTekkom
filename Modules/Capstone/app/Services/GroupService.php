@@ -14,16 +14,17 @@ use Modules\Capstone\Concerns\RequiresActivePeriod;
 use Modules\Capstone\Exceptions\ConflictRuleException;
 use Modules\Capstone\Exceptions\DomainRuleException;
 use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupInvitation;
 use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\GroupSupervisorProposal;
 use Modules\Capstone\Models\JoinRequest;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\Title;
+use Modules\Capstone\Models\TitleApprovalAudit;
 use Throwable;
 
 class GroupService
@@ -191,7 +192,7 @@ class GroupService
                     // C. Handle Old Group
                     $remainingMembers = GroupMember::where('group_id', $oldGroup->id)->count();
                     if ($remainingMembers === 0) {
-                        $this->archiveGroup($oldGroup);
+                        $this->destroyIfEmpty($oldGroup, 'member_left');
                     } else {
                         $this->evaluateGroupReadiness($oldGroup);
                     }
@@ -465,10 +466,232 @@ class GroupService
     }
 
     /**
+     * Size limits for a group (single source of truth for min/max fallbacks).
+     *
+     * @return array{0:int,1:int} [minSize, maxSize]
+     */
+    public function groupSizeLimits(Group $group): array
+    {
+        if (! $group->relationLoaded('period')) {
+            $group->load('period');
+        }
+        $period = $group->period;
+        $minSize = $group->group_mode === 'INDIVIDUAL' ? 1 : (int) ($period?->min_group_size ?? 3);
+        $maxSize = (int) ($period?->max_group_size ?? 4);
+
+        return [$minSize, $maxSize];
+    }
+
+    /**
+     * Throw when a group is outside the period min/max size for finalization.
+     */
+    public function assertGroupSizeForFinalization(Group $group): void
+    {
+        $memberCount = GroupMember::where('group_id', $group->id)->count();
+        [$minSize, $maxSize] = $this->groupSizeLimits($group);
+        if ($memberCount < $minSize || $memberCount > $maxSize) {
+            throw new DomainRuleException("Jumlah anggota harus antara {$minSize}-{$maxSize} orang (saat ini: {$memberCount}). Tambah/kurangi anggota hingga memenuhi batas sebelum finalisasi.");
+        }
+    }
+
+    /**
+     * Handle a membership shrink (kick/leave) for bidding groups.
+     *
+     * Must be called inside the caller's DB transaction, after the member row
+     * was deleted. It never deletes ACCEPT/REJECT lecturer decisions:
+     * - count < min: hard-delete PENDING bids with no lecturer decision
+     *   (deleted rows never block rebidding), compact remaining priorities,
+     *   demote bidding statuses back to FORMING, and notify remaining members
+     *   that an approved title is retained but mark-ready is blocked until refill.
+     * - count > max: bids/titles untouched, notify remaining members to trim.
+     * Locked statuses (READY_FOR_FINALIZATION and above, TITLE_APPROVED,
+     * DISSOLVED) are never demoted here.
+     *
+     * @return array{member_count:int,min_size:int,max_size:int,undersized:bool,oversized:bool,cancelled_bids:int,has_accepted_bid:bool}
+     */
+    public function handleMembershipShrink(Group $group): array
+    {
+        $group->refresh();
+        $memberCount = GroupMember::where('group_id', $group->id)->count();
+        [$minSize, $maxSize] = $this->groupSizeLimits($group);
+        $undersized = $memberCount < $minSize;
+        $oversized = $memberCount > $maxSize;
+        $cancelled = 0;
+        $hasAcceptedBid = Bid::where('group_id', $group->id)
+            ->where('lecturer_recommendation', 'ACCEPT')
+            ->exists();
+
+        if ($undersized) {
+            $pendingIds = Bid::where('group_id', $group->id)
+                ->where('status', 'PENDING')
+                ->whereNull('lecturer_recommendation')
+                ->pluck('id');
+            $cancelled = $pendingIds->count();
+            if ($cancelled > 0) {
+                Bid::whereIn('id', $pendingIds)->delete();
+                $remaining = Bid::where('group_id', $group->id)->orderBy('priority')->get();
+                foreach ($remaining as $index => $bid) {
+                    if ((int) $bid->priority !== $index + 1) {
+                        $bid->update(['priority' => $index + 1]);
+                    }
+                }
+            }
+
+            if (in_array($group->status, ['READY_FOR_BIDDING', 'WAITING_SUPERVISOR_APPROVAL'], true)) {
+                $revertStatus = ($group->is_solo && $memberCount === 1)
+                    ? self::STATUS_FORMING_SOLO
+                    : self::STATUS_FORMING;
+                $group->update(['status' => $revertStatus]);
+            }
+
+            $userIds = GroupMember::where('group_id', $group->id)
+                ->with('student')
+                ->get()
+                ->map(fn ($member) => $member->student?->user_id)
+                ->filter()
+                ->values()
+                ->all();
+            if (! empty($userIds)) {
+                $message = $hasAcceptedBid
+                    ? "Anggota keluar/dikeluarkan sehingga tersisa {$memberCount}/{$minSize}. Judul yang disetujui dosen tetap dipertahankan, tetapi kelompok belum bisa mark-ready. Tambah anggota hingga minimum."
+                    : "Anggota keluar/dikeluarkan sehingga tersisa {$memberCount}/{$minSize}. Bid PENDING yang dihapus otomatis: {$cancelled}. Tambah anggota hingga minimum untuk bidding.";
+                $this->notificationService->sendToMany(
+                    $userIds,
+                    'GROUP_SIZE_BELOW_MINIMUM',
+                    'Ukuran Kelompok Di Bawah Minimum',
+                    $message,
+                    'Group',
+                    $group->id
+                );
+            }
+
+            Log::info('group.membership.shrink_below_min', [
+                'group_id' => $group->id,
+                'member_count' => $memberCount,
+                'min_size' => $minSize,
+                'cancelled_bids' => $cancelled,
+                'accepted_bid_retained' => $hasAcceptedBid,
+            ]);
+        } elseif ($oversized) {
+            $userIds = GroupMember::where('group_id', $group->id)
+                ->with('student')
+                ->get()
+                ->map(fn ($member) => $member->student?->user_id)
+                ->filter()
+                ->values()
+                ->all();
+            if (! empty($userIds)) {
+                $this->notificationService->sendToMany(
+                    $userIds,
+                    'GROUP_SIZE_ABOVE_MAXIMUM',
+                    'Ukuran Kelompok Melebihi Maksimum',
+                    "Jumlah anggota saat ini {$memberCount} melebihi batas maksimum {$maxSize}. Judul/bid tetap dipertahankan, tetapi finalisasi diblokir. Kurangi anggota hingga maksimum.",
+                    'Group',
+                    $group->id
+                );
+            }
+
+            Log::info('group.membership.above_max', [
+                'group_id' => $group->id,
+                'member_count' => $memberCount,
+                'max_size' => $maxSize,
+            ]);
+        }
+
+        return [
+            'member_count' => $memberCount,
+            'min_size' => $minSize,
+            'max_size' => $maxSize,
+            'undersized' => $undersized,
+            'oversized' => $oversized,
+            'cancelled_bids' => $cancelled,
+            'has_accepted_bid' => $hasAcceptedBid,
+        ];
+    }
+
+    /**
+     * Destroy a group that has no remaining active members.
+     *
+     * Must be called inside the caller's DB transaction, after the last
+     * member row was removed. Applies to groups of ANY status (including
+     * finalized ones): an empty group is deleted, never left behind as an
+     * orphan row. Most relations cascade at the DB level
+     * (cascadeOnDelete); STUDENT titles and restrictOnDelete rows are
+     * removed explicitly first. An AuditLog entry is written BEFORE the
+     * delete so the trail survives the row removal.
+     *
+     * Active members = GroupMember rows with deleted_at IS NULL
+     * (soft-deleted/flagged rows do not count).
+     *
+     * @param  Group|int  $groupOrId  Group instance or ID
+     * @param  string  $reason  member_removed|member_left|member_flagged|merge|purge
+     * @param  int|null  $triggeredBy  Acting user ID for the audit payload
+     * @return bool True when the group was deleted
+     */
+    public function destroyIfEmpty(Group|int $groupOrId, string $reason, ?int $triggeredBy = null): bool
+    {
+        $groupId = $groupOrId instanceof Group ? $groupOrId->id : (int) $groupOrId;
+
+        $group = Group::where('id', $groupId)->lockForUpdate()->first();
+        if (! $group) {
+            return false;
+        }
+
+        $remainingMembers = GroupMember::where('group_id', $group->id)->count();
+        if ($remainingMembers > 0) {
+            return false;
+        }
+
+        $statusBefore = $group->status;
+        $periodId = $group->period_id;
+
+        AuditLog::create([
+            'user_id' => $triggeredBy,
+            'action' => 'GROUP_AUTO_DELETED',
+            'target_type' => Group::class,
+            'target_id' => $group->id,
+            'payload' => [
+                'reason' => $reason,
+                'status_before' => $statusBefore,
+                'period_id' => $periodId,
+            ],
+        ]);
+
+        // STUDENT proposals owned by the group are removed (matches the
+        // manual deleteGroup semantics); other titles detach via nullOnDelete.
+        Title::where('proposed_by_group_id', $group->id)
+            ->where('title_source', 'STUDENT')
+            ->delete();
+
+        // restrictOnDelete table — must go before the group row.
+        DB::table('capstone_expo_self_evaluations')->where('group_id', $group->id)->delete();
+
+        // Everything else (members incl. soft-deleted rows, bids,
+        // supervisions, documents, schedules, evaluations, invitations,
+        // join requests, …) cascades at the DB level.
+        $group->delete();
+
+        Log::info('group.lifecycle.auto_deleted', [
+            'group_id' => $groupId,
+            'reason' => $reason,
+            'status_before' => $statusBefore,
+            'period_id' => $periodId,
+        ]);
+
+        return true;
+    }
+
+    /**
      * Mark a group as dissolved (audit trail preserved).
+     *
+     * @deprecated Empty groups are now hard-deleted via destroyIfEmpty().
+     * Kept for backward compatibility; delegates to destroyIfEmpty().
      */
     private function archiveGroup(Group $group): void
     {
+        if ($this->destroyIfEmpty($group, 'legacy_archive')) {
+            return;
+        }
         $group->update(['status' => self::STATUS_DISSOLVED]);
         Log::info('group.lifecycle.dissolved', ['group_id' => $group->id]);
     }
@@ -510,7 +733,9 @@ class GroupService
         }
 
         if (! $period) {
-            $registration = PeriodRegistration::where('user_id', $userId)->first();
+            $registration = PeriodRegistration::where('user_id', $userId)
+                ->where('status', PeriodRegistration::STATUS_APPROVED)
+                ->first();
             if ($registration) {
                 $period = Period::find($registration->period_id);
             }
@@ -587,6 +812,27 @@ class GroupService
     public function buildCanonicalGroupPayload(Group $group, User $user): array
     {
         $groupArray = $group->toArray();
+
+        // Surface an approved student proposal as the display title while
+        // title_id is still null (admin finalization has not run yet).
+        // Governance is preserved: title_id itself is never written here.
+        if (empty($groupArray['title_id']) && empty($groupArray['title'])) {
+            $approvedProposal = Title::where('proposed_by_group_id', $group->id)
+                ->where('title_source', 'STUDENT')
+                ->where('supervisor_approval_status', 'APPROVED')
+                ->with('proposedSupervisor')
+                ->first();
+            if ($approvedProposal) {
+                $groupArray['title'] = [
+                    'id' => $approvedProposal->id,
+                    'title' => $approvedProposal->title,
+                    'description' => $approvedProposal->description,
+                    'lecturer' => $approvedProposal->proposedSupervisor,
+                    'title_source' => 'STUDENT',
+                ];
+            }
+        }
+
         $groupArray['status_label'] = $this->resolveStatusLabel($group);
         $groupArray['allowed_actions'] = $this->resolveAllowedActions($group, $user);
 
@@ -788,8 +1034,11 @@ class GroupService
         }
 
         $affectedStudents = $group->members()->pluck('student_id')->toArray();
+        // Notifications target users.id; members carry student-profile ids.
+        $notifyUserIds = $group->members()->with('student')->get()
+            ->pluck('student.user_id')->filter()->unique()->values()->all();
 
-        DB::transaction(function () use ($group, $admin, $period, $affectedStudents) {
+        DB::transaction(function () use ($group, $admin, $period, $affectedStudents, $notifyUserIds) {
             Title::where('proposed_by_group_id', $group->id)
                 ->where('title_source', 'STUDENT')
                 ->delete();
@@ -803,7 +1052,7 @@ class GroupService
             $group->schedules()->delete();
             $group->seminarSchedules()->delete();
             $group->taDefenseSchedules()->delete();
-            $group->approvalAudits()->delete();
+            TitleApprovalAudit::where('affected_group_id', $group->id)->delete();
             $group->members()->delete();
             GroupInvitation::where('group_id', $group->id)->delete();
             JoinRequest::where('group_id', $group->id)->delete();
@@ -823,9 +1072,9 @@ class GroupService
 
             $group->delete();
 
-            foreach ($affectedStudents as $studentId) {
+            foreach ($notifyUserIds as $userId) {
                 Notification::create([
-                    'user_id' => $studentId,
+                    'user_id' => $userId,
                     'type' => 'GROUP_DELETED_BY_ADMIN',
                     'title' => 'Kelompok Dihapus oleh Admin',
                     'message' => 'Kelompok Anda telah dihapus oleh admin. Anda sekarang dapat mendaftar kembali ke periode yang aktif.',
@@ -838,9 +1087,90 @@ class GroupService
         return count($affectedStudents);
     }
 
-    // ======================================================================
-    // Member Management
-    // ======================================================================
+    /**
+     * Admin force-delete a group in ANY status.
+     *
+     * Unlike adminDeleteGroup() (inactive period or FORMING only), this allows
+     * deletion of finalized/active groups. The trade-off is a mandatory reason
+     * which is stored in the audit log payload and shown to affected students.
+     *
+     * @return int Number of affected students
+     */
+    public function adminForceDeleteGroup(Group $group, User $admin, string $reason): int
+    {
+        $reason = trim($reason);
+        if (mb_strlen($reason) < 10) {
+            throw new DomainRuleException('Alasan penghapusan wajib diisi (minimal 10 karakter).');
+        }
+
+        $affectedStudents = $group->members()->pluck('student_id')->toArray();
+        $statusBefore = $group->status;
+        $periodId = $group->period_id;
+        $period = $group->period;
+        // Notifications target users.id; members carry student-profile ids.
+        $notifyUserIds = $group->members()->with('student')->get()
+            ->pluck('student.user_id')->filter()->unique()->values()->all();
+
+        DB::transaction(function () use ($group, $admin, $reason, $statusBefore, $periodId, $period, $affectedStudents, $notifyUserIds) {
+            Title::where('proposed_by_group_id', $group->id)
+                ->where('title_source', 'STUDENT')
+                ->delete();
+
+            $group->bids()->delete();
+            $group->supervisorProposals()->delete();
+            $group->supervisions()->delete();
+            $group->taSubmissions()->delete();
+            $group->documents()->delete();
+            $group->evaluations()->delete();
+            $group->schedules()->delete();
+            $group->seminarSchedules()->delete();
+            $group->taDefenseSchedules()->delete();
+            TitleApprovalAudit::where('affected_group_id', $group->id)->delete();
+            $group->members()->delete();
+            GroupInvitation::where('group_id', $group->id)->delete();
+            JoinRequest::where('group_id', $group->id)->delete();
+
+            // restrictOnDelete table — must go before the group row.
+            DB::table('capstone_expo_self_evaluations')->where('group_id', $group->id)->delete();
+
+            AuditLog::create([
+                'user_id' => $admin->id,
+                'action' => 'GROUP_DELETED_BY_ADMIN',
+                'target_type' => 'Group',
+                'target_id' => $group->id,
+                'payload' => [
+                    'group_id' => $group->id,
+                    'period_id' => $periodId,
+                    'status_before' => $statusBefore,
+                    'reason' => $reason,
+                    'affected_students' => $affectedStudents,
+                ],
+            ]);
+
+            $group->delete();
+
+            foreach ($notifyUserIds as $userId) {
+                Notification::create([
+                    'user_id' => $userId,
+                    'type' => 'GROUP_DELETED_BY_ADMIN',
+                    'title' => 'Kelompok Dihapus oleh Admin',
+                    'message' => 'Kelompok Anda telah dihapus oleh admin. Alasan: '.$reason,
+                    'related_type' => 'Period',
+                    'related_id' => $period?->id,
+                ]);
+            }
+        });
+
+        Log::info('group.lifecycle.admin_deleted', [
+            'group_id' => $group->id,
+            'admin_id' => $admin->id,
+            'status_before' => $statusBefore,
+            'period_id' => $periodId,
+            'affected_students' => count($affectedStudents),
+        ]);
+
+        return count($affectedStudents);
+    }
 
     /**
      * Send a group invitation to a student.
@@ -968,10 +1298,10 @@ class GroupService
 
             $remainingMembers = GroupMember::where('group_id', $group->id)->count();
             if ($remainingMembers === 0) {
-                $group->update(['status' => 'DISSOLVED']);
-                Log::info('group.lifecycle.dissolved', ['group_id' => $group->id]);
+                $group->setAttribute('was_auto_deleted', $this->destroyIfEmpty($group, 'member_removed'));
             } else {
                 $this->evaluateGroupReadiness($group);
+                $this->handleMembershipShrink($group);
             }
 
             Notification::create([
@@ -1019,11 +1349,11 @@ class GroupService
 
             $remainingMembers = GroupMember::where('group_id', $group->id)->count();
             if ($remainingMembers === 0) {
-                $group->update(['status' => 'DISSOLVED']);
-                Log::info('group.lifecycle.dissolved', ['group_id' => $group->id]);
-                $groupDissolved = true;
+                $groupDissolved = $this->destroyIfEmpty($group, 'member_left');
+                $group->setAttribute('was_auto_deleted', $groupDissolved);
             } else {
                 $this->evaluateGroupReadiness($group);
+                $this->handleMembershipShrink($group);
             }
         });
 
@@ -1033,43 +1363,6 @@ class GroupService
     // ======================================================================
     // Supervisor Management
     // ======================================================================
-
-    /**
-     * Propose supervisors for a group.
-     */
-    public function proposeSupervisors(Group $group, int $supervisor1Id, ?int $supervisor2Id): GroupSupervisorProposal
-    {
-        $this->ensurePeriodIsActive($group);
-
-        if ($group->status !== 'READY_FOR_BIDDING') {
-            throw new DomainRuleException('Supervisors can only be proposed when group is READY_FOR_BIDDING.');
-        }
-
-        if ($group->period->isBiddingLocked()) {
-            throw new DomainRuleException('Bidding is locked. Cannot propose supervisors.');
-        }
-
-        $sup1 = User::find($supervisor1Id);
-        if (! $sup1 || ! $sup1->hasRole('dosen')) {
-            throw new DomainRuleException('Proposed supervisor 1 must be a lecturer.');
-        }
-
-        if ($supervisor2Id) {
-            $sup2 = User::find($supervisor2Id);
-            if (! $sup2 || ! $sup2->hasRole('dosen')) {
-                throw new DomainRuleException('Proposed supervisor 2 must be a lecturer.');
-            }
-        }
-
-        return GroupSupervisorProposal::updateOrCreate(
-            ['group_id' => $group->id],
-            [
-                'proposed_supervisor_1_id' => $supervisor1Id,
-                'proposed_supervisor_2_id' => $supervisor2Id,
-                'status' => 'PENDING',
-            ]
-        );
-    }
 
     /**
      * Assign Supervisor 2 to a group (admin only).
@@ -1353,20 +1646,16 @@ class GroupService
             throw new DomainRuleException('Kelompok sudah penuh. Cari kelompok lain atau buat kelompok baru.');
         }
 
-        $isRegistered = PeriodRegistration::where('user_id', $user->id)
+        $isApproved = PeriodRegistration::where('user_id', $user->id)
             ->where('period_id', $group->period_id)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->exists();
 
-        $autoRegistered = false;
-        if (! $isRegistered) {
-            PeriodRegistration::create([
-                'user_id' => $user->id,
-                'period_id' => $group->period_id,
-            ]);
-            $autoRegistered = true;
+        if (! $isApproved) {
+            throw new DomainRuleException('Permintaan gabung periode Anda belum disetujui admin. Tunggu persetujuan sebelum bergabung kelompok.');
         }
 
-        return ['group' => $group, 'auto_registered' => $autoRegistered];
+        return ['group' => $group, 'auto_registered' => false];
     }
 
     /**

@@ -468,6 +468,7 @@ export function GroupFeature() {
         can_mark_ready_for_finalization:
             isLeader
             && myGroup.members.length >= minMembers
+            && myGroup.members.length <= maxMembers
             && (myGroup.status === 'READY_FOR_BIDDING'
                 || myGroup.status === 'TITLE_APPROVED'
                 || (myGroup.status === 'FORMING_SOLO' && !!myGroup.title?.id)),
@@ -616,6 +617,24 @@ export function GroupFeature() {
                             <AlertTitle>Need More Members</AlertTitle>
                             <AlertDescription>
                                 You need at least {minMembers} members to bid on a title. Current: {myGroup.members.length}/{minMembers}
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {myGroup.members.length < minMembers && hasTitle && (
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>Title Retained — Add Members to Proceed</AlertTitle>
+                            <AlertDescription>
+                                A member left or was removed (current: {myGroup.members.length}/{minMembers}). Your approved title is retained, but you cannot mark ready for finalization. Pending bids without a lecturer decision were auto-cancelled. Add members until the minimum is reached.
+                            </AlertDescription>
+                        </Alert>
+                    )}
+                    {myGroup.members.length > maxMembers && (
+                        <Alert variant="destructive">
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>Over Maximum Group Size</AlertTitle>
+                            <AlertDescription>
+                                Current: {myGroup.members.length}/{maxMembers}. Your title and bids are retained, but finalization is blocked. Remove members until the maximum is reached.
                             </AlertDescription>
                         </Alert>
                     )}

@@ -132,6 +132,9 @@ class SchedulingService
 
     /**
      * Check if a room has an overlapping schedule on the given date/time range.
+     * Checks internal Capstone schedules AND EOffice bookings (disetujui +
+     * internal academic schedules) so a room already taken in EOffice cannot
+     * be selected from Capstone.
      */
     public function checkRoomConflict(
         string $room,
@@ -139,39 +142,61 @@ class SchedulingService
         string $startTime,
         string $endTime,
         ?int $excludeSeminarId = null,
-        ?int $excludeTaDefenseId = null
+        ?int $excludeTaDefenseId = null,
+        ?int $locationId = null,
+        ?int $excludeEofficePeminjamanId = null,
+        ?int $eofficeId = null
     ): ?array {
-        if (empty($room)) {
+        if (empty($room) && ! $eofficeId) {
             return null;
         }
 
-        $seminarConflict = SeminarSchedule::where('room', $room)
-            ->where('date', $date)
-            ->where('status', '!=', 'CANCELLED')
-            ->where('start_time', '<', $endTime)
-            ->where('end_time', '>', $startTime)
-            ->when($excludeSeminarId, fn($q) => $q->where('id', '!=', $excludeSeminarId))
-            ->first();
+        if (! empty($room)) {
+            $seminarConflict = SeminarSchedule::where('room', $room)
+                ->where('date', $date)
+                ->where('status', '!=', 'CANCELLED')
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->when($excludeSeminarId, fn($q) => $q->where('id', '!=', $excludeSeminarId))
+                ->first();
 
-        if ($seminarConflict) {
-            return [
-                'type' => 'seminar',
-                'message' => "Room '{$room}' is already booked for {$seminarConflict->type} on {$date} ({$seminarConflict->start_time}-{$seminarConflict->end_time})",
-            ];
+            if ($seminarConflict) {
+                return [
+                    'type' => 'seminar',
+                    'message' => "Room '{$room}' is already booked for {$seminarConflict->type} on {$date} ({$seminarConflict->start_time}-{$seminarConflict->end_time})",
+                ];
+            }
+
+            $taConflict = TaDefenseSchedule::where('room', $room)
+                ->where('date', $date)
+                ->where('status', '!=', 'CANCELLED')
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->when($excludeTaDefenseId, fn($q) => $q->where('id', '!=', $excludeTaDefenseId))
+                ->first();
+
+            if ($taConflict) {
+                return [
+                    'type' => 'ta_defense',
+                    'message' => "Room '{$room}' is already booked for TA defense on {$date} ({$taConflict->start_time}-{$taConflict->end_time})",
+                ];
+            }
         }
 
-        $taConflict = TaDefenseSchedule::where('room', $room)
-            ->where('date', $date)
-            ->where('status', '!=', 'CANCELLED')
-            ->where('start_time', '<', $endTime)
-            ->where('end_time', '>', $startTime)
-            ->when($excludeTaDefenseId, fn($q) => $q->where('id', '!=', $excludeTaDefenseId))
-            ->first();
+        $eofficeConflict = app(EofficeAvailabilityService::class)->checkByRoom(
+            $room,
+            $locationId,
+            $date,
+            $startTime,
+            $endTime,
+            $excludeEofficePeminjamanId,
+            $eofficeId
+        );
 
-        if ($taConflict) {
+        if ($eofficeConflict) {
             return [
-                'type' => 'ta_defense',
-                'message' => "Room '{$room}' is already booked for TA defense on {$date} ({$taConflict->start_time}-{$taConflict->end_time})",
+                'type' => 'eoffice',
+                'message' => $eofficeConflict['message'],
             ];
         }
 
@@ -188,7 +213,10 @@ class SchedulingService
         string $endTime,
         ?string $room = null,
         ?int $excludeSeminarId = null,
-        ?int $excludeTaDefenseId = null
+        ?int $excludeTaDefenseId = null,
+        ?int $locationId = null,
+        ?int $excludeEofficePeminjamanId = null,
+        ?int $eofficeId = null
     ): array {
         $errors = [];
 
@@ -200,9 +228,17 @@ class SchedulingService
         }
 
         if ($room) {
-            $roomConflict = $this->checkRoomConflict($room, $date, $startTime, $endTime, $excludeSeminarId, $excludeTaDefenseId);
+            $roomConflict = $this->checkRoomConflict($room, $date, $startTime, $endTime, $excludeSeminarId, $excludeTaDefenseId, $locationId, $excludeEofficePeminjamanId, $eofficeId);
             if ($roomConflict) {
                 $errors[] = $roomConflict['message'];
+            }
+        } elseif ($locationId || $eofficeId) {
+            $location = $locationId ? \Modules\Capstone\Models\Location::find($locationId) : null;
+            if ($eofficeId || ($location && ! $location->isOnline())) {
+                $roomConflict = $this->checkRoomConflict($location?->name ?? '', $date, $startTime, $endTime, $excludeSeminarId, $excludeTaDefenseId, $locationId, $excludeEofficePeminjamanId, $eofficeId);
+                if ($roomConflict) {
+                    $errors[] = $roomConflict['message'];
+                }
             }
         }
 

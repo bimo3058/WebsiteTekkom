@@ -4,6 +4,7 @@ namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Support\CapstoneActor;
 
@@ -22,17 +23,19 @@ class TitleController extends Controller
                 ->with('lecturer')
                 ->withCount([
                     'groups as active_groups_count' => function ($query) {
-                        $query->where('status', '!=', 'REJECTED');
+                        $query->whereNotIn('status', ['FORMING', 'READY_FOR_BIDDING', 'CLOSED']);
                     },
                 ])
                 ->get();
         }
 
         if ($role === 'mahasiswa') {
-            $periodId = $request->integer('period_id') ?: \Modules\Capstone\Models\PeriodRegistration::where('user_id', CapstoneActor::student($user)->id)->value('period_id');
+            PeriodRegistration::where('user_id', CapstoneActor::student($user)->id)->where('status', PeriodRegistration::STATUS_APPROVED)->value('period_id');
+
+            // Dosen titles are cross-period: LECTURER titles ignore period_id entirely
+            // and stay visible in every period while global quota remains.
             // Student ideas come from the period-scoped Bursa Ide endpoint.
             return Title::where('status', 'open')
-                ->when($periodId, fn($q)=>$q->where(fn($q)=>$q->where('period_id',$periodId)->orWhereNull('period_id')))
                 ->where('quota', '>', 0)
                 ->where(function ($query) {
                     $query->where('title_source', 'LECTURER')
@@ -41,7 +44,7 @@ class TitleController extends Controller
                 ->with('lecturer')
                 ->withCount([
                     'groups as active_groups_count' => function ($query) {
-                        $query->where('status', '!=', 'REJECTED');
+                        $query->whereNotIn('status', ['FORMING', 'READY_FOR_BIDDING', 'CLOSED']);
                     },
                 ])
                 ->get()
@@ -76,6 +79,8 @@ class TitleController extends Controller
             'quota' => $validated['quota'],
             'status' => 'open',
             'title_source' => 'LECTURER',
+            // Dosen titles are cross-period: never bind to a single period.
+            'period_id' => null,
         ]);
 
         return response()->json($title, 201);
@@ -119,8 +124,13 @@ class TitleController extends Controller
             'specializations.*' => 'string|in:Software,Embedded,Network,Multimedia,AI,Blockchain',
             'quota' => 'sometimes|integer|min:1',
             'status' => 'sometimes|in:open,closed',
+            // Dosen titles stay cross-period: period_id can never be set via update.
+            'period_id' => 'prohibited',
         ]);
 
+        unset($validated['period_id']);
+        // Guard legacy rows that may carry a period_id: keep them global.
+        $title->forceFill(['period_id' => null])->save();
         $title->update($validated);
 
         return response()->json($title);

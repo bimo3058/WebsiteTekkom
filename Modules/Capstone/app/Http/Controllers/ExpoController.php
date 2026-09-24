@@ -54,7 +54,7 @@ class ExpoController extends Controller
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string',
+            'eoffice_ruangan_id' => 'required|integer|exists:eo_mr_ruangans,id',
             'examiner_1_id' => 'required|exists:lecturers,id',
             'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
@@ -79,13 +79,19 @@ class ExpoController extends Controller
             return response()->json(['message' => 'Group already has an EXPO schedule.'], 400);
         }
 
-        // Double-booking & room conflict check
+        // Double-booking & room conflict check (rooms come from EOffice only).
+        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($request->eoffice_ruangan_id);
         $conflicts = $this->schedulingService->validateScheduleConflicts(
             [$request->examiner_1_id, $request->examiner_2_id],
             $request->date,
             $request->start_time,
             $request->end_time,
-            $request->room
+            $ruangan->nama,
+            null,
+            null,
+            null,
+            null,
+            $ruangan->id
         );
 
         if (!empty($conflicts)) {
@@ -98,7 +104,8 @@ class ExpoController extends Controller
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
-            'room' => $request->room,
+            'room' => $ruangan->nama,
+            'eoffice_ruangan_id' => $ruangan->id,
             'examiner_1_id' => $request->examiner_1_id,
             'examiner_2_id' => $request->examiner_2_id,
             'status' => 'SCHEDULED',
@@ -191,7 +198,8 @@ class ExpoController extends Controller
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string',
+            'eoffice_ruangan_id' => 'nullable|integer|exists:eo_mr_ruangans,id',
+            'room' => 'nullable|string|max:255',
             'examiner_1_id' => 'required|exists:lecturers,id',
             'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
@@ -210,13 +218,25 @@ class ExpoController extends Controller
             return response()->json(['message' => $constraintError], 400);
         }
 
-        // Conflict check (authoritative)
+        // Conflict check (authoritative). Rooms come from EOffice only (legacy room names resolved).
+        $eofficeId = $request->eoffice_ruangan_id
+            ? (int) $request->eoffice_ruangan_id
+            : app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->resolveEofficeId($request->room ?? $schedule->room);
+        if (! $eofficeId) {
+            return response()->json(['message' => 'Ruangan tidak dikenali di EOffice. Pilih ruangan EOffice yang valid.'], 422);
+        }
+        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($eofficeId);
         $conflicts = $this->schedulingService->validateScheduleConflicts(
             $examinerIds,
             $request->date,
             $request->start_time,
             $request->end_time,
-            $request->room
+            $ruangan->nama,
+            $schedule->id,
+            null,
+            null,
+            null,
+            $ruangan->id
         );
 
         if (!empty($conflicts)) {
@@ -227,7 +247,8 @@ class ExpoController extends Controller
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
-            'room' => $request->room,
+            'room' => $ruangan->nama,
+            'eoffice_ruangan_id' => $ruangan->id,
             'examiner_1_id' => $request->examiner_1_id,
             'examiner_2_id' => $request->examiner_2_id,
             'status' => 'SCHEDULED'

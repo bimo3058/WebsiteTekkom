@@ -1,58 +1,18 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <span class="text-slate-800 font-semibold">Blind Review</span>
     @endsection
 
-    {{--
-        Layout dosen-admin: <main> sudah overflow-y-auto dengan p-8.
-        Kita buat box visual (br-box) tanpa mengambil alih scroll dari main.
-        Header box pakai sticky supaya tetap kelihatan saat scroll.
-    --}}
-    <style>
-        .br-box {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            overflow: visible;
-            width: 100%;
-        }
-        .br-box-header {
-            background: #fff;
-            border-bottom: 1px solid #e2e8f0;
-            padding: 16px 24px;
-            border-radius: 12px 12px 0 0;
-        }
-        .br-box-body {
-            padding: 20px 24px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-        @media (max-width: 767px) {
-            .br-box-header { padding: 12px 14px; }
-            .br-box-body   { padding: 14px; }
-        }
-    </style>
-
-    <div class="br-box">
-
-        {{-- Header — sticky saat scroll --}}
-        <div class="br-box-header">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                    <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">Blind Review Soal</h1>
-                    <p class="mt-1 text-sm text-slate-600">Tinjau soal dari dosen lain, dan pantau status review soal Anda.</p>
-                </div>
-                <a href="{{ route('banksoal.soal.dosen.index') }}"
-                   class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
-                    <i class="fas fa-arrow-left text-xs"></i> Kembali ke Bank Soal
-                </a>
-            </div>
-        </div>
-
-        {{-- Body --}}
-        <div class="br-box-body">
+    <x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
+    <x-banksoal::ui.page-header title="Blind Review Soal" subtitle="Tinjau soal dari dosen lain, dan pantau status review soal Anda.">
+        <x-slot:actions>
+            <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                <i class="fas fa-arrow-left"></i> Kembali ke Bank Soal
+            </a>
+        </x-slot:actions>
+    </x-banksoal::ui.page-header>
+    </x-slot:header>
 
             @if(session('info'))
                 <div class="rounded-xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-800">
@@ -280,63 +240,61 @@
                                             </div>
                                         </div>
 
-                                        @if($round->items->isNotEmpty())
-                                            <div class="space-y-3">
-                                                @foreach($round->items->groupBy('pertanyaan_id') as $pertanyaanId => $itemGroup)
-                                                    <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                                                        <p class="text-xs font-semibold text-slate-600 mb-2">Soal #{{ $pertanyaanId }}</p>
-                                                        @foreach($itemGroup as $reviewItem)
-                                                            <div class="flex items-start gap-3 mb-2 last:mb-0">
-                                                                <div class="mt-0.5 shrink-0">
-                                                                    @if($reviewItem->status === 'approved')
-                                                                        <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                                                                            <i class="fas fa-check"></i> Approved
-                                                                        </span>
-                                                                    @elseif($reviewItem->status === 'rejected')
-                                                                        <span class="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
-                                                                            <i class="fas fa-times"></i> Rejected
-                                                                        </span>
-                                                                    @else
-                                                                        <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                                                                            Pending
-                                                                        </span>
-                                                                    @endif
-                                                                </div>
-                                                                <div class="flex-1">
-                                                                    <p class="text-xs text-slate-500">
-                                                                        @if($round->is_blind)
-                                                                            <span class="font-medium italic text-slate-400">Reviewer: Anonim (blind)</span>
-                                                                        @else
-                                                                            Reviewer: <span class="font-medium">{{ $reviewItem->reviewer?->name ?? 'Anonim' }}</span>
-                                                                        @endif
-                                                                        &bull;
-                                                                        {{ $reviewItem->reviewed_at ? $reviewItem->reviewed_at->locale('id')->diffForHumans() : 'Belum direview' }}
-                                                                    </p>
-                                                                    @if($reviewItem->catatan)
-                                                                        <p class="mt-1 text-sm text-slate-700 bg-white rounded-lg border border-slate-200 px-3 py-2">
-                                                                            <i class="fas fa-comment-alt text-slate-400 mr-1"></i>
-                                                                            {{ $reviewItem->catatan }}
-                                                                        </p>
-                                                                    @else
-                                                                        <p class="mt-1 text-xs text-slate-400 italic">Tidak ada catatan.</p>
-                                                                    @endif
-                                                                </div>
-                                                            </div>
-                                                        @endforeach
-                                                    </div>
-                                                @endforeach
+                    @if($round->items->isNotEmpty())
+                        <div class="space-y-3">
+                            @foreach($round->items->groupBy('pertanyaan_id') as $pertanyaanId => $itemGroup)
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                    <p class="text-xs font-semibold text-slate-600 mb-2">Soal #{{ $pertanyaanId }}</p>
+                                    @foreach($itemGroup as $reviewItem)
+                                        <div class="flex items-start gap-3 mb-2 last:mb-0">
+                                            <div class="mt-0.5 shrink-0">
+                                                @if($reviewItem->status === 'approved')
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                                                        <i class="fas fa-check"></i> Approved
+                                                    </span>
+                                                @elseif($reviewItem->status === 'rejected')
+                                                    <span class="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-xs font-semibold text-rose-700">
+                                                        <i class="fas fa-times"></i> Rejected
+                                                    </span>
+                                                @else
+                                                    <span class="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                                                        Pending
+                                                    </span>
+                                                @endif
                                             </div>
-                                        @endif
-                                    </div>
-                                @endforeach
-                            </div>
+                                            <div class="flex-1">
+                                                <p class="text-xs text-slate-500">
+                                                    @if($round->is_blind)
+                                                        <span class="font-medium italic text-slate-400">Reviewer: Anonim (blind)</span>
+                                                    @else
+                                                        Reviewer: <span class="font-medium">{{ $reviewItem->reviewer?->name ?? 'Anonim' }}</span>
+                                                    @endif
+                                                    &bull;
+                                                    {{ $reviewItem->reviewed_at ? $reviewItem->reviewed_at->locale('id')->diffForHumans() : 'Belum direview' }}
+                                                </p>
+                                                @if($reviewItem->catatan)
+                                                    <p class="mt-1 text-sm text-slate-700 bg-white rounded-lg border border-slate-200 px-3 py-2">
+                                                        <i class="fas fa-comment-alt text-slate-400 mr-1"></i>
+                                                        {{ $reviewItem->catatan }}
+                                                    </p>
+                                                @else
+                                                    <p class="mt-1 text-xs text-slate-400 italic">Tidak ada catatan.</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @endforeach
                         </div>
-                    @endforeach
+                    @endif
                 </div>
-            </div>
-            @endif
-
-        </div>{{-- end .br-box-body --}}
-    </div>{{-- end .br-box --}}
+            @endforeach
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+    </x-banksoal::ui.bank-soal-page>
 
 </x-banksoal::layouts.dosen-admin>

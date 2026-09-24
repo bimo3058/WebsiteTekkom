@@ -63,7 +63,7 @@ class BladePeriodController extends Controller
             }
             $templates = AssessmentComponentTemplate::query()->lockForUpdate()->get()->keyBy('id');
             $peers = PeerReviewIndicatorTemplate::query()->lockForUpdate()->get()->keyBy('id');
-            if (!$templates->contains('is_active', true)) throw ValidationException::withMessages(['assessments'=>'Setup evaluasi harus diselesaikan sebelum menyimpan periode.']);
+            if (!$templates->contains('is_active', true)) throw ValidationException::withMessages(['assessments'=>'Period Setup harus diselesaikan sebelum menyimpan periode.']);
             $config = ['assessments'=>$data['assessments'], 'peer_ids'=>$data['peer_ids']];
             $old = $editing ? $this->configuration($period) : ['assessments'=>array_fill_keys(self::TYPES, []), 'peer_ids'=>[]];
             foreach ($config['assessments'] as $type => $ids) $this->validateSelection($ids, $templates, $old['assessments'][$type], 'assessments.'.$type);

@@ -1,11 +1,14 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
+    @include('banksoal::pages.arsip.Dosen._styles')
     @section('breadcrumbs')
         <a href="{{ route('banksoal.arsip.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Arsip Soal</a>
         <span class="mx-2 text-slate-300">/</span>
         <span class="text-slate-800 font-semibold">Detail Arsip</span>
     @endsection
 
-<x-banksoal::ui.page-header
+<x-banksoal::ui.bank-soal-page class="bs-archive-page">
+    <x-slot:header>
+    <x-banksoal::ui.page-header
     title="{{ $mode === 'arsip' ? 'Detail Arsip Soal' : 'Detail Riwayat Penarikan' }}"
     subtitle="{{ $record->nama_arsip ?? $record->nama_ekstraksi }}">
     <x-slot:actions>
@@ -14,8 +17,9 @@
         </a>
     </x-slot:actions>
 </x-banksoal::ui.page-header>
+    </x-slot:header>
 
-<x-banksoal::ui.panel title="Informasi Umum" padding="p-6">
+<x-banksoal::ui.panel class="bs-archive-detail" title="Informasi Umum" padding="p-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700">
         <div><span class="font-semibold">Mata Kuliah:</span> {{ $record->mataKuliah->nama ?? '-' }}</div>
         <div><span class="font-semibold">Dosen:</span> {{ auth()->user()->name ?? '-' }}</div>
@@ -41,7 +45,7 @@
 </x-banksoal::ui.panel>
 
 @if(!empty($pdfUrl))
-<div class="mt-6">
+<div class="bs-archive-detail-section">
     <x-banksoal::ui.panel title="File PDF Soal Asli" padding="p-0 overflow-hidden">
         <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
             <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
@@ -52,7 +56,7 @@
                 <i class="fas fa-external-link-alt"></i> Buka di Tab Baru
             </a>
         </div>
-        <div class="w-full h-[650px] bg-slate-100">
+        <div class="bs-archive-preview">
             <object data="{{ $pdfUrl }}" type="application/pdf" class="w-full h-full">
                 <iframe src="{{ $pdfUrl }}" class="w-full h-full border-0">
                     <p class="p-6 text-center text-slate-500">Browser Anda tidak mendukung pratinjau PDF. Silakan <a href="{{ $pdfUrl }}" class="text-primary underline">unduh file PDF</a> untuk melihatnya.</p>
@@ -64,7 +68,7 @@
 @endif
 
 @if(empty($pdfUrl) || !empty($soalList))
-<div class="mt-6">
+<div class="bs-archive-detail-section">
     <x-banksoal::ui.panel title="Daftar Soal" padding="p-0">
         <div class="divide-y divide-slate-100">
             @forelse($soalList as $soal)
@@ -92,5 +96,7 @@
     </x-banksoal::ui.panel>
 </div>
 @endif
+
+    </x-banksoal::ui.bank-soal-page>
 
 </x-banksoal::layouts.dosen-admin>

@@ -1,140 +1,7 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <span class="text-slate-800 font-semibold">Bank Soal</span>
     @endsection
-
-<style>
-    @keyframes modalPopUp {
-        from { opacity: 0; transform: scale(0.95) translateY(10px); }
-        to { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .animate-popup {
-        animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-
-    /* Pagination */
-    .pagination-list { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
-    .pagination-btn {
-        display: inline-flex; align-items: center; justify-content: center;
-        min-width: 32px; height: 32px; padding: 0 8px;
-        border: 1px solid #e2e8f0; background: #fff; color: #334155;
-        border-radius: 8px; font-size: 12px; font-weight: 600;
-        text-decoration: none; transition: all 0.2s;
-    }
-    .pagination-btn:hover:not(.opacity-45) { border-color: rgb(11,38,110); color: rgb(11,38,110); }
-    .pagination-btn.active { background: rgb(11,38,110); border-color: rgb(11,38,110); color: #fff; }
-    .pagination-ellipsis { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; font-size: 12px; color: #94a3b8; }
-
-    .dosen-page-wrap {
-        padding: 16px;
-        box-sizing: border-box;
-    }
-
-    .dosen-page-box {
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-        overflow: visible;
-    }
-
-    .dosen-page-header {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        padding: 20px 24px;
-        background: #fff;
-        border-bottom: 1px solid #e2e8f0;
-        border-top-left-radius: 12px;
-        border-top-right-radius: 12px;
-    }
-
-    .dosen-page-body {
-        padding: 20px 24px;
-    }
-
-    @media (max-width: 767px) {
-        .dosen-page-wrap { padding: 0; }
-        .dosen-page-box { border-radius: 10px; }
-        .dosen-page-header {
-            padding: 14px;
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-        }
-        .dosen-page-body { padding: 14px; }
-    }
-
-    .dosen-management-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 12px 22px;
-        border-radius: 8px;
-        border: 1px solid #cbd5e1;
-        background: #f8fafc;
-        color: #1e293b;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1;
-        white-space: nowrap;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
-        transition: all 0.2s;
-    }
-
-    .dosen-management-btn:hover {
-        background: #f1f5f9;
-        border-color: #94a3b8;
-        box-shadow: 0 2px 4px rgba(11, 38, 110, 0.1);
-    }
-
-    .dosen-sort-button {
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
-
-
-</style>
-
-<div class="dosen-page-wrap">
-<div class="dosen-page-box">
-<div class="dosen-page-header">
-<x-banksoal::ui.page-header title="Manajemen Bank Soal" subtitle="Kelola dan organisir repositori pertanyaan Anda">
-    <x-slot:actions>
-        @can('banksoal.edit')
-            <div class="relative" id="uploadDropdownContainer">
-                <button type="button" onclick="toggleUploadDropdown()" class="dosen-management-btn focus:outline-none focus:ring-2 focus:ring-slate-200">
-                    <i class="fas fa-upload text-slate-500"></i> Upload Soal <i class="fas fa-chevron-down text-[10px] ml-1 text-slate-400"></i>
-                </button>
-                
-                <div id="uploadDropdownMenu" class="absolute right-0 top-[110%] w-56 bg-white border border-slate-100 rounded-xl shadow-lg transition-all duration-200 ease-out origin-top-right z-50 overflow-hidden transform opacity-0 scale-95 pointer-events-none">
-                    <a href="{{ route('banksoal.soal.dosen.export-csv') }}" class="flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors border-b border-slate-50">
-                        <i class="fas fa-download w-5 text-center mr-2 text-emerald-500"></i> Unduh Template Excel
-                    </a>
-                    <button type="button" onclick="openImportModal(); toggleUploadDropdown();" class="w-full flex items-center text-left px-4 py-3 text-sm text-slate-700 hover:bg-primary/10 hover:text-primary transition-colors">
-                        <i class="fas fa-file-csv w-5 text-center mr-2 text-primary"></i> Import CSV
-                    </button>
-                </div>
-            </div>
-
-            <a href="{{ route('banksoal.soal.dosen.create') }}" class="dosen-management-btn">
-                <i class="fas fa-plus"></i> Buat Soal
-            </a>
-            
-            <button type="button" onclick="openAjukanModal()" class="dosen-management-btn">
-                <i class="fas fa-paper-plane"></i> Ajukan Soal
-            </button>
-        @else
-            <div class="text-sm text-slate-500 italic">
-                <i class="fas fa-info-circle"></i> Mode Lihat Saja — Anda tidak memiliki izin untuk menambah/mengubah soal
-            </div>
-        @endcan
-    </x-slot:actions>
-</x-banksoal::ui.page-header>
-
-</div>
-<div class="dosen-page-body">
 
 <div
     id="banksoal-dosen-page-data"
@@ -142,345 +9,19 @@
     hidden
 ></div>
 
+<x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
+        @include('banksoal::pages.bank-soal.Dosen._header')
+    </x-slot:header>
 
-
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible mb-8">
-    <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
-        <h2 class="text-lg font-semibold text-slate-900">Daftar Soal</h2>
-    </div>
-
-    <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col md:flex-row gap-3 flex-wrap items-center" id="filterForm" x-ref="sortForm" onsubmit="window.showLoader();">
-        <div class="relative flex-1 min-w-[250px] w-full">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-            </div>
-            <input type="text" data-search-tab="soal" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none" autocomplete="off" id="searchSoal">
-            <datalist id="search-suggestions">
-                @foreach($mataKuliahDosen as $mk)
-                    <option value="{{ $mk->nama }}"></option>
-                @endforeach
-            </datalist>
-        </div>
-
-        <div class="relative flex-shrink-0" x-data="{
-            sortOpen: false,
-            selectedSort: @js(request('sort', 'terbaru')),
-            sortLabels: {
-                terbaru: 'Terbaru',
-                terlama: 'Terlama',
-                'nama-asc': 'Nama A-Z',
-                'nama-desc': 'Nama Z-A'
-            },
-            chooseSort(value) {
-                this.selectedSort = value;
-                this.sortOpen = false;
-                this.$nextTick(() => document.getElementById('filterForm')?.submit());
-            }
-        }" @click.away="sortOpen = false">
-            <input type="hidden" name="sort" x-model="selectedSort">
-            <button type="button" @click="sortOpen = !sortOpen"
-                    class="dosen-management-btn dosen-sort-button min-w-[140px] justify-between px-4 py-2.5"
-                    :aria-expanded="sortOpen">
-                <span x-text="sortLabels[selectedSort] || 'Terbaru'"></span>
-                <i class="fas fa-chevron-down text-xs text-slate-400 transition-transform duration-200"
-                   :class="sortOpen ? 'rotate-180' : ''"></i>
-            </button>
-            <div x-show="sortOpen" x-cloak
-                 x-transition:enter="transition ease-out duration-200"
-                 x-transition:enter-start="opacity-0 translate-y-2 scale-95"
-                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave="transition ease-in duration-150"
-                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                 class="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-slate-200 bg-white p-2 shadow-xl z-50">
-                <template x-for="(label, value) in sortLabels" :key="value">
-                    <button type="button" @click="chooseSort(value)"
-                            class="flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-primary">
-                        <span x-text="label"></span>
-                        <i class="fas fa-check text-xs text-primary" x-show="selectedSort === value"></i>
-                    </button>
-                </template>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-            <x-banksoal::ui.filter-panel formId="filterForm" buttonRadius="rounded-lg" :hasActiveFilter="request('status') ? true : false" resetRoute="{{ route('banksoal.soal.dosen.index') }}" applyLabel="Terapkan">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Status Soal</label>
-                    <div class="space-y-2">
-                        @foreach([
-                            'draft' => 'Draft',
-                            'diajukan' => 'Diajukan',
-                            'disetujui' => 'Disetujui',
-                            'revisi' => 'Perlu Revisi'
-                        ] as $val => $label)
-                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
-                            <input type="radio" name="status" value="{{ $val }}" @checked(request('status') == $val) class="w-4 h-4 rounded-full border-slate-300 text-primary focus:ring-primary transition-all">
-                            <span class="text-sm text-slate-700 group-hover:text-primary transition-colors">{{ $label }}</span>
-                        </label>
-                        @endforeach
-                    </div>
-                </div>
-            </x-banksoal::ui.filter-panel>
-        </div>
-    </form>
-
-    <div class="overflow-x-auto" data-tab-panel="soal">
-        <table class="w-full" id="tableSoal">
-            <thead class="table-header">
-                <tr>
-                    <th class="table-header-cell px-6">ID</th>
-                    <th class="table-header-cell px-2">Mata Kuliah</th>
-                    <th class="table-header-cell px-2">Topik</th>
-                    <th class="table-header-cell px-3">Tingkat Kesulitan</th>
-                    <th class="table-header-cell px-3">Status</th>
-                    <th class="table-header-cell px-6">Tindakan</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100">
-                @forelse(($soals ?? collect()) as $soal)
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4 font-medium text-slate-900">
-                            <div class="flex flex-col items-start gap-1">
-                                <span>{{ $soal->kode_soal }}</span>
-                                @if(strtolower($soal->tipe_soal) === 'essay')
-                                    <span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold rounded uppercase whitespace-nowrap">Essay</span>
-                                @elseif(strtolower($soal->tipe_soal) === 'take_home')
-                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold rounded uppercase whitespace-nowrap">Take-Home</span>
-                                @else
-                                    <span class="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold rounded uppercase whitespace-nowrap">Pilihan Ganda</span>
-                                @endif
-                            </div>
-                        </td>
-                        <td class="px-2 py-4 text-slate-600">{{ $soal->mataKuliah->nama ?? '-' }}</td>
-                        <td class="px-2 py-4 text-slate-600">{!! \Illuminate\Support\Str::limit(strip_tags($soal->soal), 80, '...') !!}</td>
-                        <td class="px-3 py-4">
-                            @php $diff = strtolower($soal->kesulitan ?? ''); @endphp
-                            @if($diff === 'easy')
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">{{ ucfirst($soal->kesulitan) }}</span>
-                            @elseif($diff === 'advanced')
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">{{ ucfirst($soal->kesulitan) }}</span>
-                            @else
-                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">{{ ucfirst($soal->kesulitan) }}</span>
-                            @endif
-                        </td>
-                        <td class="px-3 py-4">
-                            @php $status = strtolower($soal->status ?? 'draft'); @endphp
-                            @if($status === 'draft')
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200"><i class="fas fa-file-alt mr-1 mt-0.5"></i> Draf</span>
-                            @elseif($status === 'diajukan')
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary border border-primary/20"><i class="fas fa-paper-plane mr-1 mt-0.5"></i> Diajukan</span>
-                            @elseif($status === 'disetujui')
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="fas fa-check mr-1 mt-0.5"></i> Disetujui</span>
-                            @elseif($status === 'revisi' || $status === 'ditolak')
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-600 border border-red-200"><i class="fas fa-times mr-1 mt-0.5"></i> Revisi/Ditolak</span>
-                            @endif
-                        </td>
-                        <td class="px-6 py-4">
-                            @include('banksoal::partials.dosen.soal-actions', ['soal' => $soal])
-                        </td>
-                    </tr>
-                @empty
-                    <tr class="no-results-message">
-                        <td colspan="6" class="px-6 py-12 text-center text-slate-600">
-                            <div class="flex flex-col items-center justify-center">
-                                <i class="fas fa-folder-open text-4xl text-slate-300 mb-3"></i>
-                                <p class="font-medium">Belum ada soal di dalam bank soal.</p>
-                            </div>
-                        </td>
-                    </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    @if(isset($soals) && $soals->count() > 0)
-        <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-            <span class="text-sm text-slate-600">
-                Showing {{ $soals->firstItem() }} to {{ $soals->lastItem() }} of {{ $soals->total() }} questions
-            </span>
-            <div class="pagination-list">
-                @php
-                    $currentPage = $soals->currentPage();
-                    $totalPages  = $soals->lastPage();
-                    $pages = [];
-                    if ($totalPages < 10) {
-                        $start = max(1, $currentPage - 2);
-                        $end   = min($totalPages, $start + 4);
-                        $start = max(1, $end - 4);
-                        $pages = range($start, $end);
-                    } else {
-                        $pages = [1, 2, 3, '...', $totalPages - 1, $totalPages];
-                    }
-                @endphp
-                <a href="{{ $soals->appends(request()->query())->previousPageUrl() ?? '#' }}"
-                   class="pagination-btn {{ $currentPage === 1 ? 'opacity-45 pointer-events-none' : '' }}">&lsaquo;</a>
-                @foreach($pages as $page)
-                    @if($page === '...')
-                        <span class="pagination-ellipsis">...</span>
-                    @else
-                        <a href="{{ $soals->appends(request()->query())->url($page) }}"
-                           class="pagination-btn {{ (int)$page === $currentPage ? 'active' : '' }}">{{ $page }}</a>
-                    @endif
-                @endforeach
-                <a href="{{ $soals->appends(request()->query())->nextPageUrl() ?? '#' }}"
-                   class="pagination-btn {{ $currentPage === $totalPages ? 'opacity-45 pointer-events-none' : '' }}">&rsaquo;</a>
-            </div>
-        </div>
-    @endif
-</div>
-
-@can('banksoal.edit')
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-            <div>
-                <h2 class="text-lg font-semibold text-slate-900">Ekstraksi Soal (Tarik Soal)</h2>
-                <p class="text-sm text-slate-600 mt-1">Tarik kumpulan soal untuk digunakan pada ujian atau asesmen.</p>
-            </div>
-            <button type="button" onclick="openTarikModal()" class="dosen-management-btn dosen-management-btn-success">
-                <i class="fas fa-download"></i> Tarik Soal
-            </button>
-        </div>
-
-        <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3" onsubmit="window.showLoader();">
-            <div class="relative flex-1 max-w-md">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
-                <input type="text" data-search-tab="paket" list="packageSuggestions" autocomplete="off" name="searchPackages" value="{{ request('searchPackages') }}" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" placeholder="Cari paket soal, kode mata kuliah, atau nama..." id="searchPackages">
-                <datalist id="packageSuggestions">
-                    @foreach(($mataKuliahDosen ?? collect()) as $mk)
-                        <option value="{{ $mk->nama }}"></option>
-                        <option value="{{ $mk->kode }}"></option>
-                    @endforeach
-                </datalist>
-            </div>
-            <button type="submit" class="dosen-management-btn">
-                <i class="fas fa-filter text-slate-500"></i> Filter
-            </button>
-            @if(request('searchPackages'))
-                <a href="{{ route('banksoal.soal.dosen.index') }}" class="dosen-management-btn border-rose-200 bg-rose-50 text-rose-600 hover:border-rose-300 hover:bg-rose-100">
-                    <i class="fas fa-times"></i> Reset
-                </a>
-            @endif
-        </form>
-
-        <div class="overflow-x-auto" data-tab-panel="paket">
-            <table class="w-full" id="tablePackages">
-                <thead class="table-header">
-                    <tr>
-                        <th class="table-header-cell">Kode MK</th>
-                        <th class="table-header-cell">Mata Kuliah</th>
-                        <th class="table-header-cell">Terkait CPL</th>
-                        <th class="table-header-cell">Terkait CPMK</th>
-                        <th class="table-header-cell">Jumlah Soal</th>
-                        <th class="table-header-cell">Tindakan</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    @forelse(($packages ?? collect()) as $pkg)
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="px-6 py-4 font-medium text-slate-900">{{ $pkg->kode }}</td>
-                            <td class="px-6 py-4 text-slate-600">{{ $pkg->nama }}</td>
-                            <td class="px-6 py-4 text-slate-600">
-                                @if($pkg->str_cpls !== '-')
-                                    <span class="inline-flex px-2 py-1 rounded text-xs font-medium bg-primary/10 text-primary whitespace-normal break-words max-w-[150px] leading-relaxed">{{ $pkg->str_cpls }}</span>
-                                @else
-                                    <span class="text-slate-400 italic">Belum Dipetakan</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-slate-600">
-                                @if($pkg->str_cpmks !== '-')
-                                    <span class="inline-flex px-2 py-1 rounded text-xs font-medium bg-emerald-50 text-emerald-700 whitespace-normal break-words max-w-[150px] leading-relaxed">{{ $pkg->str_cpmks }}</span>
-                                @else
-                                    <span class="text-slate-400 italic">Belum Dipetakan</span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="font-semibold text-slate-900">{{ $pkg->jumlah_soal }}</span> Set
-                            </td>
-                            <td class="px-6 py-4">
-                                <x-ui.action-menu align="right">
-                                    <button type="button" data-package-action="lihat" data-mk-id="{{ $pkg->id }}" data-mk-nama="{{ e($pkg->nama) }}" class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-slate-700 hover:text-primary hover:bg-slate-100 transition-colors bg-transparent border-0 text-left cursor-pointer">
-                                        <i class="fas fa-eye w-4 text-center"></i>
-                                        <span>Lihat Daftar Soal</span>
-                                    </button>
-                                    <button type="button" data-package-action="tarik" data-mk-id="{{ $pkg->id }}" class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors bg-transparent border-0 text-left cursor-pointer">
-                                        <i class="fas fa-download w-4 text-center"></i>
-                                        <span>Tarik Paket Soal</span>
-                                    </button>
-                                </x-ui.action-menu>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr class="no-results-message">
-                            <td colspan="6" class="px-6 py-12 text-center text-slate-600">
-                                <div class="flex flex-col items-center justify-center">
-                                    <i class="fas fa-box-open text-4xl text-slate-300 mb-3"></i>
-                                    <p class="font-medium">Belum ada paket soal yang tersedia untuk ditarik.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        @if(isset($packages) && $packages->count() > 0)
-            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                <span class="text-sm text-slate-600">
-                    Showing {{ $packages->firstItem() }} to {{ $packages->lastItem() }} of {{ $packages->total() }} packages
-                </span>
-                <div class="pagination-list">
-                    @php
-                        $pkgPage  = $packages->currentPage();
-                        $pkgTotal = $packages->lastPage();
-                        $pkgPages = [];
-                        if ($pkgTotal < 10) {
-                            $s = max(1, $pkgPage - 2);
-                            $e = min($pkgTotal, $s + 4);
-                            $s = max(1, $e - 4);
-                            $pkgPages = range($s, $e);
-                        } else {
-                            $pkgPages = [1, 2, 3, '...', $pkgTotal - 1, $pkgTotal];
-                        }
-                    @endphp
-                    <a href="{{ $packages->appends(request()->query())->previousPageUrl() ?? '#' }}"
-                       class="pagination-btn {{ $pkgPage === 1 ? 'opacity-45 pointer-events-none' : '' }}">&lsaquo;</a>
-                    @foreach($pkgPages as $p)
-                        @if($p === '...')
-                            <span class="pagination-ellipsis">...</span>
-                        @else
-                            <a href="{{ $packages->appends(request()->query())->url($p) }}"
-                               class="pagination-btn {{ (int)$p === $pkgPage ? 'active' : '' }}">{{ $p }}</a>
-                        @endif
-                    @endforeach
-                    <a href="{{ $packages->appends(request()->query())->nextPageUrl() ?? '#' }}"
-                       class="pagination-btn {{ $pkgPage === $pkgTotal ? 'opacity-45 pointer-events-none' : '' }}">&rsaquo;</a>
-                </div>
-            </div>
-        @endif
-    </div>
-@else
-    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden opacity-50">
-        <div class="px-6 py-12 text-center text-slate-600">
-            <div class="flex flex-col items-center justify-center">
-                <i class="fas fa-lock text-4xl text-slate-300 mb-3"></i>
-                <p class="font-semibold text-lg">Fitur Ekstraksi Soal Terkunci</p>
-                <p class="text-sm">Anda memerlukan izin <strong>Edit</strong> untuk melakukan penarikan soal.</p>
-            </div>
-        </div>
-    </div>
-@endcan
+    @include('banksoal::pages.bank-soal.Dosen._soal-table')
+    @include('banksoal::pages.bank-soal.Dosen._packages-table')
+</x-banksoal::ui.bank-soal-page>
 
 <!-- Tarik Soal Modal -->
 <div id="tarikSoalModal" class="fixed inset-0 z-[100] hidden items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity duration-300 opacity-0">
     <div id="tarikSoalModalContent" class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 transform transition-all duration-300 ease-out opacity-0 scale-95 translate-y-4 flex flex-col max-h-[90vh]">
-        
+
         <!-- Header -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
             <div>
@@ -496,11 +37,12 @@
         <div class="px-6 py-5 overflow-y-auto w-full">
             <form action="{{ route('banksoal.soal.dosen.ekstrak') }}" method="POST" id="formTarikSoal">
                 @csrf
-                
+
                 <!-- Mata Kuliah -->
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Mata Kuliah</label>
                     <div class="relative">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" style="appearance: none; -webkit-appearance: none; background-image: none;" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
                         <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" style="appearance: none; -webkit-appearance: none; background-image: none;" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
                             <option value="">Pilih  Mata Kuliah</option>
                             @foreach($mataKuliahDosen as $mk)
@@ -640,7 +182,7 @@
                 if (!isUpdatingFilter) filterCplCpmk();
             }
         });
-        
+
         new TomSelect(cpmkSelect, {
             plugins: { remove_button: { title: 'Hapus CPMK' } },
             create: false,
@@ -662,10 +204,10 @@
         if (!window.currentTarikMkId || window.tarikSoalsData.length === 0) {
             return;
         }
-        
+
         if (isUpdatingFilter) return;
         isUpdatingFilter = true;
-        
+
         const cbs = Array.from(document.querySelectorAll('input[name="jenis_soal[]"]:checked'));
         const typesChecked = cbs.map(cb => {
             if (cb.value === 'Pilihan Ganda') return 'pilihan_ganda';
@@ -681,11 +223,11 @@
 
         const cplSelect = document.getElementById('cplSelectElement');
         const cpmkSelect = document.getElementById('cpmkSelectElement');
-        
-        const selectedCplIds = cplSelect && cplSelect.tomselect ? 
+
+        const selectedCplIds = cplSelect && cplSelect.tomselect ?
             (Array.isArray(cplSelect.tomselect.getValue()) ? cplSelect.tomselect.getValue() : [cplSelect.tomselect.getValue()]).filter(v => v).map(Number) : [];
-            
-        const selectedCpmkIds = cpmkSelect && cpmkSelect.tomselect ? 
+
+        const selectedCpmkIds = cpmkSelect && cpmkSelect.tomselect ?
             (Array.isArray(cpmkSelect.tomselect.getValue()) ? cpmkSelect.tomselect.getValue() : [cpmkSelect.tomselect.getValue()]).filter(v => v).map(Number) : [];
 
         // Base filter by Tipe Soal
@@ -708,7 +250,7 @@
 
         const uniqueCplIds = [...new Set(availableCplsFromSoal)];
         const uniqueCpmkIds = [...new Set(availableCpmksFromSoal)];
-        
+
         renderCplCpmk(selectedMk, typesChecked.length === 0 && selectedCpmkIds.length === 0 ? null : uniqueCplIds, typesChecked.length === 0 && selectedCplIds.length === 0 ? null : uniqueCpmkIds);
         isUpdatingFilter = false;
     }
@@ -716,7 +258,7 @@
     function loadCplCpmk(mk_id) {
         window.currentTarikMkId = mk_id;
         const selectedMk = mkData.find(mk => mk.id == mk_id);
-        
+
         if (!selectedMk) return;
 
         // Reset checkboxes state
@@ -770,17 +312,17 @@
     function openTarikModal(mk_id = null) {
         const modal = document.getElementById('tarikSoalModal');
         const modalContent = document.getElementById('tarikSoalModalContent');
-        
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        
+
         // Timeout to trigger transition after display swap
         setTimeout(() => {
             modal.classList.remove('opacity-0');
             modalContent.classList.remove('opacity-0', 'scale-95', 'translate-y-4');
             modalContent.classList.add('opacity-100', 'scale-100', 'translate-y-0');
         }, 10);
-        
+
         if (mk_id) {
             document.getElementById('tarikMkId').value = mk_id;
             loadCplCpmk(mk_id);
@@ -790,19 +332,19 @@
     function closeTarikModal() {
         const modal = document.getElementById('tarikSoalModal');
         const modalContent = document.getElementById('tarikSoalModalContent');
-        
+
         // Start exit animation
         modal.classList.add('opacity-0');
         modalContent.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
         modalContent.classList.add('opacity-0', 'scale-95', 'translate-y-4');
-        
+
         // Hide elements after animation finishes
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }, 300);
     }
-    
+
     // Modal Lihat Soal
     function openLihatSoalModal(mk_id, mk_nama) {
         document.getElementById('lihatSoalSubtitle').innerText = 'Mata Kuliah: ' + mk_nama;
@@ -810,7 +352,7 @@
         const modalContent = document.getElementById('lihatSoalModalContent');
         const listDiv = document.getElementById('lihatSoalList');
         const loadDiv = document.getElementById('lihatSoalLoading');
-        
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         setTimeout(() => {
@@ -845,7 +387,7 @@
                     if (soal.cpmk) {
                         badges += `<span class="px-2 py-0.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[10px] font-bold rounded uppercase">${soal.cpmk}</span>`;
                     }
-                    
+
                     const tipeLabel = soal.tipe_soal === 'essay'
                         ? 'Essay'
                         : (soal.tipe_soal === 'take_home' ? 'Take-Home' : 'Pilihan Ganda');
@@ -890,27 +432,27 @@
     function closeLihatSoalModal() {
         const modal = document.getElementById('lihatSoalModal');
         const modalContent = document.getElementById('lihatSoalModalContent');
-        
+
         modalContent.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
         modalContent.classList.add('opacity-0', 'scale-95', 'translate-y-4');
         modal.classList.add('opacity-0');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }, 300);
     }
-    
+
     // AJAX for Form Tarik Soal
     function handleTarikSoalSubmit(e, formEl = null) {
         if(e) e.preventDefault();
-        
+
         const form = formEl || document.getElementById('formTarikSoal');
         const formData = new FormData(form);
         // Cari tombol submit, entah di dalam form atau di luar dengan atribut form="..."
         const submitBtn = document.querySelector('button[form="formTarikSoal"]') || form.querySelector('[type="submit"]');
         let originalText = '';
-        
+
         if (submitBtn) {
             originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
@@ -933,7 +475,7 @@
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
-            
+
             if (data.success) {
                 if (data.blind_review?.enabled && !data.blind_review?.round_id) {
                     if (typeof showSnackbar === 'function') {
@@ -999,10 +541,10 @@
 <!-- Modal Import CSV -->
 <div id="importModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closeImportModal()">
     <div id="importModalContent" class="relative w-full max-w-lg transform rounded-2xl bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 translate-y-4">
-        
+
         <form action="{{ route('banksoal.soal.dosen.import-csv') }}" method="POST" enctype="multipart/form-data" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
             @csrf
-            
+
             <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Import Massal via Spreadsheet</h3>
@@ -1042,7 +584,7 @@
                     <i class="fas fa-upload mr-1.5"></i> Proses Import
                 </button>
             </div>
-            
+
         </form>
     </div>
 </div>
@@ -1051,7 +593,7 @@
     function toggleUploadDropdown() {
         const menu = document.getElementById('uploadDropdownMenu');
         const isClosed = menu.classList.contains('opacity-0');
-        
+
         if (isClosed) {
             menu.classList.remove('opacity-0', 'scale-95', 'pointer-events-none');
             menu.classList.add('opacity-100', 'scale-100', 'pointer-events-auto');
@@ -1079,7 +621,7 @@
     function openImportModal() {
         const modal = document.getElementById('importModal');
         const modalContent = document.getElementById('importModalContent');
-        
+
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         setTimeout(() => {
@@ -1092,12 +634,12 @@
     function closeImportModal() {
         const modal = document.getElementById('importModal');
         const modalContent = document.getElementById('importModalContent');
-        
+
         modalContent.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
         modalContent.classList.add('opacity-0', 'scale-95', 'translate-y-4');
         modal.classList.remove('opacity-100');
         modal.classList.add('opacity-0');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
@@ -1132,24 +674,27 @@
 
 
 <!-- Modal Ajukan Soal -->
-<div id="ajukanModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-[100] justify-center items-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+<div id="ajukanModal" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="ajukanModalTitle" aria-hidden="true" class="bs-submit-modal hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-[100] justify-center items-center transition-opacity duration-300 opacity-0">
     <div id="ajukanModalContent" class="relative p-4 w-full max-w-lg max-h-full transform transition-all duration-300 scale-95 opacity-0 translate-y-4">
-        <form action="{{ route('banksoal.soal.dosen.ajukan-semua') }}" method="POST" class="relative bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col max-h-[90vh]" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
+        <form action="{{ route('banksoal.soal.dosen.ajukan-semua') }}" method="POST" class="bs-modal-card relative flex flex-col max-h-[90vh]" onsubmit="if(this.checkValidity()){ this.querySelector('.bs-modal-confirm').textContent = 'Memproses...'; window.showLoader(); return true; }">
             @csrf
-            
-            <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
-                <div>
-                    <h3 class="text-lg font-bold text-slate-800">Ajukan Soal (Draf)</h3>
-                    <p class="text-xs text-slate-500 mt-1">Pilih Mata Kuliah untuk mengajukan semua soal draf ke GPM.</p>
+
+            <div class="bs-modal-header">
+                <div class="bs-modal-heading">
+                    <span class="bs-modal-icon"><i class="fas fa-paper-plane" aria-hidden="true"></i></span>
+                    <div>
+                        <h3 id="ajukanModalTitle">Ajukan Soal (Draf)</h3>
+                        <p>Kirim soal draf untuk divalidasi oleh GPM.</p>
+                    </div>
                 </div>
-                <button type="button" onclick="closeAjukanModal()" class="text-slate-400 bg-white hover:bg-slate-100 hover:text-slate-900 rounded-xl p-2 text-sm drop-shadow-sm inline-flex justify-center items-center transition-all focus:ring-2 focus:ring-slate-100">
+                <button type="button" onclick="closeAjukanModal()" class="bs-modal-close">
                     <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
                         <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
                     </svg>
-                    <span class="sr-only">Close modal</span>
+                    <span class="sr-only">Tutup popup</span>
                 </button>
             </div>
-            
+
             <div class="p-6 overflow-y-auto flex-1">
                 <div class="mb-5">
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Pilih Mata Kuliah</label>
@@ -1159,7 +704,7 @@
                             selectedLabel: '-- Pilih Mata Kuliah --',
                             options: [
                                 { value: '', label: '-- Pilih Mata Kuliah --', cls: 'text-slate-500' },
-                                { value: 'all', label: '-- Ajukan Semua Mata Kuliah --', cls: 'font-semibold text-emerald-700' },
+                                { value: 'all', label: '-- Ajukan Semua Mata Kuliah --', cls: 'font-semibold text-primary' },
                                 @foreach($mataKuliahDosen as $mk)
                                 { value: '{{ $mk->id }}', label: '{{ $mk->kode }} - {{ addslashes($mk->nama) }}', cls: 'text-slate-700' },
                                 @endforeach
@@ -1169,37 +714,37 @@
                                 this.selectedLabel = opt.label;
                                 this.open = false;
                             }
-                        }" 
+                        }"
                         class="relative"
                         @click.outside="open = false">
-                        
+
                         <!-- Hidden input for form submission & validation -->
                         <input type="text" name="mk_id" id="ajukan_mk_id" x-model="selected" required class="absolute inset-x-0 bottom-0 opacity-0 pointer-events-none w-full h-1 z-[-1]" tabindex="-1" oninvalid="this.setCustomValidity('Silakan pilih mata kuliah terlebih dahulu')" oninput="this.setCustomValidity('')">
-                        
+
                         <!-- Trigger Button -->
-                        <button type="button" @click="open = !open" 
-                            class="w-full flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                            :class="open ? 'border-primary ring-2 ring-primary/20' : ''">
-                            <span x-text="selectedLabel" :class="selected === 'all' ? 'font-semibold text-emerald-700' : (selected === '' ? 'text-slate-500' : 'text-slate-800')"></span>
+                        <button type="button" @click="open = !open"
+                            class="bs-dropdown-trigger bs-dropdown-select"
+                            :class="{ 'is-open': open }">
+                            <span x-text="selectedLabel" :class="selected === 'all' ? 'font-semibold text-primary' : (selected === '' ? 'text-slate-500' : 'text-slate-800')"></span>
                             <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
 
                         <!-- Dropdown Menu -->
-                        <div x-show="open" 
+                        <div x-show="open"
                              x-transition:enter="transition ease-out duration-100"
                              x-transition:enter-start="opacity-0 scale-95"
                              x-transition:enter-end="opacity-100 scale-100"
                              x-transition:leave="transition ease-in duration-75"
                              x-transition:leave-start="opacity-100 scale-100"
                              x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+                             class="bs-dropdown-menu bs-dropdown-options absolute z-50 w-full max-h-60 overflow-y-auto"
                              style="display: none;">
-                            <ul class="py-1 text-sm text-slate-700">
+                            <ul>
                                 <template x-for="opt in options" :key="opt.value">
                                     <li>
                                         <button type="button" @click="selectOption(opt); document.getElementById('ajukan_mk_id').setCustomValidity('')"
-                                            class="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors flex items-center justify-between"
-                                            :class="[(selected === opt.value ? 'bg-primary/5' : ''), opt.cls]">
+                                            class="bs-dropdown-item"
+                                            :class="[(selected === opt.value ? 'is-selected' : ''), opt.cls]">
                                             <span x-text="opt.label"></span>
                                             <i class="fas fa-check text-primary text-xs" x-show="selected === opt.value"></i>
                                         </button>
@@ -1209,17 +754,17 @@
                         </div>
                     </div>
                 </div>
-                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-                    <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5"></i>
-                    <p class="text-xs text-amber-700 leading-relaxed">Semua soal pada mata kuliah terpilih yang masih berstatus <strong>Draf</strong> akan diubah menjadi <strong>Diajukan</strong> dan dikirimkan ke GPM untuk divalidasi. Apakah Anda yakin?</p>
+                <div class="bs-modal-notice">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    <p>Semua soal pada mata kuliah terpilih yang masih berstatus <strong>Draf</strong> akan diubah menjadi <strong>Diajukan</strong> dan dikirimkan ke GPM untuk divalidasi. Apakah Anda yakin?</p>
                 </div>
             </div>
 
-            <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 rounded-b-2xl flex items-center justify-end gap-3 mt-auto">
-                <button type="button" class="px-4 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors" onclick="closeAjukanModal()">
+            <div class="bs-modal-footer">
+                <button type="button" class="bs-modal-cancel" onclick="closeAjukanModal()">
                     Batal
                 </button>
-                <button type="submit" onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin mr-2\'></i>Memproses...'; this.classList.add('opacity-75');" class="inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors shadow-sm">
+                <button type="submit" class="bs-modal-confirm">
                     <i class="fas fa-paper-plane"></i> Ya, Ajukan Pilihan
                 </button>
             </div>
@@ -1231,10 +776,11 @@
     function openAjukanModal() {
         const modal = document.getElementById('ajukanModal');
         const modalContent = document.getElementById('ajukanModalContent');
-        
+
+        modal.setAttribute('aria-hidden', 'false');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
-        
+
         setTimeout(() => {
             modal.classList.remove('opacity-0');
             modalContent.classList.remove('opacity-0', 'scale-95', 'translate-y-4');
@@ -1245,12 +791,13 @@
     function closeAjukanModal() {
         const modal = document.getElementById('ajukanModal');
         const modalContent = document.getElementById('ajukanModalContent');
-        
+
+        modal.setAttribute('aria-hidden', 'true');
         modalContent.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
         modalContent.classList.add('opacity-0', 'scale-95', 'translate-y-4');
         modal.classList.remove('opacity-100');
         modal.classList.add('opacity-0');
-        
+
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
@@ -1292,33 +839,34 @@
                     noResultsMsg.classList.add('hidden');
                 }
             }
-            
+
             // Prevent actual form submission to retain real-time UI mapping
             // But if user hits enter, it will trigger the server-side pagination flow.
         }
 
-        document.querySelectorAll('[data-package-action]').forEach((button) => {
-            button.addEventListener('click', function () {
-                const action = this.dataset.packageAction;
-                const mkId = this.dataset.mkId;
-                const mkNama = this.dataset.mkNama || '';
+        // Delegate actions so newly filtered rows retain their modal handlers.
+        document.getElementById('packagesSection')?.addEventListener('click', function (event) {
+            const button = event.target.closest('[data-package-action]');
+            if (!button) return;
+            const action = button.dataset.packageAction;
+            const mkId = button.dataset.mkId;
+            const mkNama = button.dataset.mkNama || '';
 
-                if (action === 'lihat') {
-                    openLihatSoalModal(mkId, mkNama);
-                }
+            if (action === 'lihat') {
+                openLihatSoalModal(mkId, mkNama);
+            }
 
-                if (action === 'tarik') {
-                    openTarikModal(mkId);
-                }
-            });
+            if (action === 'tarik') {
+                openTarikModal(mkId);
+            }
         });
 
-        const searchInputs = document.querySelectorAll('[data-search-tab]');
+        const searchInputs = document.querySelectorAll('[data-search-tab]:not([data-search-tab="paket"])');
         searchInputs.forEach((input) => {
             const tabId = input.getAttribute('data-search-tab');
             input.addEventListener('input', debounce(function () {
                 // Untuk table yang di-paginasi server, kita butuh submit form otomatis.
-                // Dengan debouncing 500ms, UX akan terasa seperti live-search 
+                // Dengan debouncing 500ms, UX akan terasa seperti live-search
                 // tetapi akan melakukan fetch ke seluruh data di server.
                 const form = this.closest('form');
                 if (form) {
@@ -1334,7 +882,8 @@
 
 @include('banksoal::pages.bank-soal.Dosen.review-modal')
 
-</div>
-</div>
-</div>
+@push('scripts')
+    <script src="{{ asset('modules/banksoal/js/Banksoal/Dosen/package-filter.js') }}" defer></script>
+@endpush
+
 </x-banksoal::layouts.dosen-admin>
