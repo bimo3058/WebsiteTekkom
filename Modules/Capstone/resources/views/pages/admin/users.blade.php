@@ -16,7 +16,7 @@
             <div class="flex items-center gap-2">
                 <label class="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-[13px] text-slate-500">
                     <x-capstone::icon name="Search" size="15" />
-                    <input x-model.debounce.300ms="search" @input="filter()" type="search" placeholder="Search" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Search users">
+                    <input x-model.debounce.300ms="search" @input="page=1" type="search" placeholder="Search" class="w-28 bg-transparent outline-none placeholder:text-slate-400 sm:w-44" aria-label="Search users">
                 </label>
                 <span x-data="{open:false}" @click.outside="open=false" @keydown.escape.window="open=false" class="relative">
                     <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[13px] text-slate-500 hover:bg-slate-50">
@@ -64,7 +64,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <template x-for="(user,idx) in items" :key="user.id">
+                    <template x-for="(user,idx) in pagedUsers" :key="user.id">
                         <tr class="hover:bg-slate-50/60">
                             <td class="px-4 py-3 text-slate-500" x-text="(userPage-1)*Number(pageSize)+idx+1"></td>
                             <td class="px-4 py-3">
@@ -85,14 +85,14 @@
                             <td class="px-4 py-3 text-right">
                                 <span x-data="{menu:false}" @click.outside="menu=false" @keydown.escape.window="menu=false" class="relative inline-block text-left">
                                     <button type="button" @click="menu=!menu" :aria-expanded="menu" aria-label="Aksi user" class="rounded px-1 font-bold tracking-widest text-slate-400 hover:bg-slate-100 hover:text-slate-700">...</button>
-                                    <span x-show="menu" x-cloak class="absolute right-0 z-20 min-w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" :class="idx>=items.length-2 ? 'bottom-full mb-1' : 'top-full mt-1'">
+                                    <span x-show="menu" x-cloak class="absolute right-0 z-20 min-w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" :class="idx>=pagedUsers.length-2 ? 'bottom-full mb-1' : 'top-full mt-1'">
                                         <a :href="userUrl(user)" @click="menu=false" class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-100"><x-capstone::icon name="Eye" size="15" />Lihat Detail</a>
                                     </span>
                                 </span>
                             </td>
                         </tr>
                     </template>
-                    <tr x-show="!items.length && !loading"><td colspan="6" class="px-4 py-10 text-center text-sm text-slate-400">Tidak ada user yang sesuai dengan filter.</td></tr>
+                    <tr x-show="!pagedUsers.length && !loading"><td colspan="6" class="px-4 py-10 text-center text-sm text-slate-400">Tidak ada user yang sesuai dengan filter.</td></tr>
                     <tr x-show="loading"><td colspan="6" class="px-4 py-10 text-center text-sm text-slate-400">Memuat...</td></tr>
                 </tbody>
             </table>
