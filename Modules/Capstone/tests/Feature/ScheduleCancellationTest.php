@@ -192,6 +192,7 @@ class ScheduleCancellationTest extends TestCase
             $t->string('status')->nullable();
             $t->date('tanggal_pinjam')->nullable();
             $t->timestamps();
+            $t->softDeletes();
         });
         Schema::create('roles', function (Blueprint $t) {
             $t->id();
