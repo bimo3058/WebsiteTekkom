@@ -758,7 +758,7 @@ class VerifikasiController extends Controller
             // tahun kegiatan bisa terisi masa depan dan ikut terbawa ke statistik.
             'tanggal_kegiatan'     => 'required|date|before_or_equal:today',
             'bukti_docs'           => 'required|array|size:1',
-            'bukti_docs.*'         => 'file|mimes:pdf|max:10240',
+            'bukti_docs.*'         => 'file|mimes:pdf|max:5120',
         ], [
             'tanggal_kegiatan.before_or_equal' => 'Tanggal kegiatan tidak boleh melewati hari ini.',
         ], ['bukti_docs' => 'bukti kegiatan']);
@@ -819,7 +819,7 @@ class VerifikasiController extends Controller
             // yang sama pada tanggal kegiatan.
             'tanggal'       => 'required|date|before_or_equal:today',
             'bukti_docs'    => 'required|array|size:1',
-            'bukti_docs.*'  => 'file|mimes:pdf|max:10240',
+            'bukti_docs.*'  => 'file|mimes:pdf|max:5120',
         ], [
             'tanggal.before_or_equal' => 'Tanggal prestasi tidak boleh melewati hari ini.',
         ], ['bukti_docs' => 'bukti kegiatan']);

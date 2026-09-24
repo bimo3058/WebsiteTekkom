@@ -23,6 +23,7 @@ class PelaksanaanController extends Controller
 {
     /** Batas jumlah foto & dokumen yang boleh tersimpan pada satu kegiatan. */
     private const MAKS_FILE = 10;
+    private const MAKS_DOKUMEN = 2;
 
     public function __construct(
         private RepoMulmedService $repoMulmedService,
@@ -279,11 +280,11 @@ class PelaksanaanController extends Controller
             'panitia_ids.*'             => 'exists:students,id',
             'panitia_peran'             => 'nullable|array',
             'panitia_peran.*'           => 'nullable|string|max:255',
-            'banner'                    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'banner'                    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'foto_kegiatan'             => 'nullable|array|max:10',
-            'foto_kegiatan.*'           => 'image|mimes:jpg,jpeg,png,webp|max:10240',
-            'dokumen_kegiatan'          => 'nullable|array|max:10',
-            'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+            'foto_kegiatan.*'           => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+            'dokumen_kegiatan'          => 'nullable|array|max:' . self::MAKS_DOKUMEN,
+            'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:5120',
             'hapus_file'                => 'nullable|array',
             'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
         ], [
@@ -607,8 +608,8 @@ class PelaksanaanController extends Controller
         }
 
         $totalDokumen = $sisaFileLama('document') + count($request->file('dokumen_kegiatan', []));
-        if ($totalDokumen > self::MAKS_FILE) {
-            $pesan['dokumen_kegiatan'] = 'Total dokumen kegiatan maksimal ' . self::MAKS_FILE
+        if ($totalDokumen > self::MAKS_DOKUMEN) {
+            $pesan['dokumen_kegiatan'] = 'Total dokumen kegiatan maksimal ' . self::MAKS_DOKUMEN
                 . ", sedangkan unggahan ini membuatnya menjadi {$totalDokumen}. Hapus dulu sebagian dokumen lama.";
         }
 

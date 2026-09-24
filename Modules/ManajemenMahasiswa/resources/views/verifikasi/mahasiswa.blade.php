@@ -742,7 +742,6 @@
             'ketua_unit',
             'staff_himpunan',
             'superadmin',
-            'admin',
             'admin_kemahasiswaan'
         ]);
     @endphp
@@ -1589,7 +1588,7 @@
                                 class="form-control form-control-custom" required accept="application/pdf,.pdf"
                                 style="padding: 8px 14px;">
                             <small class="text-muted" style="font-size: 11px;">Gabungkan semua bukti (sertifikat, surat
-                                tugas, foto, dsb.) dalam <b>1 file PDF</b>. Maks 10MB.</small>
+                                tugas, foto, dsb.) dalam <b>1 file PDF</b>. Maks 5MB.</small>
                             <div class="doc-preview-list" id="riwayatDocsPreview"></div>
                         </div>
                     </div>
@@ -1656,7 +1655,7 @@
                                 class="form-control form-control-custom" required accept="application/pdf,.pdf"
                                 style="padding: 8px 14px;">
                             <small class="text-muted" style="font-size: 11px;">Gabungkan semua bukti (sertifikat, surat
-                                tugas/lomba, foto, dsb.) dalam <b>1 file PDF</b>. Maks 10MB.</small>
+                                tugas/lomba, foto, dsb.) dalam <b>1 file PDF</b>. Maks 5MB.</small>
                             <div class="doc-preview-list" id="prestasiDocsPreview"></div>
                         </div>
                     </div>

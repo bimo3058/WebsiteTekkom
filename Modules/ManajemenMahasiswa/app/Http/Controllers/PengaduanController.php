@@ -41,7 +41,6 @@ class PengaduanController extends Controller
         'gpm',
         'kaprodi',
         'dpm',
-        'admin',
         'superadmin',
         'admin_kemahasiswaan',
         'ketua_departemen',
@@ -51,14 +50,13 @@ class PengaduanController extends Controller
         'gpm',
         'kaprodi',
         'dpm',
-        'admin',
         'superadmin',
         'admin_kemahasiswaan',
         'ketua_departemen',
     ];
 
     /**
-     * Penghapusan dibatasi ke admin & pengelola database saja.
+     * Penghapusan dibatasi ke superadmin saja.
      *
      * gpm/dpm/kaprodi/ketua_departemen sengaja DICABUT: mereka bisa menjadi
      * pihak terlapor, dan tidak boleh mampu menghapus aduan tentang dirinya
@@ -66,7 +64,6 @@ class PengaduanController extends Controller
      * hanya tidak lagi memegang hak hapus.
      */
     private const DELETE_ROLES = [
-        'admin',
         'superadmin',
     ];
 
@@ -400,8 +397,9 @@ class PengaduanController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk mengubah status pengaduan.');
         }
 
-        // Toggle: jika sudah tercatat → kembalikan ke dibaca, jika belum → tandai tercatat
-        if ($pengaduan->status === Pengaduan::STATUS_TERCATAT) {
+        // Toggle: jika sudah tercatat → kembalikan ke dibaca, jika belum → tandai tercatat.
+        // Status lama selesai/didelegasikan tampil "Tercatat", jadi ikut dianggap tercatat.
+        if ($pengaduan->isTercatat()) {
             $pengaduan->update(['status' => Pengaduan::STATUS_DIBACA]);
             $this->pengaduanService->logAction($pengaduan, $user->id, PengaduanLog::ACTION_BATAL_TERCATAT);
             $message = 'Pengaduan ditandai belum tercatat.';
@@ -421,6 +419,83 @@ class PengaduanController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Aksi massal dari tabel: tandai tercatat. Tiket yang sudah tercatat dilewati
+     * supaya log-nya tidak berulang.
+     */
+    public function bulkTercatat(Request $request)
+    {
+        $user = $request->user();
+        $this->ensureViewer($user);
+
+        if (!$this->isStaffViewer($user)) {
+            abort(403, 'Anda tidak memiliki akses untuk mengubah status pengaduan.');
+        }
+
+        $targets = $this->bulkTargets($request);
+        if ($targets->isEmpty()) {
+            return back()->with('error', 'Pengaduan yang dipilih tidak ditemukan.');
+        }
+
+        $diubah = 0;
+        foreach ($targets as $pengaduan) {
+            if ($pengaduan->isTercatat()) {
+                continue;
+            }
+
+            $pengaduan->update(['status' => Pengaduan::STATUS_TERCATAT]);
+            $this->pengaduanService->logAction($pengaduan, $user->id, PengaduanLog::ACTION_TERCATAT);
+            $diubah++;
+        }
+
+        return back()->with('success', $diubah > 0
+            ? "{$diubah} pengaduan ditandai tercatat."
+            : 'Semua pengaduan yang dipilih sudah tercatat.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $user = $request->user();
+        $this->ensureViewer($user);
+
+        if (!$this->canDelete($user)) {
+            abort(403, 'Anda tidak memiliki akses untuk menghapus pengaduan.');
+        }
+
+        $targets = $this->bulkTargets($request);
+        if ($targets->isEmpty()) {
+            return back()->with('error', 'Pengaduan yang dipilih tidak ditemukan.');
+        }
+
+        foreach ($targets as $pengaduan) {
+            // Sama seperti destroy(): log dicatat sebelum dihapus.
+            $this->pengaduanService->logAction(
+                $pengaduan,
+                $user->id,
+                PengaduanLog::ACTION_DIHAPUS,
+                'Dihapus oleh ' . ($user->name ?? ('pengguna #' . $user->id))
+            );
+            $pengaduan->delete();
+        }
+
+        return redirect()
+            ->route('manajemenmahasiswa.pengaduan.index')
+            ->with('success', $targets->count() . ' pengaduan berhasil dihapus.');
+    }
+
+    /** Tiket terpilih untuk aksi massal; draft magic link tidak ikut. */
+    private function bulkTargets(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer'],
+        ]);
+
+        return Pengaduan::whereIn('id', $validated['ids'])
+            ->where('status', '!=', Pengaduan::STATUS_DRAFT)
+            ->get();
     }
 
 

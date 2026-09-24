@@ -113,7 +113,7 @@ let dokumenFiles = [];
 function handleDokumenSelect(input) {
     const newFiles = Array.from(input.files);
     newFiles.forEach(file => {
-        if (dokumenFiles.length >= 10) return;
+        if (dokumenFiles.length >= 2) return;
         dokumenFiles.push(file);
     });
     renderDokumenPreviews();
@@ -177,7 +177,7 @@ function formatFileSize(bytes) {
             renderFotoPreviews();
             syncFotoInput();
         } else {
-            Array.from(files).forEach(f => { if (dokumenFiles.length < 10) dokumenFiles.push(f); });
+            Array.from(files).forEach(f => { if (dokumenFiles.length < 2) dokumenFiles.push(f); });
             renderDokumenPreviews();
             syncDokumenInput();
         }

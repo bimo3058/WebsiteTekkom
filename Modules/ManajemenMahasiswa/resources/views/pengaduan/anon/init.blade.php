@@ -1,5 +1,7 @@
 <x-dynamic-component :component="'manajemenmahasiswa::layouts.mahasiswa'">
 
+    @include('manajemenmahasiswa::pengaduan.partials.palette')
+
     @push('styles')
         <style>
             /* Halaman ini memakai kartu sendiri di atas latar abu, jadi kotak bawaan
@@ -24,29 +26,24 @@
             }
             .success-card {
                 background: #ffffff; border-radius: 12px; padding: 48px 40px;
-                text-align: center; border: 1px solid #DDE1E8;
+                text-align: center; border: 1px solid var(--c-border);
                 box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
                 max-width: 600px; width: 100%;
             }
             .success-icon {
-                width: 80px; height: 80px; background: #E7E8F0; color: #293C79;
+                width: 80px; height: 80px; background: var(--c-primary-subtle); color: var(--c-primary);
                 border-radius: 50%; display: flex; align-items: center;
                 justify-content: center; margin: 0 auto 24px auto;
             }
             .link-box {
-                background: #f8fafc; border: 2px dashed #DDE1E8;
+                background: var(--c-bg); border: 2px dashed var(--c-border);
                 border-radius: 12px; padding: 24px; margin: 32px 0;
             }
             .link-url {
                 font-family: monospace; font-size: 16px; font-weight: 600;
-                color: #293C79; word-break: break-all; margin-bottom: 16px; display: block;
+                color: var(--c-primary); word-break: break-all; margin-bottom: 16px; display: block;
             }
-            .btn-copy {
-                background: #111827; color: white; border: none;
-                border-radius: 12px; padding: 10px 24px; font-weight: 600;
-                display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;
-            }
-            .btn-copy:hover { background: #374151; }
+            .btn-copy.is-done { border-color: var(--c-success); color: var(--c-success); }
         </style>
     @endpush
 
@@ -55,28 +52,28 @@
             <div class="success-icon">
                 <x-manajemenmahasiswa::ui.icon name="link-01" size="40" />
             </div>
-            <h2 class="fw-bold text-dark mb-3" style="font-size: 24px; color: #1e1b4b;">Magic Link Dibuat!</h2>
+            <h2 class="fw-bold mb-3" style="font-size: 24px; color: var(--c-fg);">Magic Link Dibuat!</h2>
             <p class="text-muted" style="font-size: 15px; line-height: 1.6;">
                 Sistem telah membuatkan Anda link khusus. Anda akan menggunakan link ini untuk <strong>mengisi form pengaduan</strong> dan <strong>melacak balasan</strong> dari admin.
             </p>
 
             <div class="link-box">
-                <div class="text-danger fw-bold mb-2" style="font-size: 13px; text-transform: uppercase;">Simpan Tautan Ini!</div>
+                <div class="fw-bold mb-2" style="font-size: 13px; text-transform: uppercase; color: var(--c-error);">Simpan Tautan Ini!</div>
                 @php $trackUrl = route('manajemenmahasiswa.pengaduan.track', ['token' => $pengaduan->anon_token]); @endphp
                 <a href="{{ $trackUrl }}" target="_blank" class="link-url">{{ $trackUrl }}</a>
 
-                <button class="btn-copy" onclick="copyLink()">
+                <button type="button" class="mk-btn mk-btn--secondary btn-copy" onclick="copyLink()">
                     <x-manajemenmahasiswa::ui.icon name="files-01" size="16" />
-                    Salin Tautan
+                    <span>Salin Tautan</span>
                 </button>
             </div>
 
             <p class="text-muted mb-4" style="font-size: 13px;">
-                <span style="color: #f59e0b;"><x-manajemenmahasiswa::ui.icon name="alert-triangle" size="14" /></span>
+                <span style="color: var(--c-warning);"><x-manajemenmahasiswa::ui.icon name="alert-triangle" size="14" /></span>
                 Tautan ini bersifat sangat rahasia. Jika hilang, Anda tidak dapat memulihkannya. Pastikan Anda menyalinnya sebelum membuka form.
             </p>
 
-            <a href="{{ $trackUrl }}" target="_blank" class="mk-btn mk-btn--secondary">
+            <a href="{{ $trackUrl }}" target="_blank" rel="noopener" class="mk-btn mk-btn--primary">
                 Buka Form Pengaduan (Tab Baru)
             </a>
         </div>
@@ -88,12 +85,12 @@
                 const url = '{{ $trackUrl }}';
                 navigator.clipboard.writeText(url).then(function() {
                     const btn = document.querySelector('.btn-copy');
-                    const originalText = btn.innerHTML;
-                    btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;">✓ Tersalin!</span>';
-                    btn.style.background = '#16a34a';
+                    const label = btn.querySelector('span:last-child');
+                    label.textContent = '✓ Tersalin!';
+                    btn.classList.add('is-done');
                     setTimeout(() => {
-                        btn.innerHTML = originalText;
-                        btn.style.background = '#111827';
+                        label.textContent = 'Salin Tautan';
+                        btn.classList.remove('is-done');
                     }, 2000);
                 });
             }
