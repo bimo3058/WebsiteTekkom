@@ -1,61 +1,22 @@
-﻿<x-manajemenmahasiswa::layouts.forum-layout>
+<x-manajemenmahasiswa::layouts.forum-layout>
 
     @push('styles')
         <style>
-            /* ── Page Title ──────────────────────────────────────────────────── */
-            .page-title {
-                margin-bottom: 22px;
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .page-title .back-btn {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                border-radius: 50%;
-                width: 40px;
-                height: 40px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: #4b5563;
-                text-decoration: none;
-                transition: background 0.2s;
-            }
-
-            .page-title .back-btn:hover {
-                background: #f3f4f6;
-            }
-
-            .page-title h1 {
-                font-size: 26px;
-                font-weight: 700;
-                color: #111827;
-                margin: 0 0 2px;
-                letter-spacing: -0.02em;
-            }
-
-            .page-title p {
-                font-size: 14px;
-                color: #6b7280;
-                margin: 0;
-            }
-
             .create-post-card {
-                background: transparent;
+                background: #fff;
+                border: 1px solid #DFE1E7;
                 border-radius: 12px;
-                padding: 30px 0;
-                border: none;
+                padding: 24px;
+                box-shadow: 0px 1px 2px 0px rgba(228,229,231,0.5);
                 margin-bottom: 20px;
             }
 
             /* Form Elementss */
             .form-label {
                 font-weight: 600;
-                color: #1f2937;
-                font-size: 14px;
-                margin-bottom: 8px;
+                color: #0D0D12;
+                font-size: 13px;
+                margin-bottom: 6px;
             }
 
             .checkbox-card-group {
@@ -69,31 +30,32 @@
                 align-items: center;
                 gap: 8px;
                 padding: 10px 16px;
-                border: 1.5px solid #e5e7eb;
+                border: 1.5px solid #DFE1E7;
                 border-radius: 10px;
                 background: #fff;
                 cursor: pointer;
                 transition: all 0.2s;
                 font-size: 13px;
                 font-weight: 500;
-                color: #374151;
+                color: #353849;
                 user-select: none;
             }
             .checkbox-card:hover {
-                border-color: #a5b4fc;
-                background: #f5f3ff;
+                border-color: #5C78B8;
+                background: rgba(11,38,110,0.04);
+                color: #0B266E;
             }
             .checkbox-card input[type="checkbox"] {
                 width: 16px;
                 height: 16px;
-                accent-color: #293C79;
+                accent-color: #0B266E;
                 cursor: pointer;
                 flex-shrink: 0;
             }
             .checkbox-card.checked {
-                border-color: #293C79;
-                background: #E7E8F0;
-                color: #415086;
+                border-color: #0B266E;
+                background: rgba(11,38,110,0.08);
+                color: #0B266E;
                 font-weight: 600;
             }
             .checkbox-hint {
@@ -106,11 +68,11 @@
             .custom-input,
             .custom-select,
             .custom-textarea {
-                background-color: #f9fafb;
-                border: 1px solid #e5e7eb;
+                background-color: #fff;
+                border: 1px solid #DFE1E7;
                 border-radius: 8px;
-                padding: 12px 16px;
-                font-size: 14px;
+                padding: 10px 14px;
+                font-size: 13px;
                 width: 100%;
                 transition: all 0.2s;
             }
@@ -119,8 +81,8 @@
             .custom-select:focus,
             .custom-textarea:focus {
                 background-color: #ffffff;
-                border-color: #6F7DA4;
-                box-shadow: 0 0 0 3px rgba(41, 60, 121, 0.1);
+                border-color: #0B266E;
+                box-shadow: 0 0 0 3px rgba(11,38,110,0.1);
                 outline: none;
             }
 
@@ -139,9 +101,9 @@
             /* Action Buttons */
             .btn-action {
                 border-radius: 8px;
-                padding: 10px 24px;
+                padding: 8px 20px;
                 font-weight: 600;
-                font-size: 14px;
+                font-size: 13px;
                 border: none;
                 display: inline-flex;
                 align-items: center;
@@ -150,31 +112,34 @@
             }
 
             .btn-post {
-                background-color: #293C79;
+                background-color: #0B266E;
                 color: white;
             }
 
             .btn-post:hover {
-                background-color: #415086;
+                background-color: #091958;
             }
 
             .btn-cancel {
-                background-color: #ef4444;
-                color: white;
+                background: #fff;
+                color: #374151;
+                border: 1px solid #DFE1E7;
             }
 
             .btn-cancel:hover {
-                background-color: #dc2626;
+                background: rgba(11,38,110,0.04);
+                border-color: #5C78B8;
+                color: #0B266E;
             }
 
             .btn-draft {
                 background-color: #fff;
-                color: #293C79;
-                border: 1.5px solid #293C79 !important;
+                color: #0B266E;
+                border: 1.5px solid #0B266E !important;
             }
 
             .btn-draft:hover {
-                background-color: #E7E8F0;
+                background-color: rgba(11,38,110,0.06);
             }
 
             /* Collapsible Section */
@@ -182,29 +147,29 @@
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                padding: 10px 16px;
-                background: #f9fafb;
-                border: 1px solid #e5e7eb;
+                padding: 8px 14px;
+                background: #fff;
+                border: 1px solid #DFE1E7;
                 border-radius: 8px;
                 cursor: pointer;
-                font-size: 14px;
+                font-size: 13px;
                 font-weight: 600;
-                color: #374151;
+                color: #353849;
                 transition: all 0.2s;
                 width: 100%;
                 text-align: left;
             }
 
             .section-toggle:hover {
-                background: #E7E8F0;
-                border-color: #293C79;
-                color: #415086;
+                background: rgba(11,38,110,0.04);
+                border-color: #0B266E;
+                color: #0B266E;
             }
 
             .section-toggle.active {
-                background: #E7E8F0;
-                border-color: #293C79;
-                color: #415086;
+                background: rgba(11,38,110,0.04);
+                border-color: #0B266E;
+                color: #0B266E;
             }
 
             .section-content {
@@ -220,32 +185,32 @@
 
             /* Media Upload Dropzone */
             .media-dropzone {
-                border: 2px dashed #d1d5db;
+                border: 2px dashed #DFE1E7;
                 border-radius: 12px;
                 padding: 32px 20px;
                 text-align: center;
                 cursor: pointer;
                 transition: all 0.3s ease;
-                background: #f9fafb;
+                background: #fff;
                 position: relative;
             }
 
             .media-dropzone:hover,
             .media-dropzone.dragover {
-                border-color: #293C79;
-                background: #E7E8F0;
+                border-color: #0B266E;
+                background: rgba(11,38,110,0.04);
             }
 
             .media-dropzone .dropzone-text {
-                font-size: 15px;
+                font-size: 13px;
                 font-weight: 600;
-                color: #374151;
+                color: #353849;
                 margin-bottom: 4px;
             }
 
             .media-dropzone .dropzone-hint {
-                font-size: 13px;
-                color: #9ca3af;
+                font-size: 12px;
+                color: #808897;
             }
 
             .media-dropzone input[type="file"] {
@@ -266,7 +231,7 @@
                 position: relative;
                 border-radius: 12px;
                 overflow: hidden;
-                border: 1px solid #e5e7eb;
+                border: 1px solid #DFE1E7;
                 background: #000;
                 display: flex;
                 flex-direction: column;
@@ -336,44 +301,73 @@
             }
 
             .media-counter {
-                font-size: 13px;
+                font-size: 12px;
                 font-weight: 600;
-                padding: 4px 12px;
-                border-radius: 20px;
+                padding: 3px 10px;
+                border-radius: 8px;
                 display: inline-block;
                 margin-top: 8px;
             }
 
             .media-counter.ok {
-                background: #dcfce7;
-                color: #16a34a;
+                background: #DDF2EE;
+                color: #287F6E;
             }
+
+            /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
+               jadi kotak bawaan .main-wrapper dari layout dimatikan. */
+            .main-wrapper {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: visible !important;
+            }
+
+            .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+            .dash-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; }
+            .dash-box { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #fff; border: 1px solid #DFE1E7; border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); overflow: hidden; width: 100%; box-sizing: border-box; }
+            .dash-box-header { background: #fff; border-bottom: 1px solid #DFE1E7; flex-shrink: 0; width: 100%; box-sizing: border-box; padding: 16px 24px; }
+            .dash-box-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+            .dash-box-body::-webkit-scrollbar { width: 6px; }
+            .dash-box-body::-webkit-scrollbar-thumb { background: #C1C7CF; border-radius: 10px; }
+            @media (max-width: 767px) {
+                .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
+                .dash-wrap { height: auto !important; padding: 0; }
+                .dash-box { flex: none !important; overflow: visible !important; border-radius: 10px; }
+                .dash-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+                .dash-box-body { overflow-y: visible !important; flex: none !important; padding: 14px; }
+            }
+            .create-post-card { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; }
         </style>
     @endpush
 
-    <div class="page-title">
-        <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn">
-            <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
-        </a>
-        <div>
-            <h1>Forum Diskusi</h1>
-            <p>Wadah komunikasi mahasiswa & alumni</p>
-        </div>
+    <div class="dash-wrap">
+    <div class="dash-box">
+    <div class="dash-box-header">
+        <x-manajemenmahasiswa::ui.page-header
+            title="Buat Post Baru"
+            subtitle="Bagikan sesuatu ke forum diskusi">
+            <x-slot:leading>
+                <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm">
+                    <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
+                </a>
+            </x-slot:leading>
+        </x-manajemenmahasiswa::ui.page-header>
     </div>
-
+    <div class="dash-box-body">
     <div class="create-post-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-dark mb-0">Buat Post</h4>
-            @if(isset($drafts) && $drafts->count() > 0)
-                <button type="button" class="btn btn-sm rounded-pill fw-bold px-4 text-white shadow-sm"
-                    style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border: none; transition: transform 0.2s ease, box-shadow 0.2s ease;"
-                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(234, 88, 12, 0.3)';"
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';"
+        {{-- Flash errors --}}
+        @if(isset($drafts) && $drafts->count() > 0)
+            <div class="d-flex justify-content-end mb-3">
+                <button type="button"
+                    style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:8px; border:1px solid #DFE1E7; background:#fff; color:#0B266E; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s;"
                     data-bs-toggle="modal" data-bs-target="#draftsModal">
-                    <i class="bi bi-cloud-arrow-down-fill me-1"></i> Load Draft ({{ $drafts->count() }})
+                    <x-manajemenmahasiswa::ui.icon name="download-01" size="14" /> Load Draft ({{ $drafts->count() }})
                 </button>
-            @endif
-        </div>
+            </div>
+        @endif
 
         @if($errors->any())
             <div class="alert alert-danger" style="border-radius: 10px; border: none; font-size: 14px;">
@@ -480,7 +474,7 @@
                         .poll-option-input {
                             flex: 1;
                             padding: 9px 14px;
-                            border: 1.5px solid #e5e7eb;
+                            border: 1.5px solid #DFE1E7;
                             border-radius: 10px;
                             font-size: 13px;
                             font-weight: 500;
@@ -489,8 +483,8 @@
                         }
 
                         .poll-option-input:focus {
-                            border-color: #293C79;
-                            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+                            border-color: #0B266E;
+                            box-shadow: 0 0 0 3px rgba(11,38,110,0.1);
                         }
 
                         .poll-option-remove {
@@ -516,9 +510,9 @@
                         .poll-add-option {
                             font-size: 13px;
                             font-weight: 600;
-                            color: #293C79;
-                            background: #E7E8F0;
-                            border: 1.5px dashed #a5b4fc;
+                            color: #0B266E;
+                            background: rgba(11,38,110,0.06);
+                            border: 1.5px dashed #5C78B8;
                             border-radius: 10px;
                             padding: 8px 16px;
                             cursor: pointer;
@@ -529,13 +523,13 @@
                         }
 
                         .poll-add-option:hover {
-                            background: #e0e7ff;
+                            background: rgba(11,38,110,0.1);
                         }
 
                         .poll-duration-label {
                             font-size: 12px;
                             font-weight: 600;
-                            color: #6b7280;
+                            color: #666D80;
                             margin-bottom: 4px;
                             margin-top: 12px;
                             display: block;
@@ -543,7 +537,7 @@
 
                         .poll-duration-input {
                             padding: 8px 12px;
-                            border: 1.5px solid #e5e7eb;
+                            border: 1.5px solid #DFE1E7;
                             border-radius: 10px;
                             font-size: 13px;
                             outline: none;
@@ -551,7 +545,7 @@
                         }
 
                         .poll-duration-input:focus {
-                            border-color: #293C79;
+                            border-color: #0B266E;
                         }
                     </style>
                     <div id="pollOptionsContainer">
@@ -593,7 +587,7 @@
                         class="btn-action btn-cancel text-decoration-none shadow-sm text-center">
                         <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" /> Batal
                     </a>
-                    <button type="submit" class="btn-action btn-post shadow-sm px-4">
+                    <button type="submit" class="mk-btn mk-btn--primary">
                         Terbitkan
                     </button>
                 </div>
@@ -614,7 +608,7 @@
                         <div class="list-group list-group-flush">
                             @foreach($drafts as $draft)
                                 <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3"
-                                    style="border-radius: 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; cursor: pointer;">
+                                    style="border-radius: 12px; margin-bottom: 8px; border: 1px solid #DFE1E7; cursor: pointer;">
                                     <div class="flex-grow-1 pe-3"
                                         onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->konten) }})">
                                         <h6 class="mb-1 fw-bold text-dark" style="font-size: 15px;">
@@ -649,6 +643,10 @@
             </div>
         </div>
     @endif
+
+    </div>{{-- /dash-box-body --}}
+    </div>{{-- /dash-box --}}
+    </div>{{-- /dash-wrap --}}
 
     @push('scripts')
         <script>
@@ -764,12 +762,12 @@
                             draftStatus.textContent = 'Draf tersimpan.';
                             setTimeout(() => { draftStatus.style.display = 'none'; }, 3000);
                             if (isManual) {
-                                alert('Draf berhasil disimpan!');
+                                mkNotify({ title: 'Draf Tersimpan', message: 'Draf berhasil disimpan!', variant: 'success' });
                             }
                         } else {
                             draftStatus.textContent = 'Gagal menyimpan draf.';
                             if (isManual) {
-                                alert('Terjadi kesalahan saat menyimpan draf: ' + (data.message || 'Data tidak valid.'));
+                                mkNotify({ title: 'Gagal Menyimpan Draf', message: data.message || 'Data tidak valid.', variant: 'danger' });
                             }
                         }
                     })
@@ -777,7 +775,7 @@
                         console.error('Error saving draft:', error);
                         draftStatus.textContent = 'Gagal menyimpan draf.';
                         if (isManual) {
-                            alert('Terjadi kesalahan saat menyimpan draf.');
+                            mkNotify({ title: 'Gagal Menyimpan Draf', message: 'Terjadi kesalahan saat menyimpan draf.', variant: 'danger' });
                         }
                     });
             }
@@ -840,15 +838,15 @@
             function addMediaFiles(fileList) {
                 for (const file of fileList) {
                     if (selectedFiles.length >= MAX_FILES) {
-                        alert(`Maksimal ${MAX_FILES} file yang bisa diupload.`);
+                        mkNotify({ title: 'Batas File Tercapai', message: `Maksimal ${MAX_FILES} file yang bisa diupload.`, variant: 'warning' });
                         break;
                     }
                     if (file.size > MAX_SIZE) {
-                        alert(`File "${file.name}" terlalu besar. Maksimal 10MB per file.`);
+                        mkNotify({ title: 'File Terlalu Besar', message: `File "${file.name}" melebihi 10MB.`, variant: 'warning' });
                         continue;
                     }
                     if (!file.type.match(/^(image|video)\//)) {
-                        alert(`File "${file.name}" bukan gambar/video yang didukung.`);
+                        mkNotify({ title: 'Format Tidak Didukung', message: `File "${file.name}" bukan gambar/video yang didukung.`, variant: 'warning' });
                         continue;
                     }
                     selectedFiles.push(file);

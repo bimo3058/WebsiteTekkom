@@ -11,11 +11,19 @@ use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
 use Modules\ManajemenMahasiswa\Models\PengumumanDraft;
+use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PengumumanController extends Controller
 {
+    /** Batas jumlah gambar pengumuman yang boleh diunggah sekaligus. */
+    private const MAX_GAMBAR = 5;
+
+    /** Batas ukuran per berkas (gambar & lampiran) dalam KB, satuan aturan `max:`. */
+    private const MAX_UKURAN_KB = 5120;
+
     public function __construct(
         private PengumumanService $pengumumanService,
         private RepoMulmedService $repoMulmedService,
@@ -34,16 +42,20 @@ class PengumumanController extends Controller
         // Admin murni (list lama): superadmin, admin, admin_kemahasiswaan
         // Blog-card baru: pengurus himpunan + gpm + dosen + dosen_koordinator
         $adminRoles    = ['superadmin', 'admin', 'admin_kemahasiswaan'];
-        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'ketua_departemen', 'dpm', 'dosen', 'dosen_koordinator'];
+        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'ketua_departemen', 'dpm', 'dosen', 'dosen_koordinator'];
 
         $isAdmin        = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty();
         $isAdminView    = $roles->intersect($adminRoles)->isNotEmpty();
         $isPengurusView = !$isAdminView && $roles->intersect($blogCardRoles)->isNotEmpty();
 
         if ($isAdminView || $isPengurusView) {
-            // Per-page default: list lama pakai 10, blog-card pakai 9
-            $defaultPerPage = $isAdminView ? 10 : 9;
-            $perPage = max(5, min(100, (int) $request->input('per_page', $defaultPerPage)));
+            // Admin melihat tabel baris (PerPage::TABEL), pengurus melihat grid
+            // kartu yang pilihannya kelipatan 6 (PerPage::KARTU) supaya baris
+            // terakhir tidak pincang. Daftarnya harus sama dengan dropdown
+            // "Per page" di partials/table-footer.
+            $perPage = $isAdminView
+                ? PerPage::resolve($request)
+                : PerPage::resolve($request, PerPage::KARTU, 12);
 
             $filters = $request->only(['status', 'search', 'audience']);
             if ($filterKategori && $filterKategori !== 'semua') {
@@ -60,7 +72,8 @@ class PengumumanController extends Controller
             return view($view, compact('pengumuman'));
         }
 
-        $perPage = max(5, min(100, (int) $request->input('per_page', 10)));
+        // Mahasiswa/alumni juga memakai tampilan grid kartu.
+        $perPage = PerPage::resolve($request, PerPage::KARTU, 12);
 
         // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
         $userAudience = $this->resolveAudience($roles);
@@ -79,12 +92,23 @@ class PengumumanController extends Controller
     public function create()
     {
         $user = Auth::user();
+
         $drafts = PengumumanDraft::where('user_id', $user->id)->latest()->get();
-        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts'));
+
+        // Payload lampiran per draf, dipakai JS saat tombol "Load Draft" ditekan.
+        $draftAttachments = $this->draftAttachments($drafts);
+
+        $maxUkuranMb = intdiv(self::MAX_UKURAN_KB, 1024);
+
+        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts', 'draftAttachments', 'maxUkuranMb'));
     }
 
     /**
-     * Simpan / Update Draft (AJAX)
+     * Simpan / Update Draft (AJAX).
+     *
+     * Poster & lampiran langsung diupload ke storage saat draf disimpan, lalu
+     * ID barisnya dicatat di draf. Tanpa ini file akan hilang begitu halaman
+     * di-reload, karena input file tidak bisa diisi ulang dari server.
      */
     public function saveDraft(Request $request)
     {
@@ -95,62 +119,181 @@ class PengumumanController extends Controller
                 'kategori' => 'nullable|string|max:100',
                 'target_audience' => 'nullable|in:all,mahasiswa,alumni,dosen,pengurus',
                 'konten' => 'nullable|string',
+                'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
+                'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
+                'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Draft validation failed: ', $e->errors());
             throw $e;
         }
 
-        $draftId = $request->input('draft_id');
+        $attributes = [
+            'judul' => $request->input('judul'),
+            'kategori' => $request->input('kategori'),
+            'target_audience' => $request->input('target_audience'),
+            'konten' => $request->input('konten'),
+        ];
 
-        if ($draftId) {
-            $draft = PengumumanDraft::where('id', $draftId)
-                ->where('user_id', Auth::id())
-                ->first();
+        $draft = PengumumanDraft::where('id', $request->input('draft_id'))
+            ->where('user_id', Auth::id())
+            ->first();
 
-            if ($draft) {
-                $draft->update([
-                    'judul' => $request->input('judul'),
-                    'kategori' => $request->input('kategori'),
-                    'target_audience' => $request->input('target_audience'),
-                    'konten' => $request->input('konten'),
-                ]);
-            } else {
-                $draft = PengumumanDraft::create([
-                    'user_id' => Auth::id(),
-                    'judul' => $request->input('judul'),
-                    'kategori' => $request->input('kategori'),
-                    'target_audience' => $request->input('target_audience'),
-                    'konten' => $request->input('konten'),
-                ]);
-            }
+        if ($draft) {
+            $draft->update($attributes);
         } else {
-            $draft = PengumumanDraft::create([
-                'user_id' => Auth::id(),
-                'judul' => $request->input('judul'),
-                'kategori' => $request->input('kategori'),
-                'target_audience' => $request->input('target_audience'),
-                'konten' => $request->input('konten'),
+            $draft = PengumumanDraft::create($attributes + ['user_id' => Auth::id()]);
+        }
+
+        $judulPengumuman = $request->input('judul') ?: 'Draf pengumuman';
+
+        // Gambar baru menggantikan seluruh set gambar lama — file lama dihapus
+        // agar tidak jadi sampah di storage.
+        if ($request->hasFile('poster')) {
+            $idLama = $draft->posterRepoIds();
+
+            $idBaru = $this->unggahGambar($request->file('poster'), $judulPengumuman);
+
+            $draft->update([
+                'poster_repo_ids' => $idBaru,
+                'poster_repo_id'  => $idBaru[0] ?? null,
             ]);
+
+            foreach ($idLama as $repoId) {
+                $this->repoMulmedService->deletePermanent($repoId);
+            }
+        }
+
+        if ($request->hasFile('lampiran')) {
+            $lampiranIds = $draft->lampiran_repo_ids ?? [];
+
+            foreach ($request->file('lampiran') as $file) {
+                $lampiranIds[] = $this->repoMulmedService->upload($file, [
+                    'judul_file' => $file->getClientOriginalName(),
+                    'visibility_status' => 'public',
+                ])->id;
+            }
+
+            $draft->update(['lampiran_repo_ids' => $lampiranIds]);
         }
 
         return response()->json([
             'success' => true,
             'draft_id' => $draft->id,
+            'attachments' => $this->draftAttachments(collect([$draft->fresh()]))[$draft->id],
             'message' => 'Draf berhasil disimpan.'
         ]);
     }
 
     /**
-     * Hapus Draft
+     * Hapus Draft beserta file yang sudah terlanjur diupload untuk draf itu.
      */
     public function deleteDraft($id)
     {
-        PengumumanDraft::where('id', $id)
+        $draft = PengumumanDraft::where('id', $id)
             ->where('user_id', Auth::id())
-            ->delete();
+            ->first();
+
+        if (!$draft) {
+            return redirect()->back()->with('success', 'Draf berhasil dihapus.');
+        }
+
+        foreach ($draft->allRepoIds() as $repoId) {
+            $this->repoMulmedService->deletePermanent($repoId);
+        }
+
+        $draft->delete();
 
         return redirect()->back()->with('success', 'Draf berhasil dihapus.');
+    }
+
+    /**
+     * Susun daftar file (gambar + lampiran) untuk sekumpulan draf.
+     *
+     * Semua baris mk_repo_mulmed diambil dalam satu query agar tidak N+1
+     * saat halaman "Buat Pengumuman" menampilkan banyak draf sekaligus.
+     *
+     * @param  \Illuminate\Support\Collection<PengumumanDraft>  $drafts
+     * @return array<int, array{gambar: array, lampiran: array}>
+     */
+    private function draftAttachments($drafts): array
+    {
+        $semuaId = $drafts->flatMap(fn (PengumumanDraft $draft) => $draft->allRepoIds())->unique();
+
+        $files = RepoMulmed::whereIn('id', $semuaId)->get()->keyBy('id');
+
+        $ringkas = fn (?RepoMulmed $file) => $file ? [
+            'id'   => $file->id,
+            'nama' => $file->nama_file,
+            'url'  => $file->url,
+        ] : null;
+
+        $petakan = fn (array $ids) => collect($ids)
+            ->map(fn ($id) => $ringkas($files->get($id)))
+            ->filter()
+            ->values()
+            ->all();
+
+        return $drafts->mapWithKeys(fn (PengumumanDraft $draft) => [
+            $draft->id => [
+                'gambar'   => $petakan($draft->posterRepoIds()),
+                'lampiran' => $petakan($draft->lampiran_repo_ids ?? []),
+            ],
+        ])->all();
+    }
+
+    /**
+     * Unggah gambar pengumuman sesuai urutan yang dikirim form.
+     *
+     * Indeks 0 adalah cover: diunggah paling awal sehingga id-nya paling kecil —
+     * inilah gambar yang diambil halaman daftar & detail sebagai sampul — dan
+     * judul filenya diberi prefix "Poster:" agar mudah dikenali.
+     *
+     * @param  array<\Illuminate\Http\UploadedFile>  $files
+     * @return array<int>  ID mk_repo_mulmed sesuai urutan gambar
+     */
+    private function unggahGambar(array $files, string $judul, ?int $pengumumanId = null): array
+    {
+        $ids = [];
+
+        foreach (array_values($files) as $index => $file) {
+            $meta = [
+                'judul_file' => $index === 0 ? 'Poster: ' . $judul : $file->getClientOriginalName(),
+                'visibility_status' => 'public',
+            ];
+
+            if ($pengumumanId) {
+                $meta['pengumuman_id'] = $pengumumanId;
+            }
+
+            $ids[] = $this->repoMulmedService->upload($file, $meta)->id;
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Jumlah gambar yang saat ini menempel pada sebuah pengumuman.
+     */
+    private function jumlahGambar(Pengumuman $pengumuman): int
+    {
+        return collect($pengumuman->repoMulmed)
+            ->filter(fn (RepoMulmed $file) => $file->isGambar())
+            ->count();
+    }
+
+    /**
+     * Ambil draf milik user yang sedang login. Null jika tidak ada / bukan miliknya.
+     */
+    private function userDraft(mixed $draftId): ?PengumumanDraft
+    {
+        if (!$draftId) {
+            return null;
+        }
+
+        return PengumumanDraft::where('id', $draftId)
+            ->where('user_id', Auth::id())
+            ->first();
     }
 
     //Simpan pengumuman baru.
@@ -162,24 +305,44 @@ class PengumumanController extends Controller
             'kategori' => 'nullable|string|max:100',
             'target_audience' => 'required|in:all,mahasiswa,alumni',
             'status_publish' => 'required|in:draft,published',
-            'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
-            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
+            'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
+            'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
+            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
         ]);
 
         // Remove poster & lampiran from $validated before creating Pengumuman
-        $posterFile = $request->file('poster');
+        $gambarFiles = $request->file('poster', []);
         unset($validated['poster'], $validated['lampiran']);
 
         $pengumuman = $this->pengumumanService->create(Auth::id(), $validated);
 
-        // Handle poster upload via RepoMulmed
-        if ($posterFile) {
-            $this->repoMulmedService->upload($posterFile, [
-                'judul_file' => 'Poster: ' . $validated['judul'],
-                'visibility_status' => 'public',
-                'pengumuman_id' => $pengumuman->id,
-            ]);
+        // File yang sudah diupload saat draf disimpan — tinggal dipindah kepemilikannya.
+        $draft            = $this->userDraft($request->input('draft_id'));
+        $draftGambarIds   = $draft?->posterRepoIds() ?? [];
+        $draftLampiranIds = $draft?->lampiran_repo_ids ?? [];
+
+        // Gambar yang dipilih di form menang atas gambar bawaan draf.
+        if ($gambarFiles) {
+            foreach ($draftGambarIds as $repoId) {
+                $this->repoMulmedService->deletePermanent($repoId);
+            }
+            $draftGambarIds = [];
+
+            $this->unggahGambar($gambarFiles, $validated['judul'], $pengumuman->id);
         }
+
+        $fileDariDraft = array_values(array_filter(array_merge($draftGambarIds, $draftLampiranIds)));
+
+        if ($fileDariDraft) {
+            RepoMulmed::whereIn('id', $fileDariDraft)->update(['pengumuman_id' => $pengumuman->id]);
+        }
+
+        // Lepaskan referensi agar file tidak ikut terhapus saat draf dibuang.
+        $draft?->update([
+            'poster_repo_id'    => null,
+            'poster_repo_ids'   => null,
+            'lampiran_repo_ids' => null,
+        ]);
 
         // Handle lampiran upload
         if ($request->hasFile('lampiran')) {
@@ -201,12 +364,7 @@ class PengumumanController extends Controller
                     'status_publish' => 'pending_review',
                 ]);
 
-                // Hapus draf jika post dikirim dari draf
-                if ($request->filled('draft_id')) {
-                    PengumumanDraft::where('id', $request->input('draft_id'))
-                        ->where('user_id', Auth::id())
-                        ->delete();
-                }
+                $draft?->delete();
 
                 return redirect()
                     ->route('manajemenmahasiswa.pengumuman.verification.request', $pengumuman->id)
@@ -216,12 +374,7 @@ class PengumumanController extends Controller
             $this->pengumumanService->publish($pengumuman->id);
         }
 
-        // Hapus draf jika post dikirim dari draf
-        if ($request->filled('draft_id')) {
-            PengumumanDraft::where('id', $request->input('draft_id'))
-                ->where('user_id', Auth::id())
-                ->delete();
-        }
+        $draft?->delete();
 
         return redirect()
             ->route('manajemenmahasiswa.pengumuman.index')
@@ -287,7 +440,10 @@ class PengumumanController extends Controller
         // Hanya pembuat atau admin yang boleh edit
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
 
-        return view('manajemenmahasiswa::pengumuman.pengumuman-edit', compact('pengumuman'));
+        $maxGambar = self::MAX_GAMBAR;
+        $maxUkuranMb = intdiv(self::MAX_UKURAN_KB, 1024);
+
+        return view('manajemenmahasiswa::pengumuman.pengumuman-edit', compact('pengumuman', 'maxGambar', 'maxUkuranMb'));
     }
 
     /**
@@ -304,11 +460,12 @@ class PengumumanController extends Controller
             'kategori' => 'nullable|string|max:100',
             'target_audience' => 'required|in:all,mahasiswa,alumni',
             'status_publish' => 'required|in:draft,published,archived',
-            'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
-            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
+            'poster' => 'nullable|array|max:' . self::MAX_GAMBAR,
+            'poster.*' => 'image|mimes:jpg,jpeg,png|max:' . self::MAX_UKURAN_KB,
+            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:' . self::MAX_UKURAN_KB,
         ]);
 
-        $posterFile = $request->file('poster');
+        $gambarBaru = $request->file('poster', []);
         unset($validated['poster'], $validated['lampiran']);
 
         // Fix #3: Re-verifikasi jika staff (requiresApproval) mengedit konten/judul
@@ -329,13 +486,25 @@ class PengumumanController extends Controller
 
         $this->pengumumanService->update($id, $validated);
 
-        // Ganti poster jika ada upload baru
-        if ($posterFile) {
-            $this->repoMulmedService->upload($posterFile, [
-                'judul_file' => 'Poster: ' . $validated['judul'],
-                'visibility_status' => 'public',
-                'pengumuman_id' => $id,
-            ]);
+        // Tambah gambar baru. Cover (gambar pertama) tidak bisa diganti dari
+        // halaman edit, jadi gambar baru selalu masuk di belakang — dan total
+        // gambar dibatasi supaya tidak melewati MAX_GAMBAR.
+        if ($gambarBaru) {
+            $sisaSlot = max(0, self::MAX_GAMBAR - $this->jumlahGambar($pengumuman));
+
+            if ($sisaSlot === 0) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Gambar sudah mencapai batas ' . self::MAX_GAMBAR . '. Hapus salah satu sebelum menambah.');
+            }
+
+            foreach (array_slice(array_values($gambarBaru), 0, $sisaSlot) as $file) {
+                $this->repoMulmedService->upload($file, [
+                    'judul_file' => $file->getClientOriginalName(),
+                    'visibility_status' => 'public',
+                    'pengumuman_id' => $id,
+                ]);
+            }
         }
 
         // Handle lampiran baru
@@ -523,7 +692,7 @@ class PengumumanController extends Controller
         }
 
         // Fix #1: Validasi backend bahwa verifier_id benar-benar punya role ketua yang valid
-        $validVerifierRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'];
+        $validVerifierRoles = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'];
         $validated = $request->validate([
             'verifier_id' => [
                 'required',
@@ -607,7 +776,7 @@ class PengumumanController extends Controller
         $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm']);
 
         if ($isAdmin) {
-            $requests     = $this->pengumumanService->getAllRequests($statusFilter);
+            $requests     = $this->pengumumanService->getAllRequests($statusFilter, PerPage::resolve($request));
             $pendingCount = $this->pengumumanService->getAllPendingCount();
         } else {
             $requests     = $this->pengumumanService->getRequestsForVerifier($user->id, $statusFilter);

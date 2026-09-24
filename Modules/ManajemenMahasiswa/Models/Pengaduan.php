@@ -5,10 +5,12 @@ namespace Modules\ManajemenMahasiswa\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pengaduan extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'mk_pengaduan';
 
@@ -43,8 +45,9 @@ class Pengaduan extends Model
     public const STATUS_DRAFT             = 'draft';
     public const STATUS_BARU              = 'baru';
     public const STATUS_DIBACA            = 'dibaca';
-    public const STATUS_DIDELEGASIKAN     = 'didelegasikan';
-    public const STATUS_SELESAI           = 'selesai';
+    public const STATUS_TERCATAT          = 'tercatat';
+    public const STATUS_DIDELEGASIKAN     = 'didelegasikan'; // Legacy — data lama
+    public const STATUS_SELESAI           = 'selesai';       // Legacy — data lama
 
     public const MAX_REOPEN = 2;
 
@@ -122,28 +125,6 @@ class Pengaduan extends Model
         return $this->belongsTo(\App\Models\User::class, 'closed_by');
     }
 
-    public function delegasi(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(PengaduanDelegasi::class, 'pengaduan_id')->orderByDesc('delegated_at');
-    }
-
-    public function delegasiAktif(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(PengaduanDelegasi::class, 'pengaduan_id')
-            ->where('status', 'aktif')
-            ->latestOfMany('delegated_at');
-    }
-
-    /**
-     * Delegasi terakhir (apapun statusnya) — digunakan untuk menampilkan
-     * tanggapan dosen bahkan setelah delegasi di-forward ke mahasiswa.
-     */
-    public function delegasiTerakhir(): \Illuminate\Database\Eloquent\Relations\HasOne
-    {
-        return $this->hasOne(PengaduanDelegasi::class, 'pengaduan_id')
-            ->latestOfMany('delegated_at');
-    }
-
     public function logs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(PengaduanLog::class, 'pengaduan_id')->orderByDesc('created_at');
@@ -152,5 +133,20 @@ class Pengaduan extends Model
     public function isSelesai(): bool
     {
         return $this->status === self::STATUS_SELESAI;
+    }
+
+    /**
+     * Label status yang ramah pengguna (sumber tunggal untuk seluruh tampilan).
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            self::STATUS_BARU          => 'Baru',
+            self::STATUS_DIBACA        => '',
+            self::STATUS_TERCATAT      => 'Tercatat',
+            self::STATUS_DIDELEGASIKAN => 'Tercatat', // Legacy fallback
+            self::STATUS_SELESAI       => 'Tercatat', // Legacy fallback
+            default                    => '',
+        };
     }
 }

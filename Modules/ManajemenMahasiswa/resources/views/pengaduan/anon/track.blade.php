@@ -13,10 +13,10 @@
 
         /* ── Page Title ── */
         .page-title h3 {
-            font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
+            font-size: 24px; font-weight: 700; color: #1e1b4b;
             margin: 0 0 4px; letter-spacing: -.02em;
         }
-        .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
+        .page-title p { font-size: 15px; color: #6b7280; margin: 0; }
 
         /* ── Tags ── */
         .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -26,10 +26,8 @@
             align-items: center; gap: 4px; white-space: nowrap;
         }
         .tag-kategori { background: #e0e7ff; color: #4f46e5; }
-        .tag-baru { background: #f3f4f6; color: #4b5563; }
-        .tag-dibaca { background: #e0f2fe; color: #0284c7; }
-        .tag-didelegasikan { background: #ffedd5; color: #ea580c; }
-        .tag-selesai { background: #bbf7d0; color: #15803d; }
+        .tag-baru { background: #fef3c7; color: #d97706; }
+        .tag-tercatat { background: #bbf7d0; color: #15803d; }
         .tag-anonim { background: #111827; color: #fff; }
 
         /* ── Section Labels ── */
@@ -60,12 +58,6 @@
         .info-item-value { font-size: 14px; font-weight: 600; color: #1e293b; }
 
 
-
-        /* ── Process Info Card ── */
-        .process-info-card {
-            background: #fffaf0; border: 1px solid #fde68a;
-            border-top: 3px solid #f59e0b; border-radius: 12px; padding: 24px 28px;
-        }
     </style>
 @endpush
 
@@ -79,7 +71,6 @@
         $status = strtolower($pengaduan->status);
         $waktuKejadian = data_get($pengaduan, 'data_template.waktu_kejadian')
             ?? data_get($pengaduan, 'data_template.tanggal_kejadian');
-        $linkBukti = data_get($pengaduan, 'data_template.link_bukti');
     @endphp
 
     @if (session('success'))
@@ -107,15 +98,17 @@
             @php
                 $kategoriRaw = (string) $pengaduan->kategori;
                 $kategori = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori($kategoriRaw);
+                // Legacy selesai/didelegasikan dianggap tercatat (lihat Pengaduan::statusLabel)
                 $statusStyle = match($status) {
-                    'selesai' => 'tag-selesai',
-                    'dibaca' => 'tag-dibaca',
-                    'didelegasikan' => 'tag-didelegasikan',
+                    'tercatat', 'selesai', 'didelegasikan' => 'tag-tercatat',
                     default => 'tag-baru',
                 };
+                $statusText = $pengaduan->statusLabel();
             @endphp
             <span class="tag-label tag-kategori">{{ ucwords(str_replace('_', ' ', $kategori)) }}</span>
-            <span class="tag-label {{ $statusStyle }}">{{ $status === 'dibaca' ? 'Diproses' : ucfirst($pengaduan->status) }}</span>
+            @if($statusText)
+                <span class="tag-label {{ $statusStyle }}">{{ $statusText }}</span>
+            @endif
             <span class="tag-label tag-anonim">
                 <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
             </span>
@@ -133,15 +126,17 @@
             <span>Detail Pengaduan</span>
         </div>
 
-        {{-- Hal Aduan --}}
-        <div class="mb-4">
-            <div class="section-label">Hal Aduan</div>
-            <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
-        </div>
+        {{-- Hal Aduan sudah tidak ditanyakan; tampil hanya untuk tiket lama yang masih menyimpannya. --}}
+        @if(data_get($pengaduan, 'data_template.hal_aduan'))
+            <div class="mb-4">
+                <div class="section-label">Hal Aduan</div>
+                <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan') }}</div>
+            </div>
+        @endif
 
-        {{-- Kronologi --}}
+        {{-- Pesan --}}
         <div class="mb-4">
-            <div class="section-label">Kronologi / Isi Pengaduan</div>
+            <div class="section-label">Pesan</div>
             <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
         </div>
 
@@ -171,60 +166,12 @@
             <div>
                 <div class="info-item-label">Bukti Dukung</div>
                 <div class="info-item-value">
-                    @if($linkBukti)
-                        <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer"
-                           style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
-                    @else
-                        <span style="color: #cbd5e1;">—</span>
-                    @endif
+                    @include('manajemenmahasiswa::pengaduan.partials.bukti-list', ['pengaduan' => $pengaduan, 'token' => $pengaduan->anon_token])
                 </div>
             </div>
         </div>
 
 
     </div>
-
-    {{-- ── Delegasi Info (simplified for anon) ── --}}
-    @php $delegasiInfo = $pengaduan->delegasiAktif ?? $pengaduan->delegasiTerakhir; @endphp
-
-    @if($delegasiInfo && $pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN)
-        <div class="process-info-card mb-4">
-            <div class="d-flex align-items-start gap-3">
-                <div style="background: #fef3c7; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #d97706;">
-                    <x-manajemenmahasiswa::ui.icon name="clock-02" size="20" />
-                </div>
-                <div>
-                    <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Sedang Ditinjau Pihak Berwenang</h6>
-                    <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
-                        Pengaduan Anda telah diteruskan ke pihak yang berwenang untuk ditindaklanjuti.
-                        Proses ini membutuhkan waktu.
-                    </p>
-                    <div class="mt-2 d-flex align-items-center gap-1" style="font-size: 12px; color: #b45309;">
-                        <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" />
-                        Didelegasikan sejak: {{ $delegasiInfo->delegated_at->translatedFormat('d F Y, H:i') }} WIB
-                    </div>
-                </div>
-            </div>
-        </div>
-    @endif
-
-    @if($delegasiInfo && $delegasiInfo->status === 'ditolak' && !in_array($pengaduan->status, [
-        \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_SELESAI,
-    ]))
-        <div class="process-info-card mb-4" style="background: #fefce8; border-color: #fde68a;">
-            <div class="d-flex align-items-start gap-3">
-                <div style="background: #e0f2fe; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #0284c7;">
-                    <x-manajemenmahasiswa::ui.icon name="arrow-circle-left" size="20" />
-                </div>
-                <div>
-                    <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Dikembalikan ke Admin</h6>
-                    <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
-                        Pihak yang ditunjuk mengembalikan pengaduan ini ke Admin untuk ditinjau ulang.
-                        Admin akan menindaklanjuti sendiri atau meneruskan ke pihak lain yang lebih tepat.
-                    </p>
-                </div>
-            </div>
-        </div>
-    @endif
 
 @endsection

@@ -10,10 +10,10 @@
             border: 1px solid #DDE1E8; margin-bottom: 24px;
         }
         .page-title h4 {
-            font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
+            font-size: 24px; font-weight: 700; color: #1e1b4b;
             margin: 0 0 4px; letter-spacing: -.02em;
         }
-        .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
+        .page-title p { font-size: 15px; color: #6b7280; margin: 0; }
         .btn-post {
             display: inline-flex; align-items: center; gap: 8px;
             background-color: #293C79; color: white; border: none;
@@ -33,6 +33,15 @@
             border: 1px solid #DDE1E8; color: #6b7280;
         }
         .btn-back:hover { background: #E7E8F0; color: #374151; border-color: #293C79; }
+        .detail-back {
+            width: auto; min-width: 0; height: 32px; padding: 0 12px; gap: 8px;
+            display: inline-flex; align-items: center; justify-content: center;
+            border-radius: 8px; background: #fff; border: 1px solid #DFE1E7;
+            color: #353849; box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            text-decoration: none; transition: all .2s;
+        }
+        .detail-back:hover { background: #F6F8FA; color: #0D0D12; }
+        .detail-back-label { color: inherit; font-size: 13px; font-weight: 600; line-height: 1.2; }
         .form-control-custom, .form-select-custom {
             background-color: #f9fafb; border: 1px solid #DDE1E8;
             border-radius: 12px; padding: 12px 16px;
@@ -74,8 +83,9 @@
             <h4>Form Pengaduan Konfidensial</h4>
             <p>Identitas Anda tidak akan ditampilkan kepada publik maupun admin.</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">
-            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" /> Kembali
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="detail-back" title="Kembali" aria-label="Kembali ke Pilih Jalur">
+            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+            <span class="detail-back-label">Kembali</span>
         </a>
     </div>
 
@@ -176,14 +186,14 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label-custom d-block">Dosen Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
-                    <select class="form-select form-control-custom" name="template[nama_dosen]">
+                    <x-manajemenmahasiswa::ui.select name="template[nama_dosen]" size="lg">
                         <option value="" {{ old('template.nama_dosen') ? '' : 'selected' }}>Pilih dosen…</option>
                         @foreach(($dosenList ?? []) as $namaDosen)
                             <option value="{{ $namaDosen }}" {{ old('template.nama_dosen') === $namaDosen ? 'selected' : '' }}>
                                 {{ $namaDosen }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-manajemenmahasiswa::ui.select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label-custom d-block">Tendik Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
@@ -195,14 +205,14 @@
             <div class="row g-4 mt-0 mb-1 pt-4">
                 <div class="col-md-6">
                     <label class="form-label-custom d-block">Seberapa Sering Terjadi <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
-                    <select class="form-select form-control-custom" name="template[frekuensi]">
+                    <x-manajemenmahasiswa::ui.select name="template[frekuensi]" size="lg">
                         <option value="" {{ old('template.frekuensi') ? '' : 'selected' }}>Pilih frekuensi…</option>
                         @foreach(($frekuensiList ?? []) as $value => $label)
                             <option value="{{ $value }}" {{ old('template.frekuensi') === $value ? 'selected' : '' }}>
                                 {{ $label }}
                             </option>
                         @endforeach
-                    </select>
+                    </x-manajemenmahasiswa::ui.select>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label-custom d-block">Link Bukti Dukung <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
@@ -217,8 +227,8 @@
         </div>
 
         <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
-            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">Batal</a>
-            <button type="submit" class="btn-post" style="width: auto;">Lanjut Konfirmasi</button>
+            <a href="{{ route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]) }}" class="btn-back">Batal</a>
+            <button type="submit" class="mk-btn mk-btn--primary" style="width: auto;">Lanjut Konfirmasi</button>
         </div>
     </form>
 @endsection

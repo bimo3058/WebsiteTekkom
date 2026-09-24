@@ -183,48 +183,25 @@
     <nav class="sb-nav">
         <div x-show="sidebarOpen" class="sb-section-label">Main Menu</div>
 
-        <a href="{{ $mainDashboardUrl }}"
-            class="{{ str_contains($currentRoute, 'dashboard') && !str_contains($currentRoute, 'manajemenmahasiswa') ? 'active' : '' }}">
-            <span class="nav-icon d-inline-flex">
-                {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/home-01.svg'))) !!}
-            </span>
-            <span class="nav-label" style="flex-grow:1;">Dashboard</span>
-        </a>
-
         @if($showDashboardAnalitik)
             <a href="{{ route('manajemenmahasiswa.dashboard') }}"
                 class="{{ $currentRoute === 'manajemenmahasiswa.dashboard' ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
-                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/home-01.svg'))) !!}
                 </span>
-                <span class="nav-label" style="flex-grow:1;">Analitik</span>
+                <span class="nav-label" style="flex-grow:1;">Dashboard</span>
             </a>
         @endif
 
         @php
-            $isKetua = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
+            $isKetua = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan']);
             $isAdminVerifier = (bool) array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin', 'dpm']);
             $isStaffHimpunan = in_array('staff_himpunan', $sidebarRoles) && !$isKetua && !$isAdminVerifier;
 
             $pengumumanDropdownActive = request()->routeIs('manajemenmahasiswa.pengumuman.*');
 
-            // Counter pending verifikasi pengumuman
-            $pendingVerifCount = 0;
-            if ($isKetua) {
-                // Ketua: hanya request yang ditujukan ke mereka
-                $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('verifier_id', auth()->id())
-                    ->where('status', 'pending')->count();
-            } elseif ($isAdminVerifier) {
-                // Admin: semua request pending (bisa override siapapun)
-                $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('status', 'pending')->count();
-            }
-
-            // Counter untuk staff: berapa pengajuan milik dia yang masih pending
-            $staffPendingCount = 0;
-            if ($isStaffHimpunan) {
-                $staffPendingCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('requester_id', auth()->id())
-                    ->where('status', 'pending')->count();
-            }
+            // Hitungan pending pengumuman tidak lagi dipakai di sini — semuanya
+            // pindah ke lonceng notifikasi topbar (NotifikasiTugasService).
         @endphp
 
         @if($isKetua || $isAdminVerifier)
@@ -236,10 +213,6 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
-                    @if($pendingVerifCount > 0)
-                        <span class="nav-label"
-                            style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $pendingVerifCount }}</span>
-                    @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                         <path d="m6 9 6 6 6-6" />
@@ -253,9 +226,6 @@
                     <a href="{{ route('manajemenmahasiswa.pengumuman.verifikasi.index') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.verifikasi.*') ? 'active' : '' }}">
                         <span class="nav-label">Verifikasi Pengumuman</span>
-                        @if($pendingVerifCount > 0)
-                            <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
-                        @endif
                     </a>
                 </div>
             </div>
@@ -269,10 +239,6 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
-                    @if($staffPendingCount > 0)
-                        <span class="nav-label"
-                            style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $staffPendingCount }}</span>
-                    @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                         <path d="m6 9 6 6 6-6" />
@@ -286,15 +252,13 @@
                     <a href="{{ route('manajemenmahasiswa.pengumuman.riwayat.verifikasi') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.riwayat.verifikasi') ? 'active' : '' }}">
                         <span class="nav-label">Status Verifikasi</span>
-                        @if($staffPendingCount > 0)
-                            <span style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
-                        @endif
                     </a>
                 </div>
             </div>
 
         @else
-            {{-- Link tunggal Pengumuman — untuk role lain (mahasiswa, alumni, dosen, dll) --}}
+            {{-- Pengumuman — menu tunggal untuk mahasiswa, alumni, dosen, pengurus:
+                 role ini hanya membaca pengumuman, tidak ada submenu verifikasi. --}}
             <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.pengumuman.*') ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
@@ -307,9 +271,13 @@
         <div x-show="sidebarOpen" class="sb-section-label">Direktori Mahasiswa</div>
         @php
             $isDirektoriActive = request()->routeIs('manajemenmahasiswa.direktori.*');
-            $canViewAll = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen', 'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
+            $canViewAll = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen', 'dosen', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
             $mahasiswaRoute = $canViewAll ? route('manajemenmahasiswa.direktori.mahasiswa.index') : route('manajemenmahasiswa.direktori.mahasiswa.profil');
             $alumniRoute = $canViewAll ? route('manajemenmahasiswa.direktori.alumni.index') : route('manajemenmahasiswa.direktori.alumni.profil');
+
+            // Tidak ada lagi subbab "Profil Saya": halaman itu isinya sama persis dengan
+            // halaman detail mahasiswa. Sekarang mahasiswa mencari namanya di daftar,
+            // lalu tombol Download CV & Edit muncul sendiri di halaman detail miliknya.
         @endphp
         <div class="sidebar-dropdown {{ $isDirektoriActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $isDirektoriActive ? 'active' : '' }}"
@@ -350,8 +318,9 @@
         @php
             $kegiatanRoutes = ['manajemenmahasiswa.proker.*', 'manajemenmahasiswa.pelaksanaan.*', 'manajemenmahasiswa.kegiatan.*'];
             $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
-            $canViewProker = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit']);
-            $canViewPelaksanaan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
+            // Rencana Proker & Pelaksanaan kini punya daftar akses yang sama —
+            // satu variabel supaya keduanya tidak lepas sinkron dari route middleware.
+            $canViewKegiatanHimpunan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
         @endphp
         <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
@@ -366,13 +335,13 @@
                 </svg>
             </a>
             <div class="sidebar-dropdown-menu">
-                @if($canViewProker)
+                @if($canViewKegiatanHimpunan)
                     <a href="{{ route('manajemenmahasiswa.proker.index') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.proker.*') ? 'active' : '' }}">
                         <span class="nav-label">Rencana Proker</span>
                     </a>
                 @endif
-                @if($canViewPelaksanaan)
+                @if($canViewKegiatanHimpunan)
                     <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}"
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pelaksanaan.*') ? 'active' : '' }}">
                         <span class="nav-label">Pelaksanaan Kegiatan</span>
@@ -385,18 +354,48 @@
             </div>
         </div>
 
-        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator', 'ketua_departemen', 'gpm']))
-            @php
-                $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
-                $verifTab    = request('tab', 'prestasi');
+        {{-- Daftar putih, bukan daftar larangan, dan isinya disalin dari middleware
+        route verifikasi.index. Pola sebelumnya menyembunyikan menu untuk siapa pun
+        yang memegang role dosen — padahal role menumpuk: akun GPM memegang
+        "dosen" + "gpm" sekaligus, sehingga menunya hilang karena role dosennya,
+        bukan karena keputusan tentang GPM. Daftar putih membuat yang boleh masuk
+        tertulis eksplisit, dan role di luar daftar (mis. dosen_koor) tidak lagi
+        melihat menu yang berujung 403.
 
-                // Badge jumlah pending — hanya untuk verifier (admin/kemahasiswaan)
-                $verifPendingRiwayat  = 0;
-                $verifPendingPrestasi = 0;
-                if (array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin'])) {
-                    $verifPendingRiwayat  = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count();
-                    $verifPendingPrestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
-                }
+        DPM sengaja TIDAK termasuk (22 Sep 2026) — pemilik modul memutuskan DPM
+        tidak perlu bisa melihat bab Verifikasi Data mahasiswa sama sekali,
+        bukan sekadar dibuat read-only. Lihat VerifikasiController::isPengawas(). --}}
+        @php
+            $canViewVerifikasi = (bool) array_intersect($sidebarRoles, [
+                'mahasiswa', 'alumni',
+                'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan',
+                'superadmin', 'admin_kemahasiswaan',
+                'ketua_departemen', 'gpm',
+            ]);
+        @endphp
+        @if($canViewVerifikasi)
+            @php
+                // Dropdown terbuka/toggle aktif kalau berada di salah satu dari
+                // ketiga subbab. $verifIndexActive & $verifRewardActive dipakai
+                // terpisah untuk state aktif per-link, supaya Klaim Prestasi
+                // (route sendiri, tanpa query "tab") tidak ikut ke-highlight
+                // sebagai Verifikasi Prestasi begitu juga sebaliknya.
+                $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
+                $verifIndexActive = request()->routeIs('manajemenmahasiswa.verifikasi.index');
+                $verifRewardActive = request()->routeIs('manajemenmahasiswa.verifikasi.reward.*');
+                $verifTab = request('tab', 'prestasi');
+
+                // Jumlah pending prestasi/riwayat/klaim reward kini dihitung oleh
+                // NotifikasiTugasService dan tampil di lonceng topbar.
+
+                // Alumni cuma bisa lihat (tidak lagi verifikasi/klaim aktif),
+                // jadi labelnya dibuat "Riwayat ..." biar tidak menyesatkan.
+                // Role lain (mahasiswa, pengurus, superadmin, dst) tetap pakai
+                // istilah "Verifikasi"/"Klaim" karena mereka memang jadi aktor.
+                $isAlumniSidebar = in_array('alumni', $sidebarRoles);
+                $verifLabelPrestasi = $isAlumniSidebar ? 'Riwayat Prestasi' : 'Verifikasi Prestasi';
+                $verifLabelKlaim = $isAlumniSidebar ? 'Riwayat Klaim Prestasi' : 'Klaim Prestasi';
+                $verifLabelKegiatan = $isAlumniSidebar ? 'Riwayat Kegiatan' : 'Verifikasi Kegiatan';
             @endphp
             <div class="sidebar-dropdown {{ $verifActive ? 'open' : '' }}">
                 <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $verifActive ? 'active' : '' }}"
@@ -405,10 +404,6 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/check-square-1.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Verifikasi Data</span>
-                    @if($verifPendingRiwayat + $verifPendingPrestasi > 0)
-                        <span class="nav-label"
-                            style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $verifPendingRiwayat + $verifPendingPrestasi }}</span>
-                    @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                         <path d="m6 9 6 6 6-6" />
@@ -416,30 +411,66 @@
                 </a>
                 <div class="sidebar-dropdown-menu">
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}"
-                        class="sub-item {{ $verifActive && $verifTab === 'prestasi' ? 'active' : '' }}">
-                        <span class="nav-label">Verifikasi Prestasi</span>
-                        @if($verifPendingPrestasi > 0)
-                            <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingPrestasi }}</span>
-                        @endif
+                        class="sub-item {{ $verifIndexActive && $verifTab === 'prestasi' ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelPrestasi }}</span>
+                    </a>
+                    <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
+                        class="sub-item {{ $verifRewardActive ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelKlaim }}</span>
                     </a>
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat']) }}"
-                        class="sub-item {{ $verifActive && $verifTab === 'riwayat' ? 'active' : '' }}">
-                        <span class="nav-label">Verifikasi Riwayat Kegiatan</span>
-                        @if($verifPendingRiwayat > 0)
-                            <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $verifPendingRiwayat }}</span>
-                        @endif
+                        class="sub-item {{ $verifIndexActive && $verifTab === 'riwayat' ? 'active' : '' }}">
+                        <span class="nav-label">{{ $verifLabelKegiatan }}</span>
                     </a>
                 </div>
             </div>
         @endif
 
-        <a href="{{ route('manajemenmahasiswa.forum.index') }}"
-            class="{{ request()->routeIs('manajemenmahasiswa.forum.*') ? 'active' : '' }}">
-            <span class="nav-icon d-inline-flex">
-                {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}
-            </span>
-            <span class="nav-label" style="flex-grow:1;">Forum Diskusi</span>
-        </a>
+        @php
+            $forumDropdownActive = request()->routeIs('manajemenmahasiswa.forum.*');
+        @endphp
+        @php
+            $canSeeForumReports = in_array('superadmin', $sidebarRoles) || in_array('admin', $sidebarRoles) || in_array('admin_kemahasiswaan', $sidebarRoles) || in_array('gpm', $sidebarRoles) || in_array('dpm', $sidebarRoles) || in_array('ketua_departemen', $sidebarRoles);
+        @endphp
+        <div class="sidebar-dropdown {{ $forumDropdownActive ? 'open' : '' }}">
+            <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $forumDropdownActive ? 'active' : '' }}"
+                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
+                <span class="nav-icon d-inline-flex">
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}
+                </span>
+                <span class="nav-label" style="flex-grow: 1;">Forum Diskusi</span>
+                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </a>
+            <div class="sidebar-dropdown-menu">
+                @php
+                    $forumOnlyActive = request()->routeIs('manajemenmahasiswa.forum.*')
+                        && !request()->routeIs('manajemenmahasiswa.forum.my')
+                        && !request()->routeIs('manajemenmahasiswa.forum.leaderboard')
+                        && !request()->routeIs('manajemenmahasiswa.forum.reports');
+                @endphp
+                <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+                    class="sub-item {{ $forumOnlyActive ? 'active' : '' }}">
+                    <span class="nav-label">Forum</span>
+                </a>
+                <a href="{{ route('manajemenmahasiswa.forum.my') }}"
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.my') ? 'active' : '' }}">
+                    <span class="nav-label">Forum Saya</span>
+                </a>
+                <a href="{{ route('manajemenmahasiswa.forum.leaderboard') }}"
+                    class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.leaderboard') ? 'active' : '' }}">
+                    <span class="nav-label">Leaderboard</span>
+                </a>
+                @if($canSeeForumReports)
+                    <a href="{{ route('manajemenmahasiswa.forum.reports') }}"
+                        class="sub-item {{ request()->routeIs('manajemenmahasiswa.forum.reports') ? 'active' : '' }}">
+                        <span class="nav-label">Laporan</span>
+                    </a>
+                @endif
+            </div>
+        </div>
 
         @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'dpm', 'ketua_departemen']))
             <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
@@ -453,6 +484,15 @@
     </nav>
 
     <div class="sb-footer">
+        <a href="{{ $mainDashboardUrl }}" class="btn-logout">
+            <span class="nav-icon d-inline-flex">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:16px;height:16px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </span>
+            <span class="nav-label">Kembali ke SITKOM</span>
+        </a>
+
         <a href="{{ route('profile.edit') }}" class="btn-logout">
             <span class="nav-icon d-inline-flex">
                 {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/gear.svg'))) !!}
