@@ -33,13 +33,10 @@
 <div class="modal fade tinjau-modal" id="tinjauModal" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content" style="overflow: hidden;">
-            <div class="modal-header">
-                <h5 class="modal-title fw-bold" style="color: var(--c-fg, #0D0D12);">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    <span id="tinjauTitle">Tinjau Pengajuan</span>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+            <x-manajemenmahasiswa::ui.modal-header subtitle="Periksa bukti di kiri dan data pengajuan di kanan">
+                <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></x-slot:icon>
+                <span id="tinjauTitle">Tinjau Pengajuan</span>
+            </x-manajemenmahasiswa::ui.modal-header>
             <div class="modal-body" style="padding: 0;">
                 <div class="tp-grid">
                     @include('manajemenmahasiswa::verifikasi.partials.tinjau-bukti-pane')
@@ -55,11 +52,10 @@
                                 @csrf @method('PATCH')
                                 <div id="tpActions" style="padding-top: 18px;">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label class="form-label fw-bold mb-0" style="font-size: 12px;">Catatan Verifikasi</label>
+                                        <label class="form-label-custom mb-0" for="tpNote">Catatan Verifikasi</label>
                                         <span class="text-muted" style="font-size: 11px;" id="charCount_tp">0 / 200 huruf</span>
                                     </div>
-                                    <textarea name="verification_note" id="tpNote" class="form-control" rows="3" maxlength="200"
-                                              style="border-radius: 10px; font-size: 13px;"
+                                    <textarea name="verification_note" id="tpNote" class="form-control form-control-custom" rows="3" maxlength="200"
                                               oninput="document.getElementById('charCount_tp').innerText = this.value.length + ' / 200 huruf'; document.getElementById('tpError').style.display = 'none';"></textarea>
                                     <div id="tpError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                     <div class="tp-aksi" id="tpAksiUtama">

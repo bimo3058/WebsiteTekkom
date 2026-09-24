@@ -2,6 +2,7 @@
 
 @include('manajemenmahasiswa::direktori.partials.palette')
 @include('manajemenmahasiswa::partials.card-frame')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 <style>
     /* Samakan shell card dengan form Edit Alumni. */
@@ -24,70 +25,25 @@
         align-items: center;
         gap: 8px;
     }
-    .form-label-custom {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--c-fg-sec);
-        margin-bottom: 6px;
-    }
-    .form-control-custom {
-        border: 1.5px solid var(--c-border);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        color: var(--c-fg);
-        background: #ffffff;
-        transition: all 0.2s;
-    }
-    .form-control-custom:focus {
-        border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px var(--c-primary-subtle);
-    }
-    .form-select-custom {
-        border: 1.5px solid var(--c-border);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        color: var(--c-fg);
-        background: #ffffff;
-        transition: all 0.2s;
-    }
-    .form-select-custom:focus {
-        border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px var(--c-primary-subtle);
-    }
+    /* Label & kotak isian: partials/sitkom-ui (gaya Edit User SITKOM) */
 </style>
 
-<!-- Back Button -->
-<div class="mb-3">
-    <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm" title="Kembali" aria-label="Kembali">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-        Kembali
-    </a>
-</div>
+<x-manajemenmahasiswa::ui.page-header bordered :title="($isAdmin ?? false) ? 'Edit Biodata Mahasiswa' : 'Edit Data Saya'">
+    @if($isAdmin ?? false)
+        Perbarui informasi biodata mahasiswa: {{ $mhs->nama }}
+    @else
+        Perbarui data diri Anda pada direktori mahasiswa.
+    @endif
+    <x-slot:leading>
+        <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" title="Kembali" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+    </x-slot:leading>
+</x-manajemenmahasiswa::ui.page-header>
 
-<!-- Validation Errors -->
-@if($errors->any())
-    <div class="alert alert-danger" style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error-200); font-size: 14px;">
-        <ul class="mb-0">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="error" :messages="$errors->all()" class="mb-3" />
 
 <div class="edit-card">
-    <div class="mb-4">
-        <h5 class="fw-bold mb-1" style="font-size: 20px; color: var(--c-fg);">{{ ($isAdmin ?? false) ? 'Edit Biodata Mahasiswa' : 'Edit Data Saya' }}</h5>
-        <p class="mb-0" style="font-size: 14px; color: var(--c-fg-muted);">
-        @if($isAdmin ?? false)
-            Perbarui informasi biodata mahasiswa: {{ $mhs->nama }}
-        @else
-            Perbarui data diri Anda pada direktori mahasiswa.
-        @endif
-        </p>
-    </div>
 
     <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.update', $mhs->id) }}"
           id="formEditBiodata" data-status-awal="{{ $mhs->status }}">
@@ -133,21 +89,21 @@
             <div class="col-12">
                 <label class="form-label-custom">Nama Lengkap</label>
                 <input type="text" class="form-control form-control-custom"
-                       value="{{ $mhs->nama }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
+                       value="{{ $mhs->nama }}" disabled>
             </div>
 
             <!-- NIM -->
             <div class="col-md-6">
                 <label class="form-label-custom">NIM</label>
                 <input type="text" class="form-control form-control-custom"
-                       value="{{ $mhs->nim }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
+                       value="{{ $mhs->nim }}" disabled>
             </div>
 
             <!-- Angkatan -->
             <div class="col-md-6">
                 <label class="form-label-custom">Angkatan</label>
                 <input type="number" class="form-control form-control-custom"
-                       value="{{ $mhs->angkatan }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
+                       value="{{ $mhs->angkatan }}" disabled>
             </div>
 
             <div class="col-12">
@@ -204,7 +160,7 @@
                 <label class="form-label-custom">Kontak</label>
                 <div class="d-flex position-relative form-control-custom p-0" style="overflow: visible; background: #fff;">
                     <button type="button" @click.prevent="toggle($el)"
-                            class="btn border-0 d-flex align-items-center gap-2" style="background: var(--c-grey-0); color: var(--c-fg-sec); border-right: 1.5px solid var(--c-border) !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
+                            class="btn border-0 d-flex align-items-center gap-2" style="background: var(--c-grey-0); color: var(--c-fg-sec); border-right: 1px solid var(--c-border-strong) !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 7px; border-bottom-left-radius: 7px;">
                         <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: var(--c-fg-sec);"></span>
                         {{-- Warna panah diwarisi dari tombol: :style Alpine menimpa seluruh atribut style SVG ini. --}}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -213,7 +169,7 @@
                     <input type="text" name="kontak" inputmode="numeric" maxlength="15" class="form-control border-0 shadow-none"
                            value="{{ old('kontak', $localNum) }}" placeholder="8123456789"
                            @input="$el.value = $el.value.replace(/[^0-9]/g, '').slice(0, 15)"
-                           style="background: transparent; font-size: 14px; font-weight: 600; color: var(--c-fg);">
+                           style="background: transparent; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">
                     <input type="hidden" name="phone_code" :value="selected.dial">
 
                     <!-- Dropdown -->

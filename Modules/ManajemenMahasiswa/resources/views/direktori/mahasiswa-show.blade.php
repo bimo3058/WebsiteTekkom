@@ -2,6 +2,7 @@
 
 @include('manajemenmahasiswa::direktori.partials.palette')
 @include('manajemenmahasiswa::partials.card-frame')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 <style>
     /* ── Card profil: susunan disamakan dengan halaman Detail User di User Management
@@ -39,9 +40,9 @@
         width: 84px;
         height: 84px;
         border-radius: 50%;
-        background: #F3F4F6;
-        border: 1.5px solid #E5E7EB;
-        color: #6B7280;
+        background: var(--c-grey-50);
+        border: 1.5px solid var(--c-border);
+        color: var(--c-fg-muted);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -54,20 +55,6 @@
     .detail-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
     .detail-name { font-size: 20px; font-weight: 800; color: var(--c-fg); margin: 0; letter-spacing: -0.02em; }
     .detail-sub { font-size: 14px; font-weight: 500; color: var(--c-fg-muted); margin: 0 0 16px 0; }
-    /* Badge outline berdot; warnanya tetap dari palette status, hanya latar dibuat transparan */
-    .badge-outline {
-        display: inline-flex !important;
-        align-items: center;
-        gap: 5px;
-        padding: 2px 10px !important;
-        border-radius: 99px !important;
-        font-size: 10px !important;
-        font-weight: 700;
-        background: transparent !important;
-        border: 1px solid currentColor;
-        box-shadow: none !important;
-    }
-    .badge-outline .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
     .detail-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -75,8 +62,8 @@
         max-width: 900px;
     }
     .detail-row { display: flex; align-items: center; min-width: 0; }
-    .detail-label { width: 170px; font-size: 13px; color: #94A3B8; flex-shrink: 0; font-weight: 500; }
-    .detail-value { font-size: 13px; font-weight: 600; color: #334155; min-width: 0; overflow-wrap: anywhere; }
+    .detail-label { width: 170px; font-size: 13px; color: var(--c-fg-muted); flex-shrink: 0; font-weight: 500; }
+    .detail-value { font-size: 13px; font-weight: 600; color: var(--c-fg-sec); min-width: 0; overflow-wrap: anywhere; }
     .detail-value.empty { color: var(--c-fg-placeholder); font-style: italic; font-weight: 400; }
     @media (max-width: 768px) {
         .detail-profile { flex-direction: column; }
@@ -100,14 +87,7 @@
         align-items: center;
         gap: 8px;
     }
-    /* Warna tiap status ada di partials/palette */
-    .status-badge {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 20px;
-        display: inline-block;
-    }
+    /* Bentuk & warna badge status dan tingkat ada di partials/sitkom-ui */
 
     .riwayat-table {
         width: 100%;
@@ -116,17 +96,17 @@
     }
     .riwayat-table thead th {
         background: #FAFAFA;
-        padding: 10px 14px;
-        font-size: 12px;
-        font-weight: 700;
+        padding: 11px 16px;
+        font-size: 11px;
+        font-weight: 600;
         color: var(--c-fg-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
+        text-align: left;
+        white-space: nowrap;
         border-bottom: 1px solid var(--c-border);
     }
     .riwayat-table tbody td {
-        padding: 12px 14px;
-        font-size: 14px;
+        padding: 14px 16px;
+        font-size: 13px;
         color: var(--c-fg);
         border-bottom: 1px solid #F3F4F6;
         vertical-align: middle;
@@ -155,31 +135,10 @@
         justify-content: space-between;
         align-items: center;
     }
-    /* Warna tiap tingkat ada di partials/palette */
-    .tingkat-badge {
-        font-size: 10px;
-        font-weight: 700;
-        padding: 2px 8px;
-        border-radius: 12px;
-        text-transform: uppercase;
-    }
-
-    /* Modal */
-    .modal-content { border-radius: 16px; border: none; }
-    .modal-header { border-bottom: 1px solid var(--c-border); padding: 20px 24px; }
-    .modal-body { padding: 24px; }
-    .modal-footer { border-top: 1px solid var(--c-border); padding: 16px 24px; }
 </style>
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 
 @php
     $statusLabel = match ($mhs->status) {
@@ -240,9 +199,7 @@
         <div style="flex: 1; min-width: 0;">
             <div class="detail-name-row">
                 <h2 class="detail-name">{{ $mhs->nama }}</h2>
-                <span class="status-badge {{ $mhs->status }} badge-outline">
-                    <span class="dot"></span> {{ $statusLabel }}
-                </span>
+                <span class="status-badge {{ $mhs->status }}">{{ $statusLabel }}</span>
             </div>
             <p class="detail-sub">NIM: {{ $mhs->nim }}</p>
 
@@ -368,7 +325,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span style="font-size: 14px; color: var(--c-fg);">{{ $peranValue }}</span>
+                                <span style="color: var(--c-fg);">{{ $peranValue }}</span>
                             </td>
                             <td style="font-size: 13px; color: var(--c-fg-muted);">
                                 @if($tanggalDisplay)
@@ -424,7 +381,7 @@
                                 <span style="font-weight: 600; color: var(--c-fg);">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak ditemukan' }}</span>
                             </td>
                             <td>
-                                <span style="font-size: 14px; color: var(--c-fg);">{{ $peranValue }}</span>
+                                <span style="color: var(--c-fg);">{{ $peranValue }}</span>
                             </td>
                             <td style="font-size: 13px; color: var(--c-fg-muted);">
                                 @if($tanggalDisplay)

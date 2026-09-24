@@ -19,37 +19,7 @@
         border-bottom: 1px solid var(--c-surface-muted);
     }
 
-    /* ── Custom Form Styles ── */
-    .form-label-custom {
-        font-weight: 600;
-        font-size: 13px;
-        color: var(--c-fg-sec);
-        margin-bottom: 6px;
-    }
-    .form-label-custom .required {
-        color: var(--c-error);
-    }
-    .form-control-custom,
-    .form-select-custom {
-        border: 1.5px solid var(--c-border);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--c-fg);
-        transition: all 0.2s;
-        background: var(--c-surface);
-    }
-    .form-control-custom:focus,
-    .form-select-custom:focus {
-        border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px var(--c-primary-subtle);
-        outline: none;
-    }
-    .form-control-custom::placeholder {
-        color: var(--c-fg-muted);
-        font-weight: 400;
-    }
+    /* ── Label & kotak isian: partials/sitkom-ui (gaya Edit User SITKOM) ── */
     textarea.form-control-custom {
         min-height: 140px;
         resize: vertical;

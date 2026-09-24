@@ -1,6 +1,7 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 @include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
@@ -143,14 +144,7 @@
         height: 100%;
         object-fit: cover;
     }
-    /* Warna tiap status ada di partials/palette */
-    .status-badge {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 20px;
-        display: inline-block;
-    }
+    /* Bentuk & warna badge status ada di partials/sitkom-ui */
 
     /* Kolom Aksi memakai tombol .mk-btn--icon + panel .mk-menu milik modul
        (resources/views/partials/button-theme.blade.php). */
@@ -212,23 +206,8 @@
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-@if($pesanGangguan)
-    <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-2" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        <span>{{ $pesanGangguan }}</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :message="$pesanGangguan" class="mb-3" />
 
     <!-- Stat Cards -->
 <div class="stat-grid mb-4">
@@ -513,7 +492,7 @@
                     <tr>
                         <td colspan="6" style="padding: 60px 24px; text-align: center;">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: #E5E7EB;">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: var(--c-border);">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="9" cy="7" r="4"></circle>
                                     <line x1="17" y1="11" x2="23" y2="11"></line>
