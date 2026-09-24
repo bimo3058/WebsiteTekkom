@@ -15,7 +15,7 @@
         <p x-show="selected.rejection_reason" class="rounded-md bg-red-50 p-3 text-sm text-red-700" x-text="selected.rejection_reason"></p>
         <a x-show="selected.online_link || (selected.mode==='online' && safeLink(selected.room)!=='#')" :href="safeLink(selected.online_link || selected.room)" target="_blank" rel="noopener noreferrer" class="text-primary underline">Join Meeting</a>
         <div class="flex flex-wrap justify-end gap-2">
-            @if($activeRole==='dosen')
+            @if($activeRole==='dosen' && ($allowManage ?? true))
             <x-capstone::button variant="outline" x-show="canEdit(selected)" @click="document.getElementById('schedule-detail').close();edit(selected)"><x-capstone::icon name="Edit" />Edit</x-capstone::button>
             <x-capstone::button variant="destructive" x-show="canEdit(selected)" @click="document.getElementById('schedule-detail').close();confirmDelete(selected)"><x-capstone::icon name="Trash2" />Delete</x-capstone::button>
             @endif

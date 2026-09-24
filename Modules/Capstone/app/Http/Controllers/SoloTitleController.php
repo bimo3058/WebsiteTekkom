@@ -17,6 +17,13 @@ class SoloTitleController extends Controller
     use ApiResponseTrait, RequiresActivePeriod;
 
     /**
+     * Group statuses whose approved titles stay open for recruitment.
+     * Covers solo seekers AND merged (ex-solo) groups that fell below
+     * minimum members. Locked/finalized groups are excluded.
+     */
+    public const RECRUITABLE_STATUSES = ['FORMING', 'FORMING_SOLO', 'WAITING_SUPERVISOR_APPROVAL', 'TITLE_APPROVED', 'READY_FOR_BIDDING'];
+
+    /**
      * List solo seeker titles in marketplace.
      * These are student-proposed titles that have been APPROVED and are open for recruitment.
      */
@@ -24,8 +31,14 @@ class SoloTitleController extends Controller
     {
         $user = Auth::user();
 
-        // Get active period
-        $period = Period::where('is_active', true)->first();
+        // Respect period_id like BursaIdeController, fallback to active period
+        $periodId = $request->query('period_id');
+        $period = $periodId
+            ? Period::find($periodId)
+            : Period::where('is_active', true)->first();
+        if (! $period) {
+            $period = Period::where('is_active', true)->first();
+        }
 
         // Get current user's group (if any)
         $currentGroupId = null;
@@ -34,56 +47,73 @@ class SoloTitleController extends Controller
             $currentGroupId = $membership->group_id;
         }
 
-        // Get solo titles that are APPROVED and available for bidding
-        $soloTitles = Title::with(['proposedByGroup.members.student', 'proposedSupervisor'])
+        // Get solo titles that are APPROVED and available for bidding.
+        // Returned as full Title models (same shape as BursaIdeController)
+        // so the marketplace Student Ideas tab can render them directly.
+        $query = Title::with(['proposedByGroup.members.student', 'proposedByGroup.period', 'proposedSupervisor'])
             ->where('title_source', 'STUDENT')
             ->where('supervisor_approval_status', 'APPROVED')
             ->where('status', 'open')
-            ->whereHas('proposedByGroup', function ($q) use ($period) {
-                $q->where('period_id', $period->id)
-                    ->where('is_solo', true);
-            })
+            ->whereHas('proposedByGroup', function ($q) {
+                $q->whereIn('status', self::RECRUITABLE_STATUSES);
+            });
+
+        if ($period) {
+            $query->where('period_id', $period->id);
+        }
+
+        $maxSize = $period?->max_group_size ?? 4;
+
+        $soloTitles = $query->orderBy('created_at', 'desc')
             ->get()
-            ->map(function ($title) use ($currentGroupId, $period) {
-                $group = $title->proposedByGroup;
-
-                // Calculate available quota after merge
-                $currentMembers = $group->members()->count();
-                $maxSize = $period->max_group_size ?? 4;
-                $availableSlots = $maxSize - $currentMembers;
-
-                // Check if current user already has a bid on this title
-                $hasBid = false;
-                if ($currentGroupId) {
-                    $hasBid = \Modules\Capstone\Models\Bid::where('group_id', $currentGroupId)
-                        ->where('title_id', $title->id)
-                        ->exists();
+            ->filter(function ($title) use ($currentGroupId, $maxSize) {
+                if (! $title->proposedByGroup) {
+                    return false;
+                }
+                // Only show titles with available slots and not already bid
+                if ($maxSize - $title->proposedByGroup->members->count() <= 0) {
+                    return false;
+                }
+                if ($currentGroupId && \Modules\Capstone\Models\Bid::where('group_id', $currentGroupId)
+                    ->where('title_id', $title->id)
+                    ->exists()) {
+                    return false;
                 }
 
-                return [
-                    'id' => $title->id,
-                    'title' => $title->title,
-                    'description' => $title->description,
-                    'problem_statement' => $title->problem_statement,
-                    'scope' => $title->scope,
-                    'specializations' => $title->specializations,
-                    'proposed_supervisor' => $title->proposedSupervisor,
-                    'group' => [
-                        'id' => $group->id,
-                        'member_count' => $currentMembers,
-                        'leader_name' => $group->members()->where('is_leader', true)->first()?->student->name,
-                    ],
-                    'available_slots' => $availableSlots,
-                    'has_bid' => $hasBid,
-                ];
-            })
-            ->filter(function ($title) {
-                // Only show titles with available slots and not already bid
-                return $title['available_slots'] > 0 && ! $title['has_bid'];
+                return true;
             })
             ->values();
 
         return $this->successResponse($soloTitles);
+    }
+
+    /**
+     * List incoming PENDING bids on the current leader's own solo title(s).
+     * This is the owner inbox: without it the solo seeker cannot discover
+     * bid_id values needed by acceptBidder()/rejectBidder().
+     */
+    public function incomingBids(Request $request)
+    {
+        $user = Auth::user();
+        $studentId = CapstoneActor::student($user)->id;
+
+        $ownGroupIds = GroupMember::where('student_id', $studentId)
+            ->where('is_leader', true)
+            ->pluck('group_id');
+
+        if ($ownGroupIds->isEmpty()) {
+            return $this->successResponse([]);
+        }
+
+        $bids = \Modules\Capstone\Models\Bid::with(['group.members.student', 'title'])
+            ->where('status', 'PENDING')
+            ->whereHas('title', fn ($q) => $q->where('title_source', 'STUDENT')
+                ->where('supervisor_approval_status', 'APPROVED')
+                ->whereIn('proposed_by_group_id', $ownGroupIds))
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return $this->successResponse($bids);
     }
 
     /**
@@ -93,22 +123,9 @@ class SoloTitleController extends Controller
     public function store(Request $request, $titleId)
     {
         $user = Auth::user();
+        $student = CapstoneActor::student($user);
 
-        // 1. Must be in a group
-        $membership = GroupMember::where('student_id', CapstoneActor::student($user)->id)
-            ->where('is_leader', true)
-            ->first();
-
-        if (! $membership) {
-            return $this->unauthorizedResponse('Hanya pemimpin kelompok yang dapat mengajukan bid.');
-        }
-        $group = Group::with('period', 'members')->find($membership->group_id);
-
-        $this->ensurePeriodIsActive($group);
-
-        $period = $group->period;
-
-        // 2. Check title exists and is a solo title
+        // 1. Check title exists and is a solo title
         $title = Title::find($titleId);
 
         if (! $title) {
@@ -120,24 +137,66 @@ class SoloTitleController extends Controller
         }
 
         $soloGroup = $title->proposedByGroup;
+        $soloGroup?->loadMissing('period');
 
-        if (! $soloGroup || ! $soloGroup->is_solo) {
-            return $this->errorResponse('Judul ini bukan dari solo seeker.', 400);
+        if (! $soloGroup || ! in_array($soloGroup->status, self::RECRUITABLE_STATUSES, true)) {
+            return $this->errorResponse('Kelompok pemilik judul tidak sedang membuka rekrutmen.', 400);
         }
+
+        // 2. Resolve bidder group. Group leaders bid with their group;
+        // ghost students (no group at all) get a temporary 1-person group
+        // vessel so they can join the solo seeker as individuals.
+        $membership = GroupMember::where('student_id', $student->id)
+            ->where('is_leader', true)
+            ->whereHas('group', fn ($q) => $q->where('period_id', $soloGroup->period_id))
+            ->first();
+
+        $isGhost = false;
+        if (! $membership) {
+            $anyMembership = GroupMember::where('student_id', $student->id)
+                ->whereHas('group', fn ($q) => $q->where('period_id', $soloGroup->period_id))
+                ->first();
+            if ($anyMembership) {
+                return $this->unauthorizedResponse('Hanya pemimpin kelompok yang dapat mengajukan bid.');
+            }
+            $group = Group::create([
+                'period_id' => $soloGroup->period_id,
+                'status' => 'FORMING',
+                'group_mode' => 'GROUP',
+                'has_existing_group' => false,
+                'is_solo' => false,
+            ]);
+            GroupMember::create([
+                'group_id' => $group->id,
+                'student_id' => $student->id,
+                'is_leader' => true,
+                'period_id' => $soloGroup->period_id,
+            ]);
+            $group->load('period', 'members');
+            $isGhost = true;
+        } else {
+            $group = Group::with('period', 'members')->find($membership->group_id);
+        }
+
+        // The merged group lives in the title's period, so its limits govern.
+        $this->ensurePeriodIsActive($soloGroup);
+
+        $period = $soloGroup->period;
 
         // 3. Check merge quota - total members after merge should not exceed max
         $soloMembers = $soloGroup->members()->count();
         $bidderMembers = $group->members()->count();
         $totalAfterMerge = $soloMembers + $bidderMembers;
-        $maxSize = $period->max_group_size ?? 4;
+        $maxSize = $period?->max_group_size ?? 4;
 
         if ($totalAfterMerge > $maxSize) {
             return $this->errorResponse("Total anggota setelah merge ({$totalAfterMerge}) akan melebihi batas maksimal ({$maxSize}). Kurangi anggota kelompok Anda atau cari judul lain.", 400);
         }
 
-        // 4. Check group has enough members for the bid itself (not for merge)
+        // 4. Check group has enough members for the bid itself (not for merge).
+        // Skipped for ghost individuals joining as a single person.
         $minSize = $period->min_group_size ?? 3;
-        if ($bidderMembers < $minSize) {
+        if (! $isGhost && $bidderMembers < $minSize) {
             return $this->errorResponse("Kelompok Anda memiliki {$bidderMembers} anggota. Minimal {$minSize} anggota diperlukan untuk mengajukan bid.", 400);
         }
 
@@ -176,7 +235,9 @@ class SoloTitleController extends Controller
                 'user_id' => $soloLeader->student->user_id,
                 'type' => 'BID_TO_SOLO_TITLE',
                 'title' => 'Permintaan Join ke Judul Anda',
-                'message' => "Kelompok {$group->id} mengajukan bid pada judul Anda '{$title->title}'. Terima atau tolak permintaan mereka.",
+                'message' => $isGhost
+                    ? "{$student->name} ingin bergabung ke kelompok Anda melalui judul '{$title->title}'. Terima atau tolak permintaan mereka."
+                    : "Kelompok {$group->id} mengajukan bid pada judul Anda '{$title->title}'. Terima atau tolak permintaan mereka.",
                 'related_type' => 'Bid',
                 'related_id' => $bid->id,
             ]);
@@ -210,10 +271,6 @@ class SoloTitleController extends Controller
 
         $this->ensurePeriodIsActive($soloGroup);
 
-        if (! $soloGroup->is_solo) {
-            return $this->errorResponse('Anda bukan kelompok solo seeker.', 400);
-        }
-
         // 2. Verify ownership of the title
         $title = Title::find($titleId);
         if (! $title || $title->proposed_by_group_id !== $soloGroup->id) {
@@ -222,7 +279,7 @@ class SoloTitleController extends Controller
 
         // 3. Get the bid
         $bid = \Modules\Capstone\Models\Bid::with('group.members')->find($bidId);
-        if (! $bid || $bid->title_id !== $titleId) {
+        if (! $bid || (int) $bid->title_id !== (int) $titleId) {
             return $this->notFoundResponse('Bid tidak ditemukan.');
         }
 
@@ -240,15 +297,18 @@ class SoloTitleController extends Controller
         // 5. Execute merge
         DB::beginTransaction();
         try {
-            // Move all members from bidder group to solo group
+            // Move all members from bidder group to solo group.
+            // Hard rule: the title owner remains the sole leader.
             foreach ($bidderGroup->members as $member) {
-                $member->update(['group_id' => $soloGroup->id]);
+                $member->update(['group_id' => $soloGroup->id, 'is_leader' => false]);
             }
 
-            // Update solo group - no longer solo
+            // Update solo group - no longer solo; status follows member count
+            $memberCount = $soloGroup->members()->count();
+            $minSize = $soloGroup->period->min_group_size ?? 3;
             $soloGroup->update([
                 'is_solo' => false,
-                'status' => $soloGroup->determineStatus(),
+                'status' => $memberCount >= $minSize ? 'READY_FOR_BIDDING' : 'FORMING',
             ]);
 
             // Update the bid status
@@ -257,8 +317,10 @@ class SoloTitleController extends Controller
             // Delete the bidder group
             $bidderGroup->delete();
 
-            // Update group with title
-            $soloGroup->update(['title_id' => $title->id]);
+            // NOTE: title_id is intentionally NOT set here. Title assignment
+            // is admin-finalization-owned (FinalizationService::allocateStudentProposed).
+            // The approved proposal is surfaced as the display title via
+            // GroupService::buildCanonicalGroupPayload() until then.
 
             // Notify bidder group members
             foreach ($bid->group->members as $member) {
@@ -307,10 +369,6 @@ class SoloTitleController extends Controller
 
         $this->ensurePeriodIsActive($soloGroup);
 
-        if (! $soloGroup->is_solo) {
-            return $this->errorResponse('Anda bukan kelompok solo seeker.', 400);
-        }
-
         // 2. Verify ownership
         $title = Title::find($titleId);
         if (! $title || $title->proposed_by_group_id !== $soloGroup->id) {
@@ -319,7 +377,7 @@ class SoloTitleController extends Controller
 
         // 3. Get and reject the bid
         $bid = \Modules\Capstone\Models\Bid::find($bidId);
-        if (! $bid || $bid->title_id !== $titleId) {
+        if (! $bid || (int) $bid->title_id !== (int) $titleId) {
             return $this->notFoundResponse('Bid tidak ditemukan.');
         }
 

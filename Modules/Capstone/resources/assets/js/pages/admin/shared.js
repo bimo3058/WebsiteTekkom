@@ -14,4 +14,5 @@ export function basePage(){return {
     sort(key){this.sortDirection=this.sortKey===key?-this.sortDirection:1;this.sortKey=key;},
     async run(action,message='Perubahan disimpan'){if(this.saving)return false;this.saving=true;this.errors={};try{await action();notify(message);return true;}catch(e){this.errors=e.errors||{};notify(e.message,true);return false;}finally{this.saving=false;}},
 };}
+export function mergePage(base,extra){for(const key of Object.getOwnPropertyNames(extra)){Object.defineProperty(base,key,Object.getOwnPropertyDescriptor(extra,key));}return base;}
 export async function allRows(endpoint,params={}){let data=[],page=1,last=1;do{const suffix=query({...params,per_page:100,page});const response=await api(endpoint+(endpoint.includes('?')?suffix.replace('?','&'):suffix));data.push(...rows(response));const body=unwrap(response);last=Number(response.pagination?.last_page || response.meta?.last_page || body?.pagination?.last_page || body?.last_page || body?.meta?.last_page || 1);page++;}while(page<=last);return data;}
