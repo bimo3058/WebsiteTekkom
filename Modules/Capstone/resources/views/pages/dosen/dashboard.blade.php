@@ -93,7 +93,7 @@
             </div>
 
             <div x-show="jadwalView==='calendar'" class="p-3">
-                <div class="rounded-xl border border-slate-200">
+                <div class="rounded-xl border border-slate-200 calendar">
                     <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-3 py-2.5">
                         <div class="flex items-center gap-1">
                             <button type="button" @click="move(-1)" class="rounded-md p-1.5 text-slate-500 hover:bg-slate-100" aria-label="Bulan sebelumnya"><x-capstone::icon name="ChevronLeft" size="16" /></button>

@@ -1,5 +1,5 @@
 <div class="flex flex-col gap-6" x-show="view==='calendar'">
-    <x-capstone::card class="w-full overflow-hidden pt-0">
+    <x-capstone::card class="w-full overflow-hidden pt-0 calendar">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b px-3 sm:px-6 py-4">
             <div class="flex flex-wrap items-center gap-2 sm:gap-4">
                 <x-capstone::button variant="outline" size="sm" @click="today">Today</x-capstone::button>
