@@ -17,9 +17,9 @@
     $bolehAturAkses, $calonPengelola, $pengelolaTerpilih, $namaPembuat — semuanya
     dari PengelolaKegiatanService::dataForm().
 
-    _scripts.blade.php butuh $existingPanitia dan $existingDosen — keduanya
-    disiapkan controller, karena @include punya scope sendiri (variabel yang
-    dibuat di partial ini TIDAK terbawa ke partial script).
+    Ketua Pelaksana, Dosen Pendamping, dan Panitia dirender _personel.blade.php
+    (kotak pilih Alpine) dari $existingPanitia dan $existingDosen — keduanya
+    disiapkan controller.
 --}}
 @php
     $showDokumentasi = $showDokumentasi ?? false;
@@ -155,124 +155,18 @@
         </div>
     </div>
 
-    @php
-        $ketuaNama = '';
-        if ($proker->ketua_pelaksana_id) {
-            $ketua = $proker->ketuaPelaksana;
-            $ketuaNama = $ketua?->user?->name ?? '';
-        }
-    @endphp
-
     <!-- Personel -->
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Personel Kegiatan</div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <label class="form-label-custom">Ketua Pelaksana</label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId"
-                           value="{{ old('ketua_pelaksana_id', $proker->ketua_pelaksana_id) }}">
-                    <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                           placeholder="Cari nama mahasiswa..."
-                           value="{{ $ketuaNama }}"
-                           autocomplete="off"
-                           onfocus="showDropdown('ketuaPelaksanaDropdown')"
-                           oninput="filterOptions('ketuaPelaksanaSearch', 'ketuaPelaksanaDropdown')">
-                    <div class="search-select-dropdown" id="ketuaPelaksanaDropdown">
-                        @foreach($mahasiswaList as $mhs)
-                            <div class="search-select-option"
-                                 onclick="selectOption('ketuaPelaksanaId', '{{ $mhs->id }}', 'ketuaPelaksanaSearch', '{{ $mhs->user->name ?? 'N/A' }}', 'ketuaPelaksanaDropdown')"
-                                 data-name="{{ strtolower($mhs->user->name ?? '') }}"
-                                 data-nim="{{ $mhs->student_number }}">
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- ── Dosen Pendamping (Multi-Select) ── --}}
-            <div class="col-md-6">
-                <label class="form-label-custom">
-                    Dosen Pendamping <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                    <span class="panitia-count-badge" id="dosenCountBadge" style="display:none;">0 dipilih</span>
-                </label>
-                {{-- Memakai class .panitia-* agar tampilannya identik dengan multi-select Panitia --}}
-                <div class="panitia-select-wrapper" id="dosenSelectWrapper">
-                    <div class="panitia-chips-container" id="dosenChipsContainer" onclick="focusDosenSearch()">
-                        <input type="text" class="panitia-search-input" id="dosenSearchInput"
-                               placeholder="Cari dan tambah dosen pendamping..."
-                               autocomplete="off"
-                               oninput="filterDosenOptions(this.value)"
-                               onfocus="showDosenDropdown()">
-                    </div>
-                    <div class="panitia-dropdown" id="dosenDropdown">
-                        @foreach($dosenList as $dosen)
-                            <div class="panitia-option"
-                                 data-id="{{ $dosen->id }}"
-                                 data-name="{{ $dosen->user->name ?? 'N/A' }}"
-                                 data-name-lower="{{ strtolower($dosen->user->name ?? '') }}"
-                                 data-nip="{{ $dosen->employee_number }}"
-                                 onclick="toggleDosen(this)">
-                                <div>
-                                    {{ $dosen->user->name ?? 'N/A' }}
-                                    <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
-                                </div>
-                                <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                            </div>
-                        @endforeach
-                        <div class="panitia-empty" id="dosenEmpty" style="display:none;">Tidak ada dosen yang cocok</div>
-                    </div>
-                    {{-- Hidden inputs di-generate JS --}}
-                    <div id="dosenHiddenInputs"></div>
-                </div>
-                <div class="checkbox-hint">Bisa lebih dari satu. Ketik nama atau NIP untuk mencari.</div>
-            </div>
-        </div>
-
-        {{-- ── Panitia Kegiatan (Multi-Select) ── --}}
-        <div class="mb-1">
-            <label class="form-label-custom">
-                Panitia Kegiatan
-                <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
-            </label>
-            <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
-                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
-                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
-                           placeholder="Cari dan tambah panitia..."
-                           autocomplete="off"
-                           oninput="filterPanitiaOptions(this.value)"
-                           onfocus="showPanitiaDropdown()">
-                </div>
-                <div class="panitia-dropdown" id="panitiaDropdown">
-                    @foreach($mahasiswaList as $mhs)
-                        <div class="panitia-option"
-                             data-id="{{ $mhs->id }}"
-                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
-                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
-                             data-nim="{{ $mhs->student_number }}"
-                             data-angkatan="{{ $mhs->cohort_year }}"
-                             onclick="togglePanitia(this)">
-                            <div>
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                            <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                        </div>
-                    @endforeach
-                    <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
-                </div>
-                {{-- Hidden inputs di-generate JS --}}
-                <div id="panitiaHiddenInputs"></div>
-            </div>
-            <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
-
-            {{-- Container for Jabatan Inputs --}}
-            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
-        </div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
+            'ketuaId'          => old('ketua_pelaksana_id', $proker->ketua_pelaksana_id),
+            'dosenTerpilih'    => $existingDosen,
+            'panitiaTerpilih'  => old('panitia_ids') !== null
+                ? $mahasiswaList->whereIn('id', old('panitia_ids'))
+                : $existingPanitia,
+            'panitiaPeranLama' => old('panitia_peran', []),
+        ])
     </div>
 
     {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
