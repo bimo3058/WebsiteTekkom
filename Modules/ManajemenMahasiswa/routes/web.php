@@ -214,7 +214,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::post('/', [ForumController::class, 'store'])->name('store');
 
             // Report Management (admin only) — MUST be before /{id} wildcard
-            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
                 Route::get('/laporan', [ForumController::class, 'forumReports'])->name('reports');
                 Route::delete('/reports/{reportId}/dismiss', [ForumController::class, 'dismissReport'])->name('reports.dismiss');
                 Route::delete('/reports/{reportId}/delete-thread', [ForumController::class, 'deleteReportedThread'])->name('reports.delete_thread');
