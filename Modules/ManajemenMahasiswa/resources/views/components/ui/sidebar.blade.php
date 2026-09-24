@@ -430,7 +430,7 @@
             $forumDropdownActive = request()->routeIs('manajemenmahasiswa.forum.*');
         @endphp
         @php
-            $canSeeForumReports = in_array('superadmin', $sidebarRoles) || in_array('admin', $sidebarRoles) || in_array('admin_kemahasiswaan', $sidebarRoles) || in_array('gpm', $sidebarRoles) || in_array('dpm', $sidebarRoles) || in_array('ketua_departemen', $sidebarRoles);
+            $canSeeForumReports = in_array('superadmin', $sidebarRoles) || in_array('admin', $sidebarRoles) || in_array('admin_kemahasiswaan', $sidebarRoles);
         @endphp
         <div class="sidebar-dropdown {{ $forumDropdownActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $forumDropdownActive ? 'active' : '' }}"

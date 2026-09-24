@@ -183,21 +183,39 @@
                 margin-top: 1px;
             }
 
-            .existing-badge {
-                position: absolute; top: 6px; left: 6px;
-                background: rgba(11,38,110,0.85); color: white;
-                font-size: 10px; font-weight: 700;
-                padding: 2px 6px; border-radius: 4px; z-index: 2;
-            }
-
             .media-counter {
                 font-size: 12px; font-weight: 600;
                 padding: 3px 10px; border-radius: 8px;
                 display: inline-block; margin-top: 8px;
             }
-            .media-counter.ok { background: #DDF2EE; color: #287F6E; }
+            .media-counter.ok   { background: #DDF2EE; color: #287F6E; }
             .media-counter.warn { background: #F9ECCB; color: #956321; }
             .media-counter.full { background: #FADAE1; color: #DF1C41; }
+
+            /* Cover drag-reorder badges */
+            .cover-badge-pill {
+                position: absolute; top: 5px; left: 5px;
+                background: #0B266E; color: #fff;
+                font-size: 9px; font-weight: 800; padding: 2px 8px;
+                border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase;
+                pointer-events: none; z-index: 2;
+            }
+            .cover-order-pill {
+                position: absolute; top: 5px; left: 5px;
+                background: rgba(0,0,0,0.5); color: #fff;
+                font-size: 11px; font-weight: 700; padding: 1px 7px;
+                border-radius: 20px; pointer-events: none; z-index: 2;
+            }
+            .cover-new-pill {
+                position: absolute; bottom: 5px; left: 5px;
+                background: rgba(16,185,129,0.9); color: #fff;
+                font-size: 9px; font-weight: 700; padding: 1px 6px;
+                border-radius: 20px; pointer-events: none; z-index: 2;
+            }
+            .media-preview-item { cursor: grab; }
+            .media-preview-item.dragging  { opacity: 0.4; box-shadow: 0 6px 16px rgba(0,0,0,0.18); }
+            .media-preview-item.drag-over { outline: 2px solid #5C78B8; outline-offset: 2px; }
+            .cover-hint-text { font-size: 12px; color: #6b7280; margin: 8px 0 0; display: none; }
 
             /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
                jadi kotak bawaan .main-wrapper dari layout dimatikan. */
@@ -313,21 +331,21 @@
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content {{ count($existingMedia) > 0 ? 'open' : '' }}" id="sectionMedia">
-                    {{-- Existing media --}}
+                    {{-- Existing media — reorderable --}}
                     @if(count($existingMedia) > 0)
-                        <label class="form-label mb-2" style="font-size: 13px; color: #666D80;">Media yang sudah ada (klik ✕ untuk menghapus):</label>
-                        <div class="media-preview-grid mb-3" id="existingMediaGrid">
+                        <div class="media-preview-grid mb-2" id="existingMediaGrid">
                             @foreach($existingMedia as $i => $media)
-                                <div class="media-preview-item" id="existing-media-{{ $i }}">
+                                <div class="media-preview-item" id="existing-media-{{ $i }}"
+                                     data-url="{{ $media['url'] }}" data-type="{{ $media['type'] }}" draggable="true">
                                     <div class="media-thumb">
-                                        <span class="existing-badge">
-                                            
+                                        <span class="{{ $i === 0 ? 'cover-badge-pill' : 'cover-order-pill' }}" id="badge-existing-{{ $i }}">
+                                            {{ $i === 0 ? 'Cover' : $i + 1 }}
                                         </span>
                                         <button type="button" class="remove-media" onclick="removeExistingMedia({{ $i }}, '{{ $media['url'] }}')">✕</button>
                                         @if($media['type'] === 'image')
-                                            <img src="{{ $media['url'] }}" alt="Media">
+                                            <img src="{{ $media['url'] }}" alt="Media" style="width:100%; aspect-ratio:4/3; object-fit:cover; display:block;">
                                         @else
-                                            <video src="{{ $media['url'] }}" muted></video>
+                                            <video src="{{ $media['url'] }}" muted style="width:100%; aspect-ratio:4/3; object-fit:cover; display:block;"></video>
                                         @endif
                                     </div>
                                     <div class="file-info">
@@ -336,6 +354,9 @@
                                 </div>
                             @endforeach
                         </div>
+                        <p class="cover-hint-text" id="coverHintText" style="{{ count($existingMedia) > 1 ? 'display:block' : 'display:none' }}">
+                            Seret gambar untuk mengubah urutan — gambar paling depan dipakai sebagai <strong>cover</strong>.
+                        </p>
                     @endif
 
                     {{-- Upload new media --}}
@@ -620,56 +641,133 @@
                 judulCount.textContent = this.value.length;
             });
 
-            // ---- Existing Media Removal ----
-            let removedMediaUrls = [];
+            // ---- Existing Media: Drag-Reorder + Removal ----
+            let removedMediaUrls  = [];
             let existingKeptCount = {{ count($existingMedia) }};
+            let existingDragFrom  = null;
+
+            // Build ordered URL list from DOM order
+            function getExistingOrder() {
+                const grid = document.getElementById('existingMediaGrid');
+                if (!grid) return [];
+                return Array.from(grid.querySelectorAll('.media-preview-item:not([data-removed])')).map(el => el.dataset.url);
+            }
+
+            // Sync hidden media_order[] inputs
+            function syncMediaOrder() {
+                document.querySelectorAll('input[name="media_order[]"]').forEach(el => el.remove());
+                const form = document.getElementById('removeMediaInputs').closest('form') || document.getElementById('editPostForm');
+                getExistingOrder().forEach(url => {
+                    const inp = document.createElement('input');
+                    inp.type = 'hidden'; inp.name = 'media_order[]'; inp.value = url;
+                    form.appendChild(inp);
+                });
+            }
+
+            // Refresh Cover/number badges on existing grid
+            function refreshExistingBadges() {
+                const grid = document.getElementById('existingMediaGrid');
+                if (!grid) return;
+                const items = Array.from(grid.querySelectorAll('.media-preview-item:not([data-removed])'));
+                const allItems = Array.from(grid.querySelectorAll('.media-preview-item'));
+                // count total shown (existing kept + new)
+                const totalVisible = existingKeptCount + selectedFiles.length;
+                items.forEach((el, i) => {
+                    const badge = el.querySelector('.cover-badge-pill, .cover-order-pill');
+                    if (!badge) return;
+                    if (i === 0) {
+                        badge.className = 'cover-badge-pill';
+                        badge.textContent = 'Cover';
+                    } else {
+                        badge.className = 'cover-order-pill';
+                        badge.textContent = i + 1;
+                    }
+                });
+                const hint = document.getElementById('coverHintText');
+                if (hint) hint.style.display = totalVisible > 1 ? 'block' : 'none';
+            }
+
+            // Wire up drag events on existing grid items
+            function initExistingDrag() {
+                const grid = document.getElementById('existingMediaGrid');
+                if (!grid) return;
+                grid.querySelectorAll('.media-preview-item').forEach(item => {
+                    item.addEventListener('dragstart', () => {
+                        existingDragFrom = item;
+                        item.classList.add('dragging');
+                    });
+                    item.addEventListener('dragend', () => {
+                        existingDragFrom = null;
+                        grid.querySelectorAll('.media-preview-item').forEach(el => el.classList.remove('dragging','drag-over'));
+                        refreshExistingBadges();
+                        syncMediaOrder();
+                    });
+                    item.addEventListener('dragover', e => {
+                        e.preventDefault();
+                        if (existingDragFrom && existingDragFrom !== item) item.classList.add('drag-over');
+                    });
+                    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+                    item.addEventListener('drop', e => {
+                        e.preventDefault();
+                        if (!existingDragFrom || existingDragFrom === item) return;
+                        const allItems = Array.from(grid.children);
+                        const fromIdx = allItems.indexOf(existingDragFrom);
+                        const toIdx   = allItems.indexOf(item);
+                        if (fromIdx < toIdx) {
+                            grid.insertBefore(existingDragFrom, item.nextSibling);
+                        } else {
+                            grid.insertBefore(existingDragFrom, item);
+                        }
+                    });
+                });
+            }
+            initExistingDrag();
 
             function removeExistingMedia(index, url) {
-                document.getElementById(`existing-media-${index}`).remove();
+                const el = document.getElementById(`existing-media-${index}`);
+                el.setAttribute('data-removed', '1');
+                el.style.display = 'none';
                 removedMediaUrls.push(url);
                 existingKeptCount--;
 
-                // Add hidden input
                 const container = document.getElementById('removeMediaInputs');
                 const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'remove_media[]';
-                input.value = url;
+                input.type = 'hidden'; input.name = 'remove_media[]'; input.value = url;
                 container.appendChild(input);
 
+                refreshExistingBadges();
+                syncMediaOrder();
                 updateCounter();
             }
 
             // ---- New Media Upload ----
-            const mediaFileInput = document.getElementById('mediaFileInput');
-            const mediaDropzone = document.getElementById('mediaDropzone');
+            const mediaFileInput   = document.getElementById('mediaFileInput');
+            const mediaDropzone    = document.getElementById('mediaDropzone');
             const mediaPreviewGrid = document.getElementById('mediaPreviewGrid');
-            const mediaCounter = document.getElementById('mediaCounter');
+            const mediaCounter     = document.getElementById('mediaCounter');
             let selectedFiles = [];
-            const MAX_FILES = 5;
-            const MAX_SIZE = 10 * 1024 * 1024;
+            let newDragFrom   = null;
+            const MAX_FILES   = 5;
+            const MAX_SIZE    = 10 * 1024 * 1024;
 
-            mediaDropzone.addEventListener('dragover', (e) => { e.preventDefault(); mediaDropzone.classList.add('dragover'); });
+            mediaDropzone.addEventListener('dragover',  e => { e.preventDefault(); mediaDropzone.classList.add('dragover'); });
             mediaDropzone.addEventListener('dragleave', () => mediaDropzone.classList.remove('dragover'));
-            mediaDropzone.addEventListener('drop', () => mediaDropzone.classList.remove('dragover'));
-
-            mediaFileInput.addEventListener('change', function() {
-                addMediaFiles(this.files);
-            });
+            mediaDropzone.addEventListener('drop',      () => mediaDropzone.classList.remove('dragover'));
+            mediaFileInput.addEventListener('change', function() { addMediaFiles(this.files); });
 
             function addMediaFiles(fileList) {
                 const totalAllowed = MAX_FILES - existingKeptCount;
                 for (const file of fileList) {
                     if (selectedFiles.length >= totalAllowed) {
-                        mkNotify({ title: 'Batas File Tercapai', message: `Maksimal ${MAX_FILES} file total (${existingKeptCount} existing + ${totalAllowed} baru).`, variant: 'warning' });
+                        mkNotify({ title: 'Batas File Tercapai', message: `Maksimal ${MAX_FILES} file total.`, variant: 'warning' });
                         break;
                     }
                     if (file.size > MAX_SIZE) {
-                        mkNotify({ title: 'File Terlalu Besar', message: `File "${file.name}" melebihi 10MB.`, variant: 'warning' });
+                        mkNotify({ title: 'File Terlalu Besar', message: `"${file.name}" melebihi 10MB.`, variant: 'warning' });
                         continue;
                     }
                     if (!file.type.match(/^(image|video)\//)) {
-                        mkNotify({ title: 'Format Tidak Didukung', message: `File "${file.name}" bukan gambar/video yang didukung.`, variant: 'warning' });
+                        mkNotify({ title: 'Format Tidak Didukung', message: `"${file.name}" bukan gambar/video.`, variant: 'warning' });
                         continue;
                     }
                     selectedFiles.push(file);
@@ -694,65 +792,94 @@
 
             function updateCounter() {
                 const total = existingKeptCount + selectedFiles.length;
-                if (total === 0) {
-                    mediaCounter.innerHTML = '';
-                    return;
-                }
-                let cls = 'ok';
-                if (total >= 4) cls = 'warn';
-                if (total >= MAX_FILES) cls = 'full';
+                const hint  = document.getElementById('coverHintText');
+                if (hint) hint.style.display = total > 1 ? 'block' : 'none';
+                if (!total) { mediaCounter.innerHTML = ''; return; }
+                const cls = total >= MAX_FILES ? 'full' : total >= 4 ? 'warn' : 'ok';
                 mediaCounter.innerHTML = `<span class="media-counter ${cls}">${total}/${MAX_FILES} file</span>`;
             }
 
             function renderPreviews() {
+                mediaPreviewGrid.querySelectorAll('img,video').forEach(el => URL.revokeObjectURL(el.src));
                 mediaPreviewGrid.innerHTML = '';
+
                 selectedFiles.forEach((file, idx) => {
+                    const globalIdx = existingKeptCount + idx; // position in overall list
                     const item = document.createElement('div');
                     item.className = 'media-preview-item';
+                    item.draggable = true;
 
                     const thumb = document.createElement('div');
                     thumb.className = 'media-thumb';
+
+                    // Badge
+                    const badge = document.createElement('span');
+                    if (existingKeptCount === 0 && idx === 0) {
+                        badge.className = 'cover-badge-pill';
+                        badge.textContent = 'Cover';
+                    } else {
+                        badge.className = 'cover-order-pill';
+                        badge.textContent = globalIdx + 1;
+                    }
+                    // "Baru" label
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'cover-new-pill';
+                    newBadge.textContent = 'Baru';
 
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'remove-media';
                     removeBtn.innerHTML = '✕';
-                    removeBtn.onclick = () => removeMediaFile(idx);
+                    removeBtn.onclick = e => { e.stopPropagation(); removeMediaFile(idx); };
                     thumb.appendChild(removeBtn);
+                    thumb.appendChild(badge);
+                    thumb.appendChild(newBadge);
 
                     if (file.type.startsWith('image/')) {
                         const img = document.createElement('img');
                         img.src = URL.createObjectURL(file);
                         img.onload = () => URL.revokeObjectURL(img.src);
                         thumb.appendChild(img);
-                    } else if (file.type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = URL.createObjectURL(file);
-                        video.muted = true;
-                        video.onloadeddata = () => { video.currentTime = 1; };
-                        thumb.appendChild(video);
+                    } else {
+                        const vid = document.createElement('video');
+                        vid.src = URL.createObjectURL(file);
+                        vid.muted = true;
+                        vid.onloadeddata = () => { vid.currentTime = 1; };
+                        thumb.appendChild(vid);
                     }
-
                     item.appendChild(thumb);
 
                     const fileInfo = document.createElement('div');
                     fileInfo.className = 'file-info';
-
                     const nameLabel = document.createElement('div');
                     nameLabel.className = 'file-name';
                     nameLabel.textContent = file.name;
                     nameLabel.title = file.name;
-
                     const sizeLabel = document.createElement('div');
                     sizeLabel.className = 'file-size';
                     const kb = file.size / 1024;
-                    sizeLabel.textContent = kb >= 1024
-                        ? (kb / 1024).toFixed(1) + ' MB'
-                        : kb.toFixed(1) + ' KB';
-
+                    sizeLabel.textContent = kb >= 1024 ? (kb/1024).toFixed(1)+' MB' : kb.toFixed(1)+' KB';
                     fileInfo.appendChild(nameLabel);
                     fileInfo.appendChild(sizeLabel);
                     item.appendChild(fileInfo);
+
+                    // Drag to reorder new files
+                    item.addEventListener('dragstart', () => { newDragFrom = idx; item.classList.add('dragging'); });
+                    item.addEventListener('dragend',   () => {
+                        newDragFrom = null;
+                        mediaPreviewGrid.querySelectorAll('.media-preview-item').forEach(el => el.classList.remove('dragging','drag-over'));
+                    });
+                    item.addEventListener('dragover',  e => { e.preventDefault(); if (newDragFrom !== null && newDragFrom !== idx) item.classList.add('drag-over'); });
+                    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+                    item.addEventListener('drop', e => {
+                        e.preventDefault();
+                        if (newDragFrom === null || newDragFrom === idx) return;
+                        const [moved] = selectedFiles.splice(newDragFrom, 1);
+                        selectedFiles.splice(idx, 0, moved);
+                        syncFileInput();
+                        renderPreviews();
+                        updateCounter();
+                    });
 
                     mediaPreviewGrid.appendChild(item);
                 });
