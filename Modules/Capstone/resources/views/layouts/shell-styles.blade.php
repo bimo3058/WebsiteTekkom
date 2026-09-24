@@ -85,6 +85,7 @@
     font-size: 10px; font-weight: 600; color: var(--c-fg-placeholder);
     letter-spacing: .06em; text-transform: uppercase;
     padding: 12px 10px 5px; white-space: nowrap;
+    display: block; width: 100%; text-align: left; justify-content: flex-start;
 }
 .sb-footer {
     padding: 8px 10px 12px; border-top: 1px solid var(--c-border);
@@ -93,12 +94,13 @@
 
 /* ── sb-item (from sidebar-link) ── */
 .sb-item {
-    position: relative; display: flex; align-items: center; gap: 9px;
+    position: relative; display: flex; align-items: center; justify-content: flex-start;
+    gap: 9px; text-align: left;
     padding: 7px 10px 7px 14px; border-radius: 8px;
     font-size: 13px; font-weight: 500; color: var(--c-fg-sec);
     cursor: pointer; text-decoration: none; background: none; border: none;
     font-family: inherit; transition: background .12s, color .12s;
-    white-space: nowrap; overflow: hidden;
+    white-space: nowrap; overflow: hidden; width: 100%;
 }
 .sb-item svg { width: 16px; height: 16px; color: var(--c-fg-muted); flex-shrink: 0; }
 .sb-item:hover { background: var(--c-bg); }
@@ -112,7 +114,7 @@
 .sb-item.is-disabled { opacity: .45; cursor: default; pointer-events: none; }
 .sb-item.is-collapsed { justify-content: center; padding-left: 0; padding-right: 0; }
 .sb-item.is-collapsed .sb-item-pill { display: none; }
-.sb-item-label { flex: 1; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sb-item-label { flex: 1; min-width: 0; text-align: left; justify-content: flex-start; letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sb-item-badge {
     background: var(--c-primary-subtle); color: var(--c-primary);
     font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 9999px; flex-shrink: 0;
@@ -122,10 +124,12 @@
     border-left: 1px solid var(--c-border); padding: 2px 10px;
 }
 .sb-subitem {
-    position: relative; display: flex; align-items: center; min-width: 0;
+    position: relative; display: flex; align-items: center; justify-content: flex-start;
+    min-width: 0; width: 100%; text-align: left;
     height: 28px; padding: 0 8px; border-radius: 8px;
     font-size: 13px; font-weight: 500; color: var(--c-fg-sec);
     transition: background .12s, color .12s;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .sb-subitem:hover { background: var(--c-bg); }
 .sb-subitem.is-active { background: var(--c-primary-subtle); color: var(--c-primary); font-weight: 600; }
