@@ -44,11 +44,9 @@
                 @endif
             @endforeach
         @endforeach
-        <div x-show="!collapsed" class="sb-section-label">System</div>
-        <x-capstone::sb-link :href="url('/capstone/notifications')" icon="Bell" label="Notifications" badge="unread > 0 ? unread : ''" />
     </nav>
     <div class="sb-footer">
-        @if(in_array('admin', $roles))<x-capstone::feature-link href="/admin/settings" class="sb-item" ::class="collapsed ? 'is-collapsed' : ''"><x-capstone::icon name="Settings" /><span x-show="!collapsed" class="sb-item-label">Settings</span></x-capstone::feature-link>@endif
-        <form method="POST" action="{{ route('capstone.logout') }}" style="margin:0;">@csrf<button type="submit" class="sb-item sb-link-danger"><x-capstone::icon name="LogOut" /><span x-show="!collapsed" class="sb-item-label">Logout</span></button></form>
+        <x-capstone::sb-link :href="url('/dashboard')" icon="House" label="Back to Main Dashboard" title="Back to main dashboard" />
+        <form method="POST" action="{{ route('capstone.logout') }}" style="margin:0;">@csrf<button type="submit" class="sb-item sb-link-danger w-full text-left" :class="collapsed ? 'is-collapsed' : ''"><x-capstone::icon name="LogOut" /><span x-show="!collapsed" class="sb-item-label">Logout</span></button></form>
     </div>
 </aside>

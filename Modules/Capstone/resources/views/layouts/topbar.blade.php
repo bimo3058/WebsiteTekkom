@@ -10,8 +10,7 @@
     <button type="button" @click="mobileSidebar = !mobileSidebar" aria-label="Open menu" class="md:hidden"><x-capstone::icon name="Menu" /></button>
     <nav aria-label="breadcrumb"><ol class="sitkom-crumb"><li>SICATA</li>@if($breadcrumb)<li class="sitkom-crumb-sep">/</li><li><b>{{ $breadcrumb }}</b></li>@endif</ol></nav>
     <div class="sitkom-topbar-right">
-        <x-ui.button variant="outline" size="icon" type="button" aria-label="Search" title="Search" style="width:34px;height:34px;border-radius:8px;"><x-capstone::icon name="Search" class="h-5 w-5" /></x-ui.button>
-        <x-ui.button variant="outline" size="icon" as="a" href="{{ url('/capstone/notifications') }}" aria-label="Notifications" title="Notifications" style="width:34px;height:34px;border-radius:8px;position:relative;"><x-capstone::icon name="Bell" class="h-5 w-5" /><span x-show="unread > 0" class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-[#DF1C41]"></span></x-ui.button>
+        <x-ui.button variant="outline" size="icon" as="a" href="{{ url('/capstone/notifications') }}" aria-label="Notifications" title="Notifications" style="width:34px;height:34px;border-radius:8px;position:relative;"><x-capstone::icon name="Bell" class="h-5 w-5" /><span x-show="unread > 0" x-text="unread > 99 ? '99+' : unread" class="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#DF1C41] px-1 text-[10px] font-bold leading-none text-white"></span></x-ui.button>
         <x-ui.dropdown width="56">
             <x-slot:trigger>
                 <span class="sitkom-topbar-user">
