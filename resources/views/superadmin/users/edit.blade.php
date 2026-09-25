@@ -2,17 +2,7 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
 
-    <style>
-        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-        .edit-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 20px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-        .edit-box { display: flex; flex-direction: column; flex: 1; background: #F2F3F5; border: 1px solid #D4D5D8; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
-        
-        .input-group label { display: block; font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 6px; }
-        .input-field { width: 100%; padding: 8px 12px; font-size: 13px; font-weight: 600; color: #334155; background: #fff; border: 1px solid #D0D1D5; border-radius: 8px; outline: none; transition: all 0.2s; font-family: inherit; }
-        .input-field:focus { border-color: #3B82F6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
-        
-        [x-cloak] { display: none !important; }
-    </style>
+    @include('superadmin.users._edit-style')
 
     @php
         // Mapping slug SystemModule (DB) → prefix nama permission (DB)
@@ -86,7 +76,7 @@
     <form action="{{ route('superadmin.users.update', $user) }}" method="POST" class="edit-wrap"
           x-data="{
               open: false,
-              selected: {{ json_encode(old('roles', $currentRoleNames)) }},
+              selected: @js(old('roles', $currentRoleNames)),
               removeRole(role) { this.selected = this.selected.filter(r => r !== role); },
               addRole(role) { if (!this.selected.includes(role)) { this.selected.push(role); } this.open = false; }
           }">
@@ -95,7 +85,7 @@
         
         <div class="edit-box">
             {{-- ── Toolbar ── --}}
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:#F2F3F5;border-bottom:1px solid #D4D5D8;flex-shrink:0;">
+            <div class="edit-header"><div><h1>Edit User</h1><p>Kelola informasi akun dan akses {{ $user->name }}.</p></div><div class="edit-header-actions">
                 <a href="{{ route('superadmin.users.show', $user) }}"
                    style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:#475569;background:#fff;border:1px solid #D0D1D5;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.04);text-decoration:none;">
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -105,28 +95,29 @@
                 <button type="submit" style="display:inline-flex;align-items:center;padding:7px 20px;font-size:12px;font-weight:700;color:#fff;background:#1E293B;border:none;border-radius:6px;cursor:pointer;font-family:inherit;">
                     Simpan Perubahan
                 </button>
-            </div>
+            </div></div><div class="edit-body">
+@if($errors->any())<div class="edit-errors" role="alert"><strong>Periksa kembali data berikut:</strong><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
 
             {{-- ── Detail User Section ── --}}
-            <div style="padding:24px;background:#fff;border-bottom:1px solid #D4D5D8;display:flex;gap:40px;">
-                <div style="width:200px;flex-shrink:0;">
+            <div class="edit-section">
+                <div class="edit-section-heading">
                     <h2 style="font-size:13px;font-weight:900;color:#1E293B;margin:0 0 6px 0;">Detail User</h2>
                     <p style="font-size:11px;font-weight:500;color:#64748B;line-height:1.6;margin:0;">Informasi dasar akun pengguna yang akan digunakan untuk keperluan sistem.</p>
                 </div>
 
-                <div style="flex:1; display:grid; grid-template-columns: 1fr 1fr; gap:20px 30px;">
+                <div class="edit-fields">
                     <div class="input-group">
-                        <label>Nama Lengkap <span style="color:#EF4444">*</span></label>
-                        <input type="text" name="name" value="{{ old('name', $user->name) }}" required class="input-field">
+                        <label for="edit-name">Nama Lengkap <span style="color:#EF4444">*</span></label>
+                        <input type="text" id="edit-name" name="name" value="{{ old('name', $user->name) }}" required class="input-field">
                     </div>
                     <div class="input-group">
-                        <label>Email <span style="color:#EF4444">*</span></label>
-                        <input type="email" name="email" value="{{ old('email', $user->email) }}" required class="input-field">
+                        <label for="edit-email">Email <span style="color:#EF4444">*</span></label>
+                        <input type="email" id="edit-email" name="email" value="{{ old('email', $user->email) }}" required class="input-field">
                     </div>
 
                     <div class="input-group" x-show="selected.includes('dosen') && !selected.includes('mahasiswa')" x-cloak>
-                        <label>NIP (Nomor Induk Pegawai) <span style="color:#EF4444">*</span></label>
-                        <input type="text" name="employee_number"
+                        <label for="edit-nip-1">NIP (Nomor Induk Pegawai) <span style="color:#EF4444">*</span></label>
+                        <input type="text" id="edit-nip-1" name="employee_number" :disabled="!selected.includes('dosen') || selected.includes('mahasiswa')"
                                value="{{ old('employee_number', $user->lecturer->employee_number ?? '') }}"
                                class="input-field" placeholder="Contoh: 198501012010011001">
                         @error('employee_number')
@@ -138,8 +129,8 @@
 
                     {{-- ── Baris NIM + Tahun Angkatan (mahasiswa) ── --}}
                     <div class="input-group" x-show="selected.includes('mahasiswa')" x-cloak>
-                        <label>NIM (Nomor Induk Mahasiswa) <span style="color:#EF4444">*</span></label>
-                        <input type="text" name="student_number"
+                        <label for="edit-student_number">NIM (Nomor Induk Mahasiswa) <span style="color:#EF4444">*</span></label>
+                        <input type="text" id="edit-student_number" name="student_number"
                                value="{{ old('student_number', $user->student->student_number ?? '') }}"
                                class="input-field" placeholder="Contoh: 22552011001">
                         @error('student_number')
@@ -147,12 +138,12 @@
                         @enderror
                     </div>
                     <div class="input-group">
-                        <label>Nomor Telepon</label>
-                        <input type="text" name="phone" value="{{ old('phone', $user->whatsapp) }}" placeholder="08123456789" class="input-field">
+                        <label for="edit-phone">Nomor Telepon</label>
+                        <input type="text" id="edit-phone" name="phone" value="{{ old('phone', $user->whatsapp) }}" placeholder="08123456789" class="input-field">
                     </div>
                     <div class="input-group" x-show="selected.includes('mahasiswa')" x-cloak>
-                        <label>Tahun Angkatan <span style="color:#EF4444">*</span></label>
-                        <input type="number" name="cohort_year"
+                        <label for="edit-cohort_year">Tahun Angkatan <span style="color:#EF4444">*</span></label>
+                        <input type="number" id="edit-cohort_year" name="cohort_year"
                                value="{{ old('cohort_year', $user->student->cohort_year ?? date('Y')) }}"
                                class="input-field"
                                placeholder="{{ date('Y') }}"
@@ -164,8 +155,8 @@
 
                     {{-- ── Dosen sekaligus Mahasiswa: tampilkan keduanya ── --}}
                     <div class="input-group" x-show="selected.includes('dosen') && selected.includes('mahasiswa')" x-cloak>
-                        <label>NIP (Nomor Induk Pegawai) <span style="color:#EF4444">*</span></label>
-                        <input type="text" name="employee_number"
+                        <label for="edit-nip-2">NIP (Nomor Induk Pegawai) <span style="color:#EF4444">*</span></label>
+                        <input type="text" id="edit-nip-2" name="employee_number" :disabled="!selected.includes('dosen') || !selected.includes('mahasiswa')"
                                value="{{ old('employee_number', $user->lecturer->employee_number ?? '') }}"
                                class="input-field" placeholder="Contoh: 198501012010011001">
                         @error('employee_number')
@@ -176,16 +167,16 @@
             </div>
 
             {{-- ── Role & Permissions Section ── --}}
-            <div style="display:flex;flex:1;min-height:0;overflow:hidden;">
-                <div style="width:200px;flex-shrink:0;padding:24px 20px;border-right:1px solid #D4D5D8;background:#fff;">
+            <div class="edit-section">
+                <div class="edit-section-heading">
                     <h2 style="font-size:13px;font-weight:900;color:#1E293B;margin:0 0 6px 0;">Role & Permissions</h2>
                     <p style="font-size:11px;font-weight:500;color:#64748B;line-height:1.6;margin:0;">Atur peran akses dan izin spesifik modul untuk pengguna ini.</p>
                 </div>
 
-                <div style="flex:1;overflow-y:auto;padding:24px;background:#fff;">
+                <div class="edit-access">
                     
                     {{-- Access Role Multiple Dropdown --}}
-                    <div style="margin-bottom:24px; max-width: 500px;">
+                    <div class="edit-role-picker">
                         <label style="display:block; font-size:9px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:.08em; margin-bottom:8px;">Nama Role <span style="color:#EF4444">*</span></label>
 
                         {{--
@@ -200,7 +191,7 @@
                         | dari relasi $user->roles (eager loaded di controller).
                         |--------------------------------------------------------------
                         --}}
-                        <div style="position:relative;" @click.outside="open = false">
+                        <div style="position:relative;" @click.outside="open = false" @keydown.escape.stop.prevent="open = false">
                             
                             {{-- Container Area (sebagai tombol utama) --}}
                             {{--
@@ -209,7 +200,7 @@
                                 tertimpa chip. Chip area sendiri flex-wrap sehingga chip memanjang ke
                                 bawah tanpa pernah melewati batas kanan.
                             --}}
-                            <div @click="open = !open"
+                            <div role="button" tabindex="0" aria-label="Pilih role pengguna" :aria-expanded="open" @keydown.enter.self.prevent="open = !open" @keydown.space.self.prevent="open = !open" @click="open = !open"
                                  style="min-height:38px; display:flex; align-items:center; gap:8px; padding:4px 10px 4px 8px; background:#fff; border:1px solid #D0D1D5; border-radius:8px; cursor:pointer; box-sizing:border-box;">
 
                                 {{-- Kiri: chip area tumbuh --}}
@@ -232,7 +223,7 @@
                                             {{-- Label role --}}
                                             <span x-text="window.roleStyles[role]?.label || role"></span>
                                             {{-- Tombol hapus chip --}}
-                                            <button type="button" @click="removeRole(role)"
+                                            <button type="button" @click="removeRole(role)" :aria-label="'Hapus role ' + role"
                                                     style="flex-shrink:0; display:flex; align-items:center; justify-content:center; background:transparent; border:none; padding:0; margin:0; cursor:pointer; color:#94A3B8; line-height:1;">
                                                 <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
                                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
@@ -290,7 +281,7 @@
                                 --}}
                                 @foreach($roleList as $slug => $r)
                                 <div x-show="!selected.includes('{{ $slug }}')">
-                                    <div @click="addRole('{{ $slug }}')"
+                                    <div role="button" tabindex="0" @keydown.enter.prevent="addRole('{{ $slug }}')" @keydown.space.prevent="addRole('{{ $slug }}')" @click="addRole('{{ $slug }}')"
                                          style="display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:6px; cursor:pointer; transition:background .15s;"
                                          onmouseover="this.style.background='#F2F3F5'" onmouseout="this.style.background='transparent'">
                                         <div style="flex-shrink:0; width:8px; height:8px; border-radius:50%; background:{{ $r['color'] }};"></div>
@@ -308,7 +299,7 @@
                     </div>
 
                     {{-- Grid Kartu Modul --}}
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
+                    <div class="edit-modules">
                         @foreach($dbModules as $mod)
                             @php
                                 $mkey    = $mod->slug; // contoh: 'bank_soal', 'manajemen_mahasiswa'
@@ -329,7 +320,7 @@
                                                 <path stroke-linecap="round" stroke-linejoin="round" d="{{ $style['icon'] }}"/>
                                             </svg>
                                         </div>
-                                        <span style="font-size:12px;font-weight:900;color:#1E293B;">{{ strtoupper($mod->name) }}</span>
+                                        <span style="font-size:12px;font-weight:900;color:#1E293B;">{{ $mod->name }}</span>
                                     </div>
                                     <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
                                         <input type="checkbox" onclick="toggleAllPerms('{{ $pPrefix }}', this)" {{ !$mod->is_active ? 'disabled' : '' }}
@@ -337,7 +328,7 @@
                                         <span style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.06em;">Pilih Semua</span>
                                     </label>
                                 </div>
-                                <div style="padding:15px;display:grid;grid-template-columns:1fr 1fr;gap:10px 15px;">
+                                <div class="edit-permissions">
                                     @foreach($perms as $perm)
                                         <label style="display:flex;align-items:center;gap:8px;cursor:{{ $mod->is_active ? 'pointer' : 'not-allowed' }};">
                                             <input type="checkbox" name="permissions[]" value="{{ $perm->name }}" 
@@ -349,7 +340,7 @@
                                     @endforeach
 
                                     @if($perms->isEmpty())
-                                        <p style="font-size:11px;color:#94A3B8;grid-column:span 2;margin:0;">
+                                        <p style="font-size:11px;color:#94A3B8;grid-column:1 / -1;margin:0;">
                                             Tidak ada permission terdaftar untuk modul ini.
                                         </p>
                                     @endif
@@ -359,7 +350,7 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div></div>
     </form>
 
 <script>
