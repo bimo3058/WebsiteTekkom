@@ -949,12 +949,12 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <div style="color: #0D0D12;">
+                                        <div style="font-weight: 500; color: #0D0D12;">
                                             {{ substr($j->jam_mulai, 0, 5) }} - {{ substr($j->jam_selesai, 0, 5) }}
                                         </div>
                                     </td>
                                     <td style="max-width: 200px;">
-                                        <div style="font-size: 13px; color:#0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                        <div style="font-size: 13px; font-weight: 500; color:#0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
                                             title="{{ $j->mata_kuliah ?: '-' }}">
                                             {{ $j->mata_kuliah ?: '-' }}
                                         </div>
@@ -966,10 +966,10 @@
                                         </div>
                                     </td>
                                     <td style="max-width: 180px;">
-                                        <div style="color: #0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                        <div style="font-weight: 500; color: #0D0D12; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
                                             title="{{ $j->ruangan->nama ?? 'Tidak Diketahui' }} (Lt. {{ $j->ruangan->lantai ?? '-' }})">
                                             {{ $j->ruangan->nama ?? 'Tidak Diketahui' }}
-                                            <span style="font-size: 12px; color: #666D80; margin-left: 4px;">(Lt.
+                                            <span style="font-size: 12px; font-weight: 500; color: #666D80; margin-left: 4px;">(Lt.
                                                 {{ $j->ruangan->lantai ?? '-' }})</span>
                                         </div>
                                     </td>
@@ -1043,11 +1043,8 @@
                                             :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
                                             <button type="button" @click="showDropdown = !showDropdown"
                                                 @click.away="showDropdown = false"
-                                                class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer">
-                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                    <path
-                                                        d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                                </svg>
+                                                class="inline-flex items-center justify-center w-[32px] h-[32px] rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>
                                             </button>
 
                                             <div x-show="showDropdown" style="display:none;"

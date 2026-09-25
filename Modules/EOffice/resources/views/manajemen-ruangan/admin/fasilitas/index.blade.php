@@ -171,47 +171,64 @@
         </div>
 
         {{-- Pagination Pagination Custom Sama Kayak Arsip --}}
-        <div
-            class="border-t border-slate-200 bg-slate-50/50 px-5 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-b-[12px]">
-            <div class="flex flex-col md:flex-row md:items-center gap-3">
-                <div
-                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-visible text-xs shadow-sm">
-                    <span class="px-2.5 py-1.5 bg-slate-50 border-r border-slate-200 text-slate-500 font-medium shrink-0">Per
-                        halaman</span>
-                        
+        <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+            <div class="flex items-center gap-4 text-[13px] text-slate-500">
+                <div class="flex items-center gap-2">
+                    <span class="font-medium">Per halaman</span>
                     <div x-data="{ 
                         open: false, 
-                        value: '{{ request('per_page', 10) }}', 
-                        select(val, url) { 
-                            this.value = val; 
-                            window.location.href = url; 
-                        } 
-                    }" class="relative w-[65px]" @click.away="open = false">
-                        
-                        <button type="button" @click="open = !open" 
-                            class="w-full flex items-center justify-between px-2.5 py-1.5 text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-r-md">
-                            <span x-text="value"></span>
-                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        selectedVal: '{{ request('per_page', 10) }}',
+                        selectItem(val, url) {
+                            this.selectedVal = val;
+                            this.open = false;
+                            window.location.href = url;
+                        }
+                    }" class="relative" @click.away="open = false">
+                        <button type="button" @click="open = !open"
+                            class="flex items-center justify-between px-3 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm gap-2 min-w-[64px] transition-colors">
+                            <span x-text="selectedVal"></span>
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                                :class="{'rotate-180': open}" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        
-                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
-                            class="absolute left-0 bottom-full mb-1 w-full min-w-[70px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
-                            <div class="py-1">
-                                <button type="button" @click="select('10', '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '10'}">10</button>
-                                <button type="button" @click="select('25', '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '25'}">25</button>
-                                <button type="button" @click="select('50', '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '50'}">50</button>
+
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
+                            style="display: none;">
+                            <div class="p-1">
+                                <button type="button"
+                                    @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
+                                <button type="button"
+                                    @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
+                                <button type="button"
+                                    @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="text-[13px] text-slate-500 font-medium">
+
+                <div class="w-px h-4 bg-slate-200"></div>
+
+                <div class="text-[13px] font-medium text-slate-500">
                     @if ($fasilitas->total() > 0)
                         <p>
                             Menampilkan <span class="font-bold text-slate-800">{{ $fasilitas->firstItem() ?? 0 }}</span>
                             sampai <span class="font-bold text-slate-800">{{ $fasilitas->lastItem() ?? 0 }}</span>
-                            dari <span class="font-bold text-slate-800">{{ $fasilitas->total() }}</span> fasilitas.
+                            dari <span class="font-bold text-slate-800">{{ $fasilitas->total() }}</span> entri
                         </p>
                     @else
                         <p>Belum ada data fasilitas.</p>
@@ -222,45 +239,77 @@
             <div class="flex items-center gap-1.5">
                 @if ($fasilitas->onFirstPage())
                     <button disabled
-                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                 @else
                     <a href="{{ $fasilitas->previousPageUrl() }}"
-                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                        class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 19l-7-7 7-7" />
                         </svg>
                     </a>
                 @endif
 
-                <div
-                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
-                    @foreach ($fasilitas->getUrlRange(max(1, $fasilitas->currentPage() - 2), min($fasilitas->lastPage(), $fasilitas->currentPage() + 2)) as $page => $url)
-                        @if ($page == $fasilitas->currentPage())
-                            <span
-                                class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors">{{ $page }}</span>
-                        @else
-                            <a href="{{ $url }}"
-                                class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</a>
-                        @endif
-                    @endforeach
-                </div>
+                @php
+                    $startPage = max(1, $fasilitas->currentPage() - 1);
+                    $endPage = min($fasilitas->lastPage(), $fasilitas->currentPage() + 1);
+
+                    if ($endPage - $startPage < 2) {
+                        if ($startPage == 1) {
+                            $endPage = min($fasilitas->lastPage(), 3);
+                        } elseif ($endPage == $fasilitas->lastPage()) {
+                            $startPage = max(1, $fasilitas->lastPage() - 2);
+                        }
+                    }
+                @endphp
+
+                @if($startPage > 1)
+                    <a href="{{ $fasilitas->url(1) }}"
+                        class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
+                    @if($startPage > 2)
+                        <span
+                            class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                    @endif
+                @endif
+
+                @foreach ($fasilitas->getUrlRange($startPage, $endPage) as $page => $url)
+                    @if ($page == $fasilitas->currentPage())
+                        <span
+                            class="bg-[#0f1b40] shadow-md shadow-[#0f1b40]/20 text-white font-bold text-[13px] w-8 h-8 flex items-center justify-center rounded-lg transition-colors">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}"
+                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                @if($endPage < $fasilitas->lastPage())
+                    @if($endPage < $fasilitas->lastPage() - 1)
+                        <span
+                            class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                    @endif
+                    <a href="{{ $fasilitas->url($fasilitas->lastPage()) }}"
+                        class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $fasilitas->lastPage() }}</a>
+                @endif
 
                 @if ($fasilitas->hasMorePages())
                     <a href="{{ $fasilitas->nextPageUrl() }}"
-                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                        class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7" />
                         </svg>
                     </a>
                 @else
                     <button disabled
-                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
                 @endif

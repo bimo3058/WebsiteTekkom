@@ -277,33 +277,55 @@
                                 </span>
                             </td>
                             <td class="text-center">
-                                <button type="button" @click="openDetail({{ json_encode([
-                                    'nama' => $fullName,
-                                    'nim_nip' => $identityNumber,
-                                    'telepon' => $pinjam->nomor_telepon ?: '-',
-                                    'role' => $roleName,
-                                    'ruangan' => $pinjam->ruangan->nama ?? '-',
-                                    'tanggal' => \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('l, d F Y'),
-                                    'jam' => \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') . ' WIB',
-                                    'durasi' => \Carbon\Carbon::parse($pinjam->jam_mulai)->diffInHours(\Carbon\Carbon::parse($pinjam->jam_selesai)) . ' Jam',
-                                    'kegiatan' => $pinjam->tujuan,
-                                    'berkas' => $pinjam->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) : null,
-                                    'waktu_pengajuan' => \Carbon\Carbon::parse($pinjam->created_at)->translatedFormat('d M Y, H:i'),
-                                    'waktu_diproses' => $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') : '-',
-                                    'diproses_oleh' => '-', // To be implemented later (need relation to admin)
-                                    'alasan_penolakan' => $pinjam->alasan_penolakan,
-                                    'status' => $pinjam->status
-                                ]) }})"
-                                    class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-[#0B266E] hover:bg-[#0B266E]/10 hover:text-[#060E2A] transition-colors tooltip-btn cursor-pointer" title="Lihat Detail">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                </button>
-                                
-                                @if(auth()->user()->hasRole('superadmin'))
-                                    <!-- Hard Delete action for superadmin -->
-                                    <button type="button" @click="openDelete('{{ route('eoffice.peminjaman.admin.riwayat.destroy', $pinjam->id) }}')" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-500 hover:bg-red-50 hover:text-red-700 transition-colors tooltip-btn cursor-pointer" title="Hapus Permanen">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                <div class="relative inline-flex flex-col items-center justify-center w-full"
+                                    x-data="{ showDropdown: false }"
+                                    :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
+                                    
+                                    <button type="button" @click="showDropdown = !showDropdown" @click.away="showDropdown = false"
+                                        class="inline-flex items-center justify-center w-[32px] h-[32px] rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>
                                     </button>
-                                @endif
+
+                                    <div x-show="showDropdown" style="display:none;"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        class="origin-top-right absolute right-0 top-full mt-2 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]">
+
+                                        <button type="button" @click="showDropdown = false; openDetail({{ json_encode([
+                                            'nama' => $fullName,
+                                            'nim_nip' => $identityNumber,
+                                            'telepon' => $pinjam->nomor_telepon ?: '-',
+                                            'role' => $roleName,
+                                            'ruangan' => $pinjam->ruangan->nama ?? '-',
+                                            'tanggal' => \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('l, d F Y'),
+                                            'jam' => \Carbon\Carbon::parse($pinjam->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($pinjam->jam_selesai)->format('H:i') . ' WIB',
+                                            'durasi' => \Carbon\Carbon::parse($pinjam->jam_mulai)->diffInHours(\Carbon\Carbon::parse($pinjam->jam_selesai)) . ' Jam',
+                                            'kegiatan' => $pinjam->tujuan,
+                                            'berkas' => $pinjam->berkas_pendukung ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) : null,
+                                            'waktu_pengajuan' => \Carbon\Carbon::parse($pinjam->created_at)->translatedFormat('d M Y, H:i'),
+                                            'waktu_diproses' => $pinjam->waktu_approval ? \Carbon\Carbon::parse($pinjam->waktu_approval)->translatedFormat('d M Y, H:i') : '-',
+                                            'diproses_oleh' => '-',
+                                            'alasan_penolakan' => $pinjam->alasan_penolakan,
+                                            'status' => $pinjam->status
+                                        ]) }})"
+                                            class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
+                                            <svg class="w-[14px] h-[14px] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            Detail
+                                        </button>
+
+                                        @if(auth()->user()->hasRole('superadmin'))
+                                            <button type="button" @click="showDropdown = false; openDelete('{{ route('eoffice.peminjaman.admin.riwayat.destroy', $pinjam->id) }}')" 
+                                                class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
+                                                <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                Hapus
+                                            </button>
+                                        @endif
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -316,85 +338,139 @@
         </div>
 
         <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
-            <div class="flex items-center gap-4">
-                <div class="flex items-center border border-slate-200 rounded-md bg-white overflow-visible text-[13px] shadow-sm">
-                    <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50 shrink-0">Per halaman</span>
+            <div class="flex items-center gap-4 text-[13px] text-slate-500">
+                <div class="flex items-center gap-2">
+                    <span class="font-medium">Per halaman</span>
                     <div x-data="{ 
                         open: false, 
-                        value: '{{ request('per_page', 10) }}', 
-                        select(val, url) { 
-                            this.value = val; 
-                            window.location.href = url; 
-                        } 
-                    }" class="relative w-[65px]" @click.away="open = false">
-                        
-                        <button type="button" @click="open = !open" 
-                            class="w-full flex items-center justify-between px-2.5 py-1.5 text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-r-md cursor-pointer">
-                            <span x-text="value"></span>
-                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        selectedVal: '{{ request('per_page', 10) }}',
+                        selectItem(val, url) {
+                            this.selectedVal = val;
+                            this.open = false;
+                            window.location.href = url;
+                        }
+                    }" class="relative" @click.away="open = false">
+                        <button type="button" @click="open = !open"
+                            class="flex items-center justify-between px-3 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm gap-2 min-w-[64px] transition-colors">
+                            <span x-text="selectedVal"></span>
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                                :class="{'rotate-180': open}" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
                             </svg>
                         </button>
-                        
-                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
-                            class="absolute left-0 bottom-full mb-1 w-full min-w-[70px] bg-white border border-slate-200 rounded-md shadow-lg z-[60] overflow-hidden" style="display: none;">
-                            <div class="py-1">
-                                <button type="button" @click="select('10', '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '10'}">10</button>
-                                <button type="button" @click="select('25', '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '25'}">25</button>
-                                <button type="button" @click="select('50', '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '50'}">50</button>
+
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
+                            style="display: none;">
+                            <div class="p-1">
+                                <button type="button"
+                                    @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
+                                <button type="button"
+                                    @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
+                                <button type="button"
+                                    @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <p class="text-xs font-medium text-slate-600">
+
+                <div class="w-px h-4 bg-slate-200"></div>
+
+                <p class="font-medium text-slate-500">
                     Menampilkan <span class="font-bold text-slate-800">{{ $peminjamans->firstItem() ?? 0 }}</span>
                     sampai <span class="font-bold text-slate-800">{{ $peminjamans->lastItem() ?? 0 }}</span>
                     dari <span class="font-bold text-slate-800">{{ $peminjamans->total() }}</span> entri
                 </p>
             </div>
-            
+
             <div class="flex items-center gap-1.5">
                 @if ($peminjamans->onFirstPage())
                     <button disabled
-                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 19l-7-7 7-7" />
                         </svg>
                     </button>
                 @else
                     <a href="{{ $peminjamans->previousPageUrl() }}"
-                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                        class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 19l-7-7 7-7" />
                         </svg>
                     </a>
                 @endif
 
-                <div
-                    class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
-                    @foreach ($peminjamans->getUrlRange(max(1, $peminjamans->currentPage() - 2), min($peminjamans->lastPage(), $peminjamans->currentPage() + 2)) as $page => $url)
-                        @if ($page == $peminjamans->currentPage())
-                            <span
-                                class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</span>
-                        @else
-                            <a href="{{ $url }}"
-                                class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</a>
-                        @endif
-                    @endforeach
-                </div>
+                @php
+                    $startPage = max(1, $peminjamans->currentPage() - 1);
+                    $endPage = min($peminjamans->lastPage(), $peminjamans->currentPage() + 1);
+
+                    // Adjust start and end to always show at least 3 pages if possible
+                    if ($endPage - $startPage < 2) {
+                        if ($startPage == 1) {
+                            $endPage = min($peminjamans->lastPage(), 3);
+                        } elseif ($endPage == $peminjamans->lastPage()) {
+                            $startPage = max(1, $peminjamans->lastPage() - 2);
+                        }
+                    }
+                @endphp
+
+                @if($startPage > 1)
+                    <a href="{{ $peminjamans->url(1) }}"
+                        class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
+                    @if($startPage > 2)
+                        <span
+                            class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                    @endif
+                @endif
+
+                @foreach ($peminjamans->getUrlRange($startPage, $endPage) as $page => $url)
+                    @if ($page == $peminjamans->currentPage())
+                        <span
+                            class="bg-[#0f1b40] shadow-md shadow-[#0f1b40]/20 text-white font-bold text-[13px] w-8 h-8 flex items-center justify-center rounded-lg transition-colors">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}"
+                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                @if($endPage < $peminjamans->lastPage())
+                    @if($endPage < $peminjamans->lastPage() - 1)
+                        <span
+                            class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                    @endif
+                    <a href="{{ $peminjamans->url($peminjamans->lastPage()) }}"
+                        class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $peminjamans->lastPage() }}</a>
+                @endif
 
                 @if ($peminjamans->hasMorePages())
                     <a href="{{ $peminjamans->nextPageUrl() }}"
-                        class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                        class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7" />
                         </svg>
                     </a>
                 @else
                     <button disabled
-                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7" />
                         </svg>
                     </button>
                 @endif

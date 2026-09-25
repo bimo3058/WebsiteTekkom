@@ -350,11 +350,8 @@
                                     <div class="relative inline-flex flex-col items-center justify-center w-full" :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
                                         <button type="button" @click="showDropdown = !showDropdown"
                                             @click.away="showDropdown = false"
-                                            class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path
-                                                    d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                            </svg>
+                                            class="inline-flex items-center justify-center w-[32px] h-[32px] rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>
                                         </button>
 
                                         <div x-show="showDropdown" style="display:none;"
@@ -661,8 +658,143 @@
                 </table>
             </div>
 
-            <div style="padding: 16px;">
-                {{ $jadwals->appends(['tipe' => $tipe])->links('pagination::tailwind') }}
+        <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+            <div class="flex items-center gap-4 text-[13px] text-slate-500">
+                <div class="flex items-center gap-2">
+                    <span class="font-medium">Per halaman</span>
+                    <div x-data="{ 
+                        open: false, 
+                        selectedVal: '{{ request('per_page', 10) }}',
+                        selectItem(val, url) {
+                            this.selectedVal = val;
+                            this.open = false;
+                            window.location.href = url;
+                        }
+                    }" class="relative" @click.away="open = false">
+                        <button type="button" @click="open = !open"
+                            class="flex items-center justify-between px-3 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm gap-2 min-w-[64px] transition-colors">
+                            <span x-text="selectedVal"></span>
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                                :class="{'rotate-180': open}" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                            x-transition:enter-start="opacity-0 scale-95"
+                            x-transition:enter-end="opacity-100 scale-100"
+                            x-transition:leave="transition ease-in duration-75"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
+                            style="display: none;">
+                            <div class="p-1">
+                                <button type="button"
+                                    @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
+                                <button type="button"
+                                    @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
+                                <button type="button"
+                                    @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-px h-4 bg-slate-200"></div>
+
+                <p class="font-medium text-slate-500">
+                    Menampilkan <span class="font-bold text-slate-800">{{ $jadwals->firstItem() ?? 0 }}</span>
+                    sampai <span class="font-bold text-slate-800">{{ $jadwals->lastItem() ?? 0 }}</span>
+                    dari <span class="font-bold text-slate-800">{{ $jadwals->total() }}</span> entri
+                </p>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+                @if ($jadwals->onFirstPage())
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                @else
+                    <a href="{{ $jadwals->previousPageUrl() }}"
+                        class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </a>
+                @endif
+
+                @php
+                    $startPage = max(1, $jadwals->currentPage() - 1);
+                    $endPage = min($jadwals->lastPage(), $jadwals->currentPage() + 1);
+
+                    // Adjust start and end to always show at least 3 pages if possible
+                    if ($endPage - $startPage < 2) {
+                        if ($startPage == 1) {
+                            $endPage = min($jadwals->lastPage(), 3);
+                        } elseif ($endPage == $jadwals->lastPage()) {
+                            $startPage = max(1, $jadwals->lastPage() - 2);
+                        }
+                    }
+                @endphp
+
+                @if($startPage > 1)
+                    <a href="{{ $jadwals->url(1) }}"
+                        class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
+                    @if($startPage > 2)
+                        <span
+                            class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                    @endif
+                @endif
+
+                @foreach ($jadwals->getUrlRange($startPage, $endPage) as $page => $url)
+                    @if ($page == $jadwals->currentPage())
+                        <span
+                            class="bg-[#0f1b40] shadow-md shadow-[#0f1b40]/20 text-white font-bold text-[13px] w-8 h-8 flex items-center justify-center rounded-lg transition-colors">{{ $page }}</span>
+                    @else
+                        <a href="{{ $url }}"
+                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                @if($endPage < $jadwals->lastPage())
+                    @if($endPage < $jadwals->lastPage() - 1)
+                        <span
+                            class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                    @endif
+                    <a href="{{ $jadwals->url($jadwals->lastPage()) }}"
+                        class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $jadwals->lastPage() }}</a>
+                @endif
+
+                @if ($jadwals->hasMorePages())
+                    <a href="{{ $jadwals->nextPageUrl() }}"
+                        class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7" />
+                        </svg>
+                    </a>
+                @else
+                    <button disabled
+                        class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                @endif
             </div>
         </div>
     </div>
