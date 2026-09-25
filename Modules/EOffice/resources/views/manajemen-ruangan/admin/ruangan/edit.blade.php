@@ -33,6 +33,60 @@
 
                 <div style="display:flex; gap:16px;">
                     <div style="flex:1;">
+                        <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kategori Ruangan
+                            <span style="color:red">*</span></label>
+                        <div x-data="{ 
+                                open: false, 
+                                selected: '{{ old('kategori', $ruangan->kategori ?? '') }}',
+                                options: ['Kelas', 'Laboratorium', 'Sidang'],
+                                get selectedLabel() {
+                                    return this.selected ? this.selected : 'Pilih Kategori';
+                                }
+                            }" 
+                            class="relative" 
+                            @click.away="open = false">
+                            
+                            <!-- Visually hidden input for browser validation -->
+                            <input type="text" name="kategori" x-model="selected" class="absolute w-0 h-0 opacity-0 pointer-events-none" required tabindex="-1">
+                        
+                            <button type="button" @click="open = !open" 
+                                class="mp-input w-full flex justify-between items-center text-left"
+                                style="background: white; cursor: pointer;">
+                                <span x-text="selectedLabel" :style="selected ? 'color: #0D0D12' : 'color: #72778F'"></span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="transition: transform 0.2s;" :style="open ? 'transform: rotate(180deg)' : ''">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                        
+                            <div x-show="open" 
+                                x-transition.opacity.duration.200ms
+                                class="absolute z-[100] w-full mt-1 bg-white border rounded-md shadow-lg overflow-hidden"
+                                style="display: none; border-color: #DFE1E7;">
+                                <ul class="py-1 text-sm m-0 p-0" style="list-style: none;">
+                                    <template x-for="option in options" :key="option">
+                                        <li>
+                                            <button type="button" @click="selected = option; open = false"
+                                                class="w-full px-4 py-2.5 text-left hover:bg-slate-50 focus:outline-none flex items-center justify-between transition-colors"
+                                                :class="selected === option ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700'">
+                                                <span x-text="option"></span>
+                                                <svg x-show="selected === option" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </button>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                        @error('kategori')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:16px;">
+                    <div style="flex:1;">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Lokasi /
                             Gedung <span style="color:red">*</span></label>
                         <input type="text" name="lokasi" class="mp-input" value="{{ old('lokasi', $ruangan->lokasi) }}"

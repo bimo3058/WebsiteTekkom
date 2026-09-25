@@ -37,6 +37,7 @@ class RuanganController extends Controller
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
+            'kategori' => 'required|in:Kelas,Laboratorium,Sidang',
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
@@ -48,6 +49,7 @@ class RuanganController extends Controller
             'lokasi' => $request->lokasi,
             'lantai' => $request->lantai,
             'kapasitas' => $request->kapasitas,
+            'kategori' => $request->kategori,
             'fasilitas' => $request->fasilitas ?? [],
             'is_active' => $request->has('is_active') ? true : false,
         ];
@@ -88,6 +90,7 @@ class RuanganController extends Controller
             'lokasi' => 'required|string|max:255',
             'lantai' => 'nullable|integer',
             'kapasitas' => 'required|integer|min:0',
+            'kategori' => 'required|in:Kelas,Laboratorium,Sidang',
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
@@ -100,6 +103,7 @@ class RuanganController extends Controller
             'lokasi' => $request->lokasi,
             'lantai' => $request->lantai,
             'kapasitas' => $request->kapasitas,
+            'kategori' => $request->kategori,
             'fasilitas' => $request->fasilitas ?? [],
             'is_active' => $request->has('is_active') ? true : false,
         ];

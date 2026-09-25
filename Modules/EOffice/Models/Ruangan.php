@@ -18,6 +18,7 @@ class Ruangan extends Model
         'kapasitas',
         'fasilitas',
         'is_active',
+        'kategori',
     ];
 
     protected $casts = [
