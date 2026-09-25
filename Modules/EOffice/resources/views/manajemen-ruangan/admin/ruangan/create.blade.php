@@ -124,7 +124,7 @@
 
                 <div style="margin-top: 5px;">
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Foto Ruangan
-                        Terkini (Maks. 1MB per foto)</label>
+                        Terkini (Maks. 2MB per foto)</label>
 
                     <input type="file" name="fotos[]" multiple accept="image/png, image/jpeg, image/jpg"
                         class="mp-input cursor-pointer" style="padding: 6px;" id="fotoInput" onchange="previewImages(event)">
@@ -226,8 +226,8 @@
             var files = event.target.files;
             if (files && files.length > 0) {
                 Array.from(files).forEach(function (file) {
-                    if (file.size > 1024 * 1024) {
-                        showCustomToast('Ukuran foto "' + file.name + '" terlalu besar (Maks. 1MB). Foto diabaikan.');
+                    if (file.size > 2 * 1024 * 1024) {
+                        showCustomToast('Ukuran foto "' + file.name + '" terlalu besar (Maks. 2MB). Foto diabaikan.');
                     } else if (!file.type.match('image.*')) {
                         showCustomToast('Format file "' + file.name + '" tidak didukung. Foto diabaikan.');
                     } else {
