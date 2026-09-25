@@ -70,7 +70,7 @@
 
                 <div style="margin-top: 5px;">
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Foto Ruangan
-                        Terkini (Maks. 5MB per foto)</label>
+                        Terkini (Maks. 1MB per foto)</label>
 
                     <input type="file" name="fotos[]" multiple accept="image/png, image/jpeg, image/jpg"
                         class="mp-input cursor-pointer" style="padding: 6px;" id="fotoInput" onchange="previewImages(event)">
@@ -118,11 +118,67 @@
         let accumulatedFiles = new DataTransfer();
         let sortableInstance = null;
 
+        function showCustomToast(message) {
+            const oldToast = document.getElementById('client-toast');
+            if (oldToast) oldToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'client-toast';
+            toast.className = 'mp-flash mp-flash-error';
+            toast.style.position = 'fixed';
+            toast.style.top = '24px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.zIndex = '99999';
+            toast.style.justifyContent = 'space-between';
+            toast.style.borderRadius = '8px';
+            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            toast.style.minWidth = '320px';
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 300ms ease, top 300ms ease';
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>${message}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 300)" style="background:transparent; border:none; cursor:pointer; color:inherit; padding:0; display:flex; align-items:center; opacity:0.7;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.top = '32px';
+            });
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    toast.style.opacity = '0';
+                    toast.style.top = '24px';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
         function previewImages(event) {
             var files = event.target.files;
             if (files && files.length > 0) {
                 Array.from(files).forEach(function (file) {
-                    accumulatedFiles.items.add(file);
+                    if (file.size > 1024 * 1024) {
+                        showCustomToast('Ukuran foto "' + file.name + '" terlalu besar (Maks. 1MB). Foto diabaikan.');
+                    } else if (!file.type.match('image.*')) {
+                        showCustomToast('Format file "' + file.name + '" tidak didukung. Foto diabaikan.');
+                    } else {
+                        accumulatedFiles.items.add(file);
+                    }
                 });
                 document.getElementById('fotoInput').files = accumulatedFiles.files;
             }

@@ -40,7 +40,7 @@ class RuanganController extends Controller
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
-            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120'
+            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:1024'
         ]);
 
         $data = [
@@ -91,7 +91,7 @@ class RuanganController extends Controller
             'fasilitas' => 'nullable|array',
             'fasilitas.*' => 'string',
             'fotos' => 'nullable|array|max:10',
-            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:5120',
+            'fotos.*' => 'image|mimes:jpeg,png,jpg|max:1024',
             'foto_order' => 'nullable|string'
         ]);
 

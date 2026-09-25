@@ -979,15 +979,21 @@
                                     </svg>
                                     File Berkas Proposal <span class="text-gray-500 font-normal">(Opsional)</span>
                                 </label>
-                                <input type="file" name="file_berkas" accept=".pdf,.doc,.docx" class="block w-full text-sm text-gray-500
+                                <input type="file" name="file_berkas" accept=".pdf" class="block w-full text-sm text-gray-500
                                 file:mr-4 file:py-2 file:px-4
                                 file:rounded-md file:border-0
                                 file:text-sm file:font-semibold
                                 file:bg-[#415086] file:text-white
                                 hover:file:bg-[#2e3b66]
                                 cursor-pointer transition-colors">
-                                <p class="text-[10px] text-gray-500 mt-2">Format PDF/Word maksimal 2MB. Hanya
+                                <p class="text-[10px] text-gray-500 mt-2">Format PDF maksimal 2MB. Hanya
                                     diperlukan untuk acara formal.</p>
+                                @error('file_berkas')
+                                    <p class="text-[11px] text-[#DF1C41] mt-1.5 font-bold flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Ukuran maksimal 2MB dan wajib berformat PDF.
+                                    </p>
+                                @enderror
                             </div>
 
                             {{-- Persetujuan S&K --}}
@@ -1189,5 +1195,81 @@
                 }
             }))
         })
+
+        // Fungsi untuk menampilkan Custom Toast UI
+        function showCustomToast(message) {
+            // Hapus toast lama jika ada
+            const oldToast = document.getElementById('client-toast');
+            if (oldToast) oldToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'client-toast';
+            // Gunakan class bawaan sistem agar desainnya seragam (mp-flash mp-flash-error)
+            toast.className = 'mp-flash mp-flash-error';
+            toast.style.position = 'fixed';
+            toast.style.top = '24px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.zIndex = '99999';
+            toast.style.justifyContent = 'space-between';
+            toast.style.borderRadius = '8px';
+            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            toast.style.minWidth = '320px';
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 300ms ease, top 300ms ease';
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>${message}</span>
+                </div>
+                <button onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 300)" style="background:transparent; border:none; cursor:pointer; color:inherit; padding:0; display:flex; align-items:center; opacity:0.7;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Animasi masuk
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.top = '32px';
+            });
+
+            // Hilang otomatis dalam 5 detik
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    toast.style.opacity = '0';
+                    toast.style.top = '24px';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Client-Side Validation untuk File Upload
+        document.addEventListener('change', function(e) {
+            if (e.target && e.target.name === 'file_berkas') {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validasi Ukuran (Maks 2MB)
+                    if (file.size > 2 * 1024 * 1024) { 
+                        showCustomToast('Ukuran file "' + file.name + '" terlalu besar (Maksimal 2 MB).');
+                        e.target.value = ''; // Reset input seketika
+                    } 
+                    // Validasi Ekstensi/MIME (Hanya PDF)
+                    else if (file.type !== 'application/pdf') {
+                        showCustomToast('Format file tidak didukung. Hanya file PDF yang diizinkan.');
+                        e.target.value = ''; // Reset input seketika
+                    }
+                }
+            }
+        });
     </script>
 </x-eoffice::manajemen-ruangan.layout>

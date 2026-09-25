@@ -62,7 +62,7 @@ class UserPeminjamanController extends Controller
             'tanggal_pinjam' => 'required|date',
             'jam_mulai' => 'required',
             'jam_selesai' => 'required|after:jam_mulai',
-            'file_berkas' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120'
+            'file_berkas' => 'nullable|file|mimes:pdf|max:2048'
         ]);
 
         // Interceptor: Cek status blacklist / Banned account 
