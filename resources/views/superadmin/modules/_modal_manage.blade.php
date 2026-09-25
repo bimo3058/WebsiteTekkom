@@ -1,5 +1,5 @@
 {{-- resources/views/superadmin/modules/_modal_manage.blade.php --}}
-<div id="modal-{{ $module->slug }}"
+<div id="modal-{{ $module->slug }}" class="mod-modal" role="dialog" aria-modal="true" aria-labelledby="mod-title-{{ $module->slug }}"
      style="display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:16px; background:rgba(13,13,18,0.5); backdrop-filter:blur(2px);">
     <div style="position:fixed; inset:0;" onclick="closeModal('modal-{{ $module->slug }}')"></div>
 
@@ -17,11 +17,11 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 style="font-size:14px; font-weight:700; color:var(--c-fg); line-height:1.2;">Module Settings</h3>
+                    <h3 id="mod-title-{{ $module->slug }}" style="font-size:14px; font-weight:700; color:var(--c-fg); line-height:1.2;">Pengaturan Modul</h3>
                     <p style="font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.06em; color:var(--c-fg-muted); margin-top:2px;">{{ $module->name }}</p>
                 </div>
             </div>
-            <button onclick="closeModal('modal-{{ $module->slug }}')"
+            <button type="button" aria-label="Tutup pengaturan modul" onclick="closeModal('modal-{{ $module->slug }}')"
                     style="width:28px; height:28px; border-radius:7px; border:1px solid var(--c-border); background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--c-fg-muted); transition:background .15s;"
                     onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
@@ -33,7 +33,7 @@
             <div style="padding:20px 22px; display:flex; flex-direction:column; gap:18px;">
 
                 {{-- Identity --}}
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div class="mod-form-grid">
                     <div>
                         <label style="display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-muted); margin-bottom:6px;">Nama Modul</label>
                         <input type="text" name="name" value="{{ $module->name }}"
@@ -123,7 +123,7 @@
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
-                    Purge Cache
+                    Bersihkan cache
                 </button>
 
                 {{-- Save --}}
@@ -133,7 +133,7 @@
                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z M17 21v-8H7v8 M7 3v5h8"/>
                     </svg>
-                    Save Config
+                    Simpan
                 </button>
             </div>
         </form>

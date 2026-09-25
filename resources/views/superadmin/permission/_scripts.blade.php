@@ -1,4 +1,30 @@
 <script>
+function permissionActionDropdown() {
+    return {
+        open: false,
+        position: {},
+        close(focus = false) {
+            this.open = false;
+            this.$refs.panel?.hidePopover();
+            if (focus) this.$refs.trigger.focus();
+        },
+        toggle() {
+            if (this.open) { this.close(); return; }
+            const rect = this.$refs.trigger.getBoundingClientRect();
+            const below = window.innerHeight - rect.bottom - 14;
+            const above = rect.top - 14;
+            const upwards = below < 280 && above > below;
+            this.position = {
+                left: Math.max(8, Math.min(rect.right - 180, window.innerWidth - 188)) + 'px',
+                top: upwards ? 'auto' : (rect.bottom + 6) + 'px',
+                bottom: upwards ? (window.innerHeight - rect.top + 6) + 'px' : 'auto',
+                maxHeight: Math.max(0, Math.min(280, upwards ? above : below)) + 'px'
+            };
+            this.open = true;
+            this.$nextTick(() => this.$refs.panel.showPopover());
+        }
+    };
+}
 (function() {
     // Mencegah duplikasi script jika diload dua kali
     if (window.permissionManagerLoaded) return;

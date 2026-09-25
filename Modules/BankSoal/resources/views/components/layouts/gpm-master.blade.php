@@ -1,3 +1,4 @@
+@props(['rpsPreview' => false])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -111,21 +112,25 @@
             text-align: center;
         }
     </style>
+    @if($rpsPreview)
+        <link href="{{ asset('modules/banksoal/css/dosen-bank-soal.css') }}" rel="stylesheet">
+        <link href="{{ asset('modules/banksoal/css/rps-preview.css') }}?v={{ filemtime(public_path('modules/banksoal/css/rps-preview.css')) }}" rel="stylesheet">
+    @endif
     <x-mobile-navigation-assets />
 </head>
 
-<body class="font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
+<body class="{{ $rpsPreview ? 'banksoal-management bs-rps-preview' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
         <!-- Sidebar Component -->
         <x-banksoal::ui.sidebar-gpm />
 
         <!-- Main Content Wrapper -->
-        <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+        <div class="{{ $rpsPreview ? 'bs-workspace' : '' }} flex-1 flex flex-col h-screen overflow-hidden relative">
 
             <!-- Topbar -->
             <header
-                class="bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-10">
+                class="{{ $rpsPreview ? 'bs-topbar' : '' }} bg-white border-b border-slate-200 h-16 shrink-0 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center text-sm font-medium text-slate-600">
                     <span class="mr-2">SIBASO</span>
                     @hasSection('breadcrumbs')
@@ -164,8 +169,8 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="w-full flex-1 overflow-y-auto">
-                <div id="banksoal-main-content" class="p-4 md:p-6 w-full max-w-screen-2xl mx-auto">
+            <main class="{{ $rpsPreview ? 'bs-main' : '' }} w-full flex-1 overflow-y-auto">
+                <div id="banksoal-main-content" class="{{ $rpsPreview ? 'bs-content' : '' }} p-4 md:p-6 w-full max-w-screen-2xl mx-auto">
                     {{ $slot }}
                 </div>
             </main>
