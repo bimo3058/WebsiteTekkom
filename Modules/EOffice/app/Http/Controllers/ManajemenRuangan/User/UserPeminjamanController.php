@@ -155,9 +155,8 @@ class UserPeminjamanController extends Controller
                 ->withErrors(['Sistem Internal' => 'Ruangan terblokir secara otomatis. Terbentrok dengan Jadwal ' . $isInternalConflict->kategori . ': ' . $isInternalConflict->keterangan]);
         }
 
-        // Arsitektur Status Logika Akhir (VIP Shortcut untuk Dosen HANYA pada ruang yang 100% kosong)
-        $isDosen = auth()->user()->hasRole('dosen');
-        $statusAkhir = $isDosen ? 'disetujui' : 'menunggu';
+        // Arsitektur Status Logika Akhir
+        $statusAkhir = 'menunggu';
 
         Peminjaman::create([
             'user_id' => auth()->id(),
@@ -172,9 +171,7 @@ class UserPeminjamanController extends Controller
             'created_by' => auth()->id()
         ]);
 
-        $feedbackMsg = $statusAkhir == 'disetujui'
-            ? 'Pengajuan peminjaman ruangan Anda telah berhasil diproses dan disetujui secara otomatis oleh sistem.'
-            : 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
+        $feedbackMsg = 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
 
         return redirect()->route('eoffice.peminjaman.user.saya')
             ->with('success', $feedbackMsg);
