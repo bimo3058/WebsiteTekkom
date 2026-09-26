@@ -60,8 +60,8 @@
                 </div>
 
                 {{-- Filter (Role) dropdown --}}
-                <div class="relative inline-block" x-data="{ open: false }">
-                    <button type="button" @click="open = !open" @click.outside="open = false"
+                <div class="relative inline-block" x-data="userTableDropdown(200, 240)" @keydown.escape.stop.prevent="close(true)" @resize.window="close()" @scroll.window.capture="if (!$refs.panel?.contains($event.target)) close()">
+                    <button type="button" x-ref="trigger" @click="toggle()" :aria-expanded="open" aria-label="Filter role"
                             class="flex flex-row items-center justify-center gap-1.5 h-[34px] px-3.5 bg-white border rounded-lg text-[12.5px] font-semibold text-[var(--c-fg-sec)] whitespace-nowrap cursor-pointer transition-all box-border"
                             style="border-color:var(--c-border); font-family:inherit;"
                             :style="open ? 'border-color:var(--c-primary); color:var(--c-primary);' : ''">
@@ -74,12 +74,12 @@
                         @endif
                     </button>
 
-                    <div x-show="open" x-cloak
+                    <template x-teleport="body"><div x-ref="panel" :style="position" @click.outside="close()" @keydown.escape.stop.prevent="close(true)" @click="if ($event.target.closest('a, button')) open = false" x-show="open" x-cloak
                         x-transition:enter="transition ease-out duration-100"
                         x-transition:enter-start="opacity-0 scale-95"
                         x-transition:enter-end="opacity-100 scale-100"
-                        class="absolute right-0 top-[calc(100%+6px)] bg-white border rounded-xl shadow-lg min-w-[160px] z-50 overflow-hidden"
-                        style="border-color:var(--c-border); display:none;">
+                        class="bg-white border rounded-xl shadow-lg"
+                        style="position:fixed; width:200px; max-height:240px; overflow-y:auto; overscroll-behavior:contain; z-index:1050; border-color:var(--c-border); display:none;">
                         <div class="p-1.5">
                             @php $selectedRole = request('role', 'all'); @endphp
                             <a href="{{ route('superadmin.users.index', array_merge(request()->except(['role','page']), ['role' => 'all'])) }}"
@@ -97,7 +97,7 @@
                             </a>
                             @endforeach
                         </div>
-                    </div>
+                    </div></template>
                 </div>
 
                 {{-- ── SORT BY DROPDOWN ── --}}
@@ -360,19 +360,19 @@
 
                     {{-- Action --}}
                     <td style="padding:14px 16px; text-align:center;">
-                        <div style="position:relative; display:inline-block;" x-data="{ open: false }">
-                            <button type="button" @click="open = !open" @click.outside="open = false"
+                        <div style="position:relative; display:inline-block;" x-data="userTableDropdown(180, 280)" @keydown.escape.stop.prevent="close(true)" @resize.window="close()" @scroll.window.capture="if (!$refs.panel?.contains($event.target)) close()">
+                            <button type="button" x-ref="trigger" @click="toggle()" :aria-expanded="open" aria-label="Aksi pengguna"
                                     style="width:28px; height:28px; border-radius:6px; border:1px solid var(--c-border); background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg-muted); transition:all .15s; margin:0 auto;"
                                     onmouseover="this.style.background='var(--c-bg)'; this.style.borderColor='var(--c-border-strong)'"
                                     onmouseout="this.style.background='#fff'; this.style.borderColor='var(--c-border)'">
                                 <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                             </button>
 
-                            <div x-show="open"
+                            <template x-teleport="body"><div x-ref="panel" :style="position" @click.outside="close()" @keydown.escape.stop.prevent="close(true)" @click="if ($event.target.closest('a, button')) open = false" x-show="open"
                                  x-transition:enter="transition ease-out duration-100"
                                  x-transition:enter-start="opacity-0 scale-95"
                                  x-transition:enter-end="opacity-100 scale-100"
-                                 style="position:absolute; right:0; top:calc(100% + 5px); background:#fff; border:1px solid var(--c-border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.1); min-width:160px; z-index:40; overflow:hidden; display:none;">
+                                 style="position:fixed; background:#fff; border:1px solid var(--c-border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.1); width:180px; max-height:280px; z-index:1050; overflow-y:auto; overscroll-behavior:contain; display:none;">
                                 <div style="padding:5px;">
 
                                     <a href="{{ route('superadmin.users.show', $user->id) }}"
@@ -383,7 +383,7 @@
                                     </a>
 
                                     <button type="button"
-                                            onclick="openEditInfo({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }}); open = false"
+                                            @click="openEditInfo({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }}); open = false"
                                             style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; border-radius:6px; background:none; font-size:11px; font-weight:500; color:var(--c-fg-sec); cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
                                             onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='none'">
                                         <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z"/></svg>
@@ -437,7 +437,7 @@
                                     </button>
                                     @endif
                                 </div>
-                            </div>
+                            </div></template>
                         </div>
                     </td>
 
@@ -468,6 +468,21 @@
 </div>
 
 <script>
+    function userTableDropdown(width, maxHeight) {
+        return {
+            open: false, position: {},
+            close(focus = false) { this.open = false; if (focus) this.$refs.trigger.focus(); },
+            toggle() {
+                if (this.open) { this.close(); return; }
+                const rect = this.$refs.trigger.getBoundingClientRect();
+                const below = window.innerHeight - rect.bottom - 14;
+                const above = rect.top - 14;
+                const upwards = below < maxHeight && above > below;
+                this.position = { left: Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)) + "px", top: upwards ? "auto" : (rect.bottom + 6) + "px", bottom: upwards ? (window.innerHeight - rect.top + 6) + "px" : "auto", maxHeight: Math.max(0, Math.min(maxHeight, upwards ? above : below)) + "px" };
+                this.open = true;
+            }
+        };
+    }
     // Sort helpers — prefixed "User" agar tidak clash dengan halaman audit logs
     // jika keduanya dimuat bersamaan
     function setSortUser(col, dir) {

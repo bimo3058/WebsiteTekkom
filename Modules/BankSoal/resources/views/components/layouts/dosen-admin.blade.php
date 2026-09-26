@@ -1,4 +1,4 @@
-@props(['bankSoal' => false])
+@props(['bankSoal' => false, 'rpsPreview' => false])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -28,13 +28,14 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
     @stack('styles')
-    @if($bankSoal)
+    @if($bankSoal || $rpsPreview)
         <link href="{{ asset('modules/banksoal/css/dosen-bank-soal.css') }}" rel="stylesheet">
     @endif
+    @if($rpsPreview)<link href="{{ asset('modules/banksoal/css/rps-preview.css') }}?v={{ filemtime(public_path('modules/banksoal/css/rps-preview.css')) }}" rel="stylesheet">@endif
     <x-mobile-navigation-assets />
     <link href="{{ asset('modules/banksoal/css/dosen-topbar.css') }}" rel="stylesheet">
 </head>
-<body class="{{ $bankSoal ? 'banksoal-management' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
+<body class="{{ ($bankSoal || $rpsPreview) ? 'banksoal-management' : '' }} {{ $rpsPreview ? 'bs-rps-preview' : '' }} font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div x-data="{ sidebarOpen: true }" class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
         <!-- Sidebar Component -->
