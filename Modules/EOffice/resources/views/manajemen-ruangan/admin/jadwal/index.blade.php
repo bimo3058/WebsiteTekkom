@@ -1,5 +1,5 @@
 <x-eoffice::manajemen-ruangan.layout
-    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Event dan Maintenance' }}">
+    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Blokir Ruangan' }}">
 
     <div x-data="{ 
         showModal: false, 
@@ -61,7 +61,7 @@
                     <p class="mp-page-sub">Atur dan import blocking waktu khusus untuk agenda perkuliahan rutin Fakultas.
                     </p>
                 @else
-                    <h1 class="mp-page-title">Kelola Event & Maintenance</h1>
+                    <h1 class="mp-page-title">Kelola Blokir Ruangan</h1>
                     <p class="mp-page-sub">Atur blocking waktu insidental untuk rapat dosen, acara himpunan, atau perawatan
                         ruangan.</p>
                 @endif
@@ -589,7 +589,7 @@
             <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full"
                 style="padding-bottom: 20px;">
                 <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">
-                    {{ $viewMode === 'akademik' ? 'Jadwal Akademik' : 'Event & Maintenance' }}
+                    {{ $viewMode === 'akademik' ? 'Jadwal Akademik' : 'Blokir Ruangan' }}
                 </h2>
 
                 @if($viewMode === 'akademik')
