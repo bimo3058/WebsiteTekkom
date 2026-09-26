@@ -421,6 +421,12 @@
                                                 <th class="mp-th text-left"
                             style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">
                             KEANGGOTAAN CERC</th>
+                        @if(filled($periode?->nama_berkas_tambahan))
+                            <th class="mp-th text-left"
+                                style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">
+                                {{ strtoupper($periode->nama_berkas_tambahan) }}
+                            </th>
+                        @endif
 <th class="mp-th text-center"
                             style="padding:14px 16px; color:#8CA3BA; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em;">
                             STATUS</th>
@@ -492,6 +498,18 @@
                                     <span style="color:#808897; font-size:12px; font-style:italic;">Tidak ada</span>
                                 @endif
                             </td>
+                            @if(filled($periode?->nama_berkas_tambahan))
+                                <td style="padding:14px 16px;">
+                                    @if($p->berkas_tambahan_path)
+                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_tambahan_path, 'eoffice') }}"
+                                            target="_blank" rel="noopener noreferrer"
+                                            style="display:inline-flex; align-items:center; gap:6px; color:#0B266E; font-size:12px; font-weight:600; text-decoration:none;"
+                                            class="hover:underline">Lihat Berkas</a>
+                                    @else
+                                        <span style="color:#808897; font-size:12px; font-style:italic;">Tidak ada</span>
+                                    @endif
+                                </td>
+                            @endif
                             <td style="padding:14px 16px; text-align:center;">
                                 <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
                                     @if($p->status === 'approved')
@@ -550,7 +568,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center" style="padding:32px 16px; color:#666D80; font-size:13px;">
+                            <td colspan="{{ filled($periode?->nama_berkas_tambahan) ? 9 : 8 }}" class="text-center" style="padding:32px 16px; color:#666D80; font-size:13px;">
                                 Belum ada pendaftar koordinator untuk praktikum ini.
                             </td>
                         </tr>

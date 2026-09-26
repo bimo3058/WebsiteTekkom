@@ -172,21 +172,6 @@
                                     </div>
                                     </div>
 
-                                    <div style="margin-bottom: 24px;">
-                                        <label style="display:block;font-size:13px;font-weight:600;color:#353849;margin-bottom:8px;">Jadwal <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;font-size:11px;">(Pilih hari luang)</span></label>
-                                        <div style="display:flex;flex-wrap:wrap;gap:12px;">
-                                            @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'] as $hari)
-                                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-                                                <div style="position:relative; width:20px; height:20px; border-radius:6px; border:1px solid #DFE1E7; display:flex; align-items:center; justify-content:center; background:#fff; transition:all 0.2s;">
-                                                    <input type="checkbox" name="jadwal[]" value="{{ $hari }}" style="position:absolute; inset:0; opacity:0; cursor:pointer;" onchange="this.parentElement.style.background = this.checked ? '#2A3E7B' : '#fff'; this.parentElement.style.borderColor = this.checked ? '#2A3E7B' : '#DFE1E7'; this.nextElementSibling.style.display = this.checked ? 'block' : 'none'">
-                                                    <svg style="display:none; pointer-events:none; width:14px; height:14px; color:#fff;" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                                                </div>
-                                                <span style="font-size:13px;color:#353849;">{{ $hari }}</span>
-                                            </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-
                                     @if($pAsprak->nama_berkas_tambahan)
                                     <div style="margin-bottom: 24px;">
                                         <label style="display:block;font-size:13px;font-weight:600;color:#353849;margin-bottom:6px;">{{ $pAsprak->nama_berkas_tambahan }} <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;font-size:11px;">(@if($pAsprak->keterangan_berkas_tambahan){{ $pAsprak->keterangan_berkas_tambahan }}, @endif.pdf maks 5 MB)</span></label>

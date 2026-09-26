@@ -7,14 +7,14 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                 <h1 class="mp-page-title">Pendaftaran</h1>
             </div>
-            <p class="mp-page-sub">Kelola seleksi pendaftaran Koordinator, Asisten Praktikum, dan Praktikan · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+            <p class="mp-page-sub">Kelola seleksi pendaftaran Koordinator dan Asisten &bull; {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
         </div>
     </div>
 
     @include('eoffice::manajemen-praktikum.admin.partials.registration-tabs', ['activeRegistrationTab' => 'koor'])
 </div>
 
-<div id="daftar-pendaftaran" class="mp-card">
+<div id="daftar-pendaftaran" class="mp-card" style="font-family:'Inter Tight',system-ui,sans-serif;">
     {{-- Toolbar: Filter & Search --}}
     <div class="p-4 border-b border-[#DFE1E7] bg-white flex items-center justify-between">
         <form id="filter_pendaftaran_koor_form" method="GET" action="{{ url()->current() }}#daftar-pendaftaran" class="flex w-full gap-3 items-center">
@@ -76,7 +76,7 @@
                        oninput="doLiveSearch(this.value)"
                        onkeydown="if(event.key==='Enter') event.preventDefault()">
             </div>
-            @if(request()->anyFilled(['search','status','praktikum_id']))
+            @if(request()->anyFilled(['search','status_dosen','status','praktikum_id']))
             <a href="{{ route('eoffice.manprak.admin.pendaftaran-koor.index') }}"
                class="mp-btn secondary md px-4" style="height:38px; text-decoration:none; flex-shrink: 0; display:flex; align-items:center; gap:6px;">
                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -90,15 +90,15 @@
     <div class="mp-card-body p-0 overflow-x-auto">
         <div style="min-width: max-content;">
         {{-- Header Tabel --}}
-        <div class="grid gap-3 px-5 py-3 bg-[#FAFAFA] border-b border-[#DFE1E7]"
-             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 160px 100px 190px;">
+        <div class="grid gap-4 px-5 py-3 bg-[#FAFAFA] border-b border-[#DFE1E7] items-center"
+             style="grid-template-columns:44px 260px 150px 280px 70px 200px 160px 120px 190px;">
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">No</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Nama Mahasiswa</div>
-            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Email</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">NIM</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Praktikum</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">IPK</div>
-            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">Status Dosen Pengampu</div>
+            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Berkas Tambahan</div>
+            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">Status Dosen</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center">Status Admin</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center">Aksi</div>
         </div>
@@ -111,8 +111,8 @@
             $avColors = ['sky','navy','green','yellow','violet'];
             $avColor = $avColors[crc32($p->user?->email ?? '') % count($avColors)];
         @endphp
-        <div class="grid gap-3 px-5 py-4 border-b border-[#F6F8FA] hover:bg-[#FAFAFA] transition-colors items-center"
-             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 160px 100px 190px;">
+        <div class="grid gap-4 px-5 py-4 border-b border-[#F6F8FA] hover:bg-[#FAFAFA] transition-colors items-center"
+             style="grid-template-columns:44px 260px 150px 280px 70px 200px 160px 120px 190px; min-height:76px;">
             {{-- No --}}
             <div class="text-[12px] font-semibold text-[#666D80]">
                 {{ $loop->iteration + ($pendaftaran->firstItem() ?? 1) - 1 }}
@@ -121,13 +121,11 @@
             {{-- Mahasiswa --}}
             <div class="flex items-center gap-[10px] pr-3">
                 <div class="mp-av {{ $avColor }} flex-shrink-0">{{ $initials }}</div>
-                <div>
-                    <div class="text-[13px] font-semibold text-[#0D0D12] whitespace-nowrap">{{ $p->user?->name ?? '—' }}</div>
+                <div class="min-w-0">
+                    <div class="text-[13px] font-semibold text-[#0D0D12] leading-5">{{ $p->user?->name ?? '—' }}</div>
+                    <div class="text-[11px] text-[#666D80] leading-4 break-all">{{ $p->user?->email ?? '—' }}</div>
                 </div>
             </div>
-
-            {{-- Email --}}
-            <div class="text-[12px] text-[#666D80] whitespace-nowrap">{{ $p->user?->email ?? '—' }}</div>
             
             {{-- NIM --}}
             <div class="text-[13px] text-[#0D0D12] whitespace-nowrap" style="font-family: 'Inter', sans-serif;">
@@ -135,11 +133,26 @@
             </div>
             
             {{-- Praktikum --}}
-            <div class="text-[13px] text-[#0D0D12] whitespace-nowrap">{{ $p->praktikum?->nama ?? '—' }}</div>
+            <div class="text-[13px] text-[#0D0D12] leading-5">{{ $p->praktikum?->nama ?? '—' }}</div>
             <div class="text-center">
                 <span class="text-[13px] text-[#0D0D12]">
                     {{ number_format($p->ipk ?? 0, 2) }}
                 </span>
+            </div>
+            @php
+                $additionalDocumentName = $namaBerkasTambahan->get($p->praktikum_id);
+            @endphp
+            <div class="text-[12px] text-[#666D80]">
+                @if(filled($additionalDocumentName) && $p->berkas_tambahan_path)
+                    <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
+                    <a class="text-[#0B266E] font-semibold hover:underline" target="_blank" rel="noopener"
+                       href="{{ route('eoffice.manprak.admin.pendaftaran.document', ['type' => 'koor', 'id' => $p->id, 'document' => 'berkas_tambahan_path']) }}">Lihat Berkas</a>
+                @elseif(filled($additionalDocumentName))
+                    <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
+                    <span>Tidak mengunggah</span>
+                @else
+                    <span>Tidak disyaratkan</span>
+                @endif
             </div>
             <div class="text-center">
                 @if($p->status_dosen === 'disetujui')

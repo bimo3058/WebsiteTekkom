@@ -2,23 +2,23 @@
 
     <style>
         .praktikum-filter-search {
-            flex: 1 1 280px;
-            min-width: 240px;
+            flex: 1 1 320px;
+            min-width: 260px;
         }
 
         .praktikum-filter-status {
-            flex: 0 0 135px;
-            width: 135px;
-        }
-
-        .praktikum-filter-semester {
             flex: 0 0 150px;
             width: 150px;
         }
 
+        .praktikum-filter-semester {
+            flex: 0 0 165px;
+            width: 165px;
+        }
+
         .praktikum-filter-year {
-            flex: 0 0 220px;
-            width: 220px;
+            flex: 0 0 235px;
+            width: 235px;
         }
 
         .praktikum-filter-status button,
@@ -45,8 +45,8 @@
 
         @media (min-width: 1280px) {
             .praktikum-toolbar-actions {
-                margin-left: 8px;
-                padding-left: 8px;
+                margin-left: 4px;
+                padding-left: 16px;
             }
         }
 
@@ -142,20 +142,6 @@
 
             <div
                 class="praktikum-toolbar-actions w-full flex flex-wrap gap-2 pt-4 border-t border-[#DFE1E7] xl:w-auto xl:flex-nowrap xl:flex-shrink-0 xl:pt-0 xl:border-t-0 xl:border-l">
-                {{-- Bulk Toggle --}}
-                <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-bulk-modal'))"
-                    class="mp-btn secondary md"
-                    style="height:35px; background-color:#FFF1F2; border-color:#FECDD3; color:#BE123C;"
-                    onmouseover="this.style.backgroundColor='#FEE2E2'"
-                    onmouseout="this.style.backgroundColor='#FFF1F2'">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                        <polyline points="2 17 12 22 22 17"></polyline>
-                        <polyline points="2 12 12 17 22 12"></polyline>
-                    </svg>
-                    Ubah Status Keseluruhan
-                </button>
                 <button onclick="window.dispatchEvent(new CustomEvent('open-create-modal'))" class="mp-btn primary md"
                     style="height:35px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
@@ -1094,101 +1080,5 @@
             });
         </script>
     @endif
-
-    {{-- Modal Bulk Toggle --}}
-    <div x-data="{ open: false, selectAll: false, action: 'deactivate', toggleAll() { document.querySelectorAll('.bulk-checkbox').forEach(cb => cb.checked = this.selectAll); } }"
-        @open-bulk-modal.window="open = true" @close-bulk-modal.window="open = false" id="modalBulkToggle"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
-        x-show="open" style="display: none;" x-cloak>
-
-        <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
-            @click.away="open = false" x-show="open" x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-            x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-
-            <div class="px-6 py-4 border-b border-[#DFE1E7] flex justify-between items-center flex-shrink-0">
-                <div>
-                    <div class="font-bold text-[16px] text-[#0D0D12]">Ubah Status Keseluruhan</div>
-                    <div class="text-[12px] text-[#666D80] mt-0.5">Pilih praktikum yang akan diubah statusnya</div>
-                </div>
-                <button type="button" @click="open = false"
-                    class="text-[#666D80] hover:text-[#0D0D12] transition-colors p-1.5 hover:bg-[#F6F8FA] rounded-[8px]">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.2">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="overflow-y-auto flex-1">
-                <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.bulk-toggle-active') }}"
-                    class="p-6">
-                    @csrf
-
-                    <div class="mb-5">
-                        <label class="block text-[12px] font-semibold text-[#353849] mb-2">Aksi yang diinginkan <span
-                                class="text-red-500">*</span></label>
-                        <div class="flex gap-4">
-                            <label class="flex items-center gap-2 text-[13px] text-[#353849] cursor-pointer">
-                                <input type="radio" name="action" value="deactivate" x-model="action"
-                                    class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                                Non-Aktifkan Praktikum
-                            </label>
-                            <label class="flex items-center gap-2 text-[13px] text-[#353849] cursor-pointer">
-                                <input type="radio" name="action" value="activate" x-model="action"
-                                    class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                                Aktifkan Praktikum
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="mb-3 flex justify-between items-center border-b border-[#DFE1E7] pb-3">
-                        <label class="flex items-center gap-2 text-[13px] font-semibold text-[#353849] cursor-pointer">
-                            <input type="checkbox" x-model="selectAll" @change="toggleAll()"
-                                class="w-4 h-4 rounded text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                            Pilih Semua
-                        </label>
-                    </div>
-
-                    <div class="flex flex-col border border-[#DFE1E7] rounded-[8px] overflow-hidden">
-                        @forelse($praktikums ?? [] as $p)
-                            <label
-                                class="flex items-start gap-3 p-3 border-b border-[#F6F8FA] last:border-0 cursor-pointer hover:bg-[#F6F8FA] transition-colors">
-                                <input type="checkbox" name="praktikum_ids[]" value="{{ $p->id }}"
-                                    class="bulk-checkbox w-4 h-4 mt-0.5 rounded text-[#0B266E] border-gray-300 focus:ring-[#0B266E]">
-                                <div>
-                                    <div class="text-[13px] font-medium text-[#0D0D12] leading-tight mb-1">{{ $p->nama }}
-                                    </div>
-                                    <div class="text-[11px] text-[#666D80]">
-                                        Sem. {{ $p->semester }} {{ $p->tahun_ajaran }} &bull; Status:
-                                        <span
-                                            class="{{ $p->is_active ? 'text-[#0D9488]' : 'text-[#DF1C41]' }} font-semibold">{{ $p->is_active ? 'Aktif' : 'Non-Aktif' }}</span>
-                                    </div>
-                                </div>
-                            </label>
-                        @empty
-                            <div class="text-[13px] text-center text-[#666D80] py-6 bg-[#FAFAFA]">Belum ada praktikum yang
-                                tersedia.</div>
-                        @endforelse
-                    </div>
-
-                    <div class="flex gap-3 justify-end mt-6 pt-5 border-t border-[#DFE1E7]">
-                        <button type="button" @click="open = false" class="mp-btn secondary md px-5">Batal</button>
-                        <button type="submit" class="mp-btn primary md px-5"
-                            :class="action === 'deactivate' ? 'bg-[#DF1C41] border-[#DF1C41] hover:bg-[#C9193A]' : ''">Simpan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Legacy functions redirect to Alpine events for safety
-        function openBulkModal() { window.dispatchEvent(new CustomEvent('open-bulk-modal')); }
-        function closeBulkModal() { window.dispatchEvent(new CustomEvent('close-bulk-modal')); }
-    </script>
 
 </x-eoffice::manajemen-praktikum.layout>

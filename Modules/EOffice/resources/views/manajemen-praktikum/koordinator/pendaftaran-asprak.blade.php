@@ -183,49 +183,6 @@
                         </div>
 
 
-                        <div class="mt-5">
-                            <label class="block text-[11px] font-semibold text-[#353849] mb-2">Jadwal <span
-                                    class="text-red-500">*</span> <span class="text-[#808897] font-normal">(Pilih hari
-                                    luang)</span></label>
-                            <div class="flex gap-6 flex-wrap">
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Senin</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Selasa</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Rabu</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Kamis</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Jumat</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Sabtu</span>
-                                </label>
-                                <label class="flex items-center gap-2" style="cursor:not-allowed;">
-                                    <input type="radio" disabled
-                                        class="w-4 h-4 text-[#0B266E] border-gray-300 focus:ring-[#0B266E] disabled:bg-[#F9FAFB] disabled:opacity-75">
-                                    <span class="text-[12px] text-[#666D80]">Minggu</span>
-                                </label>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
             </div>
@@ -300,9 +257,12 @@
                         <th class="mp-th text-left" style="padding:10px 16px;">NIM</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">IPK</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">TRANSKRIP NILAI</th>
-
+                        @if(filled($periodeTabel?->nama_berkas_tambahan))
+                            <th class="mp-th text-left" style="padding:10px 16px;">
+                                {{ strtoupper($periodeTabel->nama_berkas_tambahan) }}
+                            </th>
+                        @endif
                         <th class="mp-th text-left" style="padding:10px 16px;">KEANGGOTAAN CERC</th>
-                        <th class="mp-th text-left" style="padding:10px 16px;">Jadwal</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Status</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Aksi</th>
                     </tr>
@@ -356,9 +316,18 @@
                                     <span style="color:#808897; font-size:12px; font-style:italic;">Tidak ada</span>
                                 @endif
                             </td>
-                            <td style="padding:12px 16px;font-size:13px;color:#666D80;">
-                                {{ collect($p->jadwal ?? [])->join(', ') ?: '—' }}
-                            </td>
+                            @if(filled($periodeTabel?->nama_berkas_tambahan))
+                                <td style="padding:10px 16px;">
+                                    @if($p->berkas_tambahan_path)
+                                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_tambahan_path, 'eoffice') }}"
+                                            target="_blank" rel="noopener noreferrer"
+                                            style="display:inline-flex; align-items:center; gap:6px; color:#0B266E; font-size:12px; font-weight:600; text-decoration:none;"
+                                            class="hover:underline">Lihat Berkas</a>
+                                    @else
+                                        <span style="color:#808897; font-size:12px; font-style:italic;">Tidak ada</span>
+                                    @endif
+                                </td>
+                            @endif
                             <td style="padding:12px 16px;">
                                 @if($p->status_koor === 'disetujui')
                                     <div>
@@ -410,7 +379,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" style="padding:48px;text-align:center;">
+                            <td colspan="{{ filled($periodeTabel?->nama_berkas_tambahan) ? 9 : 8 }}" style="padding:48px;text-align:center;">
                                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8"
                                     stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"
                                     style="margin:0 auto 12px;display:block;">

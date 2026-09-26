@@ -1,15 +1,13 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Kelola Role — Manajemen Praktikum">
+<div x-data="{ roleModalOpen: @js($errors->any()) }" style="display:contents;">
 
 {{-- ════════════════════════
      PAGE HEADER
 ════════════════════════ --}}
 <div class="mp-page-header" style="flex-shrink:0;">
     <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h1 class="mp-page-title">Kelola Role Praktikum</h1>
-            <span class="mp-badge error sm"><span class="dot"></span>Admin</span>
-        </div>
-        <p class="mp-page-sub">Assign atau cabut role asisten praktikum & koordinator per praktikum · {{ now()->locale('id')->isoFormat('D MMMM YYYY') }}</p>
+        <h1 class="mp-page-title">Kelola Role Praktikum</h1>
+        <p class="mp-page-sub">Kelola atau cabut role Asisten dan Koordinator per praktikum &bull; {{ now()->locale('id')->isoFormat('D MMMM YYYY') }}</p>
     </div>
     <div class="mp-page-actions">
         <form method="GET" class="flex gap-2 items-center">
@@ -59,7 +57,7 @@
 
 {{-- Info strip praktikum terpilih --}}
 @if($praktikum)
-<div style="background:#fff;border:1px solid #DFE1E7;border-radius:11px;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.04);">
+<div class="mp-card" style="padding:14px 18px;display:flex;flex-direction:row;align-items:center;gap:16px;flex-shrink:0;">
     <div style="flex:1;min-width:0;">
         <div style="font-size:13px;font-weight:700;color:#0D0D12;">
             {{ $praktikum->nama }}
@@ -85,8 +83,8 @@
         </div>
         <div style="width:1px;background:#F0F1F4;"></div>
         <div style="text-align:center;">
-            <div style="font-size:10px;font-weight:600;color:#A4ABB8;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Anggota</div>
-            <div style="font-size:12px;font-weight:600;color:#0D0D12;">{{ $anggota->count() }} orang</div>
+            <div style="font-size:10px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;">Asisten</div>
+            <div style="font-size:12px;font-weight:600;color:#0D0D12;">{{ $anggota->reject(fn ($item) => $item->trashed())->count() }} orang</div>
         </div>
     </div>
 </div>
@@ -105,17 +103,21 @@
                 <div style="font-size:13px;font-weight:700;color:#0D0D12;">Anggota Terdaftar</div>
                 <div style="font-size:11px;color:#A4ABB8;margin-top:1px;">
                     @php
-                        $asprakCount = $anggota->where('role','asprak')->count();
-                        $koorCount   = $anggota->where('role','koor')->count();
+                        $asprakCount = $anggota->filter(fn ($item) => !$item->trashed() && $item->role === 'asprak')->count();
+                        $koorCount = $anggota->filter(fn ($item) => !$item->trashed() && $item->role === 'koor')->count();
                     @endphp
-                    {{ $asprakCount }} asisten praktikum · {{ $koorCount }} koordinator
+                    {{ $asprakCount }} Asisten &bull; {{ $koorCount }} Koordinator
                 </div>
             </div>
             <div style="display:flex;gap:6px;align-items:center;">
-                <span class="mp-badge success sm" style="height:fit-content;"><span class="dot"></span>{{ $asprakCount }} Asisten Praktikum</span>
+                <span class="mp-badge success sm" style="height:fit-content;"><span class="dot"></span>{{ $asprakCount }} Asisten</span>
                 <span class="mp-badge navy sm" style="height:fit-content;"><span class="dot"></span>{{ $koorCount }} Koordinator</span>
-                @if($asprakCount > 0 || $koorCount > 0)
                 <div style="width:1px;height:24px;background:#DFE1E7;margin:0 4px;"></div>
+                <button type="button" class="mp-btn primary md" style="height:34px;" @click="roleModalOpen = true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    Tambah Role
+                </button>
+                @if($asprakCount > 0 || $koorCount > 0)
                 <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.revokeAll', $praktikum->id) }}" onsubmit="return confirm('PENTING: Anda akan mencabut SELURUH role Asisten Praktikum dan Koordinator pada praktikum ini.\n\nPraktikum ini akan otomatis dinonaktifkan (mode read-only) setelah proses selesai.\nLanjutkan?')">
                     @csrf
                     <button type="submit" class="mp-btn destructive md" style="height:30px;font-size:12px;padding:0 12px;">
@@ -133,11 +135,11 @@
                 <table style="width:100%;border-collapse:collapse;min-width:420px;">
                     <thead style="position:sticky;top:0;z-index:1;">
                         <tr style="border-bottom:1px solid #DFE1E7;background:#FAFAFA;">
-                            <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;">#</th>
-                            <th style="padding:10px 16px;text-align:left;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;">Pengguna</th>
-                            <th style="padding:10px 16px;text-align:center;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;width:110px;">Role</th>
-                            <th style="padding:10px 16px;text-align:center;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;width:80px;">Bergabung</th>
-                            <th style="padding:10px 16px;text-align:center;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;width:80px;">Aksi</th>
+                            <th style="padding:12px 16px;text-align:center;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;width:64px;">No</th>
+                            <th style="padding:12px 16px;text-align:left;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;">Nama Mahasiswa</th>
+                            <th style="padding:12px 16px;text-align:center;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;width:150px;">Role</th>
+                            <th style="padding:12px 16px;text-align:center;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;width:120px;">Bergabung</th>
+                            <th style="padding:12px 16px;text-align:center;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;width:140px;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -163,7 +165,7 @@
                                 @if($a->role === 'koor')
                                 <span class="mp-badge navy sm"><span class="dot"></span>Koordinator</span>
                                 @else
-                                <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
+                                <span class="mp-badge success sm"><span class="dot"></span>Asisten</span>
                                 @endif
                                 @if($a->trashed())
                                     <span class="mp-badge error sm" style="margin-top:4px;"><span class="dot"></span>Dicabut</span>
@@ -208,7 +210,7 @@
                         <tr>
                             <td colspan="5" style="padding:56px;text-align:center;">
                                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 10px;display:block;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-                                <div style="font-size:13px;font-weight:600;color:#666D80;">Belum ada asisten praktikum atau koordinator di praktikum ini.</div>
+                                <div style="font-size:13px;font-weight:600;color:#666D80;">Belum ada Asisten atau Koordinator di praktikum ini.</div>
                                 <div style="font-size:12px;color:#A4ABB8;margin-top:4px;">Asisten dan Koordinator yang diterima pada menu Pendaftaran akan muncul di sini.</div>
                             </td>
                         </tr>
@@ -223,5 +225,117 @@
 </div>
 @endif
 @endif
+
+@if($praktikum)
+<div x-cloak x-show="roleModalOpen" @keydown.escape.window="roleModalOpen = false"
+     style="position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;">
+    <div @click="roleModalOpen = false" style="position:absolute;inset:0;background:rgba(13,13,18,.48);"></div>
+    <div class="mp-card" @click.stop
+         style="position:relative;width:min(720px,100%);max-height:calc(100vh - 48px);overflow-y:auto;border-radius:14px;box-shadow:0 24px 64px rgba(13,13,18,.24);">
+        <div class="mp-card-header" style="position:sticky;top:0;z-index:2;justify-content:space-between;">
+            <div>
+                <h2 class="mp-card-title" style="font-size:16px;">Kelola Role Praktikum</h2>
+                <p class="mp-page-sub" style="margin-top:3px;">{{ $praktikum->nama }}</p>
+            </div>
+            <button type="button" class="mp-icon-button" @click="roleModalOpen = false" aria-label="Tutup modal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <div style="padding:20px;display:grid;gap:20px;">
+            @if($errors->any())
+                <div class="mp-alert warning" style="margin:0;">
+                    <div>
+                        @foreach($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <section>
+                <div class="sec-head" style="margin-bottom:12px;"><span class="sec-bar"></span><h3 class="sec-title">Dosen Pengampu</h3><span class="sec-rule"></span></div>
+                <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.dosen.update', $praktikum->id) }}"
+                      x-data="{ dosens: @js($praktikum->dosens->pluck('id')->map(fn ($id) => (string) $id)->values()) }">
+                    @csrf
+                    @method('PUT')
+                    <template x-for="(dosenId, index) in dosens" :key="index">
+                        <div style="display:flex;gap:10px;margin-bottom:10px;">
+                            <select name="dosen_ids[]" x-model="dosens[index]" class="mp-input mp-select" required>
+                                <option value="">— Pilih Dosen —</option>
+                                @foreach($dosenOptions as $option)
+                                    <option value="{{ $option['value'] }}" :disabled="dosens.includes('{{ $option['value'] }}') && dosens[index] !== '{{ $option['value'] }}'">{{ $option['label'] }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)"
+                                    class="mp-icon-button" style="width:40px;height:38px;border-color:#FADAE1;background:#FFF5F5;color:#DF1C41;" title="Hapus dosen">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M19 6l-1 14H6L5 6m3 0V4h8v2" /></svg>
+                            </button>
+                        </div>
+                    </template>
+                    <button type="button" x-show="dosens.length < 3" @click="dosens.push('')"
+                            style="width:100%;height:42px;border:1px dashed #DFE1E7;border-radius:9px;background:#FAFBFD;color:#0B266E;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;">
+                        <span style="font-size:20px;line-height:1;">+</span> Tambah Dosen Pengampu
+                    </button>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+                        <span style="font-size:11px;color:#666D80;">Maksimal 3 dosen pengampu</span>
+                        <button type="submit" class="mp-btn primary sm">Simpan Dosen</button>
+                    </div>
+                </form>
+            </section>
+
+            <section style="border-top:1px solid #DFE1E7;padding-top:18px;">
+                <div class="sec-head" style="margin-bottom:12px;"><span class="sec-bar"></span><h3 class="sec-title">Koordinator</h3><span class="sec-rule"></span></div>
+                @if($praktikum->koordinator)
+                    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #DFE1E7;border-radius:9px;background:#FAFBFD;">
+                        <div class="mp-av navy">{{ strtoupper(substr($praktikum->koordinator->name ?? 'K', 0, 2)) }}</div>
+                        <div><div style="font-size:13px;font-weight:600;">{{ $praktikum->koordinator->name }}</div><div style="font-size:11px;color:#666D80;">{{ $praktikum->koordinator->email }}</div></div>
+                    </div>
+                @else
+                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:flex;gap:10px;align-items:end;">
+                        @csrf
+                        <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
+                        <input type="hidden" name="role" value="koor">
+                        <div style="flex:1;min-width:0;">
+                            <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Pilih Mahasiswa</label>
+                            <x-eoffice::manajemen-praktikum.ui.select name="user_id" :options="$mahasiswaOptions->all()" selected="" placeholder="Cari nama mahasiswa..." minWidth="100%" searchable="true" searchPlaceholder="Cari nama mahasiswa..." />
+                        </div>
+                        <button type="submit" class="mp-btn primary md" style="height:38px;">Tambah Koordinator</button>
+                    </form>
+                @endif
+            </section>
+
+            <section style="border-top:1px solid #DFE1E7;padding-top:18px;">
+                <div class="sec-head" style="margin-bottom:12px;"><span class="sec-bar"></span><h3 class="sec-title">Asisten</h3><span class="sec-rule"></span></div>
+                @php
+                    $asistenSaatIni = $anggota->filter(fn ($item) => !$item->trashed() && $item->role === 'asprak');
+                @endphp
+                @if($asistenSaatIni->isNotEmpty())
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+                        @foreach($asistenSaatIni as $asisten)
+                            <span class="mp-badge neutral sm">{{ $asisten->user?->name ?? 'Akun tidak tersedia' }}</span>
+                        @endforeach
+                    </div>
+                @endif
+                @if($asistenOptions->isNotEmpty())
+                    <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}" style="display:flex;gap:10px;align-items:end;">
+                        @csrf
+                        <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
+                        <input type="hidden" name="role" value="asprak">
+                        <div style="flex:1;min-width:0;">
+                            <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Cari Mahasiswa</label>
+                            <x-eoffice::manajemen-praktikum.ui.select name="user_id" :options="$asistenOptions->all()" selected="" placeholder="Cari nama mahasiswa..." minWidth="100%" searchable="true" searchPlaceholder="Cari nama mahasiswa..." />
+                        </div>
+                        <button type="submit" class="mp-btn primary md" style="height:38px;">Tambah Asisten</button>
+                    </form>
+                @else
+                    <p style="font-size:12px;color:#666D80;margin:0;">Semua mahasiswa yang tersedia sudah memiliki role pada praktikum ini.</p>
+                @endif
+            </section>
+        </div>
+    </div>
+</div>
+@endif
+</div>
 
 </x-eoffice::manajemen-praktikum.layout>

@@ -25,10 +25,10 @@
         <span class="sec-rule"></span>
     </div>
 
-    <div class="flex gap-[14px] flex-1 min-h-0">
+    <div class="flex gap-3.5 flex-1 min-h-0">
 
         {{-- Panel Kiri: Daftar Asisten Praktikum --}}
-        <div class="mp-card flex-shrink-0" style="width:280px;">
+        <div class="mp-card shrink-0" style="width:280px;">
             <div class="mp-card-header">
                 <div>
                     <span class="mp-card-title">Asisten Praktikum</span>
@@ -39,7 +39,7 @@
             <div class="overflow-y-auto flex-1">
                 @forelse($asistenList ?? [] as $a)
                     <div style="padding:10px 20px;border-bottom:1px solid #DFE1E7;">
-                        <div class="flex items-center gap-[10px]">
+                        <div class="flex items-center gap-2.5">
                             <div class="mp-av green">{{ strtoupper(substr($a->user?->name ?? 'A', 0, 2)) }}</div>
                             <div class="min-w-0">
                                 <div style="font-size:12px;font-weight:600;color:#0D0D12;" class="truncate">
@@ -69,11 +69,11 @@
         </div>
 
         {{-- Panel Kanan --}}
-        <div class="flex flex-col gap-[14px] flex-1 min-w-0 overflow-y-auto">
+        <div class="flex flex-col gap-3.5 flex-1 min-w-0 overflow-y-auto">
 
             {{-- Form Assign --}}
             @if(isset($praktikum) && $praktikum->is_active)
-                <div class="mp-card flex-shrink-0" style="padding:20px;">
+                <div class="mp-card shrink-0" style="padding:20px;">
                     <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Assign Asisten Praktikum
                         ke Modul</div>
                     <form method="POST" action="{{ route('eoffice.manprak.koor.bagi-modul.store') }}">

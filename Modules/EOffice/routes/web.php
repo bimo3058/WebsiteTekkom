@@ -171,6 +171,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('kelola-role.index');
                 Route::post('kelola-role/assign', [KelolRoleController::class, 'assignRole'])
                     ->name('kelola-role.assign');
+                Route::put('kelola-role/{praktikumId}/dosen', [KelolRoleController::class, 'updateDosen'])
+                    ->name('kelola-role.dosen.update');
                 Route::delete('kelola-role/{id}', [KelolRoleController::class, 'revokeRole'])
                     ->name('kelola-role.revoke');
                 Route::post('kelola-role/revoke-all/{praktikumId}', [KelolRoleController::class, 'revokeAll'])
@@ -292,6 +294,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('praktikan.settings');
                 Route::post('praktikan/auto-plot', [KoorManprakDashboard::class, 'autoPlot'])
                     ->name('praktikan.auto-plot');
+                Route::post('praktikan/apply-plot', [KoorManprakDashboard::class, 'applyPlot'])
+                    ->name('praktikan.apply-plot');
+                Route::post('praktikan/discard-draft', [KoorManprakDashboard::class, 'discardPlotDraft'])
+                    ->name('praktikan.discard-draft');
                 Route::post('praktikan/reset-plot', [KoorManprakDashboard::class, 'resetPlot'])
                     ->name('praktikan.reset-plot');
                 Route::post('praktikan/update-plot', [KoorManprakDashboard::class, 'updatePlot'])

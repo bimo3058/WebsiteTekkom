@@ -99,7 +99,7 @@ class DaftarAsprakController extends Controller
             'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
             'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',
-            'jadwal'       => 'required|array|min:1',
+            'berkas_tambahan' => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png',
         ]);
 
         $user = auth()->user();
@@ -128,6 +128,10 @@ class DaftarAsprakController extends Controller
             ? $this->supabase->upload($request->file('berkas_cerc'), 'asprak-cerc/' . $user->id, 'eoffice')
             : null;
 
+        $berkasTambahanPath = $request->hasFile('berkas_tambahan')
+            ? $this->supabase->upload($request->file('berkas_tambahan'), 'asprak-tambahan/' . $user->id, 'eoffice')
+            : null;
+
         PendaftaranAsprak::create([
             'user_id'        => $user->id,
             'praktikum_id'   => $request->praktikum_id,
@@ -136,7 +140,7 @@ class DaftarAsprakController extends Controller
             'cv_path'        => null,
             'transkrip_path' => $transkripPath,
             'berkas_cerc_path' => $berkasCercPath,
-            'jadwal'         => $request->jadwal ?? [],
+            'berkas_tambahan_path' => $berkasTambahanPath,
             'status'         => 'pending',
         ]);
 

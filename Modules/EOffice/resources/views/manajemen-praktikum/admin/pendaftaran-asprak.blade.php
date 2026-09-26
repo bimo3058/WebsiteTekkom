@@ -1,4 +1,4 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Asisten Praktikum">
+<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Asisten">
 @php
     /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Praktikum[] $praktikumList */
     /** @var \Illuminate\Pagination\LengthAwarePaginator|\Modules\EOffice\Models\PendaftaranAsprak[] $pendaftaran */
@@ -10,14 +10,14 @@
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                 <h1 class="mp-page-title">Pendaftaran</h1>
             </div>
-            <p class="mp-page-sub">Kelola seleksi pendaftaran Koordinator, Asisten Praktikum, dan Praktikan · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+            <p class="mp-page-sub">Kelola seleksi pendaftaran Koordinator dan Asisten &bull; {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
         </div>
     </div>
 
     @include('eoffice::manajemen-praktikum.admin.partials.registration-tabs', ['activeRegistrationTab' => 'asprak'])
 </div>
 
-<div id="daftar-pendaftaran" class="mp-card">
+<div id="daftar-pendaftaran" class="mp-card" style="font-family:'Inter Tight',system-ui,sans-serif;">
     {{-- Toolbar: Filter & Search --}}
     <div class="p-4 border-b border-[#DFE1E7] bg-white flex items-center justify-between">
         <form id="filter_pendaftaran_asprak_form" method="GET" action="{{ url()->current() }}#daftar-pendaftaran" class="flex w-full gap-3 items-center">
@@ -86,16 +86,15 @@
     <div class="mp-card-body p-0 overflow-x-auto">
         <div style="min-width: max-content;">
         {{-- Header Tabel --}}
-        <div class="grid gap-3 px-5 py-3 bg-[#FAFAFA] border-b border-[#DFE1E7]"
-             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 70px 190px 100px 190px;">
+        <div class="grid gap-4 px-5 py-3 bg-[#FAFAFA] border-b border-[#DFE1E7] items-center"
+             style="grid-template-columns:44px 260px 150px 280px 70px 200px 160px 120px 190px;">
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">No</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Nama Mahasiswa</div>
-            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Email</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">NIM</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Praktikum</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">IPK</div>
-            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">Motivasi</div>
-            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">Status Koordinator Praktikum</div>
+            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase whitespace-nowrap">Berkas Tambahan</div>
+            <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">Status Koordinator</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">Status Admin</div>
             <div class="text-[11px] font-semibold text-[#666D80] tracking-[0.06em] uppercase text-center whitespace-nowrap">Aksi</div>
         </div>
@@ -108,8 +107,8 @@
             $avColors = ['sky','navy','green','yellow','violet'];
             $avColor = $avColors[crc32($pend->user?->email ?? '') % count($avColors)];
         @endphp
-        <div class="grid gap-3 px-5 py-4 border-b border-[#F6F8FA] hover:bg-[#FAFAFA] transition-colors items-center"
-             style="grid-template-columns: 40px minmax(200px, auto) minmax(220px, auto) 130px minmax(250px, auto) 50px 70px 190px 100px 190px;">
+        <div class="grid gap-4 px-5 py-4 border-b border-[#F6F8FA] hover:bg-[#FAFAFA] transition-colors items-center"
+             style="grid-template-columns:44px 260px 150px 280px 70px 200px 160px 120px 190px; min-height:76px;">
             {{-- No --}}
             <div class="text-[12px] font-semibold text-[#666D80]">
                 {{ $loop->iteration + ($pendaftaran->firstItem() ?? 1) - 1 }}
@@ -118,13 +117,11 @@
             {{-- Mahasiswa --}}
             <div class="flex items-center gap-[10px] pr-3">
                 <div class="mp-av {{ $avColor }} flex-shrink-0">{{ $initials }}</div>
-                <div>
-                    <div class="text-[13px] font-semibold text-[#0D0D12] whitespace-nowrap">{{ $pend->user?->name ?? '—' }}</div>
+                <div class="min-w-0">
+                    <div class="text-[13px] font-semibold text-[#0D0D12] leading-5">{{ $pend->user?->name ?? '—' }}</div>
+                    <div class="text-[11px] text-[#666D80] leading-4 break-all">{{ $pend->user?->email ?? '—' }}</div>
                 </div>
             </div>
-
-            {{-- Email --}}
-            <div class="text-[12px] text-[#666D80] whitespace-nowrap">{{ $pend->user?->email ?? '—' }}</div>
 
             {{-- NIM --}}
             <div class="text-[13px] text-[#0D0D12] whitespace-nowrap" style="font-family: 'Inter', sans-serif;">
@@ -132,17 +129,25 @@
             </div>
 
             {{-- Praktikum --}}
-            <div class="text-[13px] text-[#0D0D12] whitespace-nowrap">{{ $pend->praktikum?->nama ?? '—' }}</div>
+            <div class="text-[13px] text-[#0D0D12] leading-5">{{ $pend->praktikum?->nama ?? '—' }}</div>
             <div class="text-center">
                 <span class="text-[13px] text-[#0D0D12]">
                     {{ number_format($pend->ipk ?? 0, 2) }}
                 </span>
             </div>
-            <div class="text-center">
-                @if($pend->motivasi)
-                <span class="mp-badge success sm"><span class="dot"></span>Ada</span>
+            @php
+                $additionalDocumentName = $namaBerkasTambahan->get($pend->praktikum_id);
+            @endphp
+            <div class="text-[12px] text-[#666D80]">
+                @if(filled($additionalDocumentName) && $pend->berkas_tambahan_path)
+                    <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
+                    <a class="text-[#0B266E] font-semibold hover:underline" target="_blank" rel="noopener"
+                       href="{{ route('eoffice.manprak.admin.pendaftaran.document', ['type' => 'asprak', 'id' => $pend->id, 'document' => 'berkas_tambahan_path']) }}">Lihat Berkas</a>
+                @elseif(filled($additionalDocumentName))
+                    <div class="font-semibold text-[#353849] mb-1">{{ $additionalDocumentName }}</div>
+                    <span>Tidak mengunggah</span>
                 @else
-                <span class="mp-badge neutral sm">—</span>
+                    <span>Tidak disyaratkan</span>
                 @endif
             </div>
             <div class="text-center">

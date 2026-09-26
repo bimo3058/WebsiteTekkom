@@ -2,16 +2,21 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin;
 
+use App\Models\Lecturer;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 use Modules\EOffice\Models\AsprakPraktikum;
 use Modules\EOffice\Models\Praktikum;
+use Modules\EOffice\Services\KoorPraktikumService;
 use Spatie\Permission\PermissionRegistrar;
 
 class KelolRoleController extends Controller
 {
+    public function __construct(private KoorPraktikumService $koorService) {}
+
     public function index(Request $request)
     {
         $praktikumList = Praktikum::with(['dosens', 'koordinator'])
@@ -27,29 +32,110 @@ class KelolRoleController extends Controller
             ? AsprakPraktikum::withTrashed()
                 ->with('user')
                 ->where('praktikum_id', $praktikumId)
-                ->orderByRaw('deleted_at IS NOT NULL') // Active first
-                ->orderBy('role')
                 ->get()
             : collect();
 
-        $users = User::orderBy('name')->get(['id', 'name', 'email']);
+        // Satu mahasiswa cukup tampil sekali. Jika mahasiswa mempunyai role
+        // koordinator sekaligus asisten, tampilkan record koordinatornya.
+        $anggota = $anggota
+            ->groupBy('user_id')
+            ->map(function ($records) {
+                return $records->sortBy(fn ($record) => sprintf(
+                    '%d-%d',
+                    $record->trashed() ? 1 : 0,
+                    $record->role === 'koor' ? 0 : 1
+                ))->first();
+            })
+            ->sortBy(fn ($record) => sprintf(
+                '%d-%d-%s',
+                $record->trashed() ? 1 : 0,
+                $record->role === 'koor' ? 0 : 1,
+                mb_strtolower($record->user?->name ?? '')
+            ))
+            ->values();
+
+        $dosenOptions = Lecturer::with('user')
+            ->get()
+            ->filter(fn ($lecturer) => $lecturer->user)
+            ->map(fn ($lecturer) => [
+                'value' => (string) $lecturer->user_id,
+                'label' => $lecturer->user->name.' · '.$lecturer->user->email,
+            ])
+            ->sortBy('label')
+            ->values();
+
+        $mahasiswaOptions = User::whereHas('student')
+            ->orderBy('name')
+            ->get(['id', 'name', 'email'])
+            ->map(fn ($user) => [
+                'value' => (string) $user->id,
+                'label' => $user->name.' · '.$user->email,
+            ]);
+
+        $asistenAktifIds = $praktikumId
+            ? AsprakPraktikum::where('praktikum_id', $praktikumId)->pluck('user_id')
+            : collect();
+        $asistenOptions = $mahasiswaOptions
+            ->reject(fn ($option) => $asistenAktifIds->contains($option['value']))
+            ->values();
 
         return view('eoffice::manajemen-praktikum.admin.kelola-role', compact(
             'praktikumList',
             'praktikum',
             'praktikumId',
             'anggota',
-            'users'
+            'dosenOptions',
+            'mahasiswaOptions',
+            'asistenOptions'
         ));
+    }
+
+    public function updateDosen(Request $request, string $praktikumId)
+    {
+        $data = $request->validate([
+            'dosen_ids' => 'required|array|min:1|max:3',
+            'dosen_ids.*' => 'required|distinct|exists:lecturers,user_id',
+        ], [
+            'dosen_ids.required' => 'Minimal satu dosen pengampu harus dipilih.',
+            'dosen_ids.min' => 'Minimal satu dosen pengampu harus dipilih.',
+            'dosen_ids.max' => 'Dosen pengampu maksimal 3 orang.',
+            'dosen_ids.*.distinct' => 'Dosen pengampu tidak boleh dipilih lebih dari sekali.',
+        ]);
+
+        $praktikum = Praktikum::findOrFail($praktikumId);
+        $praktikum->dosens()->sync($data['dosen_ids']);
+
+        return back()->with('success', 'Dosen pengampu berhasil diperbarui.');
     }
 
     public function assignRole(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,id|exists:students,user_id',
             'praktikum_id' => 'required|exists:eo_praktikum,id',
             'role' => 'required|in:asprak,koor',
+        ], [
+            'user_id.required' => 'Pilih mahasiswa yang akan diberi role.',
+            'user_id.exists' => 'Mahasiswa yang dipilih tidak valid.',
         ]);
+
+        $praktikum = Praktikum::findOrFail($request->praktikum_id);
+        $user = User::findOrFail($request->user_id);
+
+        if ($request->role === 'koor') {
+            $hasOtherCoordinator = AsprakPraktikum::where('praktikum_id', $praktikum->id)
+                ->where('role', 'koor')
+                ->where('user_id', '!=', $user->id)
+                ->exists();
+
+            if ($hasOtherCoordinator || ($praktikum->koor_id && (string) $praktikum->koor_id !== (string) $user->id)) {
+                return back()->with('error', 'Praktikum ini sudah memiliki Koordinator.');
+            }
+
+            DB::transaction(fn () => $this->koorService->assign($praktikum, $user));
+
+            return back()->with('success', "{$user->name} berhasil ditambahkan sebagai Koordinator.");
+        }
 
         // Restore soft-deleted record atau buat baru
         $existing = AsprakPraktikum::withTrashed()
@@ -75,14 +161,7 @@ class KelolRoleController extends Controller
             User::find($request->user_id)?->roles()->syncWithoutDetaching([$role->id]);
         }
 
-        // Jika assign sebagai koor, update eo_praktikum.koor_id juga
-        if ($request->role === 'koor') {
-            Praktikum::where('id', $request->praktikum_id)
-                ->update(['koor_id' => $request->user_id]);
-        }
-
-        $user = User::find($request->user_id);
-        return back()->with('success', "{$user?->name} berhasil di-assign sebagai {$request->role}.");
+        return back()->with('success', "{$user->name} berhasil ditambahkan sebagai Asisten.");
     }
 
     public function revokeRole($id)

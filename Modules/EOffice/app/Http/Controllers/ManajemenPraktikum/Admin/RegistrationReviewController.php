@@ -6,15 +6,17 @@ use App\Models\EoAuditLog;
 use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Schema;
 use Modules\EOffice\Models\PendaftaranAsprak;
 use Modules\EOffice\Models\PendaftaranKoordinator;
 use Modules\EOffice\Models\PendaftaranPraktikan;
+use Modules\EOffice\Models\PeriodePendaftaran;
 
 class RegistrationReviewController extends Controller
 {
     private const TYPES = [
-        'koor' => [PendaftaranKoordinator::class, 'Koordinator', ['transkrip_path' => 'Transkrip', 'berkas_cerc_path' => 'Berkas CERC']],
-        'asprak' => [PendaftaranAsprak::class, 'Asisten Praktikum', ['transkrip_path' => 'Transkrip', 'berkas_cerc_path' => 'Berkas CERC', 'cv_path' => 'CV']],
+        'koor' => [PendaftaranKoordinator::class, 'Koordinator', ['transkrip_path' => 'Transkrip Nilai', 'berkas_cerc_path' => 'Keanggotaan CERC', 'berkas_tambahan_path' => 'Berkas Tambahan']],
+        'asprak' => [PendaftaranAsprak::class, 'Asisten', ['transkrip_path' => 'Transkrip Nilai', 'berkas_cerc_path' => 'Keanggotaan CERC', 'cv_path' => 'CV', 'berkas_tambahan_path' => 'Berkas Tambahan']],
         'praktikan' => [PendaftaranPraktikan::class, 'Praktikan', ['irs_path' => 'Cetak IRS']],
     ];
 
@@ -42,11 +44,30 @@ class RegistrationReviewController extends Controller
     {
         [$model, $label, $documents] = $this->definition($request, $type);
         $registration = $model::with(['user.student', 'praktikum', 'direviewOleh'])->findOrFail($id);
+        if ($type === 'asprak') {
+            unset($documents['cv_path']);
+        }
+        $additionalDocumentRequired = false;
+        if (in_array($type, ['koor', 'asprak'], true) && Schema::hasTable('manprak_periode_pendaftaran')) {
+            $additionalDocumentName = PeriodePendaftaran::where('praktikum_id', $registration->praktikum_id)
+                ->where('jenis', $type)
+                ->latest('created_at')
+                ->value('nama_berkas_tambahan');
+            $additionalDocumentRequired = filled($additionalDocumentName);
+            $documents['berkas_tambahan_path'] = $additionalDocumentName ?: 'Berkas Tambahan';
+        }
         $overrideAudit = $type === 'koor' ? EoAuditLog::with('user')
             ->where('subject_type', 'PendaftaranKoordinator')->where('subject_id', (string) $id)
             ->where('action', 'OVERRIDE_APPROVAL')->latest('created_at')->first() : null;
 
-        return view('eoffice::manajemen-praktikum.admin.pendaftaran-detail', compact('registration', 'type', 'label', 'documents', 'overrideAudit'));
+        return view('eoffice::manajemen-praktikum.admin.pendaftaran-detail', compact(
+            'registration',
+            'type',
+            'label',
+            'documents',
+            'overrideAudit',
+            'additionalDocumentRequired'
+        ));
     }
 
     public function document(Request $request, string $type, int $id, string $document, SupabaseStorage $storage)

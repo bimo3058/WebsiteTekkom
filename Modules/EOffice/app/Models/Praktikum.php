@@ -29,6 +29,8 @@ class Praktikum extends Model
         'status',
         'jumlah_kelompok',
         'jumlah_shift',
+        'metode_pembagian',
+        'draft_pembagian',
         'bobot_tp',
         'bobot_praktikum',
         'bobot_laporan',
@@ -41,6 +43,7 @@ class Praktikum extends Model
         return [
             'deleted_at'   => 'datetime',
             'is_active'    => 'boolean',
+            'draft_pembagian' => 'array',
         ];
     }
 
