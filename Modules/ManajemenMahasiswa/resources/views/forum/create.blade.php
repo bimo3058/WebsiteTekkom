@@ -309,10 +309,29 @@
                 margin-top: 8px;
             }
 
-            .media-counter.ok {
-                background: #DDF2EE;
-                color: #287F6E;
+            .media-counter.ok   { background: #DDF2EE; color: #287F6E; }
+            .media-counter.warn { background: #fef3c7; color: #b45309; }
+            .media-counter.full { background: #fee2e2; color: #dc2626; }
+
+            /* Cover drag-reorder badges */
+            .cover-badge-pill {
+                position: absolute; top: 5px; left: 5px;
+                background: #0B266E; color: #fff;
+                font-size: 9px; font-weight: 800; padding: 2px 8px;
+                border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase;
+                pointer-events: none;
             }
+            .cover-order-pill {
+                position: absolute; top: 5px; left: 5px;
+                background: rgba(0,0,0,0.5); color: #fff;
+                font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 20px;
+                pointer-events: none;
+            }
+            .media-preview-item { cursor: grab; }
+            .media-preview-item.dragging  { opacity: 0.4; box-shadow: 0 6px 16px rgba(0,0,0,0.18); }
+            .media-preview-item.drag-over { outline: 2px solid #5C78B8; outline-offset: 2px; }
+            .media-preview-item:first-child { border-color: #0B266E; }
+            .cover-hint-text { font-size: 12px; color: #6b7280; margin: 8px 0 0; display: none; }
 
             /* Halaman ini menggambar kotak kontennya sendiri (.dash-wrap/.dash-box),
                jadi kotak bawaan .main-wrapper dari layout dimatikan. */
@@ -354,20 +373,20 @@
                     <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
                 </a>
             </x-slot:leading>
+            <x-slot:actions>
+                @if(isset($drafts) && $drafts->count() > 0)
+                    <button type="button" class="mk-btn mk-btn--secondary" data-bs-toggle="modal" data-bs-target="#draftsModal">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        </svg>
+                        Load Draft ({{ $drafts->count() }})
+                    </button>
+                @endif
+            </x-slot:actions>
         </x-manajemenmahasiswa::ui.page-header>
     </div>
     <div class="dash-box-body">
     <div class="create-post-card">
-        {{-- Flash errors --}}
-        @if(isset($drafts) && $drafts->count() > 0)
-            <div class="d-flex justify-content-end mb-3">
-                <button type="button"
-                    style="display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:8px; border:1px solid #DFE1E7; background:#fff; color:#0B266E; font-size:12px; font-weight:700; cursor:pointer; transition:all 0.15s;"
-                    data-bs-toggle="modal" data-bs-target="#draftsModal">
-                    <x-manajemenmahasiswa::ui.icon name="download-01" size="14" /> Load Draft ({{ $drafts->count() }})
-                </button>
-            </div>
-        @endif
 
         @if($errors->any())
             <div class="alert alert-danger" style="border-radius: 10px; border: none; font-size: 14px;">
@@ -383,6 +402,7 @@
             enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="draft_id" id="draft_id" value="">
+            <div id="draftMediaInputs"></div>
 
             {{-- Judul --}}
             <div class="mb-4">
@@ -430,6 +450,11 @@
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content" id="sectionMedia">
+                    {{-- Saved draft media (already uploaded to server) --}}
+                    <div id="savedDraftMediaSection" style="display:none; margin-bottom:12px;">
+                        <div style="font-size:12px; font-weight:600; color:#0B266E; margin-bottom:8px;">Gambar tersimpan di draf:</div>
+                        <div id="savedDraftMediaGrid" class="media-preview-grid"></div>
+                    </div>
                     <div class="media-dropzone" id="mediaDropzone">
                         <input type="file" name="media_files[]" id="mediaFileInput" multiple
                             accept="image/jpeg,image/png,image/webp">
@@ -439,6 +464,9 @@
                     </div>
                     <div id="mediaCounter"></div>
                     <div class="media-preview-grid" id="mediaPreviewGrid"></div>
+                    <p class="cover-hint-text" id="coverHintText">
+                        Seret gambar untuk mengubah urutan — gambar paling depan dipakai sebagai <strong>cover</strong>.
+                    </p>
                 </div>
             </div>
 
@@ -607,10 +635,19 @@
                     <div class="modal-body">
                         <div class="list-group list-group-flush">
                             @foreach($drafts as $draft)
+                                @php
+                                    $dm           = $draftMedia[$draft->id] ?? [];
+                                    $draftAttrs   = $draft->getAttributes();
+                                    $draftLinkUrl = $draftAttrs['link_url'] ?? null;
+                                    $draftPollRaw = $draftAttrs['poll_data'] ?? null;
+                                    $draftPollData = is_string($draftPollRaw) ? json_decode($draftPollRaw, true) : $draftPollRaw;
+                                    $draftHasLink = !empty($draftLinkUrl);
+                                    $draftHasPoll = !empty($draftPollData);
+                                @endphp
                                 <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3"
                                     style="border-radius: 12px; margin-bottom: 8px; border: 1px solid #DFE1E7; cursor: pointer;">
                                     <div class="flex-grow-1 pe-3"
-                                        onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->konten) }})">
+                                        onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->konten) }}, {{ json_encode($dm) }}, {{ json_encode($draftLinkUrl) }}, {{ json_encode($draftPollData) }})">
                                         <h6 class="mb-1 fw-bold text-dark" style="font-size: 15px;">
                                             {{ $draft->judul ?: '(Tanpa Judul)' }}
                                         </h6>
@@ -618,7 +655,33 @@
                                             style="font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                             {{ $draft->konten ?: '(Tidak ada konten teks)' }}
                                         </p>
-                                        <small class="text-muted" style="font-size: 11px;">
+                                        @if(!empty($dm) || $draftHasLink || $draftHasPoll)
+                                            <div style="display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; align-items:center;">
+                                                @foreach(array_slice($dm, 0, 3) as $dmItem)
+                                                    @if(($dmItem['type'] ?? '') === 'image')
+                                                        <img src="{{ $dmItem['url'] }}" style="width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid #DFE1E7;">
+                                                    @else
+                                                        <div style="width:36px;height:36px;background:#1f2937;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#fff;font-weight:700;">VID</div>
+                                                    @endif
+                                                @endforeach
+                                                @if(count($dm) > 3)
+                                                    <div style="width:36px;height:36px;background:#f3f4f6;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#6b7280;font-weight:600;">+{{ count($dm) - 3 }}</div>
+                                                @endif
+                                                @if($draftHasLink)
+                                                    <span style="font-size:10px;padding:2px 7px;border-radius:20px;background:#eff6ff;color:#1d4ed8;font-weight:700;border:1px solid #bfdbfe;display:inline-flex;align-items:center;gap:3px;">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                                        Link
+                                                    </span>
+                                                @endif
+                                                @if($draftHasPoll)
+                                                    <span style="font-size:10px;padding:2px 7px;border-radius:20px;background:#faf5ff;color:#7c3aed;font-weight:700;border:1px solid #ddd6fe;display:inline-flex;align-items:center;gap:3px;">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                                                        Poll
+                                                    </span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        <small class="text-muted" style="font-size: 11px; display:block; margin-top:4px;">
                                             Diperbarui: {{ $draft->updated_at->diffForHumans() }}
                                         </small>
                                     </div>
@@ -761,6 +824,13 @@
                             document.getElementById('draft_id').value = data.draft_id;
                             draftStatus.textContent = 'Draf tersimpan.';
                             setTimeout(() => { draftStatus.style.display = 'none'; }, 3000);
+                            // If server uploaded media, show them as saved draft media and clear new file picks
+                            if (data.media && data.media.length > 0) {
+                                renderDraftMedia(data.media);
+                                selectedFiles = [];
+                                syncFileInput();
+                                renderPreviews();
+                            }
                             if (isManual) {
                                 mkNotify({ title: 'Draf Tersimpan', message: 'Draf berhasil disimpan!', variant: 'success' });
                             }
@@ -780,21 +850,15 @@
                     });
             }
 
-            function loadDraft(id, judul, kategoriArr, konten) {
+            function loadDraft(id, judul, kategoriArr, konten, mediaArr, linkUrl, pollData) {
                 document.getElementById('draft_id').value = id;
                 document.getElementById('inputJudul').value = judul || '';
-                if (judul) {
-                    document.getElementById('judulCount').textContent = judul.length;
-                } else {
-                    document.getElementById('judulCount').textContent = '0';
-                }
-
+                document.getElementById('judulCount').textContent = judul ? judul.length : '0';
                 document.getElementById('inputKonten').value = konten || '';
 
                 // Reset checkboxes
                 const checkboxes = document.querySelectorAll('input[name="kategori[]"]');
                 checkboxes.forEach(cb => cb.checked = false);
-
                 if (kategoriArr && Array.isArray(kategoriArr)) {
                     kategoriArr.forEach(cat => {
                         const cb = document.getElementById('kategori_' + cat);
@@ -802,12 +866,140 @@
                     });
                 }
 
+                // Restore link URL
+                const linkInput = document.getElementById('inputLinkUrl');
+                if (linkInput) {
+                    linkInput.value = linkUrl || '';
+                    if (linkUrl) {
+                        document.getElementById('sectionLink').classList.add('open');
+                        document.getElementById('toggleLink').classList.add('active');
+                    }
+                }
+
+                // Restore poll data
+                if (pollData && pollData.options && pollData.options.length >= 2) {
+                    // Open poll section
+                    if (!pollOpen) togglePollSection();
+
+                    // Clear existing options and rebuild
+                    const container = document.getElementById('pollOptionsContainer');
+                    container.innerHTML = '';
+                    pollData.options.forEach((opt, i) => {
+                        const row = document.createElement('div');
+                        row.className = 'poll-option-row';
+                        row.innerHTML = `
+                            <input type="text" name="poll_options[]" class="poll-option-input"
+                                   placeholder="Opsi ${i + 1}" maxlength="150" value="${opt.replace(/"/g, '&quot;')}">
+                            <button type="button" class="poll-option-remove" onclick="removePollOption(this)" style="visibility:hidden;">×</button>`;
+                        container.appendChild(row);
+                    });
+                    updatePollOptionCount();
+
+                    // Restore expiry
+                    const expiresInput = document.getElementById('pollExpiresAt');
+                    if (expiresInput && pollData.expires_at) {
+                        expiresInput.value = pollData.expires_at;
+                    }
+                } else if (pollOpen) {
+                    // Close poll section if no poll data
+                    togglePollSection();
+                }
+
+                // Reset new file selection and load saved draft media
+                selectedFiles = [];
+                syncFileInput();
+                renderPreviews();
+                renderDraftMedia(mediaArr || []);
+
                 // Hide modal via Bootstrap API if available
                 if (typeof bootstrap !== 'undefined') {
                     const modalEl = document.getElementById('draftsModal');
                     const modal = bootstrap.Modal.getInstance(modalEl);
                     if (modal) modal.hide();
                 }
+            }
+
+            function renderDraftMedia(mediaArr) {
+                savedDraftMedia = mediaArr || [];
+                const section    = document.getElementById('savedDraftMediaSection');
+                const grid       = document.getElementById('savedDraftMediaGrid');
+                const inputsDiv  = document.getElementById('draftMediaInputs');
+
+                inputsDiv.innerHTML = '';
+                grid.innerHTML = '';
+
+                if (!savedDraftMedia.length) {
+                    section.style.display = 'none';
+                    updateCounter();
+                    return;
+                }
+
+                section.style.display = '';
+                document.getElementById('sectionMedia').classList.add('open');
+                document.getElementById('toggleMedia').classList.add('active');
+
+                savedDraftMedia.forEach((media, idx) => {
+                    // Hidden input carries the RepoMulmed ID to the server
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'draft_media_ids[]';
+                    input.value = media.id;
+                    inputsDiv.appendChild(input);
+
+                    const item = document.createElement('div');
+                    item.className = 'media-preview-item';
+
+                    const badge = document.createElement('span');
+                    badge.className = idx === 0 ? 'cover-badge-pill' : 'cover-order-pill';
+                    badge.textContent = idx === 0 ? 'Cover' : idx + 1;
+
+                    const thumb = document.createElement('div');
+                    thumb.className = 'media-thumb';
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'remove-media';
+                    removeBtn.innerHTML = '✕';
+                    removeBtn.onclick = (e) => { e.stopPropagation(); removeDraftMedia(idx); };
+
+                    let mediaEl;
+                    if (media.type === 'image') {
+                        mediaEl = document.createElement('img');
+                        mediaEl.src = media.url;
+                        mediaEl.alt = media.name;
+                    } else {
+                        mediaEl = document.createElement('video');
+                        mediaEl.src = media.url;
+                        mediaEl.muted = true;
+                    }
+
+                    thumb.appendChild(removeBtn);
+                    thumb.appendChild(badge);
+                    thumb.appendChild(mediaEl);
+                    item.appendChild(thumb);
+
+                    const fileInfo = document.createElement('div');
+                    fileInfo.className = 'file-info';
+                    const nameLabel = document.createElement('div');
+                    nameLabel.className = 'file-name';
+                    nameLabel.textContent = media.name;
+                    nameLabel.title = media.name;
+                    const savedLabel = document.createElement('div');
+                    savedLabel.className = 'file-size';
+                    savedLabel.textContent = 'Tersimpan di draf';
+                    fileInfo.appendChild(nameLabel);
+                    fileInfo.appendChild(savedLabel);
+                    item.appendChild(fileInfo);
+
+                    grid.appendChild(item);
+                });
+
+                updateCounter();
+            }
+
+            function removeDraftMedia(idx) {
+                savedDraftMedia.splice(idx, 1);
+                renderDraftMedia(savedDraftMedia);
             }
 
             // ---- Character Counter ----
@@ -819,25 +1011,26 @@
             });
 
             // ---- Media Upload ----
+            const DRAFT_MEDIA = @json($draftMedia);
             const mediaFileInput = document.getElementById('mediaFileInput');
-            const mediaDropzone = document.getElementById('mediaDropzone');
+            const mediaDropzone  = document.getElementById('mediaDropzone');
             const mediaPreviewGrid = document.getElementById('mediaPreviewGrid');
-            const mediaCounter = document.getElementById('mediaCounter');
-            let selectedFiles = [];
-            const MAX_FILES = 5;
-            const MAX_SIZE = 10 * 1024 * 1024;
+            const mediaCounter   = document.getElementById('mediaCounter');
+            const coverHintText  = document.getElementById('coverHintText');
+            let selectedFiles   = [];
+            let savedDraftMedia = [];
+            let dragFromIdx     = null;
+            const MAX_FILES     = 5;
+            const MAX_SIZE      = 10 * 1024 * 1024;
 
-            mediaDropzone.addEventListener('dragover', (e) => { e.preventDefault(); mediaDropzone.classList.add('dragover'); });
-            mediaDropzone.addEventListener('dragleave', () => mediaDropzone.classList.remove('dragover'));
-            mediaDropzone.addEventListener('drop', () => mediaDropzone.classList.remove('dragover'));
-
-            mediaFileInput.addEventListener('change', function () {
-                addMediaFiles(this.files);
-            });
+            mediaDropzone.addEventListener('dragover',  e => { e.preventDefault(); mediaDropzone.classList.add('dragover'); });
+            mediaDropzone.addEventListener('dragleave', ()  => mediaDropzone.classList.remove('dragover'));
+            mediaDropzone.addEventListener('drop',      ()  => mediaDropzone.classList.remove('dragover'));
+            mediaFileInput.addEventListener('change', function () { addMediaFiles(this.files); });
 
             function addMediaFiles(fileList) {
                 for (const file of fileList) {
-                    if (selectedFiles.length >= MAX_FILES) {
+                    if (savedDraftMedia.length + selectedFiles.length >= MAX_FILES) {
                         mkNotify({ title: 'Batas File Tercapai', message: `Maksimal ${MAX_FILES} file yang bisa diupload.`, variant: 'warning' });
                         break;
                     }
@@ -855,7 +1048,6 @@
                 renderPreviews();
                 updateCounter();
 
-                // Auto-open media section
                 if (selectedFiles.length > 0) {
                     document.getElementById('sectionMedia').classList.add('open');
                     document.getElementById('toggleMedia').classList.add('active');
@@ -876,23 +1068,33 @@
             }
 
             function updateCounter() {
-                if (selectedFiles.length === 0) {
-                    mediaCounter.innerHTML = '';
-                    return;
-                }
-                let cls = 'ok';
-                if (selectedFiles.length >= 4) cls = 'warn';
-                if (selectedFiles.length >= MAX_FILES) cls = 'full';
-                mediaCounter.innerHTML = `<span class="media-counter ${cls}">${selectedFiles.length}/${MAX_FILES} file</span>`;
+                const totalCount = savedDraftMedia.length + selectedFiles.length;
+                coverHintText.style.display = selectedFiles.length > 1 ? 'block' : 'none';
+                if (!totalCount) { mediaCounter.innerHTML = ''; return; }
+                const cls = totalCount >= MAX_FILES ? 'full' : totalCount >= 4 ? 'warn' : 'ok';
+                mediaCounter.innerHTML = `<span class="media-counter ${cls}">${totalCount}/${MAX_FILES} file</span>`;
             }
 
             function renderPreviews() {
+                mediaPreviewGrid.querySelectorAll('img, video').forEach(el => URL.revokeObjectURL(el.src));
                 mediaPreviewGrid.innerHTML = '';
+
                 selectedFiles.forEach((file, idx) => {
                     const item = document.createElement('div');
                     item.className = 'media-preview-item';
+                    item.draggable = true;
 
-                    // Thumb wrapper (image + remove button)
+                    // Badge: Cover or number
+                    const badge = document.createElement('span');
+                    if (idx === 0) {
+                        badge.className = 'cover-badge-pill';
+                        badge.textContent = 'Cover';
+                    } else {
+                        badge.className = 'cover-order-pill';
+                        badge.textContent = idx + 1;
+                    }
+
+                    // Thumb
                     const thumb = document.createElement('div');
                     thumb.className = 'media-thumb';
 
@@ -900,43 +1102,56 @@
                     removeBtn.type = 'button';
                     removeBtn.className = 'remove-media';
                     removeBtn.innerHTML = '✕';
-                    removeBtn.onclick = () => removeMediaFile(idx);
+                    removeBtn.onclick = e => { e.stopPropagation(); removeMediaFile(idx); };
                     thumb.appendChild(removeBtn);
+                    thumb.appendChild(badge);
 
                     if (file.type.startsWith('image/')) {
                         const img = document.createElement('img');
                         img.src = URL.createObjectURL(file);
                         img.onload = () => URL.revokeObjectURL(img.src);
                         thumb.appendChild(img);
-                    } else if (file.type.startsWith('video/')) {
-                        const video = document.createElement('video');
-                        video.src = URL.createObjectURL(file);
-                        video.muted = true;
-                        video.onloadeddata = () => { video.currentTime = 1; };
-                        thumb.appendChild(video);
+                    } else {
+                        const vid = document.createElement('video');
+                        vid.src = URL.createObjectURL(file);
+                        vid.muted = true;
+                        vid.onloadeddata = () => { vid.currentTime = 1; };
+                        thumb.appendChild(vid);
                     }
-
                     item.appendChild(thumb);
 
-                    // File info strip below the image
+                    // File info
                     const fileInfo = document.createElement('div');
                     fileInfo.className = 'file-info';
-
                     const nameLabel = document.createElement('div');
                     nameLabel.className = 'file-name';
                     nameLabel.textContent = file.name;
                     nameLabel.title = file.name;
-
                     const sizeLabel = document.createElement('div');
                     sizeLabel.className = 'file-size';
                     const kb = file.size / 1024;
-                    sizeLabel.textContent = kb >= 1024
-                        ? (kb / 1024).toFixed(1) + ' MB'
-                        : kb.toFixed(1) + ' KB';
-
+                    sizeLabel.textContent = kb >= 1024 ? (kb/1024).toFixed(1)+' MB' : kb.toFixed(1)+' KB';
                     fileInfo.appendChild(nameLabel);
                     fileInfo.appendChild(sizeLabel);
                     item.appendChild(fileInfo);
+
+                    // Drag events
+                    item.addEventListener('dragstart', () => { dragFromIdx = idx; item.classList.add('dragging'); });
+                    item.addEventListener('dragend',   () => {
+                        dragFromIdx = null;
+                        mediaPreviewGrid.querySelectorAll('.media-preview-item').forEach(el => el.classList.remove('dragging', 'drag-over'));
+                    });
+                    item.addEventListener('dragover',  e => { e.preventDefault(); if (dragFromIdx !== null && dragFromIdx !== idx) item.classList.add('drag-over'); });
+                    item.addEventListener('dragleave', () => item.classList.remove('drag-over'));
+                    item.addEventListener('drop', e => {
+                        e.preventDefault();
+                        if (dragFromIdx === null || dragFromIdx === idx) return;
+                        const [moved] = selectedFiles.splice(dragFromIdx, 1);
+                        selectedFiles.splice(idx, 0, moved);
+                        syncFileInput();
+                        renderPreviews();
+                        updateCounter();
+                    });
 
                     mediaPreviewGrid.appendChild(item);
                 });

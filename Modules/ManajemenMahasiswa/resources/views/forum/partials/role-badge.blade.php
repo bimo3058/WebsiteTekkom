@@ -22,7 +22,7 @@
         ];
 
         $roleLabels = [
-            'superadmin' => 'Super Admin',
+            'superadmin' => 'Admin',
             'admin' => 'Admin',
             'admin_kemahasiswaan' => 'Admin',
             'admin_banksoal' => 'Admin',
@@ -31,18 +31,18 @@
             'dosen' => 'Dosen',
             'gpm' => 'GPM',
             'ketua_departemen' => 'Kadep',
-            'ketua_himpunan' => 'Ketua HMP',
+            'ketua_himpunan' => 'Ketua HIMA',
             'ketua_bidang' => 'Ketua Bidang',
             'ketua_unit' => 'Ketua Unit',
-            'pengurus_himpunan' => 'Pengurus HMP',
-            'staff_himpunan' => 'Staff HMP',
+            'pengurus_himpunan' => 'Pengurus HIMA',
+            'staff_himpunan' => 'Staff HIMA',
             'alumni' => 'Alumni',
             'mahasiswa' => 'Mahasiswa',
         ];
 
         // Custom colors for each role
         $roleStyles = [
-            'superadmin'           => 'background: #be123c; color: #fff;',
+            'superadmin'           => 'background: #b45309; color: #fff;',
             'admin'                => 'background: #b45309; color: #fff;',
             'admin_kemahasiswaan'  => 'background: #b45309; color: #fff;',
             'admin_banksoal'       => 'background: #b45309; color: #fff;',
@@ -86,7 +86,6 @@
 
 @if($roleName)
     <span class="role-badge d-inline-flex align-items-center" style="{{ $roleStyle }} font-size: {{ $badgeSize ?? '10px' }}; font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; line-height: 1; text-transform: uppercase; letter-spacing: 0.02em;">
-        {!! $icon !!}
         {{ $roleLabel }}
     </span>
 @endif

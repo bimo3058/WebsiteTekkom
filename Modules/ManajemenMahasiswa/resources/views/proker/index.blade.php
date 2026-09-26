@@ -4,16 +4,7 @@
 @include('manajemenmahasiswa::partials.filter-popover')
 
 <style>
-    /* ── Status Badges ── */
-    .status-badge {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 4px 12px; border-radius: 50px;
-        font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
-    }
-    .status-draft     { background: var(--c-surface-muted); color: var(--c-fg-muted); }
-    .status-diajukan  { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .status-disetujui { background: var(--c-primary-subtle); color: var(--c-primary); }
-    .status-ditolak   { background: var(--c-error-subtle); color: var(--c-error); }
+    /* Badge status (Draft/Diajukan/Disetujui/Ditolak): partials/sitkom-ui */
 
 
 
@@ -88,21 +79,8 @@
     </x-slot:actions>
 </x-manajemenmahasiswa::ui.page-header>
 
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius:10px;border:none;background:var(--c-error-subtle);color:var(--c-error);font-weight:500;font-size:14px;">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
 
 {{-- Filter --}}
@@ -124,7 +102,7 @@
             $adaFilterApaPun   = $filterBidangAktif || request()->filled('search');
         @endphp
         <div class="mk-kegiatan-filter-controls">
-            <div class="filter-pop filter-pop--md" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
                 <button type="button" class="filter-pop-btn"
                         @click="filterOpen = !filterOpen"
                         :class="{ 'is-open': filterOpen }">
@@ -239,7 +217,7 @@
     ])
 @else
     <div class="empty-state">
-        <div style="font-size:48px;margin-bottom:12px;opacity:0.5;">&#128203;</div>
+        <div style="display:flex;justify-content:center;margin-bottom:12px;color:var(--c-border);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></div>
         <h5>Belum ada rencana proker</h5>
         <p>Rencana program kerja yang dibuat akan muncul di sini</p>
         @if($canManage)

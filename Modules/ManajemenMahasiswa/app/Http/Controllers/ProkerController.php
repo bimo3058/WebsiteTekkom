@@ -491,7 +491,7 @@ class ProkerController extends Controller
             'panitia_ids.*'          => 'exists:students,id',
             'panitia_peran'          => 'nullable|array',
             'panitia_peran.*'        => 'nullable|string|max:255',
-            'banner'                 => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'banner'                 => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ], [
             // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom
             // mentah ("The tanggal mulai field is required when..."), jadi aturan

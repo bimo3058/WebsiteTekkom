@@ -176,8 +176,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->middleware('throttle:10,1')->name('anon.generate');
             });
 
-            // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (gpm/admin)
-            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dpm|gpm|kaprodi|ketua_departemen|admin|superadmin|admin_kemahasiswaan')->group(function () {
+            // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (gpm)
+            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dpm|gpm|kaprodi|ketua_departemen|superadmin|admin_kemahasiswaan')->group(function () {
                 Route::get('/', [PengaduanController::class, 'index'])->name('index');
                 Route::get('/{pengaduan}', [PengaduanController::class, 'show'])
                     ->whereNumber('pengaduan')
@@ -188,17 +188,22 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('bukti');
             });
 
-            // Admin: toggle tercatat
-            Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen')->group(function () {
+            // Toggle tercatat: superadmin, admin_kemahasiswaan, dan staff terkait
+            Route::middleware('role:superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen')->group(function () {
                 Route::post('/{pengaduan}/toggle-tercatat', [PengaduanController::class, 'toggleTercatat'])
                     ->name('toggle.tercatat')->whereNumber('pengaduan');
+                Route::post('/bulk/tercatat', [PengaduanController::class, 'bulkTercatat'])
+                    ->name('bulk.tercatat');
             });
 
-            // Hapus pengaduan — hanya Admin & Superadmin
+            // Hapus pengaduan — hanya Superadmin
             Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
-                ->middleware('role:admin|superadmin');
+                ->middleware('role:superadmin');
+            Route::delete('/bulk', [PengaduanController::class, 'bulkDestroy'])
+                ->name('bulk.destroy')
+                ->middleware('role:superadmin');
         });
 
         // ── Forum Notifications (AJAX) ────────────────────────────────────
@@ -219,7 +224,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::post('/', [ForumController::class, 'store'])->name('store');
 
             // Report Management (admin only) — MUST be before /{id} wildcard
-            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')->group(function () {
                 Route::get('/laporan', [ForumController::class, 'forumReports'])->name('reports');
                 Route::delete('/reports/{reportId}/dismiss', [ForumController::class, 'dismissReport'])->name('reports.dismiss');
                 Route::delete('/reports/{reportId}/delete-thread', [ForumController::class, 'deleteReportedThread'])->name('reports.delete_thread');

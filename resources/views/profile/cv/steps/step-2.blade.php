@@ -107,12 +107,10 @@
                 </div>
                 <div>
                     <label class="form-label" style="font-size: 11px;">Tingkat Kemahiran</label>
-                    <select x-model="newLang.level" class="form-control">
-                        <option>Dasar (Basic)</option>
-                        <option>Menengah (Intermediate)</option>
-                        <option>Fasih (Fluent)</option>
-                        <option>Penutur Asli (Native)</option>
-                    </select>
+                    @include('profile.cv.partials._pilihan', [
+                        'model' => 'newLang.level',
+                        'options' => ['Dasar (Basic)', 'Menengah (Intermediate)', 'Fasih (Fluent)', 'Penutur Asli (Native)'],
+                    ])
                 </div>
                 <div>
                     <label class="form-label" style="font-size: 11px;">Skor / Nilai (Opsional)</label>

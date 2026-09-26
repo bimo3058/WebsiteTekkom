@@ -1,78 +1,8 @@
 <x-dynamic-component :component="$layout">
 
     <style>
-        /* ── Header ── */
-        .verif-header {
-            margin-bottom: 24px;
-        }
-
-        .verif-header h4 {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--c-fg);
-            margin-bottom: 2px;
-            letter-spacing: -.02em;
-        }
-
-        .verif-header p {
-            color: var(--c-fg-muted);
-            font-size: 13px;
-        }
-
-        /* ── Status & Buttons ── */
-        .status-verif {
-            display: inline-flex;
-            align-items: center;
-            padding: 3px 9px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        .status-verif.pending {
-            background: #FFFBEB;
-            color: #d97706;
-        }
-
-        .status-verif.approved {
-            background: #ECFDF5;
-            color: #059669;
-        }
-
-        .status-verif.rejected {
-            background: var(--c-error-subtle, #fef2f2);
-            color: var(--c-error, #dc2626);
-        }
-
-        .btn-submit {
-            background: #0B266E;
-            color: #fff;
-            font-weight: 600;
-            font-size: 13px;
-            padding: 9px 18px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            transition: background .15s;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none !important;
-            white-space: nowrap;
-        }
-
-        .btn-submit:hover {
-            background: #091958;
-            color: #fff;
-        }
-
-        .btn-submit:disabled,
-        .btn-submit[disabled] {
-            background: #C1C7CF;
-            color: #fff;
-            cursor: not-allowed;
-            opacity: .7;
-        }
+        /* Badge status, tingkat, reward, kotak isian form, dan modal:
+           partials/sitkom-ui. */
 
         /* ── Empty State ── */
         .empty-state {
@@ -85,106 +15,7 @@
             display: flex;
             justify-content: center;
             margin-bottom: 12px;
-            color: #E5E7EB;
-        }
-
-        /* ── Form Controls ── */
-        .form-label-custom {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--c-fg-sec);
-            margin-bottom: 6px;
-        }
-
-        .form-control-custom,
-        .form-select-custom {
-            border: 1.5px solid #B6BCC6;
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--c-fg-sec);
-            transition: all .2s;
-            background: #F1F3F5;
-        }
-
-        .form-control-custom:hover,
-        .form-select-custom:hover {
-            border-color: var(--c-primary-border);
-            background: #EDEFF2;
-        }
-
-        .form-control-custom:focus,
-        .form-select-custom:focus {
-            border-color: var(--c-primary);
-            box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
-            outline: none;
-            background: #fff;
-        }
-
-        .tingkat-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 2px 8px;
-            border-radius: 50px;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .tingkat-badge.internasional {
-            background: #FFFBEB;
-            color: #92400e;
-        }
-
-        .tingkat-badge.nasional {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .tingkat-badge.regional {
-            background: #f3e8ff;
-            color: #7c3aed;
-        }
-
-        .tingkat-badge.universitas {
-            background: #ECFDF5;
-            color: #059669;
-        }
-
-        .tingkat-badge.prodi {
-            background: #eef2ff;
-            color: var(--c-primary);
-        }
-
-        /* ── Reward Badge & Button ── */
-        .claim-badge {
-            font-size: 12px;
-            font-weight: 600;
-            padding: 3px 9px;
-            border-radius: 50px;
-            display: inline-flex;
-            align-items: center;
-        }
-
-        .claim-badge.belum {
-            background: #f3f4f6;
-            color: var(--c-fg-muted);
-        }
-
-        .claim-badge.diajukan {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .claim-badge.disetujui {
-            background: #ECFDF5;
-            color: #059669;
-        }
-
-        .claim-badge.ditolak {
-            background: var(--c-error-subtle, #fef2f2);
-            color: var(--c-error, #dc2626);
+            color: var(--c-border);
         }
 
         /* Tombol sekunder di dalam modal (picker mata kuliah), bukan aksi baris. */
@@ -234,21 +65,21 @@
         }
 
         .btn-aksi-utama:hover {
-            background: #081D55;
-            border-color: #081D55;
+            background: var(--c-primary-hover);
+            border-color: var(--c-primary-hover);
         }
 
         /* Kuota habis: tombolnya tetap ada supaya kolom Aksi tidak berubah bentuk,
        tapi kelabu — langkah itu memang sudah tidak bisa diambil. */
         .btn-aksi-utama:disabled {
-            background: #C1C7CF;
-            border-color: #C1C7CF;
+            background: var(--c-border-strong);
+            border-color: var(--c-border-strong);
             cursor: not-allowed;
         }
 
         .btn-aksi-utama:disabled:hover {
-            background: #C1C7CF;
-            border-color: #C1C7CF;
+            background: var(--c-border-strong);
+            border-color: var(--c-border-strong);
         }
 
         .jatah-preview {
@@ -471,32 +302,6 @@
             color: var(--c-error);
         }
 
-        .modal-content {
-            border-radius: 18px;
-            border: none;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, .18);
-        }
-
-        .modal-header {
-            border-bottom: 1px solid #f3f4f6;
-            padding: 18px 22px;
-        }
-
-        .modal-header .modal-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--c-fg);
-        }
-
-        .modal-body {
-            padding: 22px;
-        }
-
-        .modal-footer {
-            border-top: 1px solid #f3f4f6;
-            padding: 14px 22px;
-        }
-
         /* Preview styles */
         .preview-grid {
             display: flex;
@@ -577,6 +382,8 @@
             background: var(--c-error);
         }
 
+        /* Warna jenis berkas mengikuti konvensi umum (PDF merah, DOC biru, XLS hijau,
+           PPT oranye), sengaja di luar palet SITKOM supaya langsung dikenali. */
         .doc-preview-item .doc-icon.doc {
             background: #2563eb;
         }
@@ -656,6 +463,9 @@
     </style>
 
     @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
+    {{-- Juga mendeklarasikan token warna: layout mahasiswa (akun mahasiswa & alumni)
+         tidak memuatnya, sehingga tanpa ini garis tabel & aksen navy hilang. --}}
+    @include('manajemenmahasiswa::partials.sitkom-ui')
 
     @php
         // Dipakai juga oleh modal pengajuan yang berada di luar blok per-tab,
@@ -704,31 +514,8 @@
     </x-manajemenmahasiswa::ui.page-header>
 
     <!-- Flash Messages -->
-    @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert"
-            style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert"
-            style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="8" x2="12" y2="12"></line>
-                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+    <x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
     @php
         // Batasnya diambil dari controller, satu angka untuk form & validasinya
         $maksNama  = \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_NAMA;
@@ -742,7 +529,6 @@
             'ketua_unit',
             'staff_himpunan',
             'superadmin',
-            'admin',
             'admin_kemahasiswaan'
         ]);
     @endphp
@@ -750,10 +536,10 @@
     @if($tab === 'riwayat')
         <!-- Riwayat Kegiatan - Global Style Table Card -->
         <div
-            style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
+            style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
             <!-- Table Toolbar -->
             <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
                 <h2
                     style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; display:flex; align-items:center; gap:8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2"
@@ -781,7 +567,7 @@
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; min-width:600px;">
                         <thead>
-                            <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                            <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                                 <th
                                     style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">
                                     No</th>
@@ -853,7 +639,7 @@
                                         ] : null,
                                     ];
                                 @endphp
-                                <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
                                         {{ ($riwayatData->currentPage() - 1) * $riwayatData->perPage() + $i + 1 }}
@@ -916,7 +702,7 @@
                 @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $riwayatData])
             @else
                 <div class="empty-state">
-                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
+                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border);"
                             stroke="currentColor" stroke-width="1.5">
                             <path d="M21 8V21H3V8"></path>
                             <path d="M23 3H1v5h22V3z"></path>
@@ -935,10 +721,10 @@
     @if($tab === 'prestasi')
         <!-- Prestasi Lomba - Global Style Table Card -->
         <div
-            style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
+            style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
             <!-- Table Toolbar -->
             <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
                 <h2
                     style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; display:flex; align-items:center; gap:8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2"
@@ -964,7 +750,7 @@
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; min-width:680px;">
                         <thead>
-                            <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                            <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                                 <th
                                     style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">
                                     No</th>
@@ -1042,7 +828,7 @@
                                         ] : null,
                                     ];
                                 @endphp
-                                <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
                                         {{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}
@@ -1101,7 +887,7 @@
                 @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
             @else
                 <div class="empty-state">
-                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
+                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border);"
                             stroke="currentColor" stroke-width="1.5">
                             <circle cx="12" cy="8" r="7"></circle>
                             <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
@@ -1152,10 +938,10 @@
     @if($tab === 'klaim')
         <!-- Klaim Prestasi - Global Style Table Card -->
         <div
-            style="background:#fff; border:1px solid #e5e7eb; border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
+            style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom:18px;">
             <!-- Table Toolbar -->
             <div
-                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid #e5e7eb; gap:10px; flex-wrap:wrap;">
+                style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
                 <h2
                     style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; display:flex; align-items:center; gap:8px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--c-primary)" stroke-width="2"
@@ -1211,7 +997,7 @@
                 <div style="overflow-x:auto;">
                     <table style="width:100%; border-collapse:collapse; min-width:1100px;">
                         <thead>
-                            <tr style="border-bottom:1px solid #e5e7eb; background:#FAFAFA;">
+                            <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                                 <th
                                     style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">
                                     No</th>
@@ -1331,7 +1117,7 @@
                                         ? 'Ajukan Ulang Reward'
                                         : 'Ajukan Reward';
                                 @endphp
-                                <tr style="border-bottom:1px solid #e5e7eb; transition:background .12s;"
+                                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                                     <td style="padding:14px 12px; font-size:13px; color:var(--c-fg-muted); width:48px;">
                                         {{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}
@@ -1355,7 +1141,7 @@
                                         @if($p->reward_tahun_ajaran_label)
                                             {{ $p->reward_tahun_ajaran_label }}
                                         @else
-                                            <span style="color:#d1d5db;">—</span>
+                                            <span style="color:var(--c-border-strong);">—</span>
                                         @endif
                                     </td>
                                     <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
@@ -1366,7 +1152,7 @@
                                                     {{ $p->reward_sks_max }}</div>
                                             @endif
                                         @else
-                                            <span style="color:#d1d5db;">—</span>
+                                            <span style="color:var(--c-border-strong);">—</span>
                                         @endif
                                     </td>
                                     <td style="padding:14px 16px;">
@@ -1380,7 +1166,7 @@
                                                 @endif
                                             </div>
                                         @else
-                                            <span style="color:#d1d5db;">—</span>
+                                            <span style="color:var(--c-border-strong);">—</span>
                                         @endif
                                     </td>
                                     <td style="padding:14px 16px;">
@@ -1437,7 +1223,7 @@
                 @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $prestasiData])
             @else
                 <div class="empty-state">
-                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;"
+                    <div class="empty-icon"><svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:var(--c-border);"
                             stroke="currentColor" stroke-width="1.5">
                             <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6" />
                             <path d="M9 12l2 2 4-4" />
@@ -1467,22 +1253,10 @@
         <div class="modal fade" id="rincianKuotaModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                 <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold" style="color: #0D0D12;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                style="vertical-align:-3px;">
-                                <line x1="8" y1="6" x2="21" y2="6" />
-                                <line x1="8" y1="12" x2="21" y2="12" />
-                                <line x1="8" y1="18" x2="21" y2="18" />
-                                <line x1="3" y1="6" x2="3.01" y2="6" />
-                                <line x1="3" y1="12" x2="3.01" y2="12" />
-                                <line x1="3" y1="18" x2="3.01" y2="18" />
-                            </svg>
-                            Aturan &amp; Rincian Kuota Reward
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Ketentuan klaim reward prestasi mahasiswa">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></x-slot:icon>
+                        Aturan &amp; Rincian Kuota Reward
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body">
                         <p style="font-size:11px; color:var(--c-fg-muted); margin:0 0 16px;">
                             Dasar aturan: {{ $P::SK_BERLAKU }}, dengan batas kuota dari kebijakan departemen.
@@ -1536,15 +1310,14 @@
                 <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.riwayat.store') }}"
                     enctype="multipart/form-data">
                     @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Ajukan Riwayat Kegiatan</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Catat kegiatan di luar sistem untuk diverifikasi admin">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg></x-slot:icon>
+                        Ajukan Riwayat Kegiatan
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body">
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label-custom mb-0">Nama Kegiatan <span
-                                        style="color: #dc2626;">*</span></label>
+                                <label class="form-label-custom mb-0">Nama Kegiatan <span class="required">*</span></label>
                                 <span class="text-muted" style="font-size: 11px;" id="charCount_nama_kegiatan_manual">0
                                     / {{ $maksNama }} huruf</span>
                             </div>
@@ -1557,8 +1330,7 @@
                         </div>
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label-custom mb-0">Peran <span
-                                        style="color: #dc2626;">*</span></label>
+                                <label class="form-label-custom mb-0">Peran <span class="required">*</span></label>
                                 <span class="text-muted" style="font-size: 11px;" id="charCount_peran_manual">0 / {{ $maksPeran }}
                                     huruf</span>
                             </div>
@@ -1568,8 +1340,7 @@
                                 oninput="document.getElementById('charCount_peran_manual').innerText = this.value.length + ' / {{ $maksPeran }} huruf'">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label-custom">Tanggal Kegiatan <span
-                                    style="color: #dc2626;">*</span></label>
+                            <label class="form-label-custom">Tanggal Kegiatan <span class="required">*</span></label>
                             {{-- max hari ini: kegiatan yang belum terjadi belum punya bukti,
                             dan tahunnya ikut terbawa ke statistik. Divalidasi ulang di server. --}}
                             <input type="date" name="tanggal_kegiatan" class="form-control form-control-custom"
@@ -1577,19 +1348,19 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label-custom">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626"
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="vertical-align: -2px;">
+                                    style="vertical-align: -2px; color: var(--c-error);">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                 </svg>
-                                Bukti Kegiatan <span style="color: #dc2626;">*</span>
+                                Bukti Kegiatan <span class="required">*</span>
                             </label>
                             <input type="file" name="bukti_docs[]" id="riwayatDocs"
                                 class="form-control form-control-custom" required accept="application/pdf,.pdf"
                                 style="padding: 8px 14px;">
                             <small class="text-muted" style="font-size: 11px;">Gabungkan semua bukti (sertifikat, surat
-                                tugas, foto, dsb.) dalam <b>1 file PDF</b>. Maks 10MB.</small>
+                                tugas, foto, dsb.) dalam <b>1 file PDF</b>. Maks 5MB.</small>
                             <div class="doc-preview-list" id="riwayatDocsPreview"></div>
                         </div>
                     </div>
@@ -1609,15 +1380,14 @@
                 <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.prestasi.store') }}"
                     enctype="multipart/form-data">
                     @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Ajukan Prestasi Lomba</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Kirim prestasi lomba untuk diverifikasi admin">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></x-slot:icon>
+                        Ajukan Prestasi Lomba
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body">
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="form-label-custom mb-0">Nama Prestasi <span
-                                        style="color: #dc2626;">*</span></label>
+                                <label class="form-label-custom mb-0">Nama Prestasi <span class="required">*</span></label>
                                 <span class="text-muted" style="font-size: 11px;" id="charCount_nama_prestasi">0 / {{ $maksNama }}
                                     huruf</span>
                             </div>
@@ -1627,7 +1397,7 @@
                                 oninput="document.getElementById('charCount_nama_prestasi').innerText = this.value.length + ' / {{ $maksNama }} huruf'">
                         </div>
                         <div class="mb-3">
-                            <label class="form-label-custom">Tingkat <span style="color: #dc2626;">*</span></label>
+                            <label class="form-label-custom">Tingkat <span class="required">*</span></label>
                             <x-manajemenmahasiswa::ui.select name="tingkat" size="lg" required>
                                 <option value="">Pilih tingkat...</option>
                                 @foreach($P::TINGKAT_LIST as $tk)
@@ -1636,7 +1406,7 @@
                             </x-manajemenmahasiswa::ui.select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label-custom">Tanggal <span style="color: #dc2626;">*</span></label>
+                            <label class="form-label-custom">Tanggal <span class="required">*</span></label>
                             {{-- Lihat catatan max pada tanggal kegiatan --}}
                             <input type="date" name="tanggal" class="form-control form-control-custom" required
                                 max="{{ date('Y-m-d') }}" value="{{ old('tanggal', date('Y-m-d')) }}">
@@ -1644,19 +1414,19 @@
 
                         <div class="mb-3">
                             <label class="form-label-custom">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626"
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="vertical-align: -2px;">
+                                    style="vertical-align: -2px; color: var(--c-error);">
                                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                     <polyline points="14 2 14 8 20 8"></polyline>
                                 </svg>
-                                Bukti Kegiatan <span style="color: #dc2626;">*</span>
+                                Bukti Kegiatan <span class="required">*</span>
                             </label>
                             <input type="file" name="bukti_docs[]" id="prestasiDocs"
                                 class="form-control form-control-custom" required accept="application/pdf,.pdf"
                                 style="padding: 8px 14px;">
                             <small class="text-muted" style="font-size: 11px;">Gabungkan semua bukti (sertifikat, surat
-                                tugas/lomba, foto, dsb.) dalam <b>1 file PDF</b>. Maks 10MB.</small>
+                                tugas/lomba, foto, dsb.) dalam <b>1 file PDF</b>. Maks 5MB.</small>
                             <div class="doc-preview-list" id="prestasiDocsPreview"></div>
                         </div>
                     </div>
@@ -1678,18 +1448,10 @@
             <div class="modal-content" style="overflow: hidden;">
                 <form method="POST" id="ajukanRewardForm">
                     @csrf @method('PATCH')
-                    <div class="modal-header">
-                        <h5 class="modal-title fw-bold" style="color: #0D0D12;">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                style="vertical-align:-3px;">
-                                <circle cx="12" cy="8" r="7"></circle>
-                                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
-                            </svg>
-                            <span id="arJudul">Ajukan Reward Prestasi</span>
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
+                    <x-manajemenmahasiswa::ui.modal-header subtitle="Pilih kategori, capaian, dan mata kuliah yang diajukan">
+                        <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></x-slot:icon>
+                        <span id="arJudul">Ajukan Reward Prestasi</span>
+                    </x-manajemenmahasiswa::ui.modal-header>
                     <div class="modal-body" style="padding: 0;">
                         <div class="tp-grid">
                             @include('manajemenmahasiswa::verifikasi.partials.tinjau-bukti-pane')
@@ -1707,8 +1469,7 @@
                                         prestasi tersebut masih diatur SE 176/2020, jadi departemen dapat menolaknya.
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label-custom">Kategori Penyelenggara <span
-                                                style="color:#dc2626;">*</span></label>
+                                        <label class="form-label-custom">Kategori Penyelenggara <span class="required">*</span></label>
                                         <x-manajemenmahasiswa::ui.select name="reward_penyelenggara" id="arPenyelenggara"
                                             size="lg" required>
                                             <option value="">Pilih kategori...</option>
@@ -1718,16 +1479,14 @@
                                         </x-manajemenmahasiswa::ui.select>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label-custom">Capaian / Peringkat <span
-                                                style="color:#dc2626;">*</span></label>
+                                        <label class="form-label-custom">Capaian / Peringkat <span class="required">*</span></label>
                                         <x-manajemenmahasiswa::ui.select name="reward_capaian" id="arCapaian"
                                             size="lg" required disabled>
                                             <option value="">Pilih penyelenggara dulu...</option>
                                         </x-manajemenmahasiswa::ui.select>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="form-label-custom">Tahun Ajaran <span
-                                                style="color:#dc2626;">*</span></label>
+                                        <label class="form-label-custom">Tahun Ajaran <span class="required">*</span></label>
                                         {{-- Daftarnya dihitung dari tanggal hari ini, jadi bertambah
                                         sendiri tiap semester berganti. --}}
                                         <x-manajemenmahasiswa::ui.select name="reward_tahun_ajaran" id="arTahunAjaran"
@@ -1740,7 +1499,7 @@
                                     </div>
                                     <div class="mb-3" id="arInventionWrap" style="display:none;">
                                         <label
-                                            style="font-size:13px; color:#374151; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                                            style="font-size:13px; color:var(--c-fg-sec); display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
                                             <input type="checkbox" name="reward_is_invention" id="arInvention" value="1"
                                                 style="margin-top:3px;">
                                             @php $maksInv = $P::KUOTA_MAKS[$P::KUOTA_INVENTION]; @endphp
@@ -1759,9 +1518,8 @@
 
                                     <div class="mb-3 mt-3" id="arMkWrap" style="display:none;">
                                         <label class="form-label-custom">
-                                            Usulan Mata Kuliah yang Dinaikkan Nilainya <span
-                                                style="color:#dc2626;">*</span>
-                                            <span style="font-weight:400; color:#666D80;">(maks <span
+                                            Usulan Mata Kuliah yang Dinaikkan Nilainya <span class="required">*</span>
+                                            <span style="font-weight:400; color:var(--c-fg-muted);">(maks <span
                                                     id="arMkMax">0</span> MK)</span>
                                         </label>
                                         <div class="d-flex gap-2">
@@ -1788,7 +1546,7 @@
                                             di klaim lain tidak bisa dipilih lagi.</small>
                                     </div>
 
-                                    <div style="font-size:11px; color:#666D80; margin-top:10px; line-height:1.5;">
+                                    <div style="font-size:11px; color:var(--c-fg-muted); margin-top:10px; line-height:1.5;">
                                         Catatan: departemen berwenang menyetujui atau menolak usulan MK ini (SK 774
                                         poin 7). Kalau ditolak, ajukan ulang dengan MK lain. Reward hanya untuk MK
                                         bernilai minimal C, dan setiap MK hanya bisa dinaikkan sekali. Aturan kuota
@@ -1843,9 +1601,9 @@
                     <div id="claimConfirmIcon"
                         style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
                     </div>
-                    <h5 id="claimConfirmTitle" class="fw-bold mb-2" style="color: #1f2937;"></h5>
+                    <h5 id="claimConfirmTitle" class="fw-bold mb-2" style="color: var(--c-fg);"></h5>
                     <p id="claimConfirmText"
-                        style="color: #666D80; font-size: 14px; line-height: 1.5; margin-bottom: 0;"></p>
+                        style="color: var(--c-fg-muted); font-size: 14px; line-height: 1.5; margin-bottom: 0;"></p>
                 </div>
                 <div class="modal-footer" style="justify-content: center; gap: 8px;">
                     <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
@@ -2017,13 +1775,13 @@
             const textEl = document.getElementById('claimConfirmText');
             const btnEl = document.getElementById('claimConfirmBtn');
 
-            const ICON_WARN = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+            const ICON_WARN = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
 
             let activeFormId = null;
 
             window.openBatalConfirm = function (formId, namaPrestasi) {
                 activeFormId = formId;
-                iconEl.style.background = '#FFFBEB';
+                iconEl.style.background = 'var(--c-warning-subtle)'; iconEl.style.color = 'var(--c-warning)';
                 iconEl.innerHTML = ICON_WARN;
                 titleEl.textContent = 'Batalkan Pengajuan Reward';
                 textEl.innerHTML = 'Batalkan pengajuan reward untuk prestasi <strong class="cc-nama"></strong>? Anda bisa mengajukan ulang nanti.';
@@ -2037,7 +1795,7 @@
             // beserta berkasnya, jadi konfirmasinya menyebut itu apa adanya.
             window.openTarikConfirm = function (formId, nama) {
                 activeFormId = formId;
-                iconEl.style.background = '#FFFBEB';
+                iconEl.style.background = 'var(--c-warning-subtle)'; iconEl.style.color = 'var(--c-warning)';
                 iconEl.innerHTML = ICON_WARN;
                 titleEl.textContent = 'Tarik Pengajuan';
                 textEl.innerHTML = 'Tarik pengajuan <strong class="cc-nama"></strong> dari antrean verifikasi? Data & berkas buktinya dihapus, dan Anda perlu mengunggah ulang bila ingin mengajukannya lagi.';
