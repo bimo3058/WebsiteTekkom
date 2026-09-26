@@ -118,21 +118,36 @@
 
                     <div x-data="{
                             open: false,
-                            selectedId: '{{ $selectedRoomId }}',
-                            selectedName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
-                            selectRoom(id, name) {
-                                this.selectedId = id;
-                                this.selectedName = name;
-                                document.getElementById('ruanganInput').value = id;
+                            selectedCat: '{{ $selectedKategori }}',
+                            selectedRoomId: '{{ $selectedRoomId }}',
+                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua ' . $selectedKategori) : 'Semua ' . $selectedKategori }}',
+                            rooms: {{ $allRuangansDaftar->map(fn($r) => ['id' => $r->id, 'nama' => $r->nama, 'kategori' => $r->kategori])->toJson() }},
+                            categories: {{ $kategoriList->toJson() }},
+                            selectCat(cat) {
+                                this.selectedCat = cat;
+                                this.selectedRoomId = '';
+                                this.selectedRoomName = 'Semua ' + cat;
+                                $refs.ruanganInput.value = '';
+                                $refs.kategoriInput.value = cat;
+                                document.getElementById('roomFilterForm').submit();
+                            },
+                            selectRoom(id, name, cat) {
+                                this.selectedCat = cat;
+                                this.selectedRoomId = id;
+                                this.selectedRoomName = name;
+                                $refs.ruanganInput.value = id;
+                                $refs.kategoriInput.value = cat;
                                 document.getElementById('roomFilterForm').submit();
                             }
-                        }" class="relative w-48" @click.away="open = false">
+                        }" class="relative w-56 sm:w-64" @click.away="open = false">
 
-                        <input type="hidden" name="ruangan_id" id="ruanganInput" :value="selectedId">
+                        <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedRoomId">
+                        <input type="hidden" name="kategori" x-ref="kategoriInput" :value="selectedCat">
 
                         <button type="button" @click="open = !open"
                             class="w-full flex items-center justify-between py-1.5 px-3 text-[13px] font-medium bg-white border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-[#0B266E]/20 transition-all cursor-pointer">
-                            <span x-text="selectedName" class="truncate pr-2 text-gray-800"></span>
+                            <span x-text="selectedRoomId ? selectedRoomName : 'Kategori: ' + selectedCat"
+                                class="truncate pr-2 text-gray-800"></span>
                             <svg class="w-4 h-4 text-gray-500 transition-transform duration-200 shrink-0"
                                 :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -149,19 +164,28 @@
                             class="absolute right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 max-h-60 overflow-y-auto"
                             style="display: none;">
                             <div class="p-1.5">
-                                <button type="button" @click="selectRoom('', 'Semua Ruangan')"
-                                    class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors cursor-pointer"
-                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50': selectedId != ''}">
-                                    Semua Ruangan
-                                </button>
-
-                                @foreach($allRuangansDaftar as $r)
-                                    <button type="button" @click="selectRoom('{{ $r->id }}', '{{ addslashes($r->nama) }}')"
-                                        class="w-full text-left px-3 py-2 rounded-md text-[13px] font-medium transition-colors mt-0.5 cursor-pointer"
-                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': selectedId != '{{ $r->id }}'}">
-                                        {{ $r->nama }}
-                                    </button>
-                                @endforeach
+                                <template x-for="cat in categories" :key="cat">
+                                    <div class="mb-1">
+                                        <!-- Category Header -->
+                                        <button type="button" @click="selectCat(cat)"
+                                            class="w-full text-left px-2 py-1.5 rounded-md text-[13px] font-bold transition-colors cursor-pointer flex items-center gap-2"
+                                            :class="{'bg-[#EFF6FF] text-[#0B266E]': selectedCat === cat && !selectedRoomId, 'text-gray-800 hover:bg-gray-50': !(selectedCat === cat && !selectedRoomId)}">
+                                            <span x-text="getIcon(cat)"></span>
+                                            <span x-text="'Kategori: ' + cat"></span>
+                                        </button>
+                                        <!-- Rooms in Category -->
+                                        <div class="pl-6 border-l border-gray-100 ml-3 my-0.5 space-y-0.5">
+                                            <template x-for="r in rooms.filter(room => room.kategori === cat)"
+                                                :key="r.id">
+                                                <button type="button" @click="selectRoom(r.id, r.nama, cat)"
+                                                    class="w-full text-left px-2 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer"
+                                                    :class="{'bg-[#0B266E] text-white': selectedRoomId == r.id, 'text-gray-600 hover:bg-gray-50': selectedRoomId != r.id}">
+                                                    - <span x-text="r.nama"></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -384,7 +408,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E;
-                                                                                                    {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
+                                                                                                            {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">
                                             {{ $day->format('d/m') }}
@@ -593,10 +617,10 @@
                                                         @mouseover="$el.style.transform='scale(1.03)'; $el.style.boxShadow='0 4px 6px rgba(0,0,0,0.05)'"
                                                     @mouseout="$el.style.transform='scale(1)'; $el.style.boxShadow='none'" @endif
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               font-size:9px; font-weight:800; color:{{ $tColor }}; transition: all 0.15s;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   font-size:9px; font-weight:800; color:{{ $tColor }}; transition: all 0.15s;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -688,15 +712,15 @@
 
                             @foreach($months as $num => $name)
                                 <button type="button" @click="
-                                                                            let url = new URL(window.location.href);
-                                                                            url.searchParams.set('mode', 'month');
-                                                                            url.searchParams.set('month', selectedYear + '-{{ $num }}');
-                                                                            window.location.href = url.href;
-                                                                        "
+                                                                                    let url = new URL(window.location.href);
+                                                                                    url.searchParams.set('mode', 'month');
+                                                                                    url.searchParams.set('month', selectedYear + '-{{ $num }}');
+                                                                                    window.location.href = url.href;
+                                                                                "
                                     class="py-2 text-center text-[13px] rounded-lg transition-colors cursor-pointer" :class="{
-                                                                            'bg-[#0B266E] text-white font-bold shadow-md': selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}',
-                                                                            'text-gray-600 hover:bg-[#EFF6FF] hover:text-[#0B266E] hover:font-bold': !(selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}')
-                                                                        }">
+                                                                                    'bg-[#0B266E] text-white font-bold shadow-md': selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}',
+                                                                                    'text-gray-600 hover:bg-[#EFF6FF] hover:text-[#0B266E] hover:font-bold': !(selectedYear == {{ $currentYearNum }} && '{{ $num }}' == '{{ $currentMonthNum }}')
+                                                                                }">
                                     {{ $name }}
                                 </button>
                             @endforeach
@@ -763,8 +787,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -990,7 +1014,10 @@
                                     diperlukan untuk acara formal.</p>
                                 @error('file_berkas')
                                     <p class="text-[11px] text-[#DF1C41] mt-1.5 font-bold flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
                                         Ukuran maksimal 2MB dan wajib berformat PDF.
                                     </p>
                                 @enderror
@@ -1050,33 +1077,33 @@
                     // Jangan update UI jika user sedang berinteraksi dengan modal atau dragging
                     if (data && (data.showModal || data.showDetailModal || data.isDragging)) return;
                 }
-                
+
                 fetch(window.location.href, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    
-                    const newContainer = doc.getElementById('calendar-grid-wrapper');
-                    const currentContainer = document.getElementById('calendar-grid-wrapper');
-                    
-                    if (newContainer && currentContainer) {
-                        // Simpan posisi scroll sebelum replace
-                        let scrollWrapper = currentContainer.querySelector('#table-scroll-container');
-                        let currentScroll = scrollWrapper ? scrollWrapper.scrollLeft : 0;
+                    .then(response => response.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, 'text/html');
 
-                        currentContainer.innerHTML = newContainer.innerHTML;
+                        const newContainer = doc.getElementById('calendar-grid-wrapper');
+                        const currentContainer = document.getElementById('calendar-grid-wrapper');
 
-                        // Kembalikan posisi scroll setelah replace
-                        let newScrollWrapper = currentContainer.querySelector('#table-scroll-container');
-                        if (newScrollWrapper) {
-                            newScrollWrapper.scrollLeft = currentScroll;
+                        if (newContainer && currentContainer) {
+                            // Simpan posisi scroll sebelum replace
+                            let scrollWrapper = currentContainer.querySelector('#table-scroll-container');
+                            let currentScroll = scrollWrapper ? scrollWrapper.scrollLeft : 0;
+
+                            currentContainer.innerHTML = newContainer.innerHTML;
+
+                            // Kembalikan posisi scroll setelah replace
+                            let newScrollWrapper = currentContainer.querySelector('#table-scroll-container');
+                            if (newScrollWrapper) {
+                                newScrollWrapper.scrollLeft = currentScroll;
+                            }
                         }
-                    }
-                })
-                .catch(err => console.error('Polling error:', err));
+                    })
+                    .catch(err => console.error('Polling error:', err));
             }, 30000);
         });
 
@@ -1254,15 +1281,15 @@
         }
 
         // Client-Side Validation untuk File Upload
-        document.addEventListener('change', function(e) {
+        document.addEventListener('change', function (e) {
             if (e.target && e.target.name === 'file_berkas') {
                 const file = e.target.files[0];
                 if (file) {
                     // Validasi Ukuran (Maks 2MB)
-                    if (file.size > 2 * 1024 * 1024) { 
+                    if (file.size > 2 * 1024 * 1024) {
                         showCustomToast('Ukuran file "' + file.name + '" terlalu besar (Maksimal 2 MB).');
                         e.target.value = ''; // Reset input seketika
-                    } 
+                    }
                     // Validasi Ekstensi/MIME (Hanya PDF)
                     else if (file.type !== 'application/pdf') {
                         showCustomToast('Format file tidak didukung. Hanya file PDF yang diizinkan.');

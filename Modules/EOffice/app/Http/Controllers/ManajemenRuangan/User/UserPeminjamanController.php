@@ -198,18 +198,31 @@ class UserPeminjamanController extends Controller
             ? \Carbon\Carbon::parse($request->get('month') . '-01')
             : $today->copy()->startOfMonth();
 
-        // Handle Room Filter
+        // Handle Room Filter & Sensible Default
         $selectedRoomId = $request->get('ruangan_id');
-        $allRuangansQuery = Ruangan::where('is_active', true)->orderBy('nama');
+        $selectedKategori = $request->get('kategori');
+        
+        $allowedCategories = ['Kelas', 'Laboratorium', 'Sidang', 'Aula', 'Fasilitas Umum'];
+        $allRuangansQuery = Ruangan::where('is_active', true)
+            ->whereIn('kategori', $allowedCategories)
+            ->orderBy('nama');
 
-        if ($selectedRoomId) {
-            $ruangans = $allRuangansQuery->where('id', $selectedRoomId)->get();
-        } else {
-            $ruangans = $allRuangansQuery->get();
+        // List semua ruangan (yang boleh dipinjam) untuk dropdown filter
+        $allRuangansDaftar = $allRuangansQuery->get();
+        $kategoriList = $allRuangansDaftar->pluck('kategori')->filter()->unique()->values();
+
+        // Sensible Default: Jika tidak ada ruangan/kategori yang dipilih, default ke Kelas
+        if (!$selectedRoomId && !$selectedKategori) {
+            $selectedKategori = 'Kelas';
         }
 
-        // List semua ruangan untuk dropdown filter
-        $allRuangansDaftar = Ruangan::where('is_active', true)->orderBy('nama')->get();
+        if ($selectedRoomId) {
+            $ruangans = $allRuangansDaftar->where('id', $selectedRoomId)->values();
+        } elseif ($selectedKategori && $selectedKategori !== 'Semua Kategori') {
+            $ruangans = $allRuangansDaftar->where('kategori', $selectedKategori)->values();
+        } else {
+            $ruangans = $allRuangansDaftar;
+        }
 
         // Fetch bookings for the week range
         $bookingsRaw = Peminjaman::with('user:id,name')
@@ -244,6 +257,8 @@ class UserPeminjamanController extends Controller
             'ruangans',
             'allRuangansDaftar',
             'selectedRoomId',
+            'kategoriList',
+            'selectedKategori',
             'bookingsRaw',
             'internalSchedules',
             'weekStart',

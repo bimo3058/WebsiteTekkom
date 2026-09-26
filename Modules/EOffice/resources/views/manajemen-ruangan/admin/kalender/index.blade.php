@@ -153,53 +153,106 @@
                     @if($mode === 'month') <input type="hidden" name="month" value="{{ $monthDate->format('Y-m') }}">
                     @endif
 
-                    <div
-                        class="flex items-center rounded-md border border-slate-200 bg-white overflow-visible shadow-sm">
-                        <div x-data="{ 
-                                open: false, 
-                                selectedId: '{{ $selectedRoomId }}', 
-                                selectedName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
-                                selectItem(id, name) { 
-                                    this.selectedId = id; 
-                                    this.selectedName = name; 
-                                    $refs.ruanganInput.value = id;
-                                    document.getElementById('roomFilterForm').submit();
-                                } 
-                            }" class="relative w-[140px] sm:w-[180px]" @click.away="open = false">
-
-                            <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
-
-                            <button type="button" @click="open = !open"
-                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-md cursor-pointer">
-                                <span x-text="selectedName" class="truncate pr-2"></span>
-                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0"
-                                    :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7" />
+                    <div x-data="{
+                            openCat: false,
+                            openRoom: false,
+                            selectedCat: '{{ request()->get('kategori', 'Semua Kategori') }}',
+                            selectedRoomId: '{{ $selectedRoomId }}',
+                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
+                            rooms: {{ $allRuangansDaftar->map(fn($r) => ['id'=>$r->id, 'nama'=>$r->nama, 'kategori'=>$r->kategori])->toJson() }},
+                            categories: {{ $kategoriList->toJson() }},
+                            get filteredRooms() {
+                                if (this.selectedCat === 'Semua Kategori') {
+                                    return this.rooms;
+                                }
+                                return this.rooms.filter(r => r.kategori === this.selectedCat);
+                            },
+                            selectCat(cat) {
+                                this.selectedCat = cat;
+                                this.openCat = false;
+                                // Automatically submit the form to update calendar to show all rooms in this category
+                                this.selectedRoomId = '';
+                                this.selectedRoomName = 'Semua Ruangan';
+                                $refs.ruanganInput.value = '';
+                                $refs.kategoriInput.value = cat;
+                                document.getElementById('roomFilterForm').submit();
+                            },
+                            selectRoom(id, name) {
+                                this.selectedRoomId = id;
+                                this.selectedRoomName = name;
+                                $refs.ruanganInput.value = id;
+                                $refs.kategoriInput.value = this.selectedCat;
+                                document.getElementById('roomFilterForm').submit();
+                            },
+                            init() {
+                                if (this.selectedRoomId !== '') {
+                                    let currentRoom = this.rooms.find(r => r.id == this.selectedRoomId);
+                                    if (currentRoom && currentRoom.kategori) {
+                                        this.selectedCat = currentRoom.kategori;
+                                        $refs.kategoriInput.value = currentRoom.kategori;
+                                    }
+                                }
+                            }
+                        }" 
+                        class="flex flex-col sm:flex-row items-center gap-2">
+                        
+                        <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedRoomId">
+                        <input type="hidden" name="kategori" x-ref="kategoriInput" :value="selectedCat">
+                        
+                        <!-- Dropdown Kategori (Filter 1) -->
+                        <div class="relative w-full sm:w-[150px]" @click.away="openCat = false">
+                            <button type="button" @click="openCat = !openCat"
+                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white border border-slate-200 rounded-md hover:bg-slate-50 focus:outline-none shadow-sm transition-colors cursor-pointer">
+                                <span x-text="selectedCat" class="truncate pr-2"></span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': openCat}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-
-                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="opacity-100 scale-100"
+                            <div x-show="openCat" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute left-0 top-full mt-1 w-full min-w-[160px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48"
+                                class="absolute left-0 top-full mt-1 w-full min-w-[150px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48"
                                 style="display: none;">
                                 <div class="py-1">
-                                    <button type="button" @click="selectItem('', 'Semua Ruangan')"
+                                    <button type="button" @click="selectCat('Semua Kategori')"
                                         class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
-                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == ''}">Semua
-                                        Ruangan</button>
-                                    @foreach($allRuangansDaftar as $r)
-                                        <button type="button"
-                                            @click="selectItem('{{ $r->id }}', '{{ addslashes($r->nama) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors mt-0.5 cursor-pointer"
-                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $r->id }}'}">
-                                            {{ $r->nama }}
-                                        </button>
-                                    @endforeach
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedCat === 'Semua Kategori'}">Semua Kategori</button>
+                                    <template x-for="cat in categories" :key="cat">
+                                        <button type="button" @click="selectCat(cat)"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
+                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedCat === cat}"
+                                            x-text="cat"></button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Ruangan (Filter 2) -->
+                        <div class="relative w-full sm:w-[170px]" @click.away="openRoom = false">
+                            <button type="button" @click="openRoom = !openRoom"
+                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white border border-slate-200 rounded-md hover:bg-slate-50 focus:outline-none shadow-sm transition-colors cursor-pointer">
+                                <span x-text="selectedRoomName" class="truncate pr-2"></span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': openRoom}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div x-show="openRoom" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 top-full mt-1 w-full min-w-[170px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48"
+                                style="display: none;">
+                                <div class="py-1">
+                                    <button type="button" @click="selectRoom('', 'Semua Ruangan')"
+                                        class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedRoomId === ''}">Semua Ruangan</button>
+                                    <template x-for="r in filteredRooms" :key="r.id">
+                                        <button type="button" @click="selectRoom(r.id, r.nama)"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
+                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedRoomId == r.id}"
+                                            x-text="r.nama"></button>
+                                    </template>
                                 </div>
                             </div>
                         </div>
