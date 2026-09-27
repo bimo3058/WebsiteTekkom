@@ -215,13 +215,7 @@
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 
 <!-- Search & Filter Area (matching forum layout) -->
 <form method="GET" action="{{ route('manajemenmahasiswa.kegiatan.index') }}" id="filterForm">
@@ -250,7 +244,7 @@
                 || request()->filled('search');
         @endphp
         <div class="mk-kegiatan-filter-controls">
-            <div class="filter-pop filter-pop--md" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
                 <button type="button" class="filter-pop-btn"
                         @click="filterOpen = !filterOpen"
                         :class="{ 'is-open': filterOpen }">

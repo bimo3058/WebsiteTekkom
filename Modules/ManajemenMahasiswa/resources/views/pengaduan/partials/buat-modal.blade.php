@@ -12,7 +12,7 @@
     "Ganti jalur" di halaman form).
 --}}
 <style>
-    #buatPengaduanModal .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
+    #buatPengaduanModal .modal-content { border-radius: 16px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
     #buatPengaduanModal .modal-header { border-bottom: 1px solid #f3f4f6; padding: 18px 22px; }
     #buatPengaduanModal .modal-title { font-size: 16px; font-weight: 700; color: var(--c-fg); }
     #buatPengaduanModal .modal-body { padding: 22px; }
@@ -56,18 +56,8 @@
         display: block; font-family: monospace; font-size: 13px; font-weight: 600;
         color: var(--c-primary); word-break: break-all; margin-bottom: 12px;
     }
-    .bp-btn-primary {
-        display: inline-flex; align-items: center; gap: 8px; background: var(--c-primary); color: #fff !important;
-        border: none; border-radius: 10px; font-size: 13px; font-weight: 600; padding: 10px 20px;
-        text-decoration: none !important; transition: background .15s;
-    }
-    .bp-btn-primary:hover { background: var(--c-primary-hover); }
-    .bp-btn-copy {
-        display: inline-flex; align-items: center; gap: 8px; background: #111827; color: #fff; border: none;
-        border-radius: 10px; font-size: 13px; font-weight: 600; padding: 9px 18px; transition: background .15s;
-    }
-    .bp-btn-copy:hover { background: #374151; }
-    .bp-btn-copy.is-done { background: #16a34a; }
+    /* Tombol salin memakai .mk-btn--secondary; saat berhasil disalin, garisnya hijau sebentar. */
+    .bp-btn-copy.is-done { border-color: var(--c-success); color: var(--c-success); }
 </style>
 
 <div class="modal fade" id="buatPengaduanModal" tabindex="-1" aria-hidden="true">
@@ -120,15 +110,15 @@
                     </p>
 
                     <div class="bp-link-box">
-                        <div class="fw-bold mb-2" style="font-size: 12px; text-transform: uppercase; color: #dc2626;">Simpan tautan ini!</div>
+                        <div class="fw-bold mb-2" style="font-size: 12px; text-transform: uppercase; color: var(--c-error);">Simpan tautan ini!</div>
                         <a href="#" target="_blank" rel="noopener" class="bp-link-url" id="bpLinkUrl"></a>
-                        <button type="button" class="bp-btn-copy" id="bpSalin">
+                        <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm bp-btn-copy" id="bpSalin">
                             <x-manajemenmahasiswa::ui.icon name="files-01" size="15" /> <span>Salin Tautan</span>
                         </button>
                     </div>
 
                     <p style="font-size: 12px; color: var(--c-fg-muted); margin-bottom: 18px;">
-                        <span style="color: #f59e0b;"><x-manajemenmahasiswa::ui.icon name="alert-triangle" size="13" /></span>
+                        <span style="color: var(--c-warning);"><x-manajemenmahasiswa::ui.icon name="alert-triangle" size="13" /></span>
                         Tautan ini bersifat sangat rahasia. Jika hilang, Anda tidak dapat memulihkannya.
                         Pastikan Anda menyalinnya sebelum membuka form.
                     </p>

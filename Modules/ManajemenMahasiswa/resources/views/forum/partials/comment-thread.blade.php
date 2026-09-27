@@ -22,7 +22,7 @@
                     <span class="badge rounded-pill"
                         style="background: linear-gradient(135deg, #293C79 0%, #6F7DA4 100%); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px;"
                         title="{{ $authorTiers[$comment->user_id]['tier_name'] }}">
-                        {!! $authorTiers[$comment->user_id]['tier_icon'] !!} Lv.{{ $authorTiers[$comment->user_id]['level'] }}
+                        Lv.{{ $authorTiers[$comment->user_id]['level'] }}
                     </span>
                 @endif
                 <span class="text-muted" style="font-size: {{ $depth === 0 ? '12px' : '11px' }};">•

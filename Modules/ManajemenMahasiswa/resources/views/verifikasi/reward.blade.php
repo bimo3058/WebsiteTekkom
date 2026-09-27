@@ -34,9 +34,9 @@
     .verif-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
     /* Header, padding, ukuran huruf, dan warna teks sel disamakan dengan tabel
        Verifikasi Prestasi & Kegiatan (admin.blade.php): isi 13px, header 11px. */
-    .verif-table thead th { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); padding: 11px 16px; text-align: left; background: var(--c-bg); border-bottom: 1px solid var(--c-border); white-space: nowrap; }
+    .verif-table thead th { font-size: 11px; font-weight: 600; color: var(--c-fg-muted); padding: 11px 16px; text-align: left; background: #FAFAFA; border-bottom: 1px solid var(--c-border); white-space: nowrap; }
     .verif-table thead th:first-child { padding: 11px 12px; width: 48px; }
-    .verif-table tbody td { padding: 14px 16px; font-size: 13px; color: var(--c-fg-sec); border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+    .verif-table tbody td { padding: 14px 16px; font-size: 13px; color: var(--c-fg); border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
     .verif-table tbody td:first-child { padding: 14px 12px; color: var(--c-fg-muted); font-weight: 400; }
     .verif-table tbody tr:last-child td { border-bottom: none; }
     .verif-table tbody tr { transition: background .12s; }
@@ -47,26 +47,8 @@
     .verif-table .sel-nim { font-family: monospace; font-size: 12px; font-weight: 600; color: var(--c-primary); }
     .verif-table .sel-sub { font-size: 11px; color: var(--c-fg-muted); }
 
-    .tingkat-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 50px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
-    /* Navy solid, bukan kuning: kuning sudah jadi warna status "Menunggu Review"
-       di kolom sebelahnya, sehingga keduanya tampak sama. */
-    .tingkat-badge.internasional { background: var(--c-primary); color: #fff; }
-    .tingkat-badge.nasional { background: var(--c-primary-subtle); color: var(--c-primary); }
-    .tingkat-badge.regional { background: var(--c-sky-subtle); color: var(--c-sky); }
-    .tingkat-badge.universitas { background: var(--c-success-subtle); color: var(--c-success); }
-    .tingkat-badge.prodi { background: var(--c-primary-subtle); color: var(--c-primary); }
-
-    .claim-badge { font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
-    .claim-badge.belum { background: var(--c-bg); color: var(--c-fg-muted); }
-    .claim-badge.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .claim-badge.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
-    .claim-badge.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
+    /* Badge tingkat, reward, dan status keputusan: partials/sitkom-ui */
     .reward-mini { font-size: 11px; color: var(--c-fg-muted); margin-top: 4px; max-width: 220px; line-height: 1.4; }
-
-    .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
-    .detail-status-pill.disetujui { background: var(--c-success-subtle); color: var(--c-success); }
-    .detail-status-pill.ditolak { background: var(--c-error-subtle); color: var(--c-error); }
-    .detail-status-pill.diajukan { background: var(--c-warning-subtle); color: var(--c-warning); }
 
     /* MK pilihan mahasiswa (read-only) */
     .mk-readonly { display: flex; flex-wrap: wrap; gap: 6px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px; padding: 10px 12px; min-height: 42px; }
@@ -79,12 +61,6 @@
 
     .empty-state { text-align: center; padding: 60px 24px; color: var(--c-fg-muted); }
     .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: var(--c-border-strong); }
-
-    .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
-    .modal-header { border-bottom: 1px solid var(--c-border); padding: 18px 22px; }
-    .modal-header .modal-title { font-size: 16px; font-weight: 700; color: var(--c-fg); }
-    .modal-body { padding: 22px; }
-    .modal-footer { border-top: 1px solid var(--c-border); padding: 14px 22px; }
 
     /* Kolom data di sini memuat kuota, mata kuliah, dan penjelasan SK,
        jadi butuh lebih lega daripada halaman Verifikasi Prestasi */
@@ -99,6 +75,7 @@
 
 @include('manajemenmahasiswa::verifikasi.partials.tinjau-modal-styles')
 @include('manajemenmahasiswa::partials.filter-popover')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 <!-- Page Header -->
 <x-manajemenmahasiswa::ui.page-header bordered title="Klaim Prestasi">
@@ -106,30 +83,12 @@
         Tinjau pengajuan klaim prestasi mahasiswa, lalu setujui atau tolak konversinya menjadi nilai mata kuliah sesuai SK FT 774.
     @else
         Pantau pengajuan klaim prestasi mahasiswa untuk dikonversi menjadi nilai mata kuliah sesuai SK FT 774.
-        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:var(--c-primary-subtle); color:var(--c-primary); font-size:11px; font-weight:700; padding:4px 12px; border-radius:50px;">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            Mode Pemantauan — hanya melihat (tanpa tinjau/setujui/tolak)
-        </span>
     @endif
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
 
 <!-- Stat Cards (status klaim) — ringkasan angka saja, bukan tombol filter -->
@@ -414,13 +373,10 @@
         <div class="modal-content" style="overflow: hidden;">
             <form id="tinjauRewardForm" method="POST">
                 @csrf @method('PATCH')
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: var(--c-fg);">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-                        Tinjau Pengajuan Reward
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
+                <x-manajemenmahasiswa::ui.modal-header subtitle="Periksa sertifikat, kuota, dan mata kuliah sebelum memutuskan">
+                    <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></x-slot:icon>
+                    Tinjau Pengajuan Reward
+                </x-manajemenmahasiswa::ui.modal-header>
                 <div class="modal-body" style="padding: 0;">
                     <div class="tp-grid">
                         {{-- Kiri: sertifikat yang jadi dasar konversi nilai --}}
@@ -450,20 +406,18 @@
                             {{-- Kotak MK & textarea Catatan berbagi sisa tinggi panel
                                  sama rata, supaya tidak ada satu kotak yang terlalu besar --}}
                             <div style="margin-top: 14px; flex: 1 1 0; display: flex; flex-direction: column; min-height: 90px;">
-                                <label class="form-label fw-bold mb-1" style="font-size: 13px;">
-                                    Mata Kuliah yang Dinaikkan Nilainya
-                                </label>
+                                <label class="form-label-custom">Mata Kuliah yang Dinaikkan Nilainya</label>
                                 <div id="trMkView" class="mk-readonly" style="flex: 1 1 auto; align-content: flex-start;"></div>
                             </div>
 
                             <div id="trActions" style="flex: 1 1 0; flex-direction: column; padding-top: 18px;">
                                 <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <label class="form-label fw-bold mb-0" style="font-size: 12px;">Catatan <span style="font-weight: 400; color: var(--c-fg-muted);">(wajib untuk menolak)</span></label>
+                                    <label class="form-label-custom mb-0" for="trNote">Catatan <span style="text-transform: none; letter-spacing: normal; font-weight: 500;">(wajib untuk menolak)</span></label>
                                     <span class="text-muted" style="font-size: 11px;" id="charCount_tr">0 / 300 huruf</span>
                                 </div>
-                                <textarea name="reward_note" id="trNote" class="form-control" rows="3" maxlength="300"
+                                <textarea name="reward_note" id="trNote" class="form-control form-control-custom" rows="3" maxlength="300"
                                           placeholder="Catatan persetujuan / alasan penolakan"
-                                          style="border-radius: 10px; font-size: 13px; flex: 1 1 auto; min-height: 84px; resize: none;"
+                                          style="flex: 1 1 auto; min-height: 84px; resize: none;"
                                           oninput="document.getElementById('charCount_tr').innerText = this.value.length + ' / 300 huruf'; document.getElementById('trError').style.display = 'none';"></textarea>
                                 <div id="trError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                 <div class="tp-aksi">
@@ -489,9 +443,9 @@
                                             <button type="button" class="alasan-chip" data-alasan="Salah persetujuan">Salah persetujuan</button>
                                             <button type="button" class="alasan-chip" data-alasan="">Lainnya</button>
                                         </div>
-                                        <textarea id="trBatalDetail" class="form-control" rows="2" maxlength="270"
+                                        <textarea id="trBatalDetail" class="form-control form-control-custom" rows="2" maxlength="270"
                                                   placeholder="Keterangan tambahan (wajib bila memilih Lainnya)"
-                                                  style="border-radius: 10px; font-size: 13px; margin-top: 10px; resize: none;"></textarea>
+                                                  style="margin-top: 10px; resize: none;"></textarea>
                                         <div id="trBatalError" style="display: none; font-size: 12px; font-weight: 600; color: var(--c-error); margin-top: 6px;"></div>
                                         <div class="tp-aksi">
                                             <button type="button" id="trBatalKembaliBtn" class="mk-btn mk-btn--secondary">Kembali</button>

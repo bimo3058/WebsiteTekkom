@@ -10,19 +10,17 @@
         // Gambar tampil di galeri, dokumen di kartu lampiran — supaya tidak dobel.
         // Urutan galeri mengikuti relasi repoMulmed (orderBy id), jadi gambar
         // pertama adalah cover yang dipilih saat pengumuman dibuat.
-        $adalahGambar = fn ($file) => in_array(
-            strtolower(pathinfo($file->nama_file ?? '', PATHINFO_EXTENSION)),
-            ['jpg', 'jpeg', 'png', 'gif', 'webp']
-        );
-
-        $images   = $semuaFile->filter($adalahGambar)->values();
-        $lampiran = $semuaFile->reject($adalahGambar)->values();
+        // Penentuan "gambar" memakai RepoMulmed::isGambar() — sumber yang sama
+        // dengan tombol unduh di controller, jadi keduanya tidak bisa berbeda.
+        $images   = $semuaFile->filter->isGambar()->values();
+        $lampiran = $semuaFile->reject->isGambar()->values();
 
         $targetAudienceStr = match ($pengumuman->target_audience) {
             'all'       => 'Semua Mahasiswa / Alumni',
             'mahasiswa' => 'Mahasiswa Aktif',
             default     => ucfirst(str_replace('_', ' ', $pengumuman->target_audience)),
         };
+
 
         $tanggal = $pengumuman->published_at ?? $pengumuman->created_at;
     @endphp
@@ -80,9 +78,12 @@
                                     'judul'  => $pengumuman->judul,
                                 ])
 
-                                <div class="content-section">
-                                    {!! $pengumuman->konten !!}
-                                </div>
+                                {{-- Teks, atau pratinjau berkas kalau pengumumannya tanpa teks --}}
+                                @include('manajemenmahasiswa::pengumuman._detail-konten', [
+                                    'pengumuman' => $pengumuman,
+                                    'images'     => $images,
+                                    'lampiran'   => $lampiran,
+                                ])
                             </div>
                         </div>
                     </div>
@@ -148,6 +149,7 @@
                             </div>
                             <div class="dt-card-body">
                                 <div class="dt-actions">
+                                    {{-- Pin Pribadi --}}
                                     <form action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $pengumuman->id) }}" method="POST">
                                         @csrf
                                         <button type="submit" class="btn-action btn-pin-personal">
@@ -155,7 +157,7 @@
                                                 stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                                 <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
                                             </svg>
-                                            {{ $isPersonalPinned ? 'Hapus Pin Pribadi' : 'Pin untuk Saya' }}
+                                            {{ $isPersonalPinned ? 'Unpin Pribadi' : 'Pin Pribadi' }}
                                         </button>
                                     </form>
                                 </div>
@@ -163,14 +165,48 @@
                         </div>
 
                         {{-- ── Lampiran: berkas yang bisa diunduh ─────── --}}
-                        @if($lampiran->count() > 0)
+                        @if($lampiran->count() > 0 || $images->count() > 0)
                             <div class="dt-card">
                                 <div class="dt-card-head">
                                     <span class="dt-card-title">Lampiran File</span>
-                                    <span class="dt-card-count">{{ $lampiran->count() }} berkas</span>
+                                    <span class="dt-card-count">{{ $lampiran->count() + ($images->count() > 0 ? 1 : 0) }} berkas</span>
                                 </div>
                                 <div class="dt-card-body">
                                     <div class="lampiran-list">
+                                        {{-- Gambar galeri: satu file diunduh apa adanya,
+                                             lebih dari satu dibungkus ZIP oleh controller. --}}
+                                        @if($images->count() > 0)
+                                            <a href="{{ route('manajemenmahasiswa.pengumuman.gambar.download', $pengumuman->id) }}"
+                                                class="lampiran-item">
+                                                <div class="lampiran-icon">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                                    </svg>
+                                                </div>
+                                                <div class="lampiran-info">
+                                                    <div class="lampiran-name">
+                                                        @if($images->count() > 1)
+                                                            Gambar Pengumuman ({{ $images->count() }} foto)
+                                                        @else
+                                                            {{ $images->first()->nama_file ?? 'Gambar Pengumuman' }}
+                                                        @endif
+                                                    </div>
+                                                    <div class="lampiran-action">
+                                                        {{ $images->count() > 1 ? 'Unduh ZIP' : 'Unduh' }}
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                            stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                            <polyline points="7 10 12 15 17 10"></polyline>
+                                                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                                                        </svg>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        @endif
+
                                         @foreach($lampiran as $item)
                                             <a href="{{ route('manajemenmahasiswa.pengumuman.lampiran.download', $item->id) }}"
                                                 class="lampiran-item" download>
@@ -199,6 +235,10 @@
                                 </div>
                             </div>
                         @endif
+
+                        {{-- Mengisi sisa ruang kolom kanan di bawah Lampiran;
+                             markup & gaya dipakai bersama oleh kedua halaman detail. --}}
+                        @include('manajemenmahasiswa::pengumuman._detail-lainnya', ['lainnya' => $lainnya])
                     </aside>
 
                 </div>

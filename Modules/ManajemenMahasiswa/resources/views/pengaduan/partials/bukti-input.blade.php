@@ -10,7 +10,7 @@
     $maxKb = \Modules\ManajemenMahasiswa\Support\PengaduanBukti::MAX_KB;
     $maxMb = $maxKb / 1024;
 @endphp
-<label class="form-label-custom d-block" for="buktiInput">Bukti Dukung <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-opt">(Opsional)</span></label>
 {{-- Input bawaan disembunyikan (tetap bisa difokus keyboard): tampilannya selalu
      menulis "Tidak ada file yang dipilih", padahal berkas terpilih sudah didaftar di bawah. --}}
 <input type="file" class="bk-file-native" name="bukti[]" id="buktiInput" accept="application/pdf,.pdf" multiple>
@@ -18,21 +18,21 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
     Pilih Berkas PDF
 </label>
-<div class="form-text mt-2 fw-medium" style="color: #9ca3af; font-size: 13px;">
+<div class="pgd-help">
     Hanya berkas PDF, maks. {{ $maxFiles }} berkas &times; {{ $maxMb }} MB.
     Gabungkan foto/screenshot ke dalam PDF terlebih dahulu.
 </div>
 {{-- Hanya jalur konfidensial: di jalur reguler identitas pelapor memang sudah
      diketahui pengelola, jadi peringatan ini cuma menambah teks. --}}
 @if (!empty($confidential))
-    <div class="form-text mt-1 fw-medium" style="color: #b45309; font-size: 12.5px;">
+    <div class="pgd-help" style="color: var(--c-warning); font-weight: 600;">
         Pastikan nama atau NIM Anda tidak tertulis di dalam isi PDF.
     </div>
 @endif
 <div class="bk-list" id="buktiPreview"></div>
 <div class="bk-error" id="buktiError" role="alert"></div>
 @if ($pendingCount > 0)
-    <div class="form-text mt-3 mb-0 fw-semibold" style="color: #293C79; font-size: 13px;">
+    <div class="pgd-help" style="margin-top: 12px; color: var(--c-primary); font-weight: 600;">
         {{ $pendingCount }} berkas sudah terunggah. Pilih berkas baru hanya bila ingin menggantinya.
     </div>
     @include('manajemenmahasiswa::pengaduan.partials.bukti-items', ['items' => $buktiPendingItems])

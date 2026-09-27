@@ -116,35 +116,6 @@
 
             .search-icon svg { width: 18px; height: 18px; }
 
-            /* ── Sort Tabs ── */
-            .sort-tab {
-                display: inline-flex;
-                align-items: center;
-                gap: 4px;
-                padding: 5px 12px;
-                border-radius: 8px;
-                font-size: 12px;
-                font-weight: 600;
-                border: 1px solid #DFE1E7;
-                background: #fff;
-                color: #666D80;
-                cursor: pointer;
-                transition: all 0.15s;
-            }
-
-            .sort-tab:hover {
-                border-color: #0B266E;
-                color: #0B266E;
-                background: rgba(11,38,110,0.04);
-            }
-
-            .sort-tab.active {
-                background: #0B266E;
-                color: #fff;
-                border-color: #0B266E;
-            }
-
-            .sort-tab svg { width: 13px; height: 13px; }
 
             .post-actions .vote-pill {
                 background: #f1f5f9;
@@ -201,21 +172,6 @@
 
             .post-actions .action-btn:hover { background: #e2e8f0; color: #1e293b; }
 
-            .post-actions .action-btn.edit-btn {
-                background: #eff6ff;
-                color: #2563eb;
-                border: 1px solid #bfdbfe;
-            }
-
-            .post-actions .action-btn.edit-btn:hover { background: #dbeafe; }
-
-            .post-actions .action-btn.delete-btn {
-                background: #fef2f2;
-                color: #dc2626;
-                border: 1px solid #fecaca;
-            }
-
-            .post-actions .action-btn.delete-btn:hover { background: #fee2e2; }
 
             .tag-label {
                 font-size: 11px;
@@ -320,7 +276,6 @@
 
     {{-- Search & Filter --}}
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.my') }}" id="myForumFilterForm">
-        <input type="hidden" name="sort" id="mySortInput" value="{{ request('sort', 'terbaru') }}">
         @php $currentSort = request('sort', 'terbaru'); @endphp
 
         {{-- Row 1: Search + Buat Post --}}
@@ -337,7 +292,7 @@
             </a>
         </div>
 
-        {{-- Row 2: Category + Sort Tabs --}}
+        {{-- Row 2: Category + Sort Dropdown --}}
         <div class="d-flex gap-2 mb-4 flex-wrap align-items-center">
             <x-manajemenmahasiswa::ui.select name="kategori" size="md" :block="false" min-width="148"
                 class="flex-shrink-0"
@@ -348,14 +303,12 @@
                     <option value="{{ $key }}" {{ request('kategori') == $key ? 'selected' : '' }}>{{ $label }}</option>
                 @endforeach
             </x-manajemenmahasiswa::ui.select>
-            <button type="button" class="sort-tab {{ $currentSort === 'terbaru' ? 'active' : '' }}"
-                onclick="document.getElementById('mySortInput').value='terbaru'; document.getElementById('myForumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" /> Terbaru
-            </button>
-            <button type="button" class="sort-tab {{ $currentSort === 'top' ? 'active' : '' }}"
-                onclick="document.getElementById('mySortInput').value='top'; document.getElementById('myForumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="chevron-up" size="13" /> Top
-            </button>
+            <x-manajemenmahasiswa::ui.select name="sort" size="md" :block="false" min-width="130"
+                class="flex-shrink-0"
+                onchange="document.getElementById('myForumFilterForm').submit()">
+                <option value="terbaru" {{ $currentSort === 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                <option value="top"     {{ $currentSort === 'top'     ? 'selected' : '' }}>Top</option>
+            </x-manajemenmahasiswa::ui.select>
         </div>
     </form>
 
@@ -387,6 +340,33 @@
                                 <span style="font-size:11px; color:#808897; font-style:italic;">(diedit)</span>
                             @endif
                         </div>
+                    </div>
+                </div>
+
+                {{-- Three-dot menu --}}
+                <div style="position: relative;" x-data="{ open: false }" @click.stop>
+                    <button type="button" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm"
+                        @click.stop="open = !open" @click.outside="open = false"
+                        :aria-expanded="open" aria-haspopup="menu" title="Aksi lainnya">
+                        <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24">
+                            <circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/>
+                        </svg>
+                    </button>
+                    <div class="mk-menu" role="menu" x-show="open" x-cloak style="display:none; right:0; left:auto;"
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="opacity-0 scale-95"
+                        x-transition:enter-end="opacity-100 scale-100">
+                        <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}"
+                            class="mk-menu-item" role="menuitem">
+                            <x-manajemenmahasiswa::ui.icon name="file-01" size="14" /> Edit
+                        </a>
+                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
+                            onsubmit="return mkConfirmSubmit(this, 'Yakin ingin menghapus thread ini?', { title: 'Hapus Thread', confirmText: 'Ya, Hapus' })">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="mk-menu-item" role="menuitem">
+                                <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" /> Hapus
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -440,20 +420,6 @@
                     <x-manajemenmahasiswa::ui.icon name="message-dots-circle" size="16" />
                     {{ $thread->comments_count ?? $thread->comment_count }}
                 </button>
-
-                <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}"
-                    class="action-btn edit-btn" onclick="event.stopPropagation();">
-                    <x-manajemenmahasiswa::ui.icon name="file-01" size="16" /> Edit
-                </a>
-
-                <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
-                    style="display: inline;" onclick="event.stopPropagation();"
-                    onsubmit="return mkConfirmSubmit(this, 'Yakin ingin menghapus thread ini?', { title: 'Hapus Thread', confirmText: 'Ya, Hapus' })">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="action-btn delete-btn">
-                        <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" /> Hapus
-                    </button>
-                </form>
             </div>
         </div>
     @empty
@@ -485,7 +451,7 @@
         <script>
             document.querySelectorAll('.forum-card').forEach(card => {
                 card.addEventListener('click', function (e) {
-                    if (e.target.closest('.post-actions') || e.target.closest('form')) return;
+                    if (e.target.closest('.post-actions') || e.target.closest('[x-data]')) return;
                     window.location.href = `{{ url('manajemen-mahasiswa/forum') }}/${this.dataset.threadId}`;
                 });
             });

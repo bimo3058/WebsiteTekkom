@@ -103,42 +103,42 @@ class AnonPengaduanController extends Controller
             ->where('anon_token', $token)
             ->firstOrFail();
 
-        if ($pengaduan->status === Pengaduan::STATUS_DRAFT) {
-            $kategoriList = [
-                Pengaduan::KATEGORI_AKADEMIK_ADMINISTRASI => [
-                    'label' => 'Akademik dan Administrasi',
-                    'example' => 'KRS, transkrip, surat-menyurat, masalah administrasi akademik',
-                ],
-                Pengaduan::KATEGORI_PROSES_PEMBELAJARAN => [
-                    'label' => 'Proses Pembelajaran di Kelas',
-                    'example' => 'Metode mengajar, penilaian, materi tidak sesuai, jadwal perkuliahan',
-                ],
-                Pengaduan::KATEGORI_FASILITAS_KAMPUS => [
-                    'label' => 'Fasilitas Kampus (Sarana dan Prasarana)',
-                    'example' => 'AC/infocus rusak, kursi/kelas, kebersihan, lab/praktikum',
-                ],
-                Pengaduan::KATEGORI_LAYANAN_IT_SSO => [
-                    'label' => 'Layanan IT dan Akun SSO',
-                    'example' => 'SSO/login, email kampus, akses WiFi, LMS/portal bermasalah',
-                ],
-                Pengaduan::KATEGORI_KEGIATAN_KEMAHASISWAAN => [
-                    'label' => 'Kegiatan Kemahasiswaan',
-                    'example' => 'UKM/Himpunan, proposal kegiatan, perizinan, pendanaan',
-                ],
-                Pengaduan::KATEGORI_KEAMANAN_KETERTIBAN => [
-                    'label' => 'Keamanan dan Ketertiban Kampus',
-                    'example' => 'Parkir, kehilangan barang, keamanan area kampus, keributan',
-                ],
-                Pengaduan::KATEGORI_KESEHATAN_KONSELING => [
-                    'label' => 'Layanan Kesehatan dan Konseling Mahasiswa',
-                    'example' => 'Konseling, kesehatan mental, layanan klinik kampus, rujukan',
-                ],
-                Pengaduan::KATEGORI_TINDAKAN_TIDAK_MENYENANGKAN => [
-                    'label' => 'Tindakan Tidak Menyenangkan di Lingkungan Kampus',
-                    'example' => 'Perundungan, pelecehan, intimidasi, perlakuan tidak pantas',
-                ],
-            ];
+        $kategoriList = [
+            Pengaduan::KATEGORI_AKADEMIK_ADMINISTRASI => [
+                'label' => 'Akademik dan Administrasi',
+                'example' => 'KRS, transkrip, surat-menyurat, masalah administrasi akademik',
+            ],
+            Pengaduan::KATEGORI_PROSES_PEMBELAJARAN => [
+                'label' => 'Proses Pembelajaran di Kelas',
+                'example' => 'Metode mengajar, penilaian, materi tidak sesuai, jadwal perkuliahan',
+            ],
+            Pengaduan::KATEGORI_FASILITAS_KAMPUS => [
+                'label' => 'Fasilitas Kampus (Sarana dan Prasarana)',
+                'example' => 'AC/infocus rusak, kursi/kelas, kebersihan, lab/praktikum',
+            ],
+            Pengaduan::KATEGORI_LAYANAN_IT_SSO => [
+                'label' => 'Layanan IT dan Akun SSO',
+                'example' => 'SSO/login, email kampus, akses WiFi, LMS/portal bermasalah',
+            ],
+            Pengaduan::KATEGORI_KEGIATAN_KEMAHASISWAAN => [
+                'label' => 'Kegiatan Kemahasiswaan',
+                'example' => 'UKM/Himpunan, proposal kegiatan, perizinan, pendanaan',
+            ],
+            Pengaduan::KATEGORI_KEAMANAN_KETERTIBAN => [
+                'label' => 'Keamanan dan Ketertiban Kampus',
+                'example' => 'Parkir, kehilangan barang, keamanan area kampus, keributan',
+            ],
+            Pengaduan::KATEGORI_KESEHATAN_KONSELING => [
+                'label' => 'Layanan Kesehatan dan Konseling Mahasiswa',
+                'example' => 'Konseling, kesehatan mental, layanan klinik kampus, rujukan',
+            ],
+            Pengaduan::KATEGORI_TINDAKAN_TIDAK_MENYENANGKAN => [
+                'label' => 'Tindakan Tidak Menyenangkan di Lingkungan Kampus',
+                'example' => 'Perundungan, pelecehan, intimidasi, perlakuan tidak pantas',
+            ],
+        ];
 
+        if ($pengaduan->status === Pengaduan::STATUS_DRAFT) {
             $dosenList = User::whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
                 ->orderBy('name')
                 ->pluck('name')
@@ -156,7 +156,10 @@ class AnonPengaduanController extends Controller
             return view('manajemenmahasiswa::pengaduan.anon.create', compact('pengaduan', 'token', 'kategoriList', 'dosenList', 'frekuensiList', 'buktiPendingItems'));
         }
 
-        return view('manajemenmahasiswa::pengaduan.anon.track', compact('pengaduan'));
+        // Label resmi kategori, sama dengan yang tampil di daftar & detail staff.
+        $kategoriLabel = data_get($kategoriList, Pengaduan::normalizeKategori((string) $pengaduan->kategori) . '.label');
+
+        return view('manajemenmahasiswa::pengaduan.anon.track', compact('pengaduan', 'kategoriLabel'));
     }
 
     /**

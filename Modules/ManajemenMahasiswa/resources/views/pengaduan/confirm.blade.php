@@ -2,7 +2,8 @@
 
     @push('styles')
         <style>
-            .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+            /* Kotak .kf-box sudah punya bingkai sendiri; bingkai bawaan layout dimatikan. */
+            .main-wrapper { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
         </style>
     @endpush
 

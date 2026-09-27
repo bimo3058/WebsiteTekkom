@@ -511,27 +511,15 @@
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 
 {{-- Pesan gagal (mis. bukan pengelola kegiatan ini) — sebelumnya halaman ini hanya
      menampilkan pesan sukses, jadi redirect dengan error jatuh diam-diam. --}}
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
 <!-- Banner -->
 @if($kegiatan->banner)
-<div style="position:relative;width:100%;max-height:340px;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
+<div style="position:relative;width:100%;max-height:340px;flex-shrink:0;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
      onclick="openBannerLightbox()"
      onmouseover="this.style.transform='scale(1.005)'"
      onmouseout="this.style.transform='scale(1)'">
@@ -728,7 +716,6 @@
     </script>
     @endif
 </div>
-</div>
 
 <!-- Deskripsi -->
 <div class="detail-card">
@@ -907,7 +894,6 @@
             </form>
         </div>
     </div>
-</div>
 </div>
 @endif
 

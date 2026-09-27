@@ -175,11 +175,14 @@ class ForumController extends Controller
      */
     public function create()
     {
-        $user = Auth::user();
+        $user       = Auth::user();
         $categories = Thread::KATEGORI_LABELS;
-        $drafts = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('user_id', $user->id)->latest()->get();
+        $drafts     = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('user_id', $user->id)->latest()->get();
 
-        return view('manajemenmahasiswa::forum.create', compact('categories', 'user', 'drafts'));
+        // Pre-compute saved media for each draft so JS can render thumbnails
+        $draftMedia = $drafts->mapWithKeys(fn ($d) => [$d->id => $d->media_files ?? []])->all();
+
+        return view('manajemenmahasiswa::forum.create', compact('categories', 'user', 'drafts', 'draftMedia'));
     }
 
     /**
@@ -188,11 +191,18 @@ class ForumController extends Controller
     public function saveDraft(Request $request)
     {
         $request->validate([
-            'draft_id' => 'nullable|integer',
-            'judul' => 'nullable|string|max:255',
-            'kategori' => 'nullable|array',
-            'kategori.*' => 'string',
-            'konten' => 'nullable|string',
+            'draft_id'     => 'nullable|integer',
+            'judul'        => 'nullable|string|max:255',
+            'kategori'     => 'nullable|array',
+            'kategori.*'   => 'string',
+            'konten'       => 'nullable|string',
+            'media_files'  => 'nullable|array|max:5',
+            'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
+            'link_url'     => 'nullable|string|max:2000',
+            'poll_options' => 'nullable|array|max:6',
+            'poll_options.*' => 'nullable|string|max:150',
+            'poll_expires_at' => 'nullable|string',
+            'has_poll'     => 'nullable',
         ]);
 
         // Anti-spam: rate limit
@@ -204,6 +214,33 @@ class ForumController extends Controller
             ], 429);
         }
 
+        // Build poll_data from poll form fields
+        $pollData = null;
+        if ($request->boolean('has_poll')) {
+            $pollOptions = array_values(array_filter(
+                $request->input('poll_options', []),
+                fn($o) => trim($o ?? '') !== ''
+            ));
+            if (count($pollOptions) >= 2) {
+                $pollData = [
+                    'options'    => $pollOptions,
+                    'expires_at' => $request->input('poll_expires_at'),
+                ];
+            }
+        }
+
+        $draftFields = [
+            'judul'    => $request->input('judul'),
+            'kategori' => $request->input('kategori'),
+            'konten'   => $request->input('konten'),
+        ];
+
+        // Only include new columns if the migration has been run
+        if (\Illuminate\Support\Facades\Schema::hasColumn('mk_thread_drafts', 'link_url')) {
+            $draftFields['link_url']  = $request->input('link_url') ?: null;
+            $draftFields['poll_data'] = $pollData;
+        }
+
         $draftId = $request->input('draft_id');
 
         if ($draftId) {
@@ -212,11 +249,7 @@ class ForumController extends Controller
                 ->first();
 
             if ($draft) {
-                $draft->update([
-                    'judul' => $request->input('judul'),
-                    'kategori' => $request->input('kategori'),
-                    'konten' => $request->input('konten'),
-                ]);
+                $draft->update($draftFields);
             } else {
                 // Draft ID dikirim tapi tidak ditemukan — cek limit lalu buat baru (Fix #10)
                 $draftCount = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('user_id', Auth::id())->count();
@@ -226,12 +259,9 @@ class ForumController extends Controller
                         'message' => 'Maksimal 10 draf tersimpan. Hapus draf lama sebelum menyimpan yang baru.',
                     ], 422);
                 }
-                $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
-                    'user_id' => Auth::id(),
-                    'judul' => $request->input('judul'),
-                    'kategori' => $request->input('kategori'),
-                    'konten' => $request->input('konten'),
-                ]);
+                $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create(
+                    array_merge(['user_id' => Auth::id()], $draftFields)
+                );
             }
         } else {
             // Cek limit sebelum membuat draf baru (Fix #10)
@@ -242,18 +272,66 @@ class ForumController extends Controller
                     'message' => 'Maksimal 10 draf tersimpan. Hapus draf lama sebelum menyimpan yang baru.',
                 ], 422);
             }
-            $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
-                'user_id' => Auth::id(),
-                'judul' => $request->input('judul'),
-                'kategori' => $request->input('kategori'),
-                'konten' => $request->input('konten'),
-            ]);
+            $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create(
+                array_merge(['user_id' => Auth::id()], $draftFields)
+            );
         }
 
+        // Upload media files to Supabase and store metadata in draft
+        if ($request->hasFile('media_files')) {
+            // Delete old draft media from Supabase and RepoMulmed
+            if (!empty($draft->media_files)) {
+                foreach ($draft->media_files as $oldMedia) {
+                    try {
+                        $this->supabaseStorage->delete($oldMedia['path']);
+                        RepoMulmed::where('id', $oldMedia['id'])->delete();
+                    } catch (\Throwable $e) {
+                        \Log::warning('Failed to delete old draft media: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            $mediaFiles = [];
+            foreach ($request->file('media_files') as $file) {
+                $mime = $file->getMimeType();
+                $isImage = str_starts_with($mime, 'image/');
+                $folder = $isImage ? 'mk_mulmed/image' : 'mk_mulmed/video';
+
+                $path = $this->supabaseStorage->upload($file, $folder);
+                if ($path) {
+                    $url = $this->supabaseStorage->getPublicUrl($path);
+                    $repo = RepoMulmed::create([
+                        'nama_file' => $file->getClientOriginalName(),
+                        'path_file' => $path,
+                        'tipe_file' => $isImage ? RepoMulmed::TIPE_IMAGE : RepoMulmed::TIPE_VIDEO,
+                        'judul_file' => 'Forum Draft Media',
+                        'deskripsi_meta' => 'Draft forum mahasiswa',
+                        'visibility_status' => RepoMulmed::VISIBILITY_PUBLIC,
+                        'status_arsip' => RepoMulmed::ARSIP_AKTIF,
+                    ]);
+                    $mediaFiles[] = [
+                        'id'   => $repo->id,
+                        'url'  => $url,
+                        'type' => $isImage ? 'image' : 'video',
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                    ];
+                }
+            }
+            $draft->update(['media_files' => $mediaFiles]);
+        }
+
+        $fresh      = $draft->fresh();
+        $freshAttrs = $fresh->getAttributes();
         return response()->json([
-            'success' => true,
-            'draft_id' => $draft->id,
-            'message' => 'Draf berhasil disimpan.'
+            'success'   => true,
+            'draft_id'  => $draft->id,
+            'message'   => 'Draf berhasil disimpan.',
+            'media'     => $fresh->media_files ?? [],
+            'link_url'  => $freshAttrs['link_url'] ?? null,
+            'poll_data' => isset($freshAttrs['poll_data'])
+                ? (is_string($freshAttrs['poll_data']) ? json_decode($freshAttrs['poll_data'], true) : $freshAttrs['poll_data'])
+                : null,
         ]);
     }
 
@@ -262,9 +340,24 @@ class ForumController extends Controller
      */
     public function deleteDraft($id)
     {
-        \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('id', $id)
+        $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('id', $id)
             ->where('user_id', Auth::id())
-            ->delete();
+            ->first();
+
+        if ($draft) {
+            // Clean up media from Supabase and RepoMulmed before deleting the draft
+            if (!empty($draft->media_files)) {
+                foreach ($draft->media_files as $media) {
+                    try {
+                        $this->supabaseStorage->delete($media['path']);
+                        RepoMulmed::where('id', $media['id'])->delete();
+                    } catch (\Throwable $e) {
+                        \Log::warning('Failed to delete draft media on draft deletion: ' . $e->getMessage());
+                    }
+                }
+            }
+            $draft->delete();
+        }
 
         // Return JSON untuk AJAX, redirect untuk non-AJAX (Fix #12)
         if (request()->ajax()) {
@@ -286,6 +379,8 @@ class ForumController extends Controller
             'konten' => 'nullable|string',
             'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
+            'draft_media_ids' => 'nullable|array',
+            'draft_media_ids.*' => 'nullable|integer',
             'link_url' => 'nullable|string|max:2000',
             'has_poll' => 'nullable|boolean',
             'poll_options' => 'nullable|array|max:6',
@@ -341,6 +436,22 @@ class ForumController extends Controller
                     }
                 } else {
                     return back()->withErrors(['media_files' => 'Gagal mengupload gambar ke Supabase. Pastikan konfigurasi benar.'])->withInput();
+                }
+            }
+        } elseif (!empty($validated['draft_media_ids'])) {
+            // Gunakan media yang sudah diupload saat simpan draf
+            $draftMediaIds = array_filter($validated['draft_media_ids'], fn($v) => is_numeric($v) && $v > 0);
+            if (!empty($draftMediaIds)) {
+                $draftRepos = RepoMulmed::whereIn('id', $draftMediaIds)->get()->keyBy('id');
+                foreach ($draftMediaIds as $mediaId) {
+                    $repo = $draftRepos[$mediaId] ?? null;
+                    if (!$repo) continue;
+                    $url = $this->supabaseStorage->getPublicUrl($repo->path_file);
+                    if ($repo->tipe_file === RepoMulmed::TIPE_IMAGE) {
+                        $konten .= '<img src="' . $url . '" alt="Media Post" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">';
+                    } else {
+                        $konten .= '<video width="100%" controls style="border-radius: 8px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><source src="' . $url . '" type="video/mp4"></video>';
+                    }
                 }
             }
         }
@@ -622,6 +733,8 @@ class ForumController extends Controller
             'link_url' => 'nullable|string|max:2000',
             'remove_media' => 'nullable|array',
             'remove_media.*' => 'string',
+            'media_order' => 'nullable|array',
+            'media_order.*' => 'string',
             // Poll fields
             'has_poll' => 'nullable|boolean',
             'poll_options' => 'nullable|array|min:2|max:6',
@@ -651,11 +764,17 @@ class ForumController extends Controller
         // Rebuild konten HTML
         $konten = '';
 
-        // 1) Pertahankan media existing yang tidak dihapus
-        foreach ($existingMedia as $media) {
-            if (in_array($media['url'], $removeMedia)) {
-                continue;
-            }
+        // 1) Pertahankan media existing dalam urutan yang dikirim oleh user (media_order[])
+        $mediaOrder   = $request->input('media_order', []);
+        $existingByUrl = collect($existingMedia)->keyBy('url');
+
+        $orderedExisting = !empty($mediaOrder)
+            ? collect($mediaOrder)
+                ->filter(fn($url) => isset($existingByUrl[$url]) && !in_array($url, $removeMedia))
+                ->map(fn($url) => $existingByUrl[$url])
+            : collect($existingMedia)->filter(fn($m) => !in_array($m['url'], $removeMedia));
+
+        foreach ($orderedExisting as $media) {
             if ($media['type'] === 'image') {
                 $konten .= '<img src="' . $media['url'] . '" alt="Media Post" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">';
             } elseif ($media['type'] === 'video') {

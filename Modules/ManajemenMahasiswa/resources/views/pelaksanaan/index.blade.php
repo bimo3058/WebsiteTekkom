@@ -27,10 +27,7 @@
     .card-meta span { display:inline-flex;align-items:center;gap:4px; }
 
     /* Status */
-    .status-badge { display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700; }
-    .status-disetujui { background:var(--c-primary-subtle);color:var(--c-primary); }
-    .status-berlangsung { background:var(--c-sky-subtle);color:var(--c-sky); }
-    .status-selesai { background:var(--c-surface-muted);color:var(--c-fg-sec); }
+    /* Badge status: partials/sitkom-ui */
     .empty-state { text-align:center;padding:50px 20px;color:var(--c-fg-muted); }
     .empty-state h5 { color:var(--c-fg-muted);font-weight:600;margin-bottom:4px; }
 </style>
@@ -39,11 +36,7 @@
     title="Pelaksanaan Kegiatan"
     subtitle="Proker yang sudah disetujui — lengkapi data pelaksanaan di sini" />
 
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
-        {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
 
 
 {{-- Filter --}}
@@ -69,7 +62,7 @@
                 || request()->filled('search');
         @endphp
         <div class="mk-kegiatan-filter-controls">
-            <div class="filter-pop filter-pop--md" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
                 <button type="button" class="filter-pop-btn"
                         @click="filterOpen = !filterOpen"
                         :class="{ 'is-open': filterOpen }">
@@ -177,7 +170,7 @@
     ])
 @else
     <div class="empty-state">
-        <div style="font-size:48px;margin-bottom:12px;opacity:0.5;">&#127939;</div>
+        <div style="display:flex;justify-content:center;margin-bottom:12px;color:var(--c-border);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line><path d="m9 16 2 2 4-4"></path></svg></div>
         <h5>Belum ada proker yang siap dilaksanakan</h5>
         <p>Proker yang sudah disetujui admin akan muncul di sini</p>
         <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="mk-btn mk-btn--primary mt-2">

@@ -149,4 +149,34 @@ class Pengaduan extends Model
             default                    => '',
         };
     }
+
+    /**
+     * Sudah ditandai tercatat. Status lama selesai/didelegasikan ikut dihitung
+     * tercatat supaya tampilan dan tombol batalkan-tercatat konsisten.
+     */
+    public function isTercatat(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_TERCATAT,
+            self::STATUS_SELESAI,
+            self::STATUS_DIDELEGASIKAN,
+        ], true);
+    }
+
+    /**
+     * Badge status untuk daftar, detail, dan halaman lacak. Beda dengan
+     * statusLabel(), status 'dibaca' tetap punya label.
+     *
+     * @return array{tone: string, label: string}  tone = kelas .pgd-status
+     */
+    public function statusBadge(): array
+    {
+        if ($this->isTercatat()) {
+            return ['tone' => 'tercatat', 'label' => 'Tercatat'];
+        }
+
+        return $this->status === self::STATUS_BARU
+            ? ['tone' => 'baru', 'label' => 'Baru']
+            : ['tone' => 'dibaca', 'label' => 'Dibaca'];
+    }
 }

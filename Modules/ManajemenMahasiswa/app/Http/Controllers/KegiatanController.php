@@ -25,6 +25,7 @@ class KegiatanController extends Controller
 {
     /** Batas jumlah foto & dokumen yang boleh tersimpan pada satu kegiatan. */
     private const MAKS_FILE = 10;
+    private const MAKS_DOKUMEN = 2;
 
     public function __construct(
         private RepoMulmedService $repoMulmedService,
@@ -193,7 +194,7 @@ class KegiatanController extends Controller
             'jam_selesai'         => $jam['selesai'],
             'lokasi'              => 'nullable|string|max:255',
             // Banner wajib diisi saat menambah kegiatan langsung ke Laporan & Arsip (subbab 3).
-            'banner'              => 'required|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'banner'              => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_ids'   => 'nullable|array',
@@ -204,9 +205,9 @@ class KegiatanController extends Controller
             'panitia_peran.*'     => 'nullable|string|max:255',
             'target_peserta'      => 'nullable|integer|min:1',
             'foto_kegiatan'       => 'nullable|array|max:10',
-            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:10240',
-            'dokumen_kegiatan'    => 'nullable|array|max:10',
-            'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+            'dokumen_kegiatan'    => 'nullable|array|max:' . self::MAKS_DOKUMEN,
+            'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:5120',
         ], $this->pesanValidasi());
 
         $validated['status'] = 'selesai';
@@ -327,7 +328,7 @@ class KegiatanController extends Controller
             'lokasi'              => 'nullable|string|max:255',
             // Banner wajib ada: kalau kegiatan belum punya banner, unggahan baru diwajibkan;
             // kalau sudah punya, boleh dikosongkan (banner lama dipertahankan).
-            'banner'              => ($kegiatan->banner ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'banner'              => ($kegiatan->banner ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:5120',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_ids'   => 'nullable|array',
@@ -338,9 +339,9 @@ class KegiatanController extends Controller
             'panitia_peran.*'     => 'nullable|string|max:255',
             'target_peserta'      => 'nullable|integer|min:1',
             'foto_kegiatan'       => 'nullable|array|max:10',
-            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:10240',
-            'dokumen_kegiatan'    => 'nullable|array|max:10',
-            'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+            'dokumen_kegiatan'    => 'nullable|array|max:' . self::MAKS_DOKUMEN,
+            'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:5120',
             'hapus_file'          => 'nullable|array',
             'hapus_file.*'        => 'integer|exists:mk_repo_mulmed,id',
         ], $this->pesanValidasi());
@@ -539,8 +540,8 @@ class KegiatanController extends Controller
         }
 
         $totalDokumen = $sisaFileLama('document') + count($request->file('dokumen_kegiatan', []));
-        if ($totalDokumen > self::MAKS_FILE) {
-            $pesan['dokumen_kegiatan'] = 'Total dokumen kegiatan maksimal ' . self::MAKS_FILE
+        if ($totalDokumen > self::MAKS_DOKUMEN) {
+            $pesan['dokumen_kegiatan'] = 'Total dokumen kegiatan maksimal ' . self::MAKS_DOKUMEN
                 . ", sedangkan unggahan ini membuatnya menjadi {$totalDokumen}. Hapus dulu sebagian dokumen lama.";
         }
 

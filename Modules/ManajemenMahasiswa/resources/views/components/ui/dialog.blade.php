@@ -74,7 +74,7 @@
 
     .mkd-head {
         display: flex;
-        align-items: flex-start;
+        align-items: center;
         gap: 12px;
         padding: 18px 20px;
         border-bottom: 1px solid var(--c-border, #DFE1E7);

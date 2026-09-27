@@ -95,16 +95,8 @@
     </x-slot:actions>
 </x-manajemenmahasiswa::ui.page-header>
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-success-subtle);color:var(--c-success);font-weight:500;font-size:14px;">
-    {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
-@if(session('error'))
-<div class="alert alert-danger alert-dismissible fade show" style="border-radius:10px;border:none;background:var(--c-error-subtle);color:var(--c-error);font-weight:500;font-size:14px;">
-    {{ session('error') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
 {{-- Badan detail dipakai bersama dengan Pelaksanaan; $showDokumentasi = false --}}
 @include('manajemenmahasiswa::partials.kegiatan-detail._body', ['showDokumentasi' => false])
@@ -163,7 +155,7 @@
 @if($canDelete && $proker->status === 'draft')
 <div id="deleteModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-        <div style="width:56px;height:56px;border-radius:50%;background:var(--c-error-subtle);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">&#128465;</div>
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--c-error-subtle);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--c-error);"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></div>
         <h5 class="fw-bold mb-2">Hapus Proker?</h5>
         <p style="color:var(--c-fg-muted);font-size:14px;">Data proker "<strong>{{ $proker->judul }}</strong>" akan dihapus permanen.</p>
         <div class="d-flex gap-2 justify-content-center mt-3">

@@ -12,9 +12,9 @@
      halaman karena isi <select>-nya berbeda-beda.
 
      Ukuran tombol mengikuti kolom pencarian di sebelahnya:
-       (default)          34px — toolbar dalam kartu tabel (Direktori, Verifikasi)
+       (default)          34px — toolbar dalam kartu tabel (Direktori, Verifikasi, Pengaduan)
        .filter-pop--md    38px — baris pencarian bab Kegiatan
-       .filter-pop--lg    44px — toolbar Pengaduan --}}
+       .filter-pop--lg    44px — saat ini tidak dipakai --}}
 <style>
     .filter-pop {
         --fp-h: 34px;

@@ -2,12 +2,6 @@
 
 @section('title', 'Konfirmasi Pengaduan Konfidensial')
 
-@push('styles')
-    <style>
-        .anon-container { max-width: 1040px; }
-    </style>
-@endpush
-
 @section('content')
     {{-- Tampilan konfirmasi dipakai bersama jalur Reguler & Konfidensial. --}}
     @include('manajemenmahasiswa::pengaduan.partials.konfirmasi', [

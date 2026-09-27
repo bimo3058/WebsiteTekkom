@@ -60,6 +60,10 @@
        menyisakan ruang kosong saat isinya pendek; sidebar tetap menumpuk
        kartunya dari atas. `min-height` bisa dipakai karena .dash-box-body
        tingginya pasti (flex item dengan flex:1 di dalam .dash-box). */
+    /* Dua kolom disamakan tingginya (align-items: stretch) supaya kartu artikel
+       ikut memanjang ketika sidebar lebih tinggi — tidak menyisakan celah di
+       bawah artikel. min-height 100% membuat grid mengisi tinggi kotak saat
+       isinya pendek. */
     .dt-layout {
         display: grid; grid-template-columns: minmax(0, 1fr) 300px;
         gap: 10px; align-items: stretch; min-height: 100%;
@@ -88,6 +92,71 @@
         border-radius: 9999px; padding: 1px 8px; margin-left: auto;
     }
     .dt-card-body { padding: 16px; }
+
+    /* ── Pengumuman Lainnya ─────────────────────────────────────────────
+       Kartu terakhir di kolom kanan, mengisi ruang di bawah Lampiran.
+       Memakai .dt-card yang sama dengan kartu Informasi/Aksi/Lampiran, jadi
+       border, radius, dan bayangannya seragam — yang ditambahkan di sini
+       hanya isinya. Jarak antarkartu sudah diurus `.dt-card + .dt-card`. */
+    .dt-lainnya-all {
+        margin-left: auto;
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 11px; font-weight: 600;
+        color: var(--c-primary); text-decoration: none;
+        transition: color .15s;
+    }
+    .dt-lainnya-all:hover { color: var(--c-primary-hover); }
+
+    /* Satu kolom: kartunya tinggal di sidebar 300px (ruang efektif ~266px),
+       jadi grid auto-fill 240px tidak lagi relevan dan berisiko meluber. */
+    .dt-lainnya-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .dt-lainnya-item {
+        display: flex; align-items: center; gap: 10px;
+        padding: 10px 12px; background: #fff;
+        border: 1px solid var(--c-border); border-radius: 10px;
+        text-decoration: none; color: var(--c-fg);
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .dt-lainnya-item:hover {
+        border-color: var(--c-primary-border);
+        box-shadow: 0 4px 14px rgba(11, 38, 110, 0.07);
+        color: var(--c-fg);
+    }
+
+    .dt-lainnya-thumb {
+        width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0;
+        background: var(--c-bg); border: 1px solid var(--c-border);
+        color: var(--c-border-strong);
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+    }
+    .dt-lainnya-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    .dt-lainnya-info { flex: 1; min-width: 0; }
+
+    /* Dua baris lalu dipotong: judul pengumuman panjangnya tidak menentu,
+       tanpa batas ini tinggi tiap kartu jadi tidak rata. */
+    .dt-lainnya-judul {
+        font-size: 13px; font-weight: 600; color: var(--c-fg); line-height: 1.35;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .dt-lainnya-meta {
+        display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+        margin-top: 3px; font-size: 11px; color: var(--c-fg-muted);
+    }
+    .dt-lainnya-pin {
+        display: inline-flex; align-items: center; gap: 3px;
+        padding: 1px 6px; border-radius: 9999px;
+        background: var(--c-warning-subtle); color: var(--c-warning);
+        font-weight: 700;
+    }
 
     /* ── Judul artikel ──────────────────────────────────────────────── */
     .dt-title {

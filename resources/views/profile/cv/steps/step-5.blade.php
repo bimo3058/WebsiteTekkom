@@ -37,12 +37,10 @@
                 </div>
                 <div class="w-full md:w-40">
                     <label class="form-label" style="font-size:11px">Level</label>
-                    <select x-model="newSkill.level" class="form-control">
-                        <option>Beginner</option>
-                        <option>Intermediate</option>
-                        <option>Advanced</option>
-                        <option>Expert</option>
-                    </select>
+                    @include('profile.cv.partials._pilihan', [
+                        'model' => 'newSkill.level',
+                        'options' => ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
+                    ])
                 </div>
                 <button @click="addSkill()" class="btn-primary text-xs w-full md:w-auto" style="height: 38px;">
                     Tambah

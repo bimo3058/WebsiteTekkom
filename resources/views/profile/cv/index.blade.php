@@ -211,7 +211,7 @@
                 newOrg: { organisasi: '', peran: '', tahun_mulai: '', tahun_selesai: '', deskripsi: '' },
                 newProj: { nama: '', peran: '', tahun: '', deskripsi: '', tautan: '' },
                 newCert: { nama: '', penerbit: '', tahun: '' },
-                newLang: { nama: '', level: 'Menengah', skor: '' },
+                newLang: { nama: '', level: 'Menengah (Intermediate)', skor: '' },
                 newSkill: { nama: '', level: 'Beginner' },
 
                 init() {
@@ -411,7 +411,7 @@
                 addLang() {
                     if (!this.newLang.nama || !this.newLang.level) return;
                     this.data.cv.bahasa.push({ ...this.newLang });
-                    this.newLang = { nama: '', level: 'Menengah', skor: '' };
+                    this.newLang = { nama: '', level: 'Menengah (Intermediate)', skor: '' };
                 },
                 removeLang(index) {
                     this.data.cv.bahasa.splice(index, 1);

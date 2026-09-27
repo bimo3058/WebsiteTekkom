@@ -17,9 +17,9 @@
     $bolehAturAkses, $calonPengelola, $pengelolaTerpilih, $namaPembuat — semuanya
     dari PengelolaKegiatanService::dataForm().
 
-    _scripts.blade.php butuh $existingPanitia dan $existingDosen — keduanya
-    disiapkan controller, karena @include punya scope sendiri (variabel yang
-    dibuat di partial ini TIDAK terbawa ke partial script).
+    Ketua Pelaksana, Dosen Pendamping, dan Panitia dirender _personel.blade.php
+    (kotak pilih Alpine) dari $existingPanitia dan $existingDosen — keduanya
+    disiapkan controller.
 --}}
 @php
     $showDokumentasi = $showDokumentasi ?? false;
@@ -43,16 +43,7 @@
 </x-manajemenmahasiswa::ui.page-header>
 
 <!-- Validation Errors -->
-@if($errors->any())
-    <div class="alert alert-danger" style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error); font-size: 14px;">
-        <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Terjadi kesalahan:</strong>
-        <ul class="mb-0 mt-1">
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+<x-manajemenmahasiswa::ui.flash type="error" title="Terjadi Kesalahan" :messages="$errors->all()" class="mb-3" />
 
 <form action="{{ $formAction }}" method="POST" enctype="multipart/form-data">
     @csrf
@@ -155,124 +146,18 @@
         </div>
     </div>
 
-    @php
-        $ketuaNama = '';
-        if ($proker->ketua_pelaksana_id) {
-            $ketua = $proker->ketuaPelaksana;
-            $ketuaNama = $ketua?->user?->name ?? '';
-        }
-    @endphp
-
     <!-- Personel -->
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Personel Kegiatan</div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <label class="form-label-custom">Ketua Pelaksana</label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId"
-                           value="{{ old('ketua_pelaksana_id', $proker->ketua_pelaksana_id) }}">
-                    <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                           placeholder="Cari nama mahasiswa..."
-                           value="{{ $ketuaNama }}"
-                           autocomplete="off"
-                           onfocus="showDropdown('ketuaPelaksanaDropdown')"
-                           oninput="filterOptions('ketuaPelaksanaSearch', 'ketuaPelaksanaDropdown')">
-                    <div class="search-select-dropdown" id="ketuaPelaksanaDropdown">
-                        @foreach($mahasiswaList as $mhs)
-                            <div class="search-select-option"
-                                 onclick="selectOption('ketuaPelaksanaId', '{{ $mhs->id }}', 'ketuaPelaksanaSearch', '{{ $mhs->user->name ?? 'N/A' }}', 'ketuaPelaksanaDropdown')"
-                                 data-name="{{ strtolower($mhs->user->name ?? '') }}"
-                                 data-nim="{{ $mhs->student_number }}">
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-
-            {{-- ── Dosen Pendamping (Multi-Select) ── --}}
-            <div class="col-md-6">
-                <label class="form-label-custom">
-                    Dosen Pendamping <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                    <span class="panitia-count-badge" id="dosenCountBadge" style="display:none;">0 dipilih</span>
-                </label>
-                {{-- Memakai class .panitia-* agar tampilannya identik dengan multi-select Panitia --}}
-                <div class="panitia-select-wrapper" id="dosenSelectWrapper">
-                    <div class="panitia-chips-container" id="dosenChipsContainer" onclick="focusDosenSearch()">
-                        <input type="text" class="panitia-search-input" id="dosenSearchInput"
-                               placeholder="Cari dan tambah dosen pendamping..."
-                               autocomplete="off"
-                               oninput="filterDosenOptions(this.value)"
-                               onfocus="showDosenDropdown()">
-                    </div>
-                    <div class="panitia-dropdown" id="dosenDropdown">
-                        @foreach($dosenList as $dosen)
-                            <div class="panitia-option"
-                                 data-id="{{ $dosen->id }}"
-                                 data-name="{{ $dosen->user->name ?? 'N/A' }}"
-                                 data-name-lower="{{ strtolower($dosen->user->name ?? '') }}"
-                                 data-nip="{{ $dosen->employee_number }}"
-                                 onclick="toggleDosen(this)">
-                                <div>
-                                    {{ $dosen->user->name ?? 'N/A' }}
-                                    <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
-                                </div>
-                                <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                            </div>
-                        @endforeach
-                        <div class="panitia-empty" id="dosenEmpty" style="display:none;">Tidak ada dosen yang cocok</div>
-                    </div>
-                    {{-- Hidden inputs di-generate JS --}}
-                    <div id="dosenHiddenInputs"></div>
-                </div>
-                <div class="checkbox-hint">Bisa lebih dari satu. Ketik nama atau NIP untuk mencari.</div>
-            </div>
-        </div>
-
-        {{-- ── Panitia Kegiatan (Multi-Select) ── --}}
-        <div class="mb-1">
-            <label class="form-label-custom">
-                Panitia Kegiatan
-                <span style="color: var(--c-fg-muted); font-weight: 400;">(opsional)</span>
-                <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
-            </label>
-            <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
-                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
-                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
-                           placeholder="Cari dan tambah panitia..."
-                           autocomplete="off"
-                           oninput="filterPanitiaOptions(this.value)"
-                           onfocus="showPanitiaDropdown()">
-                </div>
-                <div class="panitia-dropdown" id="panitiaDropdown">
-                    @foreach($mahasiswaList as $mhs)
-                        <div class="panitia-option"
-                             data-id="{{ $mhs->id }}"
-                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
-                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
-                             data-nim="{{ $mhs->student_number }}"
-                             data-angkatan="{{ $mhs->cohort_year }}"
-                             onclick="togglePanitia(this)">
-                            <div>
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
-                            </div>
-                            <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
-                        </div>
-                    @endforeach
-                    <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
-                </div>
-                {{-- Hidden inputs di-generate JS --}}
-                <div id="panitiaHiddenInputs"></div>
-            </div>
-            <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
-
-            {{-- Container for Jabatan Inputs --}}
-            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
-        </div>
+        @include('manajemenmahasiswa::partials.kegiatan-form._personel', [
+            'ketuaId'          => old('ketua_pelaksana_id', $proker->ketua_pelaksana_id),
+            'dosenTerpilih'    => $existingDosen,
+            'panitiaTerpilih'  => old('panitia_ids') !== null
+                ? $mahasiswaList->whereIn('id', old('panitia_ids'))
+                : $existingPanitia,
+            'panitiaPeranLama' => old('panitia_peran', []),
+        ])
     </div>
 
     {{-- Akses Kelola — hanya dirender untuk pemilik kegiatan & override --}}
@@ -326,7 +211,7 @@
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik untuk upload banner {{ $proker->banner ? 'baru' : 'kegiatan' }}</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: var(--c-primary); font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
+            <small>Format: JPG, PNG, WebP • Maks: 5MB<br><span style="color: var(--c-primary); font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
         </div>
         <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
                style="display: none;" onchange="previewBanner(this)">
@@ -355,7 +240,7 @@
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik atau drag & drop foto baru ke sini</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB per file</small>
+            <small>Format: JPG, PNG, WebP • Maks: 5MB per file</small>
         </div>
         <input type="file" name="foto_kegiatan[]" id="fotoInput" accept="image/jpeg,image/png,image/webp"
                multiple style="display: none;" onchange="handleFotoSelect(this)">
@@ -364,7 +249,7 @@
 
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: var(--c-fg-muted); font-weight: 400; font-size: 13px;">(opsional, maks 2 dokumen)</span></div>
 
         @if($existingDokumen->count() > 0)
             <div class="existing-file-label">Dokumen yang sudah diupload</div>
@@ -390,7 +275,7 @@
         <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
             <p>Klik atau drag & drop dokumen baru ke sini</p>
-            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 10MB per file</small>
+            <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 5MB per file</small>
         </div>
         <input type="file" name="dokumen_kegiatan[]" id="dokumenInput"
                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
