@@ -2,6 +2,7 @@
 
 @include('manajemenmahasiswa::direktori.partials.palette')
 @include('manajemenmahasiswa::partials.card-frame')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 @push('styles')
 <style>
@@ -9,36 +10,6 @@
        halaman ini sama dengan halaman Direktori Mahasiswa: konten di dalam kotak putih
        di atas latar abu, seperti dashboard Super Admin. */
 
-    .page-header-profil {
-        background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-primary-hover) 100%);
-        border-radius: 16px;
-        padding: 28px 32px;
-        margin-bottom: 24px;
-        color: #fff;
-        position: relative;
-        overflow: hidden;
-    }
-    .page-header-profil::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 300px;
-        height: 300px;
-        border-radius: 50%;
-        background: rgba(255,255,255,0.06);
-    }
-    .page-header-profil h3 {
-        font-size: 20px;
-        font-weight: 700;
-        margin: 0 0 4px;
-    }
-    .page-header-profil p {
-        font-size: 14px;
-        color: rgba(255,255,255,0.8);
-        margin: 0;
-    }
-    /* Tombol Download CV di atas banner navy — sama dengan Detail Mahasiswa & Detail Alumni */
     .card-section {
         background: #fff;
         border-radius: 14px;
@@ -90,20 +61,27 @@
         gap: 8px;
         flex-wrap: wrap;
     }
-    .identity-badges .badge {
-        font-size: 12px;
-        font-weight: 600;
-        padding: 4px 12px;
-        border-radius: 6px;
+    /* Bentuk badge Role SITKOM (components/ui/role-badge), warna netral */
+    .identity-chip {
+        display: inline-block;
+        padding: 3px 12px;
+        border: 1px solid var(--c-border);
+        border-radius: 9999px;
         background: var(--c-grey-50);
         color: var(--c-fg-sec);
+        font-size: 11px;
+        font-weight: 600;
+        line-height: 1.4;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        white-space: nowrap;
     }
     .identity-note {
         margin-top: 20px;
         padding-top: 20px;
         border-top: 1px dashed var(--c-border);
         font-size: 12px;
-        color: var(--c-fg-placeholder);
+        color: var(--c-fg-muted);
         line-height: 1.6;
     }
 
@@ -114,69 +92,27 @@
         margin-bottom: 20px;
         padding-bottom: 12px;
     }
-    .form-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--c-fg-sec);
-        margin-bottom: 6px;
-    }
-    /* Latar input putih, sama dengan form Edit Mahasiswa & kotak input global */
-    .form-control-custom,
-    .form-select-custom {
-        border: 1.5px solid var(--c-border);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        color: var(--c-fg);
-        background: #ffffff;
-        transition: all 0.2s;
-        width: 100%;
-    }
-    .form-control-custom:focus,
-    .form-select-custom:focus {
-        border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px var(--c-primary-subtle);
-        background: #ffffff;
-        outline: none;
-    }
+    /* Label & kotak isian: partials/sitkom-ui (gaya Edit User SITKOM) */
     /* Pesan validasi Bootstrap memakai merah bawaannya; disamakan dengan merah palet global */
-    .form-control-custom.is-invalid, .form-select-custom.is-invalid { border-color: var(--c-error); }
-    .form-control-custom.is-invalid:focus, .form-select-custom.is-invalid:focus { box-shadow: 0 0 0 3px var(--c-error-subtle); }
     .invalid-feedback { color: var(--c-error); }
 </style>
 @endpush
 
-<!-- Flash Messages -->
-@if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-success-subtle); color: var(--c-success); font-weight: 500; font-size: 14px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-@if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert"
-         style="border-radius: 10px; border: none; background: var(--c-error-subtle); color: var(--c-error-200); font-weight: 500; font-size: 14px;">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-@endif
-
-<div class="page-header-profil d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div>
-        <h3><span class="material-symbols-outlined" style="vertical-align: text-bottom; margin-right: 6px;">edit_document</span> Profil Karir Alumni</h3>
-        <p>Perbarui data pekerjaan dan karir Anda. Data ini digunakan untuk akreditasi dan jejaring alumni.</p>
-    </div>
-    <div>
+<x-manajemenmahasiswa::ui.page-header bordered
+    title="Profil Karir Alumni"
+    subtitle="Perbarui data pekerjaan dan karir Anda. Data ini digunakan untuk akreditasi dan jejaring alumni.">
+    <x-slot:actions>
         <a href="{{ route('manajemenmahasiswa.direktori.alumni.profil.cv') }}" target="_blank"
            class="mk-btn mk-btn--secondary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             Download CV
         </a>
-    </div>
-</div>
+    </x-slot:actions>
+</x-manajemenmahasiswa::ui.page-header>
+
+<!-- Flash Messages -->
+<x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" class="mb-3" />
+<x-manajemenmahasiswa::ui.flash type="error" :message="session('error')" class="mb-3" />
 
 <div class="row g-4">
     <!-- Identity Card -->
@@ -193,8 +129,8 @@
             <div class="identity-nim">{{ $alumni->nim }}</div>
 
             <div class="identity-badges">
-                <span class="badge">Angkatan {{ $alumni->angkatan }}</span>
-                <span class="badge">Lulus {{ $alumni->tahun_lulus }}</span>
+                <span class="identity-chip">Angkatan {{ $alumni->angkatan }}</span>
+                <span class="identity-chip">Lulus {{ $alumni->tahun_lulus }}</span>
             </div>
 
             <div class="identity-note">
@@ -214,7 +150,7 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label">Status Karir</label>
+                        <label class="form-label-custom">Status Karir</label>
                         <x-manajemenmahasiswa::ui.select name="status_karir" size="md" :invalid="$errors->has('status_karir')">
                             <option value="">— Pilih Status —</option>
                             @foreach(\Modules\ManajemenMahasiswa\Models\Alumni::STATUS_LABELS as $key => $label)
@@ -224,9 +160,13 @@
                         @error('status_karir') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
-                    <div id="karir-detail-fields">
+                    {{-- Pembungkus yang disembunyikan JS saat status "Belum Terdata".
+                         Ia sendiri harus col-12 berisi .row — kalau tidak, kolom di
+                         dalamnya kehilangan jarak & lebar grid. --}}
+                    <div id="karir-detail-fields" class="col-12">
+                    <div class="row g-3">
                     <div class="col-md-6" id="field-bidang-industri">
-                        <label class="form-label">Bidang Industri</label>
+                        <label class="form-label-custom">Bidang Industri</label>
                         <x-manajemenmahasiswa::ui.select name="bidang_industri" size="md" :invalid="$errors->has('bidang_industri')">
                             <option value="">— Pilih Bidang —</option>
                             @foreach(\Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST as $key => $label)
@@ -237,7 +177,7 @@
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label" id="label-perusahaan">Perusahaan / Instansi / Nama Usaha</label>
+                        <label class="form-label-custom" id="label-perusahaan">Perusahaan / Instansi / Nama Usaha</label>
                         <input type="text" name="perusahaan" value="{{ old('perusahaan', $alumni->perusahaan) }}"
                                class="form-control form-control-custom @error('perusahaan') is-invalid @enderror"
                                placeholder="Contoh: PT Teknologi Indonesia" id="input-perusahaan">
@@ -245,7 +185,7 @@
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label" id="label-jabatan">Jabatan / Posisi</label>
+                        <label class="form-label-custom" id="label-jabatan">Jabatan / Posisi</label>
                         <input type="text" name="jabatan" value="{{ old('jabatan', $alumni->jabatan) }}"
                                class="form-control form-control-custom @error('jabatan') is-invalid @enderror"
                                placeholder="Contoh: Software Engineer" id="input-jabatan">
@@ -253,7 +193,7 @@
                     </div>
 
                     <div class="col-md-6" id="field-tahun-mulai">
-                        <label class="form-label">Tahun Mulai Bekerja / Usaha</label>
+                        <label class="form-label-custom">Tahun Mulai Bekerja / Usaha</label>
                         <input type="number" name="tahun_mulai_bekerja" value="{{ old('tahun_mulai_bekerja', $alumni->tahun_mulai_bekerja) }}"
                                class="form-control form-control-custom @error('tahun_mulai_bekerja') is-invalid @enderror"
                                placeholder="Contoh: 2023" min="2000" max="{{ date('Y') }}">
@@ -261,11 +201,12 @@
                     </div>
 
                     <div class="col-md-12">
-                        <label class="form-label">Link LinkedIn (Opsional)</label>
+                        <label class="form-label-custom">Link LinkedIn (Opsional)</label>
                         <input type="url" name="linkedin" value="{{ old('linkedin', $alumni->linkedin) }}"
                                class="form-control form-control-custom @error('linkedin') is-invalid @enderror"
                                placeholder="https://linkedin.com/in/username">
                         @error('linkedin') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
                     </div>
                     </div>
                 </div>

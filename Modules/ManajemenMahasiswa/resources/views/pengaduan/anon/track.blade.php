@@ -1,13 +1,13 @@
 @extends('manajemenmahasiswa::pengaduan.anon.layout')
 
-@section('title', 'Lacak Pengaduan Konfidensial')
+@section('title', 'Pengaduan Konfidensial')
 
 @section('content')
-    {{-- Kotak yang sama dengan halaman Detail; tanpa pelapor, riwayat, maupun aksi. --}}
+    {{-- Kotak yang sama dengan halaman Detail; tanpa pelapor, status, maupun aksi. --}}
     @include('manajemenmahasiswa::pengaduan.partials.detail-box', [
         'pengaduan'     => $pengaduan,
         'kategoriLabel' => $kategoriLabel ?? null,
-        'title'         => 'Status Pengaduan',
+        'title'         => 'Detail Pengaduan',
         'isStaff'       => false,
         'backUrl'       => null,
         'buktiToken'    => $pengaduan->anon_token,

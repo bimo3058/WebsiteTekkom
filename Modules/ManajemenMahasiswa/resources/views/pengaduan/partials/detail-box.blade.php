@@ -5,8 +5,9 @@
 
     Param:
       $pengaduan      Pengaduan
-      $title          judul bilah atas ("Detail Pengaduan" / "Status Pengaduan")
-      $isStaff        bool — tampilkan Pelapor, Riwayat Tiket, tombol Tandai Tercatat
+      $title          judul bilah atas
+      $isStaff        bool — tampilkan Pelapor, badge status, dan tombol Tandai Tercatat
+                      (pelapor tidak pernah melihat status tiket)
       $canDelete      bool — tombol Hapus (bawaan false)
       $backUrl        tujuan tombol kembali; null = tanpa tombol
       $kategoriLabel  label kategori (opsional; bawaan dari key kategori)
@@ -19,10 +20,10 @@
 
     $tpl = fn (string $key) => data_get($pengaduan, 'data_template.' . $key);
     $judul = $tpl('judul') ?: '-';
-    $badge = $pengaduan->statusBadge();
 
-    $kategoriLabel = $kategoriLabel ?? ucwords(str_replace('_', ' ',
-        \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori((string) $pengaduan->kategori)));
+    $kategoriLabel = $kategoriLabel ?? \Modules\ManajemenMahasiswa\Models\Pengaduan::kategoriLabel((string) $pengaduan->kategori);
+
+    $adaBukti = !empty(data_get($pengaduan, 'data_template.bukti')) || $tpl('link_bukti');
 
     $waktu = $tpl('waktu_kejadian') ?? $tpl('tanggal_kejadian');
     if ($waktu) {
@@ -52,33 +53,7 @@
         ['label' => 'Frekuensi',       'value' => $tpl('frekuensi')],
     ]);
 
-    // Keterangan untuk pelapor, menggantikan banner status lama.
-    $catatanPelapor = [
-        'baru'     => 'Belum dibuka admin.',
-        'dibaca'   => 'Sudah dibaca admin.',
-        'tercatat' => 'Sudah dicatat admin.',
-    ][$badge['tone']];
-
     $adaFlash = session('success') || session('info') || session('error') || $errors->any();
-
-    $logs = $isStaff && $pengaduan->relationLoaded('logs') ? $pengaduan->logs : collect();
-    $actionLabels = [
-        'dibuat'            => 'Tiket Dibuat',
-        'dibaca'            => 'Dibaca Admin',
-        'diproses'          => 'Diterima Admin',
-        'dijawab'           => 'Tercatat',
-        'ditutup_admin'     => 'Ditutup Admin',
-        'ditutup_mahasiswa' => 'Ditutup',
-        'ditutup_otomatis'  => 'Ditutup Otomatis',
-        'selesai'           => 'Tercatat',
-        'tercatat'          => 'Ditandai Tercatat',
-        'batal_tercatat'    => 'Tanda Tercatat Dicabut',
-        // Label lama — tetap ditampilkan dengan istilah netral
-        'didelegasikan'     => 'Diteruskan',
-        'ditanggapi_dosen'  => 'Ditanggapi',
-        'ditolak_dosen'     => 'Dikembalikan',
-        'diajukan_ulang'    => 'Diajukan Ulang',
-    ];
 @endphp
 
 @include('manajemenmahasiswa::pengaduan.partials.box-styles')
@@ -143,7 +118,10 @@
             <div class="kf-heading">
                 <h2 class="kf-subject">{{ $judul }}</h2>
                 <span class="pgd-pill kategori">{{ $kategoriLabel }}</span>
-                @include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $pengaduan])
+                {{-- Status hanya untuk staff; pelapor (reguler & konfidensial) tidak melihatnya. --}}
+                @if ($isStaff)
+                    @include('manajemenmahasiswa::pengaduan.partials.status-badge', ['pengaduan' => $pengaduan])
+                @endif
                 @if ($pengaduan->is_anonim)
                     <span class="pgd-pill konfidensial">
                         <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
@@ -152,9 +130,6 @@
             </div>
             <p class="kf-sub">
                 Diajukan {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
-                @unless ($isStaff)
-                    <span class="kf-sub-note">{{ $catatanPelapor }}</span>
-                @endunless
             </p>
 
             <div class="kf-grid">
@@ -190,37 +165,11 @@
     <div class="kf-split">
         <div class="kf-side">
             <h3>Bukti Dukung</h3>
-            <p>Berkas yang dilampirkan pelapor. Klik untuk melihat isinya.</p>
+            <p>{{ $adaBukti ? 'Berkas yang dilampirkan pelapor. Klik untuk melihat isinya.' : 'Pelapor tidak melampirkan berkas.' }}</p>
         </div>
         <div class="kf-main is-fields">
             @php $buktiParams = ['pengaduan' => $pengaduan] + (!empty($buktiToken) ? ['token' => $buktiToken] : []); @endphp
             @include('manajemenmahasiswa::pengaduan.partials.bukti-list', $buktiParams)
         </div>
     </div>
-
-    @if ($logs->count())
-        <div class="kf-split">
-            <div class="kf-side">
-                <h3>Riwayat Tiket</h3>
-                <p>{{ $logs->count() }} aktivitas tercatat, terbaru di atas.</p>
-            </div>
-            <div class="kf-main is-fields">
-                <div class="kf-timeline">
-                    @foreach ($logs as $log)
-                        <div class="kf-tl-item">
-                            <span class="kf-tl-dot"></span>
-                            <div class="kf-tl-date">{{ $log->created_at->translatedFormat('d M Y, H:i') }}</div>
-                            <div class="kf-tl-title">{{ $actionLabels[$log->action] ?? ucwords(str_replace('_', ' ', $log->action)) }}</div>
-                            @if ($log->actor)
-                                <div class="kf-tl-actor">Oleh: {{ $log->actor->name }}</div>
-                            @endif
-                            @if ($log->notes)
-                                <div class="kf-tl-note">"{{ \Illuminate\Support\Str::limit($log->notes, 100) }}"</div>
-                            @endif
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-        </div>
-    @endif
 </div>

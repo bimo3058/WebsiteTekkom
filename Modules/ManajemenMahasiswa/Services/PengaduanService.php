@@ -58,24 +58,22 @@ class PengaduanService
     // ── Lifecycle: Admin ───────────────────────────────────────────────────
 
     /**
-     * Staff membuka detail. Notification-style: status 'baru' berubah menjadi
-     * 'dibaca' (dot biru di tabel hilang). Status lain tidak diturunkan.
+     * Staff membuka detail: hanya mencatat kapan & oleh siapa tiket pertama kali
+     * dibuka. Status tidak diubah — status "Dibaca" sudah dihapus, jadi tiket tetap
+     * "Baru" sampai ditandai tercatat.
      */
     public function markRead(Pengaduan $pengaduan, int $readerUserId): void
     {
-        $pertamaDibuka = !$pengaduan->read_at;
+        if ($pengaduan->read_at) {
+            return;
+        }
 
         $pengaduan->forceFill([
-            'status'  => $pengaduan->status === Pengaduan::STATUS_BARU
-                ? Pengaduan::STATUS_DIBACA
-                : $pengaduan->status,
-            'read_at' => $pengaduan->read_at ?? now(),
+            'read_at' => now(),
             'read_by' => $pengaduan->read_by ?? $readerUserId,
         ])->save();
 
-        if ($pertamaDibuka) {
-            $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
-        }
+        $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
     }
 
     // ── Internal helper ───────────────────────────────────────────────────

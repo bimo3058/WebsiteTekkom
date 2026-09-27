@@ -62,18 +62,19 @@
     .status-badge.alumni       { background: var(--c-sky-subtle);     color: var(--c-sky); }
 
     /* ── Status karir alumni ──
-       belum_bekerja berlabel "Belum Terdata" (Alumni::STATUS_LABELS), jadi warnanya
-       disamakan dengan belum_terdata (status kosong) dan kartu statistiknya. */
-    .status-badge.bekerja,       .status-badge-lg.bekerja       { background: var(--c-success-subtle); color: var(--c-success); }
-    .status-badge.wirausaha,     .status-badge-lg.wirausaha     { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .status-badge.studi_lanjut,  .status-badge-lg.studi_lanjut  { background: var(--c-sky-subtle);     color: var(--c-sky); }
-    .status-badge.belum_bekerja, .status-badge-lg.belum_bekerja,
-    .status-badge.belum_terdata, .status-badge-lg.belum_terdata { background: var(--c-grey-50);        color: var(--c-fg-sec); }
+       Bentuk & warnanya (garis + titik gaya SITKOM) ada di partials/sitkom-ui,
+       yang dimuat semua halaman Alumni. belum_bekerja berlabel "Belum Terdata"
+       (Alumni::STATUS_LABELS), jadi ikut abu seperti belum_terdata. */
 
-    /* ── Tingkat prestasi ── */
-    .tingkat-badge.internasional { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .tingkat-badge.nasional      { background: var(--c-sky-subtle);     color: var(--c-sky); }
-    .tingkat-badge.regional      { background: var(--c-error-subtle);   color: var(--c-error-200); }
-    .tingkat-badge.universitas   { background: var(--c-success-subtle); color: var(--c-success); }
-    .tingkat-badge.prodi         { background: var(--c-primary-subtle); color: var(--c-primary); }
+    /* ── Tingkat prestasi ──
+       Skema sama dengan partials/sitkom-ui (Verifikasi Data & Direktori
+       Mahasiswa): tiap tingkat satu warna dari palet badge Role SITKOM (ungu,
+       biru, langit, merah muda, abu), tanpa hijau/kuning/merah yang sudah
+       dipakai warna status. */
+    .tingkat-badge               { border: 1px solid var(--c-border); }
+    .tingkat-badge.internasional { background: #EDE9FE;             color: #5B21B6;         border-color: #C4B5FD; }
+    .tingkat-badge.nasional      { background: #EFF6FF;             color: #1D4ED8;         border-color: #BFDBFE; }
+    .tingkat-badge.regional      { background: var(--c-sky-subtle); color: var(--c-sky);    border-color: #BAE6FD; }
+    .tingkat-badge.universitas   { background: #FCE7F3;             color: #9D174D;         border-color: #FBCFE8; }
+    .tingkat-badge.prodi         { background: var(--c-grey-50);    color: var(--c-fg-sec); border-color: var(--c-border); }
 </style>

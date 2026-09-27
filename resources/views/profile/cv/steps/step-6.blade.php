@@ -2,9 +2,9 @@
     <div class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6" style="background: var(--c-success-subtle);">
         <span style="color: var(--c-success);"><x-icon name="check-circle" size="40" /></span>
     </div>
-    
-    <h3 class="text-2xl font-bold text-slate-800 mb-2">Data CV Berhasil Disimpan</h3>
-    <p class="text-slate-500 max-w-md mx-auto mb-8">Data yang Anda masukkan beserta data tersinkronisasi dari sistem sudah disiapkan. Anda dapat mempratinjau atau mengunduh CV sekarang.</p>
+
+    <h3 class="text-2xl font-bold mb-2" style="color: var(--c-fg);">Data CV Berhasil Disimpan</h3>
+    <p class="max-w-md mx-auto mb-8 text-sm" style="color: var(--c-fg-muted);">Data yang Anda masukkan beserta data tersinkronisasi dari sistem sudah disiapkan. Anda dapat mempratinjau atau mengunduh CV sekarang.</p>
 
     <div class="flex items-center justify-center gap-4">
         <a href="{{ route('profile.cv.preview') }}" target="_blank"

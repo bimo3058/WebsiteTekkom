@@ -1,27 +1,25 @@
 <div>
-    <h3 class="text-lg font-bold text-slate-800 mb-6">Keahlian (Skills)</h3>
+    <h3 class="cvb-title">Keahlian (Skills)</h3>
 
-    <div class="p-4 mb-6 rounded-xl border" style="background: var(--c-primary-subtle); border-color: rgba(11,38,110,0.12);">
-        <div class="flex items-start gap-3">
-            <span class="mt-0.5 flex-shrink-0" style="color: var(--c-primary);"><x-icon name="information-circle" size="20" /></span>
-            <p class="text-sm" style="color: var(--c-fg-sec);">
-                Tambahkan keahlian teknis (hard skills) dan non-teknis (soft skills) yang relevan. Keahlian ini sangat penting untuk membantu sistem <strong style="color: var(--c-primary);">Applicant Tracking System (ATS)</strong> memfilter profil Anda.
-            </p>
-        </div>
+    <div class="cvb-note">
+        <span><x-icon name="information-circle" size="18" /></span>
+        <p>
+            Tambahkan keahlian teknis (hard skills) dan non-teknis (soft skills) yang relevan. Keahlian ini sangat penting untuk membantu sistem <strong>Applicant Tracking System (ATS)</strong> memfilter profil Anda.
+        </p>
     </div>
 
-    <div class="border-t border-slate-100 pt-6">
-        <h4 class="text-sm font-bold text-slate-800 mb-4">Daftar Keahlian</h4>
-        
+    <div class="cvb-section">
+        <h4 class="cvb-heading">Daftar Keahlian</h4>
+
         <!-- Manual Skill List -->
         <div class="flex flex-wrap gap-3 mb-6">
             <template x-for="(skill, index) in data.cv.keahlian" :key="index">
-                <div class="bg-white border border-slate-200 rounded-xl pl-4 pr-2 py-2 flex items-center gap-3">
-                    <div>
-                        <span class="font-bold text-slate-800 text-sm" x-text="skill.nama"></span>
-                        <span class="text-[10px] text-slate-500 font-medium ml-2 px-2 py-0.5 bg-slate-100 rounded-full" x-text="skill.level"></span>
+                <div class="cvb-item" style="align-items: center; padding: 8px 8px 8px 16px;">
+                    <div class="flex items-center gap-2">
+                        <span class="cvb-item-title" x-text="skill.nama"></span>
+                        <span class="cvb-chip is-neutral" x-text="skill.level"></span>
                     </div>
-                    <button @click="removeSkill(index)" class="text-red-400 hover:text-red-600 transition-colors p-1 bg-red-50 rounded-lg">
+                    <button type="button" @click="removeSkill(index)" class="cvb-icon-btn" title="Hapus" aria-label="Hapus keahlian">
                         <x-icon name="close" size="14" />
                     </button>
                 </div>
@@ -29,20 +27,20 @@
         </div>
 
         <!-- Add Form -->
-        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div class="cvb-add">
             <div class="flex flex-col md:flex-row gap-4 items-end">
                 <div class="flex-1 w-full">
-                    <label class="form-label" style="font-size:11px">Nama Keahlian</label>
-                    <input type="text" x-model="newSkill.nama" placeholder="Contoh: Laravel, Python, Public Speaking" class="form-control">
+                    <label class="form-label-custom">Nama Keahlian</label>
+                    <input type="text" x-model="newSkill.nama" placeholder="Contoh: Laravel, Python, Public Speaking" class="form-control-custom">
                 </div>
                 <div class="w-full md:w-40">
-                    <label class="form-label" style="font-size:11px">Level</label>
+                    <label class="form-label-custom">Level</label>
                     @include('profile.cv.partials._pilihan', [
                         'model' => 'newSkill.level',
                         'options' => ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
                     ])
                 </div>
-                <button @click="addSkill()" class="btn-primary text-xs w-full md:w-auto" style="height: 38px;">
+                <button @click="addSkill()" class="btn-primary text-xs w-full md:w-auto justify-center" style="height: 38px;">
                     Tambah
                 </button>
             </div>

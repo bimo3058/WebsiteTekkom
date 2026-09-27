@@ -187,17 +187,12 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::middleware('role:superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen')->group(function () {
                 Route::post('/{pengaduan}/toggle-tercatat', [PengaduanController::class, 'toggleTercatat'])
                     ->name('toggle.tercatat')->whereNumber('pengaduan');
-                Route::post('/bulk/tercatat', [PengaduanController::class, 'bulkTercatat'])
-                    ->name('bulk.tercatat');
             });
 
             // Hapus pengaduan — hanya Superadmin
             Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
-                ->middleware('role:superadmin');
-            Route::delete('/bulk', [PengaduanController::class, 'bulkDestroy'])
-                ->name('bulk.destroy')
                 ->middleware('role:superadmin');
         });
 

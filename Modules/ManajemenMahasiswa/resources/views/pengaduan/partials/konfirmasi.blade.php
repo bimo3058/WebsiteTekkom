@@ -13,7 +13,7 @@
 @php
     $tpl = fn (string $key) => data_get($payload, 'template.' . $key);
 
-    $kategoriLabel = ucwords(str_replace('_', ' ', $payload['kategori']));
+    $kategoriLabel = \Modules\ManajemenMahasiswa\Models\Pengaduan::kategoriLabel((string) $payload['kategori']);
     $buktiItems = (array) ($payload['bukti_items'] ?? []);
     $buktiCount = count($buktiItems);
 
@@ -27,7 +27,8 @@
     }
 
     $infoItems = [
-        ['label' => 'Pelapor',         'value' => $isAnonim ? 'Dirahasiakan' : ($reporterName ?? '-')],
+        // Istilah sama dengan daftar & detail staff: "Konfidensial".
+        ['label' => 'Pelapor',         'value' => $isAnonim ? 'Konfidensial' : ($reporterName ?? '-')],
         ['label' => 'Angkatan',        'value' => $tpl('angkatan')],
         ['label' => 'Lokasi Kejadian', 'value' => $tpl('lokasi')],
         ['label' => 'Waktu Kejadian',  'value' => $waktu],
@@ -84,7 +85,10 @@
                             <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
                         </span>
                     @else
-                        <span class="pgd-status dibaca">Reguler</span>
+                        {{-- Penanda jalur, bukan status tiket: pill abu tanpa titik. --}}
+                        <span class="pgd-pill jalur">
+                            <x-manajemenmahasiswa::ui.icon name="user-circle" size="11" /> Reguler
+                        </span>
                     @endif
                 </div>
                 <p class="kf-sub">Akan dikirim {{ now()->translatedFormat('d F Y, H:i') }} WIB</p>

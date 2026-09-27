@@ -99,8 +99,7 @@ class AnonPengaduanController extends Controller
      */
     public function track(Request $request, $token)
     {
-        $pengaduan = Pengaduan::with(['logs.actor'])
-            ->where('anon_token', $token)
+        $pengaduan = Pengaduan::where('anon_token', $token)
             ->firstOrFail();
 
         $kategoriList = [

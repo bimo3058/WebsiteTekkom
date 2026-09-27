@@ -44,10 +44,21 @@ class Pengaduan extends Model
 
     public const STATUS_DRAFT             = 'draft';
     public const STATUS_BARU              = 'baru';
-    public const STATUS_DIBACA            = 'dibaca';
+    public const STATUS_DIBACA            = 'dibaca';        // Legacy — kini tampil sebagai "Baru"
     public const STATUS_TERCATAT          = 'tercatat';
     public const STATUS_DIDELEGASIKAN     = 'didelegasikan'; // Legacy — data lama
     public const STATUS_SELESAI           = 'selesai';       // Legacy — data lama
+
+    /**
+     * Nilai kolom status yang tampil sebagai "Tercatat". Semua status lain
+     * (selain draft) tampil sebagai "Baru" — termasuk 'dibaca' dan status
+     * alur lama, karena status "Dibaca" sudah dihapus dari tampilan.
+     */
+    public const TERCATAT_STATUSES = [
+        self::STATUS_TERCATAT,
+        self::STATUS_SELESAI,
+        self::STATUS_DIDELEGASIKAN,
+    ];
 
     public const MAX_REOPEN = 2;
 
@@ -89,9 +100,29 @@ class Pengaduan extends Model
         self::KATEGORI_LAINNYA => self::KATEGORI_AKADEMIK_ADMINISTRASI,
     ];
 
+    /** Label resmi kategori utama, sama dengan yang tampil di form & daftar. */
+    public const KATEGORI_LABELS = [
+        self::KATEGORI_AKADEMIK_ADMINISTRASI       => 'Akademik dan Administrasi',
+        self::KATEGORI_PROSES_PEMBELAJARAN         => 'Proses Pembelajaran di Kelas',
+        self::KATEGORI_FASILITAS_KAMPUS            => 'Fasilitas Kampus (Sarana dan Prasarana)',
+        self::KATEGORI_LAYANAN_IT_SSO              => 'Layanan IT dan Akun SSO',
+        self::KATEGORI_KEGIATAN_KEMAHASISWAAN      => 'Kegiatan Kemahasiswaan',
+        self::KATEGORI_KEAMANAN_KETERTIBAN         => 'Keamanan dan Ketertiban Kampus',
+        self::KATEGORI_KESEHATAN_KONSELING         => 'Layanan Kesehatan dan Konseling Mahasiswa',
+        self::KATEGORI_TINDAKAN_TIDAK_MENYENANGKAN => 'Tindakan Tidak Menyenangkan di Lingkungan Kampus',
+    ];
+
     public static function normalizeKategori(string $kategori): string
     {
         return self::LEGACY_KATEGORI_MAP[$kategori] ?? $kategori;
+    }
+
+    /** Label resmi sebuah kategori (key lama ikut dipetakan dulu). */
+    public static function kategoriLabel(string $kategori): string
+    {
+        $utama = self::normalizeKategori($kategori);
+
+        return self::KATEGORI_LABELS[$utama] ?? ucwords(str_replace('_', ' ', $utama));
     }
 
     /**
@@ -142,7 +173,7 @@ class Pengaduan extends Model
     {
         return match ($this->status) {
             self::STATUS_BARU          => 'Baru',
-            self::STATUS_DIBACA        => '',
+            self::STATUS_DIBACA        => 'Baru',
             self::STATUS_TERCATAT      => 'Tercatat',
             self::STATUS_DIDELEGASIKAN => 'Tercatat', // Legacy fallback
             self::STATUS_SELESAI       => 'Tercatat', // Legacy fallback
@@ -156,27 +187,19 @@ class Pengaduan extends Model
      */
     public function isTercatat(): bool
     {
-        return in_array($this->status, [
-            self::STATUS_TERCATAT,
-            self::STATUS_SELESAI,
-            self::STATUS_DIDELEGASIKAN,
-        ], true);
+        return in_array($this->status, self::TERCATAT_STATUSES, true);
     }
 
     /**
-     * Badge status untuk daftar, detail, dan halaman lacak. Beda dengan
-     * statusLabel(), status 'dibaca' tetap punya label.
+     * Badge status untuk daftar, detail, dan halaman lacak. Hanya dua status:
+     * Tercatat, atau Baru untuk semua yang belum ditandai tercatat.
      *
      * @return array{tone: string, label: string}  tone = kelas .pgd-status
      */
     public function statusBadge(): array
     {
-        if ($this->isTercatat()) {
-            return ['tone' => 'tercatat', 'label' => 'Tercatat'];
-        }
-
-        return $this->status === self::STATUS_BARU
-            ? ['tone' => 'baru', 'label' => 'Baru']
-            : ['tone' => 'dibaca', 'label' => 'Dibaca'];
+        return $this->isTercatat()
+            ? ['tone' => 'tercatat', 'label' => 'Tercatat']
+            : ['tone' => 'baru', 'label' => 'Baru'];
     }
 }

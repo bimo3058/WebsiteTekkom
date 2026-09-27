@@ -2,6 +2,7 @@
 
 @include('manajemenmahasiswa::direktori.partials.palette')
 @include('manajemenmahasiswa::partials.card-frame')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 @push('styles')
 <style>
@@ -18,6 +19,9 @@
         border-radius: 12px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         overflow: hidden;
+        /* .main-wrapper adalah kolom flex; tanpa ini kartu ber-overflow:hidden
+           menyusut sampai tinggal toolbar saat bagian riwayat di bawahnya panjang. */
+        flex-shrink: 0;
     }
     .detail-toolbar {
         display: flex;
@@ -44,9 +48,9 @@
         width: 84px;
         height: 84px;
         border-radius: 50%;
-        background: #F3F4F6;
-        border: 1.5px solid #E5E7EB;
-        color: #6B7280;
+        background: var(--c-grey-50);
+        border: 1.5px solid var(--c-border);
+        color: var(--c-fg-muted);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -59,19 +63,7 @@
     .detail-name-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
     .detail-name { font-size: 20px; font-weight: 800; color: var(--c-fg); margin: 0; letter-spacing: -0.02em; }
     .detail-sub { font-size: 14px; font-weight: 500; color: var(--c-fg-muted); margin: 0 0 16px 0; }
-    /* Badge outline; warnanya tetap dari palette status karir, hanya latar dibuat transparan */
-    .badge-outline {
-        display: inline-flex !important;
-        align-items: center;
-        gap: 5px;
-        padding: 2px 10px !important;
-        border-radius: 99px !important;
-        font-size: 10px !important;
-        font-weight: 700;
-        background: transparent !important;
-        border: 1px solid currentColor;
-        box-shadow: none !important;
-    }
+    /* Bentuk & warna badge status karir dan tingkat ada di partials/sitkom-ui */
     .detail-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -80,8 +72,8 @@
     }
     .detail-row { display: flex; align-items: center; min-width: 0; }
     .detail-row.full { grid-column: 1 / -1; }
-    .detail-label { width: 170px; font-size: 13px; color: #94A3B8; flex-shrink: 0; font-weight: 500; }
-    .detail-value { font-size: 13px; font-weight: 600; color: #334155; min-width: 0; overflow-wrap: anywhere; }
+    .detail-label { width: 170px; font-size: 13px; color: var(--c-fg-muted); flex-shrink: 0; font-weight: 500; }
+    .detail-value { font-size: 13px; font-weight: 600; color: var(--c-fg-sec); min-width: 0; overflow-wrap: anywhere; }
     .detail-value.empty { color: var(--c-fg-placeholder); font-style: italic; font-weight: 400; }
     .detail-value a {
         color: #0077b5; /* warna brand LinkedIn, sengaja tidak memakai token */
@@ -145,13 +137,7 @@
         <div style="flex: 1; min-width: 0;">
             <div class="detail-name-row">
                 <h2 class="detail-name">{{ $alumni->user->name ?? 'Tanpa Nama' }}</h2>
-                <span class="status-badge-lg {{ $alumni->status_karir ?? 'belum_terdata' }} badge-outline">
-                    @if(in_array($alumni->status_karir, ['bekerja', 'wirausaha'])) <span class="material-symbols-outlined" style="font-size: 12px;">work</span>
-                    @elseif($alumni->status_karir == 'studi_lanjut') <span class="material-symbols-outlined" style="font-size: 12px;">school</span>
-                    @else <span class="material-symbols-outlined" style="font-size: 12px;">hourglass_empty</span>
-                    @endif
-                    {{ $alumni->status_karir_label }}
-                </span>
+                <span class="status-badge {{ $alumni->status_karir ?? 'belum_terdata' }}">{{ $alumni->status_karir_label }}</span>
             </div>
             <p class="detail-sub">NIM: <span style="font-family: monospace; color: var(--c-primary); font-weight: 700;">{{ $alumni->nim }}</span></p>
 
@@ -247,49 +233,8 @@
         align-items: center;
         margin-bottom: 8px;
     }
-    /* Warna tiap tingkat ada di partials/palette */
-    .tingkat-badge {
-        font-size: 10px; font-weight: 700;
-        padding: 2px 8px; border-radius: 12px;
-        text-transform: uppercase;
-    }
-
-    .riwayat-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .riwayat-table thead th {
-        background: #FAFAFA; padding: 10px 14px;
-        font-size: 12px; font-weight: 700; color: var(--c-fg-muted);
-        text-transform: uppercase; letter-spacing: 0.05em;
-        border-bottom: 1px solid var(--c-border);
-    }
-    .riwayat-table tbody td {
-        padding: 12px 14px; font-size: 14px; color: var(--c-fg);
-        border-bottom: 1px solid #F3F4F6; vertical-align: middle;
-    }
-    .riwayat-table tbody tr:hover { background: #FAFAFA; }
-    .peran-badge {
-        font-size: 11px; font-weight: 700;
-        padding: 3px 10px; border-radius: 20px; display: inline-block;
-    }
-    .peran-badge.ketua   { background: var(--c-warning-subtle); color: var(--c-warning); }
-    .peran-badge.anggota { background: var(--c-primary-subtle); color: var(--c-primary); }
-    .peran-badge.panitia { background: var(--c-sky-subtle);     color: var(--c-sky); }
-    .peran-badge.peserta { background: var(--c-success-subtle); color: var(--c-success); }
-    .btn-add-riwayat {
-        background: var(--c-primary); color: #fff;
-        border: none; padding: 6px 14px; border-radius: 8px;
-        font-size: 12px; font-weight: 600; cursor: pointer;
-        display: inline-flex; align-items: center; gap: 5px;
-        transition: background 0.2s;
-    }
-    .btn-add-riwayat:hover { background: var(--c-primary-hover); color: #fff; }
-    .btn-del-sm {
-        background: var(--c-error-0); color: var(--c-error);
-        border: 1px solid var(--c-error-subtle); padding: 3px 9px;
-        border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;
-        transition: background 0.2s;
-    }
-    .btn-del-sm:hover { background: var(--c-error-subtle); }
-    .empty-state { color: var(--c-fg-muted); font-size: 14px; text-align: center; padding: 20px 0; }
+    /* Badge tingkat & tabel riwayat (.mm-table) ada di partials/sitkom-ui */
+    .empty-state { color: var(--c-fg-muted); font-size: 13px; text-align: center; padding: 20px 0; }
 </style>
 @endpush
 
@@ -333,26 +278,23 @@
 
 {{-- Modal Tambah Prestasi --}}
 @if($canManageHistory)
-<div class="modal fade" id="modalTambahPrestasi" tabindex="-1" aria-labelledby="modalTambahPrestasiLabel" aria-hidden="true">
+<div class="modal fade" id="modalTambahPrestasi" tabindex="-1" aria-label="Tambah Prestasi / Lomba" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:16px;border:none;">
-            <div class="modal-header" style="border-bottom:1px solid var(--c-border);padding:20px 24px;">
-                <h5 class="modal-title" id="modalTambahPrestasiLabel" style="font-weight:700;font-size:16px;">
-                    Tambah Prestasi / Lomba
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+        <div class="modal-content">
+            <x-manajemenmahasiswa::ui.modal-header subtitle="Catat prestasi alumni secara manual">
+                <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg></x-slot:icon>
+                Tambah Prestasi / Lomba
+            </x-manajemenmahasiswa::ui.modal-header>
             <form method="POST" action="{{ route('manajemenmahasiswa.direktori.alumni.prestasi.store', $alumni->id) }}">
                 @csrf
-                <div class="modal-body" style="padding:24px;">
+                <div class="modal-body">
                     <div class="mb-3">
-                        <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Nama Prestasi</label>
-                        <input type="text" name="nama_prestasi" class="form-control"
-                               placeholder="Cth: Juara 1 Hackathon Nasional 2024"
-                               style="border-radius:8px;font-size:14px;" required>
+                        <label class="form-label-custom">Nama Prestasi</label>
+                        <input type="text" name="nama_prestasi" class="form-control-custom"
+                               placeholder="Cth: Juara 1 Hackathon Nasional 2024" required>
                     </div>
                     <div class="mb-3">
-                        <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Tingkat</label>
+                        <label class="form-label-custom">Tingkat</label>
                         <x-manajemenmahasiswa::ui.select name="tingkat" size="md" required>
                             <option value="">-- Pilih Tingkat --</option>
                             <option value="internasional">Internasional</option>
@@ -363,12 +305,11 @@
                         </x-manajemenmahasiswa::ui.select>
                     </div>
                     <div class="mb-3">
-                        <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Tanggal</label>
-                        <input type="date" name="tanggal" class="form-control"
-                               style="border-radius:8px;font-size:14px;">
+                        <label class="form-label-custom">Tanggal</label>
+                        <input type="date" name="tanggal" class="form-control-custom">
                     </div>
                 </div>
-                <div class="modal-footer" style="border-top:1px solid var(--c-border);padding:16px 24px;">
+                <div class="modal-footer">
                     <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Simpan Prestasi</button>
                 </div>
@@ -409,7 +350,7 @@
 
     @if($kegiatanInternal->count() > 0)
         <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--c-border);">
-            <table class="riwayat-table">
+            <table class="mm-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -444,7 +385,7 @@
                                     <span style="color:var(--c-fg-muted);">Kegiatan tidak ditemukan</span>
                                 @endif
                             </td>
-                            <td><span style="font-size:14px;color:var(--c-fg);">{{ $peranValue }}</span></td>
+                            <td>{{ $peranValue }}</td>
                             <td style="font-size:13px;color:var(--c-fg-muted);">
                                 {{ $tanggalDisplay ? \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') : '—' }}
                             </td>
@@ -482,7 +423,7 @@
 
     @if($kegiatanEksternal->count() > 0)
         <div style="overflow-x:auto;border-radius:10px;border:1px solid var(--c-border);">
-            <table class="riwayat-table">
+            <table class="mm-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -504,7 +445,7 @@
                             <td>
                                 <span style="font-weight:600;color:var(--c-fg);">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak ditemukan' }}</span>
                             </td>
-                            <td><span style="font-size:14px;color:var(--c-fg);">{{ $peranValue }}</span></td>
+                            <td>{{ $peranValue }}</td>
                             <td style="font-size:13px;color:var(--c-fg-muted);">
                                 {{ $tanggalDisplay ? \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') : '—' }}
                             </td>
@@ -518,7 +459,7 @@
                                         <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Hapus</button>
                                     </form>
                                 @else
-                                    <span style="font-size:11px;color:var(--c-border-strong);">Auto</span>
+                                    <span style="font-size:11px;color:var(--c-fg-muted);">Auto</span>
                                 @endif
                             </td>
                             @endif
@@ -534,21 +475,19 @@
 
 {{-- ── Modal Tambah Riwayat (hanya untuk canManageHistory) ─────────────── --}}
 @if($canManageHistory)
-<div class="modal fade" id="modalTambahRiwayat" tabindex="-1" aria-labelledby="modalTambahRiwayatLabel" aria-hidden="true">
+<div class="modal fade" id="modalTambahRiwayat" tabindex="-1" aria-label="Tambah Riwayat Kegiatan" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius:16px;border:none;">
-            <div class="modal-header" style="border-bottom:1px solid var(--c-border);padding:20px 24px;">
-                <h5 class="modal-title" id="modalTambahRiwayatLabel" style="font-weight:700;font-size:16px;">
-                    Tambah Riwayat Kegiatan
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+        <div class="modal-content">
+            <x-manajemenmahasiswa::ui.modal-header subtitle="Pilih kegiatan dari daftar atau isi manual">
+                <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg></x-slot:icon>
+                Tambah Riwayat Kegiatan
+            </x-manajemenmahasiswa::ui.modal-header>
 
             <form method="POST" action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.store', $alumni->id) }}">
                 @csrf
                 <input type="hidden" name="input_mode" id="input_mode_alumni" value="dropdown">
 
-                <div class="modal-body" style="padding:24px;">
+                <div class="modal-body">
                     {{-- Toggle mode --}}
                     <div style="display:flex;gap:8px;margin-bottom:20px;">
                         <button type="button" id="btn-mode-dropdown-alumni"
@@ -566,7 +505,7 @@
                     {{-- Mode: dropdown --}}
                     <div id="section-dropdown-alumni">
                         <div class="mb-3">
-                            <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Kegiatan</label>
+                            <label class="form-label-custom">Kegiatan</label>
                             <x-manajemenmahasiswa::ui.select name="kegiatan_id" size="md">
                                 <option value="">-- Pilih Kegiatan --</option>
                                 @foreach($semuaKegiatan as $kg)
@@ -575,7 +514,7 @@
                             </x-manajemenmahasiswa::ui.select>
                         </div>
                         <div class="mb-3">
-                            <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Peran</label>
+                            <label class="form-label-custom">Peran</label>
                             <x-manajemenmahasiswa::ui.select name="peran" size="md">
                                 <option value="ketua">Ketua</option>
                                 <option value="anggota">Anggota</option>
@@ -588,32 +527,29 @@
                     {{-- Mode: manual --}}
                     <div id="section-manual-alumni" style="display:none;">
                         <div class="mb-3">
-                            <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Nama Kegiatan</label>
+                            <label class="form-label-custom">Nama Kegiatan</label>
                             {{-- Batasnya sama dengan form pengajuan mahasiswa (modul Verifikasi
                                  Data), supaya nama yang ditolak di satu pintu tidak diterima
                                  di pintu lain. --}}
-                            <input type="text" name="nama_kegiatan_manual" class="form-control"
+                            <input type="text" name="nama_kegiatan_manual" class="form-control-custom"
                                    maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_NAMA }}"
-                                   placeholder="Cth: Kompetisi Robotika Nasional 2024"
-                                   style="border-radius:8px;font-size:14px;">
+                                   placeholder="Cth: Kompetisi Robotika Nasional 2024">
                         </div>
                         <div class="mb-3">
-                            <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Peran</label>
-                            <input type="text" name="peran_manual" class="form-control"
+                            <label class="form-label-custom">Peran</label>
+                            <input type="text" name="peran_manual" class="form-control-custom"
                                    maxlength="{{ \Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController::MAKS_PERAN }}"
-                                   placeholder="Cth: Peserta, Juri, Koordinator"
-                                   style="border-radius:8px;font-size:14px;">
+                                   placeholder="Cth: Peserta, Juri, Koordinator">
                         </div>
                         <div class="mb-3">
-                            <label style="font-size:13px;font-weight:600;color:var(--c-fg-sec);" class="mb-1">Tanggal Kegiatan</label>
-                            <input type="date" name="tanggal_kegiatan" class="form-control"
-                                   max="{{ date('Y-m-d') }}"
-                                   style="border-radius:8px;font-size:14px;">
+                            <label class="form-label-custom">Tanggal Kegiatan</label>
+                            <input type="date" name="tanggal_kegiatan" class="form-control-custom"
+                                   max="{{ date('Y-m-d') }}">
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-footer" style="border-top:1px solid var(--c-border);padding:16px 24px;">
+                <div class="modal-footer">
                     <button type="button" class="mk-btn mk-btn--secondary" data-bs-dismiss="modal">Batal</button>
                     <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Simpan Riwayat</button>
                 </div>

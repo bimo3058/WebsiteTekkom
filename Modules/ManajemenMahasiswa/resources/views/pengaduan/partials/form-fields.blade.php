@@ -1,7 +1,7 @@
 {{--
     Isi form Buat Pengaduan dalam "satu kotak", meniru Edit User SITKOM
-    (resources/views/superadmin/users/edit.blade.php): bilah atas Kembali | Lanjut,
-    lalu tiap bagian = kolom judul + keterangan di kiri, field di kanan.
+    (resources/views/superadmin/users/edit.blade.php): bilah atas Kembali + judul,
+    tiap bagian = kolom judul + keterangan di kiri, field di kanan, tombol Lanjut di kaki.
 
     Dipakai bersama jalur Reguler (pengaduan/create) dan Konfidensial (anon/create).
     Elemen <form>, @csrf, honeypot, dan input tersembunyi tetap di halaman pemanggil.
@@ -12,7 +12,8 @@
       $dosenList          daftar nama dosen
       $frekuensiList      [value => label]
       $buktiPendingItems  bukti yang sudah terunggah (opsional)
-      $backUrl            tujuan tombol kembali (pemilih jalur)
+      $backUrl            tujuan tombol kembali & "Ganti jalur" (pemilih jalur);
+                          tombol kembali hanya tampil di jalur Reguler
 --}}
 @php
     $isKonfidensial = $jalur === 'konfidensial';
@@ -27,14 +28,16 @@
     {{-- ── Bilah atas ── --}}
     <div class="kf-toolbar">
         <div class="kf-toolbar-lead">
-            <a href="{{ $backUrl }}" class="kf-back" title="Kembali" aria-label="Kembali ke pilih jalur">
-                <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
-            </a>
+            {{-- Jalur Konfidensial dibuka lewat magic link, jadi tanpa tombol kembali. --}}
+            @unless ($isKonfidensial)
+                <a href="{{ $backUrl }}" class="kf-back" title="Kembali" aria-label="Kembali ke pilih jalur">
+                    <x-manajemenmahasiswa::ui.icon name="chevron-left" size="16" />
+                </a>
+            @endunless
             <h1 class="kf-toolbar-title">Buat Pengaduan</h1>
         </div>
-        <div class="kf-toolbar-actions">
-            <button type="submit" class="mk-btn mk-btn--primary mk-btn--sm">Lanjut Konfirmasi</button>
-        </div>
+        {{-- Tombol lanjut hanya di kaki kotak (seperti "Kirim Pengaduan" di Konfirmasi);
+             dulu ganda di sini dan di mobile turun ke baris sendiri di bawah judul. --}}
     </div>
 
     @if ($errors->any())

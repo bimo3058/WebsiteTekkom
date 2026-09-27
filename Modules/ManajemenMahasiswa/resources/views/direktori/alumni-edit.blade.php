@@ -2,6 +2,7 @@
 
 @include('manajemenmahasiswa::direktori.partials.palette')
 @include('manajemenmahasiswa::partials.card-frame')
+@include('manajemenmahasiswa::partials.sitkom-ui')
 
 @push('styles')
 <style>
@@ -27,48 +28,22 @@
         align-items: center;
         gap: 8px;
     }
-    .form-label {
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--c-fg-sec);
-        margin-bottom: 6px;
-    }
-    /* Latar input putih, sama dengan Edit Mahasiswa & kotak input global */
-    .form-control, .form-select {
-        border: 1.5px solid var(--c-border);
-        border-radius: 10px;
-        padding: 10px 14px;
-        font-size: 14px;
-        color: var(--c-fg);
-        background: #ffffff;
-        transition: all 0.2s;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px var(--c-primary-subtle);
-        background: #ffffff;
-    }
+    /* Label & kotak isian: partials/sitkom-ui (gaya Edit User SITKOM) */
     /* Pesan validasi Bootstrap memakai merah bawaannya; disamakan dengan merah palet global */
-    .form-control.is-invalid, .form-select.is-invalid { border-color: var(--c-error); }
-    .form-control.is-invalid:focus, .form-select.is-invalid:focus { box-shadow: 0 0 0 3px var(--c-error-subtle); }
     .invalid-feedback { color: var(--c-error); }
 </style>
 @endpush
 
-<!-- Back Button -->
-<div class="mb-3">
-    <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm" title="Kembali" aria-label="Kembali">
-        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
-        Kembali
-    </a>
-</div>
+<x-manajemenmahasiswa::ui.page-header bordered title="Edit Data Alumni">
+    Admin — perbarui biodata dan karir alumni
+    <x-slot:leading>
+        <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" title="Kembali" aria-label="Kembali">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
+        </a>
+    </x-slot:leading>
+</x-manajemenmahasiswa::ui.page-header>
 
 <div class="edit-card">
-    <div class="mb-4">
-        <h5 class="fw-bold mb-1" style="font-size: 20px; color: var(--c-fg);">Edit Data Alumni</h5>
-        <p class="mb-0" style="font-size: 14px; color: var(--c-fg-muted);">Admin — perbarui biodata dan karir alumni</p>
-    </div>
-
     <form action="{{ route('manajemenmahasiswa.direktori.alumni.update', $alumni->id) }}" method="POST">
         @csrf
         @method('PUT')
@@ -115,26 +90,25 @@
              berhenti menerima kedua field ini. --}}
         <div class="row g-3 mb-4">
             <div class="col-md-6">
-                <label class="form-label">NIM</label>
-                <input type="text" class="form-control" value="{{ $alumni->nim }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
+                <label class="form-label-custom">NIM</label>
+                <input type="text" class="form-control form-control-custom" value="{{ $alumni->nim }}" disabled>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Angkatan</label>
-                <input type="number" class="form-control" value="{{ $alumni->angkatan }}" disabled style="background-color: var(--c-grey-50); cursor: not-allowed; opacity: 0.7;">
+                <label class="form-label-custom">Angkatan</label>
+                <input type="number" class="form-control form-control-custom" value="{{ $alumni->angkatan }}" disabled>
             </div>
             <div class="col-md-6">
-                <label class="form-label">Tahun Lulus</label>
-                <input type="number" name="tahun_lulus" class="form-control @error('tahun_lulus') is-invalid @enderror" value="{{ old('tahun_lulus', $alumni->tahun_lulus) }}" required min="2000" max="2099">
+                <label class="form-label-custom">Tahun Lulus</label>
+                <input type="number" name="tahun_lulus" class="form-control form-control-custom @error('tahun_lulus') is-invalid @enderror" value="{{ old('tahun_lulus', $alumni->tahun_lulus) }}" required min="2000" max="2099">
                 @error('tahun_lulus') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
 
             <!-- Kontak -->
             <div class="col-md-12" x-data="alumniPhoneCode('{{ $savedCode }}')">
-                <label class="form-label">Kontak / WhatsApp</label>
-                <div class="d-flex position-relative p-0" style="overflow: visible; background: #fff; border: 1.5px solid var(--c-border); border-radius: 10px;">
+                <label class="form-label-custom">Kontak / WhatsApp</label>
+                <div class="d-flex position-relative form-control-custom p-0" style="overflow: visible; background: #fff;">
                     <button type="button" @click.prevent="toggle($el)"
-                            class="btn border-0 d-flex align-items-center gap-2" style="background: var(--c-grey-0); color: var(--c-fg-sec); border-right: 1.5px solid var(--c-border) !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
-                        <span x-text="selected.flag" style="font-size: 15px;"></span>
+                            class="btn border-0 d-flex align-items-center gap-2" style="background: var(--c-grey-0); color: var(--c-fg-sec); border-right: 1px solid var(--c-border-strong) !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 7px; border-bottom-left-radius: 7px;">
                         <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: var(--c-fg-sec);"></span>
                         {{-- Warna panah diwarisi dari tombol: :style Alpine menimpa seluruh atribut style SVG ini. --}}
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
@@ -143,7 +117,7 @@
                     <input type="text" name="kontak" class="form-control border-0 shadow-none w-100"
                            value="{{ old('kontak', $localNum) }}" placeholder="8123456789"
                            @input="$el.value = $el.value.replace(/[^0-9]/g, '')"
-                           style="background: transparent; font-size: 14px; font-weight: 600; color: var(--c-fg);">
+                           style="background: transparent; font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">
                     <input type="hidden" name="phone_code" :value="selected.dial">
 
                     <!-- Dropdown -->
@@ -158,7 +132,6 @@
                                     <button type="button" @click="select(c)"
                                             class="w-100 btn text-start d-flex align-items-center gap-2 py-2 px-3 border-0 rounded-0"
                                             :style="selected.name === c.name ? 'background: var(--c-bg);' : 'background: #fff;'">
-                                        <span x-text="c.flag" style="font-size: 15px;"></span>
                                         <span x-text="c.name" class="text-truncate flex-grow-1" style="font-size: 12px; color: var(--c-fg-sec); font-weight: 500;"></span>
                                         <span x-text="c.dial" style="font-size: 11px; font-weight: 700; color: var(--c-fg-muted);"></span>
                                     </button>
@@ -178,8 +151,8 @@
 
             <!-- Email Pribadi -->
             <div class="col-md-12">
-                <label class="form-label">Email Pribadi</label>
-                <input type="email" name="personal_email" class="form-control @error('personal_email') is-invalid @enderror" value="{{ old('personal_email', $alumni->user->personal_email ?? '') }}" placeholder="nama@email.com">
+                <label class="form-label-custom">Email Pribadi</label>
+                <input type="email" name="personal_email" class="form-control form-control-custom @error('personal_email') is-invalid @enderror" value="{{ old('personal_email', $alumni->user->personal_email ?? '') }}" placeholder="nama@email.com">
                 @error('personal_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 <small class="d-block mt-1" style="font-size: 11px; color: var(--c-fg-muted);">Email pribadi alumni (di luar email kampus).</small>
             </div>
@@ -192,7 +165,7 @@
         </div>
         <div class="row g-3">
             <div class="col-md-6">
-                <label class="form-label">Status Karir</label>
+                <label class="form-label-custom">Status Karir</label>
                 <x-manajemenmahasiswa::ui.select name="status_karir" size="md" :invalid="$errors->has('status_karir')">
                     <option value="">— Pilih Status —</option>
                     @foreach(\Modules\ManajemenMahasiswa\Models\Alumni::STATUS_LABELS as $key => $label)
@@ -202,7 +175,7 @@
                 @error('status_karir') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6">
-                <label class="form-label">Bidang Industri</label>
+                <label class="form-label-custom">Bidang Industri</label>
                 <x-manajemenmahasiswa::ui.select name="bidang_industri" size="md" :invalid="$errors->has('bidang_industri')">
                     <option value="">— Pilih Bidang —</option>
                     @foreach(\Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST as $key => $label)
@@ -212,23 +185,23 @@
                 @error('bidang_industri') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-12">
-                <label class="form-label" id="label-perusahaan">Perusahaan / Instansi / Usaha</label>
-                <input type="text" name="perusahaan" class="form-control @error('perusahaan') is-invalid @enderror" value="{{ old('perusahaan', $alumni->perusahaan) }}" id="input-perusahaan">
+                <label class="form-label-custom" id="label-perusahaan">Perusahaan / Instansi / Usaha</label>
+                <input type="text" name="perusahaan" class="form-control form-control-custom @error('perusahaan') is-invalid @enderror" value="{{ old('perusahaan', $alumni->perusahaan) }}" id="input-perusahaan">
                 @error('perusahaan') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6">
-                <label class="form-label" id="label-jabatan">Jabatan / Posisi</label>
-                <input type="text" name="jabatan" class="form-control @error('jabatan') is-invalid @enderror" value="{{ old('jabatan', $alumni->jabatan) }}" id="input-jabatan">
+                <label class="form-label-custom" id="label-jabatan">Jabatan / Posisi</label>
+                <input type="text" name="jabatan" class="form-control form-control-custom @error('jabatan') is-invalid @enderror" value="{{ old('jabatan', $alumni->jabatan) }}" id="input-jabatan">
                 @error('jabatan') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-6">
-                <label class="form-label">Tahun Mulai Bekerja</label>
-                <input type="number" name="tahun_mulai_bekerja" class="form-control @error('tahun_mulai_bekerja') is-invalid @enderror" value="{{ old('tahun_mulai_bekerja', $alumni->tahun_mulai_bekerja) }}" min="2000" max="{{ date('Y') }}">
+                <label class="form-label-custom">Tahun Mulai Bekerja</label>
+                <input type="number" name="tahun_mulai_bekerja" class="form-control form-control-custom @error('tahun_mulai_bekerja') is-invalid @enderror" value="{{ old('tahun_mulai_bekerja', $alumni->tahun_mulai_bekerja) }}" min="2000" max="{{ date('Y') }}">
                 @error('tahun_mulai_bekerja') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
             <div class="col-md-12">
-                <label class="form-label">LinkedIn URL</label>
-                <input type="url" name="linkedin" class="form-control @error('linkedin') is-invalid @enderror" value="{{ old('linkedin', $alumni->linkedin) }}" placeholder="https://linkedin.com/in/username">
+                <label class="form-label-custom">LinkedIn URL</label>
+                <input type="url" name="linkedin" class="form-control form-control-custom @error('linkedin') is-invalid @enderror" value="{{ old('linkedin', $alumni->linkedin) }}" placeholder="https://linkedin.com/in/username">
                 @error('linkedin') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
         </div>
@@ -241,7 +214,6 @@
     </form>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 document.addEventListener('alpine:init', () => {
     Alpine.data('alumniPhoneCode', (defaultDial) => {

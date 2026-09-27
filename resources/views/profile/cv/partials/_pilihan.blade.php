@@ -8,10 +8,11 @@
 --}}
 <div class="relative" x-data="{ open: false, options: @js($options) }"
      @click.outside="open = false" @keydown.escape="open = false">
+    {{-- Tinggi, garis, huruf & cincin fokus = .form-control-custom (partials/sitkom-ui) --}}
     <button type="button" @click="open = !open"
-            class="form-control flex items-center justify-between gap-2 text-left"
+            class="form-control-custom flex items-center justify-between gap-2 text-left"
             style="cursor: pointer;"
-            :style="open ? 'border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle);' : ''">
+            :style="open ? 'border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.10);' : ''">
         <span class="truncate" x-text="{{ $model }}"></span>
         <svg class="shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"
              width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--c-fg-placeholder);">
@@ -26,10 +27,10 @@
          style="display: none; background: #fff; border: 1px solid var(--c-border); box-shadow: 0 10px 25px rgba(0,0,0,.1);">
         <template x-for="opt in options" :key="opt">
             <button type="button" @click="{{ $model }} = opt; open = false"
-                    class="w-full text-left px-3 py-1.5 text-sm hover:bg-[var(--c-bg)] transition-colors"
+                    class="w-full text-left px-3 py-1.5 hover:bg-[var(--c-bg)] transition-colors"
                     :class="{{ $model }} === opt ? 'font-semibold' : 'font-normal'"
                     :style="{{ $model }} === opt ? 'color: var(--c-primary); background: rgba(11,38,110,0.04)' : 'color: var(--c-fg-sec)'"
-                    style="font-family: inherit; border: none; cursor: pointer; background: none;">
+                    style="font-family: inherit; font-size: 13px; border: none; cursor: pointer; background: none;">
                 <span x-text="opt"></span>
             </button>
         </template>

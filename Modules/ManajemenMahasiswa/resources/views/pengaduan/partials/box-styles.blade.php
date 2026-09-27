@@ -62,7 +62,6 @@
         .kf-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 10px; margin-bottom: 4px; }
         .kf-subject { font-size: 20px; font-weight: 800; color: var(--c-fg); margin: 0; letter-spacing: -.02em; overflow-wrap: anywhere; }
         .kf-sub { font-size: 13px; font-weight: 500; color: var(--c-fg-muted); margin: 0 0 16px; }
-        .kf-sub-note { display: block; font-size: 12px; margin-top: 2px; }
 
         .kf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 40px; max-width: 900px; }
         .kf-row { display: flex; align-items: center; min-width: 0; }
@@ -86,27 +85,6 @@
         .kf-footer {
             display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px;
             background: #FAFAFA; border-top: 1px solid var(--c-border);
-        }
-
-        /* ── Riwayat tiket (timeline) ── */
-        .kf-timeline { position: relative; padding-left: 24px; max-height: 420px; overflow-y: auto; white-space: normal; }
-        .kf-tl-item { position: relative; padding-bottom: 16px; }
-        .kf-tl-item:last-child { padding-bottom: 0; }
-        .kf-tl-item::before {
-            content: ''; position: absolute; left: -19px; top: 14px; bottom: -2px;
-            width: 2px; background: var(--c-border);
-        }
-        .kf-tl-item:last-child::before { display: none; }
-        .kf-tl-dot {
-            position: absolute; left: -24px; top: 4px; width: 12px; height: 12px; border-radius: 50%;
-            background: #ffffff; border: 3px solid var(--c-primary);
-        }
-        .kf-tl-date { font-size: 11px; font-weight: 600; color: var(--c-fg-placeholder); }
-        .kf-tl-title { font-size: 13px; font-weight: 700; color: var(--c-fg); line-height: 1.4; }
-        .kf-tl-actor { font-size: 12px; color: var(--c-fg-muted); }
-        .kf-tl-note {
-            margin-top: 6px; padding: 6px 10px; font-size: 12px; font-style: italic;
-            color: var(--c-fg-muted); border: 1px dashed var(--c-border-strong); border-radius: 6px;
         }
 
         /* ── Field form, meniru .input-group/.input-field Edit User SITKOM ── */

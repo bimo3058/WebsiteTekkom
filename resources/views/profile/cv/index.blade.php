@@ -32,10 +32,84 @@
                 .sitkom-content { padding: 8px 8px 80px !important; display: block !important; overflow: visible !important; }
                 .cvb-wrap { height: auto !important; min-height: 0 !important; padding: 0; }
                 .cvb-box { flex: none !important; min-height: 0 !important; overflow: visible !important; border-radius: 10px; }
-                .cvb-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 10; }
+                /* z-index di atas lingkaran stepper (z-10) & lapisan memuat (z-20) */
+                .cvb-box-header { padding: 12px 14px; position: sticky; top: 52px; z-index: 30; }
                 .cvb-box-body { padding: 12px 14px; }
             }
+
+            /* ── Isi wizard ───────────────────────────────────────────────────
+               Label & kotak isian memakai .form-label-custom/.form-control-custom
+               dari partials/sitkom-ui (gaya Edit User SITKOM). Kelas di bawah hanya
+               untuk bagian khas CV; semua warna dari token palet. */
+            .cvb-stepper { padding: 8px 8px 20px; margin-bottom: 24px; border-bottom: 1px solid var(--c-border); }
+            .cvb-stepper-track { background: var(--c-grey-50); }
+            .cvb-step-btn { background: #ffffff; border: 2px solid var(--c-border-strong); color: var(--c-fg-muted); }
+            .cvb-step-btn:disabled { cursor: not-allowed; }
+            .cvb-step-label { color: var(--c-fg-muted); }
+            .cvb-step-label.is-reached { color: var(--c-fg); }
+            /* Di layar sempit keenam label bertumpuk dan label tepi terpotong, jadi
+               diganti satu baris "Langkah n dari 6" di bawah lingkaran. */
+            .cvb-step-mobile { display: none; margin: 0; color: var(--c-fg-muted); font-size: 11px; font-weight: 600; text-align: center; }
+            .cvb-step-mobile strong { color: var(--c-fg); font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
+            @media (max-width: 767px) {
+                .cvb-step-label, .cvb-stepper-spacer { display: none; }
+                .cvb-step-mobile { display: block; margin-top: 14px; }
+            }
+
+            .cvb-title { margin: 0 0 20px; color: var(--c-fg); font-size: 15px; font-weight: 700; }
+            .cvb-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; color: var(--c-fg); font-size: 13px; font-weight: 700; }
+            .cvb-heading.is-sync { color: var(--c-fg-sec); }
+            .cvb-section { padding-top: 24px; border-top: 1px solid var(--c-border); }
+
+            .cvb-note {
+                display: flex; align-items: flex-start; gap: 10px; margin-bottom: 24px; padding: 12px 14px;
+                background: var(--c-primary-subtle); border: 1px solid rgba(11, 38, 110, 0.12); border-radius: 10px;
+                color: var(--c-fg-sec); font-size: 12px; line-height: 1.6;
+            }
+            .cvb-note > span:first-child { flex-shrink: 0; margin-top: 1px; color: var(--c-primary); }
+            .cvb-note strong { color: var(--c-primary); }
+
+            .cvb-item {
+                display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 14px 16px;
+                background: #ffffff; border: 1px solid var(--c-border); border-radius: 10px;
+            }
+            .cvb-item.is-sync { background: var(--c-primary-subtle); border-color: rgba(11, 38, 110, 0.15); }
+            .cvb-item-title { margin: 0; color: var(--c-fg); font-size: 13px; font-weight: 700; }
+            .cvb-item-sub { margin: 0; color: var(--c-fg-sec); font-size: 13px; }
+            .cvb-item.is-sync .cvb-item-sub { color: var(--c-primary); font-weight: 500; }
+            .cvb-item-meta { margin: 4px 0 0; color: var(--c-fg-muted); font-size: 11px; }
+            .cvb-item-desc { margin: 8px 0 0; color: var(--c-fg-sec); font-size: 12px; line-height: 1.6; }
+            .cvb-item-link { display: inline-block; margin-top: 4px; color: var(--c-primary); font-size: 11px; font-weight: 600; }
+            .cvb-item-link:hover { text-decoration: underline; }
+
+            .cvb-empty {
+                padding: 16px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px;
+                color: var(--c-fg-muted); font-size: 12px; font-style: italic; text-align: center;
+            }
+            .cvb-add { padding: 20px; background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 10px; }
+
+            /* Chip bentuk role-badge SITKOM ukuran xs (components/ui/role-badge) */
+            .cvb-chip {
+                display: inline-block; flex-shrink: 0; padding: 2px 8px; border: 1px solid rgba(11, 38, 110, 0.18);
+                border-radius: 9999px; background: var(--c-primary-subtle); color: var(--c-primary);
+                font-size: 9px; font-weight: 700; line-height: 1.5; letter-spacing: 0.02em; text-transform: uppercase; white-space: nowrap;
+            }
+            .cvb-chip.is-neutral { background: var(--c-grey-50); border-color: var(--c-border); color: var(--c-fg-sec); }
+
+            /* Kotak baca-saja (data SSO) — rupa .form-control-custom:disabled */
+            .cvb-readonly { display: flex; align-items: center; gap: 8px; background-color: var(--c-bg); color: var(--c-fg-muted); cursor: not-allowed; }
+            .cvb-readonly > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .cvb-readonly .cvb-chip { margin-left: auto; }
+
+            /* Tombol hapus item: navy, bukan merah — keputusan tim untuk aksi Hapus */
+            .cvb-icon-btn {
+                display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 28px;
+                padding: 0; border: none; border-radius: 7px; background: transparent; color: var(--c-fg-muted);
+                cursor: pointer; transition: background-color 0.15s, color 0.15s;
+            }
+            .cvb-icon-btn:hover { background: var(--c-primary-subtle); color: var(--c-primary); }
         </style>
+        @include('manajemenmahasiswa::partials.sitkom-ui')
 
         <div class="cvb-wrap" x-data="cvWizard()">
             <div class="cvb-box">
@@ -43,8 +117,8 @@
                     <x-page-header title="CV Builder" subtitle="Lengkapi data Anda untuk menghasilkan CV profesional.">
                         <x-slot:leading>
                             <a href="{{ route('profile.edit') }}"
-                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50"
-                                style="border-color: var(--c-border);" title="Kembali" aria-label="Kembali ke Profil">
+                                class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border bg-white shadow-sm transition-colors hover:bg-[var(--c-bg)]"
+                                style="border-color: var(--c-border); color: var(--c-fg-sec);" title="Kembali" aria-label="Kembali ke Profil">
                                 <x-icon name="chevron-left" size="18" />
                             </a>
                         </x-slot:leading>
@@ -53,63 +127,57 @@
                 <div class="cvb-box-body">
 
                     <!-- Stepper Header -->
-                    <div class="card mb-6">
-                        <div class="p-6">
-                            <div class="relative flex justify-between items-center w-full">
-                                <div
-                                    class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-100 z-0 rounded-full">
-                                </div>
-                                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 z-0 rounded-full transition-all duration-500 ease-out"
-                                    style="background: var(--c-primary);"
-                                    :style="`width: ${((step - 1) / (steps.length - 1)) * 100}%`"></div>
-
-                                <template x-for="(s, index) in steps" :key="index">
-                                    <div class="relative z-10 flex flex-col items-center">
-                                        <button @click="goToStep(index + 1)"
-                                            class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
-                                            :class="[
-                                            step > index + 1 ? 'text-white shadow-md' :
-                                            step === index + 1 ? 'bg-white shadow-sm scale-110' :
-                                            'bg-white border-2 border-slate-200 text-slate-400'
-                                        ]"
-                                            :style="step > index + 1 ? 'background: var(--c-primary);' : (step === index + 1 ? 'border: 4px solid var(--c-primary); color: var(--c-primary);' : '')"
-                                            :disabled="index + 1 > maxStep">
-                                            <template x-if="step > index + 1"><x-icon name="check" size="18" /></template>
-                                            <template x-if="step <= index + 1"><span x-text="index + 1"></span></template>
-                                        </button>
-                                        <span
-                                            class="absolute top-12 whitespace-nowrap text-[11px] font-bold tracking-wide uppercase transition-colors duration-300"
-                                            :class="step >= index + 1 ? 'text-slate-800' : 'text-slate-400'"
-                                            x-text="s.title"></span>
-                                    </div>
-                                </template>
+                    <div class="cvb-stepper">
+                        <div class="relative flex justify-between items-center w-full">
+                            <div class="cvb-stepper-track absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 z-0 rounded-full">
                             </div>
-                            <div class="h-8"></div>
+                            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 z-0 rounded-full transition-all duration-500 ease-out"
+                                style="background: var(--c-primary);"
+                                :style="`width: ${((step - 1) / (steps.length - 1)) * 100}%`"></div>
+
+                            <template x-for="(s, index) in steps" :key="index">
+                                <div class="relative z-10 flex flex-col items-center">
+                                    <button @click="goToStep(index + 1)"
+                                        class="cvb-step-btn w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+                                        :class="step > index + 1 ? 'shadow-md' : (step === index + 1 ? 'shadow-sm scale-110' : '')"
+                                        :style="step > index + 1 ? 'background: var(--c-primary); border-color: var(--c-primary); color: #fff;' : (step === index + 1 ? 'border: 4px solid var(--c-primary); color: var(--c-primary);' : '')"
+                                        :disabled="index + 1 > maxStep">
+                                        <template x-if="step > index + 1"><x-icon name="check" size="18" /></template>
+                                        <template x-if="step <= index + 1"><span x-text="index + 1"></span></template>
+                                    </button>
+                                    <span
+                                        class="cvb-step-label absolute top-12 whitespace-nowrap text-[11px] font-bold tracking-wide uppercase transition-colors duration-300"
+                                        :class="step >= index + 1 ? 'is-reached' : ''"
+                                        x-text="s.title"></span>
+                                </div>
+                            </template>
                         </div>
+                        <div class="cvb-stepper-spacer h-8"></div>
+                        <p class="cvb-step-mobile">
+                            Langkah <span x-text="step"></span> dari <span x-text="steps.length"></span> ·
+                            <strong x-text="steps[step - 1].title"></strong>
+                        </p>
                     </div>
 
                     <!-- Step Content -->
-                    <div class="card p-8 relative min-h-[400px]">
+                    <div class="relative min-h-[400px]">
 
                         <!-- Loading State -->
                         <div x-show="loading"
-                            class="absolute inset-0 bg-white/80 z-20 rounded-2xl flex flex-col items-center justify-center">
+                            class="absolute inset-0 bg-white/80 z-20 flex flex-col items-center justify-center">
                             <div class="w-8 h-8 border-4 rounded-full animate-spin"
                                 style="border-color: var(--c-primary-subtle); border-top-color: var(--c-primary);">
                             </div>
-                            <p class="mt-4 text-sm font-bold text-slate-500">Memuat data...</p>
+                            <p class="mt-4 text-sm font-bold" style="color: var(--c-fg-muted);">Memuat data...</p>
                         </div>
 
-                        <!-- Error Alert -->
-                        <div x-show="error"
-                            class="mb-6 p-4 rounded-xl flex items-start gap-3"
-                            style="background: var(--c-error-subtle); border: 1px solid var(--c-error);">
-                            <span style="color: var(--c-error);"><x-icon name="alert-triangle" size="20" /></span>
-                            <p class="text-sm font-medium" style="color: var(--c-error);" x-text="errorMsg"></p>
-                            <button @click="error = false" class="ml-auto" style="color: var(--c-error); opacity: 0.6;">
-                                <x-icon name="close" size="18" />
-                            </button>
-                        </div>
+                        <!-- Error Alert — gaya pesan User Management SITKOM. x-if membuat ulang
+                             kartu setiap galat baru, jadi tombol tutupnya tidak "menempel". -->
+                        <template x-if="error">
+                            <x-manajemenmahasiswa::ui.flash type="error" class="mb-6">
+                                <span x-text="errorMsg"></span>
+                            </x-manajemenmahasiswa::ui.flash>
+                        </template>
 
                         <!-- Step 1: Data Pribadi -->
                         <div x-show="step === 1 && !loading" x-transition.opacity.duration.300ms style="display: none;">
