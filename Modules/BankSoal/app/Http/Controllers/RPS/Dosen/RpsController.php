@@ -309,7 +309,7 @@ class RpsController extends Controller
             }
         }
 
-        return view('banksoal::pages.rps.dosen.index', compact(
+        return view('banksoal::pages.rps.Dosen.index', compact(
             'mataKuliahs',
             'riwayat',
             'riwayatMkDisetujui',
@@ -374,7 +374,7 @@ class RpsController extends Controller
             $isUploadOpen = $now->between($start, $end);
         }
 
-        return view('banksoal::pages.rps.dosen.create', compact(
+        return view('banksoal::pages.rps.Dosen.create', compact(
             'mataKuliahs',
             'tahunAjarans',
             'semester',
@@ -1201,7 +1201,7 @@ class RpsController extends Controller
             $generateDetail = $rps->generateDetail;
         }
 
-        return view('banksoal::pages.rps.dosen.edit', compact(
+        return view('banksoal::pages.rps.Dosen.edit', compact(
             'rps',
             'tahunAjarans',
             'selectedDosenIds',
