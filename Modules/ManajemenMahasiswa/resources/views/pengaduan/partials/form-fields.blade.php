@@ -12,8 +12,8 @@
       $dosenList          daftar nama dosen
       $frekuensiList      [value => label]
       $buktiPendingItems  bukti yang sudah terunggah (opsional)
-      $backUrl            tujuan tombol kembali & "Ganti jalur" (pemilih jalur);
-                          tombol kembali hanya tampil di jalur Reguler
+      $backUrl            tujuan tombol kembali (pemilih jalur);
+                          hanya tampil di jalur Reguler
 --}}
 @php
     $isKonfidensial = $jalur === 'konfidensial';
@@ -63,7 +63,6 @@
                         {{ $isKonfidensial
                             ? 'Identitas Anda tidak ditampilkan kepada publik maupun admin.'
                             : 'Identitas Anda terlihat oleh admin untuk memudahkan tindak lanjut.' }}
-                        <a href="{{ $backUrl }}">Ganti jalur</a>
                     </div>
                 </div>
             </div>
@@ -114,9 +113,12 @@
                     </div>
                 @endunless
                 <div class="pgd-field">
-                    <label class="pgd-label" for="pgdAngkatan">Angkatan <span class="is-opt">(Opsional)</span></label>
+                    <label class="pgd-label" for="pgdAngkatan">Angkatan</label>
                     <input type="text" class="pgd-input {{ $invalid('template.angkatan') }}" id="pgdAngkatan" name="template[angkatan]"
-                           value="{{ old('template.angkatan') }}" placeholder="Contoh: 2022">
+                           value="{{ old('template.angkatan') }}" placeholder="Contoh: 2022"
+                           inputmode="numeric" pattern="\d{1,4}" maxlength="4" autocomplete="off"
+                           title="Hanya angka, maksimal 4 digit"
+                           oninput="this.value = this.value.replace(/\D/g, '').slice(0, 4)">
                     @error('template.angkatan') <div class="pgd-error">{{ $message }}</div> @enderror
                 </div>
             </div>
@@ -151,7 +153,7 @@
         </div>
     </div>
 
-    {{-- ── Informasi tambahan ── --}}
+    {{-- ── Informasi tambahan: satu grid 2 kolom (Lokasi|Waktu, Mata Kuliah|Dosen, Tendik|Frekuensi) ── --}}
     <div class="kf-split">
         <div class="kf-side">
             <h3>Informasi Tambahan</h3>
@@ -168,12 +170,10 @@
                 <div class="pgd-field">
                     <label class="pgd-label" for="pgdWaktu">Waktu Kejadian</label>
                     <input type="datetime-local" class="pgd-input {{ $invalid('template.waktu_kejadian') }}" id="pgdWaktu" name="template[waktu_kejadian]"
-                           value="{{ old('template.waktu_kejadian') ?? old('template.tanggal_kejadian') }}">
+                           value="{{ old('template.waktu_kejadian') ?? old('template.tanggal_kejadian') }}"
+                           max="{{ now()->format('Y-m-d\TH:i') }}">
                     @error('template.waktu_kejadian') <div class="pgd-error">{{ $message }}</div> @enderror
                 </div>
-            </div>
-
-            <div class="pgd-fields is-3">
                 <div class="pgd-field">
                     <label class="pgd-label" for="pgdMatkul">Mata Kuliah</label>
                     <input type="text" class="pgd-input {{ $invalid('template.mata_kuliah') }}" id="pgdMatkul" name="template[mata_kuliah]"
@@ -198,9 +198,6 @@
                            value="{{ old('template.nama_tendik') }}" placeholder="Contoh: Bu Siti">
                     @error('template.nama_tendik') <div class="pgd-error">{{ $message }}</div> @enderror
                 </div>
-            </div>
-
-            <div class="pgd-fields">
                 <div class="pgd-field">
                     <label class="pgd-label" for="pgdFrekuensi">Seberapa Sering Terjadi</label>
                     <x-manajemenmahasiswa::ui.select name="template[frekuensi]" id="pgdFrekuensi" size="md" :invalid="$errors->has('template.frekuensi')">

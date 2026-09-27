@@ -9,7 +9,7 @@
                      AJAX gagal, form disubmit biasa (halaman init sebagai cadangan).
 
     Terbuka otomatis bila URL memuat ?buat=1 (tautan lama /jalur dan tombol
-    "Ganti jalur" di halaman form).
+    kembali di form Reguler).
 --}}
 <style>
     #buatPengaduanModal .modal-content { border-radius: 16px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }

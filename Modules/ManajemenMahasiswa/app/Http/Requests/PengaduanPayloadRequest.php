@@ -36,11 +36,12 @@ class PengaduanPayloadRequest extends FormRequest
             'template'                  => ['required', 'array'],
             'template.judul'            => ['required', 'string', 'max:255'],
             'template.kronologi'        => ['required', 'string', 'min:20', 'max:5000'],
-            'template.angkatan'         => ['nullable', 'string', 'max:20'],
+            'template.angkatan'         => ['nullable', 'regex:/^\d{1,4}$/'],
             'template.lokasi'           => ['nullable', 'string', 'max:255'],
-            'template.waktu_kejadian'   => ['nullable', 'date'],
+            // Kejadian tidak mungkin terjadi di masa depan.
+            'template.waktu_kejadian'   => ['nullable', 'date', 'before_or_equal:now'],
             // Backward compatibility: key lama dari form versi sebelumnya
-            'template.tanggal_kejadian' => ['nullable', 'date'],
+            'template.tanggal_kejadian' => ['nullable', 'date', 'before_or_equal:now'],
             'template.mata_kuliah'      => ['nullable', 'string', 'max:255'],
             'template.nama_dosen'       => ['nullable', 'string', 'max:255'],
             'template.nama_tendik'      => ['nullable', 'string', 'max:255'],
@@ -57,7 +58,10 @@ class PengaduanPayloadRequest extends FormRequest
         return [
             'kategori.in'                => 'Kategori pengaduan tidak dikenali.',
             'template.kronologi.min'     => 'Pesan minimal 20 karakter agar dapat ditindaklanjuti.',
+            'template.angkatan.regex'    => 'Angkatan hanya boleh berisi angka, maksimal 4 digit.',
             'template.waktu_kejadian.date' => 'Waktu kejadian harus berupa tanggal yang valid.',
+            'template.waktu_kejadian.before_or_equal'   => 'Waktu kejadian tidak boleh melebihi waktu saat ini.',
+            'template.tanggal_kejadian.before_or_equal' => 'Waktu kejadian tidak boleh melebihi waktu saat ini.',
             'bukti.max'                  => 'Bukti dukung maksimal ' . PengaduanBukti::MAX_FILES . ' berkas.',
             'bukti.*.mimes'              => 'Bukti dukung harus berupa berkas PDF.',
             'bukti.*.max'                => 'Ukuran tiap bukti dukung maksimal ' . (PengaduanBukti::MAX_KB / 1024) . ' MB.',
