@@ -1,264 +1,149 @@
 @php
-    $layoutComponent = 'banksoal::layouts.dosen-admin';
-    if (auth()->user()->hasRole('gpm')) {
-        $layoutComponent = 'banksoal::layouts.gpm-master';
-    } elseif (auth()->user()->hasRole('admin_banksoal') || auth()->user()->hasRole('admin')) {
-        $layoutComponent = 'banksoal::layouts.admin';
-    }
+    // Follow the page's route so users with multiple roles keep the correct navigation.
+    $previewRole = match (true) {
+        request()->routeIs('banksoal.admin.*') => 'admin',
+        request()->routeIs('banksoal.rps.gpm.*') => 'gpm',
+        request()->routeIs('banksoal.rps.dosen.*') => 'dosen',
+        auth()->user()->hasRole('gpm') => 'gpm',
+        auth()->user()->hasRole('admin_banksoal') || auth()->user()->hasRole('admin') || auth()->user()->hasRole('superadmin') => 'admin',
+        default => 'dosen',
+    };
+    $layoutComponent = match ($previewRole) {
+        'admin' => 'banksoal::layouts.admin',
+        'gpm' => 'banksoal::layouts.gpm-master',
+        default => 'banksoal::layouts.dosen-admin',
+    };
+    $backUrl = route(match ($previewRole) {
+        'admin' => 'banksoal.admin.kontrol-banksoal.rps',
+        'gpm' => 'banksoal.rps.gpm.validasi-rps',
+        default => 'banksoal.rps.dosen.index',
+    });
+    $status = strtolower($rps->status ?? 'draft');
+    [$statusTone, $statusText, $statusMessage] = match ($status) {
+        'disetujui' => ['success', 'Disetujui GPM', 'RPS telah disetujui dan siap digunakan sebagai acuan pengajaran.'],
+        'revisi' => ['danger', 'Perlu revisi', 'Perbaiki dokumen sesuai catatan penilaian GPM sebelum mengajukan kembali.'],
+        'diajukan' => ['pending', 'Menunggu validasi', 'RPS telah diajukan dan menunggu peninjauan oleh GPM.'],
+        default => ['neutral', 'Draf', 'RPS belum diajukan untuk proses validasi.'],
+    };
+    $hasReview = isset($existingReview) && $existingReview->nilai_akhir !== null;
+    $scorePercent = $hasReview && ($totalBobot ?? 0) > 0 ? max(0, min(100, $existingReview->nilai_akhir / $totalBobot * 100)) : 0;
 @endphp
 
-<x-dynamic-component :component="$layoutComponent">
+<x-dynamic-component :component="$layoutComponent" :rps-preview="true">
     @section('breadcrumbs')
-    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
-    <span class="mx-2 text-slate-300">/</span>
-    <span class="text-slate-500 hover:text-primary transition-colors">RPS</span>
-    <span class="mx-2 text-slate-300">/</span>
-    <span class="text-slate-800 font-semibold">Preview RPS</span>
+        <a href="{{ $backUrl }}" class="text-slate-500 hover:text-primary">RPS</a>
+        <span class="mx-2 text-slate-300">/</span><span class="text-slate-800">Preview RPS</span>
     @endsection
 
-    <x-banksoal::notification.alerts />
-
-    <x-banksoal::ui.page-header title="Detail & Preview RPS" subtitle="Detail lengkap terkait RPS, parameter kesesuaian, audit log, dan dokumen PDF">
-        <x-slot:actions>
-            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all bg-white shadow-sm" onclick="window.history.back()">
-                <i class="fas fa-arrow-left text-xs"></i> Kembali
-            </button>
-        </x-slot:actions>
-    </x-banksoal::ui.page-header>
-
-    @if(!empty($rps))
-        <!-- Metadata Cards Grid -->
-        <div class="mb-6 grid gap-4 xl:grid-cols-3">
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="mb-2 text-[11px] font-bold uppercase tracking-wider text-primary">Mata Kuliah</div>
-                <div class="text-lg font-bold text-slate-900 leading-snug">{{ $rps->mk_nama }}</div>
-                <div class="mt-2 text-sm text-slate-500 font-medium">
-                    <span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-semibold mr-1.5">{{ $rps->kode }}</span>
-                    Semester {{ $rps->semester }} &middot; TA {{ $rps->tahun_ajaran }}
-                </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="mb-3 text-[11px] font-bold uppercase tracking-wider text-primary">Dosen Pengampu</div>
-                <div class="flex flex-wrap gap-2 max-h-24 overflow-y-auto pr-1">
-                    @forelse($dosenPengampu as $dosen)
-                        <span class="inline-flex items-center rounded-full bg-primary/5 px-3 py-1 text-xs font-semibold text-primary border border-primary/10">
-                            {{ $dosen->name }}
-                        </span>
-                    @empty
-                        <span class="text-sm text-slate-400 italic">Tidak ada dosen pengampu terdata</span>
-                    @endforelse
-                </div>
-            </div>
-
-            <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="mb-3 text-[11px] font-bold uppercase tracking-wider text-primary">CPL / CPMK Terkoneksi</div>
-                <div class="space-y-3 max-h-24 overflow-y-auto pr-1">
-                    @if($cplCpmkMappings->isNotEmpty())
-                        @forelse($cplCpmkMappings as $cplId => $rows)
-                            @php $firstRow = $rows->first(); @endphp
-                            <div class="rounded-xl border border-slate-100 bg-slate-50 p-2.5">
-                                <div class="text-xs font-bold text-slate-800">{{ $firstRow->cpl_kode }}</div>
-                                <div class="mt-1.5 space-y-1.5">
-                                    @foreach($rows as $row)
-                                        <div class="rounded-lg border border-emerald-100 bg-white px-2.5 py-1.5 text-[11px] text-slate-700">
-                                            <span class="font-bold text-emerald-700">{{ $row->cpmk_kode }}</span>
-                                            <div class="mt-0.5 text-[10px] text-slate-500 leading-normal">{{ $row->cpmk_deskripsi }}</div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @empty
-                            <div class="text-xs text-slate-400 italic">Belum ada pemetaan CPL/CPMK untuk MK ini.</div>
-                        @endforelse
-                    @else
-                        <div class="text-xs text-slate-400 italic">Belum ada pemetaan CPL/CPMK untuk MK ini.</div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        @php
-            $status = strtolower($rps->status ?? 'draft');
-            if ($status === 'disetujui') {
-                $statusClass = 'border-emerald-200 bg-emerald-50 text-emerald-700';
-                $iconClass = 'bg-emerald-100 text-emerald-600';
-                $statusText = 'Disetujui GPM';
-                $statusIcon = '✓';
-                $statusMsg = 'RPS ini telah disetujui dan siap digunakan sebagai acuan pengajaran.';
-            } elseif ($status === 'revisi') {
-                $statusClass = 'border-rose-200 bg-rose-50 text-rose-700';
-                $iconClass = 'bg-rose-100 text-rose-600';
-                $statusText = 'Perlu Revisi';
-                $statusIcon = '✕';
-                $statusMsg = 'RPS dikembalikan oleh GPM untuk dilakukan perbaikan sesuai catatan penilaian.';
-            } elseif ($status === 'diajukan') {
-                $statusClass = 'border-amber-200 bg-amber-50 text-amber-700';
-                $iconClass = 'bg-amber-100 text-amber-600';
-                $statusText = 'Menunggu Validasi GPM';
-                $statusIcon = '⏳';
-                $statusMsg = 'RPS telah diajukan dan sedang menunggu antrean peninjauan oleh tim GPM.';
-            } else {
-                $statusClass = 'border-slate-200 bg-slate-50 text-slate-700';
-                $iconClass = 'bg-slate-100 text-slate-600';
-                $statusText = 'Draf';
-                $statusIcon = '📄';
-                $statusMsg = 'RPS masih berupa draf dan belum diajukan untuk proses validasi.';
-            }
-        @endphp
-
-        <!-- Status Banner -->
-        <div class="mb-6 rounded-2xl border p-4 shadow-sm {{ $statusClass }} transition-all duration-300">
-            <div class="flex items-start gap-3">
-                <div class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full font-bold shadow-sm {{ $iconClass }} text-sm">
-                    {{ $statusIcon }}
-                </div>
-                <div class="text-sm">
-                    <p class="font-bold tracking-tight">Status: {{ $statusText }}</p>
-                    <p class="text-xs mt-0.5 opacity-90 leading-relaxed">{{ $statusMsg }}</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Workspace: PDF on left, Review/Audit on right -->
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-5 items-stretch">
-            <!-- Left: PDF Frame (3/5) -->
-            <div class="xl:col-span-3">
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-[600px] flex flex-col">
-                    <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
-                        <div class="text-xs font-bold text-slate-600 flex items-center gap-2 truncate">
-                            <i class="fas fa-file-pdf text-rose-500"></i> {{ basename($rps->dokumen ?? 'Dokumen RPS.pdf') }}
-                        </div>
-                        <div class="flex items-center gap-2">
-                            @if(!empty($fileUrl))
-                                <a href="{{ $fileUrl }}" target="_blank" class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors" title="Buka PDF di tab baru">
-                                    <i class="fas fa-external-link-alt text-xs"></i>
-                                </a>
-                            @endif
-                            @if(!empty($downloadUrl))
-                                <a href="{{ $downloadUrl }}" class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors" title="Unduh berkas PDF">
-                                    <i class="fas fa-download text-xs"></i>
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="flex-1 bg-slate-100 relative"> 
-                        @if(!empty($fileUrl))
-                            <iframe
-                                id="pdfFrame"
-                                src="{{ $fileUrl }}"
-                                loading="eager"
-                                title="PDF Preview RPS"
-                                class="absolute inset-0 w-full h-full border-0">
-                            </iframe>
-                        @else
-                            <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                                <i class="fas fa-exclamation-triangle text-3xl text-amber-500 mb-3 animate-pulse"></i>
-                                <h3 class="text-sm font-bold text-slate-700">Berkas PDF Tidak Tersedia</h3>
-                                <p class="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
-                                    {{ $errorMessage ?? 'File RPS belum diunggah atau tidak ditemukan di storage.' }}
-                                </p>
-                            </div>
+    <div class="dosen-page-wrap">
+        <div class="dosen-page-box">
+            <header class="dosen-page-header">
+                <div class="bs-heading-row">
+                    <div><div class="bs-heading-label"><h1>Detail &amp; Preview RPS</h1><span class="bs-role-badge">{{ $previewRole === 'gpm' ? 'GPM' : ucfirst($previewRole) }}</span></div><p>Tinjau dokumen, capaian pembelajaran, dan hasil penilaian GPM.</p></div>
+                    <div class="bs-heading-actions">
+                        <a href="{{ $backUrl }}" class="dosen-management-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m12 5-7 7 7 7M5 12h14" /></svg>Kembali ke RPS</a>
+                        @if(!empty($rps) && !empty($downloadUrl))
+                            <a href="{{ $downloadUrl }}" class="dosen-management-btn dosen-management-btn-primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5" /></svg>Unduh RPS</a>
                         @endif
                     </div>
                 </div>
-            </div>
-
-            <!-- Right: Ringkasan Penilaian & History Log (2/5) -->
-            <div class="xl:col-span-2 flex flex-col gap-6">
-                <!-- Ringkasan Penilaian Card -->
-                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col flex-1">
-                    <div class="text-sm font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-3">
-                        <span class="flex h-6 w-6 items-center justify-center rounded-lg bg-navy/10 text-navy">
-                            <i class="fas fa-check-circle text-xs"></i>
-                        </span>
-                        Ringkasan Penilaian GPM
-                    </div>
-                    
-                    <div class="mb-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center shadow-sm">
-                        <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Skor Akhir Evaluasi</p>
-                        <p class="text-3xl font-extrabold text-navy">
-                            {{ isset($existingReview) ? $existingReview->nilai_akhir : '0' }}<span class="text-lg text-slate-400 font-semibold">/{{ $totalBobot }}</span>
-                        </p>
-                    </div>
-
-                    @if(isset($existingReview) && !empty($existingReview->catatan))
-                        <div class="mb-4">
-                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Catatan Komentar GPM</label>
-                            <div class="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs text-slate-600 font-medium leading-relaxed">
-                                {{ $existingReview->catatan }}
-                            </div>
+            </header>
+            <div class="dosen-page-body">
+                <x-banksoal::notification.alerts />
+                @if(!empty($rps))
+                    <section class="bs-section rp-summary" aria-label="Informasi RPS">
+                        <div class="rp-course">
+                            <span class="rp-eyebrow">Mata kuliah</span>
+                            <h2>{{ $rps->mk_nama }}</h2>
+                            <dl class="rp-course-meta">
+                                <div><dt>Kode</dt><dd>{{ $rps->kode ?: '—' }}</dd></div>
+                                <div><dt>Semester</dt><dd>{{ $rps->semester ?: '—' }}</dd></div>
+                                <div><dt>Tahun ajaran</dt><dd>{{ $rps->tahun_ajaran ?: '—' }}</dd></div>
+                            </dl>
                         </div>
-                    @endif
+                        <div class="rp-lecturers"><h3 class="rp-eyebrow">Dosen pengampu</h3><div class="rp-chips">
+                            @forelse($dosenPengampu as $dosen)<span class="rp-chip">{{ $dosen->name }}</span>
+                            @empty<p class="rp-muted">Belum ada dosen pengampu terdata.</p>@endforelse
+                        </div></div>
+                        <div class="rp-status"><span class="rp-badge rp-badge-{{ $statusTone }}">{{ $statusText }}</span><p>{{ $statusMessage }}</p></div>
+                    </section>
 
-                    <!-- Parameter Checklist Breakdown -->
-                    <div class="border-t border-slate-100 pt-4 flex-1 overflow-y-auto max-h-[220px] pr-1">
-                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-3">Breakdown Parameter Kesesuaian</label>
-                        <div class="space-y-2">
-                            @forelse($parameters as $param)
-                                @php
-                                    $skorVal = $reviewChecklist[$param->id] ?? null;
-                                @endphp
-                                <div class="flex items-start justify-between p-2.5 rounded-xl border {{ $skorVal === '1' ? 'bg-emerald-50/50 border-emerald-100/70 text-emerald-800' : ($skorVal === '0' ? 'bg-rose-50/50 border-rose-100/70 text-rose-800' : 'bg-slate-50/50 border-slate-100 text-slate-500') }} transition-all duration-200">
-                                    <div class="text-[11px] font-semibold leading-relaxed pr-2">
-                                        {{ $param->aspek }}
-                                        <span class="text-[9px] text-slate-400 block font-normal mt-0.5">Bobot: {{ $param->bobot }}</span>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        @if($skorVal === '1')
-                                            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 font-extrabold text-[10px]">✓</span>
-                                        @elseif($skorVal === '0')
-                                            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-rose-700 font-extrabold text-[10px]">✕</span>
-                                        @else
-                                            <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-slate-400 font-extrabold text-[10px]">-</span>
-                                        @endif
-                                    </div>
+                    <div class="rp-workspace">
+                        <section class="bs-section rp-document" aria-labelledby="rp-document-title">
+                            <div class="bs-section-heading">
+                                <div class="rp-file-heading">
+                                    <span class="rp-file-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M14 2H6v20h12V6zM14 2v5h5M9 12h6M9 16h4" /></svg></span>
+                                    <div><h2 id="rp-document-title">Dokumen RPS</h2><p>{{ !empty($rps->dokumen) ? basename($rps->dokumen) : 'Dokumen belum tersedia' }}</p></div>
                                 </div>
-                            @empty
-                                <p class="text-xs text-slate-400 italic">Parameter kriteria penilaian kosong.</p>
-                            @endforelse
+                                @if(!empty($fileUrl))<a href="{{ $fileUrl }}" target="_blank" rel="noopener" class="dosen-management-btn" aria-label="Buka dokumen RPS di tab baru">Buka tab baru<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3h7v7m0-7L10 14M10 3H3v18h18v-7" /></svg></a>@endif
+                            </div>
+                            @if(!empty($fileUrl))
+                                <div class="rp-pdf-surface"><iframe id="pdfFrame" src="{{ $fileUrl }}" loading="eager" title="Preview PDF RPS {{ $rps->mk_nama }}"></iframe></div>
+                                <p class="rp-pdf-help">Preview tidak muncul? <a href="{{ $fileUrl }}" target="_blank" rel="noopener">Buka dokumen di tab baru</a> untuk membacanya.</p>
+                            @else
+                                <div class="rp-empty rp-file-missing" role="status">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M14 2H6v20h12V6zM14 2v5h5M12 11v4m0 3h.01" /></svg>
+                                    <h3>Berkas PDF belum tersedia</h3><p>{{ $errorMessage ?? 'Dokumen RPS belum diunggah atau berkas tidak ditemukan.' }}</p>
+                                </div>
+                            @endif
+                        </section>
+
+                        <div class="rp-review-column">
+                            <section class="bs-section" aria-labelledby="rp-review-title">
+                                <div class="bs-section-heading"><div><h2 id="rp-review-title">Penilaian GPM</h2><p>Ringkasan evaluasi dan kesesuaian RPS.</p></div></div>
+                                <div class="rp-panel-body">
+                                    <div class="rp-score">
+                                        <span class="rp-eyebrow">Skor akhir evaluasi</span>
+                                        <div class="rp-score-value">{{ $hasReview ? $existingReview->nilai_akhir : '—' }}<span>/ {{ $totalBobot ?? 0 }}</span></div>
+                                        @if($hasReview && ($totalBobot ?? 0) > 0)
+                                            <meter min="0" max="100" value="{{ $scorePercent }}" aria-label="Persentase skor evaluasi">{{ round($scorePercent) }}%</meter>
+                                        @else<p class="rp-muted">{{ $hasReview ? 'Bobot penilaian belum tersedia.' : 'Belum ada hasil penilaian GPM.' }}</p>@endif
+                                    </div>
+                                    @if(!empty($existingReview->catatan))<div class="rp-notes"><h3 class="rp-eyebrow">Catatan GPM</h3><p>{{ $existingReview->catatan }}</p></div>@endif
+                                    <h3 class="rp-eyebrow rp-checklist-title">Parameter kesesuaian</h3>
+                                    <ul class="rp-checklist">
+                                        @forelse($parameters as $param)
+                                            @php
+                                                $score = $reviewChecklist[$param->id] ?? null;
+                                                $checked = $score !== null && in_array($score, [1, '1', true], true);
+                                                $unchecked = $score !== null && in_array($score, [0, '0', false], true);
+                                            @endphp
+                                            <li><div><strong>{{ $param->aspek }}</strong><span class="rp-muted">Bobot {{ $param->bobot }}</span></div><span class="rp-check {{ $checked ? 'rp-check-yes' : ($unchecked ? 'rp-check-no' : '') }}" aria-label="{{ $checked ? 'Sesuai' : ($unchecked ? 'Belum sesuai' : 'Belum dinilai') }}" title="{{ $checked ? 'Sesuai' : ($unchecked ? 'Belum sesuai' : 'Belum dinilai') }}">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="{{ $checked ? 'm5 12 4 4L19 6' : ($unchecked ? 'm6 6 12 12M18 6 6 18' : 'M6 12h12') }}" /></svg>
+                                            </span></li>
+                                        @empty<li class="rp-muted">Belum ada parameter penilaian.</li>@endforelse
+                                    </ul>
+                                </div>
+                            </section>
+                            <section class="bs-section" aria-labelledby="rp-history-title">
+                                <div class="bs-section-heading"><h2 id="rp-history-title">Riwayat aktivitas</h2></div>
+                                <div class="rp-panel-body rp-history-body"><ol class="rp-history">
+                                    @forelse($history as $item)
+                                        <li><div class="rp-history-heading"><strong>{{ ucfirst($item->action) }}</strong><time datetime="{{ \Carbon\Carbon::parse($item->created_at)->toIso8601String() }}">{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y · H:i') }}</time></div>@if($item->description)<p>{{ $item->description }}</p>@endif</li>
+                                    @empty<li class="rp-muted">Belum ada riwayat aktivitas untuk RPS ini.</li>@endforelse
+                                </ol></div>
+                            </section>
                         </div>
                     </div>
-                </div>
 
-                <!-- History Log Card -->
-                <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm max-h-[220px] overflow-hidden flex flex-col">
-                    <div class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
-                        <i class="fas fa-history text-slate-400"></i> Audit History Log
-                    </div>
-                    <div class="space-y-3.5 overflow-y-auto pr-1 flex-1">
-                        @forelse($history as $item)
-                            <div class="relative pl-5 border-l-2 {{ $loop->first ? 'border-primary' : 'border-slate-200' }} pb-1.5 last:pb-0">
-                                <span class="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full {{ $loop->first ? 'bg-primary animate-pulse' : 'bg-slate-300' }}"></span>
-                                <div class="flex items-center justify-between gap-2">
-                                    <p class="text-[11px] font-bold text-slate-800 leading-none">{{ ucfirst($item->action) }}</p>
-                                    <p class="text-[9px] font-medium text-slate-400">{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y - H:i') }}</p>
-                                </div>
-                                @if($item->description)
-                                    <p class="text-[10px] text-slate-500 mt-1 leading-normal font-medium">{{ $item->description }}</p>
-                                @endif
-                            </div>
-                        @empty
-                            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4 text-center text-xs text-slate-400 italic">
-                                Belum ada riwayat aktivitas audit trail untuk RPS ini.
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
+                    <section class="bs-section rp-mapping" x-data="{ expanded: false }">
+                        <div class="bs-section-heading"><div><h2>Capaian pembelajaran</h2><p>Pemetaan CPL dan CPMK yang terhubung dengan mata kuliah.</p></div>
+                            <button type="button" class="dosen-management-btn" @click="expanded = !expanded" :aria-expanded="expanded" aria-controls="rp-mapping-content"><span x-text="expanded ? 'Tutup pemetaan' : 'Lihat pemetaan'">Lihat pemetaan</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" :style="expanded ? 'transform:rotate(180deg)' : ''" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></button>
+                        </div>
+                        <div id="rp-mapping-content" class="rp-mapping-grid" x-show="expanded" x-cloak>
+                            @forelse($cplCpmkMappings as $rows)
+                                <article><h3>{{ $rows->first()->cpl_kode }}</h3><ul>@foreach($rows as $row)<li><span class="rp-chip">{{ $row->cpmk_kode }}</span><p>{{ $row->cpmk_deskripsi }}</p></li>@endforeach</ul></article>
+                            @empty<p class="rp-muted">Belum ada pemetaan CPL/CPMK untuk mata kuliah ini.</p>@endforelse
+                        </div>
+                    </section>
+                @else
+                    <section class="bs-section rp-empty rp-not-found">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M14 2H6v20h12V6zM14 2v5h5M12 11v4m0 3h.01" /></svg>
+                        <h2>RPS tidak ditemukan</h2><p>Detail RPS tidak tersedia atau belum dapat dimuat. Kembali ke daftar RPS untuk memilih dokumen lain.</p>
+                        <a href="{{ $backUrl }}" class="dosen-management-btn dosen-management-btn-primary">Kembali ke daftar RPS</a>
+                    </section>
+                @endif
             </div>
         </div>
-    @else
-        <div class="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
-            <div class="flex flex-col items-center justify-center">
-                <i class="fas fa-exclamation-circle text-4xl text-rose-500 mb-3 animate-bounce"></i>
-                <h2 class="text-lg font-bold text-slate-800">RPS Tidak Ditemukan</h2>
-                <p class="text-xs text-slate-500 mt-1 max-w-sm">
-                    Detail dokumen RPS yang Anda cari tidak tersedia atau terjadi kesalahan saat memuat data.
-                </p>
-                <button type="button" class="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/95 transition-all shadow-md shadow-primary/20" onclick="window.history.back()">
-                    <i class="fas fa-arrow-left"></i> Kembali
-                </button>
-            </div>
-        </div>
-    @endif
+    </div>
 </x-dynamic-component>

@@ -7,7 +7,6 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $pageTitle ?? 'Manajemen Praktikum' }} — SIPERKOM</title>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
-@vite(['resources/assets/sass/app.scss', 'resources/assets/js/app.js'], 'build-eoffice')
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
 @include('eoffice::manajemen-praktikum.partials._styles')
 @include('eoffice::manajemen-praktikum.partials._shell-styles')

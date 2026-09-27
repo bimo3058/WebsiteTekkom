@@ -830,8 +830,9 @@
         </div>
     </a>
 
-    {{-- Laporan Forum --}}
-    <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+    {{-- Laporan Forum — langsung ke antrean laporannya, bukan ke daftar thread,
+         supaya sejalan dengan kartu aksi lain yang menuju halaman tindakannya. --}}
+    <a href="{{ route('manajemenmahasiswa.forum.reports') }}"
        class="action-card action-card-purple {{ $act['laporan_forum'] === 0 ? 'zero-state' : '' }}">
         <div class="action-card-top">
             <div class="action-icon action-icon-purple">
@@ -1253,8 +1254,10 @@
 </div>
 </div>{{-- /da-section evaluasi_mutu --}}
 
-{{-- Evaluasi Kegiatan Kemahasiswaan — bahan evaluasi kurikulum/mutu (urutan #4 untuk GPM) --}}
-<div class="da-section" style="order:3;">
+{{-- Evaluasi Kegiatan Kemahasiswaan — bahan evaluasi kurikulum/mutu.
+     Hanya dirender untuk GPM (ikut guard $hasSection('evaluasi_mutu') di atas),
+     jadi angka order-nya tidak perlu bercabang per peran. Urutan #2 untuk GPM. --}}
+<div class="da-section" style="order:2;">
 <div class="section-header section-gap" style="margin-top:6px;">
     <span class="section-label">Evaluasi Kegiatan Kemahasiswaan</span>
     <div class="section-line"></div>
@@ -1628,7 +1631,7 @@
      ⚠️ EVALUASI CALON DO & LULUSAN PER PERIODE
 ══════════════════════════════════════════════════════════════════════ --}}
 @if($hasSection('calon_do') || $hasSection('lulusan'))
-<div class="da-section" style="order:{{ $isGpm ? 2 : ($isDpm ? 1 : ($hasSection('admin_operasional') ? 5 : 4)) }};">
+<div class="da-section" style="order:{{ $isGpm ? 3 : ($isDpm ? 1 : ($hasSection('admin_operasional') ? 5 : 4)) }};">
 <div class="section-header section-gap">
     <span class="section-label">Pemantauan Akademik</span>
     <div class="section-line"></div>

@@ -391,12 +391,16 @@ class PengumumanController extends Controller
         $roles = $user->roles->pluck('name');
         $isPersonalPinned = $this->pengumumanService->isPersonalPinned($id, $user->id);
 
+        // Bagian "Pengumuman Lainnya" di bawah artikel — disaring memakai audiens
+        // pembaca, jadi isinya sama dengan yang boleh ia lihat di daftar.
+        $lainnya = $this->pengumumanService->lainnya($id, $this->resolveAudience($roles));
+
         // Admin, GPM, Pengurus, Dosen: admin layout
         if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'gpm', 'ketua_departemen', 'dpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
-            return view('manajemenmahasiswa::pengumuman.pengumuman-detail', compact('pengumuman', 'user', 'isPersonalPinned'));
+            return view('manajemenmahasiswa::pengumuman.pengumuman-detail', compact('pengumuman', 'user', 'isPersonalPinned', 'lainnya'));
         }
 
-        return view('manajemenmahasiswa::mahasiswa.pengumuman-mahasiswa-detail', compact('pengumuman', 'user', 'isPersonalPinned'));
+        return view('manajemenmahasiswa::mahasiswa.pengumuman-mahasiswa-detail', compact('pengumuman', 'user', 'isPersonalPinned', 'lainnya'));
     }
 
     /**
@@ -632,24 +636,126 @@ class PengumumanController extends Controller
      */
     public function downloadLampiran(int $lampiran)
     {
-        $file = \Modules\ManajemenMahasiswa\Models\RepoMulmed::findOrFail($lampiran);
-        $url = $this->supabase->getPublicUrl($file->path_file);
+        $file = RepoMulmed::findOrFail($lampiran);
 
-        // Fetch file content from Supabase and stream it as a download
-        $response = \Illuminate\Support\Facades\Http::timeout(30)->get($url);
+        return $this->streamBerkas($file);
+    }
 
-        if (!$response->successful()) {
-            abort(404, 'File tidak ditemukan.');
+    /**
+     * Download seluruh gambar milik satu pengumuman.
+     *
+     * Gambar tampil di galeri, bukan di kartu lampiran, sehingga sebelumnya tidak
+     * punya jalur unduh sama sekali. Satu gambar diunduh apa adanya; lebih dari
+     * satu dibungkus ZIP supaya tidak memaksa pengguna mengunduh satu per satu.
+     */
+    public function downloadGambar(int $pengumuman)
+    {
+        $item = $this->pengumumanService->findById($pengumuman);
+
+        $gambar = $item->repoMulmed->filter(fn (RepoMulmed $f) => $f->isGambar())->values();
+
+        abort_if($gambar->isEmpty(), 404, 'Pengumuman ini tidak memiliki gambar.');
+
+        if ($gambar->count() === 1) {
+            return $this->streamBerkas($gambar->first());
         }
 
-        $fileName = $file->nama_file ?? basename($file->path_file);
-        $mimeType = $response->header('Content-Type') ?? 'application/octet-stream';
+        abort_unless(
+            class_exists(\ZipArchive::class),
+            500,
+            'Ekstensi PHP Zip (ZipArchive) belum aktif, jadi gambar tidak bisa diunduh sekaligus.'
+        );
 
-        return response($response->body(), 200, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-            'Content-Length' => strlen($response->body()),
+        $tmp = tempnam(sys_get_temp_dir(), 'pengumuman-gambar-');
+        $zip = new \ZipArchive();
+
+        if ($zip->open($tmp, \ZipArchive::OVERWRITE | \ZipArchive::CREATE) !== true) {
+            @unlink($tmp);
+            abort(500, 'Gagal menyiapkan arsip ZIP.');
+        }
+
+        $dipakai = [];
+        foreach ($gambar as $i => $file) {
+            $isi = $this->ambilBerkas($file);
+            if ($isi === null) {
+                continue; // berkas hilang di storage — lewati, jangan gagalkan seluruh unduhan
+            }
+
+            $zip->addFromString($this->namaUnikDalamZip($file, $i, $dipakai), $isi);
+        }
+
+        $jumlah = $zip->numFiles;
+        $zip->close();
+
+        if ($jumlah === 0) {
+            @unlink($tmp);
+            abort(404, 'Berkas gambar tidak ditemukan di penyimpanan.');
+        }
+
+        return response()
+            ->download($tmp, $this->namaArsip($item), ['Content-Type' => 'application/zip'])
+            ->deleteFileAfterSend();
+    }
+
+    /**
+     * Tarik isi satu berkas dari Supabase; null kalau tidak terjangkau.
+     */
+    private function ambilBerkas(RepoMulmed $file): ?string
+    {
+        $response = \Illuminate\Support\Facades\Http::timeout(30)
+            ->get($this->supabase->getPublicUrl($file->path_file));
+
+        return $response->successful() ? $response->body() : null;
+    }
+
+    /**
+     * Kirim satu berkas sebagai unduhan.
+     */
+    private function streamBerkas(RepoMulmed $file)
+    {
+        $isi = $this->ambilBerkas($file);
+
+        abort_if($isi === null, 404, 'File tidak ditemukan.');
+
+        $namaFile = $file->nama_file ?: basename($file->path_file);
+
+        return response($isi, 200, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . $namaFile . '"',
+            'Content-Length' => strlen($isi),
         ]);
+    }
+
+    /**
+     * Nama berkas di dalam ZIP. Gambar hasil unggahan bisa bernama sama
+     * (mis. "image.png" dari dua perangkat), jadi yang bentrok diberi sufiks.
+     */
+    private function namaUnikDalamZip(RepoMulmed $file, int $index, array &$dipakai): string
+    {
+        $nama = $file->nama_file ?: basename($file->path_file);
+        $nama = preg_replace('/[\\\\\/:*?"<>|]+/', '_', $nama) ?: ('gambar-' . ($index + 1));
+
+        if (!isset($dipakai[$nama])) {
+            $dipakai[$nama] = 1;
+
+            return $nama;
+        }
+
+        $ext  = pathinfo($nama, PATHINFO_EXTENSION);
+        $base = pathinfo($nama, PATHINFO_FILENAME);
+        $urut = ++$dipakai[$nama];
+
+        return $ext === '' ? "{$base} ({$urut})" : "{$base} ({$urut}).{$ext}";
+    }
+
+    /**
+     * Nama file ZIP, diambil dari judul pengumuman agar mudah dikenali.
+     */
+    private function namaArsip(Pengumuman $pengumuman): string
+    {
+        $judul = trim(preg_replace('/[\\\\\/:*?"<>|]+/', '_', (string) $pengumuman->judul));
+
+        return ($judul !== '' ? $judul : 'pengumuman-' . $pengumuman->id) . ' - Gambar.zip';
     }
 
     // =========================================================================

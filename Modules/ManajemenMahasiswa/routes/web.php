@@ -146,6 +146,11 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Download lampiran — semua role boleh
             Route::get('/lampiran/{lampiran}/download', [PengumumanController::class, 'downloadLampiran'])->name('lampiran.download');
 
+            // Download gambar pengumuman: satu file kalau tunggal, ZIP kalau lebih dari satu
+            Route::get('/{pengumuman}/gambar/download', [PengumumanController::class, 'downloadGambar'])
+                ->name('gambar.download')
+                ->whereNumber('pengumuman');
+
             // Show — semua role boleh (HARUS setelah /create agar tidak konflik)
             Route::get('/{pengumuman}', [PengumumanController::class, 'show'])->name('show');
         });

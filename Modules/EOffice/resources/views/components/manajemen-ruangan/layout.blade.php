@@ -7,7 +7,6 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle ?? 'Manajemen Ruangan' }} — SIPERKOM</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @vite(['resources/assets/sass/app.scss', 'resources/assets/js/app.js'], 'build-eoffice')
     <style>
         /* ─── SITKOM Design System — ManajemenRuangan component layer ─── */
 
