@@ -66,8 +66,18 @@
     </style>
 
     <x-banksoal::notification.alerts />
-    <x-banksoal::ui.page-header title="Validasi Bank Soal"
-        subtitle="Pilih paket soal mata kuliah yang perlu dievaluasi" />
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Validasi Bank Soal</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Pilih paket soal mata kuliah yang perlu dievaluasi.</p>
+                </div>
+            </div>
+        </x-slot:header>
 
     <div x-data="{
         searchQuery: '',
@@ -296,4 +306,5 @@
 
     </div>
 
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>
