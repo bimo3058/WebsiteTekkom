@@ -62,6 +62,7 @@ _ds_tmp/
 dump.rdb
 package-lock.json
 Modules/EOffice/node_modules
+Modules/Capstone/node_modules
 
 *.dump
 *.list
