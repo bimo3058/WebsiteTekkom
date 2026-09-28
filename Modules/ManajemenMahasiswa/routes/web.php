@@ -8,6 +8,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
 use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 use Modules\ManajemenMahasiswa\Http\Controllers\AnonPengaduanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
+use Modules\ManajemenMahasiswa\Http\Controllers\CatatanKonselingController;
 
 use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ProkerController;
@@ -200,6 +201,21 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->whereNumber('pengaduan')
                 ->middleware('role:superadmin');
         });
+
+        // ── Catatan Konseling ─────────────────────────────────────────────
+        // Buku catatan GPM (dosen konseling). Tidak tertaut ke akun mahasiswa;
+        // role lain, termasuk mahasiswa, tidak punya akses.
+        Route::prefix('konseling')->name('konseling.')
+            ->middleware('role:gpm|superadmin')
+            ->group(function () {
+                Route::get('/', [CatatanKonselingController::class, 'index'])->name('index');
+                Route::post('/', [CatatanKonselingController::class, 'store'])
+                    ->middleware('throttle:30,1')->name('store');
+                Route::put('/{catatan}', [CatatanKonselingController::class, 'update'])
+                    ->whereNumber('catatan')->middleware('throttle:30,1')->name('update');
+                Route::delete('/{catatan}', [CatatanKonselingController::class, 'destroy'])
+                    ->whereNumber('catatan')->name('destroy');
+            });
 
         // ── Forum Notifications (AJAX) ────────────────────────────────────
         Route::prefix('notifications')->name('notifications.')->group(function () {

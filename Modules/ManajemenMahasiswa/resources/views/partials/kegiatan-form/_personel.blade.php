@@ -199,6 +199,7 @@
                     <input type="text" class="form-control form-control-sm"
                            :name="'panitia_peran[' + o.id + ']'"
                            placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)"
+                           maxlength="60"
                            x-model="peran[o.id]">
                 </div>
             </div>

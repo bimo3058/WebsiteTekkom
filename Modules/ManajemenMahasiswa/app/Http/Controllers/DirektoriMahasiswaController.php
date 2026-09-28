@@ -553,7 +553,7 @@ class DirektoriMahasiswaController extends Controller
         // berefek apa pun — bukan sekadar disembunyikan di tampilan.
         $rules = [
             'kontak'        => 'nullable|string|max:15',
-            'email_pribadi' => 'nullable|email|max:100',
+            'email_pribadi' => 'nullable|email|max:254',
         ];
 
         // Kolom mk_kemahasiswaan yang boleh ditulis request ini. Kosong untuk pemilik

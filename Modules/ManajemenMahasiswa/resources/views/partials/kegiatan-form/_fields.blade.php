@@ -58,9 +58,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
-                   value="{{ old('judul', $proker->judul) }}" required maxlength="255"
-                   oninput="updateCharCount('judulInput','judulCount',255)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/255 karakter</div>
+                   value="{{ old('judul', $proker->judul) }}" required maxlength="100"
+                   oninput="updateCharCount('judulInput','judulCount',100)">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/100 karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -80,19 +80,38 @@
                 </div>
                 <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
             </div>
+            @php
+                // Satu proker dipegang SATU bidang himpunan, jadi pilihannya radio.
+                // Nama input tetap `bidang_id[]` agar alur simpan ke pivot tidak berubah.
+                // Data lama bisa tercatat di beberapa bidang: yang dipilih otomatis
+                // bidang utamanya (kolom `bidang_id`), sisanya dilepas saat disimpan.
+                $idsBidangTersimpan = array_map('intval', (array) $selectedBidangIds);
+                $bidangTerpilih = in_array((int) $proker->bidang_id, $idsBidangTersimpan, true)
+                    ? (int) $proker->bidang_id
+                    : ($idsBidangTersimpan[0] ?? null);
+                $bidangLamaGanda = count($idsBidangTersimpan) > 1
+                    ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
+                    : null;
+            @endphp
             <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <div class="checkbox-card-group" id="bidangGroup">
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang pemegang proker">
                     @foreach($bidangList as $bidang)
                         <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
-                            <input type="checkbox" name="bidang_id[]"
+                            <input type="radio" name="bidang_id[]"
                                    value="{{ $bidang->id }}"
-                                   {{ in_array($bidang->id, $selectedBidangIds) ? 'checked' : '' }}>
+                                   {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
+                <div class="checkbox-hint">Pilih satu bidang yang memegang proker ini</div>
+                @if($bidangLamaGanda)
+                    <div class="checkbox-hint" style="color: var(--c-warning, #b45309);">
+                        Sebelumnya tercatat di beberapa bidang ({{ $bidangLamaGanda }}). Pastikan bidang yang terpilih
+                        sudah benar — bidang lain dilepas saat disimpan.
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -142,7 +161,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Lokasi</label>
             <input type="text" name="lokasi" class="form-control form-control-custom"
-                   value="{{ old('lokasi', $proker->lokasi) }}">
+                   value="{{ old('lokasi', $proker->lokasi) }}" id="lokasiInput" maxlength="150"
+                   oninput="updateCharCount('lokasiInput','lokasiCount',150)">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="lokasiCount">0</span>/150 karakter</div>
         </div>
     </div>
 

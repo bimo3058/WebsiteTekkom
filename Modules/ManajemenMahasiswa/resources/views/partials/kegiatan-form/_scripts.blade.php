@@ -1,5 +1,5 @@
 <script>
-// ── Char counter (judul & deskripsi) ──
+// ── Char counter (judul, lokasi & deskripsi) ──
 function updateCharCount(inputId, countId, max) {
     const el  = document.getElementById(inputId);
     const cnt = document.getElementById(countId);
@@ -9,7 +9,7 @@ function updateCharCount(inputId, countId, max) {
     cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
 }
 document.addEventListener('DOMContentLoaded', () => {
-    ['judulInput','deskripsiInput'].forEach(id => {
+    ['judulInput','lokasiInput','deskripsiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.dispatchEvent(new Event('input'));
     });
@@ -238,7 +238,7 @@ function toggleBidangField() {
     if (bidangWrapper) {
         if (isOnlyProdi) {
             bidangWrapper.style.display = 'none';
-            document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(inp => {
+            document.querySelectorAll('#bidangGroup input').forEach(inp => {
                 if (inp.checked) {
                     inp.checked = false;
                     inp.closest('.checkbox-card').classList.remove('checked');
@@ -252,17 +252,18 @@ function toggleBidangField() {
 
 // ── Initialize on page load ──
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+    document.querySelectorAll('.checkbox-card input:checked').forEach(cb => {
         cb.closest('.checkbox-card').classList.add('checked');
     });
 
-    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', function() {
-            if (this.checked) {
-                this.closest('.checkbox-card').classList.add('checked');
-            } else {
-                this.closest('.checkbox-card').classList.remove('checked');
-            }
+    // Bidang berupa radio (satu proker = satu bidang). Radio yang ikut terlepas
+    // tidak memicu `change`, jadi sorotan kartu disegarkan untuk seluruh grup.
+    const bidangInputs = document.querySelectorAll('#bidangGroup input[type="radio"]');
+    bidangInputs.forEach(rb => {
+        rb.addEventListener('change', function() {
+            bidangInputs.forEach(other => {
+                other.closest('.checkbox-card').classList.toggle('checked', other.checked);
+            });
         });
     });
 

@@ -481,6 +481,17 @@
                 <span class="nav-label" style="flex-grow:1;">Layanan Pengaduan</span>
             </a>
         @endif
+
+        {{-- Buku catatan GPM; daftar putih disalin dari middleware route konseling.* --}}
+        @if(array_intersect($sidebarRoles, ['gpm', 'superadmin']))
+            <a href="{{ route('manajemenmahasiswa.konseling.index') }}"
+                class="{{ request()->routeIs('manajemenmahasiswa.konseling.*') ? 'active' : '' }}">
+                <span class="nav-icon d-inline-flex">
+                    {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/heart.svg'))) !!}
+                </span>
+                <span class="nav-label" style="flex-grow:1;">Catatan Konseling</span>
+            </a>
+        @endif
     </nav>
 
     <div class="sb-footer">

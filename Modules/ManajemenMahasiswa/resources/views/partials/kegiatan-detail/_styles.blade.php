@@ -20,7 +20,8 @@
     .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 18px; }
     .meta-item { background: var(--c-surface-subtle); border-radius: 10px; padding: 14px 16px; border: 1px solid var(--c-surface-muted); }
     .meta-item-label { font-size: 11px; font-weight: 700; color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
-    .meta-item-value { font-size: 14px; font-weight: 600; color: var(--c-fg); display: flex; align-items: center; gap: 6px; }
+    .meta-item-value { font-size: 14px; font-weight: 600; color: var(--c-fg); display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+    .meta-item-value svg { flex-shrink: 0; }
 
     /* ── Description ── */
     .detail-description { font-size: 14px; color: var(--c-fg-sec); line-height: 1.75; white-space: pre-line; }

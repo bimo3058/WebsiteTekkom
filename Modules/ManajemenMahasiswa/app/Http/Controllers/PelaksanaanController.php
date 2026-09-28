@@ -243,7 +243,8 @@ class PelaksanaanController extends Controller
         // padahal aksi yang sama ditolak di Subbab 1.
         $kategoriDipilih = $request->input('kategori_kegiatan_id', []);
         $isOnlyProdi = is_array($kategoriDipilih) && Kegiatan::hanyaKategoriProdi($kategoriDipilih);
-        $bidangRule  = $isOnlyProdi ? 'nullable|array' : 'required|array|min:1';
+        // Paling banyak satu bidang: satu proker dipegang satu bidang himpunan.
+        $bidangRule  = $isOnlyProdi ? 'nullable|array|max:1' : 'required|array|min:1|max:1';
 
         // Jam selesai hanya dibandingkan dengan jam mulai bila kegiatan berlangsung
         // dalam SATU hari — kegiatan lintas hari wajar berakhir di jam yang lebih awal.
@@ -256,30 +257,30 @@ class PelaksanaanController extends Controller
         }
 
         $validated = $request->validate([
-            'judul'                     => 'required|string|max:255',
+            'judul'                     => 'required|string|max:100',
             // Disamakan dengan aturan di Laporan & Arsip agar kegiatan yang diarsipkan
             // selalu lolos validasi saat diedit di subbab Arsip (hindari "jebakan" validasi).
             'kategori_kegiatan_id'      => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*'    => 'integer|exists:mk_kategori_kegiatan,id',
             'bidang_id'                 => $bidangRule,
             'bidang_id.*'               => 'integer|exists:mk_bidang,id',
-            'deskripsi'                 => 'required|string|min:20',
+            'deskripsi'                 => 'required|string|min:20|max:3000',
             'tanggal_mulai'             => 'required|date',
             'tanggal_selesai'           => 'nullable|date|after_or_equal:tanggal_mulai',
             // Kolom jam di database bertipe TIME: `string` bebas membuat isian ngawur
             // lolos ke query dan memunculkan halaman error saat disimpan.
             'jam_mulai'                 => 'nullable|date_format:H:i,H:i:s',
             'jam_selesai'               => $jamSelesaiRules,
-            'lokasi'                    => 'nullable|string|max:255',
+            'lokasi'                    => 'nullable|string|max:150',
             'target_peserta'            => 'nullable|integer|min:1',
-            'anggaran'                  => 'nullable|numeric|min:0',
+            'anggaran'                  => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'        => 'nullable|exists:students,id',
             'dosen_pendamping_ids'      => 'nullable|array',
             'dosen_pendamping_ids.*'    => 'exists:lecturers,id',
             'panitia_ids'               => 'nullable|array',
             'panitia_ids.*'             => 'exists:students,id',
             'panitia_peran'             => 'nullable|array',
-            'panitia_peran.*'           => 'nullable|string|max:255',
+            'panitia_peran.*'           => 'nullable|string|max:60',
             'banner'                    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'foto_kegiatan'             => 'nullable|array|max:10',
             'foto_kegiatan.*'           => 'image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -289,8 +290,9 @@ class PelaksanaanController extends Controller
             'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
         ], [
             // Pesan bawaan Laravel masih berbahasa Inggris dan menyebut nama kolom mentah.
-            'bidang_id.required'             => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
-            'bidang_id.min'                  => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.required'             => 'Bidang pemegang proker wajib dipilih, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.min'                  => 'Bidang pemegang proker wajib dipilih, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.max'                  => 'Pilih satu bidang saja — satu proker dipegang satu bidang himpunan.',
             'tanggal_mulai.required'         => 'Tanggal mulai wajib diisi. Kegiatan yang sudah masuk tahap pelaksanaan harus punya tanggal pasti supaya bisa muncul di filter Tahun dan diarsipkan.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',

@@ -184,10 +184,10 @@ class Kegiatan extends Model
     /**
      * Many-to-many: pengurus yang ditunjuk pemilik untuk ikut mengelola kegiatan ini.
      *
-     * Semua pengelola boleh mengedit; yang boleh ikut menghapus ditentukan role-nya
-     * (KegiatanPolicy::PENGELOLA_BOLEH_HAPUS), bukan pilihan per orang. Kolom
-     * `boleh_hapus` hanya mencatat hak yang berlaku saat daftar ini disimpan —
-     * penentunya tetap KegiatanPolicy::delete.
+     * Pengelola hanya staff himpunan dan hanya boleh mengedit — ketua bidang/unit
+     * lain tidak bisa ditunjuk (KegiatanPolicy::bisaJadiPengelola). Kolom
+     * `boleh_hapus` peninggalan aturan lama dan kini selalu false; penentunya
+     * tetap KegiatanPolicy::delete.
      */
     public function pengelola(): BelongsToMany
     {

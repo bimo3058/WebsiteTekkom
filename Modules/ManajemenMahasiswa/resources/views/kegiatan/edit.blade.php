@@ -110,7 +110,8 @@
         border-color: var(--c-primary-border);
         background: var(--c-primary-subtle);
     }
-    .checkbox-card input[type="checkbox"] {
+    .checkbox-card input[type="checkbox"],
+    .checkbox-card input[type="radio"] {
         width: 16px;
         height: 16px;
         accent-color: var(--c-primary);
@@ -583,6 +584,16 @@
     $existingDokumen = $kegiatan->repoMulmed->where('tipe_file', 'document');
     $selectedKategoriIds = old('kategori_kegiatan_id', $kegiatan->kategoris->pluck('id')->toArray());
     $selectedBidangIds = old('bidang_id', $kegiatan->bidangs->pluck('id')->toArray());
+    // Satu kegiatan dipegang SATU bidang himpunan, jadi pilihannya radio. Data lama
+    // bisa tercatat di beberapa bidang: yang dipilih otomatis bidang utamanya
+    // (kolom `bidang_id`), sisanya dilepas saat disimpan.
+    $idsBidangTersimpan = array_map('intval', (array) $selectedBidangIds);
+    $bidangTerpilih = in_array((int) $kegiatan->bidang_id, $idsBidangTersimpan, true)
+        ? (int) $kegiatan->bidang_id
+        : ($idsBidangTersimpan[0] ?? null);
+    $bidangLamaGanda = count($idsBidangTersimpan) > 1
+        ? $bidangList->whereIn('id', $idsBidangTersimpan)->pluck('nama_bidang')->implode(', ')
+        : null;
     // Panitia untuk pre-populate chips.
     // Saat form dikembalikan karena validasi gagal, dipulihkan dari isian terakhir
     // user (old()) dan BUKAN dari database — kalau tidak, panitia yang barusan
@@ -618,9 +629,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
-                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="255"
-                   oninput="updateCharCount('judulInput','judulCount',255)">
-            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/255 karakter</div>
+                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="100"
+                   oninput="updateCharCount('judulInput','judulCount',100)">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/100 karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -642,17 +653,23 @@
             </div>
             <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <div class="checkbox-card-group" id="bidangGroup">
+                <div class="checkbox-card-group" id="bidangGroup" role="radiogroup" aria-label="Bidang pemegang kegiatan">
                     @foreach($bidangList as $bidang)
                         <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
-                            <input type="checkbox" name="bidang_id[]"
+                            <input type="radio" name="bidang_id[]"
                                    value="{{ $bidang->id }}"
-                                   {{ in_array($bidang->id, $selectedBidangIds) ? 'checked' : '' }}>
+                                   {{ (int) $bidang->id === $bidangTerpilih ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
+                <div class="checkbox-hint">Pilih satu bidang yang memegang kegiatan ini</div>
+                @if($bidangLamaGanda)
+                    <div class="checkbox-hint" style="color: var(--c-warning, #b45309);">
+                        Sebelumnya tercatat di beberapa bidang ({{ $bidangLamaGanda }}). Pastikan bidang yang terpilih
+                        sudah benar — bidang lain dilepas saat disimpan.
+                    </div>
+                @endif
             </div>
         </div>
 
@@ -699,7 +716,9 @@
         <div class="mb-3">
             <label class="form-label-custom">Lokasi</label>
             <input type="text" name="lokasi" class="form-control form-control-custom"
-                   value="{{ old('lokasi', $kegiatan->lokasi) }}">
+                   value="{{ old('lokasi', $kegiatan->lokasi) }}" id="lokasiInput" maxlength="150"
+                   oninput="updateCharCount('lokasiInput','lokasiCount',150)">
+            <div style="font-size:11px;color:var(--c-fg-muted);text-align:right;margin-top:4px;font-weight:500;"><span id="lokasiCount">0</span>/150 karakter</div>
         </div>
     </div>
 
@@ -852,7 +871,7 @@
 </div>
 
 <script>
-// ── Char counter (judul & deskripsi) ──
+// ── Char counter (judul, lokasi & deskripsi) ──
 function updateCharCount(inputId, countId, max) {
     const el  = document.getElementById(inputId);
     const cnt = document.getElementById(countId);
@@ -862,7 +881,7 @@ function updateCharCount(inputId, countId, max) {
     cnt.style.color = len >= max ? 'var(--c-error)' : (len > max * 0.9 ? 'var(--c-warning)' : 'var(--c-fg-muted)');
 }
 document.addEventListener('DOMContentLoaded', () => {
-    ['judulInput','deskripsiInput'].forEach(id => {
+    ['judulInput','lokasiInput','deskripsiInput'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.dispatchEvent(new Event('input'));
     });
@@ -1087,7 +1106,7 @@ function toggleBidangField() {
         // Hanya Kegiatan Prodi → sembunyikan kolom Bidang & kosongkan pilihannya
         if (bidangWrapper) bidangWrapper.style.display = 'none';
         if (bidangRequired) bidangRequired.style.display = 'none';
-        document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+        document.querySelectorAll('#bidangGroup input').forEach(cb => {
             if (cb.checked) {
                 cb.checked = false;
                 cb.dispatchEvent(new Event('change'));
@@ -1102,17 +1121,18 @@ function toggleBidangField() {
 
 // ── Initialize on page load ──
 document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+    document.querySelectorAll('.checkbox-card input:checked').forEach(cb => {
         cb.closest('.checkbox-card').classList.add('checked');
     });
 
-    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
-        cb.addEventListener('change', function() {
-            if (this.checked) {
-                this.closest('.checkbox-card').classList.add('checked');
-            } else {
-                this.closest('.checkbox-card').classList.remove('checked');
-            }
+    // Bidang berupa radio: radio yang ikut terlepas tidak memicu `change`,
+    // jadi sorotan kartu disegarkan untuk seluruh grup.
+    const bidangInputs = document.querySelectorAll('#bidangGroup input[type="radio"]');
+    bidangInputs.forEach(rb => {
+        rb.addEventListener('change', function() {
+            bidangInputs.forEach(other => {
+                other.closest('.checkbox-card').classList.toggle('checked', other.checked);
+            });
         });
     });
 

@@ -105,7 +105,8 @@
         border-color: var(--c-primary-border);
         background: var(--c-primary-subtle);
     }
-    .checkbox-card input[type="checkbox"] {
+    .checkbox-card input[type="checkbox"],
+    .checkbox-card input[type="radio"] {
         width: 16px;
         height: 16px;
         accent-color: var(--c-primary);

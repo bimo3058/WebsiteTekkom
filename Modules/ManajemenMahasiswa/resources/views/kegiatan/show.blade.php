@@ -114,7 +114,10 @@
         display: flex;
         align-items: center;
         gap: 6px;
+        min-width: 0;
+        overflow-wrap: anywhere;
     }
+    .meta-item-value svg { flex-shrink: 0; }
 
     /* ── Description ── */
     .detail-description {
@@ -556,7 +559,7 @@
     </div>
 
     <!-- Title -->
-    <h4 class="fw-bold mb-3" style="color:var(--c-fg);">{{ $kegiatan->judul }}</h4>
+    <h4 class="fw-bold mb-3" style="color:var(--c-fg);overflow-wrap:anywhere;">{{ $kegiatan->judul }}</h4>
 
     <!-- Meta Grid -->
     <div class="meta-grid">
@@ -647,11 +650,11 @@
         </div>
         <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
             @foreach($panitiaList->take(2) as $p)
-                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--c-primary-subtle); color: var(--c-primary-hover); border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--c-primary-border);">
+                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: var(--c-primary-subtle); color: var(--c-primary-hover); border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--c-primary-border); max-width: 100%;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     {{ $p->user->name ?? '-' }}
                     @if($p->pivot->peran)
-                        <span style="font-weight: 700; color: var(--c-primary-hover); margin-left: 2px;">- {{ $p->pivot->peran }}</span>
+                        <span title="{{ $p->pivot->peran }}" style="font-weight: 700; color: var(--c-primary-hover); margin-left: 2px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">- {{ $p->pivot->peran }}</span>
                     @endif
                     <span style="font-size: 10px; color: var(--c-primary); font-weight: 400;">({{ $p->student_number }})</span>
                 </span>
@@ -688,7 +691,7 @@
                             <div style="font-size:11px;color:var(--c-fg-muted);font-weight:500;margin-top:1px;">{{ $p->student_number ?? '' }}@if($p->pivot->peran) &bull; <span style="color:var(--c-primary);font-weight:600;">{{ $p->pivot->peran }}</span>@endif</div>
                         </div>
                         @if($p->pivot->peran)
-                        <span style="font-size:10px;font-weight:700;padding:3px 10px;background:var(--c-primary-subtle);color:var(--c-primary-hover);border-radius:20px;white-space:nowrap;border:1px solid var(--c-primary-border);">{{ $p->pivot->peran }}</span>
+                        <span title="{{ $p->pivot->peran }}" style="font-size:10px;font-weight:700;padding:3px 10px;background:var(--c-primary-subtle);color:var(--c-primary-hover);border-radius:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%;flex-shrink:1;border:1px solid var(--c-primary-border);">{{ $p->pivot->peran }}</span>
                         @endif
                     </div>
                     @endforeach

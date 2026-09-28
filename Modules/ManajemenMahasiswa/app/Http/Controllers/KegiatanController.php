@@ -181,8 +181,8 @@ class KegiatanController extends Controller
         $jam = $this->aturanJam($request);
 
         $validated = $request->validate([
-            'judul'               => 'required|string|max:255',
-            'deskripsi'           => 'required|string|min:20',
+            'judul'               => 'required|string|max:100',
+            'deskripsi'           => 'required|string|min:20|max:3000',
             'kategori_kegiatan_id'=> 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*' => 'exists:mk_kategori_kegiatan,id',
             'bidang_id'           => $this->aturanBidang($request),
@@ -192,7 +192,7 @@ class KegiatanController extends Controller
             'jam_mulai'           => $jam['mulai'],
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => $jam['selesai'],
-            'lokasi'              => 'nullable|string|max:255',
+            'lokasi'              => 'nullable|string|max:150',
             // Banner wajib diisi saat menambah kegiatan langsung ke Laporan & Arsip (subbab 3).
             'banner'              => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
@@ -202,7 +202,7 @@ class KegiatanController extends Controller
             'panitia_ids'         => 'nullable|array',
             'panitia_ids.*'       => 'exists:students,id',
             'panitia_peran'       => 'nullable|array',
-            'panitia_peran.*'     => 'nullable|string|max:255',
+            'panitia_peran.*'     => 'nullable|string|max:60',
             'target_peserta'      => 'nullable|integer|min:1',
             'foto_kegiatan'       => 'nullable|array|max:10',
             'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -314,8 +314,8 @@ class KegiatanController extends Controller
 
         // Check if all selected kategori are "Kegiatan Prodi" (bidang not needed)
         $validated = $request->validate([
-            'judul'               => 'required|string|max:255',
-            'deskripsi'           => 'required|string|min:20',
+            'judul'               => 'required|string|max:100',
+            'deskripsi'           => 'required|string|min:20|max:3000',
             'kategori_kegiatan_id'=> 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*' => 'exists:mk_kategori_kegiatan,id',
             'bidang_id'           => $this->aturanBidang($request),
@@ -325,7 +325,7 @@ class KegiatanController extends Controller
             'jam_mulai'           => $jam['mulai'],
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => $jam['selesai'],
-            'lokasi'              => 'nullable|string|max:255',
+            'lokasi'              => 'nullable|string|max:150',
             // Banner wajib ada: kalau kegiatan belum punya banner, unggahan baru diwajibkan;
             // kalau sudah punya, boleh dikosongkan (banner lama dipertahankan).
             'banner'              => ($kegiatan->banner ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -336,7 +336,7 @@ class KegiatanController extends Controller
             'panitia_ids'         => 'nullable|array',
             'panitia_ids.*'       => 'exists:students,id',
             'panitia_peran'       => 'nullable|array',
-            'panitia_peran.*'     => 'nullable|string|max:255',
+            'panitia_peran.*'     => 'nullable|string|max:60',
             'target_peserta'      => 'nullable|integer|min:1',
             'foto_kegiatan'       => 'nullable|array|max:10',
             'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:5120',
@@ -504,13 +504,17 @@ class KegiatanController extends Controller
      * subbab ini `bidang_id` selalu nullable, sehingga kegiatan "Kegiatan
      * Himpunan" bisa disimpan tanpa bidang lalu tampil berlabel "Prodi" di kartu
      * & detailnya, padahal kolomnya sudah ditandai wajib dengan bintang merah.
+     *
+     * Paling banyak SATU bidang: satu proker dipegang satu bidang himpunan.
+     * Input tetap berbentuk array (`bidang_id[]`) supaya pivot mk_kegiatan_bidang
+     * dan kolom lama `bidang_id` tetap terisi lewat alur yang sama.
      */
     private function aturanBidang(Request $request): string
     {
         $kategoriDipilih = $request->input('kategori_kegiatan_id', []);
         $isOnlyProdi = is_array($kategoriDipilih) && Kegiatan::hanyaKategoriProdi($kategoriDipilih);
 
-        return $isOnlyProdi ? 'nullable|array' : 'required|array|min:1';
+        return $isOnlyProdi ? 'nullable|array|max:1' : 'required|array|min:1|max:1';
     }
 
     /**
@@ -584,8 +588,9 @@ class KegiatanController extends Controller
     {
         return [
             'banner.required'                => 'Banner kegiatan wajib diunggah.',
-            'bidang_id.required'             => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
-            'bidang_id.min'                  => 'Bidang wajib dipilih minimal satu, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.required'             => 'Bidang pemegang kegiatan wajib dipilih, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.min'                  => 'Bidang pemegang kegiatan wajib dipilih, kecuali kegiatan ini murni Kegiatan Prodi.',
+            'bidang_id.max'                  => 'Pilih satu bidang saja — satu kegiatan dipegang satu bidang himpunan.',
             'tanggal_selesai.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
             'jam_mulai.date_format'          => 'Jam mulai harus berupa jam yang benar, contoh 09:00.',
             'jam_selesai.date_format'        => 'Jam selesai harus berupa jam yang benar, contoh 15:00.',

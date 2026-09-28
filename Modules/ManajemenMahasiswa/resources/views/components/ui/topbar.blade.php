@@ -36,6 +36,7 @@
         'manajemenmahasiswa.verifikasi' => 'Verifikasi Data',
         'manajemenmahasiswa.forum' => 'Forum Diskusi',
         'manajemenmahasiswa.pengaduan' => 'Layanan Pengaduan',
+        'manajemenmahasiswa.konseling' => 'Catatan Konseling',
         'profile.edit' => 'Settings',
     ];
 
