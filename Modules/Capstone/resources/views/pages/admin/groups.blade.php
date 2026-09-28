@@ -95,12 +95,18 @@
                                 </span>
                             </td>
                             <td class="px-4 py-3"><span class="whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold" :class="groupStatusClass(item.status)" x-text="groupStatusLabel(item)"></span></td>
-                            <td class="max-w-56 px-4 py-3 text-slate-700" x-text="item.title?.title || 'Belum ada Judul'"></td>
+                            <td class="max-w-56 px-4 py-3 text-slate-700">
+                                <span class="flex items-start gap-1">
+                                    <span class="flex-1" x-text="item.title?.title || 'Belum ada Judul'"></span>
+                                    <button type="button" x-show="item.title" @click="openRename(item)" title="Ubah judul" aria-label="Ubah judul" class="shrink-0 rounded p-1 text-slate-300 hover:bg-slate-100 hover:text-slate-600"><x-capstone::icon name="Pencil" size="13" /></button>
+                                </span>
+                            </td>
                             <td class="px-4 py-3 text-right">
                                 <span x-data="{menu:false}" @click.outside="menu=false" @keydown.escape.window="menu=false" class="relative inline-block text-left">
                                     <button type="button" @click="menu=!menu" :aria-expanded="menu" aria-label="Aksi group" class="rounded px-1 font-bold tracking-widest text-slate-400 hover:bg-slate-100 hover:text-slate-700">...</button>
                                     <span x-show="menu" x-cloak class="absolute right-0 z-20 min-w-40 rounded-lg border border-slate-200 bg-white p-1 shadow-lg" :class="idx>=pagedGroups.length-2 ? 'bottom-full mb-1' : 'top-full mt-1'">
                                         <a :href="url('/admin/groups/'+item.id)" @click="menu=false" class="flex items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-100"><x-capstone::icon name="Eye" size="15" />Lihat Detail</a>
+                                        <button type="button" x-show="item.title" @click="menu=false;openRename(item)" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-slate-700 hover:bg-slate-100"><x-capstone::icon name="Pencil" size="15" />Ubah Judul</button>
                                         <button type="button" @click="menu=false;openDelete(item)" class="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] font-medium text-red-600 hover:bg-red-50"><x-capstone::icon name="Trash2" size="15" />Hapus</button>
                                     </span>
                                 </span>
@@ -130,6 +136,17 @@
             </div>
         </div>
     </div>
+
+    <x-capstone::dialog id="group-rename-title" title="Ubah Judul Capstone" description="Hanya teks judul yang diubah. Status kelompok tidak berubah.">
+        <div class="mt-4 space-y-4">
+            <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Group '+renameTarget.id)) : ''"></span></p>
+            <input x-model="renameText" type="text" maxlength="255" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis judul baru..." aria-label="Judul baru">
+            <div class="flex justify-end gap-2">
+                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
+                <x-capstone::button @click="sendRename()" ::disabled="saving || !renameText.trim() || renameText.trim() === (renameTarget?.title?.title || '')">Simpan</x-capstone::button>
+            </div>
+        </div>
+    </x-capstone::dialog>
 
     @include('capstone::partials.group-delete-dialogs')
 </div>

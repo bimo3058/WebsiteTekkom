@@ -246,6 +246,11 @@ Route::prefix('capstone')->group(function () {
             Route::post('/titles/{title}/stakeholders', [StakeholderController::class, 'attachToTitle']);
             Route::delete('/titles/{title}/stakeholders/{stakeholder}', [StakeholderController::class, 'detachFromTitle']);
 
+            // Admin text-only title edit: renames Title display text without
+            // touching any Group row (status / title_id unchanged).
+            Route::match(['put', 'patch'], '/titles/{title}', [\Modules\Capstone\Http\Controllers\Admin\TitleManagementController::class, 'update'])
+                ->middleware('permission:capstone.edit');
+
             Route::get('/grade-configuration/{periodId}', [GradeConfigurationController::class, 'getFullConfiguration']);
             Route::post('/grade-configuration/{periodId}', [GradeConfigurationController::class, 'updateWeights']);
             Route::post('/grade-configuration/{periodId}/reset', [GradeConfigurationController::class, 'resetToDefaults']);

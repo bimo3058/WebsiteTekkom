@@ -91,7 +91,10 @@
                 </div>
                 <div class="grid grid-cols-[150px_1fr] items-center gap-3">
                     <p class="text-sm text-slate-500">Judul Capstone</p>
-                    <p class="text-sm font-medium text-slate-800" x-text="group.title?.title || 'Belum ada judul'"></p>
+                    <p class="flex items-center gap-2 text-sm font-medium text-slate-800">
+                        <span x-text="group.title?.title || 'Belum ada judul'"></span>
+                        <button type="button" x-show="group.title" @click="openRename(group)" title="Ubah judul" aria-label="Ubah judul" class="rounded p-1 text-slate-300 hover:bg-slate-100 hover:text-slate-600"><x-capstone::icon name="Pencil" size="13" /></button>
+                    </p>
                 </div>
             </div>
         </div>
@@ -172,6 +175,17 @@
             <div class="flex justify-end gap-2">
                 <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
                 <x-capstone::button @click="sendUnflag()" ::disabled="saving">Kembalikan</x-capstone::button>
+            </div>
+        </div>
+    </x-capstone::dialog>
+
+    <x-capstone::dialog id="group-rename-title" title="Ubah Judul Capstone" description="Hanya teks judul yang diubah. Status kelompok tidak berubah.">
+        <div class="mt-4 space-y-4">
+            <p class="text-sm text-slate-600">Kelompok <span class="font-semibold text-foreground" x-text="renameTarget ? (renameTarget.code || ('Group '+renameTarget.id)) : ''"></span></p>
+            <input x-model="renameText" type="text" maxlength="255" class="w-full rounded-lg border border-slate-200 p-3 text-sm" placeholder="Tulis judul baru..." aria-label="Judul baru">
+            <div class="flex justify-end gap-2">
+                <x-capstone::button variant="outline" @click="$el.closest('dialog').close()">Batal</x-capstone::button>
+                <x-capstone::button @click="sendRename()" ::disabled="saving || !renameText.trim() || renameText.trim() === (renameTarget?.title?.title || '')">Simpan</x-capstone::button>
             </div>
         </div>
     </x-capstone::dialog>

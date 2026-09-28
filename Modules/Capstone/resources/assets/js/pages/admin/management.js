@@ -1,6 +1,6 @@
 import {basePage,api,rows,unwrap,query,dialog,allRows,mergePage,notify} from './shared.js';
 import {context} from '../../api.js';
-export function adminGroups(detail=false){return mergePage(basePage(),{detail,group:null,lecturers:[],supervisorId:'',status:'',sortBy:'',allItems:[],selectedMembers:[],messageText:'',flagTarget:null,flagReason:'',unflagTarget:null,deleteTarget:null,deleteReason:'',
+export function adminGroups(detail=false){return mergePage(basePage(),{detail,group:null,lecturers:[],supervisorId:'',status:'',sortBy:'',allItems:[],selectedMembers:[],messageText:'',flagTarget:null,flagReason:'',unflagTarget:null,deleteTarget:null,deleteReason:'',renameTarget:null,renameText:'',
     async init(){try{await this.periodsLoad(false);if(detail){this.lecturers=await allRows('/admin/users?role=dosen');await this.load();}else{await this.loadAll();}}catch(e){this.error=e.message;this.loading=false;}},
     async load(){this.loading=true;this.error='';try{if(detail)this.group=unwrap(await api('/admin/groups/'+context.params.id));else{await this.loadAll();}}catch(e){this.error=e.message;}finally{this.loading=false;}},
     async loadAll(){this.loading=true;this.error='';try{this.allItems=await allRows('/admin/groups',{period_id:this.periodId,status:this.status});this.items=this.allItems;this.page=1;}catch(e){this.error=e.message;}finally{this.loading=false;}},
@@ -33,6 +33,8 @@ export function adminGroups(detail=false){return mergePage(basePage(),{detail,gr
     openFlag(member){this.flagTarget=member;this.flagReason='';dialog('group-flag').showModal();},
     async sendFlag(){if(!this.flagReason.trim()||!this.flagTarget)return;if(await this.run(()=>api(`/admin/groups/${this.group.id}/members/${this.flagTarget.id}/flag`,{method:'POST',body:{reason:this.flagReason.trim()}}),'Mahasiswa di-flag.')){dialog('group-flag').close();this.flagTarget=null;this.flagReason='';await this.load();}},
     openUnflag(member){this.unflagTarget=member;dialog('group-unflag').showModal();},
+    openRename(item){const target=item||this.group;if(!target?.title)return;this.renameTarget=target;this.renameText=target.title.title||'';dialog('group-rename-title').showModal();},
+    async sendRename(){if(!this.renameTarget?.title||!this.renameText.trim())return;const id=this.renameTarget.title.id;const wasDetail=this.detail;if(await this.run(()=>api(`/admin/titles/${id}`,{method:'PUT',body:{title:this.renameText.trim()}}),'Judul berhasil diubah. Status kelompok tidak berubah.')){dialog('group-rename-title').close();this.renameTarget=null;this.renameText='';if(wasDetail)await this.load();else await this.loadAll();}},
     async sendUnflag(){if(!this.unflagTarget)return;if(await this.run(()=>api(`/admin/groups/${this.group.id}/members/${this.unflagTarget.id}/unflag`,{method:'POST'}),'Mahasiswa dikembalikan.')){dialog('group-unflag').close();this.unflagTarget=null;await this.load();}},
     openDelete(item){this.deleteTarget=item||this.group;this.deleteReason='';dialog('group-delete').showModal();},
     closeDelete(){dialog('group-delete').close();dialog('group-delete-confirm').close();this.deleteTarget=null;this.deleteReason='';},
