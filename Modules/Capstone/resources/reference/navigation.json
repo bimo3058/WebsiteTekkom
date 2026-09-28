@@ -20,11 +20,6 @@
           "icon": "MapPin"
         },
         {
-          "title": "Grade Config",
-          "url": "/admin/evaluation-setup/grade-configuration",
-          "icon": "GraduationCap"
-        },
-        {
           "title": "Assessment Bank",
           "url": "/admin/assessment-bank",
           "icon": "Library"
@@ -49,6 +44,11 @@
           "title": "Peer Review",
           "url": "/admin/peer-review",
           "icon": "Star"
+        },
+        {
+          "title": "Grade Config",
+          "url": "/admin/evaluation-setup/grade-configuration",
+          "icon": "GraduationCap"
         },
         {
           "title": "Document Requirements",

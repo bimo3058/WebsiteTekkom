@@ -5,7 +5,7 @@
     $sidebarRoles = $combined ? ['admin','dosen'] : [$activeRole ?? 'mahasiswa'];
 @endphp
 <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside data-mobile-sidebar class="sitkom-sidebar-capstone fixed inset-y-0 left-0 z-40 flex h-svh shrink-0 flex-col md:relative md:translate-x-0" :class="[collapsed ? 'w-16 is-collapsed' : 'w-[240px]', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+<aside data-mobile-sidebar class="sitkom-sidebar-capstone fixed inset-y-0 left-0 z-40 flex h-svh shrink-0 flex-col md:sticky md:top-0 md:bottom-auto md:h-svh md:max-h-svh md:shrink-0 md:self-start md:translate-x-0" :class="[collapsed ? 'w-16 is-collapsed' : 'w-[240px]', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
     <div class="sb-brand">
         <a href="{{ url('/capstone/dashboard') }}" x-show="!collapsed" class="sb-brand-link"><img src="{{ url('/capstone/assets/logo.png') }}" alt="Logo" class="sb-brand-logo"><span class="sb-brand-text"><span class="sb-brand-name">SICATA</span><span class="sb-brand-tag">Sistem Informasi Capstone &amp; TA</span></span></a>
         <button type="button" aria-label="Toggle sidebar" title="Toggle Sidebar" @click="toggleSidebar" class="sb-collapse-btn"><span :style="collapsed ? 'transform:rotate(180deg)' : ''" style="transition:transform .25s ease;display:inline-flex"><x-capstone::icon name="ChevronLeft" /></span></button>
@@ -28,7 +28,7 @@
                 @if(isset($item['items']))
                     @php $expanded = collect($item['items'])->contains(fn($sub) => str_starts_with($pagePath ?? '', $sub['url'])); @endphp
                     <div x-data="{ expanded: {{ $expanded ? 'true' : 'false' }} }">
-                        <button type="button" @disabled($itemReason) aria-disabled="{{ $itemReason ? 'true' : 'false' }}" class="sb-item w-full {{ $expanded ? 'is-active' : '' }} {{ $itemReason ? 'is-disabled' : '' }}" :class="collapsed ? 'is-collapsed' : ''" :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="{{ $itemReason ?? $item['title'] }}">@if($expanded)<span class="sb-item-pill"></span>@endif<x-capstone::icon :name="$item['icon'] === 'CalendarIcon' ? 'Calendar' : $item['icon']" /><span x-show="!collapsed" class="sb-item-label">{{ $item['title'] }}</span><x-capstone::icon name="ChevronRight" class="ml-auto size-4 transition-transform" x-show="!collapsed" ::class="expanded && 'rotate-90'" /></button>
+                        <button type="button" @disabled($itemReason) aria-disabled="{{ $itemReason ? 'true' : 'false' }}" class="sb-item w-full {{ $itemReason ? 'is-disabled' : '' }}" :class="collapsed ? 'is-collapsed' : ''" :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="{{ $itemReason ?? $item['title'] }}"><x-capstone::icon :name="$item['icon'] === 'CalendarIcon' ? 'Calendar' : $item['icon']" /><span x-show="!collapsed" class="sb-item-label">{{ $item['title'] }}</span><x-capstone::icon name="ChevronRight" class="ml-auto size-4 transition-transform" x-show="!collapsed" ::class="expanded && 'rotate-90'" /></button>
                         <div x-show="expanded && !collapsed" x-cloak class="sb-sublist">
                             @foreach($item['items'] as $sub)
                                 @php

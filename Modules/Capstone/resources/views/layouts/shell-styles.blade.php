@@ -42,6 +42,16 @@
     border-right: 1px solid var(--c-border);
     transition: width .25s ease;
     overflow: hidden;
+    flex-shrink: 0;
+}
+@media (min-width: 768px) {
+    .sitkom-sidebar-capstone {
+        position: sticky;
+        top: 0;
+        height: 100svh;
+        max-height: 100svh;
+        align-self: flex-start;
+    }
 }
 .sb-brand {
     display: flex;
@@ -51,6 +61,7 @@
     border-bottom: 1px solid var(--c-border);
     min-height: 60px;
     flex-shrink: 0;
+    flex-grow: 0;
 }
 .sb-brand-link { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
 .sb-brand-logo { width: 32px; height: 32px; flex-shrink: 0; object-fit: contain; }
@@ -75,9 +86,10 @@
 .sitkom-sidebar-capstone.is-collapsed .sb-collapse-btn { margin-left: 0; }
 
 .sb-nav {
-    flex: 1; overflow-y: auto; overflow-x: hidden;
+    flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain;
     padding: 6px 10px 10px; display: flex; flex-direction: column; gap: 1px; min-height: 0;
 }
+.sb-nav > * { flex-shrink: 0; }
 .sb-nav::-webkit-scrollbar { width: 3px; }
 .sb-nav::-webkit-scrollbar-track { background: transparent; }
 .sb-nav::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 9999px; }
@@ -89,7 +101,7 @@
 }
 .sb-footer {
     padding: 8px 10px 12px; border-top: 1px solid var(--c-border);
-    display: flex; flex-direction: column; gap: 1px; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; flex-grow: 0;
 }
 
 /* ── sb-item (from sidebar-link) ── */
