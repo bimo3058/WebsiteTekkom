@@ -72,17 +72,21 @@
     @endpush
 
     <x-banksoal::notification.alerts />
-
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-        <div>
-            <h1 class="text-3xl font-bold text-slate-900 tracking-tight">Manajemen Parameter</h1>
-            <p class="text-slate-500 mt-1">Kelola aspek penilaian standar untuk RPS dan Bank Soal.</p>
-        </div>
-        <a href="{{ route('banksoal.soal.gpm.parameter.create') }}" class="btn-add hover:shadow-lg transition-all">
-            <i class="fas fa-plus text-[10px] bg-primary text-white p-1.5 rounded-full mr-2"></i>
-            Tambah Parameter
-        </a>
-    </div>
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Manajemen Parameter</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Kelola aspek penilaian standar untuk RPS dan Bank Soal.</p>
+                </div>
+                <a href="{{ route('banksoal.soal.gpm.parameter.create') }}" class="dosen-management-btn dosen-management-btn-primary">
+                    <i class="fas fa-plus" aria-hidden="true"></i> Tambah Parameter
+                </a>
+            </div>
+        </x-slot:header>
 
     <!-- Controls Section -->
     <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -170,6 +174,7 @@
                     </table>
         </div>
     </div>
+    </x-banksoal::ui.bank-soal-page>
 
     @push('scripts')
     <script>

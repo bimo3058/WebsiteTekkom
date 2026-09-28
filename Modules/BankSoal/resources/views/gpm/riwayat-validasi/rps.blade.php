@@ -22,7 +22,18 @@
         }
     </style>
     <x-banksoal::notification.alerts />
-    <x-banksoal::ui.page-header title="Riwayat Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview" />
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Riwayat Validasi RPS</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Pantau riwayat dokumen RPS yang telah direview.</p>
+                </div>
+            </div>
+        </x-slot:header>
 
     <div class="border-b border-slate-200 mb-4">
         <div class="inline-flex items-center gap-2 border-b-2 border-primary pb-3 text-sm font-semibold text-primary">
@@ -106,4 +117,5 @@
             </div>
         @endif
     </div>
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>
