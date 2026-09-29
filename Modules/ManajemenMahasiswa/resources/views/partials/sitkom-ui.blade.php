@@ -8,16 +8,13 @@
       token        resources/views/components/sidebar.blade.php (blok :root)
       badge status resources/views/components/ui/status-badge.blade.php
       badge tingkat resources/views/components/ui/role-badge.blade.php
-      form         resources/views/superadmin/users/edit.blade.php (.input-field)
+      form         resources/views/superadmin/users/_edit-style.blade.php (.input-field)
       modal        resources/views/superadmin/users/_modal_add.blade.php
       tabel        resources/views/superadmin/users/_table.blade.php
 
-    Dua penyimpangan yang disengaja:
-      - Warna teks badge & label form memakai token SITKOM, bukan nilai Tailwind
-        di komponen aslinya (#059669, #94A3B8): nilai aslinya di bawah kontras
-        4.5:1 WCAG AA untuk huruf 10–11px. Bentuknya tetap sama persis.
-      - Cincin fokus form navy, bukan biru #3B82F6 milik Edit User — halaman
-        SITKOM lain (pencarian User Management) sudah memakai navy.
+    Penyimpangan yang disengaja: warna teks badge memakai token SITKOM, bukan
+    nilai Tailwind di komponen aslinya (#059669) — nilai aslinya di bawah
+    kontras 4.5:1 WCAG AA untuk huruf 11px. Bentuknya tetap sama persis.
 
     Layout mahasiswa & dosen tidak mendeklarasikan token, jadi blok :root di sini
     juga yang membuat halaman Verifikasi tampil benar untuk akun mahasiswa/alumni.
@@ -191,33 +188,35 @@
     .tingkat-badge.prodi         { background: var(--c-grey-50);    color: var(--c-fg-sec); border-color: var(--c-border); }
 
     /* ── Kotak isian form ─────────────────────────────────────────────────────
-       Edit User SITKOM: label kecil huruf kapital, kotak putih 13px sudut 8px.
+       Edit User SITKOM (redesign 25 Sep 2026, superadmin/users/_edit-style):
+       label 12px huruf biasa, kotak putih 13px tinggi 38px sudut 7px.
        Nama kelas lama dipertahankan; aturannya menimpa .form-control Bootstrap
        yang ikut terpasang di elemen yang sama. */
     .form-label-custom {
         display: block;
         margin-bottom: 6px;
-        color: var(--c-fg-muted);
-        font-size: 10px;
-        font-weight: 700;
+        color: var(--c-fg-sec);
+        font-size: 12px;
+        font-weight: 500;
         line-height: 1.4;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
+        letter-spacing: normal;
+        text-transform: none;
     }
     .form-label-custom .required { color: var(--c-error); }
 
     .form-control-custom,
     .form-select-custom {
         width: 100%;
+        min-height: 38px;
         box-sizing: border-box;
-        padding: 8px 12px;
-        border: 1px solid var(--c-border-strong);
-        border-radius: 8px;
+        padding: 8px 11px;
+        border: 1px solid var(--c-border);
+        border-radius: 7px;
         background-color: #ffffff;
-        color: var(--c-fg-sec);
+        color: var(--c-fg);
         font-family: inherit;
         font-size: 13px;
-        font-weight: 600;
+        font-weight: 400;
         line-height: 1.5;
         outline: none;
         transition: border-color 0.2s, box-shadow 0.2s;
@@ -230,9 +229,9 @@
     .form-control-custom:focus,
     .form-select-custom:focus {
         border-color: var(--c-primary);
-        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.10);
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.08);
         background-color: #ffffff;
-        color: var(--c-fg-sec);
+        color: var(--c-fg);
         outline: none;
     }
     .form-control-custom:disabled,
@@ -251,9 +250,9 @@
        (panel Filter, Per page) sengaja tidak diubah. Selektor dua kelas supaya
        menang atas gaya komponen yang dicetak belakangan. */
     .mk-select.mk-select--md,
-    .mk-select.mk-select--lg { --mks-h: 38px; --mks-radius: 8px; --mks-font: 13px; --mks-pad: 12px; }
+    .mk-select.mk-select--lg { --mks-h: 38px; --mks-radius: 7px; --mks-font: 13px; --mks-pad: 11px; }
     .mk-select--md .mk-select-btn,
-    .mk-select--lg .mk-select-btn { border-color: var(--c-border-strong); color: var(--c-fg-sec); font-weight: 600; }
+    .mk-select--lg .mk-select-btn { border-color: var(--c-border); color: var(--c-fg); font-weight: 400; }
 
     /* ── Modal ────────────────────────────────────────────────────────────────
        Tambah User SITKOM: sudut 16px, pita judul navy muda, ikon kotak navy,
@@ -364,5 +363,31 @@
     .mm-table tbody tr { transition: background 0.12s; }
     .mm-table tbody tr:hover td { background: #FAFAFA; }
     .mm-table tbody tr:last-child td { border-bottom: none; }
+
+    /* ── Menu aksi "⋯" per baris ──────────────────────────────────────────────
+       User Management SITKOM (redesign 25 Sep 2026): panel berposisi fixed supaya
+       tidak terpotong pembungkus tabel yang overflow, dan membuka ke atas bila
+       ruang di bawah tombol tidak cukup. Dipakai bersama x-data="mmAksiMenu". */
+    .mk-menu.mm-menu-fixed { position: fixed; z-index: 1050; }
 </style>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('mmAksiMenu', () => ({
+            open: false,
+            posisi: {},
+            toggle(tombol) {
+                this.open = !this.open;
+                if (!this.open) return;
+                const r = tombol.getBoundingClientRect();
+                const layar = document.documentElement;
+                const keAtas = layar.clientHeight - r.bottom < 150 && r.top > 150;
+                this.posisi = {
+                    right: (layar.clientWidth - r.right) + 'px',
+                    top: keAtas ? 'auto' : (r.bottom + 5) + 'px',
+                    bottom: keAtas ? (layar.clientHeight - r.top + 5) + 'px' : 'auto',
+                };
+            },
+        }));
+    });
+</script>
 @endonce

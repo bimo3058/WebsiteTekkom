@@ -1,7 +1,6 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
-@include('manajemenmahasiswa::partials.card-frame')
 @include('manajemenmahasiswa::partials.sitkom-ui')
 
 <style>
@@ -14,6 +13,9 @@
         box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         overflow: hidden;
         margin-bottom: 20px;
+        /* .main-wrapper adalah kolom flex; tanpa ini kartu ber-overflow:hidden
+           menyusut sampai tinggal garis saat bagian riwayat di bawahnya panjang. */
+        flex-shrink: 0;
     }
     .detail-toolbar {
         display: flex;

@@ -1,7 +1,6 @@
 <x-dynamic-component :component="$layout">
 
 @include('manajemenmahasiswa::direktori.partials.palette')
-@include('manajemenmahasiswa::partials.card-frame')
 @include('manajemenmahasiswa::partials.sitkom-ui')
 @include('manajemenmahasiswa::partials.filter-popover')
 
@@ -390,15 +389,16 @@
                         {{-- Aksi: tombol "..." + dropdown, mengikuti pola kolom Action
                              User Management global (Alpine.js sudah dimuat di layout admin/dosen/mahasiswa) --}}
                         <td style="text-align: center;">
-                            <div style="position: relative; display: inline-block;" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm">
+                            <div style="position: relative; display: inline-block;" x-data="mmAksiMenu"
+                                 @scroll.window.capture="open = false" @resize.window="open = false">
+                                <button type="button" @click="toggle($el)" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Aksi">
                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </button>
-                                <div x-show="open" x-cloak
+                                <div x-show="open" x-cloak :style="posisi"
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100"
-                                     class="mk-menu" style="display: none;">
+                                     class="mk-menu mm-menu-fixed" style="display: none;">
                                     <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alm->id) }}" class="mk-menu-item">
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                         Detail
@@ -435,7 +435,5 @@
     {{-- Footer: Per page + Showing X to Y of Z results + nomor halaman (partial bersama) --}}
     @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $alumni])
 </div>
-
-</div>{{-- end mm-frame-body --}}
 
 </x-dynamic-component>

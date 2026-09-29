@@ -12,7 +12,7 @@
     <button type="button" @click="open = !open"
             class="form-control-custom flex items-center justify-between gap-2 text-left"
             style="cursor: pointer;"
-            :style="open ? 'border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.10);' : ''">
+            :style="open ? 'border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.08);' : ''">
         <span class="truncate" x-text="{{ $model }}"></span>
         <svg class="shrink-0 transition-transform duration-200" :class="open ? 'rotate-180' : ''"
              width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="color: var(--c-fg-placeholder);">

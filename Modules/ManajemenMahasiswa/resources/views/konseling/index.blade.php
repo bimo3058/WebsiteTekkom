@@ -35,7 +35,6 @@
     .ksl-nama { font-weight: 600; color: var(--c-fg); }
     .ksl-sub { font-size: 11px; color: var(--c-fg-muted); margin-top: 1px; }
     .ksl-tgl { white-space: nowrap; color: var(--c-fg-sec); }
-    .ksl-table .mk-menu.ksl-menu-fixed { position: fixed; z-index: 1050; }
     /* Di layar sempit tabel digeser ke samping, bukan diperas sampai nama patah per kata. */
     .ksl-table { min-width: 640px; }
 
@@ -131,12 +130,12 @@
                         </td>
                         <td style="color: var(--c-fg-sec);">{{ optional($item->pencatat)->name ?? '—' }}</td>
                         <td style="text-align: center;">
-                            <div style="position: relative; display: inline-block;" x-data="kslAksiMenu"
+                            <div style="position: relative; display: inline-block;" x-data="mmAksiMenu"
                                  @scroll.window.capture="open = false" @resize.window="open = false">
                                 <button type="button" @click="toggle($el)" @click.outside="open = false" class="mk-btn mk-btn--secondary mk-btn--icon mk-btn--sm" aria-label="Aksi">
                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                 </button>
-                                <div x-show="open" x-cloak :style="posisi" class="mk-menu ksl-menu-fixed" style="display: none;"
+                                <div x-show="open" x-cloak :style="posisi" class="mk-menu mm-menu-fixed" style="display: none;"
                                      x-transition:enter="transition ease-out duration-100"
                                      x-transition:enter-start="opacity-0 scale-95"
                                      x-transition:enter-end="opacity-100 scale-100">
@@ -366,26 +365,5 @@
             });
         @endif
     })();
-
-    // Menu aksi "⋯" per baris — posisi fixed dihitung saat dibuka supaya tidak
-    // terpotong pembungkus tabel (pola sama dengan daftar Pengaduan).
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('kslAksiMenu', () => ({
-            open: false,
-            posisi: {},
-            toggle(tombol) {
-                this.open = !this.open;
-                if (!this.open) return;
-                const r = tombol.getBoundingClientRect();
-                const layar = document.documentElement;
-                const keAtas = layar.clientHeight - r.bottom < 150 && r.top > 150;
-                this.posisi = {
-                    right: (layar.clientWidth - r.right) + 'px',
-                    top: keAtas ? 'auto' : (r.bottom + 5) + 'px',
-                    bottom: keAtas ? (layar.clientHeight - r.top + 5) + 'px' : 'auto',
-                };
-            },
-        }));
-    });
 </script>
 </x-manajemenmahasiswa::layouts.admin>

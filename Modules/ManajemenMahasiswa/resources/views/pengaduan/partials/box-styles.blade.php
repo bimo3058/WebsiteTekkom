@@ -19,6 +19,9 @@
         .kf-box {
             background: #ffffff; border: 1px solid var(--c-border); border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; font-family: 'Inter Tight', sans-serif;
+            /* Anak langsung .main-wrapper (flex kolom ber-scroll): tanpa ini kotak ikut
+               menyusut setinggi layar dan isi bawahnya terpotong oleh overflow:hidden. */
+            flex-shrink: 0;
         }
 
         /* ── Bilah atas ── */
