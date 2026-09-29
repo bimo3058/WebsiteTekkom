@@ -65,13 +65,21 @@
     </style>
 
     <x-banksoal::notification.alerts />
-    <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview">
-        <x-slot:actions>
-            <a href="{{ route('banksoal.rps.gpm.periode-rps.create') }}" class="gpm-rps-action-btn gpm-rps-action-btn-lg gpm-rps-btn-primary">
-                Atur Periode Pengajuan
-            </a>
-        </x-slot:actions>
-    </x-banksoal::ui.page-header>
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Validasi RPS</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Tinjau dan validasi dokumen RPS yang diajukan oleh dosen pengampu.</p>
+                </div>
+                <a href="{{ route('banksoal.rps.gpm.periode-rps.create') }}" class="dosen-management-btn dosen-management-btn-primary">
+                    <i class="fas fa-calendar-alt" aria-hidden="true"></i> Atur Periode Pengajuan
+                </a>
+            </div>
+        </x-slot:header>
 
     @if($activePeriode)
         <div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 border-l-4 {{ $isPeriodeRunning ? 'border-emerald-500' : 'border-slate-400' }}">
@@ -812,4 +820,5 @@
 
 
     </script>
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>
