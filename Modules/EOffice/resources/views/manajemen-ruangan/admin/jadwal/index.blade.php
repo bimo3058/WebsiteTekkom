@@ -10,7 +10,7 @@
         currentDay: '1',
         jamMulai: '',
         jamSelesai: '',
-        conflictError: '',
+        conflictError: false,
         isCheckingOut: false,
         checkTimeout: null,
         
@@ -22,10 +22,15 @@
             }, 500);
         },
         
+        akademikConflicts: [],
+        peminjamanConflicts: [],
+        
         async executeCheck() {
             if (!this.ruanganId || !this.jamMulai || !this.jamSelesai) {
                 this.isCheckingOut = false;
-                this.conflictError = '';
+                this.conflictError = false;
+                this.akademikConflicts = [];
+                this.peminjamanConflicts = [];
                 return;
             }
             
@@ -35,9 +40,13 @@
                 let data = await res.json();
                 
                 if (data.conflict) {
-                    this.conflictError = data.message;
+                    this.conflictError = true;
+                    this.akademikConflicts = data.akademik_details || [];
+                    this.peminjamanConflicts = data.peminjaman_details || [];
                 } else {
-                    this.conflictError = '';
+                    this.conflictError = false;
+                    this.akademikConflicts = [];
+                    this.peminjamanConflicts = [];
                 }
             } catch (e) {
                 console.error(e);
@@ -51,7 +60,9 @@
             this.currentDay = '1';
             this.jamMulai = '';
             this.jamSelesai = '';
-            this.conflictError = '';
+            this.conflictError = false;
+            this.akademikConflicts = [];
+            this.peminjamanConflicts = [];
         }
     }">
         <div class="mp-page-header">
@@ -444,15 +455,20 @@
                             </div>
 
 
-                            <div x-show="conflictError" x-transition
-                                class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
-                                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                    </path>
-                                </svg>
-                                <span x-text="conflictError"></span>
+                            <div x-show="conflictError" x-cloak x-transition
+                                class="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex flex-col gap-2 text-red-700 text-[13px]">
+                                <div class="font-bold">
+                                    <span>Gagal Menyimpan! Terdapat Jadwal Beririsan:</span>
+                                </div>
+                                <div class="flex flex-col gap-1.5 mt-1">
+                                    <template x-for="c in akademikConflicts" :key="c.nama">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                            <strong x-text="c.nama"></strong>
+                                            <span class="text-red-600/80" x-text="'('+c.waktu+')'"></span>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
@@ -460,7 +476,7 @@
                             <button type="button" @click="showModal = false; resetForm()"
                                 class="mp-btn secondary md">Batal</button>
                             <button type="submit" class="mp-btn primary md"
-                                :disabled="conflictError !== '' || isCheckingOut">Simpan Konfigurasi</button>
+                                :disabled="conflictError || isCheckingOut">Simpan Konfigurasi</button>
                         </div>
                     </form>
                 </div>
@@ -584,7 +600,17 @@
         @endif
 
         <div class="mp-card" style="margin-top: 15px;"
-            x-data="{ selectedIds: [], openFilter: false, openSort: false, get allSelected() { return this.selectedIds.length === {{ count($jadwals) }} && {{ count($jadwals) }} > 0; } }">
+            x-data="{ 
+                selectedIds: [], 
+                openFilter: false, 
+                openSort: false, 
+                get allSelected() { return this.selectedIds.length === {{ count($jadwals) }} && {{ count($jadwals) }} > 0; },
+                submitBulkDelete() {
+                    if (confirm('Yakin ingin menghapus permanen ' + this.selectedIds.length + ' jadwal terpilih?')) {
+                        $refs.bulkForm.submit();
+                    }
+                }
+            }">
             <!-- NEW CARD HEADER MATCHING MOCKUP -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full"
                 style="padding-bottom: 20px;">
@@ -594,17 +620,6 @@
 
                 @if($viewMode === 'akademik')
                     <div class="flex items-center gap-2">
-                        <button type="submit" form="bulkDeleteForm" x-show="selectedIds.length > 0" x-cloak
-                            class="inline-flex items-center gap-2 px-4 py-[9px] text-[13px] font-bold text-white bg-red-600 rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 shadow-sm transition-colors whitespace-nowrap mr-2"
-                            onclick="return confirm('Apakah Anda yakin ingin menghapus ' + selectedIds.length + ' jadwal yang dipilih? Ruangan terkait akan tersedia kembali.')">
-                            <svg class="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                </path>
-                            </svg>
-                            <span x-text="'Hapus (' + selectedIds.length + ')'"></span>
-                        </button>
-
                         <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}" method="GET"
                             class="flex items-center gap-2 m-0 relative">
                             <!-- Search Bar -->
@@ -890,12 +905,17 @@
             </div>
 
             <div class="mp-card-body">
-                <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.bulk-destroy') }}" method="POST"
-                    id="bulkDeleteForm" style="display: none;">
+                <form x-ref="bulkForm" action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.bulk-destroy') }}" method="POST">
                     @csrf
                     <template x-for="id in selectedIds" :key="id">
                         <input type="hidden" name="ids[]" :value="id">
                     </template>
+                    <div x-show="selectedIds.length > 0" style="display: none;" x-transition class="bg-red-50/80 px-4 py-2.5 border-b border-red-100 flex items-center justify-between">
+                        <span class="text-red-700 text-[13px] font-bold"><span x-text="selectedIds.length"></span> Jadwal Terpilih</span>
+                        <button type="button" @click="submitBulkDelete" class="bg-red-600 hover:bg-red-700 text-white px-4 py-1.5 rounded-lg text-[12px] font-bold shadow-sm transition-colors cursor-pointer">
+                            Hapus Terpilih
+                        </button>
+                    </div>
                 </form>
 
                 <div class="mp-table-wrap">
@@ -994,9 +1014,12 @@
                                                             currentDay: '{{ $j->hari }}',
                                                             jamMulai: '{{ substr($j->jam_mulai, 0, 5) }}',
                                                             jamSelesai: '{{ substr($j->jam_selesai, 0, 5) }}',
-                                                            conflictError: '',
+                                                            conflictError: false,
                                                             isCheckingOut: false,
                                                             checkTimeout: null,
+
+                                                            akademikConflicts: [],
+                                                            peminjamanConflicts: [],
 
                                                             triggerCheck() {
                                                                 if(this.checkTimeout) clearTimeout(this.checkTimeout);
@@ -1009,7 +1032,9 @@
                                                             async executeCheck() {
                                                                 if (!this.ruanganId || !this.jamMulai || !this.jamSelesai) {
                                                                     this.isCheckingOut = false;
-                                                                    this.conflictError = '';
+                                                                    this.conflictError = false;
+                                                                    this.akademikConflicts = [];
+                                                                    this.peminjamanConflicts = [];
                                                                     return;
                                                                 }
 
@@ -1019,9 +1044,13 @@
                                                                     let data = await res.json();
 
                                                                     if (data.conflict) {
-                                                                        this.conflictError = data.message;
+                                                                        this.conflictError = true;
+                                                                        this.akademikConflicts = data.akademik_details || [];
+                                                                        this.peminjamanConflicts = data.peminjaman_details || [];
                                                                     } else {
-                                                                        this.conflictError = '';
+                                                                        this.conflictError = false;
+                                                                        this.akademikConflicts = [];
+                                                                        this.peminjamanConflicts = [];
                                                                     }
                                                                 } catch (e) {
                                                                     console.error(e);
@@ -1035,7 +1064,9 @@
                                                                 this.currentDay = '{{ $j->hari }}';
                                                                 this.jamMulai = '{{ substr($j->jam_mulai, 0, 5) }}';
                                                                 this.jamSelesai = '{{ substr($j->jam_selesai, 0, 5) }}';
-                                                                this.conflictError = '';
+                                                                this.conflictError = false;
+                                                                this.akademikConflicts = [];
+                                                                this.peminjamanConflicts = [];
                                                             }
                                                         }">
                                         <div class="relative inline-flex flex-col items-center justify-center w-full"
@@ -1173,7 +1204,7 @@
                                                     <div class="flex items-center justify-between mb-5 shrink-0">
                                                         <h3 class="text-[18px] font-bold text-gray-900" id="modal-title">
                                                             Edit
-                                                            Jadwal Internal</h3>
+                                                            Jadwal Akademik</h3>
                                                         <button type="button"
                                                             @click="showEditModal = false; resetEditForm()"
                                                             class="text-gray-400 hover:text-gray-500">
@@ -1412,16 +1443,20 @@
                                                                         class="mp-input text-[14px]">
                                                                 </div>
                                                             </div>
-                                                            <div x-show="conflictError" x-transition
-                                                                class="mt-4 p-3 bg-red-50 border border-red-200 rounded-xl flex items-start gap-2 text-red-700 text-xs font-semibold">
-                                                                <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none"
-                                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                                        stroke-width="2"
-                                                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                                                    </path>
-                                                                </svg>
-                                                                <span x-text="conflictError"></span>
+                                                            <div x-show="conflictError" x-cloak x-transition
+                                                                class="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex flex-col gap-2 text-red-700 text-[13px]">
+                                                                <div class="font-bold">
+                                                                    <span>Gagal Menyimpan! Terdapat Jadwal Beririsan:</span>
+                                                                </div>
+                                                                <div class="flex flex-col gap-1.5 mt-1">
+                                                                    <template x-for="c in akademikConflicts" :key="c.nama">
+                                                                        <div class="flex items-center gap-2">
+                                                                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                                                                            <strong x-text="c.nama"></strong>
+                                                                            <span class="text-red-600/80" x-text="'('+c.waktu+')'"></span>
+                                                                        </div>
+                                                                    </template>
+                                                                </div>
                                                             </div>
                                                         </div>
 
@@ -1431,7 +1466,7 @@
                                                                 @click="showEditModal = false; resetEditForm()"
                                                                 class="mp-btn secondary md">Batal</button>
                                                             <button type="submit" class="mp-btn primary md"
-                                                                :disabled="conflictError !== '' || isCheckingOut">Simpan
+                                                                :disabled="conflictError || isCheckingOut">Simpan
                                                                 Perubahan</button>
                                                         </div>
                                                     </form>
@@ -1442,20 +1477,8 @@
                             @empty
                                 <tr>
                                     <td colspan="8" style="text-align:center; padding: 40px; color: #666D80;">
-                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#E2E8F0"
-                                            stroke-width="1.5" stroke-linecap="round" style="margin: 0 auto 10px auto;">
-                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                            <line x1="16" y1="2" x2="16" y2="6"></line>
-                                            <line x1="8" y1="2" x2="8" y2="6"></line>
-                                            <line x1="3" y1="10" x2="21" y2="10"></line>
-                                        </svg>
-                                        <div style="font-weight: 600; font-size:14px;">Belum Ada Jadwal Internal &
-                                            Akademik
-                                        </div>
-                                        <div style="font-size:12px; margin-top:4px;">Gunakan tombol Tambah Jadwal di
-                                            pojok
-                                            kanan
-                                            atas untuk mulai mengunci ruangan.</div>
+                                        <div style="font-weight: 600; font-size:14px;">Belum Ada Jadwal</div>
+                                        <div style="font-size:12px; margin-top:4px;">Gunakan tombol Tambah di pojok kanan.</div>
                                     </td>
                                 </tr>
                             @endforelse
@@ -1498,15 +1521,15 @@
                                     style="display: none;">
                                     <div class="p-1">
                                         <button type="button"
-                                            @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')"
+                                            @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10, 'page' => 1]) }}')"
                                             class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
                                         <button type="button"
-                                            @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')"
+                                            @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25, 'page' => 1]) }}')"
                                             class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
                                         <button type="button"
-                                            @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')"
+                                            @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50, 'page' => 1]) }}')"
                                             class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                                     </div>

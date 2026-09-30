@@ -371,15 +371,15 @@
                             style="display: none;">
                             <div class="p-1">
                                 <button type="button"
-                                    @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')"
+                                    @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10, 'page' => 1]) }}')"
                                     class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
                                 <button type="button"
-                                    @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')"
+                                    @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25, 'page' => 1]) }}')"
                                     class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
                                 <button type="button"
-                                    @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')"
+                                    @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50, 'page' => 1]) }}')"
                                     class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                             </div>
