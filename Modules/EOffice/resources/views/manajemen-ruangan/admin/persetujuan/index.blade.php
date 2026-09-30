@@ -132,8 +132,19 @@
                                                 $identityNumber = $pinjam->user->student->student_number ?? $pinjam->user->lecturer->employee_number ?? $pinjam->user->external_id;
                                             }
                                         @endphp
-                                        @if($identityNumber)({{ $identityNumber }})
-                                        @endif{{ $pinjam->nomor_telepon ?: '-' }}
+                                        @if($identityNumber)
+                                            <span class="mr-1">({{ $identityNumber }})</span>
+                                        @endif
+                                        @if($pinjam->nomor_telepon)
+                                            @php
+                                                $waNumber = preg_replace('/^0/', '62', $pinjam->nomor_telepon);
+                                            @endphp
+                                            <a href="https://wa.me/{{ $waNumber }}" target="_blank" title="Hubungi via WhatsApp" class="text-[#25D366] hover:text-[#1da851] hover:underline font-semibold transition-colors">
+                                                {{ $pinjam->nomor_telepon }}
+                                            </a>
+                                        @else
+                                            <span>-</span>
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="max-w-[200px]">
