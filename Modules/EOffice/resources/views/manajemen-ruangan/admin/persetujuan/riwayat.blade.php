@@ -330,7 +330,9 @@
                         </tr>
                     @empty
                         <tr class="mp-tr">
-                            <td colspan="6" class="py-12 text-center text-gray-500 text-[13px]">Belum ada arsip peminjaman yang tersedia.</td>
+                            <td colspan="6" style="padding:40px; text-align:center;">
+                                <div style="font-size:13px; font-weight:500; color:#666D80;">Belum ada arsip peminjaman yang tersedia.</div>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

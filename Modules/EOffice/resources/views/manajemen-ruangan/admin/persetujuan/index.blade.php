@@ -30,41 +30,38 @@
                             placeholder="Cari Nama/NIM/Ruangan..." x-on:input.debounce.700ms="$el.form.submit()">
                     </div>
 
-                    {{-- Filter Ruangan (No Title Label) --}}
-                    <div
-                        class="flex items-center rounded-md border border-slate-200 bg-white overflow-visible text-xs shadow-sm">
-                        <div x-data="{ 
-                            open: false, 
-                            selectedId: '{{ request('ruangan_id') }}', 
-                            selectedName: '{{ request('ruangan_id') ? addslashes($ruangans->firstWhere('id', request('ruangan_id'))->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
-                            selectItem(id, name) { 
-                                this.selectedId = id; 
-                                this.selectedName = name; 
-                                $refs.ruanganInput.value = id;
-                                $refs.ruanganInput.form.submit();
-                            } 
-                        }" class="relative w-[140px] sm:w-[180px]" @click.away="open = false">
-                            
-                            <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
+                    {{-- Filter Ruangan --}}
+                    <div x-data="{ 
+                        open: false, 
+                        selectedId: '{{ request('ruangan_id') }}', 
+                        selectItem(id) { 
+                            this.selectedId = id; 
+                            $refs.ruanganInput.value = id;
+                            $refs.ruanganInput.form.submit();
+                        } 
+                    }" class="relative inline-block text-left" @click.away="open = false">
+                        
+                        <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
 
-                            <button type="button" @click="open = !open" 
-                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-md cursor-pointer">
-                                <span x-text="selectedName" class="truncate pr-2"></span>
-                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                                </svg>
-                            </button>
-                            
-                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
-                                class="absolute left-0 top-full mt-1 w-full min-w-[160px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48" style="display: none;">
-                                <div class="py-1">
-                                    <button type="button" @click="selectItem('', 'Semua Ruangan')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50': selectedId != ''}">Semua Ruangan</button>
-                                    @foreach($ruangans as $ruangan)
-                                        <button type="button" @click="selectItem('{{ $ruangan->id }}', '{{ addslashes($ruangan->nama) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors mt-0.5 cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $ruangan->id }}', 'text-gray-700 hover:bg-gray-50': selectedId != '{{ $ruangan->id }}'}">
-                                            {{ $ruangan->nama }}
-                                        </button>
-                                    @endforeach
-                                </div>
+                        <button type="button" @click="open = !open" 
+                            class="relative inline-flex justify-center items-center px-4 py-2 border border-slate-200 rounded-md bg-white hover:bg-slate-50 focus:outline-none transition-colors font-semibold text-[13px] h-9 text-slate-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 shrink-0 text-slate-600">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                            </svg>
+                            Filter
+                            <span x-show="selectedId !== ''" style="display: none;" class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#0B266E] border-2 border-white box-content"></span>
+                        </button>
+                        
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
+                            class="absolute right-0 origin-top-right top-full mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden" style="display: none;">
+                            <div class="py-2 max-h-64 overflow-y-auto">
+                                <button type="button" @click="selectItem('')" class="w-[calc(100%-16px)] text-left px-3 py-2 mx-2 mb-1 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#F0F2F9] text-[#0B266E] font-bold': selectedId == '', 'text-slate-700 hover:bg-slate-50 font-medium': selectedId != ''}">Semua Ruangan</button>
+                                
+                                @foreach($ruangans as $ruangan)
+                                    <button type="button" @click="selectItem('{{ $ruangan->id }}')" class="w-[calc(100%-16px)] text-left px-3 py-2 mx-2 mb-1 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#F0F2F9] text-[#0B266E] font-bold': selectedId == '{{ $ruangan->id }}', 'text-slate-700 hover:bg-slate-50 font-medium': selectedId != '{{ $ruangan->id }}'}">
+                                        {{ $ruangan->nama }}
+                                    </button>
+                                @endforeach
                             </div>
                         </div>
                     </div>
@@ -82,7 +79,22 @@
                             <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width:120px;">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody x-data="{
+                        init() {
+                            setInterval(() => {
+                                fetch(window.location.href)
+                                    .then(res => res.text())
+                                    .then(html => {
+                                        const doc = new DOMParser().parseFromString(html, 'text/html');
+                                        const newTbody = doc.querySelector('tbody');
+                                        if (newTbody && this.$el.innerHTML !== newTbody.innerHTML) {
+                                            this.$el.innerHTML = newTbody.innerHTML;
+                                        }
+                                    })
+                                    .catch(err => console.error('Polling error:', err));
+                            }, 15000);
+                        }
+                    }">
                         @forelse($peminjamans as $pinjam)
                             <tr class="mp-tr">
                                 <td>
@@ -181,8 +193,9 @@
                             </tr>
                         @empty
                             <tr class="mp-tr">
-                                <td colspan="5" class="py-12 text-center text-gray-500 text-[13px]">Belum ada antrean
-                                    permohonan ruangan atau jadwal berjalan yang masuk.</td>
+                                <td colspan="5" style="padding:40px; text-align:center;">
+                                    <div style="font-size:13px; font-weight:500; color:#666D80;">Belum ada antrean permohonan ruangan atau jadwal berjalan yang masuk.</div>
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>
