@@ -2,7 +2,7 @@
 
     <div class="mp-page-header">
         <div>
-            <h1 class="mp-page-title">Persetujuan</h1>
+            <h1 class="mp-page-title">Verifikasi Peminjaman</h1>
             <p class="mp-page-sub">Kelola dan verifikasi seluruh permohonan peminjaman ruangan yang diajukan oleh
                 pengguna.</p>
         </div>
@@ -12,13 +12,13 @@
         <div class="mp-card-body">
             <div
                 class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
-                <h2 class="text-base font-bold text-gray-900 tracking-tight">Antrean Peminjaman & Jadwal Berjalan</h2>
+                <h2 class="text-base font-bold text-gray-900 tracking-tight">Daftar Antrean</h2>
 
                 <form action="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" method="GET"
-                    class="flex flex-wrap items-center gap-2.5">
+                    class="w-full md:w-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
 
                     {{-- Search --}}
-                    <div class="relative w-full sm:w-auto">
+                    <div class="relative w-full sm:w-auto flex-1">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -39,12 +39,12 @@
                             $refs.ruanganInput.value = id;
                             $refs.ruanganInput.form.submit();
                         } 
-                    }" class="relative inline-block text-left" @click.away="open = false">
+                    }" class="relative inline-block text-left w-full sm:w-auto" @click.away="open = false">
                         
                         <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
 
                         <button type="button" @click="open = !open" 
-                            class="relative inline-flex justify-center items-center px-4 py-2 border border-slate-200 rounded-md bg-white hover:bg-slate-50 focus:outline-none transition-colors font-semibold text-[13px] h-9 text-slate-700">
+                            class="relative inline-flex w-full sm:w-auto justify-center items-center px-4 py-2 border border-slate-200 rounded-md bg-white hover:bg-slate-50 focus:outline-none transition-colors font-semibold text-[13px] h-9 text-slate-700 cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 shrink-0 text-slate-600">
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
@@ -53,7 +53,7 @@
                         </button>
                         
                         <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
-                            class="absolute right-0 origin-top-right top-full mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden" style="display: none;">
+                            class="absolute left-0 origin-top-left sm:left-auto sm:right-0 sm:origin-top-right top-full mt-2 w-full sm:w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden" style="display: none;">
                             <div class="py-2 max-h-64 overflow-y-auto">
                                 <button type="button" @click="selectItem('')" class="w-[calc(100%-16px)] text-left px-3 py-2 mx-2 mb-1 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#F0F2F9] text-[#0B266E] font-bold': selectedId == '', 'text-slate-700 hover:bg-slate-50 font-medium': selectedId != ''}">Semua Ruangan</button>
                                 
@@ -254,7 +254,7 @@
     
                     <div class="w-px h-4 bg-slate-200"></div>
     
-                    <p class="font-medium text-slate-500">
+                    <p class="hidden md:block font-medium text-slate-500">
                         Menampilkan <span class="font-bold text-slate-800">{{ $peminjamans->firstItem() ?? 0 }}</span>
                         sampai <span class="font-bold text-slate-800">{{ $peminjamans->lastItem() ?? 0 }}</span>
                         dari <span class="font-bold text-slate-800">{{ $peminjamans->total() }}</span> entri
@@ -346,20 +346,34 @@
             <div x-show="modalTindakan" style="display: none;"
                 class="fixed inset-0 z-[100] flex items-center justify-center p-4">
                 <div x-show="modalTindakan" x-transition.opacity
-                    class="fixed inset-0 bg-gray-800/60 backdrop-blur-sm transition-opacity" @click="closeModal()">
+                    class="fixed inset-0 bg-slate-900/60 transition-opacity" @click="closeModal()">
                 </div>
 
-                <div x-show="modalTindakan" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4"
+                <div x-show="modalTindakan" 
+                    x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 -translate-y-8"
                     x-transition:enter-end="opacity-100 translate-y-0"
-                    class="relative bg-white rounded-[16px] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0"
+                    x-transition:leave-end="opacity-0 -translate-y-8"
+                    class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
 
                     <div
-                        class="px-6 py-4 border-b border-gray-100 flex-shrink-0 flex justify-between items-center bg-white z-10">
-                        <h3 class="font-bold text-gray-900 text-lg tracking-tight">Verifikasi Peminjaman</h3>
+                        class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-[#0B266E] p-2.5 rounded-xl">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-semibold text-[#1A1C1E]">Verifikasi Peminjaman</h3>
+                                <p class="text-xs text-[#0B266E] mt-0.5">Penanganan peminjaman dari <span class="font-bold" x-text="selectedName"></span></p>
+                            </div>
+                        </div>
                         <button type="button" @click="closeModal()"
-                            class="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            class="text-[#0B266E] hover:bg-[#0B266E]/10 transition-colors cursor-pointer p-1.5 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
                         </button>
@@ -370,10 +384,7 @@
                         @csrf
                         <input type="hidden" name="status" x-model="selectedAction">
 
-                        <div class="px-6 py-6 flex-1 overflow-y-auto bg-slate-50/30">
-                            <p class="text-sm text-gray-600 mb-4">Tentukan penanganan peminjaman dari <span
-                                    class="font-semibold text-blue-900 bg-blue-50 px-1.5 py-0.5 rounded"
-                                    x-text="selectedName"></span>.</p>
+                        <div class="p-6 flex-1 overflow-y-auto bg-white">
 
                             <!-- Ringkasan Informasi -->
                             <div class="mb-5 p-4 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
@@ -387,9 +398,22 @@
                                     <div class="text-slate-500 font-medium">NIM/NIP</div>
                                     <div class="text-slate-800 font-medium" x-text="selectedNim"></div>
 
-                                    <div class="text-slate-500 font-medium">No. Telp</div>
-                                    <div class="text-slate-800 font-medium">
-                                        <span x-text="selectedTelp"></span>
+                                    <div class="text-slate-500 font-medium flex items-center">No. Telp</div>
+                                    <div class="font-medium flex items-center">
+                                        <template x-if="selectedTelp && selectedTelp !== '-'">
+                                            <a :href="'https://wa.me/' + (selectedTelp.toString().startsWith('0') ? '62' + selectedTelp.toString().substring(1) : selectedTelp)" 
+                                                target="_blank" 
+                                                class="inline-flex items-center gap-1.5 text-[#25D366] hover:text-[#1da851] hover:underline transition-colors group"
+                                                title="Hubungi via WhatsApp">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+                                                </svg>
+                                                <span x-text="selectedTelp"></span>
+                                            </a>
+                                        </template>
+                                        <template x-if="!selectedTelp || selectedTelp === '-'">
+                                            <span class="text-slate-800" x-text="selectedTelp || '-'"></span>
+                                        </template>
                                     </div>
                                 </div>
 
@@ -621,14 +645,12 @@
                         </div> <!-- End of scrollable body -->
 
                         <!-- Fixed Footer -->
-                        <div
-                            class="px-6 py-4 border-t border-gray-100 bg-white flex-shrink-0 flex gap-3 z-10 w-full justify-end rounded-b-[16px]">
+                        <div class="px-6 py-4 flex gap-3 z-10 w-full justify-end border-t border-slate-100 bg-white">
                             <button type="button" @click="closeModal()"
-                                class="cursor-pointer py-2.5 px-6 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 flex-1 sm:flex-none transition-colors">Batalkan</button>
+                                class="flex-1 cursor-pointer py-2.5 px-4 border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all">Batalkan</button>
                             <button type="submit"
-                                class="cursor-pointer py-2.5 px-6 bg-[#0B266E] text-white rounded-xl font-medium text-sm hover:bg-[#071946] shadow-sm flex-1 sm:flex-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                :disabled="!selectedAction || (selectedAction === 'edit' && (conflictError !== '' || isCheckingOut))">Simpan
-                                Perubahan</button>
+                                class="flex-1 cursor-pointer py-2.5 px-4 bg-[#0B266E] hover:bg-[#071946] text-white rounded-xl font-semibold text-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                :disabled="!selectedAction || (selectedAction === 'edit' && (conflictError !== '' || isCheckingOut))">Simpan Perubahan</button>
                         </div>
                     </form>
                 </div>
