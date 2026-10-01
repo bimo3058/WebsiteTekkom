@@ -1,7 +1,7 @@
 import {workspace,api,rows,unwrap,notify} from './shared.js';
 import {context} from '../../api.js';
 
-export const evaluationLabels={BIMBINGAN_SEMPRO:'Bimbingan Sempro',NILAI_DOSEN:'Nilai Dosen',MILESTONE:'Milestone',EXPO:'Expo',BIMBINGAN_TA:'Bimbingan Sidang TA',SEMPRO:'Sempro',SIDANG_TA:'Sidang TA'};
+export const evaluationLabels={BIMBINGAN_SEMPRO:'Bimbingan Sempro',NILAI_DOSEN:'Nilai Dosen',MILESTONE:'Milestone',BIMBINGAN_TA:'Bimbingan Sidang TA',SEMPRO:'Sempro',SIDANG_TA:'Sidang TA'};
 export function lecturerEvaluations(){
     return workspace({items:[],type:'all',status:'all',
         async load(){this.loading=true;this.error='';try{const [result,periods]=await Promise.all([api('/dosen/seminar-schedules/examiner'),api('/periods-list')]);const data=unwrap(result);this.periods=rows(periods);this.items=[];
@@ -45,8 +45,7 @@ export function lecturerEvaluationForm(supervisor=false,ta=false){
             try{
                 if(supervisor)await api('/dosen/supervisor-evaluation',{method:'POST',body:{group_id:this.data.group.id,evaluation_type:this.type,scores:this.scoreRows}});
                 else{
-                    const evaluationType=this.type==='TA_DEFENSE'?'SIDANG_TA':this.data.schedule.type;
-                    const endpoint=this.type==='TA_DEFENSE'?'ta-defense':evaluationType==='EXPO'?'expo':'sempro';
+                    const endpoint=this.type==='TA_DEFENSE'?'ta-defense':'sempro';
                     await api('/dosen/'+endpoint+'/'+this.data.schedule.id+'/evaluate',{method:'POST',body:{rubric_json:{scores:this.scores,notes:this.notes},score:this.students.reduce((sum,s)=>sum+Number(this.total(s.id)),0)/this.students.length,result:this.result}});
                 }
                 notify('Evaluation saved');await this.load();if(supervisor)this.viewOnly=true;

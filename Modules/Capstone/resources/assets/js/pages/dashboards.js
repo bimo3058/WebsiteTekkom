@@ -112,7 +112,7 @@ export function registerDashboards(Alpine) {
         groupStatusClass(status){return ['FORMING','FORMING_SOLO','READY_FOR_BIDDING'].includes(status) ? 'bg-red-50 text-red-600 border border-red-200' : ['READY_FOR_FINALIZATION','TITLE_APPROVED'].includes(status) ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200';},
         groupStatusLabel(item){return item.status_label || (item.status || '').charAt(0)+(item.status || '').slice(1).toLowerCase().replace(/_/g,' ') || 'Unknown';},
         initials(name){return String(name || '?').trim().split(/\s+/).slice(0,2).map(w=>w.charAt(0).toUpperCase()).join('');},
-        phaseLabel(code){return {PDC1:'PDC 1',SEMPRO:'Seminar Proposal',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'Sidang TA',EXPO:'Expo',SIDANG:'Sidang TA'}[code] || code || '—';},
+        phaseLabel(code){return {PDC1:'PDC 1',SEMPRO:'Seminar Proposal',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'TA Draft',EXPO:'Expo',SIDANG:'Sidang TA'}[code] || code || '—';},
         memberDisplayName(member){return member?.student?.name || member?.student?.user?.name || '—';},
         async refreshMahasiswa(){this.loading=true;this.error='';try{
             const result=await Promise.allSettled([api('/mahasiswa/dashboard'),api('/mahasiswa/group'),api('/mahasiswa/all-schedules'),api('/mahasiswa/workflow')]);

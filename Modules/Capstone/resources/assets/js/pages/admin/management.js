@@ -23,7 +23,7 @@ export function adminGroups(detail=false){return mergePage(basePage(),{detail,gr
     longDate(value){return value?new Date(value).toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}):'—';},
     get phases(){return this.group?.workflow?.phases||[];},
     get progressPct(){return this.group?.progress_percentage??0;},
-    phaseLabel(phase){return {PDC1:'PDC 1',SEMPRO:'Sempro',PDC2:'PDC 2',TA_DRAFT:'TA Draft',EXPO:'Expo'}[phase]||phase;},
+    phaseLabel(phase){return {PDC1:'PDC 1',SEMPRO:'Sempro',PDC2:'PDC 2',TA_DRAFT:'TA Draft',TA:'TA Draft',EXPO:'Expo',SIDANG:'Sidang TA'}[phase]||phase;},
     phasePill(status){return status==='completed'?'bg-emerald-50 text-emerald-600':['submitted','revision','draft','unlocked'].includes(status)?'bg-amber-50 text-amber-600':'bg-slate-100 text-slate-500';},
     phasePillLabel(status){return status==='completed'?'Selesai':['submitted','revision','draft','unlocked'].includes(status)?'Proses':'Belum';},
     docRowClass(status){return status==='APPROVED'?'text-slate-700':status==='REJECTED'||status==='SUBMITTED'?'text-amber-600':'text-slate-400';},

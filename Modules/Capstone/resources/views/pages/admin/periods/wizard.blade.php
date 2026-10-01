@@ -8,7 +8,7 @@
             @endforeach
         </div></div></div>
         <div class="mx-auto max-w-7xl px-6 py-8"><div class="rounded-xl border bg-white shadow-sm"><div class="p-6">
-            <p x-show="finalized" class="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Periode final tidak dapat diubah.</p>
+            <x-capstone::alert variant="warning" x-show="finalized" class="mb-6">Periode final tidak dapat diubah.</x-capstone::alert>
             <form id="period-wizard-form" @submit.prevent="save()" novalidate>
                 <fieldset :disabled="!editable" class="min-w-0">
                     <div x-show="step===0">@include('capstone::pages.admin.periods.steps.basic')</div>

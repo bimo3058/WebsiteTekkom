@@ -1,4 +1,4 @@
-<x-capstone::alert title="Proposal Terkunci" icon="Lock" x-show="!canCreate && flow?.reason"><span x-text="reasonText[flow?.reason] || 'Pengajuan proposal tidak tersedia untuk kondisi kelompok saat ini.'"></span></x-capstone::alert>
+<x-capstone::alert title="Proposal Terkunci" icon="Lock" variant="warning" x-show="!canCreate && flow?.reason"><span x-text="reasonText[flow?.reason] || 'Pengajuan proposal tidak tersedia untuk kondisi kelompok saat ini.'"></span></x-capstone::alert>
 <x-capstone::alert title="Leader Only" icon="Lock" x-show="group && !isLeader">Only the group leader can propose titles. Contact your group leader to submit proposals.</x-capstone::alert>
 <x-capstone::alert title="Limit Reached" icon="AlertTriangle" x-show="isLeader && total>=3 && !approved">You have used all 3 title slots (bids + proposals combined). Delete an existing bid to make room.</x-capstone::alert>
 <x-capstone::alert title="No Group" x-show="!group">You must <x-capstone::feature-link href="/mahasiswa/group" class="underline font-medium">create a group</x-capstone::feature-link> first before proposing a title.</x-capstone::alert>

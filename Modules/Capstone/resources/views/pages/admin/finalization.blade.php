@@ -59,8 +59,8 @@
 
     <div x-show="flow && flow.blockers && flow.blockers.length" class="space-y-2" role="alert">
         <template x-for="blocker in (flow?.blockers || [])" :key="blocker.type">
-            <div class="flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 text-sm" :class="blocker.severity==='error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-amber-200 bg-amber-50 text-amber-900'">
-                <x-capstone::icon name="AlertTriangle" />
+            <div class="flex flex-wrap items-center gap-3 rounded-xl border px-4 py-3 text-sm" :class="blocker.severity==='error' ? 'border-red-200 bg-red-50 text-red-800' : 'border-amber-500 bg-amber-50 text-amber-700'">
+                <x-capstone::icon name="TriangleAlert" />
                 <span x-text="blocker.message" class="mr-auto max-w-[65ch]"></span>
                 <x-capstone::button x-show="blocker.action==='reopen'" size="sm" variant="outline" @click="openReopen()">Buka Kembali</x-capstone::button>
                 <x-capstone::button x-show="blocker.action==='period_flag'" size="sm" @click="openPeriodFlag()">Finalisasi Periode</x-capstone::button>
@@ -220,7 +220,7 @@
     </x-capstone::card>
 
     <x-capstone::card title="Beban Dosen Pembimbing" description="Kapasitas supervisi per dosen pada periode berjalan. Periksa sebelum menetapkan SV massal.">
-        <p x-show="overloadedLecturers.length" class="mx-6 mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900"><span x-text="overloadedLecturers.length" class="tabular-nums"></span> dosen overload. Hindari menetapkan mereka sebagai SV baru.</p>
+        <x-capstone::alert variant="warning" x-show="overloadedLecturers.length" class="mx-6 mb-3"><span x-text="overloadedLecturers.length" class="tabular-nums"></span> dosen overload. Hindari menetapkan mereka sebagai SV baru.</x-capstone::alert>
         <div class="relative w-full overflow-x-auto px-6 pb-6">
             <table class="w-full caption-bottom text-sm tabular-nums">
                 <thead class="[&_tr]:border-b"><tr class="border-b bg-gray-50/50">
