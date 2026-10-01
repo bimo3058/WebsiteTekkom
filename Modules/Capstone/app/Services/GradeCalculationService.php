@@ -2,13 +2,18 @@
 
 namespace Modules\Capstone\Services;
 
+use App\Models\Student;
+use Illuminate\Support\Facades\Log;
+use Modules\Capstone\Models\ExpoSelfEvaluation;
 use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PeerReview;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodAssessmentComponent;
+use Modules\Capstone\Models\PeriodPeerReviewIndicator;
+use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Repositories\AssessmentScoreRepository;
-use Illuminate\Support\Facades\Log;
 
 class GradeCalculationService
 {
@@ -31,9 +36,15 @@ class GradeCalculationService
         $groupIds = Group::where('period_id', $periodId)->pluck('id')->toArray();
         $this->batchCache['group_ids'] = $groupIds;
 
-        // 2. Batch load ALL assessment scores with relationships from all supported types
+        // 2. Batch load ALL assessment scores with relationships from all supported types.
+        // EXPO is skipped here: EXPO grades come from the members'
+        // self-evaluations in daftar expo (see 2b), not the ExpoScore
+        // split table, whose legacy rows are ignored.
         $allScores = collect();
         foreach (AssessmentScoreRepository::getSupportedTypes() as $type) {
+            if ($type === 'EXPO') {
+                continue;
+            }
             $typeScores = AssessmentScoreRepository::forType($type)
                 ->with(['evaluator:id,user_id', 'periodComponent.template'])
                 ->whereIn('group_id', $groupIds)
@@ -47,6 +58,20 @@ class GradeCalculationService
                 $this->batchCache['assessment_scores'][$key] = [];
             }
             $this->batchCache['assessment_scores'][$key][] = $score;
+        }
+
+        // 2b. Batch load EXPO self-evaluations (the member write path in
+        // daftar expo). Pembimbing EXPO evaluation was removed, so these
+        // rows are the sole source for EXPO grades.
+        $selfEvals = ExpoSelfEvaluation::with('periodComponent.template')
+            ->whereIn('group_id', $groupIds)
+            ->get();
+        foreach ($selfEvals as $eval) {
+            $key = "{$eval->student_id}:{$eval->group_id}";
+            if (! isset($this->batchCache['expo_self_evals'][$key])) {
+                $this->batchCache['expo_self_evals'][$key] = [];
+            }
+            $this->batchCache['expo_self_evals'][$key][] = $eval;
         }
 
         // 3. Batch load ALL peer reviews
@@ -90,7 +115,7 @@ class GradeCalculationService
         }
 
         // 5b. Batch load seminar schedules (SEMPRO/EXPO) for examiner role resolution
-        $seminarSchedules = \Modules\Capstone\Models\SeminarSchedule::whereIn('group_id', $groupIds)
+        $seminarSchedules = SeminarSchedule::whereIn('group_id', $groupIds)
             ->where('status', '!=', 'CANCELLED')
             ->whereIn('type', ['SEMPRO', 'EXPO'])
             ->get();
@@ -98,7 +123,7 @@ class GradeCalculationService
         // Get group_id => student_ids mapping for seminar examiner roles
         $groupStudentMap = [];
         if (count($groupIds) > 0) {
-            $members = \Modules\Capstone\Models\GroupMember::whereIn('group_id', $groupIds)
+            $members = GroupMember::whereIn('group_id', $groupIds)
                 ->select('group_id', 'student_id')
                 ->get();
             foreach ($members as $m) {
@@ -153,7 +178,7 @@ class GradeCalculationService
         $this->batchCache['period_components'] = $components->keyBy('id');
 
         // 9. Batch load peer review indicators
-        $indicators = \Modules\Capstone\Models\PeriodPeerReviewIndicator::with('template')
+        $indicators = PeriodPeerReviewIndicator::with('template')
             ->whereHas('period', fn ($q) => $q->where('id', $periodId))
             ->get();
 
@@ -268,12 +293,12 @@ class GradeCalculationService
     {
         $nilaiDosenScores = $this->getScoresFromCache($studentId, $groupId, 'NILAI_DOSEN');
         $milestoneScores = $this->getScoresFromCache($studentId, $groupId, 'MILESTONE');
-        $expoScores = $this->getScoresFromCache($studentId, $groupId, 'EXPO');
         $peerReviewScores = $this->getPeerReviewsFromCache($studentId, $groupId);
 
         $nilaiDosenScore = $this->calculateWeightedAverageFromCache($nilaiDosenScores);
         $milestoneScore = $this->calculateWeightedAverageFromCache($milestoneScores);
-        $expoScore = $this->calculateWeightedAverageFromCache($expoScores);
+        // EXPO comes from the members' self-evaluations, not the split table.
+        $expoScore = $this->getExpoSelfScoreFromCache($studentId, $groupId);
         $peerReviewScore = $this->calculatePeerReviewAverageFromCache($peerReviewScores);
 
         $componentCount = 0;
@@ -315,7 +340,7 @@ class GradeCalculationService
                 ],
                 'EXPO' => [
                     'score' => $expoScore,
-                    'evaluators' => $this->getEvaluatorsFromCache($studentId, $groupId, 'EXPO'),
+                    'evaluators' => $this->getExpoSelfEvaluatorsFromCache($studentId, $groupId),
                 ],
                 'PEER_REVIEW' => [
                     'score' => $peerReviewScore,
@@ -360,6 +385,120 @@ class GradeCalculationService
         $key = "{$studentId}:{$groupId}:{$evaluationType}";
 
         return $this->batchCache['assessment_scores'][$key] ?? [];
+    }
+
+    /**
+     * Get a student's EXPO self-evaluations from cache.
+     * EXPO grades come from the members' self-evaluations in daftar expo,
+     * not the ExpoScore split table.
+     *
+     * @return array<int, ExpoSelfEvaluation>
+     */
+    private function getExpoSelfEvalsFromCache(int $studentId, int $groupId): array
+    {
+        $key = "{$studentId}:{$groupId}";
+
+        return $this->batchCache['expo_self_evals'][$key] ?? [];
+    }
+
+    /**
+     * Weighted EXPO average from cached self-evaluations.
+     */
+    private function getExpoSelfScoreFromCache(int $studentId, int $groupId): ?float
+    {
+        return $this->calculateWeightedAverageFromCache($this->getExpoSelfEvalsFromCache($studentId, $groupId));
+    }
+
+    /**
+     * EXPO evaluators display: the member themself with role SELF.
+     */
+    private function getExpoSelfEvaluatorsFromCache(int $studentId, int $groupId): array
+    {
+        if ($this->getExpoSelfEvalsFromCache($studentId, $groupId) === []) {
+            return [];
+        }
+
+        return [
+            [
+                'name' => $this->resolveStudentName($studentId),
+                'role' => 'SELF',
+            ],
+        ];
+    }
+
+    /**
+     * EXPO evaluators with scores, matching getEvaluatorsWithScoresFromCache()
+     * output shape for the reports page.
+     */
+    public function getExpoSelfEvaluatorsWithScoresFromCache(int $studentId, int $groupId): array
+    {
+        $score = $this->getExpoSelfScoreFromCache($studentId, $groupId);
+        if ($score === null) {
+            return [];
+        }
+
+        return [
+            [
+                'evaluator_id' => $studentId,
+                'name' => $this->resolveStudentName($studentId),
+                'role' => 'SELF',
+                'score' => round($score, 2),
+            ],
+        ];
+    }
+
+    /**
+     * Resolve a student's display name, memoized to avoid N+1 queries.
+     */
+    private function resolveStudentName(int $studentId): string
+    {
+        if (! array_key_exists($studentId, $this->batchCache['student_names'] ?? [])) {
+            $student = Student::with('user:id,name')->find($studentId);
+            $this->batchCache['student_names'][$studentId] = $student?->name ?? 'Unknown';
+        }
+
+        return $this->batchCache['student_names'][$studentId];
+    }
+
+    /**
+     * Single-query EXPO average from the member's self-evaluations.
+     */
+    private function getStudentExpoSelfScore(int $studentId, int $groupId): ?float
+    {
+        $flagService = app(StudentFlagService::class);
+        if (! $flagService->canBeScored($studentId, $groupId)) {
+            return null;
+        }
+
+        $evals = ExpoSelfEvaluation::with('periodComponent.template')
+            ->where('student_id', $studentId)
+            ->where('group_id', $groupId)
+            ->get();
+
+        if ($evals->isEmpty()) {
+            return null;
+        }
+
+        return $this->calculateWeightedAverageFromScores($evals);
+    }
+
+    /**
+     * Single-query EXPO evaluators display (the member themself, role SELF).
+     */
+    private function getExpoSelfEvaluatorsForStudent(int $studentId, int $groupId): array
+    {
+        $score = $this->getStudentExpoSelfScore($studentId, $groupId);
+        if ($score === null) {
+            return [];
+        }
+
+        return [
+            [
+                'name' => $this->resolveStudentName($studentId),
+                'role' => 'SELF',
+                'score' => round($score, 2),
+            ],
+        ];
     }
 
     /**
@@ -478,6 +617,11 @@ class GradeCalculationService
      */
     public function getEvaluatorsWithScoresFromCache(int $studentId, int $groupId, string $evaluationType): array
     {
+        // EXPO comes from the members' self-evaluations, not the split table.
+        if ($evaluationType === 'EXPO') {
+            return $this->getExpoSelfEvaluatorsWithScoresFromCache($studentId, $groupId);
+        }
+
         $scores = $this->getScoresFromCache($studentId, $groupId, $evaluationType);
         $evaluatorData = [];
 
@@ -648,7 +792,8 @@ class GradeCalculationService
         try {
             $nilaiDosenScore = $this->getStudentEvaluationScore($studentId, $groupId, 'NILAI_DOSEN');
             $milestoneScore = $this->getStudentEvaluationScore($studentId, $groupId, 'MILESTONE');
-            $expoScore = $this->getStudentEvaluationScore($studentId, $groupId, 'EXPO');
+            // EXPO comes from the members' self-evaluations, not the split table.
+            $expoScore = $this->getStudentExpoSelfScore($studentId, $groupId);
             $peerReviewScore = $this->getStudentPeerReviewAverage($studentId, $groupId);
 
             // Check if any scores exist
@@ -699,7 +844,7 @@ class GradeCalculationService
                     ],
                     'EXPO' => [
                         'score' => $expoScore,
-                        'evaluators' => $this->getEvaluatorsForStudent($studentId, $groupId, 'EXPO'),
+                        'evaluators' => $this->getExpoSelfEvaluatorsForStudent($studentId, $groupId),
                     ],
                     'PEER_REVIEW' => [
                         'score' => $peerReviewScore,
@@ -839,6 +984,7 @@ class GradeCalculationService
         }
 
         $scores = AssessmentScoreRepository::forType($evaluationType)
+            ->with(['periodComponent.template', 'component'])
             ->where('student_id', $studentId)
             ->where('group_id', $groupId)
             ->get();
@@ -986,6 +1132,8 @@ class GradeCalculationService
 
     /**
      * Calculate weighted average from a collection of scores.
+     * Falls back to equal weighting (1.0) when no component weight is
+     * available, mirroring calculateWeightedAverageFromCache().
      */
     private function calculateWeightedAverageFromScores($scores): ?float
     {
@@ -997,11 +1145,23 @@ class GradeCalculationService
         $totalWeight = 0;
 
         foreach ($scores as $score) {
-            $component = PeriodAssessmentComponent::with('template')
-                ->find($score->period_component_id);
+            $weight = null;
 
+            // Method 1: Use periodComponent template weight (preferred)
+            $component = $score->periodComponent;
             if ($component && $component->template) {
                 $weight = $component->template->weight;
+            }
+            // Method 2: Fall back to component weight
+            elseif ($score->component) {
+                $weight = $score->component->weight ?? 1;
+            }
+            // Method 3: Use equal weighting (1.0) when no component info available
+            else {
+                $weight = 1.0;
+            }
+
+            if ($weight !== null && $score->score !== null) {
                 $totalWeighted += $score->score * $weight;
                 $totalWeight += $weight;
             }
@@ -1119,11 +1279,25 @@ class GradeCalculationService
      */
     private function getAverageEvaluationScore(int $groupId, string $evaluationType): ?float
     {
+        // EXPO comes from the members' self-evaluations, not the split table.
+        if ($evaluationType === 'EXPO') {
+            $evals = ExpoSelfEvaluation::with('periodComponent.template')
+                ->where('group_id', $groupId)
+                ->get();
+
+            if ($evals->isEmpty()) {
+                return null;
+            }
+
+            return $this->calculateWeightedAverageFromScores($evals);
+        }
+
         if (! AssessmentScoreRepository::isSupportedType($evaluationType)) {
             return null;
         }
 
         $scores = AssessmentScoreRepository::forType($evaluationType)
+            ->with(['periodComponent.template', 'component'])
             ->where('group_id', $groupId)
             ->get();
 
@@ -1157,7 +1331,7 @@ class GradeCalculationService
         }
 
         // Get the student's group in the latest period
-        $latestGroup = \Modules\Capstone\Models\Group::where('period_id', $latestPeriodId)
+        $latestGroup = Group::where('period_id', $latestPeriodId)
             ->whereHas('members', fn ($q) => $q->where('student_id', $studentId))
             ->first();
 
