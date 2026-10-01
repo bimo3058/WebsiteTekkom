@@ -2,6 +2,8 @@
 
 namespace Modules\Capstone\Http\Controllers\Admin;
 
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Modules\Capstone\Http\Controllers\ApiResponseTrait;
 use Modules\Capstone\Http\Controllers\Controller;
 use Modules\Capstone\Models\Document;
@@ -10,8 +12,6 @@ use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Services\DocumentStorageService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 class DocumentUploadController extends Controller
 {
@@ -310,7 +310,7 @@ class DocumentUploadController extends Controller
      */
     private function getExpoDocuments(Request $request): array
     {
-        $query = ExpoStudentDocument::with(['student', 'group.period', 'expoRegistration.expoEvent']);
+        $query = ExpoStudentDocument::with(['student', 'group.period', 'expoRegistration.expoEvent', 'reviewer']);
 
         if ($request->filled('period_id')) {
             $query->whereHas('group', fn ($q) => $q->where('period_id', $request->input('period_id')));
@@ -346,7 +346,7 @@ class DocumentUploadController extends Controller
                 'document_type' => 'Expo Document',
                 'phase' => 'EXPO',
                 'status' => $doc->status,
-                'feedback' => null,
+                'feedback' => $doc->feedback,
                 'uploaded_at' => $doc->created_at->toIso8601String(),
                 'student' => $doc->student ? [
                     'id' => $doc->student->id,
@@ -366,7 +366,10 @@ class DocumentUploadController extends Controller
                     'id' => $doc->expoRegistration->expoEvent->id,
                     'name' => $doc->expoRegistration->expoEvent->name,
                 ] : null,
-                'reviewer' => null,
+                'reviewer' => $doc->reviewer ? [
+                    'id' => $doc->reviewer->id,
+                    'name' => $doc->reviewer->name,
+                ] : null,
             ];
         })->toArray();
     }

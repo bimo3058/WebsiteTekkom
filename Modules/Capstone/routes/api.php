@@ -9,6 +9,7 @@ use Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\StakeholderController;
 use Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
+use Modules\Capstone\Http\Controllers\Admin\TitleManagementController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentTemplateController;
 use Modules\Capstone\Http\Controllers\AssessmentScoreController;
@@ -179,7 +180,6 @@ Route::prefix('capstone')->group(function () {
 
             // Expo (legacy)
             Route::get('/expo/schedules', [ExpoController::class, 'index']);
-            Route::put('/expo/schedules/{id}/approve', [ExpoController::class, 'approve']);
             Route::put('/expo/schedules/{id}/reject', [ExpoController::class, 'reject']);
             Route::put('/expo/schedules/{id}/cancel', [ExpoController::class, 'cancel']);
 
@@ -248,7 +248,7 @@ Route::prefix('capstone')->group(function () {
 
             // Admin text-only title edit: renames Title display text without
             // touching any Group row (status / title_id unchanged).
-            Route::match(['put', 'patch'], '/titles/{title}', [\Modules\Capstone\Http\Controllers\Admin\TitleManagementController::class, 'update'])
+            Route::match(['put', 'patch'], '/titles/{title}', [TitleManagementController::class, 'update'])
                 ->middleware('permission:capstone.edit');
 
             Route::get('/grade-configuration/{periodId}', [GradeConfigurationController::class, 'getFullConfiguration']);
@@ -312,7 +312,6 @@ Route::prefix('capstone')->group(function () {
 
             // Evaluations
             Route::post('/sempro/{schedule}/evaluate', [SemproController::class, 'evaluate']);
-            Route::post('/expo/{schedule}/evaluate', [ExpoController::class, 'evaluate']);
             Route::put('/ta/{id}/review', [TaSubmissionController::class, 'review']);
             Route::put('/ta/{id}/defended', [TaSubmissionController::class, 'defended']);
             Route::post('/ta-defense/{schedule}/evaluate', [TaDefenseController::class, 'evaluate']);

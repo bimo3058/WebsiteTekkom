@@ -8,12 +8,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Modules\Capstone\Models\Document;
+use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PhaseDocumentRequirement;
 use Modules\Capstone\Models\SeminarSchedule;
-use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Services\DocumentStorageService;
+use Modules\Capstone\Services\GroupLifecycleService;
 use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Services\IndividualTaWorkflow;
 use Modules\Capstone\Services\NotificationService;
@@ -63,6 +64,11 @@ class DocumentController extends Controller
         $documents = Document::where('group_id', $groupMember->group_id)->get();
         $phases = [];
         $semproScheduled = SeminarSchedule::where('group_id', $groupMember->group_id)->where('type', 'SEMPRO')
+            ->whereNotIn('status', ['CANCELLED', 'REJECTED', 'PENDING', 'PENDING_APPROVAL'])->exists();
+        // Mirror of $semproScheduled for EXPO: expo registration auto-creates
+        // an APPROVED EXPO schedule, withdrawal cancels it. EXPO documents
+        // stay locked (menunggu dijadwalkan) until the group is registered.
+        $expoScheduled = SeminarSchedule::where('group_id', $groupMember->group_id)->where('type', 'EXPO')
             ->whereNotIn('status', ['CANCELLED', 'REJECTED', 'PENDING', 'PENDING_APPROVAL'])->exists();
         $groupReason = BladeFeatureAccess::reason('/mahasiswa/documents', [
             'registered' => true,
@@ -151,8 +157,10 @@ class DocumentController extends Controller
             // Determine overall phase status if unlocked
             if ($phaseStatus === 'unlocked') {
                 if ($phase === 'EXPO') {
-                    // Custom rule for EXPO: requires at least 1 TA draft submitted by any member
-                    $hasTaDraft = TaSubmission::where('group_id', $groupMember->group_id)->exists();
+                    // Custom rule for EXPO: requires at least 1 APPROVED TA draft
+                    // document (from the documents/workflow page). A
+                    // capstone_ta_submissions row is NOT required.
+                    $hasTaDraft = $groupMember->group->hasApprovedTaDraftDocument();
                     if (! $hasTaDraft) {
                         $phaseStatus = 'locked';
                     }
@@ -178,13 +186,22 @@ class DocumentController extends Controller
                 'required_types' => $requiredTypes,
                 'document_count' => $phaseDocs->count(),
             ];
+
+            // Per-phase group-status gate: the document-approval chain alone
+            // must not unlock uploads for stages the group has not reached
+            // (e.g. PDC2 while still SEMPRO_DONE). store() replays this
+            // workflow, so forged POSTs are blocked as well.
+            $phaseGateReason = BladeFeatureAccess::phaseGateReason($phase, $groupMember->group->status);
+            if ($phaseGateReason !== null) {
+                $phaseInfo['status'] = 'locked';
+            }
             if ($groupReason) {
                 $phaseInfo['status'] = 'locked';
             }
-            $phaseInfo['locked_reason'] = $groupReason ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled);
+            $phaseInfo['locked_reason'] = $groupReason ?? $phaseGateReason ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled, null, $expoScheduled);
             $phaseInfo['can_upload'] = $phaseInfo['locked_reason'] === null;
-            $phaseInfo['documents'] = array_map(function ($document) use ($phaseInfo, $semproScheduled) {
-                $document['locked_reason'] = $phaseInfo['locked_reason'] ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled, $document['status']);
+            $phaseInfo['documents'] = array_map(function ($document) use ($phaseInfo, $semproScheduled, $expoScheduled) {
+                $document['locked_reason'] = $phaseInfo['locked_reason'] ?? BladeFeatureAccess::documentUploadReason($phaseInfo, $semproScheduled, $document['status'], $expoScheduled);
                 $document['can_upload'] = $document['locked_reason'] === null;
 
                 return $document;
@@ -209,6 +226,7 @@ class DocumentController extends Controller
             'current_phase' => $currentPhase,
             'is_graduated' => $allCompleted,
             'seminar_schedule' => ['exists' => $semproScheduled],
+            'expo_schedule' => ['exists' => $expoScheduled],
         ]);
     }
 
@@ -249,6 +267,39 @@ class DocumentController extends Controller
             }
 
             $documents = $query->orderBy('created_at', 'desc')->get();
+
+            // Supervisor EXPO review: member expo documents (daftar expo
+            // uploads) for supervised groups. EXPO has no examiner
+            // evaluation, so supervisors approve these here. Namespaced
+            // `expo-{id}` ids route review/download to the expo table;
+            // the payload mirrors phase documents so the dosen documents
+            // UI (review dialog, download, filters, grouping) works
+            // unchanged.
+            $expoDocuments = ExpoStudentDocument::with(['student', 'group.title'])
+                ->whereIn('group_id', $supervisedGroupIds)
+                ->when($request->has('group_id'), fn ($docs) => $docs->where('group_id', $request->input('group_id')))
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(fn ($doc) => [
+                    'id' => 'expo-'.$doc->id,
+                    'group_id' => $doc->group_id,
+                    'group' => $doc->group ? [
+                        'id' => $doc->group->id,
+                        'code' => $doc->group->code,
+                        'period_id' => $doc->group->period_id,
+                        'title' => $doc->group->title ? ['title' => $doc->group->title->title] : null,
+                    ] : null,
+                    'student' => $doc->student,
+                    'phase' => 'EXPO',
+                    'document_type' => 'Expo Document',
+                    'file_name' => $doc->original_name,
+                    'version' => 1,
+                    'status' => $doc->status,
+                    'feedback' => $doc->feedback,
+                    'created_at' => $doc->created_at,
+                ]);
+
+            $documents = $documents->concat($expoDocuments)->sortByDesc('created_at')->values();
 
             return response()->json(['data' => $documents]);
         }
@@ -352,6 +403,41 @@ class DocumentController extends Controller
 
     public function download(Request $request, string $id)
     {
+        // Namespaced expo ids (see index) resolve against the member
+        // expo documents table instead of phase documents.
+        if (str_starts_with($id, 'expo-')) {
+            $expoDocument = ExpoStudentDocument::findOrFail((int) substr($id, 5));
+            $user = $request->user();
+            $role = CapstoneActor::role(
+                $user,
+                $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+            );
+
+            $allowed = $role === 'admin';
+            if ($role === 'mahasiswa') {
+                $student = CapstoneActor::student($user);
+                $allowed = $student && GroupMember::where('group_id', $expoDocument->group_id)
+                    ->where('student_id', $student->id)
+                    ->exists();
+            }
+            if ($role === 'dosen') {
+                $lecturer = CapstoneActor::lecturer($user);
+                $allowed = $lecturer && Group::whereKey($expoDocument->group_id)
+                    ->supervisedBy($lecturer->id)
+                    ->exists();
+            }
+
+            abort_unless($allowed, 403);
+
+            $file = $this->documentStorage->get($expoDocument->file_path);
+            abort_unless($file, 404, 'File not found');
+
+            return response($file['content'], 200, [
+                'Content-Type' => $file['mime_type'],
+                'Content-Disposition' => 'attachment; filename="'.($expoDocument->original_name ?? basename($expoDocument->file_path)).'"',
+            ]);
+        }
+
         $document = Document::findOrFail($id);
         $user = $request->user();
         $role = CapstoneActor::role(
@@ -399,6 +485,51 @@ class DocumentController extends Controller
             'status' => ['required', Rule::in(['APPROVED', 'REJECTED'])],
             'feedback' => ['nullable', 'string'],
         ]);
+
+        // Namespaced expo ids (see index): supervisor review of a member
+        // expo document. Approving the last pending member document
+        // advances the group (EXPO_DONE, cascading to PDC2_COMPLETED when
+        // final readiness is met); rejected documents can be re-uploaded
+        // by the student.
+        if (str_starts_with($id, 'expo-')) {
+            $expoId = (int) substr($id, 5);
+
+            return DB::transaction(function () use ($expoId, $lecturerId, $request, $user) {
+                $expoDocument = ExpoStudentDocument::whereKey($expoId)->lockForUpdate()->firstOrFail();
+                Group::whereKey($expoDocument->group_id)->lockForUpdate()->firstOrFail();
+                abort_unless(
+                    Group::whereKey($expoDocument->group_id)
+                        ->supervisedBy($lecturerId)
+                        ->exists(),
+                    403,
+                    'Anda bukan dosen pembimbing kelompok ini.'
+                );
+                $expoDocument->update([
+                    'status' => $request->status,
+                    'feedback' => $request->feedback,
+                    'reviewed_by' => $user->id,
+                ]);
+
+                $studentUserId = $expoDocument->student?->user_id;
+                if ($studentUserId) {
+                    $statusStr = strtolower($request->status);
+                    app(NotificationService::class)->sendToMany(
+                        [$studentUserId],
+                        'PROPOSAL_'.strtoupper($request->status),
+                        "Document {$request->status}",
+                        "Your EXPO document ({$expoDocument->original_name}) has been {$statusStr}".($request->feedback ? " with feedback: {$request->feedback}" : '.'),
+                        'documents',
+                        $expoDocument->id
+                    );
+                }
+
+                if ($request->status === 'APPROVED') {
+                    app(GroupLifecycleService::class)->advanceIfComplete(Group::find($expoDocument->group_id));
+                }
+
+                return response()->json(['message' => 'Expo document review updated', 'data' => $expoDocument]);
+            });
+        }
 
         return DB::transaction(function () use ($id, $lecturerId, $request, $user) {
             $document = Document::findOrFail($id);

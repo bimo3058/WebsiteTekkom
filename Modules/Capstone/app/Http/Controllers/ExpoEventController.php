@@ -1,13 +1,15 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Services\EofficeAvailabilityService;
 use Modules\Capstone\Services\ExpoService;
 use Modules\Capstone\Support\CapstoneActor;
-use Illuminate\Http\Request;
+use Modules\EOffice\Models\Ruangan;
 
 class ExpoEventController extends Controller
 {
@@ -48,8 +50,8 @@ class ExpoEventController extends Controller
         ]);
 
         // Rooms come from EOffice only; `room` is a display snapshot.
-        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($validated['eoffice_ruangan_id']);
-        $conflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByEofficeId(
+        $ruangan = Ruangan::findOrFail($validated['eoffice_ruangan_id']);
+        $conflict = app(EofficeAvailabilityService::class)->checkByEofficeId(
             $ruangan->id, $validated['date'], $validated['start_time'], $validated['end_time']
         );
         if ($conflict) {
@@ -85,10 +87,10 @@ class ExpoEventController extends Controller
         unset($validated['room']);
         $eofficeId = $validated['eoffice_ruangan_id'] ?? $expoEvent->getAttributes()['eoffice_ruangan_id'] ?? null;
         if (! empty($validated['eoffice_ruangan_id'])) {
-            $validated['room'] = \Modules\EOffice\Models\Ruangan::findOrFail($validated['eoffice_ruangan_id'])->nama;
+            $validated['room'] = Ruangan::findOrFail($validated['eoffice_ruangan_id'])->nama;
         }
         if ($eofficeId) {
-            $conflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByEofficeId(
+            $conflict = app(EofficeAvailabilityService::class)->checkByEofficeId(
                 (int) $eofficeId,
                 $validated['date'] ?? $expoEvent->date->format('Y-m-d'),
                 $validated['start_time'] ?? $expoEvent->start_time,
@@ -112,6 +114,7 @@ class ExpoEventController extends Controller
         }
 
         $expoEvent->delete(); // soft delete
+
         return response()->json(['message' => 'Event deleted.']);
     }
 
@@ -120,7 +123,7 @@ class ExpoEventController extends Controller
      */
     public function publish(ExpoEvent $expoEvent)
     {
-        $expoEvent->update(['is_published' => !$expoEvent->is_published]);
+        $expoEvent->update(['is_published' => ! $expoEvent->is_published]);
 
         return response()->json([
             'message' => $expoEvent->is_published ? 'Event published.' : 'Event unpublished.',
@@ -141,21 +144,21 @@ class ExpoEventController extends Controller
         $group = GroupMember::where('student_id', CapstoneActor::student($user)->id)
             ->first()?->group;
 
-        if (!$group) {
+        if (! $group) {
             return response()->json([]);
         }
 
         $events = ExpoEvent::where('period_id', $group->period_id)
             ->where('is_published', true)
-            ->withCount(['registrations'=>fn($q)=>$q->where('status','REGISTERED')])
-            ->withExists(['registrations as is_registered'=>fn($q)=>$q->where('status','REGISTERED')->where('group_id',$group->id)])
+            ->withCount(['registrations' => fn ($q) => $q->where('status', 'REGISTERED')])
+            ->withExists(['registrations as is_registered' => fn ($q) => $q->where('status', 'REGISTERED')->where('group_id', $group->id)])
             ->orderBy('date')
             ->get();
 
-        $hasDraft=\Modules\Capstone\Models\TaSubmission::where('group_id',$group->id)->exists();
-        $events->each(function ($event) use ($group,$hasDraft) {
-            $event->registration_reason = $group->status !== 'PDC2_READY_FOR_EXPO' ? 'Group must be ready for Expo.' : (!$hasDraft ? 'At least 1 member must submit a TA draft.' : null);
-            $event->can_register = !$event->is_registered && !$event->registration_reason && $event->registrations_count < $event->capacity;
+        $hasDraft = $group->hasApprovedTaDraftDocument();
+        $events->each(function ($event) use ($group, $hasDraft) {
+            $event->registration_reason = $group->status !== 'PDC2_READY_FOR_EXPO' ? 'Group must be ready for Expo.' : (! $hasDraft ? 'Upload the TA draft document and get it approved first.' : null);
+            $event->can_register = ! $event->is_registered && ! $event->registration_reason && $event->registrations_count < $event->capacity;
         });
 
         return response()->json($events);
@@ -163,11 +166,14 @@ class ExpoEventController extends Controller
 
     public function withdraw(Request $request, ExpoEvent $expoEvent)
     {
-        $member=GroupMember::where('student_id',CapstoneActor::student($request->user())->id)->firstOrFail();
+        $member = GroupMember::where('student_id', CapstoneActor::student($request->user())->id)->firstOrFail();
         try {
-            $this->expoService->withdrawGroupFromEvent($expoEvent->id,$member->group_id,$request->user()->id);
-            return response()->json(['message'=>'Successfully withdrawn from expo.']);
-        } catch (\InvalidArgumentException $e) {return response()->json(['message'=>$e->getMessage()],403);}
+            $this->expoService->withdrawGroupFromEvent($expoEvent->id, $member->group_id, $request->user()->id);
+
+            return response()->json(['message' => 'Successfully withdrawn from expo.']);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
     }
 
     /**
@@ -178,7 +184,7 @@ class ExpoEventController extends Controller
         $user = $request->user();
         $groupMember = GroupMember::where('student_id', CapstoneActor::student($user)->id)->first();
 
-        if (!$groupMember) {
+        if (! $groupMember) {
             return response()->json(['message' => 'You are not in a group.'], 400);
         }
 
