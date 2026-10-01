@@ -2,14 +2,15 @@
 
 namespace Modules\Capstone\Services;
 
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\ExpoRegistration;
+use Modules\Capstone\Models\ExpoSelfEvaluation;
+use Modules\Capstone\Models\ExpoStudentDocument;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarSchedule;
-use Modules\Capstone\Models\TaSubmission;
-use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 class ExpoService
 {
@@ -31,12 +32,12 @@ class ExpoService
             $event = ExpoEvent::lockForUpdate()->findOrFail($eventId);
 
             // Guard: event must be published
-            if (!$event->is_published) {
+            if (! $event->is_published) {
                 throw new InvalidArgumentException('This expo event is not open for registration.');
             }
 
             // Guard: capacity check (concurrency-safe with lockForUpdate)
-            $currentCount = $event->registrations()->where('status','REGISTERED')->count();
+            $currentCount = $event->registrations()->where('status', 'REGISTERED')->count();
             if ($currentCount >= $event->capacity) {
                 throw new InvalidArgumentException('This expo event is full. No remaining capacity.');
             }
@@ -45,10 +46,10 @@ class ExpoService
             $group = Group::lockForUpdate()->findOrFail($groupId);
 
             // ⚠ Validate state machine transition BEFORE attempting
-            if (!$this->stateMachine->canTransition($group->status, 'EXPO_REGISTERED')) {
+            if (! $this->stateMachine->canTransition($group->status, 'EXPO_REGISTERED')) {
                 throw new InvalidArgumentException(
-                    "Group is not eligible for expo registration. Current status: {$group->status}. " .
-                    "Required: PDC2_READY_FOR_EXPO."
+                    "Group is not eligible for expo registration. Current status: {$group->status}. ".
+                    'Required: PDC2_READY_FOR_EXPO.'
                 );
             }
 
@@ -57,11 +58,11 @@ class ExpoService
                 throw new InvalidArgumentException('Group does not belong to the same period as this event.');
             }
 
-            // Guard: Must have at least one TA Draft submitted
-            $taDraftsCount = TaSubmission::where('group_id', $group->id)->count();
-            if ($taDraftsCount < 1) {
+            // Guard: Must have at least one APPROVED TA draft document
+            // (from the documents/workflow page). A ta_submissions row is NOT required.
+            if (! $group->hasApprovedTaDraftDocument()) {
                 throw new InvalidArgumentException(
-                    "Group is not eligible for expo registration. At least 1 member must have submitted a TA draft."
+                    'Group is not eligible for expo registration. Upload the TA draft document and get it approved first.'
                 );
             }
 
@@ -108,19 +109,21 @@ class ExpoService
 
     public function withdrawGroupFromEvent(int $eventId, int $groupId, int $userId): void
     {
-        DB::transaction(function () use ($eventId,$groupId,$userId) {
-            $event=ExpoEvent::lockForUpdate()->findOrFail($eventId);
-            $group=Group::lockForUpdate()->findOrFail($groupId);
-            $registration=ExpoRegistration::where('expo_event_id',$event->id)->where('group_id',$group->id)->where('status','REGISTERED')->lockForUpdate()->firstOrFail();
-            if ($group->status !== 'EXPO_REGISTERED') throw new InvalidArgumentException('This group can no longer withdraw from Expo.');
-            if (\Modules\Capstone\Models\ExpoSelfEvaluation::where('expo_registration_id',$registration->id)->exists()
-                || \Modules\Capstone\Models\ExpoStudentDocument::where('expo_registration_id',$registration->id)->exists()) {
+        DB::transaction(function () use ($eventId, $groupId, $userId) {
+            $event = ExpoEvent::lockForUpdate()->findOrFail($eventId);
+            $group = Group::lockForUpdate()->findOrFail($groupId);
+            $registration = ExpoRegistration::where('expo_event_id', $event->id)->where('group_id', $group->id)->where('status', 'REGISTERED')->lockForUpdate()->firstOrFail();
+            if ($group->status !== 'EXPO_REGISTERED') {
+                throw new InvalidArgumentException('This group can no longer withdraw from Expo.');
+            }
+            if (ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->exists()
+                || ExpoStudentDocument::where('expo_registration_id', $registration->id)->exists()) {
                 throw new InvalidArgumentException('Withdrawal is locked after an evaluation or document has been submitted.');
             }
-            $registration->update(['status'=>'WITHDRAWN']);
-            SeminarSchedule::where('group_id',$group->id)->where('type','EXPO')->update(['status'=>'CANCELLED']);
-            $this->stateMachine->transition($group,'PDC2_READY_FOR_EXPO');
-            AuditLog::create(['user_id'=>$userId,'action'=>'EXPO_WITHDRAWAL','target_type'=>'ExpoRegistration','target_id'=>$registration->id,'payload'=>['event_id'=>$event->id,'group_id'=>$group->id]]);
+            $registration->update(['status' => 'WITHDRAWN']);
+            SeminarSchedule::where('group_id', $group->id)->where('type', 'EXPO')->update(['status' => 'CANCELLED']);
+            $this->stateMachine->transition($group, 'PDC2_READY_FOR_EXPO');
+            AuditLog::create(['user_id' => $userId, 'action' => 'EXPO_WITHDRAWAL', 'target_type' => 'ExpoRegistration', 'target_id' => $registration->id, 'payload' => ['event_id' => $event->id, 'group_id' => $group->id]]);
         });
     }
 }

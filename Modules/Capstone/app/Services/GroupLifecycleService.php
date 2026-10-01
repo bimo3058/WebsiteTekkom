@@ -2,6 +2,7 @@
 
 namespace Modules\Capstone\Services;
 
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Log;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarSchedule;
@@ -11,12 +12,16 @@ class GroupLifecycleService
     /**
      * Group statuses in which each supervisor evaluation type accepts submissions.
      * Outside these windows the penilaian form renders view-only.
+     *
+     * NILAI_DOSEN and MILESTONE open at PDC2_ACTIVE and stay open through
+     * every later status (no EXPO schedule or registration required).
+     * Pembimbing EXPO evaluation was removed — EXPO grades come from the
+     * members' self-evaluations instead, so EXPO has no editable window.
      */
     public const EDITABLE_STATUSES = [
         'BIMBINGAN_SEMPRO' => ['PDC1_ACTIVE', 'READY_FOR_SEMPRO', 'SEMPRO_DONE'],
-        'NILAI_DOSEN' => ['PDC2_ACTIVE', 'TA_DRAFT'],
-        'MILESTONE' => ['PDC2_ACTIVE', 'TA_DRAFT'],
-        'EXPO' => ['EXPO_REGISTERED', 'EXPO_DONE'],
+        'NILAI_DOSEN' => ['PDC2_ACTIVE', 'TA_DRAFT', 'PDC2_READY_FOR_EXPO', 'EXPO_REGISTERED', 'EXPO_DONE', 'PDC2_COMPLETED', 'READY_FOR_TA_INDIVIDUAL', 'TA_IN_PROGRESS'],
+        'MILESTONE' => ['PDC2_ACTIVE', 'TA_DRAFT', 'PDC2_READY_FOR_EXPO', 'EXPO_REGISTERED', 'EXPO_DONE', 'PDC2_COMPLETED', 'READY_FOR_TA_INDIVIDUAL', 'TA_IN_PROGRESS'],
         'BIMBINGAN_TA' => ['READY_FOR_TA_INDIVIDUAL', 'TA_IN_PROGRESS', 'PDC2_COMPLETED'],
     ];
 
@@ -96,9 +101,49 @@ class GroupLifecycleService
      * transition applies or the transition is not allowed from the
      * current status.
      *
-     * @return string|null The new status, or null when nothing changed.
+     * Cascades: a transition may immediately unlock the next one (e.g. the
+     * examiner submit that completes both the EXPO stage and final TA
+     * readiness lands the group straight on PDC2_COMPLETED instead of
+     * stranding it on EXPO_DONE with no further submit to trigger the
+     * next step). Statuses only move forward, so the loop always
+     * terminates; the iteration cap is a backstop.
+     *
+     * Never throws: readiness checks touch several score tables, so a
+     * degraded/partial schema (or any query failure) degrades to null
+     * instead of breaking the caller's submit flow.
+     *
+     * @return string|null The final status reached, or null when nothing changed.
      */
     public function advanceIfComplete(Group $group): ?string
+    {
+        try {
+            $last = null;
+
+            for ($i = 0; $i < 5; $i++) {
+                try {
+                    $advanced = $this->doAdvanceIfComplete($group);
+                } catch (QueryException $e) {
+                    Log::warning("Group {$group->id} lifecycle check skipped: {$e->getMessage()}");
+
+                    return $last;
+                }
+
+                if ($advanced === null) {
+                    return $last;
+                }
+
+                $last = $advanced;
+            }
+
+            return $last;
+        } catch (QueryException $e) {
+            Log::warning("Group {$group->id} lifecycle check skipped: {$e->getMessage()}");
+
+            return null;
+        }
+    }
+
+    protected function doAdvanceIfComplete(Group $group): ?string
     {
         $group->refresh();
 
@@ -119,6 +164,18 @@ class GroupLifecycleService
             return null;
         }
 
+        // SEMPRO_DONE → PDC2_ACTIVE once the whole SEMPRO stage is
+        // complete (all examiners submitted + BIMBINGAN_SEMPRO done).
+        // Scores alone never advanced the group past SEMPRO_DONE; this
+        // closes that gap so PDC2 unlocks without manual intervention.
+        if ($group->status === 'SEMPRO_DONE') {
+            if ($this->workflowService->isSemproComplete($group)) {
+                return $this->tryTransition($group, 'PDC2_ACTIVE');
+            }
+
+            return null;
+        }
+
         // PDC2_ACTIVE → TA_DRAFT once PDC2 supervision scoring is done.
         if ($group->status === 'PDC2_ACTIVE') {
             $readiness = $this->isTaDraftReady($group);
@@ -130,16 +187,25 @@ class GroupLifecycleService
             return null;
         }
 
-        // EXPO schedule completed → EXPO_DONE safety net (examiner path
-        // owns the PASS/FAIL branch; mirror a COMPLETED schedule only).
+        // EXPO_REGISTERED → EXPO_DONE once every member's expo document
+        // is APPROVED + every member's self-evaluation is submitted.
+        // EXPO scores come only from member self-evaluations; there is no
+        // examiner evaluation for EXPO, so no schedule state is required.
         if ($group->status === 'EXPO_REGISTERED') {
-            $expo = SeminarSchedule::where('group_id', $group->id)
-                ->where('type', 'EXPO')
-                ->orderByDesc('id')
-                ->first();
-
-            if ($expo && $expo->status === 'COMPLETED') {
+            if ($this->workflowService->isExpoComplete($group)) {
                 return $this->tryTransition($group, 'EXPO_DONE');
+            }
+        }
+
+        // EXPO_DONE → PDC2_COMPLETED once final TA readiness is met (expo
+        // documents + self-evaluations from every member, NILAI_DOSEN and
+        // MILESTONE complete, peer review completed). This closes the gap
+        // that left groups stranded at EXPO_DONE with no path to
+        // TaSubmission (which requires exactly PDC2_COMPLETED).
+        if ($group->status === 'EXPO_DONE') {
+            if ($this->workflowService->isExpoComplete($group)
+                && $this->workflowService->isFinalReadyForTaIndividual($group)) {
+                return $this->tryTransition($group, 'PDC2_COMPLETED');
             }
         }
 

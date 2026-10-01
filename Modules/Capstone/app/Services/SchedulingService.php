@@ -5,12 +5,17 @@ namespace Modules\Capstone\Services;
 use App\Models\Lecturer;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
+use Modules\Capstone\Models\AssessmentComponent;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Location;
+use Modules\Capstone\Models\PeriodAssessmentComponent;
 use Modules\Capstone\Models\SeminarEvaluation;
 use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\SemproScore;
+use Modules\Capstone\Models\SidangTaScore;
 use Modules\Capstone\Models\TaDefenseEvaluation;
 use Modules\Capstone\Models\TaDefenseExaminer;
 use Modules\Capstone\Models\TaDefenseSchedule;
@@ -76,7 +81,7 @@ class SchedulingService
         }
         $supervisorIds = array_unique(array_map('intval', array_filter($supervisorIds)));
         $overlap = array_intersect(array_map('intval', $examinerIds), $supervisorIds);
-        if (!empty($overlap)) {
+        if (! empty($overlap)) {
             return 'Examiner cannot be the same as the group supervisor.';
         }
 
@@ -263,13 +268,23 @@ class SchedulingService
 
     /**
      * Auto-generate PENDING evaluation rows for a seminar schedule.
+     *
+     * Idempotent: re-running for the same examiner returns the existing
+     * row instead of duplicating it, and null examiner slots (e.g. a
+     * registration-created EXPO schedule before examiners are assigned)
+     * are skipped.
      */
     public function autoGenerateSeminarEvaluations(SeminarSchedule $schedule): void
     {
         foreach ([$schedule->examiner_1_id, $schedule->examiner_2_id] as $examinerId) {
-            SeminarEvaluation::create([
+            if ($examinerId === null) {
+                continue;
+            }
+
+            SeminarEvaluation::firstOrCreate([
                 'schedule_id' => $schedule->id,
                 'examiner_id' => $examinerId,
+            ], [
                 'status' => 'PENDING',
             ]);
         }
@@ -347,6 +362,11 @@ class SchedulingService
                 'status' => 'SUBMITTED',
             ]);
 
+            // Dual-write the per-student rubric breakdown into the split
+            // score tables read by the grades page (SEMPRO/EXPO). The
+            // evaluation row alone is invisible to GradeCalculationService.
+            $this->syncExaminerScores($schedule->type, (int) $evaluation->examiner_id, (int) $schedule->group_id, $rubricJson);
+
             // Check if ALL evaluations for this schedule are submitted
             $totalEvals = SeminarEvaluation::where('schedule_id', $schedule->id)->count();
             $submittedEvals = SeminarEvaluation::where('schedule_id', $schedule->id)
@@ -367,7 +387,6 @@ class SchedulingService
                 $target = match (true) {
                     $schedule->type === 'SEMPRO' && $result === 'PASS' => 'SEMPRO_DONE',
                     $schedule->type === 'SEMPRO' => 'PDC1_ACTIVE',
-                    $schedule->type === 'EXPO' && $result === 'PASS' => 'EXPO_DONE',
                     default => 'PDC2_ACTIVE',
                 };
 
@@ -395,6 +414,19 @@ class SchedulingService
         });
 
         $this->notifyLateSubmission($lateCheck->type ?? 'SEMPRO', $lateCheck, $userId);
+
+        // A late examiner submit can complete the SEMPRO stage after the
+        // group already reached SEMPRO_DONE (e.g. via the READY_FOR_SEMPRO
+        // safety net), so offer the lifecycle a chance to advance to
+        // PDC2_ACTIVE here as well. Supervisor submits already trigger
+        // this in SupervisorEvaluationController. Never throws: unmatched
+        // statuses return null via the canTransition guard.
+        if ($lateCheck && $lateCheck->group_id) {
+            $completedGroup = Group::find($lateCheck->group_id);
+            if ($completedGroup) {
+                app(GroupLifecycleService::class)->advanceIfComplete($completedGroup);
+            }
+        }
 
         return $out;
     }
@@ -429,6 +461,10 @@ class SchedulingService
                 'result' => $scheduleCompleted ? ($evaluation->result ?? $result) : $result,
                 'status' => 'SUBMITTED',
             ]);
+
+            // Dual-write the per-student rubric breakdown into the split
+            // score table read by the grades page (SIDANG_TA).
+            $this->syncExaminerScores('SIDANG_TA', (int) $evaluation->examiner_id, (int) $schedule->group_id, $rubricJson);
 
             // Check if ALL evaluations for this TA defense are submitted
             $totalEvals = TaDefenseEvaluation::where('schedule_id', $schedule->id)->count();
@@ -486,6 +522,112 @@ class SchedulingService
         $this->notifyLateSubmission('TA_DEFENSE', $lateCheck, $userId);
 
         return $out;
+    }
+
+    /**
+     * Expand an examiner's rubric_json into per-student rows in the split
+     * score tables (capstone_sempro_scores / capstone_sidang_ta_scores)
+     * that GradeCalculationService reads.
+     *
+     * EXPO has no examiner evaluation at all: EXPO grades come only from
+     * the members' self-evaluations in daftar expo, so no EXPO evaluation
+     * rows are ever created and this method is never called with EXPO
+     * (the match default below is a defensive no-op).
+     *
+     * Rubric keys are "{componentId}_{studentId}" (see
+     * resources/assets/js/pages/dosen/evaluations.js). Unknown keys, empty
+     * values, and non-member students are skipped. Missing split tables
+     * (e.g. isolated test schemas) are a no-op so examiner submits never
+     * break outside a fully migrated database.
+     */
+    public function syncExaminerScores(string $type, int $examinerId, int $groupId, array $rubricJson): void
+    {
+        $scores = $rubricJson['scores'] ?? [];
+        $notes = $rubricJson['notes'] ?? [];
+        if (! is_array($scores) || $scores === []) {
+            return;
+        }
+
+        $modelClass = match ($type) {
+            'SEMPRO' => SemproScore::class,
+            'SIDANG_TA' => SidangTaScore::class,
+            default => null,
+        };
+        if ($modelClass === null) {
+            return;
+        }
+        if (! Schema::hasTable((new $modelClass)->getTable())) {
+            return;
+        }
+
+        $actorColumn = 'examiner_id';
+        $memberIds = GroupMember::where('group_id', $groupId)->pluck('student_id')->all();
+        $memberLookup = array_flip(array_map('intval', $memberIds));
+
+        $componentIds = [];
+        foreach (array_keys($scores) as $key) {
+            $parts = explode('_', (string) $key);
+            if (count($parts) === 2 && is_numeric($parts[0])) {
+                $componentIds[] = (int) $parts[0];
+            }
+        }
+        $componentIds = array_values(array_unique($componentIds));
+
+        $periodComponentIds = Schema::hasTable('capstone_period_assessment_components') && $componentIds !== []
+            ? PeriodAssessmentComponent::whereIn('id', $componentIds)->pluck('id')->all()
+            : [];
+        $periodLookup = array_flip(array_map('intval', $periodComponentIds));
+        $legacyLookup = [];
+        if (Schema::hasTable('capstone_assessment_components') && $componentIds !== []) {
+            $legacyIds = AssessmentComponent::whereIn('id', $componentIds)->pluck('id')->all();
+            $legacyLookup = array_flip(array_map('intval', $legacyIds));
+        }
+
+        foreach ($scores as $key => $value) {
+            if ($value === null || $value === '' || ! is_numeric($value)) {
+                continue;
+            }
+            $numericScore = (float) $value;
+            if ($numericScore < 0 || $numericScore > 100) {
+                continue;
+            }
+            $parts = explode('_', (string) $key);
+            if (count($parts) !== 2 || ! is_numeric($parts[0]) || ! is_numeric($parts[1])) {
+                continue;
+            }
+            $componentId = (int) $parts[0];
+            $studentId = (int) $parts[1];
+            if (! isset($memberLookup[$studentId])) {
+                continue;
+            }
+
+            // Prefer period components (the examiner form's component ids);
+            // fall back to legacy components so the FK is never violated.
+            if (isset($periodLookup[$componentId])) {
+                $attributes = [
+                    $actorColumn => $examinerId,
+                    'group_id' => $groupId,
+                    'student_id' => $studentId,
+                    'period_component_id' => $componentId,
+                ];
+            } elseif (isset($legacyLookup[$componentId])) {
+                $attributes = [
+                    $actorColumn => $examinerId,
+                    'group_id' => $groupId,
+                    'student_id' => $studentId,
+                    'component_id' => $componentId,
+                ];
+            } else {
+                continue;
+            }
+
+            $note = $notes[$key] ?? null;
+
+            $modelClass::updateOrCreate($attributes, [
+                'score' => $numericScore,
+                'notes' => is_string($note) ? $note : null,
+            ]);
+        }
     }
 
     /**
