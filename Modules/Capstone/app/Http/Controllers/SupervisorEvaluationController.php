@@ -228,32 +228,17 @@ class SupervisorEvaluationController extends Controller
             );
         }
 
-        // EXPO evaluation should be visible only when group is registered for expo.
-        if ($group->status === 'EXPO_REGISTERED') {
-            $expo = SeminarSchedule::where('group_id', $group->id)
-                ->where('type', 'EXPO')
-                ->orderByDesc('id')
-                ->first();
-
-            if ($expo) {
-                $schedules[] = $this->formatSeminarScheduleForSupervisor(
-                    $expo, 'SEMINAR', 'EXPO', $group, $supervision, $supervisorId
-                );
-
-                $schedules[] = $this->formatSeminarScheduleForSupervisor(
-                    $expo, 'SEMINAR', 'MILESTONE', $group, $supervision, $supervisorId
-                );
-
-                $schedules[] = $this->formatSeminarScheduleForSupervisor(
-                    $expo, 'SEMINAR', 'NILAI_DOSEN', $group, $supervision, $supervisorId
-                );
-            } else {
-                $schedules[] = $this->formatStatusBasedEvaluationForSupervisor(
+        // NILAI_DOSEN and MILESTONE open as soon as the group reaches
+        // PDC2_ACTIVE — no EXPO schedule or registration is required.
+        // Pembimbing EXPO evaluation was removed: EXPO grades come from the
+        // members' self-evaluations (daftar expo) instead.
+        foreach (['NILAI_DOSEN', 'MILESTONE'] as $pdc2Type) {
+            if (in_array($group->status, GroupLifecycleService::EDITABLE_STATUSES[$pdc2Type] ?? [], true)) {
+                $schedules[] = $this->formatScheduleLessEvaluationForSupervisor(
                     $group,
                     $supervision,
                     $supervisorId,
-                    'EXPO',
-                    'EXPO'
+                    $pdc2Type
                 );
             }
         }
@@ -389,18 +374,20 @@ class SupervisorEvaluationController extends Controller
     }
 
     /**
-     * Format NILAI_DOSEN evaluation data for supervisor response (no schedule, just evaluation)
+     * Format schedule-less PDC2 evaluation card (NILAI_DOSEN, MILESTONE).
+     * No seminar schedule is required; the soft deadline is persisted on
+     * the group so the value is stable across requests.
      */
-    private function formatNilaiDosenForSupervisor($group, $supervision, int $supervisorId): array
+    private function formatScheduleLessEvaluationForSupervisor($group, $supervision, int $supervisorId, string $evalType): array
     {
-        $status = $this->getEvaluationStatus($group, $supervisorId, 'NILAI_DOSEN');
+        $status = $this->getEvaluationStatus($group, $supervisorId, $evalType);
 
-        $deadline = $this->resolveSoftDeadline($group, 'NILAI_DOSEN');
+        $deadline = $this->resolveSoftDeadline($group, $evalType);
 
         return [
             'schedule_id' => null,
             'schedule_type' => 'PDC2',
-            'evaluation_type' => 'NILAI_DOSEN',
+            'evaluation_type' => $evalType,
             'date' => null,
             'start_time' => null,
             'end_time' => null,
@@ -469,10 +456,10 @@ class SupervisorEvaluationController extends Controller
     public function form(Request $request, int $groupId): JsonResponse
     {
         $user = CapstoneActor::lecturer(Auth::user());
-        $evaluationType = $request->input('type'); // BIMBINGAN_SEMPRO, NILAI_DOSEN, EXPO, MILESTONE, BIMBINGAN_TA
+        $evaluationType = $request->input('type'); // BIMBINGAN_SEMPRO, NILAI_DOSEN, MILESTONE, BIMBINGAN_TA
 
         // Validate evaluation type
-        $validTypes = ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'EXPO', 'MILESTONE', 'BIMBINGAN_TA'];
+        $validTypes = ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'MILESTONE', 'BIMBINGAN_TA'];
         if (! in_array($evaluationType, $validTypes)) {
             return $this->errorResponse('Invalid evaluation type', 400);
         }
@@ -567,17 +554,8 @@ class SupervisorEvaluationController extends Controller
                 ];
             });
 
-        // Require EXPO schedule for MILESTONE and NILAI_DOSEN evaluations
-        if (in_array($evaluationType, ['MILESTONE', 'NILAI_DOSEN'], true)) {
-            $expoSchedule = SeminarSchedule::where('group_id', $groupId)
-                ->where('type', 'EXPO')
-                ->orderByDesc('id')
-                ->first();
-
-            if (! $expoSchedule) {
-                return $this->errorResponse('EXPO schedule is required for this evaluation type.', 400);
-            }
-        }
+        // NILAI_DOSEN and MILESTONE are schedule-less: scorable from
+        // PDC2_ACTIVE onward, no EXPO schedule required.
 
         // Get schedule info
         $scheduleInfo = $this->getScheduleForType($groupId, $evaluationType);
@@ -621,7 +599,7 @@ class SupervisorEvaluationController extends Controller
         // Validate with flexible field name (accepts both period_component_id and component_id)
         $validated = $request->validate([
             'group_id' => 'required|exists:capstone_groups,id',
-            'evaluation_type' => 'required|in:BIMBINGAN_SEMPRO,NILAI_DOSEN,EXPO,MILESTONE,BIMBINGAN_TA',
+            'evaluation_type' => 'required|in:BIMBINGAN_SEMPRO,NILAI_DOSEN,MILESTONE,BIMBINGAN_TA',
             'scores' => 'required|array',
             'scores.*.student_id' => 'required|exists:students,id',
             'scores.*.score' => 'required|numeric|min:1|max:100',
@@ -668,9 +646,15 @@ class SupervisorEvaluationController extends Controller
             }
         }
 
-        // Get schedule info for deadline tracking (deadline no longer blocks submission)
+        // Get schedule info for deadline tracking (deadline no longer blocks submission).
+        // Schedule-less types (NILAI_DOSEN, MILESTONE) fall back to the
+        // persisted soft deadline so late detection keeps working.
         $schedule = $this->getScheduleForType($groupId, $evaluationType);
-        $deadlinePassed = $schedule && $schedule['evaluation_deadline'] && now() > $schedule['evaluation_deadline'];
+        $deadline = $schedule['evaluation_deadline'] ?? null;
+        if (! $deadline && in_array($evaluationType, ['NILAI_DOSEN', 'MILESTONE'], true)) {
+            $deadline = $this->resolveSoftDeadline($group, $evaluationType);
+        }
+        $deadlinePassed = $deadline && now() > $deadline;
 
         DB::beginTransaction();
         try {
@@ -719,7 +703,7 @@ class SupervisorEvaluationController extends Controller
             DB::commit();
 
             // Check if all bimbingan evaluations are complete after this submission
-            if (in_array($evaluationType, ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'EXPO', 'MILESTONE'], true)) {
+            if (in_array($evaluationType, ['BIMBINGAN_SEMPRO', 'NILAI_DOSEN', 'MILESTONE'], true)) {
                 $isComplete = $this->areAllBimbinganScoresComplete($groupId, $evaluationType);
 
                 if ($isComplete) {
@@ -751,12 +735,11 @@ class SupervisorEvaluationController extends Controller
                 try {
                     $notificationService = app(NotificationService::class);
                     $groupName = $group->name ?? "Group {$groupId}";
-                    $deadlineFormatted = $schedule['evaluation_deadline'] ? date('d M Y H:i', strtotime($schedule['evaluation_deadline'])) : 'Unknown';
+                    $deadlineFormatted = $deadline ? date('d M Y H:i', strtotime($deadline)) : 'Unknown';
 
                     $evaluationName = match ($evaluationType) {
                         'BIMBINGAN_SEMPRO' => 'SEMPRO',
                         'NILAI_DOSEN' => 'Nilai Dosen Pembimbing',
-                        'EXPO' => 'Evaluasi EXPO',
                         'MILESTONE' => 'Milestone',
                         'BIMBINGAN_TA' => 'TA Defense',
                         default => $evaluationType,
@@ -895,9 +878,8 @@ class SupervisorEvaluationController extends Controller
         $scheduleType = match ($evaluationType) {
             'BIMBINGAN_SEMPRO' => 'SEMINAR',
             'BIMBINGAN_TA' => 'TA_DEFENSE',
-            'EXPO' => 'EXPO',
-            'MILESTONE' => 'EXPO',
-            'NILAI_DOSEN' => 'EXPO',
+            'MILESTONE' => null,
+            'NILAI_DOSEN' => null,
             default => null,
         };
 
@@ -936,33 +918,6 @@ class SupervisorEvaluationController extends Controller
                 return [
                     'id' => $schedule->id,
                     'type' => 'TA_DEFENSE',
-                    'date' => $schedule->date,
-                    'room' => $schedule->room,
-                    'evaluation_deadline' => $deadline,
-                ];
-            }
-        } elseif ($scheduleType === 'EXPO') {
-            $schedule = SeminarSchedule::where('group_id', $groupId)
-                ->where('type', 'EXPO')
-                ->orderByDesc('id')
-                ->first();
-            if ($schedule) {
-                $deadline = null;
-                if ($schedule->date) {
-                    $deadline = date('Y-m-d H:i:s', strtotime($schedule->date.' +2 days'));
-                }
-
-                // NILAI_DOSEN/MILESTONE share the EXPO schedule but carry
-                // their own persisted soft deadline so the value is stable
-                // across requests (display and late detection agree).
-                if (in_array($evaluationType, ['NILAI_DOSEN', 'MILESTONE'], true)) {
-                    $group = Group::find($groupId);
-                    $deadline = $group ? $this->resolveSoftDeadline($group, $evaluationType) : $deadline;
-                }
-
-                return [
-                    'id' => $schedule->id,
-                    'type' => 'EXPO',
                     'date' => $schedule->date,
                     'room' => $schedule->room,
                     'evaluation_deadline' => $deadline,
@@ -1086,7 +1041,7 @@ class SupervisorEvaluationController extends Controller
         $evaluationTypes = match ($schedule->type) {
             'SEMINAR', 'SEMPRO' => ['SEMPRO', 'BIMBINGAN_SEMPRO'],
             'TA_DEFENSE' => ['SIDANG_TA', 'BIMBINGAN_TA'],
-            'EXPO' => ['EXPO', 'MILESTONE'],
+            'EXPO' => ['MILESTONE'],
             default => [],
         };
 
@@ -1319,7 +1274,7 @@ class SupervisorEvaluationController extends Controller
         $evaluationTypes = match ($schedule->type) {
             'SEMINAR' => ['SEMPRO', 'BIMBINGAN_SEMPRO'],
             'TA_DEFENSE' => ['SIDANG_TA', 'BIMBINGAN_TA'],
-            'EXPO' => ['EXPO', 'MILESTONE'],
+            'EXPO' => ['MILESTONE'],
             default => [],
         };
 

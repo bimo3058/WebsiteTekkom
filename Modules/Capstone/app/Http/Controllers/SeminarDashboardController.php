@@ -3,6 +3,7 @@
 namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
 use Modules\Capstone\Models\AssessmentComponent;
@@ -21,7 +22,8 @@ use Modules\Capstone\Support\EvaluationDeadline;
 class SeminarDashboardController extends Controller
 {
     /**
-     * Student: my group's SEMPRO/Expo schedules + results.
+     * Student: my group's SEMPRO/Expo schedules + results, plus the
+     * global read-only EXPO feed (all groups, all periods).
      */
     public function studentSchedules(Request $request)
     {
@@ -46,16 +48,31 @@ class SeminarDashboardController extends Controller
             ->latest('date')
             ->first();
 
+        // EXPO is visible to everyone read-only (not assigned): the full
+        // schedule list across groups and periods, so students can see
+        // when/where expos happen. Own-group rows in `seminars` are kept
+        // untouched; consumers should de-duplicate by id if merging.
+        $expoSchedules = SeminarSchedule::with(['group.title', 'examiner1', 'examiner2'])
+            ->where('type', 'EXPO')
+            ->where('status', '!=', 'CANCELLED')
+            ->orderBy('date')
+            ->get();
+
         return response()->json([
             'data' => [
                 'seminars' => $seminars,
                 'ta_defense' => $taDefense,
+                'expo_schedules' => $expoSchedules,
             ],
         ]);
     }
 
     /**
      * Dosen: schedules where I'm a supervisor (read-only view).
+     *
+     * Visibility is split by supervisor slot: SEMPRO belongs to
+     * supervisor 2, TA defense to supervisor 1, EXPO is visible for
+     * every supervised group regardless of slot.
      */
     public function supervisorSchedules(Request $request)
     {
@@ -66,14 +83,23 @@ class SeminarDashboardController extends Controller
         $groupIds = Supervision::where('supervisor_id', $lecturerId)->pluck('group_id');
 
         $seminars = SeminarSchedule::with(['group.title', 'examiner1', 'examiner2', 'evaluations.examiner'])
-            ->whereIn('group_id', $groupIds)
             ->where('status', '!=', 'CANCELLED')
+            ->where(fn (Builder $q) => $q
+                ->where(fn (Builder $sempro) => $sempro
+                    ->where('type', 'SEMPRO')
+                    ->whereHas('group', fn (Builder $g) => $g->supervisedByInSlot($lecturerId, 'SUPERVISOR_2')))
+                ->orWhere(fn (Builder $expo) => $expo
+                    ->where('type', 'EXPO')
+                    ->whereIn('group_id', $groupIds))
+                ->orWhere(fn (Builder $other) => $other
+                    ->whereNotIn('type', ['SEMPRO', 'EXPO'])
+                    ->whereIn('group_id', $groupIds)))
             ->orderByDesc('date')
             ->get();
 
         $taDefenses = TaDefenseSchedule::with(['student', 'group.title', 'examiners.examiner', 'evaluations.examiner'])
-            ->whereIn('group_id', $groupIds)
             ->where('status', '!=', 'CANCELLED')
+            ->whereHas('group', fn (Builder $g) => $g->supervisedByInSlot($lecturerId, 'SUPERVISOR_1'))
             ->orderByDesc('date')
             ->get();
 

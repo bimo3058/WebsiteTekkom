@@ -126,6 +126,18 @@ class ExaminerEvaluationTest extends TestCase
             $t->json('payload')->nullable();
             $t->timestamps();
         });
+        Schema::create('capstone_sempro_scores', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('component_id')->nullable();
+            $t->unsignedBigInteger('period_component_id')->nullable();
+            $t->unsignedBigInteger('examiner_id');
+            $t->unsignedBigInteger('group_id');
+            $t->unsignedBigInteger('student_id')->nullable();
+            $t->decimal('score', 5, 2);
+            $t->text('notes')->nullable();
+            $t->timestamps();
+            $t->unique(['period_component_id', 'examiner_id', 'student_id', 'group_id'], 'cap_sempro_upsert_unique');
+        });
     }
 
     protected function tearDown(): void
@@ -270,6 +282,67 @@ class ExaminerEvaluationTest extends TestCase
 
         $this->assertCount(1, $components);
         $this->assertSame('LEG-1', $components[0]['code']);
+    }
+
+    public function test_submit_dual_writes_per_student_sempro_scores(): void
+    {
+        $f = $this->seedSemproFixture();
+        DB::table('capstone_group_members')->insert(['group_id' => $f['group']->id, 'student_id' => 7]);
+
+        $key = $f['periodComponentId'].'_7';
+        $this->service()->submitSeminarEvaluation(
+            $f['eval1'],
+            ['scores' => [$key => 86], 'notes' => [$key => 'Good']],
+            86.0,
+            'PASS',
+            1
+        );
+
+        $row = DB::table('capstone_sempro_scores')
+            ->where('examiner_id', $f['lecturer1'])
+            ->where('group_id', $f['group']->id)
+            ->where('student_id', 7)
+            ->first();
+
+        $this->assertNotNull($row);
+        $this->assertSame(86.0, (float) $row->score);
+        $this->assertSame('Good', $row->notes);
+        $this->assertEquals($f['periodComponentId'], $row->period_component_id);
+
+        // Resubmission upserts instead of duplicating.
+        $this->service()->submitSeminarEvaluation(
+            $f['eval1'],
+            ['scores' => [$key => 90], 'notes' => []],
+            90.0,
+            'PASS',
+            1
+        );
+
+        $this->assertSame(1, DB::table('capstone_sempro_scores')
+            ->where('examiner_id', $f['lecturer1'])
+            ->where('group_id', $f['group']->id)
+            ->where('student_id', 7)
+            ->count());
+        $this->assertSame(90.0, (float) DB::table('capstone_sempro_scores')
+            ->where('examiner_id', $f['lecturer1'])
+            ->where('group_id', $f['group']->id)
+            ->where('student_id', 7)
+            ->value('score'));
+    }
+
+    public function test_submit_skips_scores_for_non_member_students(): void
+    {
+        $f = $this->seedSemproFixture();
+
+        $this->service()->submitSeminarEvaluation(
+            $f['eval1'],
+            ['scores' => [$f['periodComponentId'].'_9' => 80], 'notes' => []],
+            80.0,
+            'PASS',
+            1
+        );
+
+        $this->assertSame(0, DB::table('capstone_sempro_scores')->count());
     }
 
     private function invoke(object $target, string $method, array $args): mixed

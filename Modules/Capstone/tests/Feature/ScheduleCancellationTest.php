@@ -58,6 +58,8 @@ class ScheduleCancellationTest extends TestCase
             $t->unsignedBigInteger('title_id')->nullable();
             $t->string('code')->nullable();
             $t->string('status')->default('KELOMPOK_FINAL');
+            $t->unsignedBigInteger('supervisor_1_id')->nullable();
+            $t->unsignedBigInteger('supervisor_2_id')->nullable();
             $t->timestamps();
         });
         Schema::create('capstone_group_members', function (Blueprint $t) {
@@ -71,6 +73,7 @@ class ScheduleCancellationTest extends TestCase
             $t->id();
             $t->unsignedBigInteger('group_id');
             $t->unsignedBigInteger('supervisor_id');
+            $t->string('role')->nullable();
             $t->timestamps();
         });
         Schema::create('capstone_seminar_schedules', function (Blueprint $t) {
@@ -358,7 +361,7 @@ class ScheduleCancellationTest extends TestCase
 
         $group = Group::create(['period_id' => 1, 'code' => 'GRP-CD', 'status' => 'READY_FOR_SEMPRO']);
         DB::table('capstone_group_members')->insert(['group_id' => $group->id, 'student_id' => $studentId]);
-        DB::table('capstone_supervisions')->insert(['group_id' => $group->id, 'supervisor_id' => $lecturerId]);
+        DB::table('capstone_supervisions')->insert(['group_id' => $group->id, 'supervisor_id' => $lecturerId, 'role' => 'SUPERVISOR_2']);
 
         $cancelled = SeminarSchedule::create([
             'group_id' => $group->id, 'type' => 'SEMPRO', 'date' => '2026-09-01',

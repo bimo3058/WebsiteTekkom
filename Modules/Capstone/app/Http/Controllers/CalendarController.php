@@ -23,11 +23,21 @@ class CalendarController extends Controller
 
         if ($role === 'dosen') {
             $lecturerId = CapstoneActor::lecturer($request->user())->id;
+            // Slot-split visibility: SEMPRO belongs to supervisor 2, TA
+            // defense to supervisor 1 (visibility only; duties unchanged).
+            // EXPO is global read-only: every schedule, every period.
+            // Examiner slots always stay visible regardless of slot.
             $seminars->where(fn (Builder $q) => $q
-                ->whereHas('group', fn (Builder $g) => $g->supervisedBy($lecturerId))
+                ->where(fn (Builder $sempro) => $sempro
+                    ->where('type', 'SEMPRO')
+                    ->whereHas('group', fn (Builder $g) => $g->supervisedByInSlot($lecturerId, 'SUPERVISOR_2')))
+                ->orWhere(fn (Builder $expo) => $expo->where('type', 'EXPO'))
+                ->orWhere(fn (Builder $other) => $other
+                    ->whereNotIn('type', ['SEMPRO', 'EXPO'])
+                    ->whereHas('group', fn (Builder $g) => $g->supervisedBy($lecturerId)))
                 ->orWhere('examiner_1_id', $lecturerId)->orWhere('examiner_2_id', $lecturerId));
             $defenses->where(fn (Builder $q) => $q
-                ->whereHas('group', fn (Builder $g) => $g->supervisedBy($lecturerId))
+                ->whereHas('group', fn (Builder $g) => $g->supervisedByInSlot($lecturerId, 'SUPERVISOR_1'))
                 ->orWhere('examiner_1_id', $lecturerId)->orWhere('examiner_2_id', $lecturerId)
                 ->orWhereHas('examiners', fn (Builder $e) => $e->where('examiner_id', $lecturerId)));
         } elseif ($role === 'mahasiswa') {

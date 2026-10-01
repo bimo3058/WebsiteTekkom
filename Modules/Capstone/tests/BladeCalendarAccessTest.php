@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Modules\Capstone\Http\Controllers\Admin\BladeMonitoringController;
+use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
 use Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController;
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
@@ -80,6 +81,7 @@ use Modules\Capstone\Models\TaRegistration;
 use Modules\Capstone\Models\TaSubmission;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Services\DocumentStorageService;
+use Modules\Capstone\Services\ExpoEligibilityService;
 use Modules\Capstone\Services\ExpoService;
 use Modules\Capstone\Services\GradeCalculationService;
 use Modules\Capstone\Services\GroupService;
@@ -1298,6 +1300,10 @@ class BladeCalendarAccessTest extends TestCase
         $request->files->set('file', UploadedFile::fake()->create('test.pdf', 1, 'application/pdf'));
         $this->assertSame(403, $controller->store($request)->getStatusCode());
         DB::table('capstone_documents')->insert(['group_id' => $group->id, 'student_id' => $student->student->id, 'phase' => 'PDC1', 'document_type' => 'B', 'status' => 'APPROVED', 'file_path' => 'test.pdf']);
+        // Both PDC1 docs approved: mirror the PDC1_ACTIVE -> READY_FOR_SEMPRO
+        // transition the approval flow performs, so the SEMPRO schedule check
+        // (not the stage gate) decides the upload.
+        $group->update(['status' => 'READY_FOR_SEMPRO']);
         $response = $controller->store($request);
         $this->assertSame(403, $response->getStatusCode());
         $this->assertStringContainsString('SEMPRO belum dijadwalkan', $response->getData(true)['message']);
@@ -1451,6 +1457,16 @@ class BladeCalendarAccessTest extends TestCase
                 $t->decimal('score', 5, 2);
             });
         }
+        Schema::create('capstone_expo_self_evaluations', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('expo_registration_id');
+            $t->unsignedBigInteger('group_id');
+            $t->unsignedBigInteger('student_id');
+            $t->unsignedBigInteger('period_component_id');
+            $t->decimal('score', 5, 2);
+            $t->text('notes')->nullable();
+            $t->timestamps();
+        });
         $lecturer = $this->actor('dosen');
         $student = $this->actor('mahasiswa');
         $other = $this->actor('mahasiswa');
@@ -1462,6 +1478,12 @@ class BladeCalendarAccessTest extends TestCase
         Document::create(['group_id' => $group->id, 'student_id' => $student->student->id, 'phase' => 'EXPO', 'document_type' => 'Expo report', 'file_path' => 'expo.pdf', 'status' => 'APPROVED']);
         foreach (['NILAI_DOSEN' => 'nilai_dosen', 'MILESTONE' => 'milestone', 'EXPO' => 'expo'] as $type => $suffix) {
             $id = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $group->period_id, 'type' => $type]);
+            if ($type === 'EXPO') {
+                // EXPO readiness reads the member's self-evaluations (pembimbing EXPO removed).
+                DB::table('capstone_expo_self_evaluations')->insert(['expo_registration_id' => 0, 'group_id' => $group->id, 'student_id' => $student->student->id, 'period_component_id' => $id, 'score' => 90]);
+
+                continue;
+            }
             DB::table('capstone_'.$suffix.'_scores')->insert(['group_id' => $group->id, 'student_id' => $student->student->id, 'period_component_id' => $id, 'evaluator_id' => $lecturer->lecturer->id, 'score' => 90]);
         }
         $indicator = PeerReviewIndicator::create(['period_id' => $group->period_id, 'name' => 'Contribution', 'weight' => 100]);
@@ -1668,10 +1690,6 @@ class BladeCalendarAccessTest extends TestCase
             (require __DIR__.'/../database/migrations/'.$file)->up();
         }
         Schema::table('capstone_groups', fn (Blueprint $t) => $t->string('code')->nullable());
-        Schema::create('capstone_ta_submissions', function (Blueprint $t) {
-            $t->id();
-            $t->unsignedBigInteger('group_id');
-        });
         Schema::create('capstone_assessment_component_templates', function (Blueprint $t) {
             $t->id();
             $t->string('name');
@@ -1710,12 +1728,14 @@ class BladeCalendarAccessTest extends TestCase
         });
     }
 
-    private function expoFixture(User $student): array
+    private function expoFixture(User $student, bool $withApprovedTaDoc = true): array
     {
         $this->expoSchema();
         $group = $this->group($student, null, 'PDC2_READY_FOR_EXPO');
         $event = ExpoEvent::create(['period_id' => $group->period_id, 'name' => 'Expo', 'date' => '2026-09-09', 'start_time' => '09:00', 'end_time' => '12:00', 'room' => 'Hall', 'capacity' => 1, 'is_published' => true, 'created_by' => $student->id]);
-        DB::table('capstone_ta_submissions')->insert(['group_id' => $group->id]);
+        if ($withApprovedTaDoc) {
+            Document::create(['group_id' => $group->id, 'student_id' => $student->student->id, 'phase' => 'TA', 'document_type' => 'Draft TA', 'file_path' => 'draft.pdf', 'status' => 'APPROVED']);
+        }
         $template = DB::table('capstone_assessment_component_templates')->insertGetId(['name' => 'Prototype', 'code' => 'EXPO-1', 'weight' => 100]);
         $component = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $group->period_id, 'template_id' => $template, 'type' => 'EXPO']);
 
@@ -1777,19 +1797,19 @@ class BladeCalendarAccessTest extends TestCase
         $response = $controller->getMyGrades($this->requestFor($student, '/'))->getData(true);
         $this->assertSame($student->student->id, $response['data']['student']['id']);
         $this->assertSame($student->student->student_number, $response['data']['student']['nim']);
-        $this->assertSame(85,$response['data']['grades']['pdc1']['grade']);
+        $this->assertSame(85, $response['data']['grades']['pdc1']['grade']);
     }
 
     public function test_stale_session_role_falls_back_but_explicit_wrong_role_is_denied(): void
     {
         $student = $this->actor('mahasiswa');
-        $request = $this->requestFor($student,'/capstone/dashboard');
-        $request->session()->put('capstone.blade_role','admin');
-        $response = (new BladeAccessMiddleware)->handle($request,fn () => response('allowed'));
-        $this->assertSame('allowed',$response->getContent());
-        $this->assertSame('mahasiswa',$request->attributes->get('capstone_role'));
+        $request = $this->requestFor($student, '/capstone/dashboard');
+        $request->session()->put('capstone.blade_role', 'admin');
+        $response = (new BladeAccessMiddleware)->handle($request, fn () => response('allowed'));
+        $this->assertSame('allowed', $response->getContent());
+        $this->assertSame('mahasiswa', $request->attributes->get('capstone_role'));
         $this->expectException(HttpException::class);
-        (new BladeAccessMiddleware)->handle($request,fn () => response('allowed'),'admin');
+        (new BladeAccessMiddleware)->handle($request, fn () => response('allowed'), 'admin');
     }
 
     public function test_invitation_response_can_reach_recipient_checks_before_period_registration(): void
@@ -1797,28 +1817,344 @@ class BladeCalendarAccessTest extends TestCase
         $student = $this->actor('mahasiswa');
         $middleware = new BladeSessionFeatureMiddleware;
         foreach (['accept', 'reject'] as $action) {
-            $request = $this->requestFor($student,'/capstone/session/capstone/mahasiswa/group-invitations/1/'.$action,'POST');
-            $this->assertSame('recipient controller',$middleware->handle($request,fn () => response('recipient controller'))->getContent());
+            $request = $this->requestFor($student, '/capstone/session/capstone/mahasiswa/group-invitations/1/'.$action, 'POST');
+            $this->assertSame('recipient controller', $middleware->handle($request, fn () => response('recipient controller'))->getContent());
         }
-        $request = $this->requestFor($student,'/capstone/session/capstone/mahasiswa/group','POST');
-        $this->assertSame(403,$middleware->handle($request,fn () => response('should not reach'))->getStatusCode());
+        $request = $this->requestFor($student, '/capstone/session/capstone/mahasiswa/group', 'POST');
+        $this->assertSame(403, $middleware->handle($request, fn () => response('should not reach'))->getStatusCode());
     }
 
     public function test_expo_rejects_wrong_components_and_document_replacement(): void
     {
         $student = $this->actor('mahasiswa');
         [$group,$event,$component] = $this->expoFixture($student);
-        $registration = app(ExpoService::class)->registerGroupToEvent($event->id,$group->id,$student->id);
+        $registration = app(ExpoService::class)->registerGroupToEvent($event->id, $group->id, $student->id);
         $controller = new ExpoStudentController;
-        $request = $this->requestFor($student,'/','POST',['scores' => [['period_component_id' => $component + 1, 'score' => 90]]]);
-        $this->assertSame(422,$controller->evaluate($request,$event)->getStatusCode());
-        $this->assertSame(0,ExpoSelfEvaluation::count());
+        $request = $this->requestFor($student, '/', 'POST', ['scores' => [['period_component_id' => $component + 1, 'score' => 90]]]);
+        $this->assertSame(422, $controller->evaluate($request, $event)->getStatusCode());
+        $this->assertSame(0, ExpoSelfEvaluation::count());
         ExpoStudentDocument::create(['expo_registration_id' => $registration->id, 'group_id' => $group->id, 'student_id' => $student->student->id, 'file_path' => 'old.pdf', 'storage_location' => 'supabase', 'original_name' => 'old.pdf', 'status' => 'APPROVED']);
-        $request = $this->requestFor($student,'/','POST');
-        $request->files->set('file',UploadedFile::fake()->create('new.pdf',1,'application/pdf'));
+        $request = $this->requestFor($student, '/', 'POST');
+        $request->files->set('file', UploadedFile::fake()->create('new.pdf', 1, 'application/pdf'));
         $storage = \Mockery::mock(DocumentStorageService::class);
         $storage->shouldNotReceive('store');
-        $this->assertSame(403,$controller->document($request,$event,$storage)->getStatusCode());
-        $this->assertSame('old.pdf',ExpoStudentDocument::first()->file_path);
+        $this->assertSame(403, $controller->document($request, $event, $storage)->getStatusCode());
+        $this->assertSame('old.pdf', ExpoStudentDocument::first()->file_path);
+    }
+
+    public function test_expo_gates_require_approved_ta_document_not_submission_row(): void
+    {
+        $student = $this->actor('mahasiswa');
+        [$group, $event] = $this->expoFixture($student, false);
+        $service = app(ExpoService::class);
+        $eligibility = app(ExpoEligibilityService::class);
+
+        // No TA document at all: helper, eligibility, and registration all deny.
+        $this->assertFalse($group->hasApprovedTaDraftDocument());
+        $this->assertFalse($eligibility->isEligible($group));
+        try {
+            $service->registerGroupToEvent($event->id, $group->id, $student->id);
+            $this->fail('Registration should require an approved TA draft document.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('TA draft document', $e->getMessage());
+        }
+
+        // Uploaded but not yet approved: still denied.
+        $doc = Document::create(['group_id' => $group->id, 'student_id' => $student->student->id, 'phase' => 'TA', 'document_type' => 'Draft TA', 'file_path' => 'draft.pdf', 'status' => 'SUBMITTED']);
+        $this->assertFalse($group->fresh()->hasApprovedTaDraftDocument());
+        $this->assertFalse($eligibility->isEligible($group->fresh()));
+        try {
+            $service->registerGroupToEvent($event->id, $group->id, $student->id);
+            $this->fail('Registration should require an APPROVED TA draft document.');
+        } catch (\InvalidArgumentException $e) {
+            $this->assertStringContainsString('TA draft document', $e->getMessage());
+        }
+
+        // Approved: all gates pass with zero ta_submissions rows involved.
+        $doc->update(['status' => 'APPROVED']);
+        $this->assertTrue($group->fresh()->hasApprovedTaDraftDocument());
+        $this->assertTrue($eligibility->isEligible($group->fresh()));
+        $registration = $service->registerGroupToEvent($event->id, $group->id, $student->id);
+        $this->assertSame('EXPO_REGISTERED', $group->fresh()->status);
+        $this->assertSame($event->id, $registration->expo_event_id);
+    }
+
+    public function test_ta_submission_row_alone_does_not_unlock_expo(): void
+    {
+        $student = $this->actor('mahasiswa');
+        [$group, $event] = $this->expoFixture($student, false);
+        Schema::create('capstone_ta_submissions', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('group_id');
+        });
+        DB::table('capstone_ta_submissions')->insert(['group_id' => $group->id]);
+
+        // Legacy submission row without an approved TA document unlocks nothing.
+        $this->assertFalse($group->fresh()->hasApprovedTaDraftDocument());
+        $this->assertFalse(app(ExpoEligibilityService::class)->isEligible($group->fresh()));
+        $this->expectException(\InvalidArgumentException::class);
+        app(ExpoService::class)->registerGroupToEvent($event->id, $group->id, $student->id);
+    }
+
+    public function test_expo_eligibility_still_requires_ready_for_expo_status(): void
+    {
+        $student = $this->actor('mahasiswa');
+        [$group] = $this->expoFixture($student);
+        $group->update(['status' => 'PDC2_ACTIVE']);
+
+        $this->assertTrue($group->fresh()->hasApprovedTaDraftDocument());
+        $this->assertFalse(app(ExpoEligibilityService::class)->isEligible($group->fresh()));
+    }
+
+    public function test_expo_documents_stay_locked_until_expo_is_scheduled(): void
+    {
+        Schema::create('capstone_phase_document_requirements', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('period_id');
+            $t->string('phase');
+            $t->string('name');
+            $t->boolean('is_required')->default(true);
+        });
+        $student = $this->actor('mahasiswa');
+        $this->actingAs($student);
+        [$group, $event] = $this->expoFixture($student);
+        DB::table('capstone_phase_document_requirements')->insert([
+            ['period_id' => $group->period_id, 'phase' => 'PDC2', 'name' => 'Laporan PDC2'],
+            ['period_id' => $group->period_id, 'phase' => 'EXPO', 'name' => 'Poster'],
+        ]);
+        Document::create(['group_id' => $group->id, 'student_id' => $student->student->id, 'phase' => 'PDC2', 'document_type' => 'Laporan PDC2', 'file_path' => 'pdc2.pdf', 'status' => 'APPROVED']);
+
+        $storage = \Mockery::mock(DocumentStorageService::class);
+        $storage->shouldNotReceive('store');
+        $storage->shouldNotReceive('delete');
+        $controller = new DocumentController(app(GroupStateMachine::class), $storage);
+        $expoPhase = function () use ($controller, $student) {
+            $workflow = $controller->workflow($this->requestFor($student, '/', 'GET'))->getData(true);
+            $this->assertSame(false, $workflow['expo_schedule']['exists']);
+
+            return collect($workflow['phases'])->firstWhere('phase', 'EXPO');
+        };
+
+        // Ready for expo with approved TA draft, but not registered: locked (menunggu dijadwalkan).
+        $this->assertFalse($expoPhase()['can_upload']);
+        $this->assertStringContainsString('Expo belum dijadwalkan', $expoPhase()['locked_reason']);
+        $upload = $this->requestFor($student, '/', 'POST', ['phase' => 'EXPO', 'document_type' => 'Poster']);
+        $upload->files->set('file', UploadedFile::fake()->create('poster.pdf', 1, 'application/pdf'));
+        $response = $controller->store($upload);
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertStringContainsString('Expo belum dijadwalkan', $response->getData(true)['message']);
+
+        // Registered for expo: schedule exists, uploads open.
+        app(ExpoService::class)->registerGroupToEvent($event->id, $group->id, $student->id);
+        $workflow = $controller->workflow($this->requestFor($student, '/', 'GET'))->getData(true);
+        $this->assertSame(true, $workflow['expo_schedule']['exists']);
+        $this->assertTrue(collect($workflow['phases'])->firstWhere('phase', 'EXPO')['can_upload']);
+
+        // Withdrawn: schedule cancelled, uploads lock again.
+        app(ExpoService::class)->withdrawGroupFromEvent($event->id, $group->id, $student->id);
+        $this->assertFalse($expoPhase()['can_upload']);
+        $this->assertStringContainsString('Expo belum dijadwalkan', $expoPhase()['locked_reason']);
+    }
+
+    public function test_supervisor_form_rejects_expo_but_accepts_nilai_dosen_type(): void
+    {
+        $dosen = $this->actor('dosen');
+        $this->actingAs($dosen);
+        $student = $this->actor('mahasiswa');
+        $group = $this->group($student, null, 'PDC2_ACTIVE');
+        $controller = new SupervisorEvaluationController;
+
+        // EXPO is rejected at the type gate (400) before any supervision check.
+        $expo = $controller->form($this->requestFor($dosen, '/', 'GET', ['type' => 'EXPO']), $group->id);
+        $this->assertSame(400, $expo->getStatusCode());
+        $this->assertStringContainsString('Invalid evaluation type', $expo->getData(true)['message']);
+
+        // NILAI_DOSEN passes the type gate: a non-supervising dosen reaches
+        // the supervision check (403), not the type gate (400).
+        $nilaiDosen = $controller->form($this->requestFor($dosen, '/', 'GET', ['type' => 'NILAI_DOSEN']), $group->id);
+        $this->assertSame(403, $nilaiDosen->getStatusCode());
+    }
+
+    /**
+     * Schema + fixture for supervisor EXPO document review: an
+     * EXPO_REGISTERED group with two members, a REGISTERED registration,
+     * one SUBMITTED expo document + self-evaluation per member, and the
+     * review columns on the expo documents table.
+     *
+     * @return array{Group, int, int} [group, registrationId, componentId]
+     */
+    private function expoReviewFixture(User $dosen, User $first, User $second): array
+    {
+        $this->expoSchema();
+        (require __DIR__.'/../database/migrations/2026_10_01_221810_add_review_columns_to_capstone_expo_student_documents_table.php')->up();
+        (require __DIR__.'/../database/migrations/2026_05_05_000028_create_capstone_notifications_table.php')->up();
+
+        $group = $this->group($first, $dosen, 'EXPO_REGISTERED');
+        GroupMember::create(['group_id' => $group->id, 'student_id' => $second->student->id]);
+        $event = ExpoEvent::create(['period_id' => $group->period_id, 'name' => 'Expo', 'date' => '2026-09-09', 'start_time' => '09:00', 'end_time' => '12:00', 'room' => 'Hall', 'capacity' => 10, 'is_published' => true, 'created_by' => $first->id]);
+        $registrationId = DB::table('capstone_expo_registrations')->insertGetId(['expo_event_id' => $event->id, 'group_id' => $group->id, 'status' => 'REGISTERED']);
+        $template = DB::table('capstone_assessment_component_templates')->insertGetId(['name' => 'Prototype', 'code' => 'EXPO-1', 'weight' => 100]);
+        $component = DB::table('capstone_period_assessment_components')->insertGetId(['period_id' => $group->period_id, 'template_id' => $template, 'type' => 'EXPO']);
+
+        foreach ([$first, $second] as $member) {
+            ExpoStudentDocument::create([
+                'expo_registration_id' => $registrationId,
+                'group_id' => $group->id,
+                'student_id' => $member->student->id,
+                'file_path' => 'expo/doc-'.$member->student->id.'.pdf',
+                'storage_location' => 'supabase',
+                'original_name' => 'poster.pdf',
+                'status' => 'SUBMITTED',
+            ]);
+            ExpoSelfEvaluation::create([
+                'expo_registration_id' => $registrationId,
+                'group_id' => $group->id,
+                'student_id' => $member->student->id,
+                'period_component_id' => $component,
+                'score' => 90,
+            ]);
+        }
+
+        return [$group, $registrationId, $component];
+    }
+
+    private function documentReviewController(): DocumentController
+    {
+        return new DocumentController(app(GroupStateMachine::class), app(DocumentStorageService::class));
+    }
+
+    public function test_supervisor_approving_last_expo_document_advances_group_to_expo_done(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $this->actingAs($dosen);
+        $controller = $this->documentReviewController();
+
+        foreach (ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->get() as $doc) {
+            $response = $controller->update($this->requestFor($dosen, '/', 'PUT', ['status' => 'APPROVED', 'feedback' => 'Bagus']), 'expo-'.$doc->id);
+            $this->assertSame(200, $response->getStatusCode());
+        }
+
+        $this->assertSame(0, ExpoStudentDocument::where('group_id', $group->id)->where('status', '!=', 'APPROVED')->count());
+        // Final readiness is unchecked in the isolated schema (supervisor
+        // score tables are absent), so the cascade stops at EXPO_DONE.
+        $this->assertSame('EXPO_DONE', $group->fresh()->status);
+        $this->assertSame(2, Notification::count());
+    }
+
+    public function test_supervisor_rejecting_expo_document_stores_feedback_and_holds_group(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $this->actingAs($dosen);
+        $doc = ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->first();
+
+        $response = $this->documentReviewController()->update(
+            $this->requestFor($dosen, '/', 'PUT', ['status' => 'REJECTED', 'feedback' => 'Perbaiki layout']),
+            'expo-'.$doc->id
+        );
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertSame('REJECTED', $doc->fresh()->status);
+        $this->assertSame('Perbaiki layout', $doc->fresh()->feedback);
+        $this->assertSame($dosen->id, $doc->fresh()->reviewed_by);
+        $this->assertSame('EXPO_REGISTERED', $group->fresh()->status);
+    }
+
+    public function test_non_supervising_dosen_cannot_review_expo_documents(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $outsider = $this->actor('dosen');
+        $this->actingAs($outsider);
+        $doc = ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->first();
+
+        try {
+            $this->documentReviewController()->update(
+                $this->requestFor($outsider, '/', 'PUT', ['status' => 'APPROVED']),
+                'expo-'.$doc->id
+            );
+            $this->fail('Expected HttpException was not thrown.');
+        } catch (HttpException $e) {
+            $this->assertSame(403, $e->getStatusCode());
+        }
+    }
+
+    public function test_dosen_documents_index_includes_namespaced_expo_documents(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $this->actingAs($dosen);
+
+        $items = $this->documentReviewController()->index($this->requestFor($dosen, '/', 'GET'))->getData(true)['data'];
+        $expoItems = array_values(array_filter($items, fn ($item) => ($item['phase'] ?? null) === 'EXPO'));
+
+        $this->assertCount(2, $expoItems);
+        $this->assertSame('expo-'.ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->first()->id, $expoItems[0]['id']);
+        $this->assertSame($group->id, $expoItems[0]['group_id']);
+    }
+
+    public function test_student_can_reupload_rejected_expo_document(): void
+    {
+        $student = $this->actor('mahasiswa');
+        [$group, $event] = $this->expoFixture($student);
+        $registration = app(ExpoService::class)->registerGroupToEvent($event->id, $group->id, $student->id);
+        $rejected = ExpoStudentDocument::create([
+            'expo_registration_id' => $registration->id,
+            'group_id' => $group->id,
+            'student_id' => $student->student->id,
+            'file_path' => 'expo/old.pdf',
+            'storage_location' => 'supabase',
+            'original_name' => 'old.pdf',
+            'status' => 'REJECTED',
+        ]);
+
+        $storage = new class extends DocumentStorageService
+        {
+            public array $deleted = [];
+
+            public function __construct() {}
+
+            public function store(UploadedFile $file, string $folder, string $prefix = ''): string
+            {
+                return 'expo/new.pdf';
+            }
+
+            public function delete(string $path): void
+            {
+                $this->deleted[] = $path;
+            }
+        };
+
+        $file = UploadedFile::fake()->create('poster.pdf', 100, 'application/pdf');
+        $request = $this->requestFor($student, '/', 'POST', []);
+        $request->files->set('file', $file);
+        $response = (new ExpoStudentController)->document($request, $event, $storage);
+
+        $this->assertSame(201, $response->getStatusCode());
+        $this->assertSame(['expo/old.pdf'], $storage->deleted);
+        $this->assertNull(ExpoStudentDocument::find($rejected->id));
+        $fresh = ExpoStudentDocument::where('expo_registration_id', $registration->id)->where('student_id', $student->student->id)->first();
+        $this->assertNotNull($fresh);
+        $this->assertSame('SUBMITTED', $fresh->status);
+        $this->assertSame('expo/new.pdf', $fresh->file_path);
+    }
+
+    public function test_admin_expo_documents_payload_reports_feedback_and_reviewer(): void
+    {
+        $dosen = $this->actor('dosen');
+        [$group] = $this->expoReviewFixture($dosen, $this->actor('mahasiswa'), $this->actor('mahasiswa'));
+        $doc = ExpoStudentDocument::where('group_id', $group->id)->orderBy('id')->first();
+        $doc->update(['status' => 'APPROVED', 'feedback' => 'Siap tampil', 'reviewed_by' => $dosen->id]);
+
+        $method = new \ReflectionMethod(DocumentUploadController::class, 'getExpoDocuments');
+        $method->setAccessible(true);
+        $items = $method->invoke(app(DocumentUploadController::class), $this->requestFor($dosen, '/', 'GET'));
+        $item = collect($items)->firstWhere('id', $doc->id);
+
+        $this->assertNotNull($item);
+        $this->assertSame('Siap tampil', $item['feedback']);
+        $this->assertSame($dosen->id, $item['reviewer']['id']);
+        $this->assertSame($dosen->name, $item['reviewer']['name']);
     }
 }
