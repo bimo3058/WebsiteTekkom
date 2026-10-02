@@ -118,18 +118,8 @@
                     <div class="p-6">
                         <div
                             class="text-center py-20 px-6 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
-                            <div
-                                class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-4 border border-gray-100">
-                                <svg width="32" height="32" fill="none" stroke="#9CA3AF" stroke-width="1.5"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <path
-                                        d="M9 12h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-                                </svg>
-                            </div>
                             <h3 class="text-lg font-bold text-gray-900 mb-1">Peminjaman Kosong</h3>
-                            <p class="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Anda tidak memiliki pengajuan
-                                peminjaman
-                                ruangan yang sedang berjalan atau aktif saat ini.</p>
+                            <p class="text-[13px] text-gray-500 max-w-sm mx-auto mb-6">Anda tidak memiliki pengajuan peminjaman ruangan yang sedang berjalan atau aktif saat ini.</p>
                             <a href="{{ route('eoffice.peminjaman.user.booking') }}"
                                 class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[14px] font-semibold px-6 py-[11px] rounded-full transition-colors shadow-md shadow-blue-900/10">Mulai
                                 Ajukan Peminjaman</a>

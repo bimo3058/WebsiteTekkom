@@ -36,7 +36,7 @@
                                 $menus = [
                                     ['name' => 'adm_klg', 'title' => 'Kalender Global', 'val' => $adminKlg, 'desc' => 'Tampilan kalender master.'],
                                     ['name' => 'adm_jad', 'title' => 'Jadwal Akademik', 'val' => $adminJad, 'desc' => 'Modul integrasi SIAP.'],
-                                    ['name' => 'adm_evt', 'title' => 'Event & Maintenance', 'val' => $adminEvt, 'desc' => 'Pemblokiran manual internal.'],
+                                    ['name' => 'adm_evt', 'title' => 'Blokir Ruangan', 'val' => $adminEvt, 'desc' => 'Pemblokiran manual internal.'],
                                     ['name' => 'adm_set', 'title' => 'Persetujuan Peminjaman', 'val' => $adminSet, 'desc' => 'Menerima/Tolak request.'],
                                     ['name' => 'adm_ars', 'title' => 'Arsip & Rekap', 'val' => $adminArs, 'desc' => 'Melihat history historis global.'],
                                     ['name' => 'adm_rua', 'title' => 'Manajemen Ruangan', 'val' => $adminRua, 'desc' => 'Atur ruangan dan inventaris.'],

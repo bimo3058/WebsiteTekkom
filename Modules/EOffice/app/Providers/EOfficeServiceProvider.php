@@ -76,6 +76,7 @@ class EOfficeServiceProvider extends ServiceProvider
     {
         $this->commands([
             \Modules\EOffice\Console\Commands\TutupPeriodePendaftaranKadaluarsa::class,
+            \Modules\EOffice\Console\Commands\PrunePeminjamanNotificationsCommand::class,
         ]);
     }
 
@@ -87,6 +88,7 @@ class EOfficeServiceProvider extends ServiceProvider
         $this->app->booted(function () {
             $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
             $schedule->command('eoffice:periode-pendaftaran:tutup-kadaluarsa')->hourly();
+            $schedule->command('eoffice:prune-peminjaman-notifications')->daily();
         });
     }
 

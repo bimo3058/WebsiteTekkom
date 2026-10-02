@@ -46,6 +46,7 @@ AI_*.md
 *.md
 !Modules/Capstone/PERFORMANCE.md
 *.sql
+*.gz
 
 _design_system_tmp/
 _ds_tmp/

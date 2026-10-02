@@ -10,9 +10,11 @@
         </div>
     </div>
 
+    {{-- DEBUG: action URL = {{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }} --}}
     <div class="mp-card" style="margin-top: 20px; max-width: 800px;">
         <form method="POST" id="editForm" action="{{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }}"
-            enctype="multipart/form-data">
+            enctype="multipart/form-data"
+            onsubmit="console.log('FORM SUBMIT FIRED - action:', this.action); return true;">
             @csrf
             @method('PUT')
             <div class="mp-card-body" style="display:flex; flex-direction:column; gap:20px; padding: 24px;">
@@ -23,6 +25,63 @@
                             <span style="color:red">*</span></label>
                         <input type="text" name="nama" class="mp-input" value="{{ old('nama', $ruangan->nama) }}"
                             required>
+                        @error('nama')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:16px;">
+                    <div style="flex:1;">
+                        <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kategori Ruangan
+                            <span style="color:red">*</span></label>
+                        <div x-data="{ 
+                                open: false, 
+                                selected: '{{ old('kategori', $ruangan->kategori ?? '') }}',
+                                options: ['Kelas', 'Laboratorium', 'Sidang'],
+                                get selectedLabel() {
+                                    return this.selected ? this.selected : 'Pilih Kategori';
+                                }
+                            }" 
+                            class="relative" 
+                            @click.away="open = false">
+                            
+                            <!-- Visually hidden input for browser validation -->
+                            <input type="text" name="kategori" x-model="selected" class="absolute w-0 h-0 opacity-0 pointer-events-none" required tabindex="-1">
+                        
+                            <button type="button" @click="open = !open" 
+                                class="mp-input w-full flex justify-between items-center text-left"
+                                style="background: white; cursor: pointer;">
+                                <span x-text="selectedLabel" :style="selected ? 'color: #0D0D12' : 'color: #72778F'"></span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="transition: transform 0.2s;" :style="open ? 'transform: rotate(180deg)' : ''">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                        
+                            <div x-show="open" 
+                                x-transition.opacity.duration.200ms
+                                class="absolute z-[100] w-full mt-1 bg-white border rounded-md shadow-lg overflow-hidden"
+                                style="display: none; border-color: #DFE1E7;">
+                                <ul class="py-1 text-sm m-0 p-0" style="list-style: none;">
+                                    <template x-for="option in options" :key="option">
+                                        <li>
+                                            <button type="button" @click="selected = option; open = false"
+                                                class="w-full px-4 py-2.5 text-left hover:bg-slate-50 focus:outline-none flex items-center justify-between transition-colors"
+                                                :class="selected === option ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700'">
+                                                <span x-text="option"></span>
+                                                <svg x-show="selected === option" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                                </svg>
+                                            </button>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+                        @error('kategori')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
@@ -32,17 +91,26 @@
                             Gedung <span style="color:red">*</span></label>
                         <input type="text" name="lokasi" class="mp-input" value="{{ old('lokasi', $ruangan->lokasi) }}"
                             required>
+                        @error('lokasi')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div style="width: 120px;">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Lantai</label>
                         <input type="number" name="lantai" class="mp-input"
                             value="{{ old('lantai', $ruangan->lantai) }}">
+                        @error('lantai')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div style="width: 150px;">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kapasitas
                             <span style="color:red">*</span></label>
                         <input type="number" name="kapasitas" class="mp-input" min="1"
                             value="{{ old('kapasitas', $ruangan->kapasitas) }}" required>
+                        @error('kapasitas')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
@@ -66,7 +134,7 @@
 
                 <div style="margin-top: 5px;">
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Foto Ruangan
-                        Terkini (Maks. 5MB per foto)</label>
+                        Terkini (Maks. 2MB per foto)</label>
 
                     <input type="file" name="fotos[]" multiple accept="image/png, image/jpeg, image/jpg"
                         class="mp-input cursor-pointer" style="padding: 6px;" id="fotoInput" onchange="previewImages(event)">
@@ -220,11 +288,67 @@
         let accumulatedFiles = new DataTransfer();
         let sortableClientInstance = null;
 
+        function showCustomToast(message) {
+            const oldToast = document.getElementById('client-toast');
+            if (oldToast) oldToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'client-toast';
+            toast.className = 'mp-flash mp-flash-error';
+            toast.style.position = 'fixed';
+            toast.style.top = '24px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.zIndex = '99999';
+            toast.style.justifyContent = 'space-between';
+            toast.style.borderRadius = '8px';
+            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            toast.style.minWidth = '320px';
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 300ms ease, top 300ms ease';
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>${message}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 300)" style="background:transparent; border:none; cursor:pointer; color:inherit; padding:0; display:flex; align-items:center; opacity:0.7;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.top = '32px';
+            });
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    toast.style.opacity = '0';
+                    toast.style.top = '24px';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
         function previewImages(event) {
             var files = event.target.files;
             if (files && files.length > 0) {
                 Array.from(files).forEach(function (file) {
-                    accumulatedFiles.items.add(file);
+                    if (file.size > 2 * 1024 * 1024) {
+                        showCustomToast('Ukuran foto "' + file.name + '" terlalu besar (Maks. 2MB). Foto diabaikan.');
+                    } else if (!file.type.match('image.*')) {
+                        showCustomToast('Format file "' + file.name + '" tidak didukung. Foto diabaikan.');
+                    } else {
+                        accumulatedFiles.items.add(file);
+                    }
                 });
                 document.getElementById('fotoInput').files = accumulatedFiles.files;
             }

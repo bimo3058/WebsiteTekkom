@@ -23,9 +23,7 @@
 @endphp
 
 {{-- ── MOBILE BOTTOM NAV ────────────────────── --}}
-<div x-data="{ show: window.innerWidth < 768, openMenu: false, startY: 0 }"
-    x-init="window.addEventListener('resize', () => show = window.innerWidth < 768)" x-show="show"
-    style="display: none;"
+<div x-data="{ openMenu: false, startY: 0 }"
     class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] font-['Inter_Tight']">
 
     {{-- More Menu Drawer (Lainnya) --}}
