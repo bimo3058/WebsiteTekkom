@@ -700,7 +700,7 @@
                 x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
-                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" aria-hidden="true"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" aria-hidden="true"
                 @click="closeDetailModal"></div>
 
             {{-- Modal Panel --}}
@@ -710,7 +710,7 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
+                class="relative bg-white rounded-[20px] border border-gray-100 shadow-2xl w-full max-w-sm flex flex-col overflow-hidden">
 
                 <div class="px-5 py-4 flex flex-col items-center">
                     <div class="text-[#0B266E] font-extrabold text-[15px] mb-1 text-center w-full pb-3 border-b border-gray-100"

@@ -20,8 +20,10 @@
                         class="pl-9 pr-4 py-2 text-[13px] w-full sm:w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] transition-all">
                 </div>
                 <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="inline-flex flex-shrink-0 items-center justify-center px-4 py-2 rounded-lg bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold shadow-sm transition-colors whitespace-nowrap">
-                    Lihat Kalender
+                   style="display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 16px; background:#0B266E; border:1px solid #0B266E; border-radius:8px; font-size:12px; font-weight:600; color:#fff; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 2px 6px rgba(11,38,110,0.3); flex-shrink:0;"
+                   onmouseover="this.style.background='#071946'; this.style.borderColor='#071946'; this.style.boxShadow='0 4px 12px rgba(11,38,110,0.4)'"
+                   onmouseout="this.style.background='#0B266E'; this.style.borderColor='#0B266E'; this.style.boxShadow='0 2px 6px rgba(11,38,110,0.3)'">
+                    <span>Lihat Kalender</span>
                 </a>
             </div>
         </div>

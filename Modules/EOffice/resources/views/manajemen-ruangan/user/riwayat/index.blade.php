@@ -341,35 +341,35 @@
                         INFORMASI PEMINJAMAN
                     </div>
                     
-                    <div class="space-y-2.5 mb-5">
+                    <div class="space-y-2 mb-5">
                         <div class="flex items-start">
-                            <div class="w-[130px] flex-shrink-0 text-[13px] text-[#5c6e9a] font-medium">Ruangan</div>
-                            <div class="flex-1 text-[13px] font-bold text-slate-800 break-words" x-text="selected.ruangan"></div>
+                            <div class="w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Ruangan</div>
+                            <div class="flex-1 text-[12px] font-bold text-slate-800 break-words" x-text="selected.ruangan"></div>
                         </div>
                         
                         <div class="flex items-start">
-                            <div class="w-[130px] flex-shrink-0 text-[13px] text-[#5c6e9a] font-medium">Waktu</div>
-                            <div class="flex-1 text-[13px] font-bold text-slate-800 flex items-center gap-2 flex-wrap">
+                            <div class="w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Waktu</div>
+                            <div class="flex-1 text-[12px] font-bold text-slate-800 flex items-center gap-2 flex-wrap">
                                 <span x-text="selected.tanggal"></span>
-                                <span class="bg-[#f0f4ff] text-[#0B266E] px-2 py-0.5 rounded-md text-[12px] font-semibold border border-[#dbe4ff]" x-text="selected.jam"></span>
+                                <span class="bg-[#f0f4ff] text-[#0B266E] px-2 py-0.5 rounded-md text-[11px] font-semibold border border-[#dbe4ff]" x-text="selected.jam"></span>
                             </div>
                         </div>
 
                         <div class="flex items-start">
-                            <div class="w-[130px] flex-shrink-0 text-[13px] text-[#5c6e9a] font-medium">Kegiatan</div>
-                            <div class="flex-1 text-[13px] text-slate-800 font-medium leading-relaxed break-words" x-text="selected.tujuan"></div>
+                            <div class="w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Kegiatan</div>
+                            <div class="flex-1 text-[12px] text-slate-800 font-medium leading-relaxed break-words" x-text="selected.tujuan"></div>
                         </div>
 
                         <div class="flex items-start">
-                            <div class="w-[130px] flex-shrink-0 text-[13px] text-[#5c6e9a] font-medium">Berkas</div>
+                            <div class="w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Berkas</div>
                             <div class="flex-1">
                                 <template x-if="selected.berkas">
-                                    <a :href="selected.berkas" target="_blank" class="text-[13px] text-[#0B266E] hover:underline font-semibold italic">
+                                    <a :href="selected.berkas" target="_blank" class="text-[12px] text-[#0B266E] hover:underline font-semibold italic">
                                         Lihat File Terlampir
                                     </a>
                                 </template>
                                 <template x-if="!selected.berkas">
-                                    <span class="text-[13px] text-slate-400 italic">Tidak dilampirkan</span>
+                                    <span class="text-[12px] text-slate-400 italic">Tidak dilampirkan</span>
                                 </template>
                             </div>
                         </div>
@@ -380,11 +380,11 @@
                         STATUS & RIWAYAT
                     </div>
 
-                    <div class="space-y-2.5">
+                    <div class="space-y-2">
                         <div class="flex items-start">
-                            <div class="w-[130px] flex-shrink-0 text-[13px] text-[#5c6e9a] font-medium">Status</div>
+                            <div class="w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Status</div>
                             <div class="flex-1">
-                                <span class="text-[13px] font-bold tracking-wide uppercase"
+                                <span class="text-[12px] font-bold tracking-wide uppercase"
                                     :class="{
                                         'text-emerald-600': selected.status && selected.status.toLowerCase() === 'disetujui',
                                         'text-amber-600': selected.status && selected.status.toLowerCase() === 'menunggu',
@@ -395,18 +395,18 @@
                             </div>
                         </div>
                         <div class="flex items-start">
-                            <div class="w-[130px] flex-shrink-0 text-[13px] text-[#5c6e9a] font-medium">Diajukan Pada</div>
-                            <div class="flex-1 text-[13px] text-slate-800 font-medium break-words" x-text="selected.diajukan_pada"></div>
+                            <div class="w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Diajukan Pada</div>
+                            <div class="flex-1 text-[12px] text-slate-800 font-medium break-words" x-text="selected.diajukan_pada"></div>
                         </div>
                     </div>
 
                     <!-- Alasan Penolakan -->
                     <template x-if="selected.status && (selected.status.toLowerCase() === 'ditolak' || selected.status.toLowerCase() === 'dibatalkan')">
                         <div class="mt-4 bg-rose-50 border border-rose-100 rounded-xl p-4 flex gap-3">
-                            <svg class="w-5 h-5 text-rose-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            <svg class="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                             <div>
-                                <h5 class="text-[13px] font-bold text-rose-800">Catatan Penolakan / Pembatalan</h5>
-                                <p class="text-[13px] text-rose-700 mt-1 break-words" x-text="selected.alasan || 'Tidak ada catatan tambahan.'"></p>
+                                <h5 class="text-[12px] font-bold text-rose-800">Catatan Penolakan / Pembatalan</h5>
+                                <p class="text-[12px] text-rose-700 mt-1 break-words" x-text="selected.alasan || 'Tidak ada catatan tambahan.'"></p>
                             </div>
                         </div>
                     </template>
@@ -453,7 +453,7 @@
             <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
                 <form :action="`{{ url('eoffice/peminjaman/user/riwayat') }}/${deleteId}/hide`" method="POST" class="w-full sm:w-auto">
                     @csrf
-                    <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition-colors cursor-pointer">
+                    <button type="submit" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-[#0B266E] text-base font-medium text-white hover:bg-[#071946] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0B266E] sm:ml-3 sm:w-auto sm:text-sm transition-colors cursor-pointer">
                         Ya, Hapus
                     </button>
                 </form>

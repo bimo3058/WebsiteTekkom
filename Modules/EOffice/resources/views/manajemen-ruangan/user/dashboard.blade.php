@@ -57,12 +57,19 @@
         </div>
         <div class="flex flex-shrink-0 gap-3">
             <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                class="inline-flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-[11px] rounded-xl transition-all shadow-sm">
-                Lihat Kalender
+               style="display:inline-flex; align-items:center; gap:6px; padding:8px 14px; background:#fff; border:1px solid #E2E8F0; border-radius:8px; font-size:12px; font-weight:600; color:#64748B; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 1px 2px rgba(0,0,0,.04);"
+               onmouseover="this.style.background='#F8FAFC'; this.style.borderColor='#CBD5E1'; this.style.boxShadow='0 2px 6px rgba(0,0,0,.07)'"
+               onmouseout="this.style.background='#fff'; this.style.borderColor='#E2E8F0'; this.style.boxShadow='0 1px 2px rgba(0,0,0,.04)'">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Lihat Kalender</span>
             </a>
             <a href="{{ route('eoffice.peminjaman.user.booking') }}"
-                class="inline-flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-[11px] rounded-xl transition-all shadow-sm">
-                + Pinjam Ruangan
+               style="display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#0B266E; border:1px solid #0B266E; border-radius:8px; font-size:12px; font-weight:600; color:#fff; text-decoration:none; transition:all .15s; white-space:nowrap; box-shadow:0 2px 6px rgba(11,38,110,0.3);"
+               onmouseover="this.style.background='#071946'; this.style.borderColor='#071946'; this.style.boxShadow='0 4px 12px rgba(11,38,110,0.4)'"
+               onmouseout="this.style.background='#0B266E'; this.style.borderColor='#0B266E'; this.style.boxShadow='0 2px 6px rgba(11,38,110,0.3)'">
+                <span>Pinjam Ruangan</span>
             </a>
         </div>
     </div>
