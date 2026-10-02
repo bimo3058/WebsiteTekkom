@@ -507,10 +507,6 @@
             </div>
 
 
-            <div class="mt-4 text-[12px] text-gray-500 font-medium">
-                💡 <strong>Tips:</strong> Klik kotak <span class="text-emerald-600 font-bold">hijau</span> untuk langsung
-                booking slot tersebut. Tanggal & jam otomatis terisi!
-            </div>
 
             {{-- =================== MONTHLY MODE =================== --}}
         @else

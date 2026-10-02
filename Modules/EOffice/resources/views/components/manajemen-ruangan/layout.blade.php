@@ -8,8 +8,15 @@
     <title>{{ $pageTitle ?? 'Manajemen Ruangan' }} — SIPERKOM</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @vite(['resources/assets/sass/app.scss', 'resources/assets/js/app.js'], 'build-eoffice')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
     <style>
         [x-cloak] { display: none !important; }
+        
+        /* Custom NProgress Color (Biru Dongker) */
+        #nprogress .bar { background: #0B266E !important; height: 3px !important; }
+        #nprogress .peg { display: none !important; }
+        #nprogress .spinner { display: none !important; }
+
         /* ─── SITKOM Design System — ManajemenRuangan component layer ─── */
 
         /* Box / Wrap (superadmin pattern) */
@@ -909,7 +916,7 @@
                                     <line x1="12" y1="8" x2="12" y2="12" />
                                     <line x1="12" y1="16" x2="12.01" y2="16" />
                                 </svg>
-                                <span>Terdapat kesalahan pada input Anda. Mohon periksa kembali form.</span>
+                                <span>{{ $errors->first() }}</span>
                             </div>
                             <button @click="show = false"
                                 style="background: transparent; border: none; cursor: pointer; color: inherit; padding: 0; display: flex; align-items: center; opacity: 0.6;"
@@ -1015,6 +1022,50 @@
                 })
                 .catch(err => console.error('Notif Polling Error:', err));
             }, 10000);
+        });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+    <script>
+        // NProgress configuration
+        NProgress.configure({ 
+            showSpinner: false, 
+            minimum: 0.1,
+            speed: 200,          // Animation speed (ms)
+            trickleSpeed: 100    // How often to trickle (ms)
+        });
+
+        // Start NProgress immediately as the page is parsing
+        NProgress.start();
+
+        // Finish NProgress when the page finishes loading
+        window.addEventListener('load', () => {
+            NProgress.done();
+        });
+
+        // Intercept clicks on links to show NProgress
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (link && link.href && !link.href.includes('javascript:') && !link.href.startsWith('#') && link.target !== '_blank') {
+                // Check if it's the same page anchor
+                const url = new URL(link.href, window.location.href);
+                if (url.pathname === window.location.pathname && url.hash) {
+                    return; // Same page anchor, don't show loading
+                }
+                NProgress.start();
+            }
+        });
+
+        // Intercept form submissions
+        document.addEventListener('submit', function() {
+            NProgress.start();
+        });
+
+        // Handle back/forward cache (bfcache)
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                NProgress.done();
+            }
         });
     </script>
 </body>

@@ -702,7 +702,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::resource('jadwal-internal', \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class)->except(['show', 'edit']);
                 Route::post('jadwal-internal/bulk-destroy', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'bulkDestroy'])->name('jadwal-internal.bulk-destroy');
                 Route::get('jadwal-internal/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'checkCollision'])->name('jadwal-internal.check-collision');
-                Route::get('jadwal-akademik-download/template', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'downloadTemplateCSV'])->name('jadwal-akademik.template');
+
                 Route::post('jadwal-akademik-import/preview', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'importPreview'])->name('jadwal-akademik.import-preview');
                 Route::post('jadwal-akademik-import/execute', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class, 'executeImport'])->name('jadwal-akademik.import-execute');
 
@@ -737,6 +737,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/saya', [$MRUserPeminjamanController, 'saya'])->name('saya');
                 Route::post('/saya/batal/{id}', [$MRUserPeminjamanController, 'batalkanBooking'])->name('saya.batal');
                 Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
+                Route::post('/riwayat/{id}/hide', [$MRUserPeminjamanController, 'hideRiwayat'])->name('riwayat.hide');
 
                 // Notifikasi
                 Route::get('/notifikasi/count', [$MRUserPeminjamanController, 'getUnreadCount'])->name('notifikasi.count');

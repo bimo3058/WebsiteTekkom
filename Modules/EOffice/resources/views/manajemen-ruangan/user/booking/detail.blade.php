@@ -175,6 +175,12 @@
                             <p class="text-[11px] text-gray-400">Tidak ada booking dalam 7 hari ke depan!</p>
                         </div>
                     @endif
+
+                    <div class="px-4 py-3 bg-gray-50/80 border-t border-gray-100">
+                        <p class="text-[10px] text-gray-500 leading-relaxed text-left">
+                            <span class="font-semibold text-gray-600">Catatan:</span> Daftar di atas hanya menampilkan pengajuan peminjaman di luar jam kuliah. Untuk melihat jadwal lainnya, silakan klik tombol Kalender.
+                        </p>
+                    </div>
                 </div>
             </div>
 

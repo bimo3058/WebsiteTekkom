@@ -68,7 +68,7 @@
     </div>
 
     {{-- Stats Row --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
         <a href="{{ route('eoffice.peminjaman.user.saya') }}"
             class="block bg-white rounded-[16px] border border-gray-200 p-5 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer">
             <div
@@ -166,16 +166,6 @@
                     </div>
                 @empty
                     <div class="px-5 py-12 flex flex-col items-center justify-center text-center">
-                        <div class="w-10 h-10 flex items-center justify-center text-gray-300 mb-3">
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="16" y1="13" x2="8" y2="13"></line>
-                                <line x1="16" y1="17" x2="8" y2="17"></line>
-                                <polyline points="10 9 9 9 8 9"></polyline>
-                            </svg>
-                        </div>
                         <div class="text-[13px] font-medium text-gray-500 max-w-[240px]">
                             Jadwal ruangan yang disetujui dalam waktu dekat belum tersedia
                         </div>
@@ -203,7 +193,7 @@
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Ruangan &
                                 Tanggal</th>
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Tujuan</th>
-                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-right">
+                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-left">
                                 Status</th>
                         </tr>
                     </thead>
@@ -222,7 +212,7 @@
                                     </div>
                                 </td>
                                 <td class="px-5 py-3.5 align-top text-[11px] text-gray-500">
-                                    <div class="line-clamp-2 max-w-[180px]" title="{{ $booking->tujuan }}">
+                                    <div class="line-clamp-2 max-w-[120px]" title="{{ $booking->tujuan }}">
                                         {{ $booking->tujuan }}
                                     </div>
                                     @if($booking->status === 'ditolak' && $booking->alasan_penolakan)
@@ -238,7 +228,7 @@
                                         </div>
                                     @endif
                                 </td>
-                                <td class="px-5 py-3.5 align-top text-right">
+                                <td class="px-5 py-3.5 align-top text-left">
                                     @php
                                         $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
                                         if (strtolower($booking->status) === 'disetujui')

@@ -492,7 +492,7 @@
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                     x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 transition-opacity bg-slate-900/50 backdrop-blur-sm" aria-hidden="true"
+                    class="fixed inset-0 transition-opacity bg-slate-900/60" aria-hidden="true"
                     @click="showImportModal = false"></div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
@@ -502,16 +502,24 @@
                     x-transition:leave="transition ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative">
+                    class="inline-block px-4 pt-5 pb-5 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-[500px] sm:w-full sm:p-6 relative">
 
                     <div>
-                        <div class="flex items-center justify-between mb-5">
-                            <h3 class="text-[18px] font-bold text-gray-900 font-['Inter_Tight']" id="modal-title">Impor
-                                Jadwal Kuliah Rutin</h3>
-                            <button @click="showImportModal = false" class="text-gray-400 hover:text-gray-500">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
+                        <div class="flex items-start justify-between mb-6 border-b border-gray-100 pb-5">
+                            <div class="flex items-center gap-3.5">
+                                <div class="w-11 h-11 rounded-[10px] bg-[#0B266E] flex items-center justify-center shrink-0 shadow-sm">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-[17px] font-bold text-gray-900" id="modal-title">Impor Jadwal Kuliah Rutin</h3>
+                                    <p class="text-[12.5px] text-gray-500 mt-0.5">Upload file jadwal dari sistem akademik (SIAP)</p>
+                                </div>
+                            </div>
+                            <button @click="showImportModal = false" class="text-gray-400 hover:text-gray-600 transition-colors mt-1">
+                                <svg class="w-[22px] h-[22px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
                             </button>
                         </div>
@@ -519,66 +527,47 @@
                         <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.import-preview') }}"
                             method="POST" enctype="multipart/form-data">
                             @csrf
-                            <div class="p-4 mb-4 rounded-xl relative overflow-hidden"
-                                style="background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%); border: 1px solid #BBF7D0;">
-                                <div class="flex gap-3 relative z-10">
-                                    <div
-                                        class="w-10 h-10 shrink-0 rounded-full bg-green-100/80 flex items-center justify-center border border-green-200">
-                                        <svg class="w-5 h-5 text-green-700" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M13 16h-1v-4h-1m1-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
-                                            </path>
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-[13px] font-bold text-green-800 mb-1">Mekanisme Keamanan Impor
-                                        </h4>
-                                        <p class="text-[12.5px] leading-relaxed text-green-700/80">
-                                            Seluruh data jadwal yang diunggah tidak langsung diproses ke dalam basis
-                                            data (database). Sistem akan menampilkan halaman Pratinjau agar pengguna
-                                            dapat melakukan pengecekan data sebelum konfirmasi akhir.
-                                        </p>
-
-                                    </div>
-                                </div>
-                            </div>
-
+                            
                             <div class="mb-5" x-data="{ fileName: '' }">
-                                <label class="block mb-2 text-sm font-semibold text-gray-700">Pilih File Ekspor
-                                    SIAP (*.xlsx, *.csv)</label>
-                                <div :class="fileName ? 'border-primary-400 bg-primary-50 text-primary-500' : 'border-gray-300 text-gray-900'"
-                                    class="relative block w-full border-2 border-dashed rounded-lg p-5 text-center hover:border-gray-400 focus-within:outline-none focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-transparent transition-colors">
+                                <label class="block mb-2 text-[13px] font-medium text-gray-700">Pilih File CSV / Excel</label>
+                                <div class="relative flex items-center w-full border border-gray-200 rounded-xl overflow-hidden focus-within:border-[#0B266E] focus-within:ring-1 focus-within:ring-[#0B266E] transition-all bg-white shadow-sm">
                                     <input type="file" name="file_excel"
                                         accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                                        required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                        required class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                         @change="fileName = $event.target.files[0] ? $event.target.files[0].name : ''">
-                                    <div class="flex flex-col items-center pointer-events-none">
-                                        <svg x-show="!fileName" class="w-8 h-8 text-gray-400 mb-2" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                                            </path>
-                                        </svg>
-                                        <svg x-cloak x-show="fileName" class="w-8 h-8 mb-2" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24" style="display: none;">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        <span x-show="!fileName" class="text-sm font-medium">Klik untuk memilih file
-                                            Excel / CSV</span>
-                                        <span x-cloak x-show="fileName" class="text-sm font-bold" x-text="fileName"
-                                            style="display: none;"></span>
-                                        <span class="mt-1 text-xs text-gray-500" x-show="!fileName">Maksimum ukuran:
-                                            5MB</span>
+                                    
+                                    <div class="px-4 py-2.5 bg-blue-50 text-[#0B266E] text-[13px] font-bold border-r border-gray-200">
+                                        Choose File
                                     </div>
+                                    <div class="px-3 py-2.5 text-[13px] text-gray-500 flex-1 truncate" x-text="fileName || 'No file chosen'">
+                                    </div>
+                                </div>
+                                <div class="mt-2 text-[12px] text-gray-500">Format: .csv atau .xlsx (Maks. 5MB)</div>
+                            </div>
+
+                            <div class="p-4 mb-6 rounded-[14px] border border-[#bbf7d0] flex gap-3.5" style="background-color: #ecfdf5;">
+                                <div class="w-10 h-10 shrink-0 rounded-full flex items-center justify-center border border-[#bbf7d0]" style="background-color: #d1fae5;">
+                                    <svg class="w-[20px] h-[20px] text-[#065f46]" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-[13px] font-bold text-[#065f46] mb-1.5">Mekanisme Keamanan Impor</h4>
+                                    <p class="text-[12px] leading-relaxed text-[#065f46]/90 m-0">
+                                        Seluruh data jadwal yang diunggah tidak langsung diproses ke dalam basis data (database). Sistem akan menampilkan halaman Pratinjau agar pengguna dapat melakukan pengecekan data sebelum konfirmasi akhir.
+                                    </p>
                                 </div>
                             </div>
 
-                            <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                            <div class="flex flex-col sm:flex-row justify-between gap-3 pt-2">
                                 <button type="button" @click="showImportModal = false"
-                                    class="mp-btn secondary md">Batal</button>
-                                <button type="submit" class="mp-btn primary md">Pratinjau Data</button>
+                                    class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all">Batal</button>
+                                <button type="submit" class="w-full sm:flex-1 flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5">
+                                    <svg class="w-[15px] h-[15px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    Mulai Impor
+                                </button>
                             </div>
                         </form>
                     </div>

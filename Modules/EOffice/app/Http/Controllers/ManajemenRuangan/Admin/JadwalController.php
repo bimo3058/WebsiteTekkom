@@ -430,44 +430,7 @@ class JadwalController extends Controller
             ->with('success', 'Seluruh jadwal perkuliahan akademik berhasil dihapus (Reset Semester).');
     }
 
-    public function downloadTemplateCSV()
-    {
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="Template_Jadwal_Kuliah_E_Office.csv"',
-        ];
 
-        $callback = function () {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, [
-                'Hari (1=Sen, 7=Min)',
-                'Ruangan_ID (Lihat Daftar Ruang)',
-                'Jam_Mulai (HH:MM)',
-                'Jam_Selesai (HH:MM)',
-                'Mata_Kuliah',
-                'Kode_MK',
-                'Kelas',
-                'SKS',
-                'Kuota',
-                'Dosen_Pengampu'
-            ]);
-            fputcsv($file, [
-                '1',
-                '1',
-                '08:00',
-                '10:30',
-                'Pemrograman Web',
-                'TKK211',
-                'A',
-                '3',
-                '40',
-                'Dr. Budi'
-            ]);
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
 
     public function importPreview(Request $request)
     {

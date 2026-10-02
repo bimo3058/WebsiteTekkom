@@ -8,8 +8,8 @@
                 <p class="mp-page-sub max-w-lg">Temukan ruangan yang sesuai kebutuhanmu. Klik "Detail" untuk info lengkap
                     atau "Jadwal" untuk langsung booking.</p>
             </div>
-            <div class="flex items-center gap-3">
-                <div class="relative">
+            <div class="flex items-center gap-3 w-full md:w-auto mt-3 md:mt-0">
+                <div class="relative flex-1">
                     <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -17,10 +17,10 @@
                     </svg>
                     <input type="text" id="searchInput" onkeyup="filterRooms()"
                         placeholder="Cari nama ruangan..."
-                        class="pl-9 pr-4 py-2 text-[13px] w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] transition-all">
+                        class="pl-9 pr-4 py-2 text-[13px] w-full sm:w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] transition-all">
                 </div>
                 <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold shadow-sm transition-colors whitespace-nowrap">
+                    class="inline-flex flex-shrink-0 items-center justify-center px-4 py-2 rounded-lg bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold shadow-sm transition-colors whitespace-nowrap">
                     Lihat Kalender
                 </a>
             </div>
