@@ -15,7 +15,7 @@ final class PageTitle
         'microsoft.callback' => 'Menghubungkan SSO',
         'microsoft.switch' => 'Ganti Akun',
         'sso.password' => 'Verifikasi SSO',
-        'password.request' => 'Lupa Kata Sandi',
+        'password.request' => 'Ubah Kata Sandi',
         'password.reset' => 'Atur Ulang Kata Sandi',
         'password.confirm' => 'Konfirmasi Kata Sandi',
         'verification.notice' => 'Verifikasi Email',

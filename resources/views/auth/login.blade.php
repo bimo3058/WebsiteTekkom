@@ -233,7 +233,8 @@
         padding: 20px 40px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
+        text-align: center;
         z-index: 1;
     }
     .sk-footer span {
@@ -326,7 +327,7 @@
                             <label class="sk-label" for="password" style="margin-bottom:0;">Password <span>*</span></label>
                             <a href="{{ route('password.request') }}" style="font-size:12px;font-weight:500;color:var(--c-primary);text-decoration:none;opacity:0.8;transition:opacity 0.15s;"
                                onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                                Forgot Password?
+                                Ubah Password
                             </a>
                         </div>
                         <input
@@ -349,11 +350,6 @@
     {{-- Footer --}}
     <div class="sk-footer">
         <span>© {{ date('Y') }} Departemen Teknik Komputer &bull; Universitas Diponegoro</span>
-        <div class="sk-footer-links">
-            <a href="#">Privacy</a>
-            <a href="#">Terms</a>
-            <a href="#">Bantuan</a>
-        </div>
     </div>
 </div>
 
