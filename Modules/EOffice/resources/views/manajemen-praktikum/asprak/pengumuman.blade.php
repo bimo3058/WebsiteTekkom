@@ -181,7 +181,7 @@
 
             {{-- Modal Form Buat Pengumuman (Admin-style animation) --}}
             <div x-show="showModal" style="display:none;"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
                 x-cloak>
                 <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto"
                     style="border:1px solid #E5E7EB;" @click.away="showModal = false" x-show="showModal"
@@ -298,7 +298,7 @@
 
             {{-- Modal Form Edit Pengumuman --}}
             <div x-show="editModal.open" style="display:none;"
-                class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
                 x-cloak>
                 <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto"
                     style="border:1px solid #E5E7EB;" @click.away="editModal.open = false" x-show="editModal.open"

@@ -440,7 +440,7 @@
              class="fixed inset-0 z-60 flex items-center justify-center overflow-y-auto p-4"
              aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div x-show="showEditModal" x-transition.opacity
-                 class="absolute inset-0 bg-[#0D0D12]/40 backdrop-blur-sm"
+                 class="absolute inset-0 bg-[#0D0D12]/50"
                  aria-hidden="true" @click="closeEditModal()"></div>
             <div x-show="showEditModal"
                  x-transition:enter="transition ease-out duration-200"

@@ -432,7 +432,7 @@
     {{-- Modal Create --}}
     <div x-data="{ open: {{ $errors->any() ? 'true' : 'false' }} }" @open-create-modal.window="open = true"
         id="modalCreate"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
         x-show="open" style="display: none;" x-cloak>
         <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
             @click.away="open = false" x-show="open" x-transition:enter="transition ease-out duration-300"
@@ -767,7 +767,7 @@
     updateActionUrl = '{{ route('eoffice.manprak.admin.praktikum.index') }}/' + editData.id;
     open = true;
 " id="modalEdit"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
         x-show="open" style="display: none;" x-cloak>
         <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
             @click.away="open = false" x-show="open" x-transition:enter="transition ease-out duration-300"

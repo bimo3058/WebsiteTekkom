@@ -160,7 +160,7 @@
 <div x-data="{ open: false }" 
      @open-tambah-modal.window="open = true"
      id="modal-tambah" 
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
      x-show="open" style="display: none;" x-cloak>
     <div class="bg-white rounded-[16px] w-full max-w-md mx-4 shadow-2xl overflow-visible" @click.away="open = false" x-show="open"
          x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
@@ -237,7 +237,7 @@
 <div x-data="{ open: false }" 
      @open-edit-modal.window="open = true"
      id="modal-edit" 
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300"
+     class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300"
      x-show="open" style="display: none;" x-cloak>
     <div class="bg-white rounded-[16px] w-full max-w-md mx-4 shadow-2xl overflow-visible" @click.away="open = false" x-show="open"
          x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"

@@ -1116,7 +1116,7 @@
 ">
     <template x-teleport="body">
         <div x-show="show" style="display:none;" x-cloak
-        class="fixed inset-0 z-[999999] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 p-4">
+        class="fixed inset-0 z-[999999] flex items-center justify-center bg-black/50 transition-all duration-300 p-4">
         <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 flex flex-col max-h-[90vh]"
             @click.away="show = false"
             x-show="show"

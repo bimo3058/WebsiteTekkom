@@ -436,7 +436,7 @@
                                                             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                                                             x-transition:leave="transition ease-in duration-150"
                                                             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-                                                            style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15, 23, 42, 0.45);backdrop-filter:blur(4px);z-index:9999;">
+                                                            style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15, 23, 42, 0.55);z-index:9999;">
                                                             
                                                             <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:16px;" @click.self="showRevisiModal = false">
                                                                 <!-- Modal Content -->

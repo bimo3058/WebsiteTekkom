@@ -80,7 +80,7 @@
             </div>
 
             {{-- Modal Form Asprak --}}
-            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 p-4" x-cloak>
+            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300 p-4" x-cloak>
                 
                     <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto" style="border:1px solid #E5E7EB;" @click.away="open = false" x-show="open"
                             x-transition:enter="transition ease-out duration-300"
@@ -251,7 +251,7 @@
             </div>
 
             {{-- Modal Form Koor --}}
-            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 p-4" x-cloak>
+            <div x-show="open" style="display:none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300 p-4" x-cloak>
                 
                     <div class="relative bg-white rounded-xl shadow-2xl w-[600px] max-w-[90%] max-h-[90vh] overflow-y-auto" style="border:1px solid #E5E7EB;" @click.away="open = false" x-show="open"
                             x-transition:enter="transition ease-out duration-300"

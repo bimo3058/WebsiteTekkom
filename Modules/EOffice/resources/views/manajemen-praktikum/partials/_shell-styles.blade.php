@@ -47,8 +47,12 @@
     .mp-role-toggle { display: flex; align-items: center; gap: 8px; width: 100%; padding: 8px; border: 0; border-radius: 8px; background: var(--c-bg); color: var(--c-fg-sec); font-size: 12px; font-weight: 600; cursor: pointer; }
     .mp-role-name { flex: 1; text-align: left; }
     .mp-role-initial { display: grid; place-items: center; width: 24px; height: 24px; background: white; border: 1px solid var(--c-border); border-radius: 6px; color: var(--c-primary); font-size: 11px; }
-    .mp-role-toggle svg { transition: transform .15s; }
+    .mp-role-toggle svg { transition: transform .25s cubic-bezier(.4,0,.2,1); }
     .mp-role-toggle svg.is-open { transform: rotate(180deg); }
+    .mp-role-content { overflow: hidden; transform-origin: top; }
+    .mp-role-content-transition { transition: max-height .3s cubic-bezier(.4,0,.2,1), opacity .22s ease, transform .22s ease; }
+    .mp-role-content-collapsed { max-height: 0; opacity: 0; transform: translateY(-5px); }
+    .mp-role-content-expanded { max-height: 1200px; opacity: 1; transform: translateY(0); }
     .mp-sidebar.is-collapsed .mp-role-toggle { justify-content: center; padding: 6px 0; }
     .mp-sidebar-footer { padding: 8px 10px 12px; border-top: 1px solid var(--c-border); flex-shrink: 0; }
     .mp-sidebar-footer form { margin: 0; }

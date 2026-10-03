@@ -225,7 +225,7 @@
                                     </button>
 
                                     <template x-teleport="body">
-                                        <div x-show="showDetail" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300" style="display: none;" x-cloak>
+                                        <div x-show="showDetail" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 transition-all duration-300" style="display: none;" x-cloak>
                                             <div @click.away="showDetail = false" x-show="showDetail"
                                                  x-transition:enter="transition ease-out duration-300" 
                                                  x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 

@@ -538,7 +538,7 @@
 </div>
 
 {{-- Modal Import Praktikan --}}
-<div id="modalImport" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-all duration-300 hidden">
+<div id="modalImport" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 transition-all duration-300 hidden">
     <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         <div class="flex items-center justify-between px-6 py-4 border-b border-[#DFE1E7]">
             <div class="font-bold text-[16px] text-[#0D0D12]">Import Praktikan</div>
