@@ -1824,7 +1824,7 @@ Locations
 /admin/locations
 Document Requirements
 /admin/document-requirements
-Evaluation Setup
+Period Setup
 Assessment Bank
 Tipe Penilaian
 Peer Review
@@ -2035,8 +2035,8 @@ Group settings
 Review
 Confirm details
 /admin/evaluation-setup/check
-Evaluation setup available
-Please complete evaluation setup first
+Period setup available
+Please complete period setup first
 Period updated successfully
 Period created successfully
 Failed to save period
@@ -2051,8 +2051,8 @@ h-5 w-5 text-green-600 mt-0.5
 h-5 w-5 text-yellow-600 mt-0.5
 text-green-900
 text-yellow-900
-Evaluation Setup Ready
-Evaluation Setup Required
+Period Setup Ready
+Period Setup Required
 /admin/evaluation-setup
 space-y-4 max-h-[60vh] overflow-y-auto pr-2
 space-y-2 p-3 bg-muted/30 rounded-lg
@@ -3672,7 +3672,7 @@ basic
 Informasi Dasar
 Informasi dasar periode
 evaluation
-Setup Evaluasi
+Period Setup
 Konfigurasi penilaian
 phases
 Tanggal Fase
@@ -3682,7 +3682,7 @@ Pengaturan group
 review
 Konfirmasi data
 evaluation-setup
-Silakan lengkapi setup evaluasi terlebih dahulu
+Silakan lengkapi Period Setup terlebih dahulu
 Silakan klik "Lanjut" untuk melihat review
 Memperbarui periode...
 Menyimpan periode...

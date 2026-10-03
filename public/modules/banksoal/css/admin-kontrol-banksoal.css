@@ -1,0 +1,57 @@
+/* Extends the shared Dosen/Superadmin page styles, only for Kontrol Bank Soal. */
+.bs-admin-control .bs-topbar { font-family: var(--font-sans); }
+.bs-admin-control .control-tabs { display:flex;gap:24px;margin:20px 0 -16px; }
+.bs-admin-control .control-tabs a { padding:0 0 12px;border-bottom:2px solid transparent;font-size:12px;font-weight:500;color:var(--c-fg-muted);text-decoration:none; }
+.bs-admin-control .control-tabs a[aria-current="page"] { border-color:var(--c-primary);color:var(--c-primary);font-weight:600; }
+.bs-admin-control .control-toolbar { align-items:flex-end;gap:12px; }
+.bs-admin-control .control-label { display:block;margin-bottom:6px;font-size:10px;font-weight:600;color:var(--c-fg-muted); }
+.bs-admin-control .control-search-field { position:relative; }
+.bs-admin-control .control-search-field > svg { position:absolute;left:11px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--c-fg-placeholder);pointer-events:none; }
+.bs-admin-control .control-search-field input { width:100%;padding:8px 12px 8px 34px;color:var(--c-fg-sec);background:#fff;border:1px solid var(--c-border); }
+.bs-admin-control .control-filter { position:relative;flex:0 1 190px;min-width:150px; }
+.bs-admin-control .control-filter-trigger { width:100%;height:36px;justify-content:space-between;font-size:12px;font-weight:500; }
+.bs-admin-control .control-filter-trigger[aria-expanded="true"] { border-color:var(--c-primary);color:var(--c-primary); }
+.bs-admin-control .control-filter-options { position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:40;max-height:240px;overflow-y:auto;min-width:0; }
+.bs-admin-control .control-filter-options .bs-dropdown-item { justify-content:space-between;gap:8px; }
+.bs-admin-control .control-toolbar > .dosen-management-btn { min-height:36px; }
+.bs-admin-control .control-count { display:inline-flex;padding:2px 7px;border:1px solid var(--c-border);border-radius:6px;background:var(--c-bg);color:var(--c-fg-muted);font-size:10px;font-weight:500;vertical-align:middle;margin-left:6px; }
+.bs-admin-control .control-badge { display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--c-border);border-radius:6px;background:var(--c-bg);font-size:10px;font-weight:500;white-space:nowrap;color:var(--c-fg-muted); }
+.bs-admin-control .control-badge::before { content:'';width:5px;height:5px;border-radius:50%;background:currentColor; }
+.bs-admin-control .control-badge-success { background:#ECFDF3;border-color:#ABEFC6;color:#067647; }
+.bs-admin-control .control-badge-pending { background:#FFFAEB;border-color:#FEDF89;color:#B54708; }
+.bs-admin-control .control-badge-processing { background:#EFF8FF;border-color:#B2DDFF;color:#175CD3; }
+.bs-admin-control .control-table-scroll { max-width:100%;overflow-x:auto; }
+.bs-admin-control .bs-table { min-width:760px; }
+.bs-admin-control .bs-table th:last-child { text-align:right; }
+.bs-admin-control .bs-table td { border-bottom:1px solid #EEF0F3;color:var(--c-fg-sec); }
+.bs-admin-control .bs-table tbody tr:last-child td { border-bottom:0; }
+.bs-admin-control .control-title { font-size:12px;font-weight:600;color:var(--c-fg);line-height:1.5; }
+.bs-admin-control .control-meta { display:block;margin-top:4px;color:var(--c-fg-muted);font-size:11px;font-weight:400;line-height:1.5; }
+.bs-admin-control .control-file { display:flex;align-items:center;gap:9px;max-width:300px; }
+.bs-admin-control .control-file > svg { flex-shrink:0;width:30px;height:34px;padding:7px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:7px;color:var(--c-fg-muted); }
+.bs-admin-control .control-file > span { overflow-wrap:anywhere; }
+.bs-admin-control .control-date { white-space:nowrap;font-variant-numeric:tabular-nums; }
+.bs-admin-control .control-actions { display:flex;align-items:center;justify-content:flex-end;gap:6px;white-space:nowrap; }
+.bs-admin-control .control-actions form { margin:0; }
+.bs-admin-control .control-actions .dosen-management-btn { padding:6px 9px;min-height:30px;font-size:11px;box-shadow:none; }
+.bs-admin-control .control-actions svg { width:13px;height:13px;flex-shrink:0; }
+.bs-admin-control .control-empty { padding:48px 20px;text-align:center;color:var(--c-fg-muted); }
+.bs-admin-control .control-empty > svg { width:38px;height:38px;padding:9px;margin:0 auto 12px;border:1px solid var(--c-border);border-radius:10px;background:var(--c-bg); }
+.bs-admin-control .control-empty h3 { margin:0;font-size:13px;font-weight:600;color:var(--c-fg-sec); }
+.bs-admin-control .control-empty p { margin:6px 0 0;font-size:12px; }
+.bs-admin-control .control-empty .dosen-management-btn { margin-top:14px; }
+.bs-admin-control .control-alert { padding:12px 14px;border:1px solid #ABEFC6;border-radius:8px;background:#ECFDF3;color:#067647;font-size:12px; }
+.bs-admin-control .control-alert-error { border-color:#FECDCA;background:#FEF3F2;color:#B42318; }
+.bs-admin-control [hidden] { display:none !important; }
+.bs-admin-control .pagination-btn:disabled { opacity:.4;cursor:not-allowed; }
+.bs-admin-control .control-section { overflow:visible; }
+.bs-admin-control .control-status-heading { display:flex;align-items:center;gap:8px; }
+@media (max-width:767px) {
+    .bs-admin-control .dosen-page-wrap { padding:8px; }
+    .bs-admin-control .control-tabs { margin-bottom:-14px;gap:20px; }
+    .bs-admin-control .control-filter { flex:1 1 150px; }
+    .bs-admin-control .control-filter-trigger,.bs-admin-control .control-toolbar > .dosen-management-btn { min-height:40px; }
+    .bs-admin-control .control-search-field input { height:42px;font-size:16px; }
+    .bs-admin-control .control-actions .dosen-management-btn { min-height:40px; }
+    .bs-admin-control .control-filter-options button { min-height:40px; }
+}

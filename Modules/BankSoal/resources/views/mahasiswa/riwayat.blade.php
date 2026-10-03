@@ -368,10 +368,10 @@
                     <span style="font-size:12px; color:var(--c-fg-muted); font-weight:500;">Per page</span>
                     <select onchange="window.location.href = '{{ request()->fullUrlWithQuery(['page' => 1]) }}&per_page=' + this.value;"
                         style="height:30px; padding:0 24px 0 10px; border:1px solid var(--c-border); border-radius:6px; font-size:12px; color:var(--c-fg); font-family:inherit; outline:none; cursor:pointer; background:#fff;">
-                        <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
-                        <option value="25" {{ request('per_page', 10) == 25 ? 'selected' : '' }}>25</option>
-                        <option value="50" {{ request('per_page', 10) == 50 ? 'selected' : '' }}>50</option>
-                        <option value="100" {{ request('per_page', 10) == 100 ? 'selected' : '' }}>100</option>
+                        <option value="5" {{ request('per_page', 5) == 5 ? 'selected' : '' }}>5</option>
+                        <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
                     </select>
                 </div>
                 @if ($sessions instanceof \Illuminate\Pagination\LengthAwarePaginator)

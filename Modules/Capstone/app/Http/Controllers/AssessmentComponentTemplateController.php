@@ -96,7 +96,7 @@ class AssessmentComponentTemplateController extends Controller
     }
 
     /**
-     * Check if evaluation setup (templates) exist for the period wizard.
+     * Check if period setup (templates) exist for the period wizard.
      */
     public function check()
     {

@@ -30,7 +30,7 @@
         <!-- Add Modal Alpine Component -->
         <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 
                 <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
@@ -68,24 +68,91 @@
                                         <label
                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Pilih
                                             Ruangan</label>
-                                        <select name="ruangan_id" required class="mp-input text-[14px]">
-                                            <option value="" disabled selected>-- Pilih Ruangan --</option>
-                                            @foreach($ruangans as $r)
-                                                <option value="{{ $r->id }}">{{ $r->nama }} - Lt. {{ $r->lantai }}</option>
-                                            @endforeach
-                                        </select>
+                                        <div x-data="{ 
+                                                open: false,
+                                                ruanganId: '',
+                                                get selectedName() {
+                                                    const room = [
+                                                        @foreach($ruangans as $r)
+                                                            {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                        @endforeach
+                                                    ].find(r => r.id == this.ruanganId);
+                                                    return room ? room.name : '-- Pilih Ruangan --';
+                                                },
+                                                selectItem(id) { 
+                                                    this.ruanganId = id;
+                                                    this.open = false; 
+                                                } 
+                                            }" class="relative w-full" @click.away="open = false">
+                                            
+                                            <input type="hidden" name="ruangan_id" :value="ruanganId" required>
+
+                                            <button type="button" @click="open = !open" 
+                                                class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                                <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !ruanganId, 'text-gray-800': ruanganId}"></span>
+                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </button>
+                                            
+                                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto" style="display: none;">
+                                                <div class="p-1">
+                                                    <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">-- Pilih Ruangan --</button>
+                                                    
+                                                    @foreach($ruangans as $r)
+                                                        <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
+                                                            {{ $r->nama }} - Lt. {{ $r->lantai }}
+                                                        </button>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div>
                                         <label
                                             class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Kategori</label>
-                                        <select name="kategori" x-model="kategoriType" required
-                                            class="mp-input text-[14px]">
-                                            <option value="Event / Kegiatan">Event / Kegiatan Mahasiswa</option>
-                                            <option value="Rapat Internal">Rapat Internal Dosen</option>
-                                            <option value="Ujian / Evaluasi">Ujian / Evaluasi (UTS/UAS)</option>
-                                            <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
-                                            <option value="Lainnya">Lainnya...</option>
-                                        </select>
+                                        <div x-data="{ 
+                                                open: false,
+                                                get selectedName() {
+                                                    const map = {
+                                                        'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                        'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                        'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                        'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
+                                                        'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
+                                                        'Lainnya': 'Lainnya...'
+                                                    };
+                                                    return map[kategoriType] || 'Pilih Kategori...';
+                                                },
+                                                selectItem(val) { 
+                                                    kategoriType = val;
+                                                    this.open = false; 
+                                                } 
+                                            }" class="relative w-full" @click.away="open = false">
+                                            
+                                            <input type="hidden" name="kategori" :value="kategoriType" required>
+
+                                            <button type="button" @click="open = !open" 
+                                                class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                                <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !kategoriType, 'text-gray-800': kategoriType}"></span>
+                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                </svg>
+                                            </button>
+                                            
+                                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto" style="display: none;">
+                                                <div class="p-1">
+                                                    <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                                    <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                                    <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                                    <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
+                                                    <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
+                                                    <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -183,19 +250,50 @@
 
                 <div
                     class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-xs shadow-sm">
-                    <select name="kategori"
-                        class="px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border-none appearance-none pr-7 relative bg-no-repeat w-full max-w-[140px] sm:max-w-[180px] truncate"
-                        style="background-image: url('data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' stroke=\'%2394a3b8\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/></svg>'); background-position: right 0.5rem center; background-size: 0.9rem;"
-                        onchange="this.form.submit()">
-                        <option value="">Semua Kategori</option>
-                        <option value="Event / Kegiatan" {{ request('kategori') == 'Event / Kegiatan' ? 'selected' : '' }}>Event / Kegiatan Mahasiswa</option>
-                        <option value="Rapat Internal" {{ request('kategori') == 'Rapat Internal' ? 'selected' : '' }}>
-                            Rapat Internal Dosen</option>
-                        <option value="Ujian / Evaluasi" {{ request('kategori') == 'Ujian / Evaluasi' ? 'selected' : '' }}>Ujian / Evaluasi (UTS/UAS)</option>
-                        <option value="Maintenance / Perbaikan" {{ request('kategori') == 'Maintenance / Perbaikan' ? 'selected' : '' }}>Maintenance / Perbaikan</option>
-                        <option value="Lainnya" {{ request('kategori') == 'Lainnya' ? 'selected' : '' }}>Lainnya...
-                        </option>
-                    </select>
+                    <div x-data="{ 
+                            open: false, 
+                            selectedVal: '{{ request('kategori') }}', 
+                            get selectedName() {
+                                const map = {
+                                    'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                    'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                    'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                    'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
+                                    'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
+                                    'Lainnya': 'Lainnya...'
+                                };
+                                return map[this.selectedVal] || 'Semua Kategori';
+                            },
+                            selectItem(val) { 
+                                this.selectedVal = val; 
+                                $refs.kategoriInput.value = val;
+                                $refs.kategoriInput.form.submit();
+                            } 
+                        }" class="relative w-full max-w-[140px] sm:max-w-[180px]" @click.away="open = false">
+                        
+                        <input type="hidden" name="kategori" x-ref="kategoriInput" :value="selectedVal">
+
+                        <button type="button" @click="open = !open" 
+                            class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 transition-colors h-[34px] rounded-md border-none">
+                            <span x-text="selectedName" class="truncate pr-2"></span>
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                            class="absolute right-0 top-full mt-1 w-[220px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
+                            <div class="p-1">
+                                <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-slate-700 hover:bg-slate-50': selectedVal != ''}">Semua Kategori</button>
+                                <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Pindah Kelas', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Maintenance / Perbaikan', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Sterilisasi Ruangan', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Penutupan Khusus', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
+                                <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Ujian / Evaluasi', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
+                                <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'Lainnya', 'text-slate-700 hover:bg-slate-50': selectedVal != 'Lainnya'}">Lainnya...</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
@@ -247,9 +345,9 @@
                                             {{ $j->ruangan->lantai ?? '-' }})</span>
                                     </div>
                                 </td>
-                                <td style="text-align: center;"
-                                    x-data="{ showDropdown: false, showEditModal: false, formType: '{{ $j->tipe_jadwal }}', kategoriType: '{{ $j->kategori }}' }">
-                                    <div class="relative inline-flex flex-col items-center justify-center w-full z-[1]">
+                                    <td style="text-align: center;"
+                                        x-data="{ showDropdown: false, showEditModal: false, showDeleteModal: false, formType: '{{ $j->tipe_jadwal }}', kategoriType: '{{ $j->kategori }}', ruanganId: '{{ $j->ruangan_id }}' }">
+                                    <div class="relative inline-flex flex-col items-center justify-center w-full" :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
                                         <button type="button" @click="showDropdown = !showDropdown"
                                             @click.away="showDropdown = false"
                                             class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer">
@@ -282,10 +380,10 @@
                                             <form
                                                 action="{{ route('eoffice.peminjaman.admin.jadwal-internal.destroy', $j->id) }}"
                                                 method="POST"
-                                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus blokir jadwal ini?');">
+                                                id="deleteForm-{{ $j->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit"
+                                                <button type="button" @click="showDeleteModal = true; showDropdown = false"
                                                     class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
                                                     <svg class="w-[14px] h-[14px] text-red-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -296,6 +394,48 @@
                                                     Hapus Jadwal
                                                 </button>
                                             </form>
+                                        </div>
+                                    </div>
+
+                                    <!-- DELETE MODAL -->
+                                    <div x-show="showDeleteModal" style="display: none;"
+                                        class="fixed inset-0 z-[100] overflow-y-auto text-left whitespace-normal"
+                                        aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                                        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                            <div x-show="showDeleteModal"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0"
+                                                x-transition:enter-end="opacity-100"
+                                                x-transition:leave="transition ease-in duration-200"
+                                                x-transition:leave-start="opacity-100"
+                                                x-transition:leave-end="opacity-0"
+                                                class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-md"
+                                                aria-hidden="true" @click="showDeleteModal = false"></div>
+                                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen"
+                                                aria-hidden="true">&#8203;</span>
+
+                                            <div x-show="showDeleteModal"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                                x-transition:leave="transition ease-in duration-200"
+                                                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                                class="inline-block px-4 pt-5 pb-4 overflow-hidden text-center align-bottom transition-all transform bg-white rounded-2xl shadow-2xl sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6 relative">
+                                                
+                                                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-50 mb-4">
+                                                    <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                                    </svg>
+                                                </div>
+                                                <h3 class="text-base font-bold text-slate-800 mb-2">Hapus Jadwal?</h3>
+                                                <p class="text-xs text-slate-500 mb-6 leading-relaxed">Apakah Anda yakin ingin menghapus blokir jadwal ini? Tindakan ini tidak dapat dikembalikan.</p>
+                                                
+                                                <div class="flex justify-center gap-3">
+                                                    <button type="button" @click="showDeleteModal = false" class="mp-btn secondary px-4 py-2">Batal</button>
+                                                    <button type="button" @click="document.getElementById('deleteForm-{{ $j->id }}').submit()" class="mp-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-transparent" style="border:none;">Hapus Jadwal</button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -350,31 +490,89 @@
                                                                 <label
                                                                     class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Tipe
                                                                     Ruangan</label>
-                                                                <select name="ruangan_id" required
-                                                                    class="mp-input text-[14px]">
-                                                                    @foreach($ruangans as $r)
-                                                                        <option value="{{ $r->id }}" {{ $r->id == $j->ruangan_id ? 'selected' : '' }}>
-                                                                            {{ $r->nama }} - Lt.
-                                                                            {{ $r->lantai }}
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
+                                                                <div x-data="{ 
+                                                                        open: false,
+                                                                        get selectedName() {
+                                                                            const room = [
+                                                                                @foreach($ruangans as $r)
+                                                                                    {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                                                @endforeach
+                                                                            ].find(r => r.id == ruanganId);
+                                                                            return room ? room.name : '-- Pilih Ruangan --';
+                                                                        },
+                                                                        selectItem(id) { 
+                                                                            ruanganId = id;
+                                                                            this.open = false; 
+                                                                        } 
+                                                                    }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" @click.away="open = false">
+                                                                    
+                                                                    <input type="hidden" name="ruangan_id" :value="ruanganId" required>
+
+                                                                    <button type="button" @click="open = !open" 
+                                                                        class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                                                        <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !ruanganId, 'text-gray-800': ruanganId}"></span>
+                                                                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                                        </svg>
+                                                                    </button>
+                                                                    
+                                                                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                                        class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden" style="display: none;">
+                                                                        <div class="p-1 flex flex-col">
+                                                                            <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">-- Pilih Ruangan --</button>
+                                                                            @foreach($ruangans as $r)
+                                                                                <button type="button" @click="selectItem('{{ $r->id }}')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
+                                                                                    {{ $r->nama }} - Lt. {{ $r->lantai }}
+                                                                                </button>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                             <div>
                                                                 <label
                                                                     class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Kategori</label>
-                                                                <select name="kategori" x-model="kategoriType" required
-                                                                    class="mp-input text-[14px]">
-                                                                    <option value="Event / Kegiatan" {{ $j->kategori == 'Event / Kegiatan' ? 'selected' : '' }}>Event / Kegiatan
-                                                                        Mahasiswa</option>
-                                                                    <option value="Rapat Internal" {{ $j->kategori == 'Rapat Internal' ? 'selected' : '' }}>Rapat Internal Dosen
-                                                                    </option>
-                                                                    <option value="Ujian / Evaluasi" {{ $j->kategori == 'Ujian / Evaluasi' ? 'selected' : '' }}>Ujian / Evaluasi
-                                                                        (UTS/UAS)</option>
-                                                                    <option value="Maintenance / Perbaikan" {{ $j->kategori == 'Maintenance / Perbaikan' ? 'selected' : '' }}>Maintenance / Perbaikan
-                                                                    </option>
-                                                                    <option value="Lainnya" {{ $j->kategori == 'Lainnya' ? 'selected' : '' }}>Lainnya...</option>
-                                                                </select>
+                                                                <div x-data="{ 
+                                                                        open: false,
+                                                                        get selectedName() {
+                                                                            const map = {
+                                                                                'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                                                'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                                                'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                                                'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
+                                                                                'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
+                                                                                'Lainnya': 'Lainnya...'
+                                                                            };
+                                                                            return map[kategoriType] || 'Pilih Kategori...';
+                                                                        },
+                                                                        selectItem(val) { 
+                                                                            kategoriType = val;
+                                                                            this.open = false; 
+                                                                        } 
+                                                                    }" class="relative w-full" :class="{'z-50': open, 'z-10': !open}" @click.away="open = false">
+                                                                    
+                                                                    <input type="hidden" name="kategori" :value="kategoriType" required>
+
+                                                                    <button type="button" @click="open = !open" 
+                                                                        class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
+                                                                        <span x-text="selectedName" class="truncate" :class="{'text-gray-400': !kategoriType, 'text-gray-800': kategoriType}"></span>
+                                                                        <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                                                                        </svg>
+                                                                    </button>
+                                                                    
+                                                                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
+                                                                        class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto" style="display: none;">
+                                                                        <div class="p-1 flex flex-col">
+                                                                            <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                                                            <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                                                            <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                                                            <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
+                                                                            <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
+                                                                            <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
                                                         </div>
 

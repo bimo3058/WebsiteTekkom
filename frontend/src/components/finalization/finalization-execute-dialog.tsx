@@ -54,8 +54,11 @@ export function FinalizationExecuteDialog({
     handleClose();
   };
 
-  const groupsWithSupervisor1 = groups.filter((g) => g.supervisor_1_id);
+  const groupsReady = groups.filter((g) => g.supervisor_1_id && g.supervisor_2_id);
   const groupsWithoutSupervisor1 = groups.filter((g) => !g.supervisor_1_id);
+  const groupsWithoutSupervisor2 = groups.filter((g) => !g.supervisor_2_id);
+  const groupsNotReady = groups.filter((g) => !g.supervisor_1_id || !g.supervisor_2_id);
+  const canFinalize = groupsNotReady.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -86,19 +89,20 @@ export function FinalizationExecuteDialog({
                 Siap Finalisasi
               </div>
               <div className="mt-1 text-2xl font-bold text-green-700">
-                {groupsWithSupervisor1.length}
+                {groupsReady.length}
               </div>
             </div>
           </div>
 
           {/* Validation Status */}
-          {groupsWithoutSupervisor1.length > 0 ? (
+          {groupsNotReady.length > 0 ? (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertTitle>Finalisasi Tidak Dapat Dilakukan</AlertTitle>
               <AlertDescription>
-                Terdapat {groupsWithoutSupervisor1.length} grup KELOMPOK_FINAL yang belum memiliki
-                Supervisor 1. Semua grup harus memiliki supervisor sebelum difinalisasi.
+                Terdapat {groupsWithoutSupervisor1.length} grup yang belum memiliki
+                Supervisor 1 dan {groupsWithoutSupervisor2.length} grup yang belum memiliki
+                Supervisor 2. Semua grup harus memiliki Supervisor 1 dan Supervisor 2 sebelum difinalisasi.
               </AlertDescription>
             </Alert>
           ) : stats?.total_ready && stats.total_ready > 0 ? (
@@ -140,13 +144,13 @@ export function FinalizationExecuteDialog({
                           {group.supervisor1?.name || 'Belum ada supervisor'}
                         </p>
                       </div>
-                      {group.supervisor_1_id ? (
+                      {group.supervisor_1_id && group.supervisor_2_id ? (
                         <Badge variant="outline" className="text-green-600 border-green-200">
                           Siap
                         </Badge>
                       ) : (
                         <Badge variant="destructive" className="text-xs">
-                          Perlu Supervisor
+                          {!group.supervisor_1_id ? 'Perlu Supervisor 1' : 'Perlu Supervisor 2'}
                         </Badge>
                       )}
                     </div>
@@ -164,7 +168,7 @@ export function FinalizationExecuteDialog({
               id="confirm"
               checked={confirmed}
               onCheckedChange={(checked) => setConfirmed(checked as boolean)}
-              disabled={groupsWithoutSupervisor1.length > 0 || (stats?.total_ready ?? 0) > 0}
+              disabled={!canFinalize || (stats?.total_ready ?? 0) > 0}
             />
             <div className="grid gap-1.5 leading-none">
               <Label
@@ -190,7 +194,7 @@ export function FinalizationExecuteDialog({
             disabled={
               loading ||
               !confirmed ||
-              groupsWithoutSupervisor1.length > 0 ||
+              !canFinalize ||
               (stats?.total_ready ?? 0) > 0
             }
           >

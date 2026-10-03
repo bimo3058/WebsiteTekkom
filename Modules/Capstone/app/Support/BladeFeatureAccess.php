@@ -25,7 +25,9 @@ final class BladeFeatureAccess
     public static function snapshot(User $user): array
     {
         $studentId = CapstoneActor::student($user)->id;
-        $registered = PeriodRegistration::where('user_id', $studentId)->exists();
+        $registrationStatus = PeriodRegistration::where('user_id', $studentId)->value('status');
+        $registered = $registrationStatus !== null && strtoupper($registrationStatus) === PeriodRegistration::STATUS_APPROVED;
+        $pendingRegistration = $registrationStatus !== null && strtoupper($registrationStatus) === PeriodRegistration::STATUS_PENDING;
         $membership = GroupMember::where('student_id', $studentId)
             ->whereHas('group', fn ($query) => $query->whereNotIn('status', ['CLOSED', 'DISSOLVED']))
             ->with('group:id,status,period_id')->first();
@@ -35,6 +37,7 @@ final class BladeFeatureAccess
         // that user before its existing registration repair can run.
         return [
             'registered' => $registered || $status !== null,
+            'pending_registration' => $pendingRegistration && $status === null,
             'group_status' => $status,
             'pdc1_started' => $membership?->group ? self::hasStartedPdc1($membership->group) : false,
         ];
@@ -60,6 +63,10 @@ final class BladeFeatureAccess
             return null;
         }
         if (!($state['registered'] ?? false)) {
+            if (!empty($state['pending_registration'])) {
+                return 'Your join request is still pending admin approval';
+            }
+
             return 'Register for a period first';
         }
         $feature = explode('/', trim($path, '/'))[1] ?? '';

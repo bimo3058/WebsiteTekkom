@@ -3,6 +3,8 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Models\Role;
+use App\Models\Student;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\PermissionAssigner;
@@ -35,10 +37,19 @@ class ManajemenPenggunaController extends Controller
 
     // ── Halaman Utama ─────────────────────────────────────────────────────────
 
+    /**
+     * Halaman utama Permission: ringkasan pengguna per kategori.
+     *
+     * Daftar dapat dipersempit lewat pencarian dan filter angkatan. Angkatan
+     * dibaca dari `students.cohort_year`, kolom yang sama dengan yang tampil di
+     * kolom "Angkatan" pada tabel, supaya hasil filter selalu cocok dengan yang
+     * terlihat.
+     */
     public function index(Request $request)
     {
         $actor = auth()->user();
         $search = $request->input('search');
+        $angkatan = $request->input('angkatan');
 
         $query = User::with(['roles', 'student'])
             ->whereNull('deleted_at')
@@ -62,7 +73,21 @@ class ManajemenPenggunaController extends Controller
             }
         }
 
-        $users = $query->orderBy('name')->get();
+        $semuaUser = $query->orderBy('name')->get();
+
+        // Pilihan angkatan disusun SEBELUM filter angkatan dipakai, jadi dropdown
+        // tetap memuat seluruh pilihan meski daftarnya sedang disaring. Relasi
+        // student sudah di-eager load di atas, jadi ini tidak memicu N+1.
+        $angkatanList = $semuaUser
+            ->pluck('student.cohort_year')
+            ->filter()
+            ->unique()
+            ->sortDesc()
+            ->values();
+
+        $users = $angkatan
+            ? $semuaUser->filter(fn($u) => (string) ($u->student->cohort_year ?? '') === (string) $angkatan)->values()
+            : $semuaUser;
 
         $categories = [
             'Mahasiswa Aktif'   => $users->filter(fn($u) => $this->isMahasiswaAktif($u))->sortBy('name')->take(5),
@@ -71,18 +96,29 @@ class ManajemenPenggunaController extends Controller
         ];
 
         $assignableRoles = $this->getAssignableRoles($actor);
+        $isFiltered      = filled($search) || filled($angkatan);
 
-        return view('manajemenmahasiswa::permissions.index', compact('users', 'categories', 'assignableRoles', 'search'));
+        return view('manajemenmahasiswa::permissions.index', compact(
+            'users', 'categories', 'assignableRoles', 'search', 'angkatan', 'angkatanList', 'isFiltered'
+        ));
     }
 
     // ── Halaman Kategori ──────────────────────────────────────────────────────
 
+    /**
+     * Halaman daftar lengkap satu kategori (Mahasiswa Aktif / Pengurus / Alumni).
+     *
+     * Selain pencarian, role, dan jumlah baris, daftar juga bisa disaring per
+     * angkatan (`students.cohort_year`) — sumber yang sama dengan halaman utama
+     * Permission maupun kolom "Angkatan" di tabel.
+     */
     public function category(Request $request, string $category)
     {
         $actor    = auth()->user();
         $search   = $request->input('search');
-        $perPage  = (int) $request->input('per_page', 10);
+        $perPage  = PerPage::resolve($request);
         $roleFilter = $request->input('role', 'all');
+        $angkatan = $request->input('angkatan');
 
         $validCategories = ['Mahasiswa Aktif', 'Pengurus Himpunan', 'Alumni'];
         abort_unless(in_array($category, $validCategories), 404);
@@ -119,11 +155,26 @@ class ManajemenPenggunaController extends Controller
             }
         }
 
-        $users = $query->orderBy('name')->paginate($perPage);
+        // Opsi angkatan diambil dari cakupan yang sama TAPI sebelum filter angkatan
+        // dipasang, supaya dropdown tidak menyusut jadi satu pilihan begitu dipakai.
+        $angkatanList = Student::query()
+            ->whereNotNull('cohort_year')
+            ->whereIn('user_id', (clone $query)->select('users.id'))
+            ->distinct()
+            ->orderByDesc('cohort_year')
+            ->pluck('cohort_year');
+
+        if ($angkatan) {
+            $query->whereHas('student', fn($q) => $q->where('cohort_year', $angkatan));
+        }
+
+        $users = $query->orderBy('name')->paginate($perPage)->withQueryString();
         $assignableRoles = $this->getAssignableRoles($actor);
+        $isFiltered = filled($search) || filled($angkatan)
+            || ($category === 'Pengurus Himpunan' && $roleFilter !== 'all');
 
         return view('manajemenmahasiswa::permissions.category', compact(
-            'users', 'category', 'assignableRoles', 'search', 'perPage', 'roleFilter'
+            'users', 'category', 'assignableRoles', 'search', 'perPage', 'roleFilter', 'angkatan', 'angkatanList', 'isFiltered'
         ));
     }
 

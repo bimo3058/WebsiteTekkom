@@ -10,16 +10,21 @@
     @php
         $skorMinimum = \Illuminate\Support\Facades\DB::table('bs_pengaturan')->where('kunci', 'standar_skor_minimum')->value('nilai') ?? 60;
     @endphp
-    <x-banksoal::notification.alerts />
-    <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Periksa kelengkapan dokumen RPS">
-        <x-slot:actions>
-            <button type="button"
-                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300 cursor-pointer transition-all shadow-sm hover:shadow-md"
-                onclick="window.history.back()">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </button>
-        </x-slot:actions>
-    </x-banksoal::ui.page-header>
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Review RPS</h1>
+                        <span class="bs-role-badge">GPM</span>
+                    </div>
+                    <p>Periksa kelengkapan dan lakukan validasi dokumen RPS.</p>
+                </div>
+                <button type="button" class="dosen-management-btn" @click="window.history.back()">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </button>
+            </div>
+        </x-slot:header>
 
     <div class="mb-6 grid gap-4 xl:grid-cols-3">
         <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -562,4 +567,5 @@
             }
         });
     </script>
+    </x-banksoal::ui.bank-soal-page>
 </x-banksoal::layouts.gpm-master>

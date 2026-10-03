@@ -33,8 +33,9 @@ class BladeCalendarAccessTest extends TestCase
         Schema::table('capstone_groups', fn(Blueprint $t)=>$t->unsignedBigInteger('title_id')->nullable());
         Schema::table('capstone_seminar_schedules', function(Blueprint $t){$t->foreignId('examiner_1_id')->nullable()->change();$t->foreignId('examiner_2_id')->nullable()->change();});
         (require __DIR__.'/../database/migrations/2026_09_08_110000_support_capstone_mentoring_calendar.php')->up();
-        Schema::create('capstone_group_members', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id');$t->boolean('is_leader')->default(false);$t->timestamps();});
-        Schema::create('capstone_period_registrations', function(Blueprint $t){$t->id();$t->unsignedBigInteger('user_id');$t->unsignedBigInteger('period_id');$t->timestamps();});
+        Schema::create('capstone_group_members', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id');$t->boolean('is_leader')->default(false);$t->string('status')->nullable();$t->unsignedBigInteger('removed_by')->nullable();$t->text('removal_reason')->nullable();$t->timestamps();$t->softDeletes();});
+        Schema::create('capstone_period_registrations', function(Blueprint $t){$t->id();$t->unsignedBigInteger('user_id');$t->unsignedBigInteger('period_id');$t->string('status')->default('PENDING');$t->text('rejection_reason')->nullable();$t->unsignedBigInteger('reviewed_by')->nullable();$t->timestamp('reviewed_at')->nullable();$t->timestamp('flagged_at')->nullable();$t->unsignedBigInteger('flagged_by')->nullable();$t->timestamps();});
+
         Schema::create('capstone_supervisions', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('supervisor_id');$t->string('role')->nullable();});
         Schema::create('capstone_ta_defense_schedules', function(Blueprint $t){
             $t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id')->nullable();$t->unsignedBigInteger('examiner_1_id')->nullable();$t->unsignedBigInteger('examiner_2_id')->nullable();
@@ -104,6 +105,9 @@ class BladeCalendarAccessTest extends TestCase
         foreach (['2026_05_05_000014_create_capstone_seminar_evaluations_table.php', '2026_05_05_000029_create_capstone_audit_logs_table.php'] as $file) {
             (require __DIR__.'/../database/migrations/'.$file)->up();
         }
+        Schema::create('eo_mr_ruangans', function(Blueprint $t){$t->id();$t->string('nama');$t->string('lokasi')->nullable();$t->integer('lantai')->nullable();$t->integer('kapasitas')->default(0);$t->json('fasilitas')->nullable();$t->boolean('is_active')->default(true);$t->timestamps();});
+        $roomId = DB::table('eo_mr_ruangans')->insertGetId(['nama'=>'Ruang Sidang','kapasitas'=>30]);
+        Schema::table('capstone_seminar_schedules', function(Blueprint $t){$t->unsignedBigInteger('eoffice_ruangan_id')->nullable();$t->unsignedBigInteger('eoffice_peminjaman_id')->nullable();});
         $admin=$this->actor('admin');
         $first=$this->actor('dosen')->lecturer->id;
         $second=$this->actor('dosen')->lecturer->id;
@@ -113,12 +117,12 @@ class BladeCalendarAccessTest extends TestCase
         foreach ([$first,$second] as $examiner) $schedule->evaluations()->create(['examiner_id'=>$examiner,'status'=>'PENDING']);
         $service=\Mockery::mock(\Modules\Capstone\Services\SchedulingService::class);
         $service->shouldReceive('validateExaminerConstraints')->once()->withArgs(fn($found,$ids)=>$found->id===$group->id && $ids===[$first,$replacement])->andReturn(null);
-        $service->shouldReceive('validateScheduleConflicts')->once()->with([$first,$replacement],'2026-10-02','09:00','10:00','B',$schedule->id)->andReturn([]);
+        $service->shouldReceive('validateScheduleConflicts')->once()->with([$first,$replacement],'2026-10-02','09:00','10:00','Ruang Sidang',$schedule->id,null,null,null,$roomId)->andReturn([]);
         $controller=new \Modules\Capstone\Http\Controllers\SemproController(app(\Modules\Capstone\Services\GroupStateMachine::class),$service);
-        $payload=['date'=>'2026-10-02','start_time'=>'09:00','end_time'=>'10:00','room'=>'B','examiner_1_id'=>$first,'examiner_2_id'=>$replacement];
+        $payload=['date'=>'2026-10-02','start_time'=>'09:00','end_time'=>'10:00','eoffice_ruangan_id'=>$roomId,'examiner_1_id'=>$first,'examiner_2_id'=>$replacement];
         $request=$this->requestFor($admin,'/','PUT',$payload);
         $this->assertSame(200,$controller->update($request,$schedule->id)->getStatusCode());
-        $this->assertSame('B',$schedule->fresh()->room);
+        $this->assertSame('Ruang Sidang',$schedule->fresh()->room);
         $this->assertEqualsCanonicalizing([$first,$replacement],$schedule->evaluations()->pluck('examiner_id')->all());
         $schedule->evaluations()->where('examiner_id',$first)->update(['status'=>'SUBMITTED','score'=>85]);
         foreach (['update','cancel'] as $method) {
@@ -216,6 +220,7 @@ class BladeCalendarAccessTest extends TestCase
     public function test_period_registration_unlocks_all_group_submenus_and_links_using_student_profile_id(): void
     {
         Schema::table('capstone_periods', fn(Blueprint $t)=>$t->boolean('is_finalized')->default(false));
+        (require __DIR__.'/../database/migrations/2026_05_05_000028_create_capstone_notifications_table.php')->up();
         $this->actor('admin'); // Account ID must differ from the student profile ID.
         $user = $this->actor('mahasiswa');
         $this->assertNotEquals($user->id, $user->student->id);
@@ -242,6 +247,20 @@ class BladeCalendarAccessTest extends TestCase
         $response = (new \Modules\Capstone\Http\Controllers\RegistrationController)->register($request);
         $this->assertSame(201, $response->getStatusCode());
         $this->assertEquals($user->student->id, PeriodRegistration::first()->user_id);
+        $this->assertSame('PENDING', PeriodRegistration::first()->status);
+        // A pending join request keeps every feature locked with a pending message.
+        $pendingState = BladeFeatureAccess::snapshot($user);
+        $this->assertFalse($pendingState['registered']);
+        $this->assertTrue($pendingState['pending_registration']);
+        $this->assertSame('Your join request is still pending admin approval', BladeFeatureAccess::reason('/mahasiswa/group', $pendingState));
+        $response = (new BladeAccessMiddleware)->handle($this->requestFor($user, '/capstone/mahasiswa/group'), fn()=>response('allowed'), 'mahasiswa');
+        $this->assertSame(403, $response->getStatusCode());
+        // Admin approval unlocks the menus.
+        $admin = User::where('id', '<>', $user->id)->first();
+        $approveRequest = $this->requestFor($admin, '/api/capstone/admin/period-registrations/'.PeriodRegistration::first()->id.'/approve', 'PUT');
+        $approveResponse = (new \Modules\Capstone\Http\Controllers\Admin\PeriodRegistrationApprovalController)->approve($approveRequest, PeriodRegistration::first()->id);
+        $this->assertSame(200, $approveResponse->getStatusCode());
+        $this->assertSame('APPROVED', PeriodRegistration::first()->fresh()->status);
         $html = $renderSidebar();
         $this->assertMatchesRegularExpression('/<button[^>]*aria-disabled="false"[^>]*title="Group &amp; Titles"/', $html);
         foreach ($paths as $path) {
@@ -310,7 +329,7 @@ class BladeCalendarAccessTest extends TestCase
     public function test_registered_missing_page_has_explicit_unavailable_response_and_period_routes_render(): void
     {
         $user = $this->actor('admin');
-        foreach (['/capstone/admin/users'=>503, '/capstone/admin/periods/new'=>200, '/capstone/admin/periods/17/edit'=>200] as $path=>$status) {
+        foreach (['/capstone/admin/assessments'=>503, '/capstone/admin/periods/new'=>200, '/capstone/admin/periods/17/edit'=>200] as $path=>$status) {
             $request = $this->requestFor($user, $path);
             $route = app('router')->getRoutes()->match($request);
             $request->setRouteResolver(fn()=>$route);
@@ -330,7 +349,7 @@ class BladeCalendarAccessTest extends TestCase
         Schema::table('capstone_periods',fn(Blueprint $t)=>$t->boolean('is_finalized')->default(false));
         Schema::table('capstone_groups',function(Blueprint $t){$t->boolean('is_solo')->default(false);$t->boolean('has_active_proposal')->default(false);});
         Schema::table('capstone_group_members',fn(Blueprint $t)=>$t->unsignedBigInteger('period_id')->nullable());
-        foreach (['2026_05_05_000003_create_capstone_titles_table.php','2026_05_05_000009_create_capstone_bids_table.php','2026_05_05_000028_create_capstone_notifications_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
+        foreach (['2026_05_05_000003_create_capstone_titles_table.php','2026_05_05_000009_create_capstone_bids_table.php','2026_05_05_000028_create_capstone_notifications_table.php','2026_05_05_000029_create_capstone_audit_logs_table.php','2026_09_18_000000_make_capstone_bids_uniques_reject_aware.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
         Schema::table('capstone_titles',fn(Blueprint $t)=>$t->unsignedBigInteger('period_id')->nullable());
         Schema::create('roles',function(Blueprint $t){$t->id();$t->string('name');$t->string('guard_name')->default('web');});
         Schema::create('model_has_roles',function(Blueprint $t){$t->unsignedBigInteger('role_id');$t->unsignedBigInteger('model_id');$t->string('model_type');});
@@ -378,7 +397,9 @@ class BladeCalendarAccessTest extends TestCase
         $controller=app(\Modules\Capstone\Http\Controllers\GroupController::class);
         $request=$this->requestFor($student,'/','POST',['period_id'=>$period->id]);
         $this->assertWorkspaceDenied(fn()=>$controller->storeSolo($request));
-        PeriodRegistration::create(['user_id'=>$student->student->id,'period_id'=>$period->id]);
+        PeriodRegistration::create(['user_id'=>$student->student->id,'period_id'=>$period->id,'status'=>'PENDING']);
+        $this->assertWorkspaceDenied(fn()=>$controller->storeSolo($request));
+        PeriodRegistration::where('user_id',$student->student->id)->update(['status'=>'APPROVED']);
         $response=$controller->storeSolo($request);$this->assertSame(201,$response->getStatusCode());
         $this->assertSame('FORMING_SOLO',Group::first()->status);
         $this->assertEquals($student->student->id,GroupMember::first()->student_id);
@@ -432,7 +453,8 @@ class BladeCalendarAccessTest extends TestCase
         $this->studentWorkspaceSchema();$lecturer=$this->workspaceLecturer();$student=$this->actor('mahasiswa');$other=$this->actor('mahasiswa');
         $group=$this->group($student,null,'READY_FOR_BIDDING');$group->period->update(['min_group_size'=>1]);
         $controller=app(\Modules\Capstone\Http\Controllers\BidController::class);$bids=[];
-        foreach([1,2] as $priority){$title=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);$response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$title->id,'priority'=>$priority,'proposed_supervisor_1_id'=>$lecturer->lecturer->id]));$this->assertSame(201,$response->getStatusCode());$bids[]=$response->getData(true)['data']['id'];}
+        foreach([1,2] as $priority){$title=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);$response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$title->id,'priority'=>$priority]));$this->assertSame(201,$response->getStatusCode());$bids[]=$response->getData(true)['data']['id'];}
+        $this->assertNull($group->bids()->find($bids[0])->proposed_supervisor_1_id);
         $otherGroup=$this->group($other,null,'READY_FOR_BIDDING');
         $foreign=\Modules\Capstone\Models\Bid::create(['group_id'=>$otherGroup->id,'title_id'=>$this->workspaceTitle($lecturer)->id,'priority'=>1,'status'=>'PENDING']);
         $request=$this->requestFor($student,'/','PUT',['bids'=>[['id'=>$bids[0],'priority'=>2],['id'=>$foreign->id,'priority'=>1]]]);
@@ -445,6 +467,27 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertWorkspaceDenied(fn()=>$controller->destroy($this->requestFor($student,'/','DELETE'),$bids[1]));
         $group->period->update(['is_finalized'=>false]);$controller->destroy($this->requestFor($student,'/','DELETE'),$bids[1]);
         $this->assertEquals(1,$group->bids()->first()->priority);
+    }
+
+    public function test_rejected_bid_frees_slot_and_allows_rebidding_same_title(): void
+    {
+        $this->studentWorkspaceSchema();$lecturer=$this->workspaceLecturer();$student=$this->actor('mahasiswa');
+        $group=$this->group($student,null,'READY_FOR_BIDDING');$group->period->update(['min_group_size'=>1]);
+        $controller=app(\Modules\Capstone\Http\Controllers\BidController::class);
+        $titleA=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);
+        $titleB=$this->workspaceTitle($lecturer,['period_id'=>$group->period_id]);
+        $response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$titleA->id,'priority'=>1]));$this->assertSame(201,$response->getStatusCode());
+        $response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$titleB->id,'priority'=>2]));$this->assertSame(201,$response->getStatusCode());
+        $bidA=$group->bids()->where('title_id',$titleA->id)->firstOrFail();
+        $rec=$controller->recommend($this->requestFor($lecturer,'/','PUT',['recommendation'=>'REJECT']),$bidA->id);
+        $this->assertSame(200,$rec->getStatusCode());
+        $this->assertSame('REJECTED',$bidA->fresh()->status);
+        $this->assertSame([1],$group->bids()->where('status','PENDING')->orderBy('priority')->pluck('priority')->all());
+        // Re-bidding the rejected title must succeed (hit 23505 before partial uniques).
+        $response=$controller->store($this->requestFor($student,'/','POST',['title_id'=>$titleA->id]));
+        $this->assertSame(201,$response->getStatusCode());
+        $this->assertSame(2,$response->getData(true)['data']['priority']);
+        $this->assertNull(\Modules\Capstone\Models\Bid::find($response->getData(true)['data']['id'])->proposed_supervisor_1_id);
     }
 
     public function test_accepting_marketplace_join_promotes_proposal_without_assigning_title_early(): void
@@ -981,7 +1024,7 @@ class BladeCalendarAccessTest extends TestCase
     private function individualTaFixture(): array
     {
         $this->peerReviewSchema();
-        foreach (['2026_05_05_000012_create_capstone_phase_document_requirements_table.php','2026_05_05_000015_create_capstone_ta_submissions_table.php','2026_05_05_000028_create_capstone_notifications_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
+        foreach (['2026_05_05_000012_create_capstone_phase_document_requirements_table.php','2026_05_05_000015_create_capstone_ta_submissions_table.php','2026_05_05_000028_create_capstone_notifications_table.php','2026_09_19_000001_create_capstone_ta_registrations_table.php'] as $file) (require __DIR__.'/../database/migrations/'.$file)->up();
         Schema::table('capstone_ta_submissions',fn(Blueprint $t)=>$t->unsignedBigInteger('period_id')->nullable());
         Schema::create('capstone_period_assessment_components', function(Blueprint $t){$t->id();$t->unsignedBigInteger('period_id');$t->string('type');});
         foreach(['nil_dosen'=>'nilai_dosen','milestone'=>'milestone','expo'=>'expo'] as $suffix) Schema::create('capstone_'.$suffix.'_scores', function(Blueprint $t){$t->id();$t->unsignedBigInteger('group_id');$t->unsignedBigInteger('student_id')->nullable();$t->unsignedBigInteger('period_component_id');$t->unsignedBigInteger('evaluator_id');$t->decimal('score',5,2);});
@@ -1018,6 +1061,7 @@ class BladeCalendarAccessTest extends TestCase
     public function test_ta_document_upload_approval_and_private_download_keep_server_locks(): void
     {
         [$student,$other,$group,$lecturer]=$this->individualTaFixture();
+        \Modules\Capstone\Models\TaRegistration::create(['student_id'=>$student->student->id,'group_id'=>$group->id,'period_id'=>$group->period_id,'status'=>'APPROVED']);
         $workflow=new \Modules\Capstone\Services\IndividualTaWorkflow;
         $storage=\Mockery::mock(\Modules\Capstone\Services\DocumentStorageService::class);
         $storage->shouldReceive('store')->once()->andReturn('individual/thesis.pdf');
@@ -1045,6 +1089,53 @@ class BladeCalendarAccessTest extends TestCase
         $documents->download($otherRequest,(string)$document->id);
     }
 
+    public function test_ta_registration_approval_gates_document_upload(): void
+    {
+        [$student,$other,$group]=$this->individualTaFixture();
+        $workflow=new \Modules\Capstone\Services\IndividualTaWorkflow;
+        $state=$workflow->forStudent($student->student->id);
+        $this->assertTrue($state['can_access']);
+        $this->assertSame('TA_AWAITING_APPROVAL',$state['status']);
+        $this->assertFalse($state['can_upload']);
+        $this->assertFalse($state['sidang_approved']);
+        $controller=new \Modules\Capstone\Http\Controllers\TaRegistrationController;
+        $request=$this->requestFor($student,'/','POST',[]);
+        $this->assertSame(201,$controller->store($request,$workflow)->getStatusCode());
+        $this->assertSame('PENDING',\Modules\Capstone\Models\TaRegistration::first()->status);
+        // Duplicate request while pending is blocked.
+        $this->assertSame(400,$controller->store($request,$workflow)->getStatusCode());
+        // Upload stays locked while the request is pending.
+        $storage=\Mockery::mock(\Modules\Capstone\Services\DocumentStorageService::class);
+        $storage->shouldReceive('store')->once()->andReturn('individual/thesis.pdf');
+        $uploadRequest=$this->requestFor($student,'/','POST',['document_type'=>'Thesis']);
+        $uploadRequest->files->set('file',\Illuminate\Http\UploadedFile::fake()->create('thesis.pdf',1,'application/pdf'));
+        $individual=new \Modules\Capstone\Http\Controllers\IndividualTaController;
+        $this->assertWorkspaceDenied(fn()=>$individual->upload($uploadRequest,$workflow,$storage));
+        // Admin approval unlocks the upload.
+        $admin=$this->actor('admin');
+        $approval=new \Modules\Capstone\Http\Controllers\Admin\TaRegistrationApprovalController;
+        $approveRequest=$this->requestFor($admin,'/','PUT');
+        $this->assertSame(200,$approval->approve($approveRequest,\Modules\Capstone\Models\TaRegistration::first()->id)->getStatusCode());
+        $this->assertSame('APPROVED',\Modules\Capstone\Models\TaRegistration::first()->fresh()->status);
+        $unlocked=$workflow->forStudent($student->student->id);
+        $this->assertTrue($unlocked['can_upload']);
+        $this->assertSame('TA_DOCUMENTS_REQUIRED',$unlocked['status']);
+        $this->assertSame(201,$individual->upload($uploadRequest,$workflow,$storage)->getStatusCode());
+        // Approved registrations cannot be cancelled.
+        $this->assertSame(400,$controller->destroy($this->requestFor($student,'/','DELETE'))->getStatusCode());
+        // Rejected requests can be re-submitted.
+        \Modules\Capstone\Models\TaRegistration::query()->update(['status'=>'PENDING']);
+        $rejectRequest=$this->requestFor($admin,'/','PUT',['rejection_reason'=>'Incomplete prerequisites']);
+        $this->assertSame(200,$approval->reject($rejectRequest,\Modules\Capstone\Models\TaRegistration::first()->id)->getStatusCode());
+        $rejected=$workflow->forStudent($student->student->id);
+        $this->assertSame('TA_AWAITING_APPROVAL',$rejected['status']);
+        $this->assertSame('Incomplete prerequisites',$rejected['registration']->rejection_reason);
+        $this->assertSame(201,$controller->store($request,$workflow)->getStatusCode());
+        $this->assertSame('PENDING',\Modules\Capstone\Models\TaRegistration::first()->status);
+        $this->assertSame(200,$controller->destroy($this->requestFor($student,'/','DELETE'))->getStatusCode());
+        $this->assertSame(0,\Modules\Capstone\Models\TaRegistration::count());
+    }
+
     public function test_admin_ta_schedule_updates_examiners_atomically_and_locks_submitted_evaluations(): void
     {
         [$student,$other,$group,$supervisor]=$this->individualTaFixture();
@@ -1054,7 +1145,7 @@ class BladeCalendarAccessTest extends TestCase
         $schedule=\Modules\Capstone\Models\TaDefenseSchedule::create(['group_id'=>$group->id,'student_id'=>$student->student->id,'examiner_1_id'=>$examiner1->lecturer->id,'examiner_2_id'=>$examiner2->lecturer->id,'date'=>'2027-01-15','start_time'=>'09:00','end_time'=>'10:00','room'=>'Lab','status'=>'SCHEDULED']);
         $schedule->students()->attach($student->student->id);
         $service=\Mockery::mock(\Modules\Capstone\Services\SchedulingService::class)->makePartial();
-        $service->shouldReceive('validateScheduleConflicts')->once()->with([$replacement->lecturer->id,$examiner2->lecturer->id],'2027-01-15','09:00','10:00','Lab',null,$schedule->id)->andReturn([]);
+        $service->shouldReceive('validateScheduleConflicts')->once()->with([$replacement->lecturer->id,$examiner2->lecturer->id],'2027-01-15','09:00','10:00','Lab',null,$schedule->id,null,null,null)->andReturn([]);
         $controller=new \Modules\Capstone\Http\Controllers\TaDefenseScheduleController($service);
         $request=\Modules\Capstone\Http\Requests\Admin\UpdateTaDefenseRequest::create('/','PUT',['examiner_1_id'=>$replacement->lecturer->id]);
         $request->setUserResolver(fn()=>$admin);
@@ -1078,18 +1169,21 @@ class BladeCalendarAccessTest extends TestCase
     {
         [$student,$other,$group]=$this->individualTaFixture();
         $admin=$this->actor('admin');$this->actingAs($admin);$first=$this->actor('dosen');$second=$this->actor('dosen');
-        Schema::table('capstone_ta_defense_schedules',function(Blueprint $t){$t->unsignedBigInteger('period_id')->nullable();$t->timestamp('evaluation_deadline')->nullable();$t->text('notes')->nullable();});
+        Schema::table('capstone_ta_defense_schedules',function(Blueprint $t){$t->unsignedBigInteger('period_id')->nullable();$t->timestamp('evaluation_deadline')->nullable();$t->text('notes')->nullable();$t->unsignedBigInteger('eoffice_ruangan_id')->nullable();$t->unsignedBigInteger('eoffice_peminjaman_id')->nullable();});
         Schema::create('capstone_ta_defense_evaluations',function(Blueprint $t){$t->id();$t->unsignedBigInteger('schedule_id');$t->unsignedBigInteger('examiner_id');$t->string('status');$t->timestamps();});
+        Schema::create('eo_mr_ruangans', function(Blueprint $t){$t->id();$t->string('nama');$t->string('lokasi')->nullable();$t->integer('lantai')->nullable();$t->integer('kapasitas')->default(0);$t->json('fasilitas')->nullable();$t->boolean('is_active')->default(true);$t->timestamps();});
+        $roomId = DB::table('eo_mr_ruangans')->insertGetId(['nama'=>'Lab','kapasitas'=>30]);
         $service=\Mockery::mock(\Modules\Capstone\Services\SchedulingService::class)->makePartial();
         $service->shouldReceive('validateScheduleConflicts')->once()->andReturn([]);
         $controller=new \Modules\Capstone\Http\Controllers\TaDefenseScheduleController($service);
-        $data=['group_id'=>$group->id,'period_id'=>$group->period_id,'student_ids'=>[$student->student->id],'examiner_1_id'=>$first->lecturer->id,'examiner_2_id'=>$second->lecturer->id,'date'=>'2027-02-10','start_time'=>'09:00','end_time'=>'10:00','room'=>'Lab'];
+        $data=['group_id'=>$group->id,'period_id'=>$group->period_id,'student_ids'=>[$student->student->id],'examiner_1_id'=>$first->lecturer->id,'examiner_2_id'=>$second->lecturer->id,'date'=>'2027-02-10','start_time'=>'09:00','end_time'=>'10:00','room'=>'Lab','eoffice_ruangan_id'=>$roomId];
         $request=\Modules\Capstone\Http\Requests\Admin\StoreTaDefenseRequest::create('/','POST',$data);
         $request->setUserResolver(fn()=>$admin);
         $request->setValidator(\Illuminate\Support\Facades\Validator::make($data,$request->rules()));
         $this->assertSame(400,$controller->store($request)->getStatusCode());
         $this->assertSame(0,\Modules\Capstone\Models\TaDefenseSchedule::count());
         \Modules\Capstone\Models\TaSubmission::create(['student_id'=>$student->student->id,'group_id'=>$group->id,'period_id'=>$group->period_id,'status'=>'TA_DOCUMENTS_APPROVED']);
+        \Modules\Capstone\Models\TaRegistration::create(['student_id'=>$student->student->id,'group_id'=>$group->id,'period_id'=>$group->period_id,'status'=>'APPROVED']);
         $this->assertSame(201,$controller->store($request)->getStatusCode());
         $this->assertSame(2,\Modules\Capstone\Models\TaDefenseEvaluation::where('status','PENDING')->count());
         $this->assertSame(2,\Modules\Capstone\Models\TaDefenseExaminer::count());

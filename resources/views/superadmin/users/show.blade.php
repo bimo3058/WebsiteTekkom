@@ -2,33 +2,21 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
 
-    <style>
-        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-        .show-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 12px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-        .show-box { display: flex; flex-direction: column; flex: 1; background: #fff; border: 1px solid #D4D5D8; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
-        
-        .badge-outline { display: inline-flex; align-items:center; gap:5px; padding:2px 10px; border-radius:99px; font-size:10px; font-weight:700; text-transform: capitalize; }
-        .dot { width: 5px; height: 5px; border-radius: 50%; }
-        
-        .info-label { width: 160px; font-size: 13px; color: #94A3B8; flex-shrink: 0; font-weight: 500; }
-        .info-value { font-size: 13px; font-weight: 600; color: #334155; }
-        
-        .module-card { border: 1px solid #E2E8F0; border-radius: 10px; overflow: hidden; background: #F8FAFC; }
-    </style>
+    @include('superadmin.users._show-style')
 
     <div class="show-wrap">
         <div class="show-box">
             {{-- ── Header / Toolbar ── --}}
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border-bottom:1px solid #D4D5D8;flex-shrink:0;">
-                <div style="display:flex; align-items:center; gap:16px;">
-                    <a href="{{ route('superadmin.users.index') }}"
+            <div class="show-header">
+                <div class="show-heading">
+                    <a href="{{ route('superadmin.users.index') }}" aria-label="Kembali ke User Management"
                        style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;color:#475569;background:#fff;border:1px solid #D0D1D5;border-radius:8px;box-shadow:0 1px 2px rgba(0,0,0,.05);text-decoration:none;">
                         <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 19l-7-7 7-7"/></svg>
                     </a>
-                    <h1 style="font-size:14px; font-weight:800; color:#1E293B; margin:0; text-transform:uppercase; letter-spacing:0.02em;">Detail User</h1>
+                    <div><h1>Detail User</h1><p>Informasi akun, role, dan akses pengguna.</p></div>
                 </div>
 
-                <div style="display:flex;gap:10px;">
+                <div class="show-actions">
                     @if($user->suspended_at)
                         <form method="POST" action="{{ route('superadmin.users.unsuspend', $user) }}" style="margin:0;">
                             @csrf
@@ -44,11 +32,11 @@
             </div>
 
             {{-- ── Main Content Area ── --}}
-            <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column;">
+            <div class="show-body">
                 
                 {{-- ── Profile Section ── --}}
-                <div style="padding:20px; border-bottom:1px solid #d1d1d1; flex-shrink:0;">
-                    <div style="display:flex; gap:20px; align-items:flex-start;">
+                <div class="show-profile">
+                    <div class="show-profile-row">
                         
                         @php
                             
@@ -66,11 +54,11 @@
 
                         <x-ui.user-avatar :user="$user" size="xl" />
 
-                        <div style="flex:1;">
-                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:4px;">
+                        <div class="show-profile-content">
+                            <div class="show-profile-title">
                                 <h2 style="font-size:20px; font-weight:800; color:#1E293B; margin:0; letter-spacing:-0.02em;">{{ $user->name }}</h2>
                                 
-                                <div style="display:flex; gap:6px;">
+                                <div class="show-statuses">
                                     @if($user->isSuspended())
                                         <div class="badge-outline" style="border:1px solid #EF4444; color:#EF4444;">
                                             <span class="dot" style="background:#EF4444;"></span> Suspended
@@ -87,9 +75,9 @@
                                 </div>
                             </div>
                             
-                            <p style="font-size:14px; font-weight:500; color:#64748B; margin:0 0 16px 0;">{{ $identityLabel }}: {{ $identityValue }}</p>
+                            <p style="font-size:14px; font-weight:500; color:#64748B; margin:0 0 16px 0;">{{ $identityLabel }}: {{ $identityValue ?: '-' }}</p>
 
-                            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px 40px; max-width: 900px;">
+                            <div class="show-info-grid">
                                 <div style="display:flex; align-items:center;">
                                     <span class="info-label">Alamat Email</span>
                                     <span class="info-value">{{ $user->email }}</span>
@@ -139,15 +127,15 @@
                 </div>
 
                 {{-- ── Role & Permissions Section (Pushed to Bottom) ── --}}
-                <div style="display:flex; flex:1;">
-                    <div style="width:240px; padding:20px; border-right:1px solid #d1d1d1; background:#fff;">
+                <div class="show-access">
+                    <div class="show-section-heading">
                         <h3 style="font-size:14px; font-weight:800; color:#1E293B; margin:0 0 8px 0;">Role & Permissions</h3>
                         <p style="font-size:12px; font-weight:500; color:#64748B; line-height:1.6; margin:0;">
-                            Daftar izin modul yang dikunci (view-only). Untuk mengubah izin, silakan klik tombol Edit Profil.
+                            Permission langsung yang terpasang pada akun ini. Gunakan Edit Profil untuk mengubahnya.
                         </p>
                     </div>
 
-                    <div style="flex:1; padding:20px;">
+                    <div class="show-access-content">
                         @php
                             $dbModules = \App\Models\SystemModule::orderBy('id')->get();
 
@@ -169,7 +157,7 @@
                             $defaultStyle = ['bg'=>'#EDE9FE','border'=>'#C4B5FD','color'=>'#8B5CF6','icon'=>'M4 6h16M4 10h16M4 14h16M4 18h16'];
                         @endphp
 
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+                        <div class="show-modules">
                             @foreach($dbModules as $mod)
                                 @php
                                     $mkey    = $mod->slug;
@@ -188,16 +176,16 @@
                                             </div>
                                             <span style="font-size:11px; font-weight:800; color:#1E293B; text-transform:uppercase; letter-spacing:0.03em;">{{ $mod->name }}</span>
                                         </div>
-                                        <span style="font-size:9px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em;">View Only</span>
+                                        <span style="font-size:9px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em;">Hanya lihat</span>
                                     </div>
 
                                     {{-- Daftar permission — pakai permissions yang sudah eager-loaded, bukan hasPermissionTo() agar tidak N+1 --}}
-                                    <div style="padding:14px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                                    <div class="show-permissions">
                                         @forelse($perms as $perm)
                                             @php
                                                 $hasPerm = $user->permissions->contains('name', $perm->name);
                                             @endphp
-                                            <div style="display:flex; align-items:center; gap:8px; opacity: {{ $hasPerm ? '1' : '0.3' }}">
+                                            <div style="display:flex; align-items:center; gap:8px; opacity: {{ $hasPerm ? '1' : '0.65' }}">
                                                 <input type="checkbox" {{ $hasPerm ? 'checked' : '' }} disabled
                                                     style="width:14px; height:14px; accent-color:{{ $style['color'] }}; cursor:not-allowed;">
                                                 <span style="font-size:12px; font-weight:600; color:#475569;">
@@ -205,7 +193,7 @@
                                                 </span>
                                             </div>
                                         @empty
-                                            <p style="font-size:11px; color:#94A3B8; grid-column:span 2; margin:0;">
+                                            <p style="font-size:11px; color:#94A3B8; grid-column:1 / -1; margin:0;">
                                                 Tidak ada permission terdaftar.
                                             </p>
                                         @endforelse

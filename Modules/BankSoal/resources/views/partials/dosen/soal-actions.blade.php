@@ -10,15 +10,15 @@
     {{-- Multiple actions: use three-dots menu --}}
     <x-ui.action-menu align="right">
         @can('banksoal.view')
-            <a href="{{ route('banksoal.soal.dosen.show', $soal->id) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                <i class="fas fa-eye w-4 text-gray-500"></i>
+            <a href="{{ route('banksoal.soal.dosen.show', $soal->id) }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-slate-700 hover:text-primary hover:bg-slate-100 transition-colors">
+                <i class="fas fa-eye w-4 text-center"></i>
                 <span>Lihat Detail</span>
             </a>
         @endcan
 
         @can('banksoal.edit')
-            <a href="{{ route('banksoal.soal.dosen.edit', $soal->id) }}" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700">
-                <i class="fas fa-pen w-4 text-gray-500"></i>
+            <a href="{{ route('banksoal.soal.dosen.edit', $soal->id) }}" class="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-slate-700 hover:text-primary hover:bg-slate-100 transition-colors">
+                <i class="fas fa-pen w-4 text-center"></i>
                 <span>Edit Soal</span>
             </a>
         @endcan
@@ -28,8 +28,8 @@
             <form action="{{ route('banksoal.destroy', $soal->id) }}" method="POST" class="m-0 block" onsubmit="return confirm('Yakin ingin menghapus soal ini?');">
                 @csrf
                 @method('DELETE')
-                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 border-0 cursor-pointer bg-transparent text-left">
-                    <i class="fas fa-trash w-4"></i>
+                <button type="submit" class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors border-0 cursor-pointer bg-transparent text-left">
+                    <i class="fas fa-trash w-4 text-center"></i>
                     <span>Hapus Soal</span>
                 </button>
             </form>

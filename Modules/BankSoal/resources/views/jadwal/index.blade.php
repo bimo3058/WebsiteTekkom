@@ -5,7 +5,7 @@
     <span class="text-slate-800 font-semibold">Jadwal Sesi</span>
     @endsection
 
-    <div x-data="{ openModal: false }" class="w-full">
+    <div x-data="{ openModal: false, isSubmitting: false }" class="w-full">
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
             <div>
@@ -165,8 +165,9 @@
                     <button @click="openModal = false" type="button" class="w-full px-5 py-2.5 text-sm font-bold text-slate-700 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 focus:outline-none transition-colors">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formTambahSesi').submit()" class="w-full px-5 py-2.5 text-sm font-bold text-white bg-slate-700 hover:bg-slate-800 shadow-sm rounded-xl focus:outline-none transition-colors">
-                        Simpan Sesi
+                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formTambahSesi').submit()" :disabled="isSubmitting" class="w-full px-5 py-2.5 text-sm font-bold text-white bg-slate-700 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Sesi'"></span>
                     </button>
                 </div>
             </div>

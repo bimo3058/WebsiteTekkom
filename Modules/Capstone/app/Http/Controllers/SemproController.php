@@ -42,7 +42,8 @@ class SemproController extends Controller
     {
         $data = $request->validate([
             'date'=>'required|date', 'start_time'=>'required|date_format:H:i',
-            'end_time'=>'required|date_format:H:i|after:start_time', 'room'=>'nullable|string|max:255',
+            'end_time'=>'required|date_format:H:i|after:start_time',
+            'eoffice_ruangan_id'=>'required|integer|exists:eo_mr_ruangans,id',
             'examiner_1_id'=>'required|exists:lecturers,id',
             'examiner_2_id'=>'required|exists:lecturers,id|different:examiner_1_id',
         ]);
@@ -53,7 +54,10 @@ class SemproController extends Controller
             $ids = [(int)$data['examiner_1_id'], (int)$data['examiner_2_id']];
             $error = $this->schedulingService->validateExaminerConstraints($schedule->group, $ids);
             abort_if($error !== null, 422, $error ?? 'Penguji tidak valid.');
-            $conflicts = $this->schedulingService->validateScheduleConflicts($ids, $data['date'], $data['start_time'], $data['end_time'], $data['room'] ?? null, $schedule->id);
+            // Single source of rooms: EOffice. `room` is only a display snapshot.
+            $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($data['eoffice_ruangan_id']);
+            $data['room'] = $ruangan->nama;
+            $conflicts = $this->schedulingService->validateScheduleConflicts($ids, $data['date'], $data['start_time'], $data['end_time'], $data['room'], $schedule->id, null, null, ($schedule->getAttributes()['eoffice_peminjaman_id'] ?? null), (int) $data['eoffice_ruangan_id']);
             abort_if(count($conflicts)>0, 422, implode(' ', $conflicts));
             $schedule->update($data);
             $schedule->evaluations()->whereNotIn('examiner_id', $ids)->delete();
@@ -87,7 +91,7 @@ class SemproController extends Controller
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string',
+            'eoffice_ruangan_id' => 'required|integer|exists:eo_mr_ruangans,id',
             'examiner_1_id' => 'required|exists:lecturers,id',
             'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
@@ -107,13 +111,19 @@ class SemproController extends Controller
             return response()->json(['message' => 'Group already has a SEMPRO schedule.'], 400);
         }
 
-        // Double-booking & room conflict check
+        // Double-booking & room conflict check (rooms come from EOffice only).
+        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($request->eoffice_ruangan_id);
         $conflicts = $this->schedulingService->validateScheduleConflicts(
             [$request->examiner_1_id, $request->examiner_2_id],
             $request->date,
             $request->start_time,
             $request->end_time,
-            $request->room
+            $ruangan->nama,
+            null,
+            null,
+            null,
+            null,
+            (int) $request->eoffice_ruangan_id
         );
 
         if (!empty($conflicts)) {
@@ -126,7 +136,8 @@ class SemproController extends Controller
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
-            'room' => $request->room,
+            'room' => $ruangan->nama,
+            'eoffice_ruangan_id' => $ruangan->id,
             'examiner_1_id' => $request->examiner_1_id,
             'examiner_2_id' => $request->examiner_2_id,
             'status' => 'SCHEDULED',
@@ -222,7 +233,8 @@ class SemproController extends Controller
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'nullable|string',
+            'eoffice_ruangan_id' => 'nullable|integer|exists:eo_mr_ruangans,id',
+            'room' => 'nullable|string|max:255',
             'examiner_1_id' => 'required|exists:lecturers,id',
             'examiner_2_id' => 'required|exists:lecturers,id|different:examiner_1_id',
         ]);
@@ -242,12 +254,26 @@ class SemproController extends Controller
         }
 
         // Conflict check (authoritative â€” only at approval)
+        // Conflict check (authoritative — only at approval). Rooms come from EOffice only.
+        // Legacy compat: student requests submitted with a free-text room are resolved by name.
+        $eofficeId = $request->eoffice_ruangan_id
+            ? (int) $request->eoffice_ruangan_id
+            : app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->resolveEofficeId($request->room ?? $schedule->room);
+        if (! $eofficeId) {
+            return response()->json(['message' => 'Ruangan tidak dikenali di EOffice. Pilih ruangan EOffice yang valid.'], 422);
+        }
+        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($eofficeId);
         $conflicts = $this->schedulingService->validateScheduleConflicts(
             $examinerIds,
             $request->date,
             $request->start_time,
             $request->end_time,
-            $request->room
+            $ruangan->nama,
+            $schedule->id,
+            null,
+            null,
+            null,
+            $ruangan->id
         );
 
         if (!empty($conflicts)) {
@@ -258,7 +284,8 @@ class SemproController extends Controller
             'date' => $request->date,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
-            'room' => $request->room,
+            'room' => $ruangan->nama,
+            'eoffice_ruangan_id' => $ruangan->id,
             'examiner_1_id' => $request->examiner_1_id,
             'examiner_2_id' => $request->examiner_2_id,
             'status' => 'SCHEDULED'

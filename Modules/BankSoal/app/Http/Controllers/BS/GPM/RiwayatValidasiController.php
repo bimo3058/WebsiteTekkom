@@ -36,6 +36,8 @@ class RiwayatValidasiController extends Controller
 
         $baseQuery = DB::table('bs_mata_kuliah')
             ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
+            ->leftJoin('bs_dosen_pengampu_mk', 'bs_mata_kuliah.id', '=', 'bs_dosen_pengampu_mk.mk_id')
+            ->leftJoin('users', 'bs_dosen_pengampu_mk.user_id', '=', 'users.id')
             ->leftJoinSub($latestReviews, 'latest_reviews', function($join) {
                 $join->on('bs_pertanyaan.id', '=', 'latest_reviews.pertanyaan_id');
             })
@@ -44,6 +46,7 @@ class RiwayatValidasiController extends Controller
                 'bs_mata_kuliah.id as mk_id',
                 'bs_mata_kuliah.kode as mk_kode',
                 'bs_mata_kuliah.nama as mk_nama',
+                DB::raw("STRING_AGG(DISTINCT users.name, '|||') as dosen_pengampu"),
                 DB::raw('COUNT(DISTINCT bs_pertanyaan.id) as jumlah_soal'), // Hitung jumlah soal yang sudah direview
                 DB::raw('MAX(latest_reviews.created_at) as tanggal_review'), // Ambil tanggal review paling terakhir
                 DB::raw("SUM(CASE WHEN latest_reviews.status_review IN ('Revisi Total', 'Kurang Sesuai', 'Revisi') THEN 1 ELSE 0 END) as jumlah_revisi")

@@ -9,7 +9,6 @@ return new class extends Migration
     {
         $roles = [
             ['name' => 'ketua_himpunan',       'module' => 'manajemen_mahasiswa', 'is_academic' => false],
-            ['name' => 'wakil_ketua_himpunan',  'module' => 'manajemen_mahasiswa', 'is_academic' => false],
             ['name' => 'ketua_bidang',          'module' => 'manajemen_mahasiswa', 'is_academic' => false],
             ['name' => 'ketua_unit',            'module' => 'manajemen_mahasiswa', 'is_academic' => false],
             ['name' => 'staff_himpunan',        'module' => 'manajemen_mahasiswa', 'is_academic' => false],
@@ -35,7 +34,6 @@ return new class extends Migration
     {
         DB::table('roles')->whereIn('name', [
             'ketua_himpunan',
-            'wakil_ketua_himpunan',
             'ketua_bidang',
             'ketua_unit',
             'staff_himpunan',

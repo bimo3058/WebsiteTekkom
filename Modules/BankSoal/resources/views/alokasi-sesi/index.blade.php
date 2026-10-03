@@ -6,17 +6,92 @@
     @endsection
 
     @section('hide_global_errors', true)
-        <div id="alokasiSesiRoot" x-data="alokasiSesiApp()" class="w-full relative"
+
+    {{-- Style Box Wrap khas SITKOM (Mengadopsi Dashboard Admin Bank Soal) --}}
+    <style>
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+        main.overflow-y-auto { overflow: hidden !important; }
+        #banksoal-main-content { padding: 0 !important; max-width: 100% !important; height: 100% !important; display: flex; flex-direction: column; }
+
+        .dash-wrap {
+            display: flex; flex-direction: column; height: 100%;
+            padding: 16px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+        }
+
+        .dash-box {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            background: #fff; border: 1px solid var(--c-border);
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden; width: 100%; box-sizing: border-box;
+        }
+
+        .dash-box-header {
+            background: #fff;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0; width: 100%; box-sizing: border-box;
+            padding: 16px 24px;
+        }
+
+        .dash-box-body {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+
+        .dash-box-body > * {
+            flex-shrink: 0;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb {
+            background: var(--c-border-strong);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .dash-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .dash-box {
+                border-radius: 10px;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .dash-box-header {
+                padding: 12px 14px;
+                position: sticky; top: 0; z-index: 20;
+            }
+            .dash-box-body {
+                padding: 14px;
+                overflow-y: visible;
+                display: block;
+            }
+        }
+    </style>
+
+        <div id="alokasiSesiRoot" x-data="alokasiSesiApp()" class="dash-wrap"
             data-open-modal="{{ $errors->any() ? '1' : '0' }}"
             data-jadwals='@json($jadwals ?? [])'
             data-pendaftars='@json($pendaftars ?? [])'>
         
-        <!-- Page Header -->
-        <div class="mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+        <div class="dash-box">
+
+        <!-- Box Header -->
+        <div class="dash-box-header">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Jadwal & Sesi</h1>
-                    <p class="text-sm text-slate-500 mt-1">Mengatur sesi ujian dan membagi jadwal peserta ujian komprehensif.</p>
+                    <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">Manajemen Jadwal & Sesi</h1>
+                    <p class="text-[13px] text-gray-500 mt-0.5">Mengatur sesi ujian dan membagi jadwal peserta ujian komprehensif.</p>
                 </div>
 
                 <!-- ============================================================= -->
@@ -127,6 +202,9 @@
 
 
 
+        <!-- Box Body -->
+        <div class="dash-box-body">
+
         <!-- Rentang tanggal periode terpilih -->
         @if($selectedPeriode)
         <div class="flex items-center gap-2 mb-6">
@@ -217,6 +295,9 @@
             @endif
         @endif
 
+        </div> {{-- end .dash-box-body --}}
+        </div> {{-- end .dash-box --}}
+
         <!-- Modal Kelola Peserta -->
         <div x-show="openDrawer" tabindex="-1" class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6" style="display: none;" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
                 <!-- Dimmed background -->
@@ -292,8 +373,9 @@
                                         
                                         <div class="flex justify-between items-center mb-3">
                                             <h3 class="font-bold text-slate-700 text-[13px]">Tambahkan ke sesi ini:</h3>
-                                            <button type="button" @click="document.getElementById('formAssign').submit()" class="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
-                                                Tambahkan (<span x-text="selectedUnassignedIds.length"></span>)
+                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formAssign').submit()" class="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="isSubmitting || selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
+                                                <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                <span x-text="isSubmitting ? 'Memproses...' : 'Tambahkan (' + selectedUnassignedIds.length + ')'"></span>
                                             </button>
                                         </div>
 
@@ -346,8 +428,9 @@
                                         
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="font-bold text-slate-700 text-[13px]">Daftar peserta di sesi ini:</h3>
-                                            <button type="button" @click="document.getElementById('formRemove').submit()" class="bg-white text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="selectedAssignedIds.length === 0">
-                                                Keluarkan (<span x-text="selectedAssignedIds.length"></span>)
+                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formRemove').submit()" class="bg-white text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="isSubmitting || selectedAssignedIds.length === 0">
+                                                <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin text-red-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                                <span x-text="isSubmitting ? 'Memproses...' : 'Keluarkan (' + selectedAssignedIds.length + ')'"></span>
                                             </button>
                                         </div>
 
@@ -433,6 +516,13 @@
                         @csrf
                         <input type="hidden" name="periode_ujian_id" value="{{ $selectedPeriodeId }}">
                         
+                        @if($errors->has('database'))
+                            <div class="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-[13px] font-medium text-red-600 flex items-start gap-2">
+                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span>{{ $errors->first('database') }}</span>
+                            </div>
+                        @endif
+
                         @if(session('error'))
                             <div class="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-[13px] font-medium text-red-600 flex items-start gap-2">
                                 <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -452,22 +542,73 @@
                             @enderror
                         </div>
 
-                        <!-- Dropdown Tanggal Ujian -->
+                        <!-- Dropdown Tanggal Ujian (Alpine) -->
+                        @php
+                            $tanggalOptions = [];
+                            if ($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian) {
+                                $startDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->startOfDay();
+                                $endDate   = \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->startOfDay();
+                                for ($d = $startDate->copy(); $d->lte($endDate); $d->addDay()) {
+                                    $tanggalOptions[] = ['value' => $d->format('Y-m-d'), 'label' => $d->translatedFormat('d F Y')];
+                                }
+                            }
+                        @endphp
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Tanggal Ujian (Berdasarkan Rentang Periode)</label>
-                            <div class="relative">
-                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow cursor-pointer">
-                                    <option value="">Pilih Tanggal Ujian...</option>
-                                    @if($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
-                                        @php
-                                            $startDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian);
-                                            $endDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian);
-                                            for($d = $startDate; $d->lte($endDate); $d->addDay()) {
-                                                echo '<option value="' . $d->format('Y-m-d') . '"' . (old('tanggal_ujian') == $d->format('Y-m-d') ? ' selected' : '') . '>' . $d->translatedFormat('d F Y') . '</option>';
-                                            }
-                                        @endphp
-                                    @endif
-                                </select>
+                            <div class="relative"
+                                 x-data="{
+                                     open: false,
+                                     value: @js(old('tanggal_ujian', '')),
+                                     options: @js($tanggalOptions),
+                                     get selectedLabel() {
+                                         const found = this.options.find(o => o.value === this.value);
+                                         return found ? found.label : '';
+                                     },
+                                     choose(val) { this.value = val; this.open = false; },
+                                     close() { this.open = false; }
+                                 }"
+                                 @click.outside="close()"
+                                 @keydown.escape.window="close()">
+
+                                {{-- Nilai yang dikirim saat form submit --}}
+                                <input type="hidden" name="tanggal_ujian" :value="value">
+
+                                {{-- Trigger --}}
+                                <button type="button" @click="open = !open"
+                                        class="w-full flex items-center justify-between gap-3 pl-4 pr-3 py-2.5 bg-white rounded-xl text-sm text-left transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary {{ $errors->has('tanggal_ujian') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                                    <span x-text="selectedLabel || 'Pilih Tanggal Ujian...'"
+                                          :class="value ? 'text-slate-800' : 'text-slate-400'" class="truncate"></span>
+                                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400 transition-transform duration-200"
+                                         :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+
+                                {{-- Panel Opsi --}}
+                                <div x-show="open"
+                                     x-transition:enter="transition ease-out duration-100"
+                                     x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
+                                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave="transition ease-in duration-75"
+                                     x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                                     x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
+                                     class="absolute z-50 mt-2 w-full bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden"
+                                     style="display:none">
+                                    <div class="overflow-y-auto max-h-52 py-1.5">
+                                        <template x-for="opt in options" :key="opt.value">
+                                            <button type="button" @click="choose(opt.value)"
+                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-slate-50"
+                                                    :class="value === opt.value ? 'bg-primary/10 text-primary' : 'text-slate-700'">
+                                                <span x-text="opt.label" class="flex-1 text-left"></span>
+                                                <svg x-show="value === opt.value" class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                            </button>
+                                        </template>
+
+                                        <div x-show="options.length === 0" class="px-4 py-8 text-center">
+                                            <p class="text-[13px] text-slate-400 font-medium">Tidak ada tanggal ujian dalam rentang periode ini.</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             @error('tanggal_ujian')
                                 <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
@@ -481,18 +622,36 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Mulai</label>
-                                <input type="time" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
+                                <input type="time" id="as_waktu_mulai" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow {{ $errors->has('waktu_mulai') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                                @error('waktu_mulai')
+                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Selesai</label>
-                                <input type="time" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
+                                <input type="time" id="as_waktu_selesai" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow {{ $errors->has('waktu_selesai') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                                @error('waktu_selesai')
+                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
                         </div>
 
                         <!-- Box 4: Kapasitas -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Kapasitas Maksimal</label>
-                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow">
+                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow {{ $errors->has('kuota') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
+                            @error('kuota')
+                                <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                     </form>
                 </div>
@@ -502,8 +661,9 @@
                     <button type="button" @click="openModal = false" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formTambahSesi').submit()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors">
-                        Simpan Sesi
+                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formTambahSesi').submit()" :disabled="isSubmitting" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Sesi'"></span>
                     </button>
                 </div>
             </div>
@@ -546,9 +706,10 @@
                     <button type="button" @click="closeDeleteConfirm()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Batal
                     </button>
-                    <button type="button" @click="submitDelete()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        Hapus Sesi
+                    <button type="button" @click="submitDelete()" :disabled="isSubmitting" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                        <svg x-show="!isSubmitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Hapus Sesi'"></span>
                     </button>
                 </div>
             </div>
@@ -567,6 +728,7 @@
                 openDrawer: false,
                 deleteConfirmModal: false,
                 jadwalToDeleteId: null,
+                isSubmitting: false,
                 drawerTab: 'unassigned', // unassigned | assigned
                 selectedJadwal: null,
                 jadwals: [],
@@ -632,6 +794,7 @@
                 },
 
                 closeDeleteConfirm() {
+                    if (this.isSubmitting) return;
                     this.deleteConfirmModal = false;
                     setTimeout(() => {
                         this.jadwalToDeleteId = null;
@@ -639,7 +802,9 @@
                 },
 
                 submitDelete() {
+                    if (this.isSubmitting) return;
                     if (this.jadwalToDeleteId) {
+                        this.isSubmitting = true;
                         const form = document.getElementById('form-delete-' + this.jadwalToDeleteId);
                         if(form) form.submit();
                     }

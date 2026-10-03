@@ -4,7 +4,7 @@ globalThis.document={getElementById:()=>({textContent:JSON.stringify({role:'admi
 globalThis.window={dispatchEvent(){},location:{assign(){}}};
 const {periodWizard}=await import('../resources/assets/js/pages/period-wizard.js');
 function ready(){const page=periodWizard();page.loading=false;page.templates=[{id:1,name:'A',is_active:true,weight:100}];page.form={...page.form,name:'New Period',start_date:'2026-01-01',end_date:'2026-12-31'};return page;}
-test('wizard cannot skip required fields or missing evaluation setup',()=>{
+test('wizard cannot skip required fields or missing period setup',()=>{
     const page=periodWizard();page.go(1);assert.equal(page.step,0);assert.ok(page.errors.name);
     const valid=ready();valid.go(4);assert.equal(valid.step,0);valid.go(1);assert.equal(valid.step,1);
     valid.templates=[];valid.go(2);assert.equal(valid.step,1);assert.ok(valid.errors.assessments);

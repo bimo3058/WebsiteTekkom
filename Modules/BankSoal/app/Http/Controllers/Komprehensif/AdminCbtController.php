@@ -82,7 +82,9 @@ class AdminCbtController extends Controller
             });
         }
 
-        $perPage = $request->input('per_page', 5);
+        $perPage = in_array((int) $request->input('per_page', 5), [5, 10, 25, 50])
+            ? (int) $request->input('per_page', 5)
+            : 5;
         $sessions = $query->orderBy('bs_kompre_session.finished_at', 'desc')->paginate($perPage)->withQueryString();
         $periodes  = PeriodeUjian::orderBy('created_at', 'desc')->get();
 
@@ -135,15 +137,20 @@ class AdminCbtController extends Controller
      */
     public function forceSubmit($id)
     {
-        $session = KompreSession::findOrFail($id);
+        return \Illuminate\Support\Facades\DB::transaction(function () use ($id) {
+            $session = KompreSession::lockForUpdate()->findOrFail($id);
 
-        // Policy memverifikasi role admin DAN status === 'ongoing' sekaligus.
-        // Jika sesi sudah selesai, authorize() akan throw AuthorizationException (403).
-        $this->authorize('forceSubmit', $session);
+            $this->authorize('forceSubmit', $session);
 
-        $this->cbtService->finishSession($session);
+            // Double-check status inside lock — cegah race 2 tab
+            if ($session->status !== \Modules\BankSoal\Enums\KompreSessionStatus::Ongoing) {
+                return back()->with('error', 'Sesi sudah selesai, tidak dapat di-force submit lagi.');
+            }
 
-        return back()->with('success', 'Sesi ujian berhasil diakhiri paksa. Skor: ' . $session->fresh()->score);
+            $this->cbtService->finishSession($session);
+
+            return back()->with('success', 'Sesi ujian berhasil diakhiri paksa. Skor: ' . $session->fresh()->score);
+        });
     }
 
     public function analytics()

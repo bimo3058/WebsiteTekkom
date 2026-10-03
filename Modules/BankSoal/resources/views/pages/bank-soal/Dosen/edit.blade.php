@@ -1,14 +1,17 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
         <span class="mx-2 text-slate-300">/</span>
         <span class="text-slate-800 font-semibold">Edit Soal</span>
     @endsection
+    <x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
     <x-banksoal::ui.page-header title="Edit Soal" subtitle="Perbarui detail pertanyaan dan opsi jawaban.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
+    </x-slot:header>
 
     <x-banksoal::ui.panel title="Form Edit Soal" subtitle="Pastikan jawaban benar tetap ditandai sebelum menyimpan." padding="p-0">
         @if(isset($review) && !empty($review->catatan))
@@ -78,6 +81,8 @@
             <div class="flex items-center justify-end border-t border-slate-200 bg-slate-50 px-6 py-4"><button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"><i class="fas fa-save mr-1"></i> Simpan Perubahan</button></div>
         </form>
     </x-banksoal::ui.panel>
+
+    </x-banksoal::ui.bank-soal-page>
 
     @push('styles')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">

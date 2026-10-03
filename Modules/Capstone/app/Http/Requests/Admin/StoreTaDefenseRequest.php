@@ -34,6 +34,7 @@ class StoreTaDefenseRequest extends FormRequest
             'end_time' => ['required', 'date_format:H:i,H:i:s', 'after:start_time'],
             'room' => ['nullable', 'string', 'max:100'],
             'location_id' => ['nullable', 'exists:capstone_locations,id'],
+            'eoffice_ruangan_id' => ['required', 'integer', 'exists:eo_mr_ruangans,id'],
             'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
@@ -70,6 +71,8 @@ class StoreTaDefenseRequest extends FormRequest
             'room.string' => 'Room must be a string.',
             'room.max' => 'Room must not exceed 100 characters.',
             'location_id.exists' => 'The selected location does not exist.',
+            'eoffice_ruangan_id.required' => 'Ruangan EOffice wajib dipilih.',
+            'eoffice_ruangan_id.exists' => 'Ruangan EOffice yang dipilih tidak ada.',
             'notes.string' => 'Notes must be a string.',
             'notes.max' => 'Notes must not exceed 1000 characters.',
         ];

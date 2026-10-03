@@ -81,8 +81,27 @@
                     <tbody>
                         @forelse($upcomingActivities as $act)
                             <tr class="mp-tr">
-                                <td style="font-weight: 600;">
-                                    {{ $act->user->name ?? 'Pegawai / Mahasiswa' }}
+                                <td style="font-weight: 600;" title="{{ $act->user->name ?? 'Pegawai / Mahasiswa' }}">
+                                    @php
+                                        $fullName = $act->user->name ?? 'Pegawai / Mahasiswa';
+                                        $isDosen = $act->user ? $act->user->hasRole('dosen') : false;
+                                        
+                                        $displayName = $fullName;
+                                        if (!$isDosen) {
+                                            $nameParts = explode(' ', $fullName);
+                                            if (count($nameParts) > 2) {
+                                                $displayName = $nameParts[0] . ' ' . $nameParts[1];
+                                                for ($i = 2; $i < count($nameParts); $i++) {
+                                                    $displayName .= ' ' . strtoupper(substr($nameParts[$i], 0, 1)) . '.';
+                                                }
+                                            }
+                                        }
+                                    @endphp
+                                    @if($isDosen)
+                                        <div style="max-width: 160px;" class="truncate">{{ $fullName }}</div>
+                                    @else
+                                        <div>{{ $displayName }}</div>
+                                    @endif
                                 </td>
                                 <td style="max-width: 260px;" class="truncate" title="{{ $act->ruangan->nama ?? '-' }}">
                                     {{ $act->ruangan->nama ?? '-' }}
@@ -104,13 +123,22 @@
                                     </div>
                                 </td>
                                 <td>
-                                    @if(strtolower($act->status) === 'disetujui')
-                                        <span class="mp-badge success sm">Disetujui</span>
-                                    @elseif(strtolower($act->status) === 'menunggu')
-                                        <span class="mp-badge sm" style="background:#FFF9ED; color:#A77B2E;">Menunggu</span>
-                                    @else
-                                        <span class="mp-badge secondary sm">{{ ucfirst($act->status) }}</span>
-                                    @endif
+                                    @php
+                                        $st = ['bg' => '#F3F4F6', 'color' => '#374151', 'border' => '#E5E7EB'];
+                                        if ($act->status === 'disetujui')
+                                            $st = ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'];
+                                        elseif ($act->status === 'ditolak')
+                                            $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                        elseif ($act->status === 'menunggu')
+                                            $st = ['bg' => '#FFF9E6', 'color' => '#B45309', 'border' => '#FFEBB3'];
+                                        elseif ($act->status === 'selesai')
+                                            $st = ['bg' => '#F1E9FF', 'color' => '#5E53F4', 'border' => '#D1BFFF'];
+                                        elseif ($act->status === 'dibatalkan')
+                                            $st = ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'];
+                                    @endphp
+                                    <span style="font-size:11px; font-weight:700; color:{{ $st['color'] }}; background:{{ $st['bg'] }}; border:1px solid {{ $st['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.02em; text-transform:uppercase; display:inline-block;">
+                                        {{ $act->status }}
+                                    </span>
                                 </td>
                             </tr>
                         @empty

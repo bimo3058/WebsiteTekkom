@@ -6,7 +6,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ArrowLeft, Lock } from 'lucide-react';
+import Link from 'next/link';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { Loading } from '@/components/ui/loading';
@@ -19,17 +21,20 @@ export function TitleDetailFeature() {
     const [group, setGroup] = useState<Group | null>(null);
     const [loading, setLoading] = useState(true);
     const [bidding, setBidding] = useState(false);
+    const [bidFlowReason, setBidFlowReason] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [titleRes, groupRes] = await Promise.all([
+                const [titleRes, groupRes, bidsRes] = await Promise.all([
                     api.get(`/mahasiswa/titles/${params.id}`),
                     api.get('/mahasiswa/group'),
+                    api.get('/mahasiswa/bids'),
                 ]);
                 setTitle(titleRes.data?.data ?? titleRes.data);
                 const groupData = groupRes.data?.data ?? groupRes.data;
                 setGroup(groupData?.group ?? groupData);
+                setBidFlowReason(bidsRes.data?.flow?.reason ?? bidsRes.data?.data?.flow?.reason ?? null);
             } catch (error) {
                 toast.error('Failed to load title details');
                 console.error(error);
@@ -41,7 +46,9 @@ export function TitleDetailFeature() {
     }, [params.id]);
 
     const hasGroup = !!group;
-    const canBid = hasGroup && !group?.title_id && group?.status === 'READY_FOR_BIDDING';
+    const minGroupSize = group?.period?.min_group_size ?? 3;
+    const memberCount = group?.members?.length ?? 0;
+    const canBid = hasGroup && !group?.title_id && ['READY_FOR_BIDDING', 'FORMING_SOLO', 'FORMING', 'WAITING_SUPERVISOR_APPROVAL'].includes(group?.status ?? '') && (!group?.is_solo || memberCount >= minGroupSize) && memberCount >= minGroupSize;
 
     const handleBid = async () => {
         if (!title || !canBid) return;
@@ -55,11 +62,9 @@ export function TitleDetailFeature() {
             await api.post('/mahasiswa/bids', {
                 title_id: title.id,
                 priority: 1,
-                proposed_supervisor_1_id: title.lecturer.id,
-                proposed_supervisor_2_id: null,
             });
             toast.success('Bid submitted successfully!');
-            router.push('/mahasiswa/group');
+            router.push('/mahasiswa/bidding');
         } catch (error) {
             if (axios.isAxiosError(error)) {
                 toast.error(api.getApiErrorMessage(error, 'Failed to bid'));
@@ -85,6 +90,20 @@ export function TitleDetailFeature() {
     }
 
     const activeGroups = title.groups?.filter(g => g.status !== 'REJECTED') || [];
+    const slotsLeft = title.quota - activeGroups.length;
+    const isSoloBelowMin = !!group?.is_solo && memberCount < minGroupSize;
+    const bidBlockReasonMap: Record<string, string> = {
+        NO_GROUP: 'Anda harus memiliki kelompok terlebih dahulu.',
+        LEADER_ONLY: 'Hanya ketua kelompok yang dapat melakukan bidding.',
+        INSUFFICIENT_MEMBERS: 'Jumlah anggota kelompok belum memenuhi minimal untuk bidding.',
+        INVALID_GROUP_STATUS: 'Status kelompok saat ini tidak memungkinkan bidding.',
+        TITLE_ALREADY_ASSIGNED: 'Kelompok Anda sudah memiliki judul.',
+        BIDDING_LOCKED: 'Bidding sudah dikunci.',
+        BIDDING_WINDOW_CLOSED: 'Jendela waktu bidding belum dibuka atau sudah berakhir.',
+        ACTIVE_PROPOSAL_EXISTS: 'Kelompok Anda memiliki proposal aktif. Bidding dinonaktifkan.',
+        TITLE_LIMIT_REACHED: 'Maksimal 3 slot judul (bidding + proposal) sudah tercapai.',
+        PERIOD_FINALIZED: 'Periode sudah ditutup oleh admin.',
+    };
 
     return (
         <div className="space-y-6">
@@ -103,6 +122,28 @@ export function TitleDetailFeature() {
                     </Button>
                 )}
             </div>
+
+            {!canBid && isSoloBelowMin && (
+                <Alert variant="destructive">
+                    <Lock className="h-4 w-4" />
+                    <AlertTitle>Belum Bisa Bidding Judul Dosen</AlertTitle>
+                    <AlertDescription>
+                        Kelompok solo Anda memiliki {memberCount} dari minimal {minGroupSize} anggota. Untuk membuka bidding judul dosen, tambah anggota di{' '}
+                        <Link href="/mahasiswa/group" className="underline font-bold">Grup Saya</Link> hingga mencapai minimal. Sementara itu, Anda tetap dapat{' '}
+                        <Link href="/mahasiswa/propose-title" className="font-medium underline">mengajukan judul sendiri</Link>.
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {!canBid && !isSoloBelowMin && (bidFlowReason || slotsLeft <= 0) && (
+                <Alert>
+                    <Lock className="h-4 w-4" />
+                    <AlertTitle>Belum Bisa Bidding</AlertTitle>
+                    <AlertDescription>
+                        {bidFlowReason ? (bidBlockReasonMap[bidFlowReason] || 'Bidding tidak tersedia untuk kondisi kelompok saat ini.') : 'Kuota judul ini sudah penuh.'}
+                    </AlertDescription>
+                </Alert>
+            )}
 
             <div className="grid gap-6 md:grid-cols-2">
                 <Card>

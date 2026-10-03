@@ -58,6 +58,18 @@ class PendaftaranService
                 throw new \RuntimeException('Maaf, kuota pendaftaran untuk periode ini sudah penuh.');
             }
 
+            // Cek duplikat NIM/mahasiswa_id di periode yang sama (active only) — cegah race
+            $duplicate = PendaftarUjian::where('periode_ujian_id', $lockedPeriode->id)
+                ->where(function ($q) use ($mahasiswaId, $data) {
+                    $q->where('nim', $data['nim'])->orWhere('mahasiswa_id', $mahasiswaId);
+                })
+                ->lockForUpdate()
+                ->exists();
+
+            if ($duplicate) {
+                throw new \RuntimeException('Anda sudah terdaftar pada periode ini.');
+            }
+
             return PendaftarUjian::create([
                 'periode_ujian_id'      => $lockedPeriode->id,
                 'mahasiswa_id'          => $mahasiswaId,

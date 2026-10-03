@@ -73,7 +73,7 @@
                         Terkini (Maks. 5MB per foto)</label>
 
                     <input type="file" name="fotos[]" multiple accept="image/png, image/jpeg, image/jpg"
-                        class="mp-input" style="padding: 6px;" id="fotoInput" onchange="previewImages(event)">
+                        class="mp-input cursor-pointer" style="padding: 6px;" id="fotoInput" onchange="previewImages(event)">
                     <p style="font-size:11px; color:#A0A4B8; margin-top:4px; margin-bottom:12px;">Pilih banyak foto
                         sekaligus. Format: JPG,
                         PNG. Opsional, namun disarankan untuk referensi peminjam.</p>

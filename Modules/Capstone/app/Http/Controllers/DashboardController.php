@@ -8,10 +8,16 @@ use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Modules\Capstone\Models\AuditLog;
+use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\PeriodRegistration;
+use Modules\Capstone\Models\SeminarSchedule;
+use Modules\Capstone\Models\TaDefenseSchedule;
 use Modules\Capstone\Models\Title;
 
 class DashboardController extends Controller
@@ -20,21 +26,53 @@ class DashboardController extends Controller
     {
         // Keep the same permission boundary as /admin/groups. Dashboard cards
         // need counts and five labels, not every member and supervisor profile.
-        $canViewGroups = $request->user()->can('capstone.view');
+        $canViewGroups = $request->user()->can('capstone.groups.view');
+        $periodId = $request->input('period_id');
+        $scopedPeriod = $periodId && $periodId !== 'all' ? (int) $periodId : null;
+
         $groupCounts = $canViewGroups
-            ? Group::query()->selectRaw('COUNT(*) AS total')
+            ? Group::query()
+                ->when($scopedPeriod, fn ($query) => $query->where('period_id', $scopedPeriod))
+                ->selectRaw('COUNT(*) AS total')
                 ->selectRaw('COUNT(CASE WHEN status = ? THEN 1 END) AS pending', ['READY_FOR_FINALIZATION'])
                 ->first()
             : null;
+
+        $pendingFinalization = (int) ($groupCounts?->pending ?? 0);
+        $pendingTitles = Title::where('title_source', 'STUDENT')
+            ->where('supervisor_approval_status', 'PENDING')
+            ->when($scopedPeriod, fn ($query) => $query->whereHas('proposedByGroup', fn ($groups) => $groups->where('period_id', $scopedPeriod)))
+            ->count();
+        $pendingDocuments = Document::where('status', 'SUBMITTED')
+            ->when($scopedPeriod, fn ($query) => $query->whereHas('group', fn ($groups) => $groups->where('period_id', $scopedPeriod)))
+            ->count();
+        $pendingJoinRequests = PeriodRegistration::where('status', PeriodRegistration::STATUS_PENDING)
+            ->when($scopedPeriod, fn ($query) => $query->where('period_id', $scopedPeriod))
+            ->count();
+
+        $activePeriods = Period::where('is_active', true)->get();
 
         return response()->json([
             'total_users' => User::count(),
             'total_students' => Student::count(),
             'total_lecturers' => Lecturer::count(),
-            'active_periods' => Period::where('is_active', true)->get(),
+            'active_periods' => $activePeriods,
+            'active_periods_count' => $activePeriods->count(),
+            'periods' => Period::orderByDesc('created_at')->get(['id', 'name', 'is_active']),
             'total_periods' => Period::count(),
             'total_groups' => (int) ($groupCounts?->total ?? 0),
-            'pending_finalization' => (int) ($groupCounts?->pending ?? 0),
+            'pending_finalization' => $pendingFinalization,
+            'pending_title_approvals' => $pendingTitles,
+            'pending_documents' => $pendingDocuments,
+            'pending_join_requests' => $pendingJoinRequests,
+            'pending_approval' => $pendingFinalization + $pendingTitles + $pendingDocuments + $pendingJoinRequests,
+            'pending_breakdown' => [
+                'finalization' => $pendingFinalization,
+                'titles' => $pendingTitles,
+                'documents' => $pendingDocuments,
+                'join_requests' => $pendingJoinRequests,
+            ],
+            'selected_period_id' => $periodId ?: 'all',
             'recent_groups' => $canViewGroups
                 ? Group::query()->latest()->orderByDesc('id')->limit(5)->get(['id', 'code', 'status'])
                 : [],
@@ -63,11 +101,58 @@ class DashboardController extends Controller
             ->where('supervisor_approval_status', 'PENDING')
             ->count();
 
+        $pendingBids = Bid::whereHas('title', fn ($query) => $query->where('lecturer_id', $lecturer->id))
+            ->whereNull('lecturer_recommendation')
+            ->when($periodId && $periodId !== 'all', fn ($query) => $query->whereHas('group', fn ($groups) => $groups->where('period_id', $periodId)))
+            ->count();
+
+        $upcomingSeminars = SeminarSchedule::where('date', '>=', today())
+            ->whereNotIn('status', ['CANCELLED', 'REJECTED'])
+            ->where(fn ($query) => $query
+                ->whereHas('group', fn ($groups) => $groups->supervisedBy($lecturer->id))
+                ->orWhere('examiner_1_id', $lecturer->id)->orWhere('examiner_2_id', $lecturer->id))
+            ->when($periodId && $periodId !== 'all', fn ($query) => $query->whereHas('group', fn ($groups) => $groups->where('period_id', $periodId)))
+            ->count();
+
+        $upcomingDefenses = TaDefenseSchedule::where('date', '>=', today())
+            ->whereNotIn('status', ['CANCELLED', 'REJECTED'])
+            ->where(fn ($query) => $query
+                ->whereHas('group', fn ($groups) => $groups->supervisedBy($lecturer->id))
+                ->orWhere('examiner_1_id', $lecturer->id)->orWhere('examiner_2_id', $lecturer->id)
+                ->orWhereHas('examiners', fn ($examiners) => $examiners->where('examiner_id', $lecturer->id)))
+            ->when($periodId && $periodId !== 'all', fn ($query) => $query->where('period_id', $periodId))
+            ->count();
+
+        $titles = Title::where('lecturer_id', $lecturer->id)
+            ->when($periodId && $periodId !== 'all', fn ($query) => $query->where('period_id', $periodId))
+            ->get(['id', 'quota']);
+        $titlesAvailable = 0;
+        foreach ($titles as $title) {
+            $allocations = Group::where('title_id', $title->id)
+                ->whereNotIn('status', ['FORMING', 'READY_FOR_BIDDING', 'CLOSED'])
+                ->count();
+            if ($title->quota - $allocations > 0) {
+                $titlesAvailable++;
+            }
+        }
+
+        $activitySeries = AuditLog::where('user_id', $user->id)
+            ->where('created_at', '>=', today()->subDays(30))
+            ->selectRaw('DATE(created_at) AS day, COUNT(*) AS count')
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->orderBy('day')
+            ->get();
+
         return response()->json([
             'total_titles' => $totalTitles,
             'active_groups' => $activeGroups,
             'pending_bimbingan' => 0,
             'pending_proposals' => $pendingProposals,
+            'pending_bids' => $pendingBids,
+            'upcoming_schedules' => $upcomingSeminars + $upcomingDefenses,
+            'titles_available' => $titlesAvailable,
+            'titles_full' => $titles->count() - $titlesAvailable,
+            'activity_series' => $activitySeries,
             'available_periods' => Period::orderByDesc('created_at')->get(['id', 'name', 'is_active']),
             'selected_period_id' => $periodId ?: 'all',
         ]);

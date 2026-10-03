@@ -100,23 +100,20 @@
                                                 {{ $item->dokumen ? basename((string) $item->dokumen) : '-' }}
                                             </p>
                                         </div>
-                                        <div class="flex items-end justify-end">
+                                        <div class="flex items-end justify-end gap-2">
                                             @if ($item->dokumen)
-                                                <div class="dots-wrap" id="dots-approved-{{ $item->id }}">
-                                                    <button type="button" class="btn-dots" onclick="toggleMenu('approved-{{ $item->id }}', event)">⋮</button>
-                                                    <div class="dots-menu" id="menu-approved-{{ $item->id }}">
-                                                        <button type="button"
-                                                                class="preview-dokumen-btn"
-                                                                data-id="{{ $item->id }}"
-                                                                data-title="{{ e($firstItem->mk_nama ?? 'Dokumen') }}">
-                                                            <i class="fas fa-eye w-4"></i> Preview
-                                                        </button>
-                                                        <a href="{{ route('banksoal.rps.dosen.download', $item->id) }}"
-                                                           class="download-rps-btn">
-                                                            <i class="fas fa-download w-4"></i> Unduh
-                                                        </a>
-                                                    </div>
-                                                </div>
+                                                <button type="button"
+                                                        class="preview-dokumen-btn cursor-pointer inline-flex items-center rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
+                                                        data-id="{{ $item->id }}"
+                                                        data-title="{{ e($firstItem->mk_nama ?? 'Dokumen') }}"
+                                                        title="Preview dokumen">
+                                                    Preview
+                                                </button>
+                                                <a href="{{ route('banksoal.rps.dosen.download', $item->id) }}"
+                                                   class="inline-flex items-center rounded-lg border border-slate-200 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200 transition-colors"
+                                                   title="Unduh RPS">
+                                                    Unduh
+                                                </a>
                                             @else
                                                 <span class="text-slate-400 text-sm">-</span>
                                             @endif

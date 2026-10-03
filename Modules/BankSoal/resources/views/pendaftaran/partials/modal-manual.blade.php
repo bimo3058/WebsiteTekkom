@@ -77,9 +77,10 @@
                 class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
                 Batal
             </button>
-            <button type="submit" form="form-tambah-manual"
-                class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
-                Simpan Peserta
+            <button type="submit" form="form-tambah-manual" id="btn-simpan-peserta"
+                class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <svg id="btn-simpan-spinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                <span id="btn-simpan-text">Simpan Peserta</span>
             </button>
         </div>
     </div>
@@ -137,4 +138,42 @@
             lookupNIM();
         }
     });
+
+    // Anti double-submit: cegah double-click (click + submit) dengan dataset guard + disabled+spinner
+    (function () {
+        const form = document.getElementById('form-tambah-manual');
+        const btn = document.getElementById('btn-simpan-peserta');
+        const spinner = document.getElementById('btn-simpan-spinner');
+        const text = document.getElementById('btn-simpan-text');
+        function lockButton() {
+            if (!btn) return;
+            btn.disabled = true;
+            if (spinner) spinner.classList.remove('hidden');
+            if (text) text.textContent = 'Memproses...';
+        }
+        if (btn) {
+            btn.addEventListener('click', function (e) {
+                if (form && form.dataset.submitting === '1') {
+                    e.preventDefault();
+                    return;
+                }
+                if (form) form.dataset.submitting = '1';
+                lockButton();
+            });
+        }
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (form.dataset.submitting === '1' && btn && btn.disabled) {
+                    // sudah di-lock via click, tetap lock UI
+                    return;
+                }
+                if (form.dataset.submitting === '1') {
+                    e.preventDefault();
+                    return;
+                }
+                form.dataset.submitting = '1';
+                lockButton();
+            });
+        }
+    })();
 </script>

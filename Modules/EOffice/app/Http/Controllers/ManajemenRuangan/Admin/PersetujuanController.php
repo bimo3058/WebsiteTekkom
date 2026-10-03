@@ -71,6 +71,78 @@ class PersetujuanController extends Controller
         return view('eoffice::manajemen-ruangan.admin.persetujuan.riwayat', compact('peminjamans', 'ruangans'));
     }
 
+    private function getExportQuery(Request $request)
+    {
+        $now = now();
+        $date = $now->format('Y-m-d');
+        $time = $now->format('H:i:s');
+
+        $query = Peminjaman::with(['user.student', 'user.lecturer', 'user.roles', 'ruangan'])
+            ->where('status', '!=', 'menunggu')
+            ->where(function ($q) use ($date, $time) {
+                $q->where('status', '!=', 'disetujui')
+                    ->orWhere(function ($q2) use ($date, $time) {
+                        $q2->where('status', 'disetujui')
+                            ->whereRaw("(tanggal_pinjam < ? OR (tanggal_pinjam = ? AND jam_selesai <= ?))", [$date, $date, $time]);
+                    });
+            });
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('ruangan_id')) {
+            $query->where('ruangan_id', $request->ruangan_id);
+        }
+
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $query->whereBetween('tanggal_pinjam', [$request->start_date, $request->end_date]);
+        } elseif ($request->filled('start_date')) {
+            $query->where('tanggal_pinjam', '>=', $request->start_date);
+        } elseif ($request->filled('end_date')) {
+            $query->where('tanggal_pinjam', '<=', $request->end_date);
+        }
+
+        if ($request->filled('search')) {
+            $search = strtolower($request->search);
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('user', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(external_id) LIKE ?', ["%{$search}%"]);
+                })->orWhereHas('ruangan', function ($sq) use ($search) {
+                    $sq->whereRaw('LOWER(nama) LIKE ?', ["%{$search}%"]);
+                })->orWhereRaw('LOWER(tujuan) LIKE ?', ["%{$search}%"])
+                    ->orWhereRaw('LOWER(nomor_telepon) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        return $query->orderBy('waktu_approval', 'desc')->orderBy('created_at', 'desc')->get();
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $peminjamans = $this->getExportQuery($request);
+        $fileName = 'Arsip_Peminjaman_' . now()->format('Ymd_His') . '.xlsx';
+        
+        return \Maatwebsite\Excel\Facades\Excel::download(
+            new \Modules\EOffice\Exports\PeminjamanExport($peminjamans),
+            $fileName
+        );
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $peminjamans = $this->getExportQuery($request);
+
+        // Menggunakan fitur print browser (tanpa dependensi eksternal seperti dompdf)
+        return view('eoffice::manajemen-ruangan.admin.persetujuan.export', [
+            'peminjamans' => $peminjamans,
+            'startDate' => $request->start_date,
+            'endDate' => $request->end_date,
+            'isPdf' => true
+        ]);
+    }
+
     public function updateStatus(Request $request, $id)
     {
         $request->validate([

@@ -2,14 +2,79 @@
 @section('title','Detail User')
 @section('content')
 <div x-data="adminUsers('detail')" class="space-y-6">
-    <div class="flex flex-wrap items-center justify-between gap-3"><x-capstone::button href="/admin/users" variant="outline"><x-capstone::icon name="ChevronLeft" class="h-4 w-4" />Kembali</x-capstone::button><template x-if="user"><div class="flex gap-2"><a x-show="user.can_edit" :href="userUrl(user,true)" class="rounded-md border px-4 py-2 text-sm font-medium">Edit</a><x-capstone::button variant="destructive" x-show="user.can_delete" @click="confirmDelete([user])">Hapus</x-capstone::button></div></template></div>
     @include('capstone::partials.loading')
-    <template x-if="user && !loading && !error"><div class="space-y-6">
-        <div class="flex items-center gap-5"><span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl font-semibold text-primary" x-text="initials(user)"></span><div><h1 class="text-3xl font-semibold" x-text="user.name"></h1><div class="mt-2 flex gap-2"><span x-show="user.is_sso" class="rounded border bg-primary/5 px-2 py-1 text-xs text-primary">SSO</span><span class="rounded-full px-2 py-1 text-xs" :class="user.status==='active'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'" x-text="user.status==='active'?'Aktif':'Ditangguhkan'"></span></div></div></div>
-        <dl class="grid gap-6 rounded-xl border bg-card p-6 md:grid-cols-2">@foreach(['email'=>'Email','nim'=>'NIM','nip'=>'NIP / Identitas Dosen','cohort_year'=>'Angkatan'] as $field=>$label)<div><dt class="text-sm text-muted-foreground">{{ $label }}</dt><dd class="mt-1 break-words text-sm font-medium" x-text="user.{{ $field }}||'-'"></dd></div>@endforeach<div><dt class="text-sm text-muted-foreground">Tanggal Daftar</dt><dd class="mt-1 text-sm font-medium" x-text="date(user.created_at)"></dd></div><div><dt class="text-sm text-muted-foreground">Aktivitas Terakhir</dt><dd class="mt-1 text-sm font-medium" x-text="date(user.last_login,true)"></dd></div></dl>
-        <section class="grid gap-6 rounded-xl border bg-card p-6 md:grid-cols-2"><div><h2 class="text-xl font-semibold">Role &amp; Permissions</h2><p class="mt-2 text-sm text-muted-foreground">Manage roles and module permissions for each user.</p></div><div><h3 class="mb-3 text-sm font-medium">Access Role</h3><div class="flex flex-wrap gap-2"><template x-for="slug in user.roles" :key="slug"><span class="rounded-full border bg-primary/5 px-3 py-1 text-sm capitalize text-primary" x-text="slug"></span></template></div><p x-show="user.other_roles.length" class="mt-3 text-xs text-muted-foreground" x-text="'Role lainnya: '+user.other_roles.join(', ')"></p><a x-show="user.can_edit" :href="userUrl(user,true)" class="mt-4 inline-block text-sm text-primary hover:underline">Edit Role &amp; Profile</a></div></section>
-        <p x-show="user.roles.includes('dosen') && !user.lecturer_id" class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Profil dosen belum tersedia. Lengkapi NIP melalui Edit agar identitas akademik sesuai.</p>
-    </div></template>
-    @include('capstone::pages.admin.users.delete-dialog')
+
+    <div x-show="error" x-cloak class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700" x-text="error"></div>
+
+    <template x-if="user && !loading && !error">
+        <div class="space-y-5">
+            <div>
+                <x-capstone::button href="/admin/users" variant="outline" class="text-slate-500"><x-capstone::icon name="ChevronLeft" size="16" /> Kembali</x-capstone::button>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <span class="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-slate-200 text-xl font-bold text-slate-500" x-text="initials(user)"></span>
+                <div>
+                    <h1 class="flex flex-wrap items-center gap-2 text-2xl font-bold tracking-tight text-slate-900"><span x-text="user.name"></span><span x-show="user.is_sso" class="rounded-full border border-violet-400 px-2.5 py-0.5 text-xs font-semibold text-violet-600">SSO</span></h1>
+                    <p class="mt-1 text-sm text-slate-500" x-text="[user.nim,user.nip].filter(Boolean).join(' / ')||'—'"></p>
+                </div>
+            </div>
+
+            <div class="grid gap-x-10 gap-y-4 md:grid-cols-2">
+                <div class="space-y-4">
+                    <div class="grid grid-cols-[130px_1fr] items-center gap-3">
+                        <p class="text-sm text-slate-500">Email</p>
+                        <p class="break-words text-sm font-medium text-slate-800" x-text="user.email"></p>
+                    </div>
+                    <div class="grid grid-cols-[130px_1fr] items-center gap-3">
+                        <p class="text-sm text-slate-500">Angkatan</p>
+                        <p class="text-sm font-medium text-slate-800" x-text="user.cohort_year || '—'"></p>
+                    </div>
+                    <div class="grid grid-cols-[130px_1fr] items-center gap-3">
+                        <p class="text-sm text-slate-500">Access Role</p>
+                        <p class="flex flex-wrap gap-1">
+                            <template x-for="slug in user.roles" :key="slug">
+                                <span class="rounded-full px-2 py-0.5 text-[11px] font-semibold capitalize" :class="rolePillClass(slug)" x-text="roleLabel(slug)"></span>
+                            </template>
+                        </p>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-[150px_1fr] items-center gap-3">
+                        <p class="text-sm text-slate-500">Nomor Telepon</p>
+                        <p class="text-sm font-medium text-slate-800" x-text="user.whatsapp || '—'"></p>
+                    </div>
+                    <div class="grid grid-cols-[150px_1fr] items-center gap-3">
+                        <p class="text-sm text-slate-500">Tanggal Daftar</p>
+                        <p class="text-sm font-medium text-slate-800" x-text="longDate(user.created_at)"></p>
+                    </div>
+                    <div class="grid grid-cols-[150px_1fr] items-center gap-3">
+                        <p class="text-sm text-slate-500">Aktifitas Terakhir</p>
+                        <p class="text-sm font-medium text-slate-800" x-text="timeAgo(user.last_seen_at || user.last_login)"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 p-4 sm:p-5">
+                <div class="grid gap-6 md:grid-cols-2">
+                    <div>
+                        <h2 class="text-base font-bold text-slate-900">Role &amp; Permissions</h2>
+                        <p class="mt-1.5 text-sm text-slate-500">Manage roles and module permissions for each user</p>
+                    </div>
+                    <div>
+                        <p class="mb-2 text-sm text-slate-500">Acces Role</p>
+                        <div class="rounded-xl border border-[#2f3d8a] px-3 py-2" aria-label="Access Role (lihat saja)">
+                            <span class="flex flex-wrap gap-1.5">
+                                <template x-for="slug in user.roles" :key="slug">
+                                    <span class="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[13px] font-medium text-slate-800" x-text="roleLabel(slug)"></span>
+                                </template>
+                            </span>
+                        </div>
+                        <p x-show="user.other_roles.length" class="mt-2 text-xs text-slate-400" x-text="'Role lainnya: '+user.other_roles.join(', ')"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
 </div>
 @endsection

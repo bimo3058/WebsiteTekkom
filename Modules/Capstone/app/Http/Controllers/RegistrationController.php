@@ -3,6 +3,7 @@
 namespace Modules\Capstone\Http\Controllers;
 
 use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Support\CapstoneActor;
@@ -15,22 +16,27 @@ class RegistrationController extends Controller
 
     /**
      * Check if the authenticated user is registered for a specific period.
+     * Returns the request status so the UI can show pending/approved/rejected.
      */
     public function check(Request $request, $periodId)
     {
         $user = $request->user();
         $studentId = CapstoneActor::student($user)->id;
-        $isRegistered = PeriodRegistration::where('user_id', $studentId)
+        $registration = PeriodRegistration::where('user_id', $studentId)
             ->where('period_id', $periodId)
-            ->exists();
+            ->first();
 
         return $this->successResponse([
-            'is_registered' => $isRegistered,
+            'is_registered' => $registration && $registration->isApproved(),
+            'is_approved' => $registration && $registration->isApproved(),
+            'status' => $registration?->status,
+            'registration' => $registration,
         ]);
     }
 
     /**
-     * Register the authenticated user for a specific period.
+     * Request to join a period. Creates a PENDING registration
+     * that requires admin approval (one request at a time).
      */
     public function register(Request $request)
     {
@@ -51,38 +57,51 @@ class RegistrationController extends Controller
             return $this->errorResponse('Registration for this period is closed.', 400);
         }
 
-        // Guard: User can only be registered in ONE period at a time
         $studentId = CapstoneActor::student($user)->id;
-        $existingRegistration = PeriodRegistration::where('user_id', $studentId)
-            ->first();
 
-        if ($existingRegistration) {
+        // Guard: one request at a time. A rejected request may be replaced
+        // (re-apply), but pending/approved blocks a new join.
+        $existingRegistration = PeriodRegistration::where('user_id', $studentId)->first();
+
+        if ($existingRegistration && ! $existingRegistration->isRejected()) {
             $existingPeriod = Period::find($existingRegistration->period_id);
+            $periodName = $existingPeriod?->name ?? 'another period';
 
-            return $this->errorResponse("You are already registered in period '{$existingPeriod->name}'. You must leave your current group before registering for a new period.", 400);
-        }
+            if ($existingRegistration->isPending()) {
+                return $this->errorResponse("Your request to join '{$periodName}' is still pending admin approval. Cancel it before joining another period.", 400);
+            }
 
-        // Check if already registered for this specific period (redundant but safe)
-        $existing = PeriodRegistration::where('user_id', $studentId)
-            ->where('period_id', $period->id)
-            ->first();
-
-        if ($existing) {
-            return $this->errorResponse('You are already registered for this period.', 400);
+            return $this->errorResponse("You are already registered in period '{$periodName}'. You must leave your current group before registering for a new period.", 400);
         }
 
         DB::beginTransaction();
         try {
+            if ($existingRegistration && $existingRegistration->isRejected()) {
+                $existingRegistration->delete();
+            }
+
             $registration = PeriodRegistration::create([
                 'user_id' => $studentId,
                 'period_id' => $period->id,
+                'status' => PeriodRegistration::STATUS_PENDING,
             ]);
+
+            // Notify the requester. Admins see the badge via
+            // dashboard pending count + approval page.
+            Notification::create([
+                    'user_id' => $user->id,
+                    'type' => 'PERIOD_JOIN_REQUESTED',
+                    'title' => 'Join Request Sent',
+                    'message' => "Your request to join {$period->name} has been sent. Please wait for admin approval.",
+                    'related_type' => 'Period',
+                    'related_id' => $period->id,
+                ]);
 
             DB::commit();
 
             return $this->createdResponse([
                 'registration' => $registration,
-            ], "Successfully registered for {$period->name}.");
+            ], "Join request for {$period->name} sent. Waiting for admin approval.");
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -91,8 +110,31 @@ class RegistrationController extends Controller
     }
 
     /**
+     * Cancel the authenticated user's pending (or rejected) join request.
+     */
+    public function cancel(Request $request)
+    {
+        $user = $request->user();
+        $studentId = CapstoneActor::student($user)->id;
+
+        $registration = PeriodRegistration::where('user_id', $studentId)->first();
+
+        if (! $registration) {
+            return $this->errorResponse('You have no join request to cancel.', 404);
+        }
+
+        if ($registration->isApproved()) {
+            return $this->errorResponse('Approved registrations cannot be cancelled here. Leave your group first or contact admin.', 400);
+        }
+
+        $registration->delete();
+
+        return $this->successResponse(null, 'Join request cancelled. You can now join another period.');
+    }
+
+    /**
      * Get the authenticated user's currently registered period.
-     * Auto-registers user if they have a group but no registration.
+     * Auto-registers (APPROVED) users that already have a group but no registration (legacy repair).
      */
     public function myPeriod(Request $request)
     {
@@ -113,16 +155,17 @@ class RegistrationController extends Controller
                 ->first();
 
             if ($groupMembership) {
-                // Auto-create registration for the group's period
+                // Auto-approve legacy memberships so existing groups keep working.
                 $registration = PeriodRegistration::create([
                     'user_id' => $studentId,
                     'period_id' => $groupMembership->group->period_id,
+                    'status' => PeriodRegistration::STATUS_APPROVED,
                 ]);
 
                 $registration->load('period');
 
                 return $this->successResponse([
-                    'period' => $registration->period,
+                    'period' => $registration->isApproved() ? $registration->period : null,
                     'registration' => $registration,
                     'auto_registered' => true,
                     'message' => "You have been automatically registered for {$registration->period->name} based on your group membership.",
@@ -131,12 +174,13 @@ class RegistrationController extends Controller
 
             return $this->successResponse([
                 'period' => null,
+                'registration' => null,
                 'message' => 'Not registered for any period',
             ]);
         }
 
         return $this->successResponse([
-            'period' => $registration->period,
+            'period' => $registration->isApproved() ? $registration->period : null,
             'registration' => $registration,
             'auto_registered' => false,
         ]);

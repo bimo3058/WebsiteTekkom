@@ -183,9 +183,7 @@
                         @if($isUjianBerlangsung)
                             <h3 class="text-[20px] font-bold text-slate-900 tracking-tight mb-1">Akses Sesi Ujian</h3>
                             <p class="text-[13px] text-slate-600 leading-relaxed mb-4 max-w-xl">
-                                Sesi ujian komprehensif Anda telah dibuka. Silakan masukkan <strong>Token Ujian (6 Digit)</strong> yang diberikan oleh pengawas ruangan untuk memulai pengerjaan soal. 
-                                <br><br>
-                                <span class="text-rose-600 font-medium">Perhatian:</span> Dilarang menutup halaman atau berpindah aplikasi selama ujian berlangsung.
+                                Sesi ujian komprehensif Anda telah dibuka. Silakan masukkan <strong>Token Ujian (6 Digit)</strong> yang diberikan oleh pengawas ruangan untuk memulai pengerjaan soal.
                             </p>
                         @else
                             <h3 class="text-[20px] font-bold text-slate-900 tracking-tight mb-1">Pendaftaran Berhasil Disetujui</h3>
@@ -317,8 +315,8 @@
                                 <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-full">
 
                                     <div class="px-6 pt-6 pb-4 text-center">
-                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-blue-50">
-                                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-primary/10">
+                                            <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                             </svg>
                                         </div>
@@ -326,11 +324,15 @@
                                         <p class="text-[13px] text-slate-500 font-medium leading-relaxed">
                                             Token valid. Mulai ujian dan kerjakan soal dengan durasi 100 menit.
                                         </p>
+                                        <div class="mt-3 flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-left">
+                                            <svg class="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <p class="text-[12px] font-medium text-amber-800 leading-relaxed"><span class="font-bold">Perhatian:</span> Dilarang menutup halaman atau berpindah aplikasi selama ujian berlangsung.</p>
+                                        </div>
                                     </div>
 
                                     <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
                                         <button type="button" @click="confirmModal = false" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">Batal</button>
-                                        <button type="button" @click="$refs.examForm.submit()" class="flex-1 w-full px-4 py-2.5 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm rounded-xl focus:outline-none transition-all">
+                                        <button type="button" @click="$refs.examForm.submit()" class="flex-1 w-full px-4 py-2.5 text-[13px] font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-all">
                                             Ya, Mulai
                                         </button>
                                     </div>

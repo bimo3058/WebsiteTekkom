@@ -67,15 +67,17 @@ class LocationController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:capstone_locations,name',
             'capacity' => 'nullable|integer|min:1',
-            'type' => 'required|string|in:offline,online',
+            'type' => 'required|string|in:online',
             'description' => 'nullable|string|max:1000',
+            'eoffice_ruangan_id' => 'prohibited',
         ]);
 
         $location = Location::create([
             'name' => $request->name,
             'capacity' => $request->capacity,
-            'type' => $request->type,
+            'type' => 'online',
             'description' => $request->description,
+            'eoffice_ruangan_id' => null,
             'is_active' => true,
         ]);
 
@@ -109,12 +111,16 @@ class LocationController extends Controller
         $request->validate([
             'name' => 'sometimes|string|max:255|unique:capstone_locations,name,'.$id,
             'capacity' => 'nullable|integer|min:1',
-            'type' => 'sometimes|string|in:offline,online',
+            'type' => 'sometimes|string|in:online',
             'description' => 'nullable|string|max:1000',
             'is_active' => 'sometimes|boolean',
+            'eoffice_ruangan_id' => 'prohibited',
         ]);
 
-        $location->update($request->all());
+        $data = $request->all();
+        $data['type'] = 'online';
+        $data['eoffice_ruangan_id'] = null;
+        $location->update($data);
 
         return $this->successResponse($location, 'Location updated successfully');
     }
@@ -142,8 +148,9 @@ class LocationController extends Controller
     }
 
     /**
-     * Get available locations for a specific date/time range.
-     * Checks against existing schedules to find available rooms.
+     * Get available EOffice rooms for a specific date/time range.
+     * EOffice is the single source of rooms; Capstone no longer keeps
+     * its own offline room list.
      */
     public function available(Request $request)
     {
@@ -154,52 +161,90 @@ class LocationController extends Controller
             'exclude_schedule_id' => 'nullable|integer',
             'exclude_seminar_id' => 'nullable|integer',
             'exclude_ta_defense_id' => 'nullable|integer',
+            'exclude_expo_id' => 'nullable|integer',
         ]);
 
         $date = $request->date;
         $startTime = $request->start_time;
         $endTime = $request->end_time;
 
-        // Get all active offline locations
-        $allLocations = Location::offline()->active()->orderBy('name')->get();
+        $eoffice = app(\Modules\Capstone\Services\EofficeAvailabilityService::class);
+        $busyIds = $eoffice->busyEofficeIds($date, $startTime, $endTime);
 
-        // Get busy locations from schedules table (BIMBINGAN)
-        $busyFromSchedules = \Modules\Capstone\Models\Schedule::where('type', 'BIMBINGAN')
-            ->whereRaw('DATE(date) = ?', [$date])
-            ->whereRaw('start_time < ?', [$endTime])
-            ->whereRaw('end_time > ?', [$startTime])
-            ->when($request->exclude_schedule_id, fn ($q) => $q->where('id', '!=', $request->exclude_schedule_id))
-            ->pluck('room')
-            ->toArray();
+        // Rooms taken by other Capstone schedules in the same slot.
+        $capstoneBusyIds = [];
+        if (\Illuminate\Support\Facades\Schema::hasColumn('capstone_seminar_schedules', 'eoffice_ruangan_id')) {
+            $capstoneBusyIds = array_merge($capstoneBusyIds, \Modules\Capstone\Models\SeminarSchedule::where('date', $date)
+                ->where('status', '!=', 'CANCELLED')
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->when($request->exclude_seminar_id, fn ($q) => $q->where('id', '!=', $request->exclude_seminar_id))
+                ->whereNotNull('eoffice_ruangan_id')
+                ->pluck('eoffice_ruangan_id')->all());
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('capstone_ta_defense_schedules', 'eoffice_ruangan_id')) {
+            $capstoneBusyIds = array_merge($capstoneBusyIds, \Modules\Capstone\Models\TaDefenseSchedule::where('date', $date)
+                ->where('status', '!=', 'CANCELLED')
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->when($request->exclude_ta_defense_id, fn ($q) => $q->where('id', '!=', $request->exclude_ta_defense_id))
+                ->whereNotNull('eoffice_ruangan_id')
+                ->pluck('eoffice_ruangan_id')->all());
+        }
+        if (\Illuminate\Support\Facades\Schema::hasColumn('capstone_expo_events', 'eoffice_ruangan_id')) {
+            $capstoneBusyIds = array_merge($capstoneBusyIds, \Modules\Capstone\Models\ExpoEvent::where('date', $date)
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->when($request->exclude_expo_id, fn ($q) => $q->where('id', '!=', $request->exclude_expo_id))
+                ->whereNotNull('eoffice_ruangan_id')
+                ->pluck('eoffice_ruangan_id')->all());
+        }
 
-        // Get busy locations from seminar_schedules (SEMPRO, EXPO)
-        $busyFromSeminars = \Modules\Capstone\Models\SeminarSchedule::where('date', $date)
-            ->where('status', '!=', 'CANCELLED')
-            ->where('start_time', '<', $endTime)
-            ->where('end_time', '>', $startTime)
-            ->when($request->exclude_seminar_id, fn ($q) => $q->where('id', '!=', $request->exclude_seminar_id))
-            ->pluck('room')
-            ->toArray();
+        $busyIds = array_values(array_unique(array_merge($busyIds, $capstoneBusyIds)));
 
-        // Get busy locations from ta_defense_schedules
-        $busyFromTaDefense = \Modules\Capstone\Models\TaDefenseSchedule::where('date', $date)
-            ->where('status', '!=', 'CANCELLED')
-            ->where('start_time', '<', $endTime)
-            ->where('end_time', '>', $startTime)
-            ->when($request->exclude_ta_defense_id, fn ($q) => $q->where('id', '!=', $request->exclude_ta_defense_id))
-            ->pluck('room')
-            ->toArray();
+        $rooms = \Modules\EOffice\Models\Ruangan::orderBy('nama')
+            ->get(['id', 'nama', 'lokasi', 'lantai', 'kapasitas'])
+            ->map(fn ($room) => [
+                'id' => $room->id,
+                'nama' => $room->nama,
+                'lokasi' => $room->lokasi,
+                'lantai' => $room->lantai,
+                'kapasitas' => $room->kapasitas,
+                'available' => ! in_array($room->id, $busyIds),
+            ]);
 
-        // Combine all busy locations
-        $busyLocations = array_unique(array_merge($busyFromSchedules, $busyFromSeminars, $busyFromTaDefense));
-
-        // Filter out busy locations
-        $availableLocations = $allLocations->filter(function ($location) use ($busyLocations) {
-            return ! in_array($location->name, $busyLocations);
-        })->values();
-
-        return $this->envelopeResponse($availableLocations, [
-            'busy_locations' => $busyLocations,
+        return $this->envelopeResponse($rooms->where('available')->values()->all(), [
+            'busy_eoffice_ids' => $busyIds,
         ]);
+    }
+
+    /**
+     * List EOffice rooms (view-only single source of rooms).
+     * Used by the locations page and every schedule room picker.
+     */
+    public function eofficeRooms()
+    {
+        if (! in_array('admin', \Modules\Capstone\Support\CapstoneActor::roles(Auth::user()), true)) {
+            return $this->unauthorizedResponse('Unauthorized');
+        }
+
+        $today = now()->format('Y-m-d');
+        $rooms = \Modules\EOffice\Models\Ruangan::orderBy('nama')
+            ->withCount(['peminjamans as upcoming_bookings_count' => fn ($q) => $q
+                ->where('status', 'disetujui')
+                ->whereDate('tanggal_pinjam', '>=', $today)])
+            ->get(['id', 'nama', 'lokasi', 'lantai', 'kapasitas', 'fasilitas', 'is_active'])
+            ->map(fn ($room) => [
+                'id' => $room->id,
+                'nama' => $room->nama,
+                'lokasi' => $room->lokasi,
+                'lantai' => $room->lantai,
+                'kapasitas' => $room->kapasitas,
+                'fasilitas' => $room->fasilitas,
+                'is_active' => (bool) $room->is_active,
+                'upcoming_bookings_count' => (int) $room->upcoming_bookings_count,
+            ]);
+
+        return $this->successResponse($rooms);
     }
 }

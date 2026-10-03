@@ -26,7 +26,9 @@ export interface Bid {
 
 export interface GroupInfo {
   id: number;
+  is_solo?: boolean;
   members: { id: number; student: { id: number }; is_leader: boolean }[];
+  period?: { min_group_size?: number; max_group_size?: number };
 }
 
 export interface ProposalItem {

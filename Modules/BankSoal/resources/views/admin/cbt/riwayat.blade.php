@@ -5,14 +5,93 @@
         <span class="text-gray-900 font-semibold">Riwayat Ujian</span>
     @endsection
 
-    <div class="w-full">
-        <!-- Page Header -->
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+    
+    <style>
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+        main.overflow-y-auto { overflow: hidden !important; }
+        #banksoal-main-content { padding: 0 !important; max-width: 100% !important; height: 100% !important; display: flex; flex-direction: column; }
+
+        .dash-wrap {
+            display: flex; flex-direction: column; height: 100%;
+            padding: 16px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+        }
+
+        .dash-box {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            background: #fff; border: 1px solid var(--c-border);
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden; width: 100%; box-sizing: border-box;
+        }
+
+        .dash-box-header {
+            background: #fff;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0; width: 100%; box-sizing: border-box;
+            padding: 16px 24px;
+        }
+
+        .dash-box-body {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+
+        .dash-box-body > * {
+            flex-shrink: 0;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb {
+            background: var(--c-border-strong);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .dash-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .dash-box {
+                border-radius: 10px;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .dash-box-header {
+                padding: 12px 14px;
+                position: sticky; top: 0; z-index: 20;
+            }
+            .dash-box-body {
+                padding: 14px;
+                overflow-y: visible;
+                display: block;
+            }
+        }
+    </style>
+
+    <div class="dash-wrap">
+        <div class="dash-box">
+
+        <!-- Box Header -->
+        <div class="dash-box-header">
+            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
                 <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">Riwayat Ujian Komprehensif</h1>
                 <p class="text-[13px] text-gray-500 mt-0.5">Rekapitulasi nilai akhir mahasiswa yang telah menyelesaikan ujian.</p>
             </div>
+            </div>
         </div>
+
+        <!-- Box Body -->
+        <div class="dash-box-body">
 
         {{-- Filter Panel: Alpine.js state is on the outer wrapper div --}}
         <div
@@ -262,11 +341,10 @@
                         <span class="text-[13px] text-gray-700 font-medium whitespace-nowrap">Per page</span>
                         <div class="relative">
                             <select onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); url.searchParams.delete('page'); window.location.href = url.toString();" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
-                                <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
-                                <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
-                                <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
-                                <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
-                                <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
+                                 <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
+                                 <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
+                                 <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
+                                 <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
                             </select>
                         </div>
                         @if ($sessions instanceof \Illuminate\Pagination\LengthAwarePaginator)
@@ -375,6 +453,9 @@
         </div>
 
     </div>
+
+        </div> {{-- end .dash-box-body --}}
+        </div> {{-- end .dash-box --}}
 
 </div>{{-- /end Alpine x-data wrapper --}}
 

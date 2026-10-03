@@ -114,18 +114,18 @@ class DosenDashboardComponent {
         }
 
         const max = Math.max(...Object.values(chartData)) || 1;
-        const BAR_H = 90;
+        const BAR_H = 150;
         wrap.className = "h-64 flex items-end gap-4";
         wrap.style.cssText =
-            "display:flex;align-items:flex-end;gap:6px;width:100%;padding-top:8px";
+            "display:flex;align-items:flex-end;gap:12px;width:max-content;min-width:100%;padding-top:8px";
         let html = "";
 
         Object.entries(chartData).forEach(([label, val]) => {
             const h = Math.max(8, Math.round((val / max) * BAR_H));
-            html += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px">
-                    <span style="font-size:10px;font-weight:600;color:#475569">${val}</span>
-                    <div style="width:100%;height:${h}px;background:#3b82f6;border-radius:4px 4px 0 0"></div>
-                    <span style="font-size:9px;color:#94a3b8;white-space:nowrap">${label}</span>
+            html += `<div class="bs-dashboard-bar-item" style="display:flex;flex-direction:column;align-items:center;flex:1;gap:6px">
+                    <span class="bs-dashboard-bar-value" style="font-weight:600">${val}</span>
+                    <div class="bs-dashboard-bar" style="width:100%;height:${h}px;background:var(--c-primary, #0B266E);border-radius:6px 6px 0 0"></div>
+                    <span class="bs-dashboard-bar-label" style="white-space:nowrap">${label}</span>
                 </div>`;
         });
 
@@ -164,19 +164,18 @@ class DosenDashboardComponent {
         }
 
         const max = Math.max(...chartData.map((d) => d.count)) || 1;
-        const BAR_H = 90; // Tinggi maksimum batang dalam piksel.
+        const BAR_H = 150; // Tinggi maksimum batang dalam piksel.
         wrap.className = "h-64 flex items-end gap-4";
         wrap.style.cssText =
-            "display:flex;align-items:flex-end;gap:10px;width:100%;padding-top:8px";
+            "display:flex;align-items:flex-end;gap:12px;width:max-content;min-width:100%;padding-top:8px";
         let html = "";
 
         chartData.forEach((d) => {
             const h = Math.max(8, Math.round((d.count / max) * BAR_H));
-            const valColor = d.count > 0 ? "#22C55E" : "#9CA3AF";
-            html += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px">
-                    <span style="font-size:10px;font-weight:600;color:${valColor}">${d.count || ""}</span>
-                    <div style="width:100%;height:${h}px;background:${d.color};border-radius:4px 4px 0 0"></div>
-                    <span style="font-size:10px;color:#94a3b8;white-space:nowrap">${d.mk}</span>
+            html += `<div class="bs-dashboard-bar-item" style="display:flex;flex-direction:column;align-items:center;flex:1;gap:6px">
+                    <span class="bs-dashboard-bar-value" style="font-weight:600">${d.count || ""}</span>
+                    <div class="bs-dashboard-bar" style="width:100%;height:${h}px;background:${d.color};border-radius:6px 6px 0 0"></div>
+                    <span class="bs-dashboard-bar-label" style="white-space:nowrap">${d.mk}</span>
                 </div>`;
         });
 

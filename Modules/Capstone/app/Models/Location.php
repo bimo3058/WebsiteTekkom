@@ -3,6 +3,7 @@
 namespace Modules\Capstone\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Location extends Model
 {
@@ -13,11 +14,13 @@ class Location extends Model
         'is_active',
         'type',
         'description',
+        'eoffice_ruangan_id',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'capacity' => 'integer',
+        'eoffice_ruangan_id' => 'integer',
     ];
 
     /**
@@ -66,5 +69,24 @@ class Location extends Model
     public function isOffline(): bool
     {
         return $this->type === 'offline';
+    }
+
+    /**
+     * Whether this location is linked to an EOffice room.
+     * Online/virtual locations are never linked.
+     */
+    public function isEofficeLinked(): bool
+    {
+        $attributes = $this->getAttributes();
+
+        return ! $this->isOnline() && ($attributes['eoffice_ruangan_id'] ?? null) !== null;
+    }
+
+    /**
+     * The linked EOffice room (same database, cross-module relation).
+     */
+    public function eofficeRoom(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\EOffice\Models\Ruangan::class, 'eoffice_ruangan_id');
     }
 }

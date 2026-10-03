@@ -3,7 +3,7 @@
 
     <div class="p-4 mb-6 rounded-xl border" style="background: var(--c-primary-subtle); border-color: rgba(11,38,110,0.12);">
         <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-[20px] mt-0.5 flex-shrink-0" style="color: var(--c-primary);">info</span>
+            <span class="mt-0.5 flex-shrink-0" style="color: var(--c-primary);"><x-icon name="information-circle" size="20" /></span>
             <p class="text-sm" style="color: var(--c-fg-sec);">
                 Data <strong style="color: var(--c-primary);">Pengalaman</strong> dan <strong style="color: var(--c-primary);">Kegiatan Mahasiswa</strong> diambil secara otomatis dari modul Manajemen Mahasiswa.
             </p>
@@ -14,7 +14,7 @@
         @if(auth()->user()->hasRole('alumni') || auth()->user()->hasRole('superadmin'))
         <div class="w-full">
             <h4 class="text-sm font-bold text-slate-600 mb-4 flex items-center gap-2">
-                <span class="material-symbols-outlined text-[18px]">work</span>
+                <x-icon name="briefcase-01" size="18" />
                 Pengalaman dari Sistem (Alumni)
             </h4>
             <div class="space-y-3">
@@ -37,7 +37,7 @@
 
         <div class="w-full">
             <h4 class="text-sm font-bold text-slate-600 mb-4 flex items-center gap-2">
-                <span class="material-symbols-outlined text-[18px]">event</span>
+                <x-icon name="calendar" size="18" />
                 Kegiatan Mahasiswa (Auto)
             </h4>
             <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2">
@@ -69,7 +69,7 @@
                         <p class="text-sm text-slate-600 mt-2" x-text="exp.deskripsi"></p>
                     </div>
                     <button @click="removeExp(index)" class="text-red-400 hover:text-red-600 transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
+                        <x-icon name="trash" size="18" />
                     </button>
                 </div>
             </template>

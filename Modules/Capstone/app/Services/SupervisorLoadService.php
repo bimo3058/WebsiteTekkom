@@ -2,10 +2,11 @@
 
 namespace Modules\Capstone\Services;
 
+use App\Models\Lecturer;
+use App\Models\User;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\Supervision;
-use App\Models\User;
 
 class SupervisorLoadService
 {
@@ -62,13 +63,15 @@ class SupervisorLoadService
      */
     public function validateAssignment(int $lecturerId, int $periodId, ?int $excludeGroupId = null): array
     {
-        $lecturer = User::find($lecturerId);
+        // NOTE: $lecturerId is a lecturers.id (matches supervisions.supervisor_id
+        // and groups.supervisor_1_id/2_id), not a users.id.
+        $lecturer = Lecturer::find($lecturerId);
 
         if (! $lecturer) {
             return ['valid' => false, 'message' => 'Dosen tidak ditemukan.'];
         }
 
-        if (! $lecturer->hasRole('dosen')) {
+        if (! $lecturer->user || ! $lecturer->user->hasRole('dosen')) {
             return ['valid' => false, 'message' => 'User bukan dosen.'];
         }
 

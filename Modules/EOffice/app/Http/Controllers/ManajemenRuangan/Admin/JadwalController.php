@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\EOffice\Models\MrJadwalInternal;
 use Modules\EOffice\Models\Ruangan;
-use Illuminate\Support\Str;
 
 class JadwalController extends Controller
 {
@@ -25,7 +24,7 @@ class JadwalController extends Controller
         $filterHari = $request->query('hari');
         $filterRuangan = $request->query('ruangan_id');
         $filterKategori = $request->query('kategori');
-        $sort = $request->query('sort', 'waktu');
+        $sort = $request->query('sort', $isAkademik ? 'waktu' : 'terbaru');
 
         $query = MrJadwalInternal::with('ruangan');
 

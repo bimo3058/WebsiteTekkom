@@ -16,10 +16,11 @@ export function schedulePage() {
                     api(`/${role}/all-schedules`),
                     role==='mahasiswa' ? [] : api(role==='admin' ? '/admin/periods' : '/periods-list'),
                     role==='dosen' ? api('/dosen/groups/supervised') : [],
-                    role==='dosen' ? api('/locations') : [],
+                    role==='dosen' ? api('/locations/eoffice-rooms') : [],
                 ]);
                 this.schedules=rows(result[0]).map(item=>normalizeSchedule(item,item.type)).filter(item=>localDateKey(item.date));
-                this.periods=rows(result[1]);this.groups=rows(result[2]);this.locations=rows(result[3]);
+                // Bimbingan stays free-text: map EOffice rooms to {id,name} suggestions.
+                this.periods=rows(result[1]);this.groups=rows(result[2]);this.locations=rows(result[3]).map(r=>r.nama!==undefined?{id:r.id,name:r.nama,type:'offline'}:r);
             } catch(e){this.error=e.message;} finally{this.loading=false;}
         },
         get filtered(){return this.schedules.filter(s=>this.selectedPeriod==='all' || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
@@ -81,7 +82,7 @@ export function schedulePage() {
             if(!this.canApprove(event)||this.saving)return;
             this.saving=true;
             try{
-                const body={date:localDateKey(event.date),start_time:event.start_time,end_time:event.end_time,room:event.room,
+                const body={date:localDateKey(event.date),start_time:event.start_time,end_time:event.end_time,room:event.room,eoffice_ruangan_id:event.eoffice_ruangan_id || null,
                     examiner_1_id:event.examiner_1_id||event.examiner1?.id,examiner_2_id:event.examiner_2_id||event.examiner2?.id};
                 const endpoint=event.type==='TA_DEFENSE'?`/admin/ta-defense-schedules/${event._id}`:`/admin/${event.type.toLowerCase()}/schedules/${event._id}/approve`;
                 if(event.type==='TA_DEFENSE')body.status='SCHEDULED';

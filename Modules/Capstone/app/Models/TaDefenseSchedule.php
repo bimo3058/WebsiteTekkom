@@ -26,6 +26,8 @@ class TaDefenseSchedule extends Model
         'examiner_1_id',
         'examiner_2_id',
         'location_id',
+        'eoffice_ruangan_id',
+        'eoffice_peminjaman_id',
         'evaluation_deadline',
         'notes',
         'final_score',
@@ -75,6 +77,16 @@ class TaDefenseSchedule extends Model
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class);
+    }
+
+    public function eofficeRoom(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\EOffice\Models\Ruangan::class, 'eoffice_ruangan_id');
+    }
+
+    public function eofficeBooking(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\EOffice\Models\Peminjaman::class, 'eoffice_peminjaman_id');
     }
 
     public function evaluations(): HasMany

@@ -50,7 +50,7 @@ class CbtEngineController extends Controller
             ->first();
 
         if (! $jadwal) {
-            return back()->with('error', 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian yang aktif.');
+            return back()->with('error', 'Token tidak valid. Silakan periksa kembali token ujian Anda.');
         }
 
         if (! now()->isSameDay($jadwal->tanggal_ujian)) {
@@ -103,7 +103,7 @@ class CbtEngineController extends Controller
             ->first();
 
         if (! $jadwal) {
-            return response()->json(['valid' => false, 'message' => 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian yang aktif.']);
+            return response()->json(['valid' => false, 'message' => 'Token tidak valid. Silakan periksa kembali token ujian Anda.']);
         }
 
         if (! now()->isSameDay($jadwal->tanggal_ujian)) {
@@ -255,6 +255,14 @@ class CbtEngineController extends Controller
             ->first();
 
         if (! $jawaban) {
+            // Cek apakah sesi sudah di-force submit admin → return expired agar frontend redirect
+            $finished = KompreSession::where('user_id', auth()->id())
+                ->where('status', KompreSessionStatus::Finished)
+                ->latest('finished_at')
+                ->first();
+            if ($finished) {
+                return response()->json(['success' => false, 'expired' => true, 'message' => 'Sesi ujian telah diakhiri oleh pengawas.'], 403);
+            }
             return response()->json(['success' => false, 'message' => 'Sesi tidak valid.'], 403);
         }
 
@@ -287,6 +295,13 @@ class CbtEngineController extends Controller
             ->first();
 
         if (! $jawaban) {
+            $finished = KompreSession::where('user_id', auth()->id())
+                ->where('status', KompreSessionStatus::Finished)
+                ->latest('finished_at')
+                ->first();
+            if ($finished) {
+                return response()->json(['success' => false, 'expired' => true, 'message' => 'Sesi ujian telah diakhiri oleh pengawas.'], 403);
+            }
             return response()->json(['success' => false, 'message' => 'Sesi tidak valid.'], 403);
         }
 
@@ -325,6 +340,38 @@ class CbtEngineController extends Controller
         ]);
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Polling status sesi ujian — dipakai frontend untuk deteksi force submit admin.
+     */
+    public function status()
+    {
+        $session = KompreSession::where('user_id', auth()->id())
+            ->where('status', KompreSessionStatus::Ongoing)
+            ->first();
+
+        if (! $session) {
+            $finished = KompreSession::where('user_id', auth()->id())
+                ->where('status', KompreSessionStatus::Finished)
+                ->latest('finished_at')
+                ->first();
+
+            if ($finished) {
+                return response()->json(['status' => 'finished', 'finished_at' => $finished->finished_at, 'score' => $finished->score]);
+            }
+
+            return response()->json(['status' => 'no_session']);
+        }
+
+        $endTime = $this->cbtService->getEndTime($session);
+        $expired = now()->gt($endTime);
+
+        return response()->json([
+            'status' => 'ongoing',
+            'endTime' => $endTime->toIso8601String(),
+            'expired' => $expired,
+        ]);
     }
 
     /**

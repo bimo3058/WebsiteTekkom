@@ -15,6 +15,7 @@ class TaSubmission extends Model
      */
     const TA_STATUS_ORDER = [
         'TA_LOCKED' => 0,
+        'TA_AWAITING_APPROVAL' => 1,
         'TA_DRAFT' => 1,
         'TA_DOCUMENTS_REQUIRED' => 1,
         'TA_DOCUMENTS_UNDER_REVIEW' => 2,
