@@ -100,11 +100,21 @@ class NotifikasiTugasService
             // Klaim reward (konversi nilai MK, SK FT 774) antreannya terpisah dari
             // verifikasi prestasi: yang diputus di sini pengajuan reward, bukan
             // benar-tidaknya prestasi. Halaman tujuannya sudah menyaring "menunggu".
+            //
+            // Klaim yang diajukan lewat 1 tahun sejak tanggal prestasi tetap masuk
+            // antrean (mahasiswa tidak dihalangi), jadi jumlahnya disebut di sini:
+            // admin berhak menyetujui atau menolaknya.
+            $klaimDiajukan = Prestasi::rewardDiajukan();
+            $klaimTerlambat = (clone $klaimDiajukan)
+                ->whereRaw("(tanggal + interval '1 year') < claimed_at")
+                ->count();
+
             $tugas[] = [
                 'key'   => 'klaim-prestasi',
                 'label' => 'Klaim Prestasi',
-                'desc'  => 'klaim reward prestasi menunggu keputusan',
-                'count' => Prestasi::rewardDiajukan()->count(),
+                'desc'  => 'klaim reward prestasi menunggu keputusan'
+                    . ($klaimTerlambat > 0 ? " ({$klaimTerlambat} diajukan lewat 1 tahun, Anda berhak menyetujui atau menolak)" : ''),
+                'count' => $klaimDiajukan->count(),
                 'url'   => route('manajemenmahasiswa.verifikasi.reward.index'),
                 'tone'  => 'danger',
             ];

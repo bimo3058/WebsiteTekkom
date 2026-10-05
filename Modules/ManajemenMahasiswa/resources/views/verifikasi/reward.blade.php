@@ -56,7 +56,9 @@
     /* Versi kecil untuk sel tabel. Lebarnya dibatasi supaya klaim 3 MK tidak
        meregangkan kolom lain; daftar utuhnya tetap ada di modal Tinjau. */
     .mk-tag--sm { font-size: 11px; padding: 2px 8px; }
-    .mk-cell { display: flex; flex-wrap: nowrap; gap: 4px; }
+    .mk-cell { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+    .mk-cell-item { display: flex; align-items: center; gap: 8px; }
+    .mk-cell-item .sel-sub { white-space: nowrap; }
     .sel-kosong { color: var(--c-fg-placeholder); }
 
     .empty-state { text-align: center; padding: 60px 24px; color: var(--c-fg-muted); }
@@ -233,7 +235,6 @@
                     <th>NIM</th>
                     <th>Nama Prestasi</th>
                     <th>Tingkat</th>
-                    <th>Tahun Ajaran</th>
                     <th>SKS Diklaim</th>
                     <th>Mata Kuliah</th>
                     <th>Status</th>
@@ -277,11 +278,12 @@
                             "penyelenggara"  => $p->reward_penyelenggara_label,
                             "capaian"        => $p->reward_capaian_label,
                             "invention"      => (bool) $p->reward_is_invention,
-                            "tahun_ajaran"   => $p->reward_tahun_ajaran_label,
                             "jml_mk_max"     => $p->reward_jml_mk_max,
                             "sks_max"        => $p->reward_sks_max,
                             "sks_diajukan"   => $p->reward_sks_diajukan,
                             "mk_diajukan"    => $mkRingkas,
+                            // Nama MK + tahun ajaran pengambilannya masing-masing
+                            "mk_list"        => $p->reward_mk_list,
                             "mk_disetujui"   => $p->reward_mk_disetujui,
                             "kuota_terpakai" => $kuotaTerpakai,
                             "kuota_maks"     => $kuotaMaks,
@@ -294,8 +296,10 @@
                             "sk_lawas"       => $p->rewardSkSudahDiganti(),
                             // SK 774 poin 9 — prestasi sebelum SK berlaku
                             "pra_sk"         => $p->rewardSebelumMasaBerlaku(),
-                            // Batas waktu 1 tahun sejak tanggal prestasi
-                            "kadaluwarsa"    => $p->rewardKadaluwarsa(),
+                            // Diajukan lebih dari 1 tahun setelah tanggal prestasi — penanda
+                            // khusus admin; mahasiswa tidak pernah melihatnya.
+                            "terlambat"      => $p->rewardTerlambat(),
+                            "tgl_klaim"      => $p->claimed_at?->translatedFormat('d M Y'),
                             "batas_akhir"    => $p->rewardBatasAkhir(),
                             "status"         => $p->reward_status,
                             "note"           => $p->reward_note,
@@ -315,13 +319,6 @@
                         <td style="min-width: 180px;"><p class="sel-utama sel-judul">{{ $p->nama_prestasi }}</p></td>
                         <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
                         <td style="white-space: nowrap;">
-                            @if($p->reward_tahun_ajaran_label)
-                                {{ $p->reward_tahun_ajaran_label }}
-                            @else
-                                <span class="sel-kosong">&ndash;</span>
-                            @endif
-                        </td>
-                        <td style="white-space: nowrap;">
                             @if($p->reward_sks_diajukan !== null)
                                 <span style="font-weight: 600; color: var(--c-fg);">{{ $p->reward_sks_diajukan }} SKS</span>
                                 @if($p->reward_sks_max)
@@ -333,13 +330,14 @@
                         </td>
                         <td>
                             @if(count($mkRingkas))
+                                {{-- Satu baris per MK dengan tahun ajarannya sendiri --}}
                                 <div class="mk-cell">
-                                    @foreach(array_slice($mkRingkas, 0, 2) as $mkNama)
-                                        <span class="mk-tag mk-tag--sm">{{ $mkNama }}</span>
+                                    @foreach($p->reward_mk_list as $mkItem)
+                                        <div class="mk-cell-item">
+                                            <span class="mk-tag mk-tag--sm">{{ $mkItem['nama'] }}</span>
+                                            <span class="sel-sub">{{ $mkItem['ta_label'] ?? '–' }}</span>
+                                        </div>
                                     @endforeach
-                                    @if(count($mkRingkas) > 2)
-                                        <span class="mk-tag mk-tag--sm">+{{ count($mkRingkas) - 2 }}</span>
-                                    @endif
                                 </div>
                             @else
                                 <span class="sel-kosong">&ndash;</span>
@@ -416,10 +414,10 @@
                                  sudah diganti — keputusannya tetap memakai aturan lama --}}
                             <div id="trSkLawas" class="sk-lawas" style="display: none;"></div>
                             <div id="trPraSk" class="sk-lawas" style="display: none;"></div>
-                            {{-- Batas waktu 1 tahun sejak tanggal prestasi sudah terlewat.
-                                 Hanya peringatan bagi admin — klaim yang sudah masuk tidak otomatis
-                                 ditolak, karena penijau bisa menilai konteksnya. --}}
-                            <div id="trKadaluwarsa" class="sk-lawas" style="display: none;"></div>
+                            {{-- Klaim diajukan lebih dari 1 tahun setelah tanggal prestasi.
+                                 Hanya peringatan bagi admin — klaim tidak otomatis ditolak,
+                                 karena peninjau berhak menyetujui atau menolaknya. --}}
+                            <div id="trTerlambat" class="sk-lawas" style="display: none;"></div>
                             {{-- Melewati batas SK 774 — diizinkan kebijakan departemen,
                                  tapi fakultas masih mengacu ke SK --}}
                             <div id="trSkBatas" class="sk-lawas" style="display: none;"></div>
@@ -514,7 +512,6 @@ function openTinjauReward(data) {
         ['Prestasi',       data.nama],
         ['Penyelenggara',  data.penyelenggara || '-'],
         ['Capaian',        (data.capaian || '-') + (data.invention ? ' (invention/expo/fair)' : '')],
-        ['Tahun ajaran',   data.tahun_ajaran || '-'],
         ['Maks. konversi', data.jml_mk_max + ' mata kuliah (setara ' + data.sks_max + ' SKS)'],
         ['SKS diklaim',    (data.sks_diajukan === null || data.sks_diajukan === undefined)
                                ? '-'
@@ -547,14 +544,17 @@ function openTinjauReward(data) {
         : '';
     praSkEl.style.display = data.pra_sk ? 'block' : 'none';
 
-    // Batas waktu 1 tahun: klaim ini diajukan setelah tanggal prestasi + 1 tahun.
-    // Hanya pengingat — admin tetap bisa meninjau dan memutuskan sendiri.
-    const kadaluwarsaEl = document.getElementById('trKadaluwarsa');
-    kadaluwarsaEl.textContent = data.kadaluwarsa
-        ? 'Batas waktu pengajuan reward sudah terlewat (lebih dari 1 tahun sejak tanggal prestasi'
-            + (data.batas_akhir ? ', batas: ' + data.batas_akhir : '') + '). Tinjau dengan seksama sebelum memutuskan.'
+    // Klaim diajukan lebih dari 1 tahun setelah tanggal prestasi. Mahasiswa tetap
+    // bisa mengajukan dan tidak diberi tahu; keputusannya sepenuhnya di tangan
+    // admin — boleh disetujui, boleh ditolak.
+    const terlambatEl = document.getElementById('trTerlambat');
+    terlambatEl.textContent = data.terlambat
+        ? 'Klaim ini diajukan' + (data.tgl_klaim ? ' pada ' + data.tgl_klaim : '')
+            + ', lebih dari 1 tahun setelah tanggal prestasi'
+            + (data.batas_akhir ? ' (batas 1 tahun: ' + data.batas_akhir + ')' : '')
+            + '. Anda berhak menyetujui atau menolak klaim ini. Mahasiswa tidak melihat peringatan ini.'
         : '';
-    kadaluwarsaEl.style.display = data.kadaluwarsa ? 'block' : 'none';
+    terlambatEl.style.display = data.terlambat ? 'block' : 'none';
 
     // Kebijakan departemen lebih longgar dari SK 774 poin 4 & 5 — tidak
     // menghalangi persetujuan, hanya mengingatkan bahwa fakultas bisa menolak.
@@ -565,12 +565,13 @@ function openTinjauReward(data) {
     // MK pilihan mahasiswa — tampil read-only sebagai chip
     const mkView = document.getElementById('trMkView');
     mkView.innerHTML = '';
-    const mks = data.mk_diajukan || [];
+    const mks = data.mk_list || [];
     if (mks.length) {
-        mks.forEach(function (nama) {
+        mks.forEach(function (mk) {
             const tag = document.createElement('span');
             tag.className = 'mk-tag';
-            tag.textContent = nama;
+            // Tahun ajaran pengambilan ikut tampil per MK
+            tag.textContent = mk.nama + (mk.ta_label ? ' — ' + mk.ta_label : '');
             mkView.appendChild(tag);
         });
     } else {

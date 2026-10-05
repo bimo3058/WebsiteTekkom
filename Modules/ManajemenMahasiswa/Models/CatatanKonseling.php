@@ -30,12 +30,20 @@ class CatatanKonseling extends Model
         'lainnya'           => 'Lainnya',
     ];
 
+    /** Status pemantauan kasus. Kunci = nilai di database, nilai = label tampilan. */
+    public const STATUS_KASUS = [
+        'baru'         => 'Baru',
+        'dalam_proses' => 'Dalam Proses',
+        'selesai'      => 'Selesai',
+    ];
+
     protected $fillable = [
         'nama_mahasiswa',
         'nim',
         'angkatan',
         'tanggal',
         'kategori_kasus',
+        'status_kasus',
         'kronologi',
         'keinginan_pelapor',
         'tindak_lanjut',
@@ -57,6 +65,12 @@ class CatatanKonseling extends Model
     public function getLabelKategoriAttribute(): ?string
     {
         return self::KATEGORI_KASUS[$this->kategori_kasus] ?? $this->kategori_kasus;
+    }
+
+    /** Label tampilan untuk status kasus. */
+    public function getLabelStatusAttribute(): ?string
+    {
+        return self::STATUS_KASUS[$this->status_kasus] ?? $this->status_kasus;
     }
 
     public function pencatat(): BelongsTo

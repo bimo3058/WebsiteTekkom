@@ -225,9 +225,27 @@
         /* Picker usulan mata kuliah (reward) */
         .mk-chosen {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
+            flex-direction: column;
+            gap: 8px;
             margin-top: 10px;
+        }
+
+        /* Satu baris per MK terpilih: nama MK di kiri, kolom tahun ajarannya di kanan */
+        .mk-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mk-row .mk-chip {
+            flex: 1;
+            min-width: 0;
+            justify-content: space-between;
+        }
+
+        .mk-row .mk-row-ta {
+            width: 150px;
+            flex-shrink: 0;
         }
 
         /* Chip ringkas untuk sel tabel. Dibiarkan satu baris (tidak wrap) supaya
@@ -235,8 +253,21 @@
            tabel sudah bisa discroll horizontal. Daftar utuhnya ada di modal Tinjau. */
         .mk-sel {
             display: flex;
-            flex-wrap: nowrap;
-            gap: 4px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 6px;
+        }
+
+        .mk-sel-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mk-sel-ta {
+            font-size: 11px;
+            color: var(--c-fg-muted);
+            white-space: nowrap;
         }
 
         .mk-sel-tag {
@@ -266,7 +297,20 @@
             padding: 4px 6px 4px 12px;
         }
 
+        /* Nama MK di baris atas, SKS + tahun ajaran di bawahnya — dua baris
+           supaya tidak terpotong acak di kolom kanan yang sempit. */
+        .mk-chip {
+            border-radius: 12px;
+        }
+
+        .mk-chip .mk-teks {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.3;
+        }
+
         .mk-chip .mk-sks {
+            font-size: 11px;
             font-weight: 500;
             color: var(--c-primary-border);
         }
@@ -1012,9 +1056,6 @@
                                     Tanggal</th>
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
-                                    Tahun Ajaran</th>
-                                <th
-                                    style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     SKS Diklaim</th>
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted);">
@@ -1051,6 +1092,12 @@
                                     ];
 
                                     $mkUsulan = $p->reward_mk_diajukan ?? [];
+                                    // Modal Tinjau membaca daftar teks, jadi tahun ajaran tiap MK
+                                    // ikut ditempel di labelnya.
+                                    $mkUsulanLabel = array_map(
+                                        fn ($m) => $m['nama'] . ($m['ta_label'] ? ' — ' . $m['ta_label'] : ''),
+                                        $p->reward_mk_list
+                                    );
                                     // Nama kelas badge mengikuti .claim-badge di tabel, bukan nilai
                                     // statusnya — 'belum_ajukan' tidak punya padanan kelas.
                                     $rewardKelas = match ($p->reward_status) {
@@ -1069,10 +1116,9 @@
                                                 $p->reward_capaian_label
                                                 . ($p->reward_is_invention ? ' · invention/expo/fair' : '')
                                             ] : null,
-                                            $p->reward_tahun_ajaran_label ? ['Tahun Ajaran', $p->reward_tahun_ajaran_label] : null,
                                             $p->reward_jml_mk_max ? ['Jatah', $p->reward_jml_mk_max . ' mata kuliah, maksimal ' . $p->reward_sks_max . ' SKS'] : null,
                                             $p->reward_sks_diajukan !== null ? ['SKS diklaim', $p->reward_sks_diajukan . ' SKS'] : null,
-                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'Mata kuliah disetujui' : 'Mata kuliah usulan'), $mkUsulan] : null,
+                                            count($mkUsulan) ? [($p->reward_status === $P::CLAIM_DISETUJUI ? 'Mata kuliah disetujui' : 'Mata kuliah usulan'), $mkUsulanLabel] : null,
                                             (!count($mkUsulan) && $p->reward_mk_disetujui) ? ['Mata kuliah disetujui', $p->reward_mk_disetujui] : null,
                                             $p->reward_note ? [($p->reward_status === $P::CLAIM_DITOLAK ? 'Alasan' : 'Catatan'), $p->reward_note] : null,
                                             $p->reward_status === $P::CLAIM_BELUM_AJUKAN
@@ -1110,14 +1156,10 @@
                                          'pra_sk' => $p->rewardSebelumMasaBerlaku(),
                                      ];
 
-                                     // Batas waktu 1 tahun sejak tanggal prestasi
-                                     $rewardKadaluwarsa = $p->rewardKadaluwarsa();
-                                     $rewardBatasAkhir  = $p->rewardBatasAkhir();
-
                                      // Langkah maju yang benar-benar bisa diambil pada baris ini.
-                                     // Klaim kedaluwarsa diblokir di view (dan dijaga server-side di controller).
+                                     // Umur prestasi tidak menghalangi apa pun di sisi mahasiswa — klaim
+                                     // yang lewat 1 tahun hanya ditandai untuk admin.
                                      $rewardBisaDiajukan = !($isAlumni ?? false)
-                                         && !$rewardKadaluwarsa
                                          && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true);
                                      $rewardLabelAksi = $p->reward_status === $P::CLAIM_DITOLAK
                                          ? 'Ajukan Ulang Reward'
@@ -1144,13 +1186,6 @@
                                         @endif
                                     </td>
                                     <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
-                                        @if($p->reward_tahun_ajaran_label)
-                                            {{ $p->reward_tahun_ajaran_label }}
-                                        @else
-                                            <span style="color:var(--c-border-strong);">—</span>
-                                        @endif
-                                    </td>
-                                    <td style="padding:14px 16px; font-size:13px; white-space:nowrap;">
                                         @if($p->reward_sks_diajukan !== null)
                                             <span style="font-weight:600;">{{ $p->reward_sks_diajukan }} SKS</span>
                                             @if($p->reward_sks_max)
@@ -1163,13 +1198,15 @@
                                     </td>
                                     <td style="padding:14px 16px;">
                                         @if(count($mkUsulan))
+                                            {{-- Satu baris per MK dengan tahun ajarannya sendiri — maksimal 3 MK,
+                                            jadi daftarnya ditampilkan utuh. --}}
                                             <div class="mk-sel">
-                                                @foreach(array_slice($mkUsulan, 0, 2) as $mkNama)
-                                                    <span class="mk-sel-tag">{{ $mkNama }}</span>
+                                                @foreach($p->reward_mk_list as $mkItem)
+                                                    <div class="mk-sel-item">
+                                                        <span class="mk-sel-tag">{{ $mkItem['nama'] }}</span>
+                                                        <span class="mk-sel-ta">{{ $mkItem['ta_label'] ?? '—' }}</span>
+                                                    </div>
                                                 @endforeach
-                                                @if(count($mkUsulan) > 2)
-                                                    <span class="mk-sel-tag">+{{ count($mkUsulan) - 2 }}</span>
-                                                @endif
                                             </div>
                                         @else
                                             <span style="color:var(--c-border-strong);">—</span>
@@ -1188,16 +1225,7 @@
                                         @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
                                             <span class="claim-badge disetujui">Reward disetujui</span>
                                         @elseif($p->reward_status === $P::CLAIM_DITOLAK)
-                                            {{-- Jika klaim ditolak DAN sudah kadaluwarsa, tunjukkan badge
-                                            kadaluwarsa saja — ajukan ulang sudah tidak bisa. --}}
-                                            @if($rewardKadaluwarsa)
-                                                <span class="claim-badge ditolak">Ditolak &middot; Kedaluwarsa</span>
-                                            @else
-                                                <span class="claim-badge ditolak">Reward ditolak</span>
-                                            @endif
-                                        @elseif($rewardKadaluwarsa)
-                                            {{-- Belum pernah diajukan tapi sudah kadaluwarsa --}}
-                                            <span class="claim-badge ditolak">Batas waktu habis</span>
+                                            <span class="claim-badge ditolak">Reward ditolak</span>
                                         @else
                                             <span class="claim-badge belum">Belum diajukan</span>
                                         @endif
@@ -1217,13 +1245,6 @@
                                                     <button type="button" class="mk-btn mk-btn--primary"
                                                         onclick="openAjukanReward(@js($ajukanRewardPayload))">{{ $rewardLabelAksi }}</button>
                                                 @endif
-                                            @elseif($rewardKadaluwarsa && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true))
-                                                {{-- Kedaluwarsa: blokir tombol pengajuan dengan keterangan
-                                                jelas — sama seperti "kuota reward habis". --}}
-                                                <button type="button" class="mk-btn mk-btn--primary" disabled
-                                                    title="Batas waktu pengajuan reward sudah habis{{ $rewardBatasAkhir ? ' (batas: ' . $rewardBatasAkhir . ')' : '' }}. Hubungi admin jika ada kekeliruan.">
-                                                    Batas waktu habis
-                                                </button>
                                             @endif
                                             <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
                                                 onclick="openTinjau(@js($tinjauKlaimPayload))">
@@ -1311,7 +1332,6 @@
                                     </li>
                                     <li>Setiap mata kuliah hanya bisa dinaikkan nilainya satu tingkat lebih tinggi, dan harus bernilai minimal C.</li>
                                     <li>Hanya mata kuliah yang sudah pernah diambil yang bisa diajukan kenaikan nilainya.</li>
-                                    <li>Klaim kenaikan nilai paling lambat diajukan 1 tahun sejak tanggal lomba diadakan.</li>
                                     <li>Khusus kuota invention/expo/fair, pengajuan yang masih dalam tahap menunggu review tetap memakai jatah kuota tersebut selama belum diproses.</li>
                                 </ul>
                             </div>
@@ -1507,18 +1527,6 @@
                                             <option value="">Pilih penyelenggara dulu...</option>
                                         </x-manajemenmahasiswa::ui.select>
                                     </div>
-                                    <div class="mb-3">
-                                        <label class="form-label-custom">Tahun Ajaran <span class="required">*</span></label>
-                                        {{-- Daftarnya dihitung dari tanggal hari ini, jadi bertambah
-                                        sendiri tiap semester berganti. --}}
-                                        <x-manajemenmahasiswa::ui.select name="reward_tahun_ajaran" id="arTahunAjaran"
-                                            size="lg" required>
-                                            <option value="">Pilih tahun ajaran...</option>
-                                            @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::tahunAjaranList() as $taKode => $taLabel)
-                                                <option value="{{ $taKode }}">{{ $taLabel }}</option>
-                                            @endforeach
-                                        </x-manajemenmahasiswa::ui.select>
-                                    </div>
                                     <div class="mb-3" id="arInventionWrap" style="display:none;">
                                         <label
                                             style="font-size:13px; color:var(--c-fg-sec); display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
@@ -1544,28 +1552,49 @@
                                             <span style="font-weight:400; color:var(--c-fg-muted);">(maks <span
                                                     id="arMkMax">0</span> MK)</span>
                                         </label>
-                                        <div class="d-flex gap-2">
-                                            <x-manajemenmahasiswa::ui.select id="arMkSelect" size="lg"
-                                                style="flex:1;">
-                                                <option value="">Pilih mata kuliah...</option>
-                                                @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::MATA_KULIAH as $smt => $mks)
-                                                    <optgroup label="{{ $smt }}">
-                                                        @foreach($mks as $namaMk => $sksMk)
-                                                            <option value="{{ $namaMk }}">{{ $namaMk }} ({{ $sksMk }} SKS)
-                                                            </option>
+                                        <x-manajemenmahasiswa::ui.select id="arMkSelect" size="lg">
+                                            <option value="">Pilih mata kuliah...</option>
+                                            @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::MATA_KULIAH as $smt => $mks)
+                                                <optgroup label="{{ $smt }}">
+                                                    @foreach($mks as $namaMk => $sksMk)
+                                                        <option value="{{ $namaMk }}">{{ $namaMk }} ({{ $sksMk }} SKS)
+                                                        </option>
+                                                    @endforeach
+                                                </optgroup>
+                                            @endforeach
+                                        </x-manajemenmahasiswa::ui.select>
+                                        {{-- Tahun ajaran diisi per mata kuliah: begitu sebuah MK dipilih, barisnya
+                                        muncul dengan kolom tahun ajaran di sebelah kanannya, karena tiap MK
+                                        bisa diambil di semester yang berbeda. Jatah maksimal 3 MK, jadi
+                                        disediakan 3 baris tetap yang dinyalakan satu per satu oleh JS.
+                                        Daftar tahun ajaran dihitung dari tanggal hari ini, jadi bertambah
+                                        sendiri tiap semester berganti. --}}
+                                        <div id="arMkChosen" class="mk-chosen">
+                                            @for($slot = 0; $slot < 3; $slot++)
+                                                <div class="mk-row" data-slot="{{ $slot }}" style="display:none;">
+                                                    <span class="mk-chip">
+                                                        <span class="mk-teks">
+                                                            <span class="mk-nama"></span>
+                                                            <span class="mk-sks"></span>
+                                                        </span>
+                                                        <button type="button" class="mk-remove" aria-label="Hapus mata kuliah">&times;</button>
+                                                    </span>
+                                                    <x-manajemenmahasiswa::ui.select id="arMkTa{{ $slot }}" size="lg" :block="false"
+                                                        class="mk-row-ta" data-slot="{{ $slot }}">
+                                                        <option value="">Tahun ajaran...</option>
+                                                        @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::tahunAjaranList() as $taKode => $taLabel)
+                                                            <option value="{{ $taKode }}">{{ $taLabel }}</option>
                                                         @endforeach
-                                                    </optgroup>
-                                                @endforeach
-                                            </x-manajemenmahasiswa::ui.select>
-                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" id="arMkAddBtn"
-                                                style="white-space:nowrap;">+ Tambah</button>
+                                                    </x-manajemenmahasiswa::ui.select>
+                                                </div>
+                                            @endfor
                                         </div>
-                                        <div id="arMkChosen" class="mk-chosen"></div>
                                         <div id="arMkCounter" class="mk-counter"></div>
                                         <div id="arMkHidden"></div>
                                         <small class="text-muted" style="font-size:11px;">Pilih MK kurikulum Teknik
-                                            Komputer yang nilainya ingin dinaikkan (syarat min. C). MK yang sudah dipakai
-                                            di klaim lain tidak bisa dipilih lagi.</small>
+                                            Komputer yang nilainya ingin dinaikkan (syarat min. C). Setelah dipilih, isi
+                                            tahun ajaran saat MK itu diambil di kolom sebelah kanannya. MK yang sudah
+                                            dipakai di klaim lain tidak bisa dipilih lagi.</small>
                                     </div>
 
                                     <div style="font-size:11px; color:var(--c-fg-muted); margin-top:10px; line-height:1.5;">
@@ -1856,7 +1885,6 @@
             const submitLabelEl = document.getElementById('arSubmitLabel');
             const penyEl = document.getElementById('arPenyelenggara');
             const capEl = document.getElementById('arCapaian');
-            const taEl = document.getElementById('arTahunAjaran');
             const invWrap = document.getElementById('arInventionWrap');
             const invEl = document.getElementById('arInvention');
             const previewEl = document.getElementById('arJatahPreview');
@@ -1867,8 +1895,9 @@
             // Picker usulan mata kuliah
             const mkWrap = document.getElementById('arMkWrap');
             const mkSelect = document.getElementById('arMkSelect');
-            const mkAddBtn = document.getElementById('arMkAddBtn');
             const mkChosen = document.getElementById('arMkChosen');
+            // 3 baris tetap (jatah maksimal 3 MK), tiap baris punya dropdown tahun ajaran sendiri
+            const mkRows = Array.from(mkChosen.querySelectorAll('.mk-row'));
             const mkCounter = document.getElementById('arMkCounter');
             const mkHidden = document.getElementById('arMkHidden');
             const mkMaxEl = document.getElementById('arMkMax');
@@ -1879,6 +1908,7 @@
             const JATAH_INV = @json($rewardJatahInvention);
             const PENY_LAINNYA = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LAINNYA);
             const MK_SKS = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::mataKuliahFlat());
+            const TA_LABEL = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::tahunAjaranList());
             const BASE_URL = @json(url('manajemen-mahasiswa/verifikasi'));
 
             // Kuota milik mahasiswa ini — angkanya sama dengan yang dipakai guard
@@ -1911,41 +1941,47 @@
             }
 
             let arMkList = [];   // nama MK yang dipilih
+            let arMkTa = {};     // nama MK -> kode tahun ajaran pengambilannya
             let arJatahOk = false;
             let arKuotaOk = true; // kelompok kuota yang dituju masih tersisa
             let arCap = 0;    // maks jumlah MK
             let arSksMax = 0;    // maks total SKS
 
             function renderMk() {
-                mkChosen.innerHTML = '';
                 mkHidden.innerHTML = '';
                 let totalSks = 0;
-                arMkList.forEach(function (name) {
+                let tanpaTa = 0;
+                mkRows.forEach(function (row, i) {
+                    const name = arMkList[i];
+                    if (!name) { row.style.display = 'none'; return; }
+
                     const sks = MK_SKS[name] || 0;
                     totalSks += sks;
-                    const chip = document.createElement('span');
-                    chip.className = 'mk-chip';
-                    chip.appendChild(document.createTextNode(name + ' '));
-                    const s = document.createElement('span');
-                    s.className = 'mk-sks';
-                    s.textContent = '(' + sks + ' SKS)';
-                    chip.appendChild(s);
-                    const rm = document.createElement('button');
-                    rm.type = 'button';
-                    rm.className = 'mk-remove';
-                    rm.dataset.mk = name;
-                    rm.innerHTML = '&times;';
-                    chip.appendChild(rm);
-                    mkChosen.appendChild(chip);
+                    if (!arMkTa[name]) tanpaTa++;
+
+                    row.style.display = 'flex';
+                    row.querySelector('.mk-nama').textContent = name;
+                    row.querySelector('.mk-sks').textContent = sks + ' SKS';
+                    const taSel = row.querySelector('select');
+                    taSel.value = arMkTa[name] || '';
+                    syncSelect(taSel);
+
                     const hid = document.createElement('input');
                     hid.type = 'hidden';
                     hid.name = 'reward_mk_diajukan[]';
                     hid.value = name;
                     mkHidden.appendChild(hid);
+                    // Sejajar dengan reward_mk_diajukan[] — server memasangkannya per indeks
+                    const hidTa = document.createElement('input');
+                    hidTa.type = 'hidden';
+                    hidTa.name = 'reward_mk_ta[]';
+                    hidTa.value = arMkTa[name] || '';
+                    mkHidden.appendChild(hidTa);
                 });
                 const over = (arMkList.length > arCap) || (totalSks > arSksMax);
                 mkCounter.className = 'mk-counter' + (over ? ' over' : '');
-                mkCounter.textContent = 'Dipilih ' + arMkList.length + '/' + arCap + ' MK • Total ' + totalSks + ' SKS (maks ' + arSksMax + ')';
+                mkCounter.textContent = 'Dipilih ' + arMkList.length + '/' + arCap + ' MK • Total ' + totalSks + ' SKS (maks ' + arSksMax + ')'
+                    + (tanpaTa ? ' • Isi tahun ajaran ' + tanpaTa + ' MK' : '');
             }
 
             function currentTotalSks() {
@@ -1954,7 +1990,8 @@
 
             function refreshSubmit() {
                 const totalSks = currentTotalSks();
-                const valid = arKuotaOk && arJatahOk && taEl.value !== ''
+                const valid = arKuotaOk && arJatahOk
+                    && arMkList.every(function (n) { return !!arMkTa[n]; })
                     && arMkList.length >= 1 && arMkList.length <= arCap && totalSks <= arSksMax;
                 // Tampilan nonaktifnya diatur .mk-btn:disabled, jadi cukup flagnya
                 submitBtn.disabled = !valid;
@@ -1992,25 +2029,39 @@
                 kuotaEl.style.display = penuh ? 'block' : 'none';
             }
 
-            mkAddBtn.addEventListener('click', function () {
+            // Begitu sebuah MK dipilih, MK itu langsung masuk sebagai baris baru; kolom
+            // tahun ajarannya muncul di sebelah kanan dan wajib diisi sebelum Ajukan.
+            mkSelect.addEventListener('change', function () {
                 const v = mkSelect.value;
                 if (!v) return;
-                if (MK_TERPAKAI.indexOf(v) !== -1) return;   // sudah dipakai klaim lain
-                if (arMkList.indexOf(v) !== -1) { mkSelect.value = ''; syncSelect(mkSelect); return; }
-                if (arMkList.length >= arCap) return;   // jumlah MK sudah penuh
-                if (currentTotalSks() + (MK_SKS[v] || 0) > arSksMax) return;   // melebihi plafon SKS
-                arMkList.push(v);
                 mkSelect.value = '';
                 syncSelect(mkSelect);
+                if (MK_TERPAKAI.indexOf(v) !== -1) return;   // sudah dipakai klaim lain
+                if (arMkList.indexOf(v) !== -1) return;      // sudah ada di daftar
+                if (arMkList.length >= arCap) return;        // jumlah MK sudah penuh
+                if (currentTotalSks() + (MK_SKS[v] || 0) > arSksMax) return;   // melebihi plafon SKS
+                arMkList.push(v);
                 renderMk();
                 refreshSubmit();
+            });
+
+            // Tahun ajaran milik tiap MK diisi di baris MK itu sendiri
+            mkRows.forEach(function (row, i) {
+                row.querySelector('select').addEventListener('change', function (e) {
+                    const name = arMkList[i];
+                    if (!name) return;
+                    arMkTa[name] = e.target.value;
+                    renderMk();
+                    refreshSubmit();
+                });
             });
 
             mkChosen.addEventListener('click', function (e) {
                 const btn = e.target.closest('.mk-remove');
                 if (!btn) return;
-                const name = btn.dataset.mk;
+                const name = arMkList[Number(btn.closest('.mk-row').dataset.slot)];
                 arMkList = arMkList.filter(function (x) { return x !== name; });
+                delete arMkTa[name];
                 renderMk();
                 refreshSubmit();
             });
@@ -2029,16 +2080,15 @@
                 penyEl.value = '';
                 capEl.innerHTML = '<option value="">Pilih penyelenggara dulu...</option>';
                 capEl.disabled = true;
-                taEl.value = '';
                 syncSelect(penyEl);
                 syncSelect(capEl);
-                syncSelect(taEl);
                 invWrap.style.display = 'none';
                 invEl.checked = false;
                 previewEl.style.display = 'none';
                 kuotaEl.style.display = 'none';
                 kuotaEl.innerHTML = '';
                 arMkList = [];
+                arMkTa = {};
                 arJatahOk = false;
                 arKuotaOk = true;
                 arCap = 0;
@@ -2118,7 +2168,6 @@
 
             penyEl.addEventListener('change', function () { rebuildCapaian(); updatePreview(); });
             capEl.addEventListener('change', updatePreview);
-            taEl.addEventListener('change', refreshSubmit);
             invEl.addEventListener('change', updatePreview);
         })();
 

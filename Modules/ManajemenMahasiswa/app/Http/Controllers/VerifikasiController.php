@@ -1114,23 +1114,15 @@ class VerifikasiController extends Controller
                 ->with('error', 'Reward prestasi ini sudah diajukan atau sudah disetujui.');
         }
 
-        // Guard 3a: batas waktu 1 tahun sejak tanggal prestasi
-        // SK FT 774 tidak menyebut batas waktu, namun kebijakan departemen menetapkan
-        // bahwa reward hanya dapat diajukan dalam 1 tahun sejak lomba dimenangkan.
-        if ($prestasi->rewardKadaluwarsa()) {
-            $batas = $prestasi->rewardBatasAkhir();
-            return redirect()
-                ->route('manajemenmahasiswa.verifikasi.reward.index')
-                ->with('error', "Batas waktu pengajuan reward untuk prestasi ini sudah berakhir pada {$batas} (1 tahun sejak tanggal prestasi). Hubungi admin jika ada kekeliruan.");
-        }
+        // Tidak ada guard batas waktu 1 tahun: klaim yang lewat setahun sejak
+        // tanggal prestasi tetap diterima, dan mahasiswa tidak diberi tahu.
+        // Penandanya hanya tampil bagi admin (Prestasi::rewardTerlambat()), yang
+        // berhak menyetujui atau menolaknya.
 
         $validated = $request->validate([
             'reward_penyelenggara' => 'required|in:' . implode(',', Prestasi::PENYELENGGARA_LIST),
             'reward_capaian'       => 'required|string',
             'reward_is_invention'  => 'nullable|boolean',
-            // Daftarnya dibangun ulang tiap permintaan, jadi semester yang baru
-            // dibuka langsung sah tanpa ada yang perlu diperbarui manual.
-            'reward_tahun_ajaran'  => 'required|in:' . implode(',', array_keys(Prestasi::tahunAjaranList())),
         ]);
 
         $penyelenggara = $validated['reward_penyelenggara'];
@@ -1183,11 +1175,29 @@ class VerifikasiController extends Controller
         // Usulan MK: hanya MK kurikulum yang valid, jumlah maks sesuai jatah (SK 774)
         $mkFlat     = Prestasi::mataKuliahFlat();
         $mkValid    = array_keys($mkFlat);
-        $mkInput    = (array) $request->input('reward_mk_diajukan', []);
-        $mkDiajukan = array_values(array_unique(array_filter(
-            $mkInput,
-            fn ($mk) => \in_array($mk, $mkValid, true)
-        )));
+        $mkInput    = array_values((array) $request->input('reward_mk_diajukan', []));
+        $taInput    = array_values((array) $request->input('reward_mk_ta', []));
+
+        // Tahun ajaran dikirim sejajar dengan MK-nya (indeks yang sama), jadi
+        // dipasangkan dulu sebelum disaring — kalau disaring lebih dulu,
+        // posisinya bergeser dan tahun ajaran bisa menempel di MK yang salah.
+        // Daftar tahun ajaran dibangun ulang tiap permintaan, jadi semester yang
+        // baru dibuka langsung sah tanpa ada yang perlu diperbarui manual.
+        $taValid    = array_keys(Prestasi::tahunAjaranList());
+        $mkTa       = [];
+        foreach ($mkInput as $i => $mk) {
+            if (!\in_array($mk, $mkValid, true) || isset($mkTa[$mk])) {
+                continue;
+            }
+            $ta = $taInput[$i] ?? null;
+            if (!\in_array($ta, $taValid, true)) {
+                return redirect()
+                    ->route('manajemenmahasiswa.verifikasi.reward.index')
+                    ->with('error', "Tahun ajaran untuk mata kuliah \"{$mk}\" belum diisi atau tidak valid.");
+            }
+            $mkTa[$mk] = $ta;
+        }
+        $mkDiajukan = array_keys($mkTa);
 
         if (empty($mkDiajukan)) {
             return redirect()
@@ -1232,10 +1242,10 @@ class VerifikasiController extends Controller
             // termasuk bila SK berganti sementara klaim ini masih menunggu.
             'reward_kuota_grup'    => Prestasi::tentukanKuotaGrup($penyelenggara, $isInvention),
             'reward_sk_ref'        => Prestasi::SK_BERLAKU,
-            'reward_tahun_ajaran'  => $validated['reward_tahun_ajaran'],
             'reward_jml_mk_max'    => $jatah['jml_mk_max'],
             'reward_sks_max'       => $jatah['sks_max'],
             'reward_mk_diajukan'   => $mkDiajukan,
+            'reward_mk_ta'         => $mkTa,
             // Bobot SKS ikut dicap: nilainya berasal dari konstanta kurikulum,
             // yang bisa berubah setelah klaim ini diputus.
             'reward_sks_diajukan'  => $totalSks,
@@ -1283,11 +1293,11 @@ class VerifikasiController extends Controller
             // menyandang kelompok kuota & nomor SK milik pengajuan yang tak ada.
             'reward_kuota_grup'    => null,
             'reward_sk_ref'        => null,
-            'reward_tahun_ajaran'  => null,
             'reward_jml_mk_max'    => null,
             'reward_sks_max'       => null,
             'reward_sks_diajukan'  => null,
             'reward_mk_diajukan'   => null,
+            'reward_mk_ta'         => null,
         ]);
 
         return redirect()

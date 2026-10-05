@@ -9,9 +9,15 @@
 <x-manajemenmahasiswa::layouts.admin>
 
 @include('manajemenmahasiswa::partials.sitkom-ui')
+@include('manajemenmahasiswa::partials.filter-popover')
 
 @php
-    $adaFilter = $filters['q'] !== '' || ($filters['kategori'] ?? '') !== '';
+    $filterPanelAktif = $filters['kategori'] !== '' || $filters['status'] !== '';
+    $adaFilter = $filters['q'] !== '' || $filterPanelAktif;
+
+    // Status memakai badge garis + titik dari sitkom-ui. Kuning = menunggu tindakan,
+    // langit = sedang berjalan, abu = selesai (peta warna yang sama dengan bab lain).
+    $statusKelas = ['baru' => 'mm-status--warning', 'dalam_proses' => 'mm-status--sky', 'selesai' => 'mm-status--neutral'];
     $hariIni = now()->toDateString();
 @endphp
 
@@ -34,9 +40,12 @@
 
     .ksl-nama { font-weight: 600; color: var(--c-fg); }
     .ksl-sub { font-size: 11px; color: var(--c-fg-muted); margin-top: 1px; }
+    /* NIM meniru kolom NIM Direktori Mahasiswa. */
+    .ksl-nim { font-weight: 600; font-family: monospace; color: var(--c-primary); white-space: nowrap; }
+    .ksl-kosong { color: var(--c-fg-placeholder); font-size: 12px; }
     .ksl-tgl { white-space: nowrap; color: var(--c-fg-sec); }
     /* Di layar sempit tabel digeser ke samping, bukan diperas sampai nama patah per kata. */
-    .ksl-table { min-width: 740px; }
+    .ksl-table { min-width: 860px; }
 
     /* public/js/mobile-navigation.js menandai setiap <form> ber-display flex di dalam
        konten sebagai toolbar (data-mobile-toolbar) lalu merapatkan anaknya ke kanan.
@@ -61,31 +70,26 @@
         background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 8px; padding: 12px 14px;
     }
 
-    /* ── Kategori badge ── */
+    /* ── Kategori badge ──
+       Bentuk & palet badge tingkat prestasi di sitkom-ui (terisi muda + garis), satu
+       warna per kategori. Hijau/kuning/merah dihindari supaya tidak terbaca sebagai
+       status di kolom sebelahnya. */
     .ksl-kategori {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 11px; font-weight: 600; line-height: 1;
-        padding: 4px 10px; border-radius: 20px;
-        white-space: nowrap;
+        display: inline-block; padding: 3px 12px;
+        border: 1px solid var(--c-border); border-radius: 9999px;
+        background: var(--c-grey-50); color: var(--c-fg-sec);
+        font-size: 11px; font-weight: 600; line-height: 1.4; white-space: nowrap;
     }
-    .ksl-kategori--kesehatan_mental  { background: #EFF6FF; color: #1D4ED8; }
-    .ksl-kategori--kekerasan_verbal  { background: #FFF7ED; color: #C2410C; }
-    .ksl-kategori--kaderisasi        { background: #F5F3FF; color: #6D28D9; }
-    .ksl-kategori--kekerasan_seksual { background: #FFF1F2; color: #BE123C; }
-    .ksl-kategori--lainnya           { background: #F3F4F6; color: #4B5563; }
+    .ksl-kategori--kesehatan_mental  { background: #EFF6FF;             color: #1D4ED8;         border-color: #BFDBFE; }
+    .ksl-kategori--kekerasan_verbal  { background: #EDE9FE;             color: #5B21B6;         border-color: #C4B5FD; }
+    .ksl-kategori--kaderisasi        { background: var(--c-sky-subtle); color: var(--c-sky);    border-color: #BAE6FD; }
+    .ksl-kategori--kekerasan_seksual { background: #FCE7F3;             color: #9D174D;         border-color: #FBCFE8; }
+    .ksl-kategori--lainnya           { background: var(--c-grey-50);    color: var(--c-fg-sec); border-color: var(--c-border); }
 
     /* ── Section separator in detail modal ── */
     .ksl-section-sep {
         border: none; border-top: 1px solid var(--c-border); margin: 4px 0 16px;
     }
-
-    /* Filter select */
-    .ksl-filter-select {
-        background: #ffffff; border: 1px solid var(--c-border); border-radius: 8px;
-        height: 34px; padding: 0 10px; font-size: 12px; font-weight: 500; color: var(--c-fg);
-        min-width: 140px;
-    }
-    .ksl-filter-select:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); outline: none; }
 </style>
 
 {{-- ── Header ── --}}
@@ -102,7 +106,7 @@
 
 <x-manajemenmahasiswa::ui.flash type="success" :message="session('success')" />
 
-<div class="ksl-card">
+<div class="ksl-card filter-pop-host">
     <div class="ksl-toolbar">
         <h2>Daftar Catatan</h2>
         <form method="GET" action="{{ route('manajemenmahasiswa.konseling.index') }}" id="kslFilterForm">
@@ -110,16 +114,61 @@
                 <input type="hidden" name="per_page" value="{{ request('per_page') }}">
             @endif
 
-            <select name="kategori" class="ksl-filter-select" onchange="document.getElementById('kslFilterForm').submit()">
-                <option value="">Semua Kategori</option>
-                @foreach($kategoriList as $key => $label)
-                    <option value="{{ $key }}" {{ ($filters['kategori'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                @endforeach
-            </select>
-
             <div class="ksl-search">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Cari nama atau NIM…">
+            </div>
+
+            {{-- Panel Filter bergaya Audit Log SITKOM, sama dengan Direktori & Pengaduan. --}}
+            <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
+                <button type="button" class="filter-pop-btn" @click="filterOpen = !filterOpen" :class="{ 'is-open': filterOpen }">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink: 0;">
+                        <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+                    </svg>
+                    <span style="line-height: 1;">Filter</span>
+                    @if($filterPanelAktif)
+                        <span class="filter-pop-dot"></span>
+                    @endif
+                </button>
+
+                <div class="filter-pop-backdrop" x-show="filterOpen" x-cloak style="display: none;" @click="filterOpen = false"></div>
+
+                <div class="filter-pop-panel" x-show="filterOpen" x-cloak style="display: none;"
+                     x-transition:enter="transition ease-out duration-100"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-75"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95">
+                    <p class="filter-pop-title">Advanced Filters</p>
+                    <div class="filter-pop-fields">
+                        <div>
+                            <label class="filter-pop-label" for="kslFilterKategori">Kategori Kasus</label>
+                            {{-- "semua", bukan nilai kosong: nilai kosong digambar sebagai placeholder abu. --}}
+                            <x-manajemenmahasiswa::ui.select name="kategori" id="kslFilterKategori">
+                                <option value="semua">Semua Kategori</option>
+                                @foreach($kategoriList as $key => $label)
+                                    <option value="{{ $key }}" @selected($filters['kategori'] === $key)>{{ $label }}</option>
+                                @endforeach
+                            </x-manajemenmahasiswa::ui.select>
+                        </div>
+                        <div>
+                            <label class="filter-pop-label" for="kslFilterStatus">Status</label>
+                            <x-manajemenmahasiswa::ui.select name="status" id="kslFilterStatus">
+                                <option value="semua">Semua Status</option>
+                                @foreach($statusList as $key => $label)
+                                    <option value="{{ $key }}" @selected($filters['status'] === $key)>{{ $label }}</option>
+                                @endforeach
+                            </x-manajemenmahasiswa::ui.select>
+                        </div>
+                        <div class="filter-pop-actions">
+                            <button type="submit" class="filter-pop-submit">Terapkan</button>
+                            @if($adaFilter)
+                                <a href="{{ route('manajemenmahasiswa.konseling.index') }}" class="filter-pop-reset">Reset</a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
@@ -129,26 +178,28 @@
             <thead>
                 <tr>
                     <th style="width: 56px;">No</th>
-                    <th>Tanggal</th>
-                    <th>Mahasiswa</th>
+                    <th>Nama Mahasiswa</th>
+                    <th>NIM</th>
                     <th>Kategori Kasus</th>
+                    <th>Status</th>
                     <th>Dicatat oleh</th>
+                    <th>Tanggal</th>
                     <th style="width: 72px; text-align: center;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($catatan as $index => $item)
                     @php
-                        $identitas = collect([$item->nim, $item->angkatan ? 'Angkatan ' . $item->angkatan : null])->filter()->implode(' · ');
                         $payload = [
                             'id'               => $item->id,
                             'nama_mahasiswa'    => $item->nama_mahasiswa,
                             'nim'               => $item->nim,
                             'angkatan'          => $item->angkatan,
                             'tanggal'           => optional($item->tanggal)->toDateString(),
-                            'tanggal_label'     => optional($item->tanggal)->translatedFormat('d F Y'),
+                            'tanggal_label'     => $item->tanggal?->locale('id')->translatedFormat('d F Y'),
                             'kategori_kasus'    => $item->kategori_kasus,
                             'kategori_label'    => $item->label_kategori,
+                            'status_kasus'      => $item->status_kasus,
                             'kronologi'         => $item->kronologi,
                             'keinginan_pelapor' => $item->keinginan_pelapor,
                             'tindak_lanjut'     => $item->tindak_lanjut,
@@ -159,22 +210,29 @@
                     @endphp
                     <tr>
                         <td style="color: var(--c-fg-muted);">{{ $catatan->firstItem() + $index }}</td>
-                        <td class="ksl-tgl">{{ optional($item->tanggal)->translatedFormat('d M Y') }}</td>
                         <td>
                             <a href="javascript:void(0)" class="ksl-nama" style="text-decoration: none;"
                                data-catatan="{{ json_encode($payload) }}" onclick="kslBukaDetail(this)">{{ $item->nama_mahasiswa }}</a>
-                            @if($identitas !== '')
-                                <div class="ksl-sub">{{ $identitas }}</div>
+                        </td>
+                        <td>
+                            @if($item->nim)
+                                <span class="ksl-nim">{{ $item->nim }}</span>
+                            @else
+                                <span class="ksl-kosong">—</span>
                             @endif
                         </td>
                         <td>
                             @if($item->kategori_kasus)
                                 <span class="ksl-kategori ksl-kategori--{{ $item->kategori_kasus }}">{{ $item->label_kategori }}</span>
                             @else
-                                <span style="color: var(--c-fg-placeholder); font-size: 12px;">—</span>
+                                <span class="ksl-kosong">—</span>
                             @endif
                         </td>
+                        <td>
+                            <span class="mm-status {{ $statusKelas[$item->status_kasus] ?? 'mm-status--neutral' }}">{{ $item->label_status }}</span>
+                        </td>
                         <td style="color: var(--c-fg-sec);">{{ optional($item->pencatat)->name ?? '—' }}</td>
+                        <td class="ksl-tgl">{{ $item->tanggal?->locale('id')->translatedFormat('d M Y') }}</td>
                         <td style="text-align: center;">
                             <div style="position: relative; display: inline-block;" x-data="mmAksiMenu"
                                  @scroll.window.capture="open = false" @resize.window="open = false">
@@ -209,7 +267,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" style="padding: 60px 24px; text-align: center;">
+                        <td colspan="8" style="padding: 60px 24px; text-align: center;">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                                 <span style="color: #D1D5DB;"><x-manajemenmahasiswa::ui.icon name="heart" size="40" /></span>
                                 @if($adaFilter)
@@ -247,11 +305,17 @@
             <div class="modal-body">
                 <div class="ksl-grid">
                     {{-- ── Identitas Mahasiswa ── --}}
-                    <div class="full">
+                    <div>
                         <label class="form-label-custom" for="kslNama">Nama Mahasiswa <span class="required">*</span></label>
                         <input type="text" id="kslNama" name="nama_mahasiswa" maxlength="150" required
                                class="form-control-custom @error('nama_mahasiswa') is-invalid @enderror" placeholder="Nama lengkap mahasiswa">
                         @error('nama_mahasiswa') <div class="ksl-err">{{ $message }}</div> @enderror
+                    </div>
+                    <div>
+                        <label class="form-label-custom" for="kslTanggal">Tanggal Konseling <span class="required">*</span></label>
+                        <input type="date" id="kslTanggal" name="tanggal" max="{{ $hariIni }}" required
+                               class="form-control-custom @error('tanggal') is-invalid @enderror">
+                        @error('tanggal') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
                     <div>
                         <label class="form-label-custom" for="kslNim">NIM</label>
@@ -265,22 +329,28 @@
                                class="form-control-custom @error('angkatan') is-invalid @enderror" placeholder="Opsional, mis. 2022">
                         @error('angkatan') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
-                    <div>
-                        <label class="form-label-custom" for="kslTanggal">Tanggal Konseling <span class="required">*</span></label>
-                        <input type="date" id="kslTanggal" name="tanggal" max="{{ $hariIni }}" required
-                               class="form-control-custom @error('tanggal') is-invalid @enderror">
-                        @error('tanggal') <div class="ksl-err">{{ $message }}</div> @enderror
-                    </div>
+
+                    {{-- ── Klasifikasi ── --}}
                     <div>
                         <label class="form-label-custom" for="kslKategori">Kategori Kasus <span class="required">*</span></label>
-                        <select id="kslKategori" name="kategori_kasus" required
-                                class="form-control-custom @error('kategori_kasus') is-invalid @enderror">
-                            <option value="">— Pilih kategori —</option>
+                        <x-manajemenmahasiswa::ui.select name="kategori_kasus" id="kslKategori" size="md" required
+                                                        :invalid="$errors->has('kategori_kasus')">
+                            <option value="">Pilih kategori…</option>
                             @foreach($kategoriList as $key => $label)
                                 <option value="{{ $key }}">{{ $label }}</option>
                             @endforeach
-                        </select>
+                        </x-manajemenmahasiswa::ui.select>
                         @error('kategori_kasus') <div class="ksl-err">{{ $message }}</div> @enderror
+                    </div>
+                    <div>
+                        <label class="form-label-custom" for="kslStatus">Status Kasus <span class="required">*</span></label>
+                        <x-manajemenmahasiswa::ui.select name="status_kasus" id="kslStatus" size="md" required
+                                                        :invalid="$errors->has('status_kasus')">
+                            @foreach($statusList as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </x-manajemenmahasiswa::ui.select>
+                        @error('status_kasus') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
 
                     {{-- ── Kronologi Kasus ── --}}
@@ -353,6 +423,8 @@
                     <dd id="kslDTanggal"></dd>
                     <dt>Kategori Kasus</dt>
                     <dd><span id="kslDKategori"></span></dd>
+                    <dt>Status Kasus</dt>
+                    <dd><span id="kslDStatus"></span></dd>
 
                     <hr class="ksl-section-sep">
 
@@ -385,6 +457,8 @@
         const HARI_INI = @json($hariIni);
         const TAHUN_INI = {{ now()->year }};
         const KATEGORI_LABELS = @json($kategoriList);
+        const STATUS_LABELS = @json($statusList);
+        const STATUS_KELAS = @json($statusKelas);
         let detailAktif = null;
 
         const $ = id => document.getElementById(id);
@@ -403,6 +477,9 @@
             $('kslAngkatan').value = d.angkatan || '';
             $('kslTanggal').value = d.tanggal || HARI_INI;
             $('kslKategori').value = d.kategori_kasus || '';
+            $('kslStatus').value = d.status_kasus || 'baru';
+            // Dropdown Alpine membaca ulang nilai <select> di belakangnya lewat event 'change'.
+            ['kslKategori', 'kslStatus'].forEach(id => $(id).dispatchEvent(new Event('change')));
             $('kslKronologi').value = d.kronologi || '';
             $('kslKeinginan').value = d.keinginan_pelapor || '';
             $('kslTindakLanjut').value = d.tindak_lanjut || '';
@@ -451,6 +528,10 @@
                 kategoriEl.className = '';
                 kategoriEl.textContent = d.kategori_label || '—';
             }
+
+            const statusEl = $('kslDStatus');
+            statusEl.className = 'mm-status ' + (STATUS_KELAS[d.status_kasus] || 'mm-status--neutral');
+            statusEl.textContent = STATUS_LABELS[d.status_kasus] || STATUS_LABELS.baru;
 
             $('kslDKronologi').textContent = d.kronologi || 'Tidak diisi.';
             $('kslDKeinginan').textContent = d.keinginan_pelapor || 'Tidak diisi.';

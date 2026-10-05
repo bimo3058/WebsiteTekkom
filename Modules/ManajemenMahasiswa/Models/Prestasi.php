@@ -32,11 +32,11 @@ class Prestasi extends Model
         // Dibekukan saat klaim diajukan — lihat SK_BERLAKU
         'reward_kuota_grup',
         'reward_sk_ref',
-        'reward_tahun_ajaran',
         'reward_jml_mk_max',
         'reward_sks_max',
         'reward_sks_diajukan',
         'reward_mk_diajukan',
+        'reward_mk_ta',
         'reward_mk_disetujui',
         'reward_reviewed_by',
         'reward_reviewed_at',
@@ -50,6 +50,7 @@ class Prestasi extends Model
         'reward_is_invention' => 'boolean',
         'reward_reviewed_at'  => 'datetime',
         'reward_mk_diajukan'  => 'array',
+        'reward_mk_ta'        => 'array',
     ];
 
     // -------------------------------------------------------------------------
@@ -521,9 +522,23 @@ class Prestasi extends Model
             : null;
     }
 
-    public function getRewardTahunAjaranLabelAttribute(): ?string
+    /**
+     * Usulan MK beserta tahun ajaran pengambilannya, urut seperti diusulkan.
+     *
+     * Dirakit di sini supaya tabel, modal, dan payload JS membaca satu bentuk
+     * yang sama. Klaim lama tanpa tahun ajaran per MK menghasilkan ta = null.
+     *
+     * @return list<array{nama:string,ta:?string,ta_label:?string}>
+     */
+    public function getRewardMkListAttribute(): array
     {
-        return self::tahunAjaranLabel($this->reward_tahun_ajaran);
+        $peta = $this->reward_mk_ta ?? [];
+
+        return array_map(fn ($nama) => [
+            'nama'     => $nama,
+            'ta'       => $peta[$nama] ?? null,
+            'ta_label' => self::tahunAjaranLabel($peta[$nama] ?? null),
+        ], $this->reward_mk_diajukan ?? []);
     }
 
     public function isRewardDiajukan(): bool
@@ -687,34 +702,37 @@ class Prestasi extends Model
     }
 
     // -------------------------------------------------------------------------
-    // Batas waktu klaim reward — 1 tahun sejak tanggal prestasi
+    // Batas waktu klaim reward — 1 tahun sejak tanggal prestasi (penanda untuk admin)
     // -------------------------------------------------------------------------
 
     /**
-     * Lama maksimal (dalam tahun) antara tanggal prestasi dan pengajuan reward.
-     *
-     * Setelah melewati batas ini, pengajuan reward tidak lagi diizinkan oleh sistem.
+     * Lama (dalam tahun) antara tanggal prestasi dan pengajuan reward yang
+     * dianggap wajar. Melewatinya TIDAK menutup pengajuan: mahasiswa tetap boleh
+     * mengajukan dan tidak diberi tahu soal batas ini — hanya admin yang melihat
+     * penandanya, lalu memutuskan sendiri menyetujui atau menolak.
      */
     const REWARD_BATAS_TAHUN = 1;
 
     /**
-     * Apakah batas waktu pengajuan reward sudah terlewat.
+     * Apakah klaim ini diajukan setelah lewat 1 tahun sejak tanggal prestasi.
      *
-     * Berbeda dengan rewardSebelumMasaBerlaku() yang hanya penanda, method ini
-     * menjadi penjaga aktif: pengajuan baru ditolak bila batas sudah dilampaui.
-     * Klaim yang sudah masuk sebelum batas tidak terpengaruh.
+     * Patokannya tanggal klaim diajukan (claimed_at), bukan hari ini, supaya
+     * penandanya tidak berubah-ubah hanya karena admin meninjaunya belakangan.
+     * Klaim yang belum diajukan dihitung terhadap hari ini.
      */
-    public function rewardKadaluwarsa(): bool
+    public function rewardTerlambat(): bool
     {
         if ($this->tanggal === null) {
             return false;
         }
 
-        return $this->tanggal->copy()->addYears(self::REWARD_BATAS_TAHUN)->isPast();
+        $acuan = $this->claimed_at ?? now();
+
+        return $this->tanggal->copy()->addYears(self::REWARD_BATAS_TAHUN)->lt($acuan);
     }
 
     /**
-     * Tanggal paling lambat reward boleh diajukan (tanggal prestasi + 1 tahun).
+     * Tanggal 1 tahun setelah prestasi — batas yang dilampaui klaim terlambat.
      *
      * Dikembalikan sebagai string agar mudah dipakai di pesan dan payload JS.
      */
