@@ -685,4 +685,45 @@ class Prestasi extends Model
             && $this->tanggal !== null
             && $this->tanggal->toDateString() < $mulai;
     }
+
+    // -------------------------------------------------------------------------
+    // Batas waktu klaim reward — 1 tahun sejak tanggal prestasi
+    // -------------------------------------------------------------------------
+
+    /**
+     * Lama maksimal (dalam tahun) antara tanggal prestasi dan pengajuan reward.
+     *
+     * Setelah melewati batas ini, pengajuan reward tidak lagi diizinkan oleh sistem.
+     */
+    const REWARD_BATAS_TAHUN = 1;
+
+    /**
+     * Apakah batas waktu pengajuan reward sudah terlewat.
+     *
+     * Berbeda dengan rewardSebelumMasaBerlaku() yang hanya penanda, method ini
+     * menjadi penjaga aktif: pengajuan baru ditolak bila batas sudah dilampaui.
+     * Klaim yang sudah masuk sebelum batas tidak terpengaruh.
+     */
+    public function rewardKadaluwarsa(): bool
+    {
+        if ($this->tanggal === null) {
+            return false;
+        }
+
+        return $this->tanggal->copy()->addYears(self::REWARD_BATAS_TAHUN)->isPast();
+    }
+
+    /**
+     * Tanggal paling lambat reward boleh diajukan (tanggal prestasi + 1 tahun).
+     *
+     * Dikembalikan sebagai string agar mudah dipakai di pesan dan payload JS.
+     */
+    public function rewardBatasAkhir(): ?string
+    {
+        if ($this->tanggal === null) {
+            return null;
+        }
+
+        return $this->tanggal->copy()->addYears(self::REWARD_BATAS_TAHUN)->translatedFormat('d M Y');
+    }
 }

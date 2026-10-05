@@ -532,6 +532,14 @@ class VerifikasiController extends Controller
             $reward = 'menunggu';
         }
 
+        // Filter tingkat — sama dengan Verifikasi Prestasi (adminIndex).
+        // Nilai di luar daftar resmi dianggap "semua" supaya URL yang diubah
+        // manual tidak menghasilkan tabel kosong tanpa penjelasan.
+        $tingkat = $request->get('tingkat');
+        if (!\in_array($tingkat, Prestasi::TINGKAT_LIST, true)) {
+            $tingkat = 'semua';
+        }
+
         $rewardStatusMap = [
             'menunggu'  => Prestasi::CLAIM_DIAJUKAN,
             'disetujui' => Prestasi::CLAIM_DISETUJUI,
@@ -558,6 +566,10 @@ class VerifikasiController extends Controller
             });
         }
 
+        if ($tingkat !== 'semua') {
+            $rewardQuery->where('tingkat', $tingkat);
+        }
+
         $rewardData = $rewardQuery->orderByDesc('claimed_at')
             ->paginate(PerPage::resolve($request))
             ->withQueryString();
@@ -580,6 +592,8 @@ class VerifikasiController extends Controller
             ->orderBy('angkatan', 'desc')
             ->pluck('angkatan');
 
+        $tingkatList = Prestasi::TINGKAT_LIST;
+
         // Hanya admin kemahasiswaan yang memutus konversi SKS — sembunyikan
         // tinjau/setujui/tolak/batalkan dari Ketua Departemen & GPM (satu-
         // satunya pengawas yang bisa sampai ke halaman ini; DPM sudah dicabut
@@ -592,6 +606,8 @@ class VerifikasiController extends Controller
             'search',
             'angkatan',
             'angkatanList',
+            'tingkat',
+            'tingkatList',
             'pendingPrestasiReward',
             'rewardStats',
             'kuotaMap',
@@ -1096,6 +1112,16 @@ class VerifikasiController extends Controller
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.reward.index')
                 ->with('error', 'Reward prestasi ini sudah diajukan atau sudah disetujui.');
+        }
+
+        // Guard 3a: batas waktu 1 tahun sejak tanggal prestasi
+        // SK FT 774 tidak menyebut batas waktu, namun kebijakan departemen menetapkan
+        // bahwa reward hanya dapat diajukan dalam 1 tahun sejak lomba dimenangkan.
+        if ($prestasi->rewardKadaluwarsa()) {
+            $batas = $prestasi->rewardBatasAkhir();
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.reward.index')
+                ->with('error', "Batas waktu pengajuan reward untuk prestasi ini sudah berakhir pada {$batas} (1 tahun sejak tanggal prestasi). Hubungi admin jika ada kekeliruan.");
         }
 
         $validated = $request->validate([

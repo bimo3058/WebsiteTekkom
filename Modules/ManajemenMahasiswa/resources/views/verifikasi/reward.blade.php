@@ -139,14 +139,16 @@
                 <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
                 <input type="text" name="search" class="search-input" placeholder="Cari nama, NIM, prestasi, tingkat..." value="{{ request('search') }}">
             </div>
-            {{-- Status Klaim & Angkatan dikumpulkan dalam satu panel, sama dengan panel
+            {{-- Status Klaim, Angkatan, & Tingkat dikumpulkan dalam satu panel, sama dengan panel
                  "Advanced Filters" tabel Audit Log global (partials/filter-popover).
                  Titik di tombol Filter menyala bila ada dropdown yang sedang menyaring —
                  termasuk "Menunggu Review" yang jadi tampilan bawaan. --}}
             @php
                 $filterRewardAktif   = $reward !== 'semua';
                 $filterAngkatanAktif = filled($angkatan) && $angkatan !== 'semua';
-                $adaFilterApaPun     = $filterAngkatanAktif || request()->filled('search') || $reward !== 'menunggu';
+                $filterTingkatAktif  = $tingkat !== 'semua';
+                $adaFilterApaPun     = $filterAngkatanAktif || $filterTingkatAktif
+                    || request()->filled('search') || $reward !== 'menunggu';
             @endphp
             <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
                 <button type="button" class="filter-pop-btn"
@@ -156,7 +158,7 @@
                         <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
                     </svg>
                     <span style="line-height: 1;">Filter</span>
-                    @if($filterRewardAktif || $filterAngkatanAktif)
+                    @if($filterRewardAktif || $filterAngkatanAktif || $filterTingkatAktif)
                         <span class="filter-pop-dot"></span>
                     @endif
                 </button>
@@ -186,12 +188,24 @@
                             </x-manajemenmahasiswa::ui.select>
                         </div>
 
+                        <!-- Angkatan -->
                         <div>
                             <label class="filter-pop-label" for="filterAngkatan">Angkatan</label>
                             <x-manajemenmahasiswa::ui.select name="angkatan" id="filterAngkatan">
                                 <option value="semua">Semua Angkatan</option>
                                 @foreach($angkatanList as $a)
                                     <option value="{{ $a }}" {{ $angkatan == $a ? 'selected' : '' }}>{{ $a }}</option>
+                                @endforeach
+                            </x-manajemenmahasiswa::ui.select>
+                        </div>
+
+                        <!-- Tingkat -->
+                        <div>
+                            <label class="filter-pop-label" for="filterTingkat">Tingkat</label>
+                            <x-manajemenmahasiswa::ui.select name="tingkat" id="filterTingkat">
+                                <option value="semua">Semua Tingkat</option>
+                                @foreach($tingkatList as $t)
+                                    <option value="{{ $t }}" {{ $tingkat === $t ? 'selected' : '' }}>{{ ucfirst($t) }}</option>
                                 @endforeach
                             </x-manajemenmahasiswa::ui.select>
                         </div>
@@ -280,6 +294,9 @@
                             "sk_lawas"       => $p->rewardSkSudahDiganti(),
                             // SK 774 poin 9 — prestasi sebelum SK berlaku
                             "pra_sk"         => $p->rewardSebelumMasaBerlaku(),
+                            // Batas waktu 1 tahun sejak tanggal prestasi
+                            "kadaluwarsa"    => $p->rewardKadaluwarsa(),
+                            "batas_akhir"    => $p->rewardBatasAkhir(),
                             "status"         => $p->reward_status,
                             "note"           => $p->reward_note,
                             "reviewer"       => $p->reviewedBy->name ?? null,
@@ -399,6 +416,10 @@
                                  sudah diganti — keputusannya tetap memakai aturan lama --}}
                             <div id="trSkLawas" class="sk-lawas" style="display: none;"></div>
                             <div id="trPraSk" class="sk-lawas" style="display: none;"></div>
+                            {{-- Batas waktu 1 tahun sejak tanggal prestasi sudah terlewat.
+                                 Hanya peringatan bagi admin — klaim yang sudah masuk tidak otomatis
+                                 ditolak, karena penijau bisa menilai konteksnya. --}}
+                            <div id="trKadaluwarsa" class="sk-lawas" style="display: none;"></div>
                             {{-- Melewati batas SK 774 — diizinkan kebijakan departemen,
                                  tapi fakultas masih mengacu ke SK --}}
                             <div id="trSkBatas" class="sk-lawas" style="display: none;"></div>
@@ -525,6 +546,15 @@ function openTinjauReward(data) {
         ? 'Prestasi ini bertanggal sebelum SK 774 berlaku (1 Januari 2025). Menurut poin 9, prestasi tersebut masih diatur SE 176/2020. Periksa sebelum menyetujui.'
         : '';
     praSkEl.style.display = data.pra_sk ? 'block' : 'none';
+
+    // Batas waktu 1 tahun: klaim ini diajukan setelah tanggal prestasi + 1 tahun.
+    // Hanya pengingat — admin tetap bisa meninjau dan memutuskan sendiri.
+    const kadaluwarsaEl = document.getElementById('trKadaluwarsa');
+    kadaluwarsaEl.textContent = data.kadaluwarsa
+        ? 'Batas waktu pengajuan reward sudah terlewat (lebih dari 1 tahun sejak tanggal prestasi'
+            + (data.batas_akhir ? ', batas: ' + data.batas_akhir : '') + '). Tinjau dengan seksama sebelum memutuskan.'
+        : '';
+    kadaluwarsaEl.style.display = data.kadaluwarsa ? 'block' : 'none';
 
     // Kebijakan departemen lebih longgar dari SK 774 poin 4 & 5 — tidak
     // menghalangi persetujuan, hanya mengingatkan bahwa fakultas bisa menolak.

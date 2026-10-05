@@ -1097,25 +1097,31 @@
                                         ] : null,
                                     ];
 
-                                    // Payload modal Ajukan/Ajukan Ulang Reward — kerangkanya sama dengan
-                                    // modal Tinjau (bukti di kiri, data di kanan), isinya formulir.
-                                    $ajukanRewardPayload = [
-                                        'id' => $p->id,
-                                        'judul' => $p->reward_status === $P::CLAIM_DITOLAK
-                                            ? 'Ajukan Ulang Reward Prestasi'
-                                            : 'Ajukan Reward Prestasi',
-                                        'sections' => [$blokPengajuan],
-                                        'bukti' => $pBukti,
-                                        // SK 774 poin 9 — hanya penanda, pengajuan tetap boleh
-                                        'pra_sk' => $p->rewardSebelumMasaBerlaku(),
-                                    ];
+                                     // Payload modal Ajukan/Ajukan Ulang Reward — kerangkanya sama dengan
+                                     // modal Tinjau (bukti di kiri, data di kanan), isinya formulir.
+                                     $ajukanRewardPayload = [
+                                         'id' => $p->id,
+                                         'judul' => $p->reward_status === $P::CLAIM_DITOLAK
+                                             ? 'Ajukan Ulang Reward Prestasi'
+                                             : 'Ajukan Reward Prestasi',
+                                         'sections' => [$blokPengajuan],
+                                         'bukti' => $pBukti,
+                                         // SK 774 poin 9 — hanya penanda, pengajuan tetap boleh
+                                         'pra_sk' => $p->rewardSebelumMasaBerlaku(),
+                                     ];
 
-                                    // Langkah maju yang benar-benar bisa diambil pada baris ini.
-                                    $rewardBisaDiajukan = !($isAlumni ?? false)
-                                        && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true);
-                                    $rewardLabelAksi = $p->reward_status === $P::CLAIM_DITOLAK
-                                        ? 'Ajukan Ulang Reward'
-                                        : 'Ajukan Reward';
+                                     // Batas waktu 1 tahun sejak tanggal prestasi
+                                     $rewardKadaluwarsa = $p->rewardKadaluwarsa();
+                                     $rewardBatasAkhir  = $p->rewardBatasAkhir();
+
+                                     // Langkah maju yang benar-benar bisa diambil pada baris ini.
+                                     // Klaim kedaluwarsa diblokir di view (dan dijaga server-side di controller).
+                                     $rewardBisaDiajukan = !($isAlumni ?? false)
+                                         && !$rewardKadaluwarsa
+                                         && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true);
+                                     $rewardLabelAksi = $p->reward_status === $P::CLAIM_DITOLAK
+                                         ? 'Ajukan Ulang Reward'
+                                         : 'Ajukan Reward';
                                 @endphp
                                 <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
                                     onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
@@ -1182,7 +1188,16 @@
                                         @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
                                             <span class="claim-badge disetujui">Reward disetujui</span>
                                         @elseif($p->reward_status === $P::CLAIM_DITOLAK)
-                                            <span class="claim-badge ditolak">Reward ditolak</span>
+                                            {{-- Jika klaim ditolak DAN sudah kadaluwarsa, tunjukkan badge
+                                            kadaluwarsa saja — ajukan ulang sudah tidak bisa. --}}
+                                            @if($rewardKadaluwarsa)
+                                                <span class="claim-badge ditolak">Ditolak &middot; Kedaluwarsa</span>
+                                            @else
+                                                <span class="claim-badge ditolak">Reward ditolak</span>
+                                            @endif
+                                        @elseif($rewardKadaluwarsa)
+                                            {{-- Belum pernah diajukan tapi sudah kadaluwarsa --}}
+                                            <span class="claim-badge ditolak">Batas waktu habis</span>
                                         @else
                                             <span class="claim-badge belum">Belum diajukan</span>
                                         @endif
@@ -1202,6 +1217,13 @@
                                                     <button type="button" class="mk-btn mk-btn--primary"
                                                         onclick="openAjukanReward(@js($ajukanRewardPayload))">{{ $rewardLabelAksi }}</button>
                                                 @endif
+                                            @elseif($rewardKadaluwarsa && !in_array($p->reward_status, [$P::CLAIM_DIAJUKAN, $P::CLAIM_DISETUJUI], true))
+                                                {{-- Kedaluwarsa: blokir tombol pengajuan dengan keterangan
+                                                jelas — sama seperti "kuota reward habis". --}}
+                                                <button type="button" class="mk-btn mk-btn--primary" disabled
+                                                    title="Batas waktu pengajuan reward sudah habis{{ $rewardBatasAkhir ? ' (batas: ' . $rewardBatasAkhir . ')' : '' }}. Hubungi admin jika ada kekeliruan.">
+                                                    Batas waktu habis
+                                                </button>
                                             @endif
                                             <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
                                                 onclick="openTinjau(@js($tinjauKlaimPayload))">
