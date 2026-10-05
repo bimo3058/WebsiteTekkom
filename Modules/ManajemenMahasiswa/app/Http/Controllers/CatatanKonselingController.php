@@ -4,6 +4,7 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Modules\ManajemenMahasiswa\Models\CatatanKonseling;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
@@ -16,7 +17,8 @@ class CatatanKonselingController extends Controller
     public function index(Request $request)
     {
         $filters = [
-            'q' => trim((string) $request->query('q', '')),
+            'q'        => trim((string) $request->query('q', '')),
+            'kategori' => trim((string) $request->query('kategori', '')),
         ];
 
         $query = CatatanKonseling::query()->with('pencatat:id,name');
@@ -29,6 +31,10 @@ class CatatanKonselingController extends Controller
             });
         }
 
+        if ($filters['kategori'] !== '' && array_key_exists($filters['kategori'], CatatanKonseling::KATEGORI_KASUS)) {
+            $query->where('kategori_kasus', $filters['kategori']);
+        }
+
         $catatan = $query->orderByDesc('tanggal')->orderByDesc('id')
             ->paginate(PerPage::resolve($request))
             ->withQueryString();
@@ -38,7 +44,9 @@ class CatatanKonselingController extends Controller
             'bulan_ini' => CatatanKonseling::whereBetween('tanggal', [now()->startOfMonth(), now()->endOfMonth()])->count(),
         ];
 
-        return view('manajemenmahasiswa::konseling.index', compact('catatan', 'filters', 'ringkasan'));
+        $kategoriList = CatatanKonseling::KATEGORI_KASUS;
+
+        return view('manajemenmahasiswa::konseling.index', compact('catatan', 'filters', 'ringkasan', 'kategoriList'));
     }
 
     public function store(Request $request)
@@ -84,19 +92,28 @@ class CatatanKonselingController extends Controller
                     }
                 },
             ],
-            'tanggal'        => ['required', 'date', 'before_or_equal:today'],
-            'catatan'        => ['nullable', 'string', 'max:5000'],
+            'tanggal'           => ['required', 'date', 'before_or_equal:today'],
+            'kategori_kasus'    => ['required', Rule::in(array_keys(CatatanKonseling::KATEGORI_KASUS))],
+            'kronologi'         => ['nullable', 'string', 'max:5000'],
+            'keinginan_pelapor' => ['nullable', 'string', 'max:5000'],
+            'tindak_lanjut'     => ['nullable', 'string', 'max:5000'],
+            'catatan'           => ['nullable', 'string', 'max:5000'],
         ], [
-            'nama_mahasiswa.required' => 'Nama mahasiswa wajib diisi.',
-            'nama_mahasiswa.max'      => 'Nama mahasiswa maksimal 150 karakter.',
-            'nim.max'                 => 'NIM maksimal 30 karakter.',
-            'angkatan.integer'        => 'Angkatan harus berupa tahun, mis. 2022.',
-            'angkatan.min'            => 'Angkatan paling lama 1990.',
-            'angkatan.max'            => 'Angkatan ' . ($tahunIni + 1) . ' belum ada. Angkatan terbaru adalah ' . $tahunIni . '.',
-            'tanggal.required'        => 'Tanggal konseling wajib diisi.',
-            'tanggal.date'            => 'Tanggal konseling tidak valid.',
-            'tanggal.before_or_equal' => 'Tanggal konseling tidak boleh melewati hari ini.',
-            'catatan.max'             => 'Catatan maksimal 5000 karakter.',
+            'nama_mahasiswa.required'  => 'Nama mahasiswa wajib diisi.',
+            'nama_mahasiswa.max'       => 'Nama mahasiswa maksimal 150 karakter.',
+            'nim.max'                  => 'NIM maksimal 30 karakter.',
+            'angkatan.integer'         => 'Angkatan harus berupa tahun, mis. 2022.',
+            'angkatan.min'             => 'Angkatan paling lama 1990.',
+            'angkatan.max'             => 'Angkatan ' . ($tahunIni + 1) . ' belum ada. Angkatan terbaru adalah ' . $tahunIni . '.',
+            'tanggal.required'         => 'Tanggal konseling wajib diisi.',
+            'tanggal.date'             => 'Tanggal konseling tidak valid.',
+            'tanggal.before_or_equal'  => 'Tanggal konseling tidak boleh melewati hari ini.',
+            'kategori_kasus.required'  => 'Kategori kasus wajib dipilih.',
+            'kategori_kasus.in'        => 'Kategori kasus tidak valid.',
+            'kronologi.max'            => 'Kronologi maksimal 5000 karakter.',
+            'keinginan_pelapor.max'    => 'Keinginan pelapor maksimal 5000 karakter.',
+            'tindak_lanjut.max'        => 'Tindak lanjut maksimal 5000 karakter.',
+            'catatan.max'              => 'Catatan maksimal 5000 karakter.',
         ]);
     }
 }
