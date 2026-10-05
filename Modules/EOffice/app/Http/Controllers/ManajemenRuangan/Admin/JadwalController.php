@@ -488,15 +488,49 @@ class JadwalController extends Controller
                 $roomIdx = $sheetWidth >= 10 ? 9 : 7;
                 $pengIdx = $sheetWidth >= 10 ? 8 : 6;
 
-                $rawRoom = strtoupper((string) ($row[$roomIdx] ?? ''));
-                $cleanRawRoom = str_replace([' ', '.', '-'], '', $rawRoom);
-
+                $rawRoom = (string) ($row[$roomIdx] ?? '');
+                $rawRoomUpper = strtoupper($rawRoom);
+                
                 $ruanganIdTarget = null;
-                foreach ($semuaRuangan as $r) {
-                    $cleanName = strtoupper(str_replace([' ', '.', '-'], '', $r->nama));
-                    if (!empty($cleanName) && strpos($cleanRawRoom, $cleanName) !== false) {
-                        $ruanganIdTarget = $r->id; // ID might be UUID string
-                        break;
+
+                if (strpos($rawRoomUpper, '|') !== false) {
+                    $parts = explode('|', $rawRoomUpper);
+                    $roomCode = trim($parts[0]);
+                    $buildingInfo = trim($parts[1] ?? '');
+                    
+                    // Bersihkan dari titik dan spasi untuk pengecekan keyword (contoh: 'T. Kom' menjadi 'TKOM')
+                    $cleanBuildingInfo = str_replace([' ', '.'], '', $buildingInfo);
+                    
+                    $isTekkom = false;
+                    if (strpos($cleanBuildingInfo, 'TKOM') !== false || 
+                        strpos($cleanBuildingInfo, 'TEKKOM') !== false || 
+                        strpos($cleanBuildingInfo, 'TEKNIKKOMPUTER') !== false) {
+                        $isTekkom = true;
+                    }
+                    
+                    if ($isTekkom) {
+                        $cleanRoomCode = str_replace([' ', '.', '-'], '', $roomCode);
+                        foreach ($semuaRuangan as $r) {
+                            $cleanName = strtoupper(str_replace([' ', '.', '-'], '', $r->nama));
+                            if (!empty($cleanName) && strpos($cleanRoomCode, $cleanName) !== false) {
+                                $ruanganIdTarget = $r->id;
+                                break;
+                            }
+                        }
+                    } else {
+                        // Jika bukan Tekkom (misal Teknik Mesin S1), ruanganIdTarget dibiarkan null 
+                        // agar muncul di sandbox dengan status kuning (unmapped).
+                        $ruanganIdTarget = null;
+                    }
+                } else {
+                    // Kasus tanpa delimiter '|' (misal 'R. Dexlite 401')
+                    $cleanRawRoom = str_replace([' ', '.', '-'], '', $rawRoomUpper);
+                    foreach ($semuaRuangan as $r) {
+                        $cleanName = strtoupper(str_replace([' ', '.', '-'], '', $r->nama));
+                        if (!empty($cleanName) && strpos($cleanRawRoom, $cleanName) !== false) {
+                            $ruanganIdTarget = $r->id;
+                            break;
+                        }
                     }
                 }
 

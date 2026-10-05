@@ -1,5 +1,5 @@
 <x-eoffice::manajemen-ruangan.layout
-    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Blokir Ruangan' }}">
+    pageTitle="{{ $viewMode === 'akademik' ? 'Jadwal Akademik' : 'Kelola Blokir Ruangan' }}">
 
     <div
         x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}' }">
@@ -907,20 +907,20 @@
                                                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Tipe
                                                                         Ruangan</label>
                                                                     <div x-data="{ 
-                                                                                open: false,
-                                                                                get selectedName() {
-                                                                                    const room = [
-                                                                                        @foreach($ruangans as $r)
-                                                                                            {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
-                                                                                        @endforeach
-                                                                                    ].find(r => r.id == ruanganId);
-                                                                                    return room ? room.name : '-- Pilih Ruangan --';
-                                                                                },
-                                                                                selectItem(id) { 
-                                                                                    ruanganId = id;
-                                                                                    this.open = false; 
-                                                                                } 
-                                                                            }" class="relative w-full"
+                                                                                    open: false,
+                                                                                    get selectedName() {
+                                                                                        const room = [
+                                                                                            @foreach($ruangans as $r)
+                                                                                                {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                                                            @endforeach
+                                                                                        ].find(r => r.id == ruanganId);
+                                                                                        return room ? room.name : '-- Pilih Ruangan --';
+                                                                                    },
+                                                                                    selectItem(id) { 
+                                                                                        ruanganId = id;
+                                                                                        this.open = false; 
+                                                                                    } 
+                                                                                }" class="relative w-full"
                                                                         :class="{'z-50': open, 'z-10': !open}"
                                                                         @click.away="open = false">
 
@@ -971,23 +971,23 @@
                                                                     <label
                                                                         class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Kategori</label>
                                                                     <div x-data="{ 
-                                                                                open: false,
-                                                                                get selectedName() {
-                                                                                    const map = {
-                                                                                        'Pindah Kelas': 'Pindah / Pengganti Kelas',
-                                                                                        'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
-                                                                                        'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
-                                                                                        'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
-                                                                                        'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                                                        'Lainnya': 'Lainnya...'
-                                                                                    };
-                                                                                    return map[kategoriType] || 'Pilih Kategori...';
-                                                                                },
-                                                                                selectItem(val) { 
-                                                                                    kategoriType = val;
-                                                                                    this.open = false; 
-                                                                                } 
-                                                                            }" class="relative w-full"
+                                                                                    open: false,
+                                                                                    get selectedName() {
+                                                                                        const map = {
+                                                                                            'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                                                            'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                                                            'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                                                            'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
+                                                                                            'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
+                                                                                            'Lainnya': 'Lainnya...'
+                                                                                        };
+                                                                                        return map[kategoriType] || 'Pilih Kategori...';
+                                                                                    },
+                                                                                    selectItem(val) { 
+                                                                                        kategoriType = val;
+                                                                                        this.open = false; 
+                                                                                    } 
+                                                                                }" class="relative w-full"
                                                                         :class="{'z-50': open, 'z-10': !open}"
                                                                         @click.away="open = false">
 
@@ -1282,4 +1282,5 @@
             </div>
 
         </div> <!-- Close Alpine Wrapper -->
-</div></x-eoffice::manajemen-ruangan.layout>
+    </div>
+</x-eoffice::manajemen-ruangan.layout>

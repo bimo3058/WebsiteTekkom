@@ -1,5 +1,5 @@
 <x-eoffice::manajemen-ruangan.layout
-    pageTitle="{{ $viewMode === 'akademik' ? 'Kelola Jadwal Akademik' : 'Kelola Blokir Ruangan' }}">
+    pageTitle="{{ $viewMode === 'akademik' ? 'Jadwal Akademik' : 'Kelola Blokir Ruangan' }}">
 
     <div x-data="{ 
         showModal: false, 
@@ -144,16 +144,15 @@
                             @csrf
                             @method('DELETE')
                             <button type="button" @click="showDeleteAllModal = true"
-                                class="mp-btn md font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200"
-                                style="gap: 6px;">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2.5" stroke-linecap="round">
+                                class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-red-200 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors gap-1.5 shadow-sm cursor-pointer">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round">
                                     <path d="M3 6h18"></path>
                                     <path
                                         d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
                                     </path>
                                 </svg>
-                                Reset Jadwal
+                                Hapus
                             </button>
 
                             {{-- Decision Modal --}}
@@ -199,22 +198,18 @@
                         </form>
                     </div>
 
-                    <button @click="showImportModal = true" class="mp-btn secondary md font-semibold" style="gap: 6px;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-green-600"
-                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="8" y1="13" x2="16" y2="13"></line>
-                            <line x1="8" y1="17" x2="16" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
+                    <button @click="showImportModal = true" 
+                        class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-[#0B266E] hover:bg-gray-50 transition-colors gap-1.5 shadow-sm cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
                         Import Excel
                     </button>
                 @endif
 
-                <button @click="showModal = true" class="mp-btn primary md">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round">
+                <button @click="showModal = true" 
+                    class="inline-flex items-center justify-center px-3 py-1.5 bg-[#0B266E] border border-transparent rounded-lg text-xs font-semibold text-white hover:bg-[#071946] transition-colors gap-1.5 shadow-sm cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
@@ -226,30 +221,37 @@
 
 
         <!-- Add Modal Alpine Component -->
-        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+        <div x-show="showModal" x-cloak style="display: none;"
+            class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" 
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 
-                <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-sm" aria-hidden="true"
-                    @click="showModal = false"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <!-- 1. BACKDROP OVERLAY (Latar Belakang Gelap) -->
+            <div x-show="showModal" 
+                x-transition:enter="ease-out duration-300" 
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" 
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" 
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" 
+                aria-hidden="true" @click="showModal = false"></div>
 
-                <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-flex flex-col w-full px-4 pt-5 pb-4 overflow-visible text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative max-h-[90vh]">
+            <!-- 2. MODAL PANEL (Kotak Utama Modal) -->
+            <div x-show="showModal" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="relative bg-white rounded-[20px] border border-gray-100 shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-visible">
+                
+                <div class="p-4 sm:p-6 flex flex-col flex-1 min-h-0">
 
                     <div class="flex items-center justify-between mb-5 shrink-0">
                         <h3 class="text-[18px] font-bold text-gray-900 font-['Inter_Tight']" id="modal-title">Tambah
                             Jadwal Baru</h3>
-                        <button type="button" @click="showModal = false" class="text-gray-400 hover:text-gray-500">
+                        <button type="button" @click="showModal = false" class="text-gray-400 hover:text-gray-500 cursor-pointer">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M6 18L18 6M6 6l12 12"></path>
@@ -474,8 +476,8 @@
 
                         <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100 shrink-0">
                             <button type="button" @click="showModal = false; resetForm()"
-                                class="mp-btn secondary md">Batal</button>
-                            <button type="submit" class="mp-btn primary md"
+                                class="mp-btn secondary md cursor-pointer">Batal</button>
+                            <button type="submit" class="mp-btn primary md cursor-pointer"
                                 :disabled="conflictError || isCheckingOut">Simpan Konfigurasi</button>
                         </div>
                     </form>
@@ -517,7 +519,7 @@
                                     <p class="text-[12.5px] text-gray-500 mt-0.5">Upload file jadwal dari sistem akademik (SIAP)</p>
                                 </div>
                             </div>
-                            <button @click="showImportModal = false" class="text-gray-400 hover:text-gray-600 transition-colors mt-1">
+                            <button type="button" @click="showImportModal = false" class="text-gray-400 hover:text-gray-600 transition-colors mt-1 cursor-pointer">
                                 <svg class="w-[22px] h-[22px]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                                 </svg>
@@ -563,8 +565,8 @@
 
                             <div class="flex flex-col sm:flex-row justify-between gap-3 pt-2">
                                 <button type="button" @click="showImportModal = false"
-                                    class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all">Batal</button>
-                                <button type="submit" class="w-full sm:flex-1 flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5">
+                                    class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all cursor-pointer">Batal</button>
+                                <button type="submit" class="w-full sm:flex-1 flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5 cursor-pointer">
                                     <svg class="w-[15px] h-[15px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                                     Mulai Impor
                                 </button>
