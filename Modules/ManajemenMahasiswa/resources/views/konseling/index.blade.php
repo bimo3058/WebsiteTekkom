@@ -11,7 +11,7 @@
 @include('manajemenmahasiswa::partials.sitkom-ui')
 
 @php
-    $adaFilter = $filters['q'] !== '';
+    $adaFilter = $filters['q'] !== '' || ($filters['kategori'] ?? '') !== '';
     $hariIni = now()->toDateString();
 @endphp
 
@@ -36,7 +36,7 @@
     .ksl-sub { font-size: 11px; color: var(--c-fg-muted); margin-top: 1px; }
     .ksl-tgl { white-space: nowrap; color: var(--c-fg-sec); }
     /* Di layar sempit tabel digeser ke samping, bukan diperas sampai nama patah per kata. */
-    .ksl-table { min-width: 640px; }
+    .ksl-table { min-width: 740px; }
 
     /* public/js/mobile-navigation.js menandai setiap <form> ber-display flex di dalam
        konten sebagai toolbar (data-mobile-toolbar) lalu merapatkan anaknya ke kanan.
@@ -60,6 +60,32 @@
         white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.6;
         background: var(--c-bg); border: 1px solid var(--c-border); border-radius: 8px; padding: 12px 14px;
     }
+
+    /* ── Kategori badge ── */
+    .ksl-kategori {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 11px; font-weight: 600; line-height: 1;
+        padding: 4px 10px; border-radius: 20px;
+        white-space: nowrap;
+    }
+    .ksl-kategori--kesehatan_mental  { background: #EFF6FF; color: #1D4ED8; }
+    .ksl-kategori--kekerasan_verbal  { background: #FFF7ED; color: #C2410C; }
+    .ksl-kategori--kaderisasi        { background: #F5F3FF; color: #6D28D9; }
+    .ksl-kategori--kekerasan_seksual { background: #FFF1F2; color: #BE123C; }
+    .ksl-kategori--lainnya           { background: #F3F4F6; color: #4B5563; }
+
+    /* ── Section separator in detail modal ── */
+    .ksl-section-sep {
+        border: none; border-top: 1px solid var(--c-border); margin: 4px 0 16px;
+    }
+
+    /* Filter select */
+    .ksl-filter-select {
+        background: #ffffff; border: 1px solid var(--c-border); border-radius: 8px;
+        height: 34px; padding: 0 10px; font-size: 12px; font-weight: 500; color: var(--c-fg);
+        min-width: 140px;
+    }
+    .ksl-filter-select:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); outline: none; }
 </style>
 
 {{-- ── Header ── --}}
@@ -84,6 +110,13 @@
                 <input type="hidden" name="per_page" value="{{ request('per_page') }}">
             @endif
 
+            <select name="kategori" class="ksl-filter-select" onchange="document.getElementById('kslFilterForm').submit()">
+                <option value="">Semua Kategori</option>
+                @foreach($kategoriList as $key => $label)
+                    <option value="{{ $key }}" {{ ($filters['kategori'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                @endforeach
+            </select>
+
             <div class="ksl-search">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 <input type="text" name="q" value="{{ $filters['q'] }}" placeholder="Cari nama atau NIM…">
@@ -98,6 +131,7 @@
                     <th style="width: 56px;">No</th>
                     <th>Tanggal</th>
                     <th>Mahasiswa</th>
+                    <th>Kategori Kasus</th>
                     <th>Dicatat oleh</th>
                     <th style="width: 72px; text-align: center;">Aksi</th>
                 </tr>
@@ -107,15 +141,20 @@
                     @php
                         $identitas = collect([$item->nim, $item->angkatan ? 'Angkatan ' . $item->angkatan : null])->filter()->implode(' · ');
                         $payload = [
-                            'id'             => $item->id,
-                            'nama_mahasiswa' => $item->nama_mahasiswa,
-                            'nim'            => $item->nim,
-                            'angkatan'       => $item->angkatan,
-                            'tanggal'        => optional($item->tanggal)->toDateString(),
-                            'tanggal_label'  => optional($item->tanggal)->translatedFormat('d F Y'),
-                            'catatan'        => $item->catatan,
-                            'pencatat'       => optional($item->pencatat)->name,
-                            'update_url'     => route('manajemenmahasiswa.konseling.update', $item->id),
+                            'id'               => $item->id,
+                            'nama_mahasiswa'    => $item->nama_mahasiswa,
+                            'nim'               => $item->nim,
+                            'angkatan'          => $item->angkatan,
+                            'tanggal'           => optional($item->tanggal)->toDateString(),
+                            'tanggal_label'     => optional($item->tanggal)->translatedFormat('d F Y'),
+                            'kategori_kasus'    => $item->kategori_kasus,
+                            'kategori_label'    => $item->label_kategori,
+                            'kronologi'         => $item->kronologi,
+                            'keinginan_pelapor' => $item->keinginan_pelapor,
+                            'tindak_lanjut'     => $item->tindak_lanjut,
+                            'catatan'           => $item->catatan,
+                            'pencatat'          => optional($item->pencatat)->name,
+                            'update_url'        => route('manajemenmahasiswa.konseling.update', $item->id),
                         ];
                     @endphp
                     <tr>
@@ -126,6 +165,13 @@
                                data-catatan="{{ json_encode($payload) }}" onclick="kslBukaDetail(this)">{{ $item->nama_mahasiswa }}</a>
                             @if($identitas !== '')
                                 <div class="ksl-sub">{{ $identitas }}</div>
+                            @endif
+                        </td>
+                        <td>
+                            @if($item->kategori_kasus)
+                                <span class="ksl-kategori ksl-kategori--{{ $item->kategori_kasus }}">{{ $item->label_kategori }}</span>
+                            @else
+                                <span style="color: var(--c-fg-placeholder); font-size: 12px;">—</span>
                             @endif
                         </td>
                         <td style="color: var(--c-fg-sec);">{{ optional($item->pencatat)->name ?? '—' }}</td>
@@ -163,12 +209,12 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" style="padding: 60px 24px; text-align: center;">
+                        <td colspan="6" style="padding: 60px 24px; text-align: center;">
                             <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
                                 <span style="color: #D1D5DB;"><x-manajemenmahasiswa::ui.icon name="heart" size="40" /></span>
                                 @if($adaFilter)
                                     <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted); margin: 0;">Tidak ada catatan yang cocok</p>
-                                    <p style="font-size: 12px; color: var(--c-fg-placeholder); margin: 0;">Coba kata kunci lain.</p>
+                                    <p style="font-size: 12px; color: var(--c-fg-placeholder); margin: 0;">Coba kata kunci atau kategori lain.</p>
                                     <a href="{{ route('manajemenmahasiswa.konseling.index') }}" class="mk-btn mk-btn--secondary mk-btn--sm mt-1">Reset pencarian</a>
                                 @else
                                     <p style="font-size: 13px; font-weight: 600; color: var(--c-fg-muted); margin: 0;">Belum ada catatan konseling</p>
@@ -200,6 +246,7 @@
 
             <div class="modal-body">
                 <div class="ksl-grid">
+                    {{-- ── Identitas Mahasiswa ── --}}
                     <div class="full">
                         <label class="form-label-custom" for="kslNama">Nama Mahasiswa <span class="required">*</span></label>
                         <input type="text" id="kslNama" name="nama_mahasiswa" maxlength="150" required
@@ -218,18 +265,64 @@
                                class="form-control-custom @error('angkatan') is-invalid @enderror" placeholder="Opsional, mis. 2022">
                         @error('angkatan') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
-                    <div class="full">
+                    <div>
                         <label class="form-label-custom" for="kslTanggal">Tanggal Konseling <span class="required">*</span></label>
                         <input type="date" id="kslTanggal" name="tanggal" max="{{ $hariIni }}" required
-                               class="form-control-custom @error('tanggal') is-invalid @enderror" style="max-width: 240px;">
+                               class="form-control-custom @error('tanggal') is-invalid @enderror">
                         @error('tanggal') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
+                    <div>
+                        <label class="form-label-custom" for="kslKategori">Kategori Kasus <span class="required">*</span></label>
+                        <select id="kslKategori" name="kategori_kasus" required
+                                class="form-control-custom @error('kategori_kasus') is-invalid @enderror">
+                            <option value="">— Pilih kategori —</option>
+                            @foreach($kategoriList as $key => $label)
+                                <option value="{{ $key }}">{{ $label }}</option>
+                            @endforeach
+                        </select>
+                        @error('kategori_kasus') <div class="ksl-err">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- ── Kronologi Kasus ── --}}
                     <div class="full">
-                        <label class="form-label-custom" for="kslCatatan">Catatan</label>
-                        <textarea id="kslCatatan" name="catatan" rows="5" maxlength="5000"
+                        <label class="form-label-custom" for="kslKronologi">Kronologi Kasus</label>
+                        <textarea id="kslKronologi" name="kronologi" rows="4" maxlength="5000"
+                                  class="form-control-custom @error('kronologi') is-invalid @enderror"
+                                  style="font-weight: 500; resize: vertical;"
+                                  placeholder="Ceritakan kejadian dari sudut pandang mahasiswa… (opsional)"></textarea>
+                        <div class="ksl-hint">Disimpan terenkripsi.</div>
+                        @error('kronologi') <div class="ksl-err">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- ── Keinginan Pelapor ── --}}
+                    <div class="full">
+                        <label class="form-label-custom" for="kslKeinginan">Keinginan Pelapor</label>
+                        <textarea id="kslKeinginan" name="keinginan_pelapor" rows="3" maxlength="5000"
+                                  class="form-control-custom @error('keinginan_pelapor') is-invalid @enderror"
+                                  style="font-weight: 500; resize: vertical;"
+                                  placeholder="Apa yang diharapkan/diinginkan oleh pelapor… (opsional)"></textarea>
+                        <div class="ksl-hint">Disimpan terenkripsi.</div>
+                        @error('keinginan_pelapor') <div class="ksl-err">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- ── Tindak Lanjut ── --}}
+                    <div class="full">
+                        <label class="form-label-custom" for="kslTindakLanjut">Tindak Lanjut</label>
+                        <textarea id="kslTindakLanjut" name="tindak_lanjut" rows="3" maxlength="5000"
+                                  class="form-control-custom @error('tindak_lanjut') is-invalid @enderror"
+                                  style="font-weight: 500; resize: vertical;"
+                                  placeholder="Arahan, rekomendasi, atau langkah selanjutnya… (opsional)"></textarea>
+                        <div class="ksl-hint">Disimpan terenkripsi.</div>
+                        @error('tindak_lanjut') <div class="ksl-err">{{ $message }}</div> @enderror
+                    </div>
+
+                    {{-- ── Catatan Tambahan ── --}}
+                    <div class="full">
+                        <label class="form-label-custom" for="kslCatatan">Catatan Tambahan</label>
+                        <textarea id="kslCatatan" name="catatan" rows="3" maxlength="5000"
                                   class="form-control-custom @error('catatan') is-invalid @enderror"
                                   style="font-weight: 500; resize: vertical;"
-                                  placeholder="Ringkasan masalah, saran yang diberikan, rencana berikutnya… (opsional)"></textarea>
+                                  placeholder="Catatan internal dosen, mis. observasi pribadi… (opsional)"></textarea>
                         <div class="ksl-hint">Disimpan terenkripsi.</div>
                         @error('catatan') <div class="ksl-err">{{ $message }}</div> @enderror
                     </div>
@@ -246,7 +339,7 @@
 
 {{-- ── Modal detail ── --}}
 <div class="modal fade" id="kslDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <x-manajemenmahasiswa::ui.modal-header subtitle="Catatan hanya terlihat oleh GPM">
                 <x-slot:icon><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg></x-slot:icon>
@@ -258,7 +351,21 @@
                     <dd><span id="kslDNama" style="font-weight: 600;"></span><div class="ksl-sub" id="kslDIdentitas"></div></dd>
                     <dt>Tanggal</dt>
                     <dd id="kslDTanggal"></dd>
-                    <dt>Catatan</dt>
+                    <dt>Kategori Kasus</dt>
+                    <dd><span id="kslDKategori"></span></dd>
+
+                    <hr class="ksl-section-sep">
+
+                    <dt>Kronologi Kasus</dt>
+                    <dd><div class="ksl-isi" id="kslDKronologi"></div></dd>
+                    <dt>Keinginan Pelapor</dt>
+                    <dd><div class="ksl-isi" id="kslDKeinginan"></div></dd>
+                    <dt>Tindak Lanjut</dt>
+                    <dd><div class="ksl-isi" id="kslDTindakLanjut"></div></dd>
+
+                    <hr class="ksl-section-sep">
+
+                    <dt>Catatan Tambahan</dt>
                     <dd><div class="ksl-isi" id="kslDCatatan"></div></dd>
                     <dt>Dicatat oleh</dt>
                     <dd id="kslDPencatat" style="margin-bottom: 0;"></dd>
@@ -277,6 +384,7 @@
         const STORE_URL = @json(route('manajemenmahasiswa.konseling.store'));
         const HARI_INI = @json($hariIni);
         const TAHUN_INI = {{ now()->year }};
+        const KATEGORI_LABELS = @json($kategoriList);
         let detailAktif = null;
 
         const $ = id => document.getElementById(id);
@@ -294,6 +402,10 @@
             $('kslNim').value = d.nim || '';
             $('kslAngkatan').value = d.angkatan || '';
             $('kslTanggal').value = d.tanggal || HARI_INI;
+            $('kslKategori').value = d.kategori_kasus || '';
+            $('kslKronologi').value = d.kronologi || '';
+            $('kslKeinginan').value = d.keinginan_pelapor || '';
+            $('kslTindakLanjut').value = d.tindak_lanjut || '';
             $('kslCatatan').value = d.catatan || '';
             batasiAngkatan();
         }
@@ -329,7 +441,21 @@
             $('kslDNama').textContent = d.nama_mahasiswa || '-';
             $('kslDIdentitas').textContent = identitas;
             $('kslDTanggal').textContent = d.tanggal_label || '-';
-            $('kslDCatatan').textContent = d.catatan || 'Tidak ada catatan.';
+
+            // Kategori badge
+            const kategoriEl = $('kslDKategori');
+            if (d.kategori_kasus && KATEGORI_LABELS[d.kategori_kasus]) {
+                kategoriEl.className = 'ksl-kategori ksl-kategori--' + d.kategori_kasus;
+                kategoriEl.textContent = KATEGORI_LABELS[d.kategori_kasus];
+            } else {
+                kategoriEl.className = '';
+                kategoriEl.textContent = d.kategori_label || '—';
+            }
+
+            $('kslDKronologi').textContent = d.kronologi || 'Tidak diisi.';
+            $('kslDKeinginan').textContent = d.keinginan_pelapor || 'Tidak diisi.';
+            $('kslDTindakLanjut').textContent = d.tindak_lanjut || 'Tidak diisi.';
+            $('kslDCatatan').textContent = d.catatan || 'Tidak ada catatan tambahan.';
             $('kslDPencatat').textContent = d.pencatat || '—';
             modal('kslDetailModal').show();
         };
