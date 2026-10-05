@@ -146,8 +146,8 @@
                             @csrf
                             @method('DELETE')
                             <button type="button" @click="showDeleteAllModal = true"
-                                class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-red-200 rounded-lg text-xs font-semibold text-red-600 hover:bg-red-50 transition-colors gap-1.5 shadow-sm cursor-pointer">
-                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                class="mp-btn md bg-white border border-red-200 text-red-600 hover:bg-red-50 transition-colors shadow-sm cursor-pointer">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round">
                                     <path d="M3 6h18"></path>
                                     <path
@@ -218,17 +218,16 @@
                     </div>
 
                     <button @click="showImportModal = true" 
-                        class="inline-flex items-center justify-center px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-xs font-semibold text-[#0B266E] hover:bg-gray-50 transition-colors gap-1.5 shadow-sm cursor-pointer">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                        class="mp-btn md bg-white border border-gray-200 text-[#0B266E] hover:bg-gray-50 transition-colors shadow-sm cursor-pointer">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
                         </svg>
                         Import Excel
                     </button>
                 @endif
 
-                <button @click="showModal = true" 
-                    class="inline-flex items-center justify-center px-3 py-1.5 bg-[#0B266E] border border-transparent rounded-lg text-xs font-semibold text-white hover:bg-[#071946] transition-colors gap-1.5 shadow-sm cursor-pointer">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
+                <button @click="showModal = true" class="mp-btn primary md">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
