@@ -511,14 +511,21 @@
             {{-- =================== MONTHLY MODE =================== --}}
         @else
             {{-- Month Nav --}}
-            <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center justify-between mb-4 gap-2">
                 @if($canGoBackMonth)
                     <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                        ← Bulan Lalu
+                        class="inline-flex items-center justify-center text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all md:min-w-[130px]">
+                        <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span class="hidden md:inline">← Bulan Lalu</span>
                     </a>
                 @else
-                    <div class="px-4 py-2 min-w-[130px]"></div>
+                    <div class="px-3 md:px-4 py-2 md:min-w-[130px] invisible flex items-center justify-center">
+                        <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                    </div>
                 @endif
 
                 {{-- Month/Year Picker Dropdown (Monthly) --}}
@@ -598,27 +605,32 @@
                 </div>
 
                 <a href="{{ request()->fullUrlWithQuery(['month' => $nextMonth]) }}"
-                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                    Bulan Depan →
+                    class="inline-flex items-center justify-center text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all md:min-w-[130px]">
+                    <svg class="w-4 h-4 shrink-0 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span class="hidden md:inline">Bulan Depan →</span>
                 </a>
             </div>
 
-            <div class="mp-card overflow-hidden">
-                <div class="mp-card-body" style="padding: 20px;">
-                    <p class="text-[12px] text-gray-500 mb-4"><strong>Heatmap Aktivitas:</strong> Semakin gelap warnanya,
+            <div class="mp-card overflow-hidden w-full">
+                <div class="mp-card-body p-3 md:p-5">
+                    <p class="text-[11px] md:text-[12px] text-gray-500 mb-4 leading-snug"><strong>Heatmap Aktivitas:</strong> Semakin gelap warnanya,
                         semakin banyak peminjaman di tanggal tersebut.</p>
 
-                    {{-- Day-of-week header --}}
-                    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 4px; margin-bottom: 4px;">
-                        @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $dayLabel)
-                            <div style="text-align:center; font-size:11px; font-weight:700; color:#6B7280; padding: 6px 0;">
-                                {{ $dayLabel }}
+                    <div class="overflow-x-auto w-full pb-2">
+                        <div class="min-w-[280px]">
+                            {{-- Day-of-week header --}}
+                            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 2px md:gap-4; margin-bottom: 4px;">
+                                @foreach(['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'] as $dayLabel)
+                                    <div style="text-align:center; font-size:11px; font-weight:700; color:#6B7280; padding: 4px 0;">
+                                        {{ $dayLabel }}
+                                    </div>
+                                @endforeach
                             </div>
-                        @endforeach
-                    </div>
 
-                    {{-- Calendar Cells --}}
-                    <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 4px;">
+                            {{-- Calendar Cells --}}
+                            <div style="display:grid; grid-template-columns:repeat(7, 1fr); gap: 2px md:gap-4;">
                         @foreach($calendarDays as $cell)
                             @if($cell === null)
                                 <div></div>
@@ -655,9 +667,9 @@
                                 @endphp
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
-                                    style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                                                                                                                                                                                                                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                    class="block text-center py-1.5 px-1 md:py-2 md:px-1.5 rounded-md md:rounded-lg no-underline transition-all"
+                                    style="background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #0B266E' : '1px solid #E5E7EB' }};
+                                           {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -680,6 +692,8 @@
                                 </a>
                             @endif
                         @endforeach
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -109,7 +109,8 @@ class PersetujuanController extends Controller
             });
         }
 
-        $peminjamans = $query->orderBy('updated_at', 'desc')
+        $peminjamans = $query->orderBy('tanggal_pinjam', 'desc')
+            ->orderBy('jam_mulai', 'desc')
             ->paginate((int) $request->input('per_page', 10))->withQueryString();
 
         $ruangans = Ruangan::orderBy('nama', 'asc')->get();
@@ -162,7 +163,9 @@ class PersetujuanController extends Controller
             });
         }
 
-        return $query->orderBy('updated_at', 'desc')->get();
+        return $query->orderBy('tanggal_pinjam', 'desc')
+            ->orderBy('jam_mulai', 'desc')
+            ->get();
     }
 
     public function exportExcel(Request $request)

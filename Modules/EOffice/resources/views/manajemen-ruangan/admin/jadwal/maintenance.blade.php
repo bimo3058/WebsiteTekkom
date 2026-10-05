@@ -1282,4 +1282,4 @@
             </div>
 
         </div> <!-- Close Alpine Wrapper -->
-</x-eoffice::manajemen-ruangan.layout>
+</div></x-eoffice::manajemen-ruangan.layout>
