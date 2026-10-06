@@ -696,6 +696,8 @@
                                 </button>
                                 <input type="text" name="search" x-model="searchQuery" 
                                     @input.debounce.500ms="$el.form.submit()"
+                                    @scroll.window.capture="$el.blur()"
+                                    @touchmove.window.capture="$el.blur()"
                                     placeholder="Search..."
                                     class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
                                 
