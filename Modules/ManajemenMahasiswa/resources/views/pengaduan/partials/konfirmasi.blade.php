@@ -17,26 +17,14 @@
     $buktiItems = (array) ($payload['bukti_items'] ?? []);
     $buktiCount = count($buktiItems);
 
-    $waktu = $tpl('waktu_kejadian');
-    if ($waktu) {
-        try {
-            $waktu = \Carbon\Carbon::parse($waktu)->translatedFormat('d F Y, H:i');
-        } catch (\Throwable $e) {
-            // tampilkan apa adanya
-        }
-    }
-
-    $infoItems = [
+    $infoItems = array_merge([
         // Istilah sama dengan daftar & detail staff: "Konfidensial".
-        ['label' => 'Pelapor',         'value' => $isAnonim ? 'Konfidensial' : ($reporterName ?? '-')],
-        ['label' => 'Angkatan',        'value' => $tpl('angkatan')],
-        ['label' => 'Lokasi Kejadian', 'value' => $tpl('lokasi')],
-        ['label' => 'Waktu Kejadian',  'value' => $waktu],
-        ['label' => 'Mata Kuliah',     'value' => $tpl('mata_kuliah')],
-        ['label' => 'Dosen Terkait',   'value' => $tpl('nama_dosen')],
-        ['label' => 'Tendik Terkait',  'value' => $tpl('nama_tendik')],
-        ['label' => 'Frekuensi',       'value' => $tpl('frekuensi')],
-    ];
+        ['label' => 'Pelapor',  'value' => $isAnonim ? 'Konfidensial' : ($reporterName ?? '-')],
+        ['label' => 'Angkatan', 'value' => $tpl('angkatan')],
+    ], \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::barisInfo(
+        (string) $payload['kategori'],
+        (array) ($payload['template'] ?? [])
+    ));
 @endphp
 
 @include('manajemenmahasiswa::pengaduan.partials.box-styles')

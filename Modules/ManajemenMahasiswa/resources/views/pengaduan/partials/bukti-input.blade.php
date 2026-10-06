@@ -10,7 +10,7 @@
     $maxKb = \Modules\ManajemenMahasiswa\Support\PengaduanBukti::MAX_KB;
     $maxMb = $maxKb / 1024;
 @endphp
-<label class="pgd-label" for="buktiInput">Berkas PDF</label>
+<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-opt">(opsional)</span></label>
 {{-- Input bawaan disembunyikan (tetap bisa difokus keyboard): tampilannya selalu
      menulis "Tidak ada file yang dipilih", padahal berkas terpilih sudah didaftar di bawah. --}}
 <input type="file" class="bk-file-native" name="bukti[]" id="buktiInput" accept="application/pdf,.pdf" multiple>

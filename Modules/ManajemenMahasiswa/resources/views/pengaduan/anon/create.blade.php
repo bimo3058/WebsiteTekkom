@@ -11,7 +11,6 @@
             'jalur'             => 'konfidensial',
             'kategoriList'      => $kategoriList,
             'dosenList'         => $dosenList ?? [],
-            'frekuensiList'     => $frekuensiList ?? [],
             'buktiPendingItems' => $buktiPendingItems ?? [],
             'backUrl'           => route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]),
         ])

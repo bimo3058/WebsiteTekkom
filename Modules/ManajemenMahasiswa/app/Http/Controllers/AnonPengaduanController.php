@@ -143,16 +143,9 @@ class AnonPengaduanController extends Controller
                 ->pluck('name')
                 ->toArray();
 
-            $frekuensiList = [
-                'Sekali' => 'Sekali',
-                'Kadang-kadang' => 'Kadang-kadang',
-                'Sering' => 'Sering',
-                'Hampir Setiap Pertemuan Kuliah' => 'Hampir Setiap Pertemuan Kuliah',
-            ];
-
             $buktiPendingItems = $this->buktiPendingItems($token);
 
-            return view('manajemenmahasiswa::pengaduan.anon.create', compact('pengaduan', 'token', 'kategoriList', 'dosenList', 'frekuensiList', 'buktiPendingItems'));
+            return view('manajemenmahasiswa::pengaduan.anon.create', compact('pengaduan', 'token', 'kategoriList', 'dosenList', 'buktiPendingItems'));
         }
 
         // Label resmi kategori, sama dengan yang tampil di daftar & detail staff.

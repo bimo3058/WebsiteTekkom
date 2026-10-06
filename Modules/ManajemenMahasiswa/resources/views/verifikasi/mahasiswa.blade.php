@@ -36,16 +36,10 @@
             border-color: var(--c-primary-border);
         }
 
-        /* Kolom Reward memuat status saja; semua aksi baris berkumpul di kolom Aksi,
-       sama seperti halaman admin (verifikasi/reward.blade.php). Rel ini rata
-       kanan: tombol langkah maju di kiri, Tinjau selalu paling kanan, jadi
-       tombol Tinjau segaris di semua baris. Kerangka modal (.tp-*) & .btn-tinjau
-       ada di partials/tinjau-modal-styles.blade.php — dipakai bersama admin. */
-        .aksi-rail {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
+        /* Semua aksi baris berkumpul di menu "⋯" kolom Aksi (partials/aksi-menu),
+       sama seperti Direktori Mahasiswa & halaman admin. Kerangka modal (.tp-*)
+       & .btn-tinjau ada di partials/tinjau-modal-styles.blade.php — dipakai
+       bersama admin. */
 
         /* Satu-satunya tombol berlatar pekat dalam sebuah baris: navy mengikuti tombol
        primer halaman Superadmin. Hierarkinya dibawa oleh bobot latar (pekat vs
@@ -268,6 +262,65 @@
             font-size: 11px;
             color: var(--c-fg-muted);
             white-space: nowrap;
+        }
+
+        /* Tabel Klaim Prestasi di layar sempit (laptop ≤ 1680px): tanpa ini tabel
+           selebar ±1270px dan kolom Aksi (Ajukan Reward / Tinjau) terdorong keluar
+           layar. Di atas 1680px tabel sudah muat, jadi tidak diubah sama sekali.
+           Gaya sel ditulis inline di markup, jadi di sini perlu !important —
+           hanya di dalam media query ini. Hanya padding yang dikecilkan; nama MK
+           dan tahun ajarannya TETAP sejajar dalam satu baris di semua lebar
+           layar (keputusan Surya). */
+        @media (max-width: 1680px) {
+            .klaim-table {
+                min-width: 0 !important;
+            }
+
+            .klaim-table th,
+            .klaim-table td {
+                padding-left: 8px !important;
+                padding-right: 8px !important;
+            }
+
+            .klaim-table th:first-child,
+            .klaim-table td:first-child {
+                padding-left: 12px !important;
+                padding-right: 4px !important;
+                width: 40px !important;
+            }
+
+            .klaim-table th[style*="min-width:180px"],
+            .klaim-table td[style*="min-width:180px"] {
+                min-width: 130px !important;
+            }
+
+            /* Jaring pengaman: kalau tabel tetap harus digeser, kolom Aksi
+               menempel di tepi kanan supaya tombol "⋯" tidak hilang dari pandangan. */
+            .klaim-table th:last-child,
+            .klaim-table td:last-child {
+                position: sticky;
+                right: 0;
+                box-shadow: -8px 0 8px -8px rgba(15, 23, 42, .12);
+            }
+
+            .klaim-table th:last-child {
+                background: #FAFAFA;
+            }
+
+            .klaim-table td:last-child {
+                background: #fff;
+            }
+
+            .klaim-table tr:hover td:last-child {
+                background: #FAFAFA;
+            }
+
+            /* Sel yang menempel membentuk lapisan sendiri, jadi sel baris di
+               bawahnya bisa menimpa menu "⋯" yang sedang terbuka — sel yang
+               aktif dinaikkan di atas yang lain. */
+            .klaim-table td:last-child:focus-within {
+                z-index: 5;
+            }
         }
 
         .mk-sel-tag {
@@ -628,7 +681,7 @@
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     Status</th>
                                 <th
-                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:120px;">
+                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">
                                     Aksi</th>
                             </tr>
                         </thead>
@@ -690,7 +743,7 @@
                                     </td>
                                     <td style="padding:14px 16px; min-width:200px;">
                                         <p
-                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:260px;">
+                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:260px;">
                                             {{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak diketahui' }}</p>
                                     </td>
                                     <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-sec);">
@@ -728,14 +781,9 @@
                                         @endif
                                         {{-- Satu pintu masuk seperti halaman admin: bukti, tanggal, dan
                                         catatan verifikasi semuanya dibuka dari sini. --}}
-                                        <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjau(@js($tinjauRiwayatPayload))">
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                <circle cx="12" cy="12" r="3" />
-                                            </svg>
-                                            Tinjau
-                                        </button>
+                                        @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                            ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauRiwayatPayload],
+                                        ]])
                                     </td>
                                 </tr>
                             @endforeach
@@ -810,11 +858,8 @@
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     Status Verifikasi</th>
-                                {{-- Rata kanan: tombol Tinjau jadi elemen paling kanan di setiap baris,
-                                sehingga kolomnya membentuk satu rel lurus meski lebar tombol
-                                utamanya berbeda-beda (atau tidak ada sama sekali). --}}
                                 <th
-                                    style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:170px;">
+                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">
                                     Aksi</th>
                             </tr>
                         </thead>
@@ -879,7 +924,7 @@
                                     </td>
                                     <td style="padding:14px 16px; min-width:180px;">
                                         <p
-                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">
+                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:220px;">
                                             {{ $p->nama_prestasi }}</p>
                                     </td>
                                     <td style="padding:14px 16px;"><span
@@ -902,7 +947,7 @@
                                             @endif
                                         </span>
                                     </td>
-                                    <td style="padding:14px 16px; text-align:right;">
+                                    <td style="padding:14px 16px; text-align:center;">
                                         @if(!$pDiputus && $canSubmit)
                                             {{-- Lihat catatan pada form tarik di tabel Riwayat Kegiatan --}}
                                             <form method="POST" id="tarikPrestasiForm{{ $p->id }}" style="display:none;"
@@ -910,17 +955,9 @@
                                                 @csrf @method('DELETE')
                                             </form>
                                         @endif
-                                        <div class="aksi-rail">
-                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
-                                                onclick="openTinjau(@js($tinjauPrestasiPayload))">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                    <circle cx="12" cy="12" r="3" />
-                                                </svg>
-                                                Tinjau
-                                            </button>
-                                        </div>
+                                        @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                            ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauPrestasiPayload],
+                                        ]])
                                     </td>
                                 </tr>
                             @endforeach
@@ -1039,7 +1076,7 @@
             {{-- Peringatan kuota penuh ada di callout di atas kartu ini. --}}
             @if($prestasiData->count() > 0)
                 <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; min-width:1100px;">
+                    <table class="klaim-table" style="width:100%; border-collapse:collapse; min-width:1100px;">
                         <thead>
                             <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
                                 <th
@@ -1064,7 +1101,7 @@
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     Status Reward</th>
                                 <th
-                                    style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:290px;">
+                                    style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:72px;">
                                     Aksi</th>
                             </tr>
                         </thead>
@@ -1172,7 +1209,7 @@
                                     </td>
                                     <td style="padding:14px 16px; min-width:180px;">
                                         <p
-                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">
+                                            style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow-wrap:break-word; line-height:1.5; max-width:220px;">
                                             {{ $p->nama_prestasi }}</p>
                                     </td>
                                     <td style="padding:14px 16px;"><span
@@ -1230,32 +1267,31 @@
                                             <span class="claim-badge belum">Belum diajukan</span>
                                         @endif
                                     </td>
-                                    <td style="padding:14px 16px; text-align:right;">
-                                        <div class="aksi-rail">
-                                            @if($rewardBisaDiajukan)
-                                                @if($kuotaSemuaPenuh)
-                                                    {{-- Kedua kelompok kuota habis: kategori apa pun yang
-                                                    dipilih pasti tertahan, jadi jangan biarkan mahasiswa
-                                                    mengisi formulir lalu menunggu penolakan. --}}
-                                                    <button type="button" class="mk-btn mk-btn--primary" disabled
-                                                        title="Semua kuota reward Anda sudah habis. Buka &quot;Aturan &amp; rincian&quot; di kanan atas tabel untuk melihat prestasi mana yang memakainya.">
-                                                        Kuota reward habis
-                                                    </button>
-                                                @else
-                                                    <button type="button" class="mk-btn mk-btn--primary"
-                                                        onclick="openAjukanReward(@js($ajukanRewardPayload))">{{ $rewardLabelAksi }}</button>
-                                                @endif
-                                            @endif
-                                            <button type="button" class="mk-btn mk-btn--primary mk-btn--sm"
-                                                onclick="openTinjau(@js($tinjauKlaimPayload))">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                                    <circle cx="12" cy="12" r="3" />
-                                                </svg>
-                                                Tinjau
-                                            </button>
-                                        </div>
+                                    <td style="padding:14px 16px; text-align:center;">
+                                        @php
+                                            // Langkah maju (Ajukan Reward) di atas, Tinjau di bawah.
+                                            // Kedua kelompok kuota habis: kategori apa pun yang dipilih
+                                            // pasti tertahan, jadi butirnya dimatikan supaya mahasiswa
+                                            // tidak mengisi formulir lalu menunggu penolakan.
+                                            $itemAksiKlaim = [];
+                                            if ($rewardBisaDiajukan) {
+                                                $itemAksiKlaim[] = $kuotaSemuaPenuh
+                                                    ? [
+                                                        'label'    => 'Kuota reward habis',
+                                                        'icon'     => 'gift',
+                                                        'disabled' => true,
+                                                        'title'    => 'Semua kuota reward Anda sudah habis. Buka "Aturan & rincian" di kanan atas tabel untuk melihat prestasi mana yang memakainya.',
+                                                    ]
+                                                    : [
+                                                        'label'   => $rewardLabelAksi,
+                                                        'icon'    => 'gift',
+                                                        'fn'      => 'openAjukanReward',
+                                                        'payload' => $ajukanRewardPayload,
+                                                    ];
+                                            }
+                                            $itemAksiKlaim[] = ['label' => 'Tinjau', 'fn' => 'openTinjau', 'payload' => $tinjauKlaimPayload];
+                                        @endphp
+                                        @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => $itemAksiKlaim])
                                     </td>
                                 </tr>
                             @endforeach

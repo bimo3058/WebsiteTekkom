@@ -67,8 +67,9 @@
         .kf-sub { font-size: 13px; font-weight: 500; color: var(--c-fg-muted); margin: 0 0 16px; }
 
         .kf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 40px; max-width: 900px; }
-        .kf-row { display: flex; align-items: center; min-width: 0; }
-        .kf-label { width: 140px; font-size: 13px; color: var(--c-fg-placeholder); flex-shrink: 0; font-weight: 500; }
+        .kf-row { display: flex; align-items: baseline; min-width: 0; }
+        /* Lebar cukup untuk label pertanyaan terpanjang ("Nama Kegiatan / Organisasi"). */
+        .kf-label { width: 180px; padding-right: 12px; box-sizing: border-box; font-size: 13px; line-height: 1.4; color: var(--c-fg-placeholder); flex-shrink: 0; font-weight: 500; }
         .kf-value { font-size: 13px; font-weight: 600; color: var(--c-fg-sec); min-width: 0; overflow-wrap: anywhere; }
         .kf-value.is-empty { color: var(--c-border-strong); }
 
@@ -90,29 +91,48 @@
             background: #FAFAFA; border-top: 1px solid var(--c-border);
         }
 
-        /* ── Field form, meniru .input-group/.input-field Edit User SITKOM ── */
+        /* ── Field form, meniru redesign Edit User SITKOM (superadmin/users/_edit-style):
+              label 12px huruf biasa, kotak 38px radius 7px ── */
         .pgd-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; }
         .pgd-fields.is-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         .pgd-fields + .pgd-fields { margin-top: 16px; }
         .pgd-field.is-wide { grid-column: 1 / -1; }
         .pgd-label {
-            display: block; margin-bottom: 6px; font-size: 10px; font-weight: 700;
-            color: var(--c-fg-muted); text-transform: uppercase; letter-spacing: .08em;
+            display: block; margin-bottom: 6px; font-size: 12px; font-weight: 500; line-height: 1.4;
+            color: var(--c-fg-sec); text-transform: none; letter-spacing: normal;
         }
         .pgd-label .is-req { color: var(--c-error); }
-        .pgd-label .is-opt { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--c-fg-placeholder); }
+        .pgd-label .is-opt { font-weight: 400; color: var(--c-fg-placeholder); }
         .pgd-input {
-            display: block; width: 100%; box-sizing: border-box; min-height: 36px; padding: 8px 12px;
-            font-family: inherit; font-size: 13px; font-weight: 500; color: var(--c-fg);
-            background: #ffffff; border: 1px solid var(--c-border); border-radius: 8px;
+            display: block; width: 100%; box-sizing: border-box; min-height: 38px; padding: 8px 11px;
+            font-family: inherit; font-size: 13px; font-weight: 400; color: var(--c-fg);
+            background: #ffffff; border: 1px solid var(--c-border); border-radius: 7px;
             outline: none; transition: border-color .15s, box-shadow .15s;
         }
         .pgd-input::placeholder { color: var(--c-fg-placeholder); font-weight: 400; }
-        .pgd-input:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); }
+        .pgd-input:focus { border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11, 38, 110, .08); }
+        /* Dropdown Alpine di form disamakan tinggi & sudutnya dengan kotak isian. */
+        .kf-box .mk-select.mk-select--md { --mks-h: 38px; --mks-radius: 7px; --mks-font: 13px; --mks-pad: 11px; }
         .pgd-input:disabled { background: var(--c-bg); color: var(--c-fg-muted); }
         .pgd-input.is-invalid { border-color: var(--c-error); }
         textarea.pgd-input { resize: vertical; line-height: 1.6; }
         .pgd-help { margin-top: 5px; font-size: 11px; color: var(--c-fg-muted); }
+        .pgd-help-row { display: flex; justify-content: space-between; gap: 12px; }
+        .pgd-help-row [data-pgd-count] { font-variant-numeric: tabular-nums; flex-shrink: 0; }
+
+        /* Set pertanyaan per kategori (Detail Kejadian) */
+        .pgd-set { border: 0; margin: 0; padding: 0; min-width: 0; }
+        .pgd-set[hidden] { display: none; }
+        .pgd-set-empty {
+            display: flex; align-items: center; gap: 8px; padding: 14px 16px;
+            border: 1px dashed var(--c-border-strong); border-radius: 10px;
+            background: var(--c-bg); color: var(--c-fg-muted); font-size: 13px; font-weight: 500;
+        }
+        .pgd-set-empty[hidden] { display: none; }
+        .pgd-sr-only {
+            position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+            overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+        }
         .pgd-error { margin-top: 5px; font-size: 11px; font-weight: 600; color: var(--c-error); }
 
         /* Kartu pilihan kategori */

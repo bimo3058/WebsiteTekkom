@@ -25,15 +25,6 @@
 
     $adaBukti = !empty(data_get($pengaduan, 'data_template.bukti')) || $tpl('link_bukti');
 
-    $waktu = $tpl('waktu_kejadian') ?? $tpl('tanggal_kejadian');
-    if ($waktu) {
-        try {
-            $waktu = \Carbon\Carbon::parse($waktu)->translatedFormat('d F Y, H:i');
-        } catch (\Throwable $e) {
-            // tampilkan apa adanya
-        }
-    }
-
     $infoItems = [];
     if ($isStaff) {
         $infoItems[] = ['label' => 'Pelapor', 'value' => $pengaduan->is_anonim
@@ -44,14 +35,12 @@
     if (!$pengaduan->is_anonim) {
         $infoItems[] = ['label' => 'Angkatan', 'value' => $tpl('angkatan')];
     }
-    $infoItems = array_merge($infoItems, [
-        ['label' => 'Lokasi Kejadian', 'value' => $tpl('lokasi')],
-        ['label' => 'Waktu Kejadian',  'value' => $waktu],
-        ['label' => 'Mata Kuliah',     'value' => $tpl('mata_kuliah')],
-        ['label' => 'Dosen Terkait',   'value' => $tpl('nama_dosen')],
-        ['label' => 'Tendik Terkait',  'value' => $tpl('nama_tendik')],
-        ['label' => 'Frekuensi',       'value' => $tpl('frekuensi')],
-    ]);
+    // Pertanyaan Detail Kejadian sesuai kategori tiket; jawaban tiket lama di luar
+    // set kategorinya tetap ditampilkan bila berisi.
+    $infoItems = array_merge($infoItems, \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::barisInfo(
+        (string) $pengaduan->kategori,
+        (array) ($pengaduan->data_template ?? [])
+    ));
 
     $adaFlash = session('success') || session('info') || session('error') || $errors->any();
 @endphp

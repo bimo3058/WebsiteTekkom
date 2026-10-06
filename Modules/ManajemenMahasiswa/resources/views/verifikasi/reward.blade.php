@@ -42,8 +42,9 @@
     .verif-table tbody tr { transition: background .12s; }
     .verif-table tbody tr:hover td { background: #FAFAFA; }
     .verif-table .sel-utama { font-size: 13px; font-weight: 600; color: var(--c-fg); margin: 0; }
-    .verif-table .sel-nama { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; }
-    .verif-table .sel-judul { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.5; max-width: 300px; }
+    /* Isi sel tidak pernah dipotong ("…"): teks panjang turun ke baris berikutnya */
+    .verif-table .sel-nama { overflow-wrap: break-word; line-height: 1.5; max-width: 160px; }
+    .verif-table .sel-judul { overflow-wrap: break-word; line-height: 1.5; max-width: 300px; }
     .verif-table .sel-nim { font-family: monospace; font-size: 12px; font-weight: 600; color: var(--c-primary); }
     .verif-table .sel-sub { font-size: 11px; color: var(--c-fg-muted); }
 
@@ -60,6 +61,45 @@
     .mk-cell-item { display: flex; align-items: center; gap: 8px; }
     .mk-cell-item .sel-sub { white-space: nowrap; }
     .sel-kosong { color: var(--c-fg-placeholder); }
+
+    /* Lebar minimum kolom nama — di kelas supaya bisa dikecilkan oleh aturan layar sempit */
+    .verif-table .col-mhs { min-width: 160px; }
+    .verif-table .col-judul { min-width: 180px; }
+    .verif-table .col-aksi { text-align: center; width: 72px; }
+
+    /* Layar sempit (laptop ≤ 1680px): tanpa ini tabel selebar ±1330px dan kolom
+       Status + Aksi terdorong keluar layar (harus geser horizontal). Di atas
+       1680px tabel sudah muat, jadi tampilannya tidak diubah sama sekali.
+       Pemadatan: padding sel dikecilkan dan kolom nama dibatasi lebih sempit.
+       Kolom Mata Kuliah TIDAK dipadatkan: nama MK dan tahun ajarannya tetap
+       sejajar dalam satu baris di semua lebar layar (keputusan Surya). */
+    @media (max-width: 1680px) {
+        .verif-table { min-width: 0; }
+        .verif-table thead th,
+        .verif-table tbody td { padding-left: 8px; padding-right: 8px; }
+        .verif-table thead th:first-child,
+        .verif-table tbody td:first-child { padding-left: 12px; padding-right: 4px; width: 40px; }
+        .verif-table .col-mhs { min-width: 90px; }
+        .verif-table .col-judul { min-width: 110px; }
+        .verif-table .sel-nama { max-width: 120px; }
+        .verif-table .sel-judul { max-width: 150px; }
+
+        /* Jaring pengaman: kalau layar lebih sempit lagi dan tabel tetap harus
+           digeser, kolom Aksi menempel di tepi kanan supaya tombol "⋯" tidak
+           pernah hilang dari pandangan. */
+        .verif-table thead th:last-child,
+        .verif-table tbody td:last-child {
+            position: sticky; right: 0;
+            box-shadow: -8px 0 8px -8px rgba(15, 23, 42, .12);
+        }
+        .verif-table thead th:last-child { background: #FAFAFA; }
+        .verif-table tbody td:last-child { background: #fff; }
+        .verif-table tbody tr:hover td:last-child { background: #FAFAFA; }
+        /* Sel yang menempel membentuk lapisan sendiri, jadi sel baris di bawahnya
+           bisa menimpa menu "⋯" yang sedang terbuka. Sel yang sedang aktif
+           (tombol/menunya fokus) dinaikkan di atas yang lain. */
+        .verif-table tbody td:last-child:focus-within { z-index: 5; }
+    }
 
     .empty-state { text-align: center; padding: 60px 24px; color: var(--c-fg-muted); }
     .empty-state .empty-icon { display: flex; justify-content: center; margin-bottom: 12px; color: var(--c-border-strong); }
@@ -238,7 +278,7 @@
                     <th>SKS Diklaim</th>
                     <th>Mata Kuliah</th>
                     <th>Status</th>
-                    <th style="text-align: center; width: 120px;">Aksi</th>
+                    <th class="col-aksi">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -314,9 +354,9 @@
                     @endphp
                     <tr>
                         <td>{{ ($rewardData->currentPage() - 1) * $rewardData->perPage() + $i + 1 }}</td>
-                        <td style="min-width: 160px;"><p class="sel-utama sel-nama">{{ $p->kemahasiswaan->nama ?? '-' }}</p></td>
+                        <td class="col-mhs"><p class="sel-utama sel-nama">{{ $p->kemahasiswaan->nama ?? '-' }}</p></td>
                         <td><span class="sel-nim">{{ $p->kemahasiswaan->nim ?? '-' }}</span></td>
-                        <td style="min-width: 180px;"><p class="sel-utama sel-judul">{{ $p->nama_prestasi }}</p></td>
+                        <td class="col-judul"><p class="sel-utama sel-judul">{{ $p->nama_prestasi }}</p></td>
                         <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
                         <td style="white-space: nowrap;">
                             @if($p->reward_sks_diajukan !== null)
@@ -353,14 +393,11 @@
                             @endif
                         </td>
                         <td style="text-align: center;">
-                            <div class="d-flex gap-1 flex-wrap justify-content-center">
-                                {{-- Semua baris memakai tombol & modal yang sama; klaim yang sudah
-                                     diputus tinggal membuka modal itu tanpa panel keputusan. --}}
-                                <button type="button" class="mk-btn mk-btn--primary mk-btn--sm" onclick="openTinjauReward(@js($rewardPayload))">
-                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    Tinjau
-                                </button>
-                            </div>
+                            {{-- Semua baris memakai butir menu & modal yang sama; klaim yang sudah
+                                 diputus tinggal membuka modal itu tanpa panel keputusan. --}}
+                            @include('manajemenmahasiswa::verifikasi.partials.aksi-menu', ['items' => [
+                                ['label' => 'Tinjau', 'fn' => 'openTinjauReward', 'payload' => $rewardPayload],
+                            ]])
                         </td>
                     </tr>
                 @endforeach

@@ -214,16 +214,9 @@ class PengaduanController extends Controller
             ->pluck('name')
             ->toArray();
 
-        $frekuensiList = [
-            'Sekali' => 'Sekali',
-            'Kadang-kadang' => 'Kadang-kadang',
-            'Sering' => 'Sering',
-            'Hampir Setiap Pertemuan Kuliah' => 'Hampir Setiap Pertemuan Kuliah',
-        ];
-
         $buktiPendingItems = $this->buktiPendingItems();
 
-        return view('manajemenmahasiswa::pengaduan.create', compact('kategoriList', 'dosenList', 'frekuensiList', 'isStaff', 'buktiPendingItems'));
+        return view('manajemenmahasiswa::pengaduan.create', compact('kategoriList', 'dosenList', 'isStaff', 'buktiPendingItems'));
     }
 
     /**
