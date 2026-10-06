@@ -427,7 +427,7 @@ class JadwalController extends Controller
     {
         MrJadwalInternal::where('kategori', 'Jadwal Akademik (Kuliah)')->delete();
         return redirect()->route('eoffice.peminjaman.admin.jadwal-akademik.index')
-            ->with('success', 'Seluruh jadwal perkuliahan akademik berhasil dihapus (Reset Semester).');
+            ->with('success', 'Reset data berhasil. Seluruh jadwal akademik telah dihapus.');
     }
 
 
@@ -694,7 +694,7 @@ class JadwalController extends Controller
         }
         // --- SELESAI: LOGIKA SAPU BERSIH ---
 
-        $msgInfo = count($insertBatch) . ' row jadwal kelas massal berhasil diimpor!';
+        $msgInfo = 'Impor data berhasil. Sebanyak ' . count($insertBatch) . ' jadwal akademik telah ditambahkan ke dalam sistem.';
         if ($ditolakCount > 0 || $dibatalkanCount > 0) {
             $msgInfo .= " (Sistem telah melakukan sterilisasi: $ditolakCount permohonan baru ditolak otomatis & $dibatalkanCount jadwal disetujui dibatalkan otomatis karena bentrok).";
         }
