@@ -685,18 +685,28 @@
                         <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}" method="GET"
                             class="flex flex-col md:flex-row items-stretch md:items-center gap-2 m-0 relative w-full">
                             <!-- Search Bar -->
-                            <div class="relative w-full sm:w-auto">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
+                            <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                                <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
                                         stroke-width="2" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
                                             d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z">
                                         </path>
                                     </svg>
-                                </div>
-                                <input type="text" name="search" value="{{ request('search') }}" onblur="this.form.submit()"
+                                </button>
+                                <input type="text" name="search" x-model="searchQuery" 
+                                    @input.debounce.500ms="$el.form.submit()"
                                     placeholder="Search..."
-                                    class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                                    class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                                
+                                <!-- Clear Search (X) -->
+                                <button type="button" x-show="searchQuery.length > 0" x-cloak
+                                    @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
+                                    class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
                             </div>
 
                             <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
