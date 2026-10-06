@@ -50,33 +50,30 @@
                             <input type="text" name="kategori" x-model="selected" class="absolute w-0 h-0 opacity-0 pointer-events-none" required tabindex="-1">
                         
                             <button type="button" @click="open = !open" 
-                                class="mp-input w-full flex justify-between items-center text-left"
-                                style="background: white; cursor: pointer;">
-                                <span x-text="selectedLabel" :style="selected ? 'color: #0D0D12' : 'color: #72778F'"></span>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="transition: transform 0.2s;" :style="open ? 'transform: rotate(180deg)' : ''">
-                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px] cursor-pointer">
+                                <span x-text="selectedLabel" :class="selected ? 'text-gray-800' : 'text-gray-400'"></span>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
                         
-                            <div x-show="open" 
-                                x-transition.opacity.duration.200ms
-                                class="absolute z-[100] w-full mt-1 bg-white border rounded-md shadow-lg overflow-hidden"
-                                style="display: none; border-color: #DFE1E7;">
-                                <ul class="py-1 text-sm m-0 p-0" style="list-style: none;">
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto overflow-x-hidden"
+                                style="display: none;">
+                                <div class="p-1 flex flex-col">
                                     <template x-for="option in options" :key="option">
-                                        <li>
-                                            <button type="button" @click="selected = option; open = false"
-                                                class="w-full px-4 py-2.5 text-left hover:bg-slate-50 focus:outline-none flex items-center justify-between transition-colors"
-                                                :class="selected === option ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-700'">
-                                                <span x-text="option"></span>
-                                                <svg x-show="selected === option" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <polyline points="20 6 9 17 4 12"></polyline>
-                                                </svg>
-                                            </button>
-                                        </li>
+                                        <button type="button" @click="selected = option; open = false"
+                                            class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                            :class="selected === option ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'">
+                                            <span x-text="option"></span>
+                                        </button>
                                     </template>
-                                </ul>
+                                </div>
                             </div>
                         </div>
                         @error('kategori')
@@ -85,8 +82,8 @@
                     </div>
                 </div>
 
-                <div style="display:flex; gap:16px;">
-                    <div style="flex:1;">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="w-full sm:flex-1">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Lokasi /
                             Gedung <span style="color:red">*</span></label>
                         <input type="text" name="lokasi" class="mp-input" value="{{ old('lokasi', $ruangan->lokasi) }}"
@@ -95,7 +92,7 @@
                             <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div style="width: 120px;">
+                    <div class="w-full sm:w-[120px]">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Lantai</label>
                         <input type="number" name="lantai" class="mp-input"
                             value="{{ old('lantai', $ruangan->lantai) }}">
@@ -103,7 +100,7 @@
                             <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
                         @enderror
                     </div>
-                    <div style="width: 150px;">
+                    <div class="w-full sm:w-[150px]">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kapasitas
                             <span style="color:red">*</span></label>
                         <input type="number" name="kapasitas" class="mp-input" min="1"
@@ -117,7 +114,7 @@
                 <div>
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:10px;">Fasilitas
                         Tersedia</label>
-                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                         @php
                             $opsiFasilitas = \Modules\EOffice\Models\Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
                             $currentFasilitas = is_array($ruangan->fasilitas) ? $ruangan->fasilitas : [];
@@ -198,11 +195,7 @@
                                                 
                                                 <div class="flex justify-center gap-3">
                                                     <button type="button" @click="showDeleteModal = false" class="mp-btn secondary px-4 py-2">Batal</button>
-                                                    <form method="POST" action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}/foto/{{ $foto->id }}" style="margin:0;">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="mp-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-transparent" style="border:none;">Hapus Foto</button>
-                                                    </form>
+                                                    <button type="button" onclick="document.getElementById('delete-foto-{{ $foto->id }}').submit();" class="mp-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-transparent" style="border:none;">Hapus Foto</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -242,7 +235,14 @@
         </form>
     </div>
 
-
+    @if($ruangan->fotos && $ruangan->fotos->count() > 0)
+        @foreach($ruangan->fotos as $foto)
+            <form id="delete-foto-{{ $foto->id }}" method="POST" action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}/foto/{{ $foto->id }}" style="display: none;">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endforeach
+    @endif
 
     <!-- SortableJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>

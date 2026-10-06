@@ -1216,8 +1216,8 @@
                                                                 <p class="text-[10px] text-red-600 font-medium">Tindakan ini tidak dapat dikembalikan</p>
                                                             </div>
                                                         </div>
-                                                        <button type="button" @click="showDeleteModal = false" class="text-red-600 hover:text-red-700 hover:bg-red-600/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
-                                                            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+                                                        <button type="button" @click="showDeleteModal = false" class="text-red-600 hover:text-red-700 hover:bg-red-600/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer border-0 bg-transparent">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
                                                         </button>
                                                     </div>
 
