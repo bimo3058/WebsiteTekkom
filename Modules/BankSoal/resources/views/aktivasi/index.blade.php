@@ -283,7 +283,7 @@
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="status" value="aktif">
-                                <button type="submit" class="w-full text-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm focus:ring-2 focus:ring-primary/20">
+                                <button type="submit" class="w-full text-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm focus:ring-2 focus:ring-primary/20 cursor-pointer">
                                     Aktifkan Sesi & Token
                                 </button>
                             </form>
