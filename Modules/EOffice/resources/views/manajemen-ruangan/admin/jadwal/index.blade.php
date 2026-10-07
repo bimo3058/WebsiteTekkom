@@ -176,53 +176,45 @@
                             {{-- Decision Modal --}}
                             <div x-show="showDeleteAllModal" x-cloak style="display: none;"
                                 class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal">
-                                <div x-show="showDeleteAllModal" x-transition:enter="ease-out duration-300"
-                                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+                                
+                                <div x-show="showDeleteAllModal" 
+                                    x-transition:enter="ease-out duration-300"
+                                    x-transition:enter-start="opacity-0" 
+                                    x-transition:enter-end="opacity-100"
+                                    x-transition:leave="ease-in duration-200" 
+                                    x-transition:leave-start="opacity-100"
                                     x-transition:leave-end="opacity-0"
-                                    class="fixed inset-0 bg-slate-900/60 transition-opacity"
+                                    class="fixed inset-0 bg-slate-900/60 transition-opacity" 
                                     @click="showDeleteAllModal = false"></div>
 
-                                <div x-show="showDeleteAllModal" x-transition:enter="ease-out duration-300"
+                                <div x-show="showDeleteAllModal" 
+                                    x-transition:enter="ease-out duration-300"
                                     x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                                     x-transition:leave="ease-in duration-200"
                                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                                     x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                                    class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[500px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-5 sm:p-6 overflow-hidden z-10 text-left">
-                                    <div class="flex flex-col flex-1 min-h-0">
-                        <div class="-mx-5 sm:-mx-6 -mt-5 sm:-mt-6 mb-5 px-6 py-4 border-b border-red-600/10 flex items-center justify-between bg-red-600/[0.06] rounded-t-[24px] sm:rounded-t-[20px]">
-                            <div class="flex items-center gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shadow-sm">
-                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Hapus Seluruh Jadwal</h3>
-                                    <p class="text-[10px] text-red-600 font-medium">Peringatan bahaya! Tindakan ini permanen</p>
-                                </div>
-                            </div>
-                            <button type="button" @click="showDeleteAllModal = false" class="text-red-600 hover:text-red-700 hover:bg-red-600/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
-                                <span class="material-symbols-outlined" style="font-size:20px">close</span>
-                            </button>
-                        </div>
+                                    class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-6 overflow-hidden z-10 text-center">
+                                    
+                                    <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="font-bold text-gray-900 text-[16px] mb-2 tracking-tight">Konfirmasi Hapus</h3>
+                                    <p class="text-[13.5px] text-gray-500 mb-6 leading-relaxed px-2">
+                                        Kamu yakin ingin menghapus <strong class="text-gray-800">SELURUH</strong> jadwal akademik secara massal?
+                                    </p>
 
-                                        <div class="overflow-y-auto pr-1 -mr-1 pb-2">
-                                            <div class="mb-5">
-                                                <p class="text-[13px] leading-relaxed text-gray-600 m-0">
-                                                    Apakah Anda yakin ingin <strong class="text-gray-800">MENGHAPUS SELURUH</strong> jadwal akademik di sistem secara massal? Aksi ini lazimnya hanya dilakukan pada saat reset pergantian semester. Tindakan ini tidak dapat dikembalikan.
-                                                </p>
-                                            </div>
-
-                                            <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
-                                                <button type="button" @click="showDeleteAllModal = false"
-                                                    class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all cursor-pointer">Batal</button>
-                                                <button type="submit" class="w-full sm:flex-1 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5 cursor-pointer border-0">
-                                                    Hapus
-                                                </button>
-                                            </div>
-                                        </div>
+                                    <div class="flex justify-center gap-3">
+                                        <button type="button" @click="showDeleteAllModal = false"
+                                            class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2 cursor-pointer">
+                                            Batal
+                                        </button>
+                                        <button type="submit"
+                                            class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2 cursor-pointer">
+                                            Ya, Hapus
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -649,7 +641,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
+                                <div class="flex flex-col-reverse sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
                                     <button type="button" @click="showImportModal = false"
                                         class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all cursor-pointer">Batal</button>
                                     <button type="submit" class="w-full sm:flex-1 flex items-center justify-center bg-[#0B266E] hover:bg-[#071946] text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5 cursor-pointer">
@@ -879,68 +871,49 @@
 
                     <!-- BULK DELETE MODAL -->
                     <div x-show="showBulkDeleteModal" x-cloak style="display: none;"
-                        class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal">
-                        
-                        <!-- Backdrop -->
-                        <div x-show="showBulkDeleteModal" 
-                            x-transition:enter="ease-out duration-300"
-                            x-transition:enter-start="opacity-0" 
-                            x-transition:enter-end="opacity-100"
-                            x-transition:leave="ease-in duration-200" 
-                            x-transition:leave-start="opacity-100"
-                            x-transition:leave-end="opacity-0"
-                            class="fixed inset-0 bg-slate-900/60 transition-opacity"
-                            @click="showBulkDeleteModal = false"></div>
+                                class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal">
+                                
+                                <div x-show="showBulkDeleteModal" 
+                                    x-transition:enter="ease-out duration-300"
+                                    x-transition:enter-start="opacity-0" 
+                                    x-transition:enter-end="opacity-100"
+                                    x-transition:leave="ease-in duration-200" 
+                                    x-transition:leave-start="opacity-100"
+                                    x-transition:leave-end="opacity-0"
+                                    class="fixed inset-0 bg-slate-900/60 transition-opacity" 
+                                    @click="showBulkDeleteModal = false"></div>
 
-                        <!-- Modal Content -->
-                        <div x-show="showBulkDeleteModal" 
-                            x-transition:enter="ease-out duration-300"
-                            x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                            x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                            x-transition:leave="ease-in duration-200"
-                            x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                            x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                            class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[500px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-5 sm:p-6 overflow-hidden z-10 text-left">
-                            
-                            <div class="flex flex-col flex-1 min-h-0">
-                                <!-- Header Modal -->
-                                <div class="-mx-5 sm:-mx-6 -mt-5 sm:-mt-6 mb-5 px-6 py-4 border-b border-red-600/10 flex items-center justify-between bg-red-600/[0.06] rounded-t-[24px] sm:rounded-t-[20px]">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shadow-sm">
-                                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Hapus Jadwal Terpilih</h3>
-                                            <p class="text-[10px] text-red-600 font-medium">Tindakan ini tidak dapat dikembalikan</p>
-                                        </div>
+                                <div x-show="showBulkDeleteModal" 
+                                    x-transition:enter="ease-out duration-300"
+                                    x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                    x-transition:leave="ease-in duration-200"
+                                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                    x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                                    class="relative bg-white rounded-t-[24px] sm:rounded-[20px] shadow-2xl w-full max-w-[400px] flex flex-col p-6 overflow-hidden z-10 text-center">
+                                    
+                                    <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
                                     </div>
-                                    <button type="button" @click="showBulkDeleteModal = false" class="text-red-600 hover:text-red-700 hover:bg-red-600/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
-                                        <span class="material-symbols-outlined" style="font-size:20px">close</span>
-                                    </button>
-                                </div>
+                                    <h3 class="font-bold text-gray-900 text-[16px] mb-2 tracking-tight">Konfirmasi Hapus</h3>
+                                    <p class="text-[13.5px] text-gray-500 mb-6 leading-relaxed px-2">
+                                        Kamu yakin ingin menghapus <span x-text="selectedIds.length" class="font-bold"></span> jadwal terpilih secara massal?
+                                    </p>
 
-                                <!-- Body Modal -->
-                                <div class="overflow-y-auto pb-1">
-                                    <div class="mb-5">
-                                        <p class="text-[13px] leading-relaxed text-gray-600 m-0">
-                                            Apakah Anda yakin ingin menghapus permanen <strong class="text-red-600" x-text="selectedIds.length + ' jadwal'"></strong> yang telah dipilih? Tindakan ini akan menghapus semua jadwal tersebut secara permanen.
-                                        </p>
-                                    </div>
-
-                                    <!-- Footer Modal -->
-                                    <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
+                                    <div class="flex justify-center gap-3">
                                         <button type="button" @click="showBulkDeleteModal = false"
-                                            class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all cursor-pointer">Batal</button>
-                                        <button type="button" @click="$refs.bulkForm.submit()" 
-                                            class="w-full sm:flex-1 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5 cursor-pointer border-0">
-                                            Hapus Terpilih
+                                            class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2 cursor-pointer">
+                                            Batal
+                                        </button>
+                                        <button type="button" @click="$refs.bulkForm.submit()"
+                                            class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2 cursor-pointer">
+                                            Ya, Hapus
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </form>
 
@@ -1147,7 +1120,7 @@
                                                 @close-action-dropdowns.window="checkScroll()">
 
                                                 <button type="button" @click="showEditModal = true; showDropdown = false"
-                                                    class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
+                                                    class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
                                                     <svg class="w-[14px] h-[14px] text-gray-600" fill="none"
                                                         stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -1164,7 +1137,7 @@
                                                     @method('DELETE')
                                                     <button type="button"
                                                         @click="showDeleteModal = true; showDropdown = false"
-                                                        class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
+                                                        class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
                                                         <svg class="w-[14px] h-[14px] text-red-600" fill="none"
                                                             stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -1181,7 +1154,6 @@
                                         <div x-show="showDeleteModal" x-cloak style="display: none;"
                                             class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal">
                                             
-                                            <!-- Backdrop -->
                                             <div x-show="showDeleteModal" 
                                                 x-transition:enter="ease-out duration-300"
                                                 x-transition:enter-start="opacity-0" 
@@ -1189,10 +1161,9 @@
                                                 x-transition:leave="ease-in duration-200" 
                                                 x-transition:leave-start="opacity-100"
                                                 x-transition:leave-end="opacity-0"
-                                                class="fixed inset-0 bg-slate-900/60 transition-opacity"
+                                                class="fixed inset-0 bg-slate-900/60 transition-opacity" 
                                                 @click="showDeleteModal = false"></div>
 
-                                            <!-- Modal Content -->
                                             <div x-show="showDeleteModal" 
                                                 x-transition:enter="ease-out duration-300"
                                                 x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
@@ -1200,45 +1171,27 @@
                                                 x-transition:leave="ease-in duration-200"
                                                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                                                 x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                                                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[500px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-5 sm:p-6 overflow-hidden z-10 text-left">
+                                                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-6 overflow-hidden z-10 text-center">
                                                 
-                                                <div class="flex flex-col flex-1 min-h-0">
-                                                    <!-- Header Modal -->
-                                                    <div class="-mx-5 sm:-mx-6 -mt-5 sm:-mt-6 mb-5 px-6 py-4 border-b border-red-600/10 flex items-center justify-between bg-red-600/[0.06] rounded-t-[24px] sm:rounded-t-[20px]">
-                                                        <div class="flex items-center gap-3">
-                                                            <div class="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shadow-sm">
-                                                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                                </svg>
-                                                            </div>
-                                                            <div>
-                                                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Hapus Jadwal?</h3>
-                                                                <p class="text-[10px] text-red-600 font-medium">Tindakan ini tidak dapat dikembalikan</p>
-                                                            </div>
-                                                        </div>
-                                                        <button type="button" @click="showDeleteModal = false" class="text-red-600 hover:text-red-700 hover:bg-red-600/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer border-0 bg-transparent">
-                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                                        </button>
-                                                    </div>
+                                                <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                                                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </div>
+                                                <h3 class="font-bold text-gray-900 text-[16px] mb-2 tracking-tight">Konfirmasi Hapus</h3>
+                                                <p class="text-[13.5px] text-gray-500 mb-6 leading-relaxed px-2">
+                                                    Kamu yakin ingin menghapus jadwal <strong class="text-gray-800">{{ $j->mata_kuliah ?: 'Tanpa Mata Kuliah' }} (Kelas {{ $j->kelas ?: '-' }})</strong>?
+                                                </p>
 
-                                                    <!-- Body Modal -->
-                                                    <div class="overflow-y-auto pb-1">
-                                                        <div class="mb-5">
-                                                            <p class="text-[13px] leading-relaxed text-gray-600 m-0">
-                                                                Apakah Anda yakin ingin menghapus jadwal <strong class="text-gray-800">{{ $j->mata_kuliah ?: 'Tanpa Mata Kuliah' }} (Kelas {{ $j->kelas ?: '-' }})</strong> di ruangan <strong class="text-gray-800">{{ $j->ruangan->nama ?? 'Tidak Diketahui' }}</strong>?
-                                                            </p>
-                                                        </div>
-
-                                                        <!-- Footer Modal -->
-                                                        <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
-                                                            <button type="button" @click="showDeleteModal = false"
-                                                                class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all cursor-pointer">Batal</button>
-                                                            <button type="button" @click="document.getElementById('deleteForm-{{ $j->id }}').submit()" 
-                                                                class="w-full sm:flex-1 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5 cursor-pointer border-0">
-                                                                Hapus
-                                                            </button>
-                                                        </div>
-                                                    </div>
+                                                <div class="flex justify-center gap-3">
+                                                    <button type="button" @click="showDeleteModal = false"
+                                                        class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2 cursor-pointer">
+                                                        Batal
+                                                    </button>
+                                                    <button type="button" @click="document.getElementById('deleteForm-{{ $j->id }}').submit()"
+                                                        class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2 cursor-pointer">
+                                                        Ya, Hapus
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>

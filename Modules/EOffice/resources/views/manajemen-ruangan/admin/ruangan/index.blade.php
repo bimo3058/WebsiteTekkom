@@ -159,8 +159,8 @@
                                         URUTKAN BERDASARKAN</div>
                                     @php
                                         $sorts = [
-                                            'terbaru' => 'Waktu Ditambahkan (Terbaru)',
-                                            'terlama' => 'Waktu Ditambahkan (Terlama)',
+                                            'terbaru' => 'Terbaru',
+                                            'terlama' => 'Terlama',
                                             'kapasitas_desc' => 'Kapasitas Terbesar',
                                             'kapasitas_asc' => 'Kapasitas Terkecil',
                                             'nama_asc' => 'Nama Ruangan (A-Z)',
@@ -494,45 +494,28 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[500px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-5 sm:p-6 overflow-hidden z-10 text-left">
-                
-                <div class="flex flex-col flex-1 min-h-0">
-                    <!-- Header Modal -->
-                    <div class="-mx-5 sm:-mx-6 -mt-5 sm:-mt-6 mb-5 px-6 py-4 border-b border-red-600/10 flex items-center justify-between bg-red-600/[0.06] rounded-t-[24px] sm:rounded-t-[20px]">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-red-600 flex items-center justify-center shadow-sm">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Hapus Ruangan</h3>
-                                <p class="text-[10px] text-red-600 font-medium">Tindakan ini tidak dapat dikembalikan</p>
-                            </div>
-                        </div>
-                        <button type="button" @click="showDeleteModal = false" class="text-red-600 hover:text-red-700 hover:bg-red-600/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer border-0 bg-transparent">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
-                        </button>
-                    </div>
+                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-6 overflow-hidden z-10 text-center">
 
-                    <!-- Body Modal -->
-                    <div class="overflow-y-auto pb-1">
-                        <div class="mb-5">
-                            <p class="text-[13px] leading-relaxed text-gray-600 m-0">
-                                Apakah Anda yakin ingin menghapus <strong class="text-red-600" x-text="deleteRoomName"></strong>? Sistem akan menonaktifkan ruangan ini secara permanen agar tidak lagi bisa dipinjam oleh pengguna.
-                            </p>
-                        </div>
+                <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </div>
+                <h3 class="font-bold text-gray-900 text-[16px] mb-2 tracking-tight">Konfirmasi Hapus</h3>
+                <p class="text-[13.5px] text-gray-500 mb-6 leading-relaxed px-2">
+                    Apakah Anda yakin ingin menghapus <strong class="text-red-600" x-text="deleteRoomName"></strong>? Sistem akan menonaktifkan ruangan ini secara permanen agar tidak lagi bisa dipinjam oleh pengguna.
+                </p>
 
-                        <!-- Footer Modal -->
-                        <div class="flex flex-col sm:flex-row justify-between gap-3 pt-4 border-t border-gray-100">
-                            <button type="button" @click="showDeleteModal = false"
-                                class="w-full sm:flex-1 flex items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all cursor-pointer">Batal</button>
-                            <button type="button" @click="executeDelete()" 
-                                class="w-full sm:flex-1 flex items-center justify-center bg-red-600 hover:bg-red-700 text-white text-[13px] font-semibold px-4 py-2.5 rounded-[12px] transition-all gap-1.5 cursor-pointer border-0">
-                                Ya, Hapus
-                            </button>
-                        </div>
-                    </div>
+                <div class="flex justify-center gap-3">
+                    <button type="button" @click="showDeleteModal = false"
+                        class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2 cursor-pointer">
+                        Batal
+                    </button>
+                    <button type="button" @click="executeDelete()"
+                        class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2 cursor-pointer">
+                        Ya, Hapus
+                    </button>
                 </div>
             </div>
         </div>

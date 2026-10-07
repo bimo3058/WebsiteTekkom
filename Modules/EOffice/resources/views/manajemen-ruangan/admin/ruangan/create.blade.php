@@ -46,8 +46,8 @@
                             <input type="text" name="kategori" x-model="selected" class="absolute w-0 h-0 opacity-0 pointer-events-none" required tabindex="-1">
                         
                             <button type="button" @click="open = !open" 
-                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px] cursor-pointer">
-                                <span x-text="selectedLabel" :class="selected ? 'text-gray-800' : 'text-gray-400'"></span>
+                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[38px] cursor-pointer">
+                                <span x-text="selectedLabel" :class="selected ? 'text-[#0D0D12]' : 'text-gray-400'"></span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
