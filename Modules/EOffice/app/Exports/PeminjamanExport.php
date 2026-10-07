@@ -128,8 +128,16 @@ class PeminjamanExport implements FromCollection, WithHeadings, WithMapping, Wit
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 
-        // Ensure Identitas (NIM/NIP) column is explicitly left-aligned
+        // Ensure Identitas (NIM/NIP) column is explicitly left-aligned and formatted as number without decimal
         $sheet->getStyle('C4:C' . $sheet->getHighestRow())
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('C4:C' . $sheet->getHighestRow())
+            ->getNumberFormat()
+            ->setFormatCode('0');
+
+        // Ensure No Telepon is explicitly left-aligned
+        $sheet->getStyle('E4:E' . $sheet->getHighestRow())
             ->getAlignment()
             ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
 

@@ -19,12 +19,26 @@
                     @click="
                         const rect = $el.getBoundingClientRect();
                         const viewportHeight = window.innerHeight;
-                        let style = `position: fixed; right: ${window.innerWidth - rect.right}px; `;
-                        if (rect.bottom + 250 > viewportHeight) {
-                            style += `bottom: ${viewportHeight - rect.top + 8}px; transform-origin: bottom right;`;
+                        let style = `position: fixed; `;
+                        let origin = '';
+                        
+                        if (rect.left < 200) {
+                            style += `left: ${rect.left}px; `;
+                            origin += 'left ';
                         } else {
-                            style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
+                            style += `right: ${window.innerWidth - rect.right}px; `;
+                            origin += 'right ';
                         }
+
+                        if (rect.bottom + 250 > viewportHeight) {
+                            style += `bottom: ${viewportHeight - rect.top + 8}px; `;
+                            origin = 'bottom ' + origin.trim();
+                        } else {
+                            style += `top: ${rect.bottom + 8}px; `;
+                            origin = 'top ' + origin.trim();
+                        }
+                        
+                        style += `transform-origin: ${origin};`;
                         dropdownStyles = style;
                         openExport = !openExport;
                     "
@@ -56,15 +70,15 @@
                         <div class="border-t border-gray-100 my-1"></div>
                         
                         <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                            JALAN PINTAS</div>
+                            EKSPOR CEPAT</div>
                             
                         @php
                             $startBulanIni = now()->startOfMonth()->format('Y-m-d');
                             $endBulanIni = now()->endOfMonth()->format('Y-m-d');
                         @endphp
                         <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', ['start_date' => $startBulanIni, 'end_date' => $endBulanIni]) }}" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer" title="Unduh data bulan berjalan">
-                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            Rekap Excel Bulan Ini
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Laporan Bulan Berjalan
                         </a>
                     </div>
                 </div>
@@ -82,9 +96,9 @@
             class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
             <h2 class="text-base font-bold text-gray-900 tracking-tight">Arsip Peminjaman</h2>
 
-            <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
                 <form action="{{ route('eoffice.peminjaman.admin.riwayat.index') }}" method="GET"
-                    class="flex flex-wrap items-center gap-2.5">
+                    class="flex flex-col sm:flex-row flex-wrap sm:items-center gap-2.5 w-full sm:w-auto">
                     {{-- Search --}}
                     <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
                         <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
@@ -109,28 +123,10 @@
                         </button>
                     </div>
 
-                    {{-- Filter Engine Dropdown --}}
-                    <div class="relative" x-data="{ 
-                        open: false,
-                        dropdownStyles: '',
-                        checkScroll() {
-                            if(this.open) this.open = false;
-                        }
-                    }">
+                    <div class="relative w-full sm:w-auto" x-data="{ open: false }">
                         <button type="button" 
-                            @click="
-                                const rect = $el.getBoundingClientRect();
-                                const viewportHeight = window.innerHeight;
-                                let style = `position: fixed; right: ${window.innerWidth - rect.right}px; `;
-                                if (rect.bottom + 350 > viewportHeight) {
-                                    style += `bottom: ${viewportHeight - rect.top + 8}px; transform-origin: bottom right;`;
-                                } else {
-                                    style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
-                                }
-                                dropdownStyles = style;
-                                open = !open;
-                            "
-                            class="h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
+                            @click="open = !open"
+                            class="w-full sm:w-auto justify-center h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
                             <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
@@ -143,17 +139,21 @@
                         </button>
 
                         <div x-show="open" @click.outside="open = false" style="display: none;"
-                            class="bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-72"
-                            :style="dropdownStyles"
-                            @scroll.window.capture="checkScroll()">
+                            x-transition:enter="transition ease-out duration-100" 
+                            x-transition:enter-start="opacity-0 scale-95" 
+                            x-transition:enter-end="opacity-100 scale-100" 
+                            x-transition:leave="transition ease-in duration-75" 
+                            x-transition:leave-start="opacity-100 scale-100" 
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 origin-top sm:origin-top-right bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-80 max-w-sm">
                             <div class="p-4 space-y-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Rentang Waktu</label>
-                                    <div class="flex gap-2">
+                                    <div class="flex flex-col sm:flex-row gap-2">
                                         <input type="date" name="start_date" value="{{ request('start_date') }}"
-                                            class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text">
+                                            class="w-full sm:w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text">
                                         <input type="date" name="end_date" value="{{ request('end_date') }}"
-                                            class="w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text">
+                                            class="w-full sm:w-1/2 text-xs border border-gray-200 rounded block p-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] cursor-text">
                                     </div>
                                 </div>
                                 <div>
@@ -237,9 +237,9 @@
                                 </div>
                                 <div class="pt-2 flex justify-end gap-2 border-t border-gray-100">
                                     <a href="{{ route('eoffice.peminjaman.admin.riwayat.index') }}"
-                                        class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-transparent cursor-pointer">Reset</a>
+                                        class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">Reset</a>
                                     <button type="submit"
-                                        class="px-3 py-1.5 text-xs font-medium text-white bg-[#060E2A] rounded-md hover:bg-[#030715] transition-colors cursor-pointer">Terapkan
+                                        class="px-3 py-1.5 text-xs font-medium text-white bg-[#0B266E] rounded-md hover:bg-[#091F5E] transition-colors cursor-pointer">Terapkan
                                         Filter</button>
                                 </div>
                             </div>
@@ -367,7 +367,7 @@
                                         x-transition:leave="transition ease-in duration-75"
                                         x-transition:leave-start="transform opacity-100 scale-100"
                                         x-transition:leave-end="transform opacity-0 scale-95"
-                                        class="bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]"
+                                        class="bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5"
                                         :style="dropdownStyles"
                                         @scroll.window.capture="checkScroll()"
                                         @close-action-dropdowns.window="checkScroll()">
@@ -391,14 +391,14 @@
                                         ]) }})"
                                             class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
                                             <svg class="w-[14px] h-[14px] text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            Detail
+                                            Detail Arsip
                                         </button>
 
                                         @if(auth()->user()->hasRole('superadmin'))
                                             <button type="button" @click="showDropdown = false; openDelete('{{ route('eoffice.peminjaman.admin.riwayat.destroy', $pinjam->id) }}')" 
                                                 class="w-full text-left px-2.5 py-1.5 mt-0.5 text-[12px] text-red-600 hover:bg-red-50 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors cursor-pointer">
-                                                <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                Hapus
+                                                <svg class="w-[14px] h-[14px] text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                Hapus Arsip
                                             </button>
                                         @endif
                                     </div>
@@ -451,15 +451,15 @@
                             <div class="p-1">
                                 <button type="button"
                                     @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10, 'page' => 1]) }}')"
-                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
                                 <button type="button"
                                     @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25, 'page' => 1]) }}')"
-                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
                                 <button type="button"
                                     @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50, 'page' => 1]) }}')"
-                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                    class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
                                     :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                             </div>
                         </div>
@@ -594,7 +594,7 @@
                             <p class="text-xs text-[#0B266E] mt-0.5">Arsip peminjaman dari <span class="font-bold" x-text="detailData.nama"></span></p>
                         </div>
                     </div>
-                    <button type="button" @click="closeDetail()" class="text-[#0B266E] hover:bg-[#0B266E]/10 transition-colors cursor-pointer p-1.5 rounded-lg">
+                    <button type="button" @click="closeDetail()" class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -602,20 +602,37 @@
                 </div>
 
                 <!-- Modal Body (Scrollable) -->
-                <div class="p-6 flex-1 overflow-y-auto bg-white custom-scrollbar">
+                <div class="p-6 flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar">
                     
-                    <div class="mb-5 p-4 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
-                        <!-- Bagian A: Identitas Peminjam -->
-                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">Informasi Peminjam</h4>
-                        <div class="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr] gap-x-2 gap-y-2 text-[13px] mb-3 border-b border-slate-100 pb-3">
-                            <div class="text-slate-500 font-medium">Nama</div>
-                            <div class="text-slate-800 font-bold" x-text="detailData.nama"></div>
+                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mx-1">
+                        <!-- HEADER -->
+                        <div class="px-5 py-4 border-b border-slate-100 bg-white">
+                            <h4 class="text-[13px] font-bold text-slate-800 flex items-center gap-2">
+                                <svg class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Informasi Lengkap Peminjaman
+                            </h4>
+                        </div>
+                        
+                        <!-- BODY -->
+                        <div class="p-5 grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr] gap-x-4 gap-y-4 text-[13px]">
+                            
+                            <!-- Nama Pemohon -->
+                            <div class="text-slate-500 font-medium">Nama Pemohon</div>
+                            <div class="text-slate-900 font-bold" x-text="detailData.nama"></div>
 
+                            <!-- NIM/NIP -->
                             <div class="text-slate-500 font-medium">NIM / NIP</div>
-                            <div class="text-slate-800 font-medium" x-text="detailData.nim_nip"></div>
+                            <div class="text-slate-900 font-medium" x-text="detailData.nim_nip"></div>
 
-                            <div class="text-slate-500 font-medium flex items-center">No. Telp</div>
-                            <div class="font-medium flex items-center">
+                            <!-- Role -->
+                            <div class="text-slate-500 font-medium flex items-start mt-0.5">Role / Peran</div>
+                            <div class="flex items-center">
+                                <span class="bg-blue-50 text-[#0B266E] px-2 py-0.5 rounded text-[11px] font-semibold border border-blue-200" x-text="detailData.role"></span>
+                            </div>
+
+                            <!-- No. Telp -->
+                            <div class="text-slate-500 font-medium">No. Telepon</div>
+                            <div class="text-slate-900 font-medium flex items-center">
                                 <template x-if="detailData.telepon && detailData.telepon !== '-'">
                                     <a :href="'https://wa.me/' + (detailData.telepon.toString().startsWith('0') ? '62' + detailData.telepon.toString().substring(1) : detailData.telepon)" 
                                         target="_blank" 
@@ -632,34 +649,32 @@
                                 </template>
                             </div>
 
-                            <div class="text-slate-500 font-medium">Role / Peran</div>
-                            <div>
-                                <span class="bg-blue-50 text-[#0B266E] px-2 py-0.5 rounded text-[11px] font-semibold border border-blue-200" x-text="detailData.role"></span>
-                            </div>
-                        </div>
+                            <div class="col-span-full my-2 border-t border-slate-100"></div>
 
-                        <!-- Bagian B: Detail Peminjaman -->
-                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-3">Informasi Peminjaman</h4>
-                        <div class="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr] gap-x-2 gap-y-2 text-[13px] mb-3 border-b border-slate-100 pb-3">
+                            <!-- Ruangan -->
                             <div class="text-slate-500 font-medium">Ruangan</div>
-                            <div class="text-slate-800 font-bold" x-text="detailData.ruangan"></div>
+                            <div class="text-slate-900 font-bold" x-text="detailData.ruangan"></div>
 
+                            <!-- Tanggal -->
                             <div class="text-slate-500 font-medium">Tanggal</div>
-                            <div class="text-slate-800 font-bold" x-text="detailData.tanggal"></div>
+                            <div class="text-slate-900 font-bold" x-text="detailData.tanggal"></div>
 
-                            <div class="text-slate-500 font-medium">Waktu</div>
-                            <div class="text-slate-800 font-bold flex items-center">
+                            <!-- Waktu -->
+                            <div class="text-slate-500 font-medium flex items-start mt-0.5">Waktu</div>
+                            <div class="text-slate-900 font-bold flex items-center">
                                 <span class="bg-blue-50 text-[#0B266E] px-1.5 py-0.5 rounded text-[11px] font-semibold border border-blue-200" x-text="detailData.jam"></span>
                                 <span class="text-slate-600 font-medium text-[12px] ml-2" x-text="detailData.durasi"></span>
                             </div>
 
+                            <!-- Kegiatan -->
                             <div class="text-slate-500 font-medium">Kegiatan</div>
-                            <div class="text-slate-800 font-medium leading-snug" x-text="detailData.kegiatan"></div>
+                            <div class="text-slate-900 font-medium leading-relaxed" x-text="detailData.kegiatan"></div>
 
-                            <div class="text-slate-500 font-medium pt-1">Berkas</div>
-                            <div class="pt-1">
+                            <!-- Berkas -->
+                            <div class="text-slate-500 font-medium flex items-start mt-0.5">Berkas</div>
+                            <div class="text-slate-900 font-medium">
                                 <template x-if="detailData.berkas">
-                                    <a :href="detailData.berkas" target="_blank" class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors mt-0.5 inline-block">
+                                    <a :href="detailData.berkas" target="_blank" class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors inline-block">
                                         Lihat Berkas Terlampir
                                     </a>
                                 </template>
@@ -667,12 +682,12 @@
                                     <span class="text-gray-400 italic text-[12px]">Tidak dilampirkan</span>
                                 </template>
                             </div>
-                        </div>
-
-                        <!-- Bagian C: Riwayat Proses (Jejak Audit) -->
-                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-3">Jejak Audit</h4>
-                        <div class="grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr] gap-x-2 gap-y-2 text-[13px]">
-                            <div class="text-slate-500 font-medium pt-1">Status Akhir</div>
+                            
+                            <div class="col-span-full my-2 border-t border-slate-100"></div>
+                            
+                            <!-- JEJAK AUDIT -->
+                            <!-- Status -->
+                            <div class="text-slate-500 font-medium flex items-start mt-1">Status Akhir</div>
                             <div>
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
                                     :class="{
@@ -680,33 +695,26 @@
                                         'bg-[#FFF1F2] text-[#9D174D] border-[#FECDD3]': detailData.status === 'ditolak' || detailData.status === 'dibatalkan',
                                         'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': detailData.status === 'menunggu',
                                         'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]': detailData.status === 'selesai'
-                                    }" x-text="detailData.status">
+                                    }"
+                                    x-text="detailData.status">
                                 </span>
                             </div>
 
-                            <div class="text-slate-500 font-medium">Waktu Daftar</div>
-                            <div class="text-slate-800 font-medium" x-text="detailData.waktu_pengajuan"></div>
-
-                            <div class="text-slate-500 font-medium">Waktu Proses</div>
-                            <div class="text-slate-800 font-medium" x-text="detailData.waktu_diproses"></div>
-                            
-                            <div class="text-slate-500 font-medium">Oleh (Admin)</div>
-                            <div class="text-slate-800 font-medium" x-text="detailData.diproses_oleh"></div>
-                        </div>
-
-                        <!-- Alasan penolakan / pembatalan jika ada -->
-                        <template x-if="detailData.status === 'ditolak' || detailData.status === 'dibatalkan'">
-                            <div class="mt-4 pt-3 border-t border-slate-100">
-                                <div class="bg-red-50 border border-red-100 rounded-lg p-3 flex gap-3 items-start">
-                                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    <div>
-                                        <h5 class="text-[12px] font-bold text-red-800">Catatan / Alasan</h5>
-                                        <p class="text-[12px] text-red-700 mt-0.5 leading-relaxed" x-text="detailData.alasan_penolakan || 'Tidak ada keterangan tambahan.'"></p>
-                                    </div>
+                            <template x-if="detailData.status === 'ditolak' || detailData.status === 'dibatalkan'">
+                                <div class="col-span-full grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr] gap-x-4 gap-y-1 mt-1">
+                                    <div class="text-slate-500 font-medium">Alasan Penolakan</div>
+                                    <div class="text-red-600 font-semibold leading-relaxed" x-text="detailData.alasan_penolakan || 'Tidak ada keterangan tambahan.'"></div>
                                 </div>
-                            </div>
-                        </template>
-
+                            </template>
+                            
+                            <!-- Waktu Pengajuan -->
+                            <div class="text-slate-500 font-medium">Waktu Diajukan</div>
+                            <div class="text-slate-900 font-medium" x-text="detailData.waktu_pengajuan"></div>
+                            
+                            <!-- Waktu Diproses -->
+                            <div class="text-slate-500 font-medium">Waktu Diproses</div>
+                            <div class="text-slate-900 font-medium" x-text="detailData.waktu_diproses"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -714,7 +722,7 @@
 
         <!-- Pop-up Modal Konfirmasi Hapus -->
         <div x-show="isDeleteModalOpen" x-cloak style="display: none;"
-            class="fixed inset-0 z-[110] flex items-center justify-center p-4 sm:p-6" 
+            class="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6" 
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
             <!-- 1. BACKDROP OVERLAY (Latar Belakang Gelap) -->
@@ -731,12 +739,12 @@
             <!-- 2. MODAL PANEL (Kotak Utama Modal) -->
             <div x-show="isDeleteModalOpen" 
                 x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative bg-white rounded-[20px] border border-gray-100 shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
                 
                 <div class="p-6">
                     <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
