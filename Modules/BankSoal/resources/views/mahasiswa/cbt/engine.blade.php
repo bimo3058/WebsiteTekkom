@@ -608,6 +608,10 @@
                 alertIcon: '⚠️',
                 _alertCallback: null,
 
+                // Penanda navigasi submit/timeout oleh mahasiswa sendiri
+                // (cegah race: polling melihat sesi finished lalu salah menampilkan popup force-submit)
+                selfSubmitting: false,
+
                 get currentSoal() {
                     return this.soals[this.currentIndex] || null;
                 },
@@ -659,6 +663,8 @@
                             if (!res.ok) return;
                             const data = await res.json();
                             if (data.status === 'finished') {
+                                // Abaikan: ini hasil submit/timeout mahasiswa sendiri, bukan force-submit admin
+                                if (this.selfSubmitting) return;
                                 clearInterval(this.timerInterval);
                                 clearInterval(this.statusInterval);
                                 window.onbeforeunload = null;
@@ -871,7 +877,12 @@
                                 'Waktu Ujian Habis',
                                 'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
                                 '⏰',
-                                () => { window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}"; }
+                                () => {
+                                    this.selfSubmitting = true;
+                                    clearInterval(this.statusInterval);
+                                    clearInterval(this.timerInterval);
+                                    window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                                }
                             );
                             return;
                         }
@@ -920,7 +931,12 @@
                                 'Waktu Ujian Habis',
                                 'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
                                 '⏰',
-                                () => { window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}"; }
+                                () => {
+                                    this.selfSubmitting = true;
+                                    clearInterval(this.statusInterval);
+                                    clearInterval(this.timerInterval);
+                                    window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                                }
                             );
                             return;
                         }
@@ -961,12 +977,18 @@
                 },
 
                 confirmSubmit() {
+                    this.selfSubmitting = true;
+                    clearInterval(this.statusInterval);
+                    clearInterval(this.timerInterval);
                     this.showSubmitModal = false;
                     window.onbeforeunload = null;
                     window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
                 },
 
                 forceSubmitTimeUp() {
+                    this.selfSubmitting = true;
+                    clearInterval(this.statusInterval);
+                    clearInterval(this.timerInterval);
                     window.onbeforeunload = null;
                     this.showAlert(
                         'Waktu Ujian Habis',

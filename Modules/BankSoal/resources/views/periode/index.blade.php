@@ -109,7 +109,7 @@
                 </div>
 
                 <button @click="openModal = true"
-                    class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 text-white font-medium text-[13px] shadow-sm">
+                    class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 text-white font-medium text-[13px] shadow-sm cursor-pointer">
                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -294,12 +294,13 @@
                 <!-- Modal Footer -->
                 <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 bg-gray-50 rounded-b-2xl">
                     <button @click="openModal = false" type="button"
-                        class="px-5 py-2 border border-gray-300 text-gray-700 font-medium text-[13px] bg-white rounded-lg hover:bg-gray-50 transition-colors">
+                        class="px-5 py-2 border border-gray-300 text-gray-700 font-medium text-[13px] bg-white rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formPeriodeBaru').submit()"
-                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors">
-                        Simpan Periode
+                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formPeriodeBaru').submit()" :disabled="isSubmitting"
+                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 cursor-pointer">
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Periode'"></span>
                     </button>
                 </div>
             </div>
@@ -473,12 +474,13 @@
                 <!-- Modal Footer -->
                 <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 bg-gray-50 rounded-b-2xl">
                     <button @click="editModal = false" type="button"
-                        class="px-5 py-2 border border-gray-300 text-gray-700 font-medium text-[13px] bg-white rounded-lg hover:bg-gray-50 transition-colors">
+                        class="px-5 py-2 border border-gray-300 text-gray-700 font-medium text-[13px] bg-white rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formEditPeriode').submit()"
-                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors">
-                        Simpan Perubahan
+                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formEditPeriode').submit()" :disabled="isSubmitting"
+                        class="px-5 py-2 bg-primary hover:bg-primary/90 text-white font-medium text-[13px] rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2 cursor-pointer">
+                        <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                        <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Perubahan'"></span>
                     </button>
                 </div>
             </div>
@@ -499,12 +501,11 @@
                 </div>
 
                 <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl flex items-center gap-3">
-                    <button type="button" @click="closeConfirm()" class="flex-1 px-4 py-2 text-[13px] font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 rounded-lg transition-colors">Batal</button>
+                    <button type="button" @click="closeConfirm()" class="flex-1 px-4 py-2 text-[13px] font-medium text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:shadow-md active:scale-95 rounded-lg transition-all cursor-pointer">Batal</button>
                     <form :action="confirmAction" method="POST" class="flex-1 m-0">
                         @csrf
                         <input type="hidden" name="_method" :value="confirmMethod">
-                        <button type="submit" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all ' + confirmBtnColor">
-                            Ya, Lanjutkan
+                        <button type="submit" :class="'w-full px-4 py-2 text-[13px] font-medium text-white rounded-lg transition-all border border-transparent hover:shadow-md active:scale-95 cursor-pointer ' + confirmBtnColor" x-text="confirmBtnText">
                         </button>
                     </form>
                 </div>
@@ -538,8 +539,11 @@
                         confirmBtnColor: '',
                         confirmIconColor: '',
                         confirmIconBg: '',
+                        confirmBtnText: 'Ya, Lanjutkan',
 
-                        openConfirm: function(action, method, title, text, btnColor, iconColor, iconBg) {
+                        isSubmitting: false,
+
+                        openConfirm: function(action, method, title, text, btnColor, iconColor, iconBg, btnText) {
                             this.confirmAction = action;
                             this.confirmMethod = method;
                             this.confirmTitle = title;
@@ -547,6 +551,7 @@
                             this.confirmBtnColor = btnColor;
                             this.confirmIconColor = iconColor;
                             this.confirmIconBg = iconBg;
+                            this.confirmBtnText = btnText || 'Ya, Lanjutkan';
                             this.confirmModal = true;
                         },
                         closeConfirm: function() {
