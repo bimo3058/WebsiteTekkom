@@ -327,25 +327,34 @@
             </div>
         @endif
 
-        <div class="bg-white border border-gray-200 rounded-[12px] mt-6"
-            style="box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-            <div
-                class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
+        <div class="mp-card" style="margin-top: 15px;">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
                 <h2 class="text-base font-bold text-gray-900 tracking-tight">Daftar Jadwal</h2>
 
                 <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.index') }}" method="GET"
                     class="flex flex-wrap items-center gap-2.5">
-                    {{-- Search --}}
-                    <div class="relative w-full sm:w-auto">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    <!-- Search Bar -->
+                    <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                        <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
                             </svg>
-                        </div>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400"
-                            placeholder="Cari acara..." x-on:input.debounce.700ms="$el.form.submit()">
+                        </button>
+                        <input type="text" name="search" x-model="searchQuery" 
+                            @input.debounce.500ms="$el.form.submit()"
+                            @scroll.window.capture="$el.blur()"
+                            @touchmove.window.capture="$el.blur()"
+                            placeholder="Cari acara..."
+                            class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                        
+                        <!-- Clear Search (X) -->
+                        <button type="button" x-show="searchQuery.length > 0" x-cloak
+                            @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
 
                     <!-- Hidden Inputs untuk mempertahankan state -->
@@ -360,12 +369,18 @@
                         <div x-data="{ openFilter: false }" class="relative inline-block text-left">
                             <!-- Tombol Filter -->
                             <button type="button" @click="openFilter = !openFilter" @click.away="openFilter = false"
-                                class="flex items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-[#0B266E] transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E]">
+                                class="flex items-center relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                                :class="openFilter ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                                 </svg>
                                 Filter
+                                @if(request('status_waktu') || request('ruangan_id') || request('kategori'))
+                                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
+                                    </span>
+                                @endif
                             </button>
 
                             <!-- Dropdown Menu Filter -->
@@ -484,7 +499,8 @@
                         <div x-data="{ openSort: false }" class="relative inline-block text-left">
                             <!-- Tombol Sort -->
                             <button type="button" @click="openSort = !openSort" @click.away="openSort = false"
-                                class="flex items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-[#0B266E] transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E]">
+                                class="flex items-center relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                                :class="openSort ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <line x1="4" y1="6" x2="20" y2="6"></line>
@@ -493,16 +509,12 @@
                                     <polyline points="14 15 17 18 20 15"></polyline>
                                     <line x1="17" y1="18" x2="17" y2="10"></line>
                                 </svg>
-                                Sort: @php
-                                    $sortLabels = [
-                                        'pelaksanaan_asc' => 'Terdekat',
-                                        'pelaksanaan_desc' => 'Terlama',
-                                        'ruangan_asc' => 'Ruangan A-Z',
-                                        'ruangan_desc' => 'Ruangan Z-A',
-                                        'terbaru' => 'Baru Dibuat'
-                                    ];
-                                    echo $sortLabels[request('sort')] ?? 'Baru Dibuat';
-                                @endphp
+                                Sort
+                                @if(request('sort') && request('sort') !== 'terbaru')
+                                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
+                                    </span>
+                                @endif
                             </button>
 
                             <!-- Dropdown Menu Sort -->
@@ -644,7 +656,7 @@
                     </div>
                 </form>
             </div>
-            <div class="mp-card-body p-0 rounded-b-[12px] overflow-hidden" x-data="{ 
+            <div class="mp-card-body" x-data="{ 
                 selectedIds: [],
                 toggleAll() {
                     let checkboxes = document.querySelectorAll('.bulk-checkbox');
@@ -681,7 +693,7 @@
                         </button>
                     </div>
                 </form>
-                <div class="mp-table-wrap">
+                <div class="mp-table-wrap" @scroll.passive="$dispatch('close-action-dropdowns')">
                     <table class="mp-table">
                         <thead>
                             <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
@@ -749,8 +761,38 @@
                                     <td style="text-align: center;"
                                         x-data="{ showDropdown: false, showEditModal: false, showDeleteModal: false, formType: '{{ $j->tipe_jadwal }}', kategoriType: '{{ $j->kategori }}', ruanganId: '{{ $j->ruangan_id }}' }">
                                         <div class="relative inline-flex flex-col items-center justify-center w-full"
-                                            :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
-                                            <button type="button" @click="showDropdown = !showDropdown"
+                                            x-data="{ 
+                                                dropdownStyles: '',
+                                                initialX: 0,
+                                                initialY: 0,
+                                                checkScroll() {
+                                                    if (!this.showDropdown) return;
+                                                    const rect = this.$el.getBoundingClientRect();
+                                                    const diffX = Math.abs(rect.left - this.initialX);
+                                                    const diffY = Math.abs(rect.top - this.initialY);
+                                                    if (diffX > 30 || diffY > 30) {
+                                                        this.showDropdown = false;
+                                                    }
+                                                }
+                                            }">
+                                            <button type="button" 
+                                                @click="
+                                                    const rect = $el.getBoundingClientRect();
+                                                    initialX = rect.left;
+                                                    initialY = rect.top;
+                                                    
+                                                    const popUp = (window.innerHeight - rect.bottom) < 150;
+                                                    let calcLeft = Math.max(10, rect.right - 140);
+                                                    
+                                                    let style = `position: fixed; left: ${calcLeft}px; z-index: 99999; width: 140px; `;
+                                                    if (popUp) {
+                                                        style += `bottom: ${window.innerHeight - rect.top + 8}px; transform-origin: bottom right;`;
+                                                    } else {
+                                                        style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
+                                                    }
+                                                    dropdownStyles = style;
+                                                    showDropdown = !showDropdown;
+                                                "
                                                 @click.away="showDropdown = false"
                                                 class="inline-flex items-center justify-center w-[32px] h-[32px] rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
                                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -767,7 +809,10 @@
                                                 x-transition:leave="transition ease-in duration-75"
                                                 x-transition:leave-start="transform opacity-100 scale-100"
                                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                                class="origin-top-right absolute right-5 top-0 mt-8 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]">
+                                                class="bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5"
+                                                :style="dropdownStyles"
+                                                @scroll.window.capture="checkScroll()"
+                                                @close-action-dropdowns.window="checkScroll()">
 
                                                 <button type="button" @click="showEditModal = true; showDropdown = false"
                                                     class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors">
@@ -1139,8 +1184,7 @@
                     </table>
                 </div>
 
-                <div
-                    class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+                <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2 rounded-b-[12px]">
                     <div class="flex items-center gap-4 text-[13px] text-slate-500">
                         <div class="flex items-center gap-2">
                             <span class="font-medium">Per halaman</span>
@@ -1175,15 +1219,15 @@
                                     <div class="p-1">
                                         <button type="button"
                                             @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10, 'page' => 1]) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
                                         <button type="button"
                                             @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25, 'page' => 1]) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
                                         <button type="button"
                                             @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50, 'page' => 1]) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
                                             :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                                     </div>
                                 </div>

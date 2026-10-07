@@ -672,10 +672,9 @@
                     {{ $viewMode === 'akademik' ? 'Jadwal Akademik' : 'Blokir Ruangan' }}
                 </h2>
 
-                @if($viewMode === 'akademik')
-                    <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto mt-3 md:mt-0">
-                        <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}" method="GET"
-                            class="flex flex-col md:flex-row items-stretch md:items-center gap-2 m-0 relative w-full">
+                <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto mt-3 md:mt-0">
+                    <form action="{{ $viewMode === 'akademik' ? route('eoffice.peminjaman.admin.jadwal-akademik.index') : route('eoffice.peminjaman.admin.jadwal-internal.index') }}" method="GET"
+                        class="flex flex-col md:flex-row items-stretch md:items-center gap-2 m-0 relative w-full">
                             <!-- Search Bar -->
                             <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
                                 <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
@@ -708,7 +707,8 @@
                                 <!-- Filter Button -->
                                 <div class="relative flex-1 md:flex-none" @click.away="openFilter = false">
                                     <button type="button" @click="openFilter = !openFilter"
-                                        class="relative w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-slate-700 transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E] whitespace-nowrap cursor-pointer">
+                                        class="relative w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer"
+                                        :class="openFilter ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
                                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                             <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                                         </svg>
@@ -799,7 +799,8 @@
                                 <!-- Sort By Button -->
                                 <div class="relative flex-1 md:flex-none" @click.away="openSort = false">
                                     <button type="button" @click="openSort = !openSort"
-                                        class="w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-slate-700 transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E] whitespace-nowrap cursor-pointer">
+                                        class="w-full inline-flex justify-center items-center relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer"
+                                        :class="openSort ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
                                         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
                                             <line x1="4" y1="6" x2="20" y2="6"></line>
                                             <line x1="4" y1="12" x2="14" y2="12"></line>
@@ -808,6 +809,11 @@
                                             <line x1="17" y1="18" x2="17" y2="10"></line>
                                         </svg>
                                         Sort
+                                        @if(request('sort') && request('sort') !== 'waktu')
+                                            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                                <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
+                                            </span>
+                                        @endif
                                     </button>
                                     <!-- Sort Popover -->
                                     <div x-show="openSort" x-cloak x-transition:enter="transition ease-out duration-100"
@@ -852,8 +858,7 @@
                                 </div>
                             </div>
                         </form>
-                    </div>
-                @endif
+                </div>
             </div>
 
             <div class="mp-card-body">
@@ -1538,7 +1543,7 @@
                 </div>
 
                 <div
-                    class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2">
+                    class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2 rounded-b-[12px]">
                     <div class="flex flex-col md:flex-row items-center gap-4 text-[13px] text-slate-500 w-full md:w-auto">
                         <div class="flex items-center justify-center gap-2 w-full md:w-auto">
                             <span class="font-medium">Per halaman</span>
