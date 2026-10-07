@@ -1358,7 +1358,7 @@ class VerifikasiController extends Controller
         if (!empty($mkBentrok)) {
             return redirect()
                 ->route('manajemenmahasiswa.verifikasi.reward.index')
-                ->with('error', 'Mata kuliah ' . implode('; ', $mkBentrok) . ' sudah dinaikkan lewat klaim lain milik mahasiswa ini (SK 774 poin 4: mata kuliah harus berbeda). Tolak pengajuan ini agar mahasiswa mengajukan ulang dengan MK lain.');
+                ->with('error', 'Mata kuliah ' . implode('; ', $mkBentrok) . ' sudah dinaikkan lewat klaim lain milik mahasiswa ini (SK 774 poin 4: mata kuliah harus berbeda). Tolak pengajuan ini agar mahasiswa mengajukan ulang dengan mata kuliah lain.');
         }
 
         $prestasi->update([

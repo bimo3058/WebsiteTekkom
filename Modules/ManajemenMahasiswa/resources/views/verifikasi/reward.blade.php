@@ -462,7 +462,7 @@
                             {{-- Kotak MK & textarea Catatan berbagi sisa tinggi panel
                                  sama rata, supaya tidak ada satu kotak yang terlalu besar --}}
                             <div style="margin-top: 14px; flex: 1 1 0; display: flex; flex-direction: column; min-height: 90px;">
-                                <label class="form-label-custom">Mata Kuliah yang Dinaikkan Nilainya</label>
+                                <label class="form-label-custom">Mata Kuliah</label>
                                 <div id="trMkView" class="mk-readonly" style="flex: 1 1 auto; align-content: flex-start;"></div>
                             </div>
 
@@ -673,7 +673,7 @@ function trRenderHasil(data) {
     reviewEl.innerHTML = '';
 
     if (data.mk_disetujui) {
-        reviewEl.appendChild(trBarisHasil('MK disetujui: ', data.mk_disetujui, 'var(--c-success)', false));
+        reviewEl.appendChild(trBarisHasil('Mata kuliah disetujui: ', data.mk_disetujui, 'var(--c-success)', false));
     }
     if (data.note) {
         reviewEl.appendChild(trBarisHasil('Catatan: ', data.note, data.status === 'ditolak' ? 'var(--c-error)' : 'var(--c-success)', true));

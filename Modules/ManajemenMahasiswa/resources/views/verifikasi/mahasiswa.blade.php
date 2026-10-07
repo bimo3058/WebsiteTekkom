@@ -123,14 +123,6 @@
             font-weight: 500;
         }
 
-        /* Aturan dibaca sebagai kalimat ("tanpa batas, kecuali …"), bukan nama
-       kelompok: kelompok tanpa batas tidak perlu diberi nama sendiri. */
-        .kuota-ringkas-teks {
-            font-size: 12px;
-            color: var(--c-fg);
-            font-weight: 600;
-        }
-
         /* Daftar aturan di modal Aturan & rincian — isi .tinjau-info biasa */
         .kuota-aturan {
             margin: 0;
@@ -359,6 +351,9 @@
         .mk-chip .mk-teks {
             display: flex;
             flex-direction: column;
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow-wrap: anywhere;
             line-height: 1.3;
         }
 
@@ -369,8 +364,13 @@
         }
 
         .mk-chip .mk-remove {
+            /* Ukuran dikunci: nama MK panjang membungkus di kolom sempit dan tanpa
+               flex-shrink:0 tombol ikut terjepit jadi lonjong / menimpa teks. */
+            flex: 0 0 18px;
             width: 18px;
             height: 18px;
+            padding: 0;
+            align-self: center;
             border-radius: 50%;
             background: rgba(11, 38, 110, 0.18);
             color: var(--c-primary);
@@ -386,6 +386,27 @@
 
         .mk-chip .mk-remove:hover {
             background: var(--c-primary-border);
+        }
+
+        /* Petunjuk & catatan di bawah pilihan mata kuliah: poin-poin pendek,
+           satu ukuran huruf dan satu jarak baris untuk keduanya. */
+        .mk-bantuan {
+            margin: 6px 0 0;
+            padding-left: 16px;
+            font-size: 11.5px;
+            line-height: 1.55;
+            color: var(--c-fg-muted);
+        }
+
+        .mk-bantuan li+li {
+            margin-top: 3px;
+        }
+
+        .mk-bantuan-judul {
+            margin: 14px 0 0;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--c-fg-sec);
         }
 
         .mk-counter {
@@ -578,7 +599,8 @@
         $kuotaSemuaPenuh = false;
         $grupPenuh       = [];
         $adaMenunggu     = false;
-        // Ada kelompok tanpa batas → toolbar membaca "tanpa batas, kecuali …"
+        // Ada kelompok tanpa batas → toolbar membaca "Kuota reward: tanpa batas"
+        // diikuti pil "Kuota <kelompok terbatas>: sisa X dari N"
         $adaTanpaBatas   = in_array(null, $P::KUOTA_MAKS, true);
         if ($tab === 'klaim') {
             foreach ($P::KUOTA_MAKS as $grupCek => $maksCek) {
@@ -600,13 +622,14 @@
     <x-manajemenmahasiswa::ui.page-header bordered
         :title="match($tab) { 'klaim' => 'Klaim Prestasi', 'riwayat' => 'Riwayat Kegiatan Saya', default => 'Prestasi Saya' }">
         @if($tab === 'prestasi')
-            Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda lihat &amp;
-            ajukan rewardnya (konversi nilai mata kuliah, SK FT 774) di subbab Klaim Prestasi.
+            Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui akan ditampilkan di halaman
+            profil Anda pada bab Direktori Mahasiswa dan otomatis masuk ke fitur CV generator.
         @elseif($tab === 'klaim')
-            Ajukan reward untuk prestasi Anda yang sudah disetujui. Reward berupa peningkatan nilai mata kuliah
-            (SK FT 774); mata kuliah final ditetapkan departemen.
+            Ajukan reward untuk prestasi Anda yang sudah disetujui pada verifikasi prestasi. Reward berupa
+            peningkatan nilai mata kuliah sesuai dengan SK FT 774.
         @else
-            Ajukan riwayat keikutsertaan kegiatan untuk diverifikasi admin.
+            Ajukan riwayat keikutsertaan kegiatan di luar sistem untuk diverifikasi admin. Riwayat yang sudah disetujui
+            akan ditampilkan di halaman profil Anda pada bab Direktori Mahasiswa dan otomatis masuk ke fitur CV generator.
         @endif
     </x-manajemenmahasiswa::ui.page-header>
 
@@ -1036,15 +1059,16 @@
 
                 {{-- Ringkasan kuota di kanan toolbar, sejajar judul tabel — mengisi
                      ruang kosong di sebelah judul, bukan strip tambahan di atas
-                     tabel. Dibaca sebagai kalimat aturan: "tanpa batas, kecuali
-                     [kelompok terbatas: sisa X dari N]". Penjelasan lengkapnya di
+                     tabel. Dua pil sejajar: "Kuota reward: tanpa batas" dan
+                     "Kuota [kelompok terbatas]: sisa X dari N". Penjelasan lengkapnya di
                      modal lewat tombol sekunder — bukan tooltip, yang tidak
                      muncul di HP. --}}
                 <div class="kuota-toolbar">
                     <div class="kuota-ringkas">
-                        <span class="kuota-ringkas-label">Kuota reward:</span>
                         @if($adaTanpaBatas)
-                            <span class="kuota-ringkas-teks">tanpa batas, kecuali</span>
+                            <span class="kuota-pill">Kuota reward: tanpa batas</span>
+                        @else
+                            <span class="kuota-ringkas-label">Kuota reward:</span>
                         @endif
                         @foreach($P::KUOTA_MAKS as $grup => $maks)
                             @continue($maks === null)
@@ -1053,7 +1077,7 @@
                                 $sisa = max($maks - ($kuotaTerpakai[$grup] ?? 0), 0);
                             @endphp
                             <span class="kuota-pill {{ $sisa === 0 ? 'penuh' : ($sisa === 1 && $maks > 1 ? 'hampir' : '') }}">
-                                {{ ucfirst($P::KUOTA_LABELS[$grup]) }}: {{ $sisa === 0 ? 'habis' : "sisa {$sisa} dari {$maks}" }}
+                                {{ $adaTanpaBatas ? 'Kuota ' : '' }}{{ ucfirst($P::KUOTA_LABELS[$grup]) }}: {{ $sisa === 0 ? 'habis' : "sisa {$sisa} dari {$maks}" }}
                             </span>
                         @endforeach
                     </div>
@@ -1090,7 +1114,7 @@
                                     Tingkat</th>
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
-                                    Tanggal</th>
+                                    Tanggal Raih</th>
                                 <th
                                     style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">
                                     SKS Diklaim</th>
@@ -1367,6 +1391,7 @@
                                         @endif
                                     </li>
                                     <li>Setiap mata kuliah hanya bisa dinaikkan nilainya satu tingkat lebih tinggi, dan harus bernilai minimal C.</li>
+                                    <li>Mata kuliah yang sudah mendapatkan reward tidak bisa dipilih lagi.</li>
                                     <li>Hanya mata kuliah yang sudah pernah diambil yang bisa diajukan kenaikan nilainya.</li>
                                     <li>Khusus kuota invention/expo/fair, pengajuan yang masih dalam tahap menunggu review tetap memakai jatah kuota tersebut selama belum diproses.</li>
                                 </ul>
@@ -1539,7 +1564,9 @@
                                 sama persis dengan yang tampil di modal Tinjau. --}}
                                 <div id="arFields"></div>
 
-                                <div class="tp-section">
+                                {{-- #arFields berisi .tp-section sendiri, jadi aturan sibling
+                                .tp-section + .tp-section tidak mengenai blok ini; jaraknya diberi manual. --}}
+                                <div class="tp-section" style="margin-top:28px;">
                                     <p class="tp-pane-heading">Formulir reward</p>
                                     {{-- SK 774 poin 9 — penanda saja, pengajuan tetap bisa dikirim --}}
                                     <div id="arPraSk" class="sk-lawas" style="display:none; margin:0 0 12px;">
@@ -1583,11 +1610,9 @@
                                     <div class="jatah-preview" id="arJatahPreview" style="display:none;"></div>
 
                                     <div class="mb-3 mt-3" id="arMkWrap" style="display:none;">
-                                        <label class="form-label-custom">
-                                            Usulan Mata Kuliah yang Dinaikkan Nilainya <span class="required">*</span>
-                                            <span style="font-weight:400; color:var(--c-fg-muted);">(maks <span
-                                                    id="arMkMax">0</span> MK)</span>
-                                        </label>
+                                        {{-- Judul dibuat pendek seperti label isian lain; batas jumlahnya
+                                        sudah tampil di kotak jatah di atas dan penghitung di bawah. --}}
+                                        <label class="form-label-custom">Mata Kuliah <span class="required">*</span></label>
                                         <x-manajemenmahasiswa::ui.select id="arMkSelect" size="lg">
                                             <option value="">Pilih mata kuliah...</option>
                                             @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::MATA_KULIAH as $smt => $mks)
@@ -1627,18 +1652,23 @@
                                         </div>
                                         <div id="arMkCounter" class="mk-counter"></div>
                                         <div id="arMkHidden"></div>
-                                        <small class="text-muted" style="font-size:11px;">Pilih MK kurikulum Teknik
-                                            Komputer yang nilainya ingin dinaikkan (syarat min. C). Setelah dipilih, isi
-                                            tahun ajaran saat MK itu diambil di kolom sebelah kanannya. MK yang sudah
-                                            dipakai di klaim lain tidak bisa dipilih lagi.</small>
+                                        <ul class="mk-bantuan">
+                                            <li>Pilih mata kuliah kurikulum Teknik Komputer yang nilainya ingin dinaikkan.</li>
+                                            <li>Setelah dipilih, isi tahun ajaran saat mata kuliah itu diambil di kolom
+                                                sebelah kanannya.</li>
+                                            <li>Mata kuliah yang sudah mendapatkan reward tidak bisa dipilih lagi.</li>
+                                        </ul>
                                     </div>
 
-                                    <div style="font-size:11px; color:var(--c-fg-muted); margin-top:10px; line-height:1.5;">
-                                        Catatan: departemen berwenang menyetujui atau menolak usulan MK ini (SK 774
-                                        poin 7). Kalau ditolak, ajukan ulang dengan MK lain. Reward hanya untuk MK
-                                        bernilai minimal C, dan setiap MK hanya bisa dinaikkan sekali. Aturan kuota
-                                        lengkapnya ada di "Aturan &amp; rincian" di kanan atas tabel.
-                                    </div>
+                                    <p class="mk-bantuan-judul">Catatan</p>
+                                    <ul class="mk-bantuan">
+                                        <li>Reward hanya untuk mata kuliah bernilai minimal C, dan setiap mata kuliah hanya
+                                            bisa dinaikkan sekali.</li>
+                                        <li>Departemen berwenang menyetujui atau menolak usulan mata kuliah ini sesuai
+                                            dengan SK 774 poin 7. Harap memperhatikan alasan penolakan yang tertera sebelum
+                                            mengajukan kembali.</li>
+                                        <li>Aturan kuota lengkapnya ada di "Aturan &amp; rincian" di kanan atas tabel.</li>
+                                    </ul>
                                 </div>
 
                                 {{-- Tombol memakai bentuk yang sama dengan panel keputusan di modal
@@ -1874,7 +1904,7 @@
                 textEl.innerHTML = 'Batalkan pengajuan reward untuk prestasi <strong class="cc-nama"></strong>? Anda bisa mengajukan ulang nanti.';
                 const namaEl = textEl.querySelector('.cc-nama');
                 if (namaEl) namaEl.textContent = '"' + namaPrestasi + '"';
-                btnEl.textContent = 'Ya, Batalkan';
+                btnEl.textContent = 'Ya';
                 ccModal.show();
             };
 
@@ -1888,7 +1918,7 @@
                 textEl.innerHTML = 'Tarik pengajuan <strong class="cc-nama"></strong> dari antrean verifikasi? Data & berkas buktinya dihapus, dan Anda perlu mengunggah ulang bila ingin mengajukannya lagi.';
                 const namaEl = textEl.querySelector('.cc-nama');
                 if (namaEl) namaEl.textContent = '"' + nama + '"';
-                btnEl.textContent = 'Ya, Tarik';
+                btnEl.textContent = 'Ya';
                 ccModal.show();
             };
 
@@ -1936,7 +1966,6 @@
             const mkRows = Array.from(mkChosen.querySelectorAll('.mk-row'));
             const mkCounter = document.getElementById('arMkCounter');
             const mkHidden = document.getElementById('arMkHidden');
-            const mkMaxEl = document.getElementById('arMkMax');
 
             const LABELS = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_LABELS);
             const CAP_BY_PENY = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_BY_PENYELENGGARA);
@@ -2016,8 +2045,8 @@
                 });
                 const over = (arMkList.length > arCap) || (totalSks > arSksMax);
                 mkCounter.className = 'mk-counter' + (over ? ' over' : '');
-                mkCounter.textContent = 'Dipilih ' + arMkList.length + '/' + arCap + ' MK • Total ' + totalSks + ' SKS (maks ' + arSksMax + ')'
-                    + (tanpaTa ? ' • Isi tahun ajaran ' + tanpaTa + ' MK' : '');
+                mkCounter.textContent = 'Dipilih ' + arMkList.length + '/' + arCap + ' mata kuliah • Total ' + totalSks + ' SKS (maks ' + arSksMax + ')'
+                    + (tanpaTa ? ' • Isi tahun ajaran ' + tanpaTa + ' mata kuliah' : '');
             }
 
             function currentTotalSks() {
@@ -2187,7 +2216,6 @@
                     arJatahOk = true;
                     arCap = jatah.jml_mk_max;
                     arSksMax = jatah.sks_max;
-                    mkMaxEl.textContent = arCap;
                     mkWrap.style.display = 'block';
                     // bila jatah mengecil (ganti kategori), pangkas pilihan yang melebihi
                     if (arMkList.length > arCap) arMkList = arMkList.slice(0, arCap);
