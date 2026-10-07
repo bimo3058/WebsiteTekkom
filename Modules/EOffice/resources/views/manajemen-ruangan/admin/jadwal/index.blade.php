@@ -687,7 +687,7 @@
                                     </svg>
                                 </button>
                                 <input type="text" name="search" x-model="searchQuery" 
-                                    @input.debounce.500ms="$el.form.submit()"
+                                    @input="if(searchQuery.trim() === '') $el.form.submit()"
                                     @scroll.window.capture="$el.blur()"
                                     @touchmove.window.capture="$el.blur()"
                                     placeholder="Search..."

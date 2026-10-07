@@ -7,45 +7,66 @@
         </div>
 
         {{-- Quick Export Dropdown --}}
-        <div class="relative z-10" x-data="{ openExport: false }">
-            <button type="button" @click="openExport = !openExport"
-                class="h-[38px] px-4 bg-[#0B266E] border border-[#060E2A] rounded-lg flex items-center gap-2 text-[13px] font-medium text-white hover:bg-[#060E2A] transition-colors cursor-pointer shadow-sm">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                </svg>
-                Ekspor Laporan
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-            </button>
+        <div class="mp-page-actions flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <div class="relative z-[60]" x-data="{ 
+                openExport: false,
+                dropdownStyles: '',
+                checkScroll() {
+                    if(this.openExport) this.openExport = false;
+                }
+            }">
+                <button type="button" 
+                    @click="
+                        const rect = $el.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        let style = `position: fixed; right: ${window.innerWidth - rect.right}px; `;
+                        if (rect.bottom + 250 > viewportHeight) {
+                            style += `bottom: ${viewportHeight - rect.top + 8}px; transform-origin: bottom right;`;
+                        } else {
+                            style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
+                        }
+                        dropdownStyles = style;
+                        openExport = !openExport;
+                    "
+                    class="mp-btn primary md cursor-pointer">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    Ekspor Laporan
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
 
-            <div x-show="openExport" @click.outside="openExport = false" style="display: none;"
-                class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden transform origin-top-right">
-                <div class="p-2 space-y-1">
-                    <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-pdf', request()->query()) }}" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50 flex items-start gap-3 transition-colors cursor-pointer">
-                        <div class="bg-red-50 p-2 rounded-md text-red-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg></div>
-                        <div>
-                            <div class="text-[13px] font-bold text-gray-800">Cetak PDF (Sesuai Filter)</div>
-                            <div class="text-[11px] text-gray-500 mt-0.5 leading-snug">Unduh laporan resmi format PDF sesuai data tabel saat ini</div>
-                        </div>
-                    </a>
-                    <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', request()->query()) }}" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50 flex items-start gap-3 transition-colors cursor-pointer">
-                        <div class="bg-green-50 p-2 rounded-md text-green-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
-                        <div>
-                            <div class="text-[13px] font-bold text-gray-800">Unduh Excel (Sesuai Filter)</div>
-                            <div class="text-[11px] text-gray-500 mt-0.5 leading-snug">Unduh data mentah Excel untuk diolah kembali</div>
-                        </div>
-                    </a>
-                    <div class="border-t border-gray-100 my-1"></div>
-                    @php
-                        $startBulanIni = now()->startOfMonth()->format('Y-m-d');
-                        $endBulanIni = now()->endOfMonth()->format('Y-m-d');
-                    @endphp
-                    <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', ['start_date' => $startBulanIni, 'end_date' => $endBulanIni]) }}" class="w-full text-left px-3 py-2.5 rounded-lg hover:bg-gray-50 flex items-start gap-3 transition-colors cursor-pointer">
-                        <div class="bg-blue-50 p-2 rounded-md text-blue-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
-                        <div>
-                            <div class="text-[13px] font-bold text-gray-800">Rekap Cepat: Bulan Ini</div>
-                            <div class="text-[11px] text-gray-500 mt-0.5 leading-snug">Langsung unduh seluruh peminjaman di bulan berjalan tanpa atur filter</div>
-                        </div>
-                    </a>
+                <div x-show="openExport" @click.outside="openExport = false" style="display: none;"
+                    class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden z-[60] w-56"
+                    :style="dropdownStyles"
+                    @scroll.window.capture="checkScroll()">
+                    <div class="py-1 px-1">
+                        <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            PILIH FORMAT</div>
+                            
+                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-pdf', request()->query()) }}" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                            Cetak PDF
+                        </a>
+                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', request()->query()) }}" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            Unduh Excel
+                        </a>
+                        
+                        <div class="border-t border-gray-100 my-1"></div>
+                        
+                        <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                            JALAN PINTAS</div>
+                            
+                        @php
+                            $startBulanIni = now()->startOfMonth()->format('Y-m-d');
+                            $endBulanIni = now()->endOfMonth()->format('Y-m-d');
+                        @endphp
+                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', ['start_date' => $startBulanIni, 'end_date' => $endBulanIni]) }}" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer" title="Unduh data bulan berjalan">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            Rekap Excel Bulan Ini
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -53,33 +74,62 @@
 
 
 
-    <div class="bg-white border border-gray-200 rounded-[12px] mt-6" style="box-shadow: 0 1px 3px rgba(0,0,0,0.03);"
+    <div class="mp-card" style="margin-top: 0px;"
         x-data="arsipManager()">
         
         <!-- Header Actions -->
         <div
-            class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
+            class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
             <h2 class="text-base font-bold text-gray-900 tracking-tight">Arsip Peminjaman</h2>
 
             <div class="flex flex-wrap items-center gap-2.5">
                 <form action="{{ route('eoffice.peminjaman.admin.riwayat.index') }}" method="GET"
                     class="flex flex-wrap items-center gap-2.5">
                     {{-- Search --}}
-                    <div class="relative w-full sm:w-auto">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                        <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
                             </svg>
-                        </div>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400 cursor-text"
-                            placeholder="Search" x-on:input.debounce.700ms="$el.form.submit()">
+                        </button>
+                        <input type="text" name="search" x-model="searchQuery" 
+                            @input="if(searchQuery.trim() === '') $el.form.submit()"
+                            @scroll.window.capture="$el.blur()"
+                            @touchmove.window.capture="$el.blur()"
+                            placeholder="Search"
+                            class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                        
+                        <!-- Clear Search (X) -->
+                        <button type="button" x-show="searchQuery.length > 0" x-cloak
+                            @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
                     </div>
 
                     {{-- Filter Engine Dropdown --}}
-                    <div class="relative" x-data="{ open: false }">
-                        <button type="button" @click="open = !open"
+                    <div class="relative" x-data="{ 
+                        open: false,
+                        dropdownStyles: '',
+                        checkScroll() {
+                            if(this.open) this.open = false;
+                        }
+                    }">
+                        <button type="button" 
+                            @click="
+                                const rect = $el.getBoundingClientRect();
+                                const viewportHeight = window.innerHeight;
+                                let style = `position: fixed; right: ${window.innerWidth - rect.right}px; `;
+                                if (rect.bottom + 350 > viewportHeight) {
+                                    style += `bottom: ${viewportHeight - rect.top + 8}px; transform-origin: bottom right;`;
+                                } else {
+                                    style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
+                                }
+                                dropdownStyles = style;
+                                open = !open;
+                            "
                             class="h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
                             <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -93,7 +143,9 @@
                         </button>
 
                         <div x-show="open" @click.outside="open = false" style="display: none;"
-                            class="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 transform origin-top-right">
+                            class="bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-72"
+                            :style="dropdownStyles"
+                            @scroll.window.capture="checkScroll()">
                             <div class="p-4 space-y-4">
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-700 mb-1.5 relative z-10 w-full bg-white">Rentang Waktu</label>
@@ -200,19 +252,20 @@
             </div>
         </div>
 
-        <div class="mp-table-wrap mt-0 border-t-0">
-            <table class="mp-table" style="table-layout: auto; width: 100%;">
-                <thead>
-                    <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Peminjam</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu Pemakaian</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Kegiatan</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Status</th>
-                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
+        <div class="mp-card-body">
+            <div class="mp-table-wrap" @scroll.passive="$dispatch('close-action-dropdowns')">
+                <table class="mp-table">
+                    <thead>
+                        <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Peminjam</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Ruangan</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Waktu Pemakaian</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Kegiatan</th>
+                            <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap;">Status</th>
+                            <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:#64748b; white-space:nowrap; width: 80px;">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                     @forelse($peminjamans as $pinjam)
                         @php
                             $fullName = $pinjam->user->name ?? 'User Tidak Diketahui';
@@ -280,10 +333,29 @@
                             </td>
                             <td class="text-center">
                                 <div class="relative inline-flex flex-col items-center justify-center w-full"
-                                    x-data="{ showDropdown: false }"
+                                    x-data="{ 
+                                        showDropdown: false,
+                                        dropdownStyles: '',
+                                        checkScroll() {
+                                            if(this.showDropdown) this.showDropdown = false;
+                                        }
+                                    }"
                                     :class="{'z-50': showDropdown, 'z-[1]': !showDropdown}">
                                     
-                                    <button type="button" @click="showDropdown = !showDropdown" @click.away="showDropdown = false"
+                                    <button type="button" 
+                                        @click="
+                                            const rect = $el.getBoundingClientRect();
+                                            const viewportHeight = window.innerHeight;
+                                            let style = `position: fixed; right: ${window.innerWidth - rect.right}px; `;
+                                            if (rect.bottom + 150 > viewportHeight) {
+                                                style += `bottom: ${viewportHeight - rect.top + 8}px; transform-origin: bottom right;`;
+                                            } else {
+                                                style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
+                                            }
+                                            dropdownStyles = style;
+                                            showDropdown = !showDropdown;
+                                        " 
+                                        @click.away="showDropdown = false"
                                         class="inline-flex items-center justify-center w-[32px] h-[32px] rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
                                         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>
                                     </button>
@@ -295,7 +367,10 @@
                                         x-transition:leave="transition ease-in duration-75"
                                         x-transition:leave-start="transform opacity-100 scale-100"
                                         x-transition:leave-end="transform opacity-0 scale-95"
-                                        class="origin-top-right absolute right-0 top-full mt-2 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]">
+                                        class="bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]"
+                                        :style="dropdownStyles"
+                                        @scroll.window.capture="checkScroll()"
+                                        @close-action-dropdowns.window="checkScroll()">
 
                                         <button type="button" @click="showDropdown = false; openDetail({{ json_encode([
                                             'nama' => $fullName,
@@ -341,9 +416,9 @@
             </table>
         </div>
 
-        <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
-            <div class="flex items-center gap-4 text-[13px] text-slate-500">
-                <div class="flex items-center gap-2">
+        <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2 rounded-b-[12px]">
+            <div class="flex flex-col md:flex-row items-center gap-4 text-[13px] text-slate-500 w-full md:w-auto">
+                <div class="flex items-center justify-center gap-2 w-full md:w-auto">
                     <span class="font-medium">Per halaman</span>
                     <div x-data="{ 
                         open: false, 
@@ -391,16 +466,16 @@
                     </div>
                 </div>
 
-                <div class="w-px h-4 bg-slate-200"></div>
+                <div class="hidden md:block w-px h-4 bg-slate-200"></div>
 
-                <p class="font-medium text-slate-500">
+                <p class="hidden md:block font-medium text-slate-500">
                     Menampilkan <span class="font-bold text-slate-800">{{ $peminjamans->firstItem() ?? 0 }}</span>
                     sampai <span class="font-bold text-slate-800">{{ $peminjamans->lastItem() ?? 0 }}</span>
                     dari <span class="font-bold text-slate-800">{{ $peminjamans->total() }}</span> entri
                 </p>
             </div>
 
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center justify-center gap-1.5 w-full md:w-auto">
                 @if ($peminjamans->onFirstPage())
                     <button disabled
                         class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
@@ -479,6 +554,7 @@
                     </button>
                 @endif
             </div>
+        </div>
         </div>
 
         <!-- Pop-up Modal Detail Peminjaman -->
