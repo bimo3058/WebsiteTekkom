@@ -5,14 +5,19 @@
     <meta name="csrf-token" content="">
     <title>Edit Periode | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["admin"],"active_role":"admin","nim":null,"nip":"TEST-NIP"},"role":"admin","path":"\/admin\/periods\/_id_\/edit","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
+    <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
+<script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
 <body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div x-show="pendingRequests > 0" x-cloak class="capstone-progress" role="status" aria-label="Sedang memproses permintaan">
+    <span class="capstone-progress-bar" aria-hidden="true"></span>
+</div>
 <div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
     <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+<aside data-mobile-sidebar class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
     <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
         <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
         <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
@@ -30,7 +35,7 @@
                     <rect  width="7"  height="5"  x="3"  y="16"  rx="1"  />
     </svg>
 <span x-show="!collapsed">Dashboard</span></a>
-                                                                                    <div x-data="{ expanded: true }">
+                                                                                    <div x-data="{ expanded: false }">
                         <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Master Data"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"  />
                     <circle  cx="12"  cy="12"  r="3"  />
@@ -40,30 +45,31 @@
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/users"  title="Users" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Users</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/groups"  title="Groups" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Groups</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/locations"  title="Locations" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Locations</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Requirements</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
                                                     </div>
                     </div>
-                                                                                                    <div x-data="{ expanded: false }">
-                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Evaluation Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+                                                                                                    <div x-data="{ expanded: true }">
+                        <button type="button"  aria-disabled="false" class="flex h-8 w-full items-center gap-2 rounded-md p-2 text-sm hover:bg-sidebar-accent " :aria-expanded="expanded" @click="if (collapsed) toggleSidebar(); expanded = !expanded" title="Period Setup"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M13 5h8"  />
                     <path  d="M13 12h8"  />
                     <path  d="M13 19h8"  />
                     <path  d="m3 17 2 2 4-4"  />
                     <path  d="m3 7 2 2 4-4"  />
     </svg>
-<span x-show="!collapsed">Evaluation Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
+<span x-show="!collapsed">Period Setup</span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-auto size-4 transition-transform" x-show="!collapsed" :class="expanded && 'rotate-90'">
                     <path  d="m9 18 6-6-6-6"  />
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/assessment-bank"  title="Assessment Bank" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Assessment Bank</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/periods"  title="Periods" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Periods</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/period-assessment-config"  title="Tipe Penilaian" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Tipe Penilaian</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/peer-review"  title="Peer Review" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Peer Review</a>
-                                                                                            <a  href="http://localhost:8000/capstone/admin/evaluation-setup/grade-configuration"  title="Grade Config" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Grade Config</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/document-requirements"  title="Document Requirements" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Document Requirements</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -76,11 +82,12 @@
     </svg>
 </button>
                         <div x-show="expanded && !collapsed" x-cloak class="border-sidebar-border mx-3.5 flex flex-col gap-1 border-l px-2.5 py-0.5">
-                                                                                            <a  href="http://localhost:8000/capstone/admin/finalization"  title="Finalization" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Finalization</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/schedule"  title="Schedule" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Schedule</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/sempro"  title="Sidang Proposal" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Sidang Proposal</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/expo"  title="Expo Events" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Expo Events</a>
                                                                                             <a  href="http://localhost:8000/capstone/admin/ta-defense"  title="TA Defense" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">TA Defense</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/audit-logs"  title="Audit Log" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Audit Log</a>
+                                                                                            <a  href="http://localhost:8000/capstone/admin/period-registrations"  title="Approval" class="flex h-7 min-w-0 items-center rounded-md px-2 text-sm hover:bg-sidebar-accent  ">Approval</a>
                                                     </div>
                     </div>
                                                                                                     <div x-data="{ expanded: false }">
@@ -168,12 +175,12 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="px-3 sm:px-6 pt-6 pb-6"><div class="min-h-screen bg-gray-50/50" x-data="periodWizard(1)">
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div class="min-h-screen bg-gray-50/50" x-data="periodWizard(1)">
     <div class="sticky top-0 z-10"><div class="mx-auto max-w-7xl px-6 py-4"><h1 class="text-2xl font-semibold text-gray-900">Edit Periode</h1><p class="mt-1 text-sm text-gray-500">Perbarui konfigurasi periode yang sudah ada.</p></div></div>
-    <div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
-                    <circle  cx="12"  cy="12"  r="10"  />
-    </svg>
-<span class="sr-only">Loading</span></div>
+    <div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
 <div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
     <div x-show="!loading && !error" x-cloak>
         <div class="mx-auto max-w-7xl px-6 py-4"><div class="rounded-xl border bg-white px-6 py-6 shadow-sm"><div class="flex items-start justify-between overflow-x-auto">
@@ -184,7 +191,7 @@ Logout</button></form>
                             <div class="flex flex-1 items-start"><div class="flex flex-1 flex-col items-center"><button type="button" @click="go(1)" :disabled="1>step+1 || saving || copying" :aria-current="step===1 ? 'step' : null" class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all" :class="step>1 ? 'bg-green-600 text-white' : (step===1 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400 border-2 border-gray-200')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="step>1" class="h-5 w-5">
                     <path  d="M20 6 9 17l-5-5"  />
     </svg>
-<span x-show="step<=1">2</span></button><div class="mt-3 min-w-20 text-center"><p class="text-sm font-semibold" :class="step>1 ? 'text-green-700' : (step===1 ? 'text-blue-700' : 'text-gray-500')">Setup Evaluasi</p><p class="mt-0.5 max-w-[120px] text-xs text-gray-400">Konfigurasi penilaian</p></div></div><div class="flex-1 px-2 pt-5"><div class="h-0.5" :class="step>1 ? 'bg-green-600' : 'bg-gray-200'"></div></div></div>
+<span x-show="step<=1">2</span></button><div class="mt-3 min-w-20 text-center"><p class="text-sm font-semibold" :class="step>1 ? 'text-green-700' : (step===1 ? 'text-blue-700' : 'text-gray-500')">Period Setup</p><p class="mt-0.5 max-w-[120px] text-xs text-gray-400">Konfigurasi penilaian</p></div></div><div class="flex-1 px-2 pt-5"><div class="h-0.5" :class="step>1 ? 'bg-green-600' : 'bg-gray-200'"></div></div></div>
                             <div class="flex flex-1 items-start"><div class="flex flex-1 flex-col items-center"><button type="button" @click="go(2)" :disabled="2>step+1 || saving || copying" :aria-current="step===2 ? 'step' : null" class="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold transition-all" :class="step>2 ? 'bg-green-600 text-white' : (step===2 ? 'bg-blue-600 text-white ring-4 ring-blue-100' : 'bg-gray-100 text-gray-400 border-2 border-gray-200')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" x-show="step>2" class="h-5 w-5">
                     <path  d="M20 6 9 17l-5-5"  />
     </svg>
@@ -226,7 +233,7 @@ Logout</button></form>
 </div><div class="flex items-center justify-between border-t pt-4"><div><label for="period-active" class="text-sm font-medium text-gray-700">Set Aktif <span class="text-red-500">*</span></label><p class="text-xs text-gray-500">Periode yang aktif akan digunakan untuk proses akademik saat ini</p></div><input id="period-active" type="checkbox" role="switch" x-model="form.is_active" class="h-5 w-9 accent-blue-600" /></div></div></div>
 </div>
                     <div x-show="step===1"><div class="space-y-6">
-    <div class="flex items-center justify-between gap-3 rounded-lg border p-4" :class="hasTemplates ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'"><div><h2 class="font-medium" :class="hasTemplates ? 'text-green-900' : 'text-amber-900'" x-text="hasTemplates ? 'Setup Evaluasi Siap' : 'Setup Evaluasi Diperlukan'"></h2><p class="text-sm" x-text="hasTemplates ? templates.filter(t=>t.is_active).length+' template tersedia' : 'Konfigurasi template evaluasi harus diselesaikan sebelum membuat periode.'"></p></div><a href="http://localhost:8000/capstone/admin/assessment-bank" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" target="_blank" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
+    <div class="flex items-center justify-between gap-3 rounded-lg border p-4" :class="hasTemplates ? 'border-green-200 bg-green-50' : 'border-amber-200 bg-amber-50'"><div><h2 class="font-medium" :class="hasTemplates ? 'text-green-900' : 'text-amber-900'" x-text="hasTemplates ? 'Period Setup Siap' : 'Period Setup Diperlukan'"></h2><p class="text-sm" x-text="hasTemplates ? templates.filter(t=>t.is_active).length+' template tersedia' : 'Konfigurasi template evaluasi harus diselesaikan sebelum membuat periode.'"></p></div><a href="http://localhost:8000/capstone/admin/assessment-bank" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-8 rounded-md gap-1.5 px-3 has-[&gt;svg]:px-2.5" target="_blank" rel="noopener noreferrer"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M5 12h14"  />
                     <path  d="M12 5v14"  />
     </svg>
@@ -371,7 +378,7 @@ Salin Penilaian dari Periode:</span><select x-model="copyPeriod" @change="copy()
                     <path  d="m9 14 2 2 4-4"  />
     </svg>
 </div><div><h2 class="text-lg font-semibold text-gray-900">Review Konfigurasi Periode</h2><p class="text-sm text-gray-500">Periksa kembali data sebelum menyimpan periode</p></div></div><div class="grid gap-6 md:grid-cols-2"><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Informasi Dasar</h3><p class="text-lg font-medium" x-text="form.name"></p><p class="mt-2 text-sm text-gray-600" x-text="form.start_date+' — '+form.end_date"></p><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 text-foreground mt-3" x-text="form.is_active ? 'Aktif' : 'Nonaktif'"></span>
-</div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Konfigurasi Group</h3><p class="text-sm text-gray-600" x-text="form.min_group_size+'–'+form.max_group_size+' anggota per group'"></p><p class="mt-2 text-sm text-gray-600" x-text="form.max_supervisor_load+' group/dosen'"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Tanggal Fase</h3><div class="mb-3 text-sm"><p class="font-medium">Bidding</p><p class="text-gray-600" x-text="(form.bidding_start || '-')+' — '+(form.bidding_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.bidding_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">PDC1</p><p class="text-gray-600" x-text="(form.pdc1_start || '-')+' — '+(form.pdc1_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.pdc1_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">PDC2</p><p class="text-gray-600" x-text="(form.pdc2_start || '-')+' — '+(form.pdc2_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.pdc2_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">Sidang TA</p><p class="text-gray-600" x-text="(form.ta_start || '-')+' — '+(form.ta_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.ta_reminder_at || '-')"></p></div><p class="text-sm font-medium">EXPO TA</p><p class="text-sm text-gray-600" x-text="form.expo_date || '-'"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.expo_reminder_at || '-')"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Setup Evaluasi</h3><template x-for="type in types" :key="type"><div class="flex justify-between gap-3 py-2 text-sm"><span x-text="type.replaceAll('_',' ')"></span><span x-text="assessments[type].length+' komponen / '+weight(assessments[type])+'%'"></span></div></template><div class="flex justify-between py-2 text-sm"><span>Peer Review</span><span x-text="peerIds.length+' indikator / '+weight(peerIds,true)+'%'"></span></div></div></div></div>
+</div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Konfigurasi Group</h3><p class="text-sm text-gray-600" x-text="form.min_group_size+'–'+form.max_group_size+' anggota per group'"></p><p class="mt-2 text-sm text-gray-600" x-text="form.max_supervisor_load+' group/dosen'"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Tanggal Fase</h3><div class="mb-3 text-sm"><p class="font-medium">Bidding</p><p class="text-gray-600" x-text="(form.bidding_start || '-')+' — '+(form.bidding_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.bidding_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">PDC1</p><p class="text-gray-600" x-text="(form.pdc1_start || '-')+' — '+(form.pdc1_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.pdc1_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">PDC2</p><p class="text-gray-600" x-text="(form.pdc2_start || '-')+' — '+(form.pdc2_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.pdc2_reminder_at || '-')"></p></div><div class="mb-3 text-sm"><p class="font-medium">Sidang TA</p><p class="text-gray-600" x-text="(form.ta_start || '-')+' — '+(form.ta_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.ta_reminder_at || '-')"></p></div><p class="text-sm font-medium">EXPO TA</p><p class="text-sm text-gray-600" x-text="form.expo_date || '-'"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.expo_reminder_at || '-')"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Period Setup</h3><template x-for="type in types" :key="type"><div class="flex justify-between gap-3 py-2 text-sm"><span x-text="type.replaceAll('_',' ')"></span><span x-text="assessments[type].length+' komponen / '+weight(assessments[type])+'%'"></span></div></template><div class="flex justify-between py-2 text-sm"><span>Peer Review</span><span x-text="peerIds.length+' indikator / '+weight(peerIds,true)+'%'"></span></div></div></div></div>
 </div>
                 </fieldset>
                 <div x-show="Object.keys(errors).length" role="alert" class="mt-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><template x-for="(messages,key) in errors" :key="key"><p x-text="messages[0]"></p></template></div>
@@ -393,8 +400,33 @@ Salin Penilaian dari Periode:</span><select x-model="copyPeriod" @change="copy()
         </div>
     </main>
 </div>
-<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
-    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+<div aria-live="polite" aria-relevant="additions" class="capstone-notices fixed bottom-5 right-5 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id">
+        <div role="status" class="capstone-notice bg-popover text-popover-foreground flex items-start gap-3 rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300' : 'border-green-200'">
+            <template x-if="!notice.error">
+                <span class="capstone-success-icon flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+                </span>
+            </template>
+            <template x-if="notice.error">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+                </span>
+            </template>
+            <span class="min-w-0 flex-1 break-words pt-0.5" x-text="notice.message"></span>
+            <button type="button" class="text-muted-foreground shrink-0 rounded p-1 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Tutup notifikasi" @click="notices=notices.filter(item=>item.id!==notice.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+            </button>
+        </div>
+    </template>
 </div>
-</body>
+    </body>
 </html>

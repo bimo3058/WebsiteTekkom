@@ -86,9 +86,18 @@ class Pengumuman extends Model
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
+    /**
+     * File pengumuman (gambar + lampiran), diurutkan dari yang paling awal diunggah.
+     *
+     * Urutan wajib eksplisit: gambar diunggah sesuai urutan yang dipilih di form,
+     * sehingga gambar pertama (id terkecil) adalah cover, dan gambar yang
+     * ditambahkan lewat halaman edit selalu masuk di belakangnya. Tanpa ORDER BY,
+     * Postgres tidak menjamin urutan baris — apalagi setelah UPDATE saat file draf
+     * dipindahkan ke pengumuman — dan cover bisa tertukar.
+     */
     public function repoMulmed(): HasMany
     {
-        return $this->hasMany(RepoMulmed::class, 'pengumuman_id');
+        return $this->hasMany(RepoMulmed::class, 'pengumuman_id')->orderBy('id');
     }
 
     public function personalPins(): HasMany

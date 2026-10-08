@@ -78,9 +78,6 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
 
             Route::post('/mata-kuliah/import', [MataKuliahController::class, 'import'])->name('mata-kuliah.import');
             Route::get('/mata-kuliah/export-template', [MataKuliahController::class, 'exportTemplate'])->name('mata-kuliah.export-template');
-            Route::patch('/mata-kuliah/{id}/toggle-active', [MataKuliahController::class, 'toggleActive'])->name('mata-kuliah.toggle-active');
-            Route::post('/mata-kuliah/sync-semester', [MataKuliahController::class, 'syncSemester'])->name('mata-kuliah.sync-semester');
-
             Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
             Route::get('/pemetaan/mk-cpl', [PemetaanController::class, 'listMkCpl'])->name('pemetaan.mk-cpl.index');
             Route::get('/pemetaan/cpl-mk', [PemetaanController::class, 'listCplMk'])->name('pemetaan.cpl-mk.index');
@@ -115,7 +112,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
                 Route::get('/cpmk-by-rps/{rpsId}', [DosenRpsController::class, 'getCpmkByRps'])->name('cpmk-by-rps');
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
                 Route::get('/wizard-cache/{mkId}', [DosenRpsController::class, 'getWizardCache'])->name('get-wizard-cache');
-            });
+                Route::get('/draft/{mkId}', [DosenRpsController::class, 'getDraft'])->name('get-draft');
+
+                });
             // RPS - GPM
             Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::get('/', [RiwayatValidasiController::class, 'index'])->name('index');
@@ -209,6 +208,8 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
             Route::post('/', [MataKuliahController::class, 'store'])->name('store');
             Route::get('/{id}', [MataKuliahController::class, 'show'])->name('show');
             Route::put('/{id}', [MataKuliahController::class, 'update'])->name('update');
+            Route::patch('/{id}/toggle-active', [MataKuliahController::class, 'toggleActive'])->name('toggle-active');
+            Route::post('/sync-semester', [MataKuliahController::class, 'syncSemester'])->name('sync-semester');
         });
 
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
@@ -230,8 +231,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             // RPS - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
-                Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
-                Route::put('/{rpsId}', [DosenRpsController::class, 'update'])->name('update');
+                Route::post('/submit',          [DosenRpsController::class, 'store'])->name('store');
+                Route::post('/store-upload',    [DosenRpsController::class, 'storeUpload'])->name('store-upload');
+                Route::post('/store-generator', [DosenRpsController::class, 'storeGenerator'])->name('store-generator');
+                Route::post('/save-draft',      [DosenRpsController::class, 'saveDraft'])->name('save-draft');
+                Route::put('/{rpsId}',          [DosenRpsController::class, 'update'])->name('update');
                 Route::post('/wizard-cache', [DosenRpsController::class, 'saveWizardCache'])->name('wizard-cache');
                 Route::post('/clear-wizard-cache', [DosenRpsController::class, 'clearWizardCache'])->name('clear-wizard-cache');
             });
@@ -292,6 +296,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('api/v1/bank-soal
 
             Route::delete('/pemetaan/dosen-mk/{id}', [PemetaanController::class, 'destroyDosenMk'])->name('pemetaan.dosen-mk.destroy');
             Route::delete('/pemetaan/dosen-mk/{mk_id}/all', [PemetaanController::class, 'destroyAllDosenByMk'])->name('pemetaan.dosen-mk.destroy-all');
+            Route::delete('/draft/{draftId}', [DosenRpsController::class, 'deleteDraft'])->name('delete-draft');
             Route::delete('/pemetaan/dosen-mk/bulk', [PemetaanController::class, 'bulkDestroyDosenMk'])->name('pemetaan.dosen-mk.bulk-destroy');
         });
 

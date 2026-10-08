@@ -5,14 +5,19 @@
     <meta name="csrf-token" content="">
     <title>Registration | SICATA</title>
     <link rel="icon" href="http://localhost:8000/capstone/assets/images/UNDIPOfficial.png">
-    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1788976620">
+    <link rel="stylesheet" href="http://localhost:8000/capstone/assets/build/app.css?v=1790016247">
     <script type="application/json" id="capstone-context">{"actor":{"id":1,"name":"Test Administrator","email":"test@example.test","roles":["mahasiswa"],"active_role":"mahasiswa","nim":null,"nip":"TEST-NIP"},"role":"mahasiswa","path":"\/mahasiswa\/registration","params":{"id":1,"groupId":1,"phase":"PDC1","studentId":1,"evaluationType":"PDC1","evaluatorId":1,"scheduleId":1,"expoId":1},"base":"http:\/\/localhost:8000\/capstone","api":"http:\/\/localhost:8000\/capstone\/session\/capstone"}</script>
-    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1788976620"></script>
+    <script defer src="http://localhost:8000/capstone/assets/build/app.js?v=1790016247"></script>
+    <link rel="stylesheet" href="http://localhost:8000/css/mobile-navigation.css?v=1789469914">
+<script defer src="http://localhost:8000/js/mobile-navigation.js?v=1789469914"></script>
 </head>
 <body class="font-sans bg-background text-foreground" x-data="capstoneShell">
+<div x-show="pendingRequests > 0" x-cloak class="capstone-progress" role="status" aria-label="Sedang memproses permintaan">
+    <span class="capstone-progress-bar" aria-hidden="true"></span>
+</div>
 <div class="flex min-h-svh w-full" style="--sidebar-width:16rem">
     <div x-cloak x-show="mobileSidebar" class="fixed inset-0 z-40 bg-black/50 md:hidden" @click="mobileSidebar = false"></div>
-<aside class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
+<aside data-mobile-sidebar class="bg-sidebar text-sidebar-foreground flex h-svh shrink-0 flex-col border-r md:relative md:translate-x-0 fixed inset-y-0 left-0 z-40 transition-all" :class="[collapsed ? 'w-16' : 'w-64', mobileSidebar ? 'translate-x-0' : '-translate-x-full']">
     <div class="p-2"><div class="flex items-center justify-between px-2 py-2">
         <a href="http://localhost:8000/capstone/dashboard" x-show="!collapsed" class="flex min-w-0 items-center gap-2"><img src="http://localhost:8000/capstone/assets/logo.png" alt="Logo" class="size-8 object-contain"><span x-show="!collapsed" class="grid flex-1 text-left text-sm leading-tight"><span class="truncate font-semibold">SICATA</span><span class="truncate text-xs">Sistem Informasi Capstone &amp; TA</span></span></a>
         <button type="button" aria-label="Toggle sidebar" @click="toggleSidebar" class="hover:bg-sidebar-accent flex h-8 w-8 items-center justify-center rounded-md shrink-0"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="size-4">
@@ -163,11 +168,11 @@ Logout</button></form>
         </div>
     </div>
 </header>
-                <div class="px-3 sm:px-6 pt-6 pb-6"><div x-data="capstoneRegistration">
-<div x-show="loading" role="status" class="flex items-center justify-center py-12"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-muted-foreground h-8 w-8 animate-spin">
-                    <circle  cx="12"  cy="12"  r="10"  />
-    </svg>
-<span class="sr-only">Loading</span></div>
+                <div class="capstone-mobile-content px-3 sm:px-6 pt-6 pb-6"><div x-data="capstoneRegistration">
+<div x-show="loading" role="status" class="flex flex-col items-center justify-center gap-3 py-12">
+    <span class="capstone-loader text-primary" aria-hidden="true"></span>
+    <span class="text-muted-foreground text-sm">Memuat data...</span>
+</div>
 <div x-show="error" x-cloak role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"><span x-text="error"></span><button type="button" class="ml-3 underline" @click="load()">Coba lagi</button></div>
 <div x-show="!loading && registered" x-cloak class="max-w-2xl mx-auto py-12"><section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-green-200 bg-green-50/50">
 <div class="px-6 pt-6 pb-6 text-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-16 w-16 text-green-600 mx-auto mb-4">
@@ -180,19 +185,34 @@ Logout</button></form>
 </div>
 </section>
 </div>
-<div x-show="!loading && !error && !registered" x-cloak class="max-w-4xl mx-auto py-8 px-4"><div class="text-center mb-8"><div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-8 w-8 text-primary">
+<div x-show="!loading && isPending" x-cloak class="max-w-2xl mx-auto py-12"><section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-amber-200 bg-amber-50/50">
+<div class="px-6 pt-6 pb-6 text-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-16 w-16 text-amber-600 mx-auto mb-4">
+                    <path  d="M12 6v6l4 2"  />
+                    <circle  cx="12"  cy="12"  r="10"  />
+    </svg>
+<h2 class="text-2xl font-bold text-amber-800 mb-2">Join Request Pending</h2><p class="text-amber-700 mb-2">Your request to join <strong x-text="requestedPeriodName"></strong> is waiting for admin approval.</p><p class="text-sm text-amber-600 mb-6">You will be notified once an admin reviews your request. Group, title, and other features unlock after approval.</p><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[&gt;svg]:px-3 border-amber-300 text-amber-800" type="button" @click="cancelRequest()" :disabled="cancelling"><span x-text="cancelling ? 'Cancelling...' : 'Cancel Request'"></span></button>
+</div>
+</section>
+</div>
+<div x-show="!loading && !error && !registered && !isPending" x-cloak class="max-w-4xl mx-auto py-8 px-4"><div class="text-center mb-8"><div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-8 w-8 text-primary">
                     <path  d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"  />
                     <path  d="M22 10v6"  />
                     <path  d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"  />
     </svg>
-</div><h1 class="text-3xl font-bold tracking-tight mb-2">Welcome, Test Administrator!</h1><p class="text-muted-foreground text-lg max-w-2xl mx-auto">To get started, you need to register for an academic period. Select one of the available periods below.</p></div>
+</div><h1 class="text-3xl font-bold tracking-tight mb-2">Welcome, Test Administrator!</h1><p class="text-muted-foreground text-lg max-w-2xl mx-auto">To get started, request to join an academic period below. An admin will review your request.</p></div>
+<div x-show="isRejected" class="mb-8 relative w-full rounded-lg border border-red-200 bg-red-50/50 px-4 py-3 text-sm grid grid-cols-[auto_1fr] gap-x-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="text-red-600">
+                    <circle  cx="12"  cy="12"  r="10"  />
+                    <line  x1="12"  x2="12"  y1="8"  y2="12"  />
+                    <line  x1="12"  x2="12.01"  y1="16"  y2="16"  />
+    </svg>
+<div><h2 class="font-medium text-red-800">Previous Request Rejected</h2><p class="text-red-700">Reason: <span x-text="myRequest?.rejection_reason || 'No reason provided'"></span></p><p class="text-muted-foreground mt-1">You can send a new join request below.</p></div></div>
 <div role="note" class="mb-8 relative w-full rounded-lg border px-4 py-3 text-sm grid grid-cols-[auto_1fr] gap-x-3"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" >
                     <path  d="M8 2v4"  />
                     <path  d="M16 2v4"  />
                     <rect  width="18"  height="18"  x="3"  y="4"  rx="2"  />
                     <path  d="M3 10h18"  />
     </svg>
-<div><h2 class="font-medium">Registration Required</h2><p class="text-muted-foreground">You must register for a period before you can create or join a group, browse titles, or access other features. You can only register for one period at a time.</p></div></div>
+<div><h2 class="font-medium">Approval Required</h2><p class="text-muted-foreground">You can only have one join request at a time. Creating or joining a group, browsing titles, and other features unlock after an admin approves your request.</p></div></div>
 <section class="bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm border-dashed" x-show="!periods.length">
 <div class="px-6 pt-8 pb-8 text-center"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-12 w-12 text-muted-foreground mx-auto mb-4">
                     <path  d="M8 2v4"  />
@@ -210,7 +230,7 @@ Logout</button></form>
                     <path  d="M3 10h18"  />
     </svg>
 <span x-text="date(period.start_date)+' - '+date(period.end_date)"></span></div></div><span class="inline-flex items-center justify-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit whitespace-nowrap shrink-0 gap-1 border-transparent bg-primary text-primary-foreground bg-green-600">Open</span>
-</div></div><div class="px-6"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md px-6 has-[&gt;svg]:px-4 w-full" type="button" @click="register(period)" :disabled="saving!==null"><span x-text="saving===period.id ? 'Registering...' : 'Register for This Period'"></span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-2 h-4 w-4">
+</div></div><div class="px-6"><button class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*=&#039;size-&#039;])]:size-4 shrink-0 [&amp;_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive bg-primary text-primary-foreground hover:bg-primary/90 h-10 rounded-md px-6 has-[&gt;svg]:px-4 w-full" type="button" @click="register(period)" :disabled="saving!==null"><span x-text="saving===period.id ? 'Sending request...' : 'Request to Join'"></span><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="ml-2 h-4 w-4">
                     <path  d="M5 12h14"  />
                     <path  d="m12 5 7 7-7 7"  />
     </svg></button>
@@ -223,8 +243,33 @@ Logout</button></form>
         </div>
     </main>
 </div>
-<div aria-live="polite" class="fixed bottom-5 right-5 z-50 flex w-80 flex-col gap-2">
-    <template x-for="notice in notices" :key="notice.id"><div role="status" class="bg-popover text-popover-foreground rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300 text-red-700' : 'border-green-200'" x-text="notice.message"></div></template>
+<div aria-live="polite" aria-relevant="additions" class="capstone-notices fixed bottom-5 right-5 flex w-80 flex-col gap-2">
+    <template x-for="notice in notices" :key="notice.id">
+        <div role="status" class="capstone-notice bg-popover text-popover-foreground flex items-start gap-3 rounded-lg border p-4 shadow-lg text-sm" :class="notice.error ? 'border-red-300' : 'border-green-200'">
+            <template x-if="!notice.error">
+                <span class="capstone-success-icon flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M20 6 9 17l-5-5"  />
+    </svg>
+                </span>
+            </template>
+            <template x-if="notice.error">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-100 text-red-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+                </span>
+            </template>
+            <span class="min-w-0 flex-1 break-words pt-0.5" x-text="notice.message"></span>
+            <button type="button" class="text-muted-foreground shrink-0 rounded p-1 hover:bg-muted focus-visible:outline-2 focus-visible:outline-ring" aria-label="Tutup notifikasi" @click="notices=notices.filter(item=>item.id!==notice.id)">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-4 w-4">
+                    <path  d="M18 6 6 18"  />
+                    <path  d="m6 6 12 12"  />
+    </svg>
+            </button>
+        </div>
+    </template>
 </div>
-</body>
+    </body>
 </html>

@@ -4,15 +4,17 @@ namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lecturer;
+use App\Models\Student;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupInvitation;
 use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\GroupSupervisorProposal;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\Period;
+use Modules\Capstone\Models\PeriodRegistration;
+use Modules\Capstone\Models\PhaseDocumentRequirement;
 use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\Title;
 use Modules\Capstone\Services\GroupService;
@@ -104,18 +106,22 @@ class GroupController extends Controller
         }
 
         $perPage = min(max($request->integer('per_page', 10), 1), 100);
-        $groups = $query->latest()->paginate($perPage);
+        $fetchAll = $request->string('per_page')->toString() === 'all';
+        $groups = $fetchAll
+            ? $query->latest()->get()
+            : $query->latest()->paginate($perPage);
+        $collection = $fetchAll ? $groups : $groups->getCollection();
         $data = $role === 'admin'
-            ? $groups->getCollection()->map(fn (Group $group) => $this->groupService->transformGroupForAdminList($group))
-            : $this->groupService->enrichSupervisedGroups($groups->getCollection(), $lecturer);
+            ? $collection->map(fn (Group $group) => $this->groupService->transformGroupForAdminList($group))
+            : $this->groupService->enrichSupervisedGroups($collection, $lecturer);
 
         return response()->json([
             'data' => $data->values(),
             'pagination' => [
-                'current_page' => $groups->currentPage(),
-                'last_page' => $groups->lastPage(),
-                'per_page' => $groups->perPage(),
-                'total' => $groups->total(),
+                'current_page' => $fetchAll ? 1 : $groups->currentPage(),
+                'last_page' => $fetchAll ? 1 : $groups->lastPage(),
+                'per_page' => $fetchAll ? $collection->count() : $groups->perPage(),
+                'total' => $fetchAll ? $collection->count() : $groups->total(),
             ],
         ]);
     }
@@ -134,61 +140,94 @@ class GroupController extends Controller
 
         abort_unless(in_array($role, ['admin', 'dosen'], true), 403);
 
-        return response()->json([
-            'data' => $group->load([
-                'title.lecturer',
-                'members.student',
-                'period',
-                'supervisor1',
-                'supervisor2',
-                'supervisions.supervisor',
-                'documents',
-                'schedules',
-            ]),
+        $group->load([
+            'title.lecturer',
+            'members.student',
+            'period',
+            'supervisor1',
+            'supervisor2',
+            'supervisions.supervisor',
+            'documents',
+            'schedules',
         ]);
+
+        $requirements = PhaseDocumentRequirement::where('period_id', $group->period_id)->get();
+        $progress = $this->groupService->transformGroupForProgress($group, $group->documents, $requirements);
+        $group->setAttribute('workflow', $progress['progress']);
+        $group->setAttribute('progress_percentage', $progress['progress_percentage']);
+        $group->setAttribute('flagged_members', GroupMember::withTrashed()
+            ->with('student')
+            ->where('group_id', $group->id)
+            ->where('status', 'flagged')
+            ->whereNotNull('deleted_at')
+            ->get());
+
+        return response()->json(['data' => $group]);
     }
 
     /**
      * Create a new group. Student becomes leader. Status = FORMING.
      */
-    public function store(Request $request) { return $this->createStudentGroup($request, false); }
-    public function storeSolo(Request $request) { return $this->createStudentGroup($request, true); }
+    public function store(Request $request)
+    {
+        return $this->createStudentGroup($request, false);
+    }
+
+    public function storeSolo(Request $request)
+    {
+        return $this->createStudentGroup($request, true);
+    }
 
     private function createStudentGroup(Request $request, bool $solo)
     {
-        $data = $request->validate(['period_id'=>'required|integer|exists:capstone_periods,id']);
-        return DB::transaction(function () use ($request,$data,$solo) {
+        $data = $request->validate(['period_id' => 'required|integer|exists:capstone_periods,id']);
+
+        return DB::transaction(function () use ($request, $data, $solo) {
             $student = CapstoneActor::student($request->user());
-            \App\Models\Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
+            Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
             $period = Period::lockForUpdate()->findOrFail($data['period_id']);
-            abort_unless($period->isRegistrationOpen(),403,'Period is closed.');
-            abort_unless(\Modules\Capstone\Models\PeriodRegistration::where('user_id',$student->id)->where('period_id',$period->id)->exists(),403,'Register for this period first.');
-            abort_if(GroupMember::where('student_id',$student->id)->whereHas('group',fn($q)=>$q->whereNotIn('status',['CLOSED','DISSOLVED']))->exists(),422,'You already have an active group.');
-            $group = Group::create(['period_id'=>$period->id,'status'=>$solo?'FORMING_SOLO':'FORMING','group_mode'=>'GROUP','has_existing_group'=>false,'is_solo'=>$solo]);
-            GroupMember::create(['group_id'=>$group->id,'student_id'=>$student->id,'is_leader'=>true,'period_id'=>$period->id]);
-            if (!$solo) $this->checkAndTransitionToReady($group,$period);
-            return response()->json(['group'=>$group->load('members.student','period'),'message'=>'Group created successfully.'],201);
+            abort_unless($period->isRegistrationOpen(), 403, 'Period is closed.');
+            abort_unless(PeriodRegistration::where('user_id', $student->id)->where('period_id', $period->id)->where('status', PeriodRegistration::STATUS_APPROVED)->exists(), 403, 'Your join request for this period must be approved by admin first.');
+            abort_if(GroupMember::where('student_id', $student->id)->whereHas('group', fn ($q) => $q->whereNotIn('status', ['CLOSED', 'DISSOLVED']))->exists(), 422, 'You already have an active group.');
+            $group = Group::create(['period_id' => $period->id, 'status' => $solo ? 'FORMING_SOLO' : 'FORMING', 'group_mode' => 'GROUP', 'has_existing_group' => false, 'is_solo' => $solo]);
+            GroupMember::create(['group_id' => $group->id, 'student_id' => $student->id, 'is_leader' => true, 'period_id' => $period->id]);
+            if (! $solo) {
+                $this->checkAndTransitionToReady($group, $period);
+            }
+
+            return response()->json(['group' => $group->load('members.student', 'period'), 'message' => 'Group created successfully.'], 201);
         });
     }
 
-    public function markReadyForFinalization(Request $request) { return $this->changeReady($request, false); }
-    public function cancelReadyForFinalization(Request $request) { return $this->changeReady($request, true); }
+    public function markReadyForFinalization(Request $request)
+    {
+        return $this->changeReady($request, false);
+    }
+
+    public function cancelReadyForFinalization(Request $request)
+    {
+        return $this->changeReady($request, true);
+    }
 
     private function changeReady(Request $request, bool $cancel)
     {
-        $data=$request->validate(['group_id'=>'required|integer|exists:capstone_groups,id']);
-        return DB::transaction(function () use ($request,$data,$cancel) {
-            $group=Group::with('period')->lockForUpdate()->findOrFail($data['group_id']);
-            $actions=$this->groupService->resolveAllowedActions($group,$request->user());
-            abort_unless($actions[$cancel?'can_cancel_ready_for_finalization':'can_mark_ready_for_finalization'],403,'Group prerequisites are not satisfied or you are not its leader.');
-            $target='READY_FOR_FINALIZATION';
-            if($cancel) $target=Title::where('proposed_by_group_id',$group->id)->where('title_source','STUDENT')->where('supervisor_approval_status','APPROVED')->exists()?'TITLE_APPROVED':'READY_FOR_BIDDING';
-            $this->stateMachine->transition($group,$target);
-            $group->load('members.student');
-            foreach($group->members as $member) {
-                app(NotificationService::class)->send($member->student->user_id, $cancel?'GROUP_FINALIZATION_CANCELLED':'GROUP_READY_FOR_FINALIZATION', $cancel?'Finalization Cancelled':'Ready for Finalization', $cancel?'Status siap finalisasi kelompok dibatalkan.':'Kelompok siap untuk finalisasi admin.', 'Group', $group->id);
+        $data = $request->validate(['group_id' => 'required|integer|exists:capstone_groups,id']);
+
+        return DB::transaction(function () use ($request, $data, $cancel) {
+            $group = Group::with('period')->lockForUpdate()->findOrFail($data['group_id']);
+            $actions = $this->groupService->resolveAllowedActions($group, $request->user());
+            abort_unless($actions[$cancel ? 'can_cancel_ready_for_finalization' : 'can_mark_ready_for_finalization'], 403, 'Group prerequisites are not satisfied or you are not its leader.');
+            $target = 'READY_FOR_FINALIZATION';
+            if ($cancel) {
+                $target = Title::where('proposed_by_group_id', $group->id)->where('title_source', 'STUDENT')->where('supervisor_approval_status', 'APPROVED')->exists() ? 'TITLE_APPROVED' : 'READY_FOR_BIDDING';
             }
-            return response()->json(['group'=>$group,'message'=>'Group status updated.']);
+            $this->stateMachine->transition($group, $target);
+            $group->load('members.student');
+            foreach ($group->members as $member) {
+                app(NotificationService::class)->send($member->student->user_id, $cancel ? 'GROUP_FINALIZATION_CANCELLED' : 'GROUP_READY_FOR_FINALIZATION', $cancel ? 'Finalization Cancelled' : 'Ready for Finalization', $cancel ? 'Status siap finalisasi kelompok dibatalkan.' : 'Kelompok siap untuk finalisasi admin.', 'Group', $group->id);
+            }
+
+            return response()->json(['group' => $group, 'message' => 'Group status updated.']);
         });
     }
 
@@ -510,19 +549,26 @@ class GroupController extends Controller
         try {
             $member->delete();
 
-            // If members drop below min size, revert to FORMING
-            $memberCount = GroupMember::where('group_id', $group->id)->count();
-            $minSize = $group->period->min_group_size ?? 2;
+            // Empty group (no remaining active members) is hard-deleted,
+            // never left behind as an orphan row.
+            $groupId = $group->id;
+            if (GroupMember::where('group_id', $groupId)->count() === 0) {
+                $this->groupService->destroyIfEmpty($groupId, 'member_removed', $user->id);
 
-            if ($memberCount < $minSize && $group->status === 'READY_FOR_BIDDING') {
-                $this->stateMachine->transition($group, 'FORMING');
+                DB::commit();
+
+                return response()->json(['message' => 'Member removed. Group had no remaining members and was deleted.', 'group' => null, 'group_deleted' => true]);
             }
+
+            // Shrink policy: auto-cancel PENDING bids below min (ACCEPT kept,
+            // title retained), demote bidding statuses, notify members.
+            $shrink = $this->groupService->handleMembershipShrink($group);
 
             DB::commit();
 
             $group = Group::with('members.student')->find($leaderMembership->group_id);
 
-            return response()->json(['message' => 'Member removed', 'group' => $group]);
+            return response()->json(['message' => 'Member removed', 'group' => $group, 'membership_shrink' => $shrink]);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -556,86 +602,29 @@ class GroupController extends Controller
 
         DB::beginTransaction();
         try {
+            $groupId = $membership->group_id;
             $membership->delete();
 
-            $memberCount = GroupMember::where('group_id', $group->id)->count();
-            $minSize = $group->period->min_group_size ?? 2;
+            // Empty group (no remaining active members) is hard-deleted,
+            // never left behind as an orphan row.
+            if (GroupMember::where('group_id', $groupId)->count() === 0) {
+                $this->groupService->destroyIfEmpty($groupId, 'member_left', $user->id);
 
-            if ($memberCount < $minSize && $group->status === 'READY_FOR_BIDDING') {
-                $this->stateMachine->transition($group, 'FORMING');
+                DB::commit();
+
+                return response()->json(['message' => 'You have left the group. Group had no remaining members and was deleted.', 'group_deleted' => true]);
             }
+
+            $shrink = $this->groupService->handleMembershipShrink($group);
 
             DB::commit();
 
-            return response()->json(['message' => 'You have left the group.']);
+            return response()->json(['message' => 'You have left the group.', 'membership_shrink' => $shrink]);
         } catch (\Exception $e) {
             DB::rollBack();
 
             return response()->json(['message' => 'Failed to leave group: '.$e->getMessage()], 500);
         }
-    }
-
-    /**
-     * Propose preferred supervisors (group leader only, when READY_FOR_BIDDING).
-     */
-    public function proposeSupervisors(Request $request)
-    {
-        $request->validate([
-            'proposed_supervisor_1_id' => 'required|exists:lecturers,id',
-            'proposed_supervisor_2_id' => 'nullable|exists:lecturers,id|different:proposed_supervisor_1_id',
-        ]);
-
-        $user = $request->user();
-        $studentId = CapstoneActor::student($user)->id;
-
-        $leaderMembership = GroupMember::where('student_id', $studentId)
-            ->first();
-
-        if (! $leaderMembership || ! $leaderMembership->is_leader) {
-            return response()->json(['message' => 'Only the group leader can propose supervisors.'], 403);
-        }
-
-        $group = Group::with('period')->find($leaderMembership->group_id);
-
-        if ($group->status !== 'READY_FOR_BIDDING') {
-            return response()->json(['message' => 'Supervisors can only be proposed when group is READY_FOR_BIDDING.'], 400);
-        }
-
-        // Check bidding lock
-        if ($group->period->isBiddingLocked()) {
-            return response()->json(['message' => 'Bidding is locked. Cannot propose supervisors.'], 400);
-        }
-
-        // Validate supervisors are dosen
-        $sup1 = Lecturer::whereKey($request->proposed_supervisor_1_id)
-            ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
-            ->first();
-        if (! $sup1) {
-            return response()->json(['message' => 'Proposed supervisor 1 must be a lecturer.'], 400);
-        }
-        if ($request->proposed_supervisor_2_id) {
-            $sup2 = Lecturer::whereKey($request->proposed_supervisor_2_id)
-                ->whereHas('user.roles', fn ($query) => $query->where('name', 'dosen'))
-                ->first();
-            if (! $sup2) {
-                return response()->json(['message' => 'Proposed supervisor 2 must be a lecturer.'], 400);
-            }
-        }
-
-        // Upsert proposal
-        $proposal = GroupSupervisorProposal::updateOrCreate(
-            ['group_id' => $group->id],
-            [
-                'proposed_supervisor_1_id' => $request->proposed_supervisor_1_id,
-                'proposed_supervisor_2_id' => $request->proposed_supervisor_2_id,
-                'status' => 'PENDING',
-            ]
-        );
-
-        return response()->json([
-            'message' => 'Supervisor proposal submitted.',
-            'proposal' => $proposal->load(['supervisor1', 'supervisor2']),
-        ]);
     }
 
     public function supervisedGroups(Request $request)

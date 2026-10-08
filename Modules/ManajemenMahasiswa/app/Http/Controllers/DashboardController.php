@@ -182,7 +182,7 @@ class DashboardController extends Controller
                             'id'            => $p->id,
                             'nama_prestasi' => $p->nama_prestasi,
                             'tingkat'       => $p->tingkat,
-                            'tahun'         => $p->tahun,
+                            'tahun'         => $p->tanggal?->year,
                             'tanggal'       => $p->tanggal?->translatedFormat('d M Y') ?? '-',
                             'verified_at'   => $p->verified_at?->translatedFormat('d M Y') ?? '-',
                             'student_name'  => $student?->user?->name ?? $student?->nama ?? 'Mahasiswa',
@@ -190,7 +190,7 @@ class DashboardController extends Controller
                             'angkatan'      => (int) ($student?->angkatan ?? 0),
                             'bukti'         => $p->buktiFiles->map(fn ($b) => [
                                 'nama'     => $b->nama_file ?? basename($b->path_file),
-                                'url'      => $b->public_url,
+                                'url'      => $b->url_akses,
                                 'is_image' => $b->isImage(),
                             ])->values()->all(),
                         ];

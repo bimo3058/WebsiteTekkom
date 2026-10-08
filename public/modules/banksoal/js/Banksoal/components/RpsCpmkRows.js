@@ -223,10 +223,29 @@ class RpsCpmkRows {
                             return `<div class="item summary-item" data-value="${escape(data.value)}">${escape(data.text)}</div>`;
                         },
                         option: function(data, escape) {
-                            return `<div class="option py-1.5 px-3">${escape(data.text)}</div>`;
+                            return `<div class="option py-2 px-3">${escape(data.text)}</div>`;
                         }
                     }
                 });
+
+                if (typeof this.dosenTs.hook === 'function') {
+                    const orig_dosen_onOptionSelect = this.dosenTs.onOptionSelect;
+                    this.dosenTs.hook('instead', 'onOptionSelect', (evt, option) => {
+                        if (!option && evt && evt.target) {
+                            option = evt.target.closest('.option');
+                        }
+                        if (!option) return;
+                        const val = option.dataset?.value || option.getAttribute('data-value');
+                        if (option.classList.contains('selected') || (val && this.dosenTs.items.includes(String(val)))) {
+                            option.classList.remove('selected');
+                            if (val) this.dosenTs.removeItem(val);
+                            this.dosenTs.refreshOptions(false);
+                            if (evt && evt.preventDefault) evt.preventDefault();
+                            return;
+                        }
+                        orig_dosen_onOptionSelect.call(this.dosenTs, evt, option);
+                    });
+                }
 
                 const updateDisplayAndSort = () => {
                     if (!this.dosenTs) return;
@@ -328,11 +347,35 @@ class RpsCpmkRows {
     }
 
     renderAllCplSelects() {
+        this.renderCplCheckboxes();
         if (!this.rowContainers || this.rowContainers.length === 0) return;
         this.rowContainers.forEach(container => {
             container.querySelectorAll("[data-cpmk-row]").forEach(row => this.renderCplSelect(row));
         });
         this.updateCpmkFormState();
+    }
+
+    renderCplCheckboxes() {
+        const cplContainer = document.getElementById('cpl_checkbox_container');
+        if (!cplContainer) return;
+        cplContainer.innerHTML = '';
+        if (!this.cplOptions || this.cplOptions.length === 0) {
+            cplContainer.innerHTML = '<p class="field-hint text-rose-500">Mata kuliah ini belum dipetakan ke CPL manapun.</p>';
+            return;
+        }
+        this.cplOptions.forEach(cpl => {
+            const item = document.createElement('label');
+            item.style.display = 'flex';
+            item.style.alignItems = 'flex-start';
+            item.style.gap = '10px';
+            item.style.fontSize = '13px';
+            item.style.cursor = 'pointer';
+            item.innerHTML = `
+                <input type="checkbox" name="cpl_ids[]" class="cpl-checkbox-item" value="${cpl.id}" style="margin-top: 3px; accent-color: var(--primary-blue);" data-code="${cpl.kode}">
+                <div><strong>${cpl.kode}</strong>: ${cpl.deskripsi}</div>
+            `;
+            cplContainer.appendChild(item);
+        });
     }
 
     renderCplSelect(row) {
@@ -654,7 +697,7 @@ class RpsCpmkRows {
 }
 
 function initRpsCpmk() {
-    const form = document.querySelector('form[data-cpmk-row-builder="1"]');
+    const form = document.querySelector('[data-cpmk-row-builder="1"]');
     if (!form) {
         return;
     }

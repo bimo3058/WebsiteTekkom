@@ -42,11 +42,21 @@ class ExpoEventController extends Controller
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
-            'room' => 'required|string|max:255',
+            'eoffice_ruangan_id' => 'required|integer|exists:eo_mr_ruangans,id',
             'capacity' => 'required|integer|min:1|max:200',
             'is_published' => 'boolean',
         ]);
 
+        // Rooms come from EOffice only; `room` is a display snapshot.
+        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($validated['eoffice_ruangan_id']);
+        $conflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByEofficeId(
+            $ruangan->id, $validated['date'], $validated['start_time'], $validated['end_time']
+        );
+        if ($conflict) {
+            return response()->json(['message' => $conflict['message']], 422);
+        }
+
+        $validated['room'] = $ruangan->nama;
         $validated['created_by'] = $request->user()->id;
 
         $event = ExpoEvent::create($validated);
@@ -68,9 +78,27 @@ class ExpoEventController extends Controller
             'date' => 'sometimes|date',
             'start_time' => 'sometimes|date_format:H:i',
             'end_time' => 'sometimes|date_format:H:i',
-            'room' => 'sometimes|string|max:255',
+            'eoffice_ruangan_id' => 'sometimes|integer|exists:eo_mr_ruangans,id',
             'capacity' => 'sometimes|integer|min:1|max:200',
         ]);
+
+        unset($validated['room']);
+        $eofficeId = $validated['eoffice_ruangan_id'] ?? $expoEvent->getAttributes()['eoffice_ruangan_id'] ?? null;
+        if (! empty($validated['eoffice_ruangan_id'])) {
+            $validated['room'] = \Modules\EOffice\Models\Ruangan::findOrFail($validated['eoffice_ruangan_id'])->nama;
+        }
+        if ($eofficeId) {
+            $conflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByEofficeId(
+                (int) $eofficeId,
+                $validated['date'] ?? $expoEvent->date->format('Y-m-d'),
+                $validated['start_time'] ?? $expoEvent->start_time,
+                $validated['end_time'] ?? $expoEvent->end_time,
+                $expoEvent->getAttributes()['eoffice_peminjaman_id'] ?? null
+            );
+            if ($conflict) {
+                return response()->json(['message' => $conflict['message']], 422);
+            }
+        }
 
         $expoEvent->update($validated);
 

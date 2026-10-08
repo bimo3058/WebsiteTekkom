@@ -18,6 +18,8 @@ class ExpoEvent extends Model
         'start_time',
         'end_time',
         'room',
+        'eoffice_ruangan_id',
+        'eoffice_peminjaman_id',
         'capacity',
         'is_published',
         'created_by',
@@ -42,6 +44,16 @@ class ExpoEvent extends Model
     public function registrations()
     {
         return $this->hasMany(ExpoRegistration::class);
+    }
+
+    public function eofficeRoom()
+    {
+        return $this->belongsTo(\Modules\EOffice\Models\Ruangan::class, 'eoffice_ruangan_id');
+    }
+
+    public function eofficeBooking()
+    {
+        return $this->belongsTo(\Modules\EOffice\Models\Peminjaman::class, 'eoffice_peminjaman_id');
     }
 
     /**

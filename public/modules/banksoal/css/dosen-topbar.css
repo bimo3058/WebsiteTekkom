@@ -1,0 +1,55 @@
+/* Shared Dosen topbar, matching the Superadmin header on every Dosen page. */
+.bs-topbar.bs-dosen-topbar {
+    --c-primary: #0B266E;
+    --c-bg: #F6F8FA;
+    --c-fg: #0D0D12;
+    --c-fg-sec: #353849;
+    --c-fg-muted: #666D80;
+    --c-border: #DFE1E7;
+    --c-border-strong: #C1C7CF;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    position: sticky; top: 0; z-index: 30; flex-shrink: 0;
+    height: 60px; padding: 0 28px; border-bottom: 1px solid var(--c-border);
+    background: #fff; font-family: 'Inter Tight', system-ui, sans-serif;
+}
+.bs-dosen-topbar [x-cloak] { display: none !important; }
+.bs-dosen-topbar .bs-dosen-crumb { display: flex; align-items: center; gap: 7px; min-width: 0; font-size: 12px; color: var(--c-fg-muted); }
+.bs-dosen-topbar .bs-dosen-crumb-brand { flex-shrink: 0; }
+.bs-dosen-topbar .bs-dosen-crumb-separator { color: var(--c-border-strong); }
+.bs-dosen-topbar .bs-dosen-crumb-page { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; min-width: 0; color: var(--c-fg); font-weight: 600; overflow-wrap: anywhere; }
+.bs-dosen-topbar .bs-dosen-crumb-page > span { color: inherit; }
+.bs-dosen-topbar .bs-dosen-crumb-page a { color: var(--c-fg-muted); }
+.bs-dosen-topbar .bs-dosen-crumb-page a:hover { color: var(--c-primary); }
+.bs-dosen-topbar .bs-dosen-topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.bs-dosen-topbar .bs-dosen-topbar-user { display: flex; align-items: center; gap: 10px; padding-left: 12px; border-left: 1px solid var(--c-border); margin-left: 4px; }
+.bs-dosen-topbar .bs-dosen-topbar-avatar { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 34px; height: 34px; border: 1px solid #E5E7EB; border-radius: 50%; overflow: hidden; background: #F3F4F6; color: #6B7280; font-size: 12px; font-weight: 700; }
+.bs-dosen-topbar .bs-dosen-topbar-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.bs-dosen-topbar .bs-dosen-topbar-meta { min-width: 0; line-height: 1.2; }
+.bs-dosen-topbar .bs-dosen-topbar-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--c-fg); }
+.bs-dosen-topbar .bs-dosen-topbar-role { font-size: 11px; color: var(--c-fg-muted); white-space: nowrap; }
+.bs-dosen-topbar .dosen-notification-button { width: 34px; height: 34px; border: 1px solid var(--c-border); border-radius: 8px; background: #fff; color: var(--c-fg-muted); cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.bs-dosen-topbar .dosen-notification-button:hover { background: var(--c-bg); border-color: var(--c-border-strong); color: var(--c-fg); }
+.bs-dosen-topbar .dosen-notification-button:focus-visible { outline: 2px solid var(--c-primary); outline-offset: 3px; }
+.bs-dosen-topbar .dosen-notification-dot { top: -3px; right: -3px; width: 8px; height: 8px; }
+.bs-dosen-topbar .dosen-notification-panel { border-color: var(--c-border); font-family: inherit; }
+.bs-dosen-topbar .dosen-notification-panel header { border-color: var(--c-border); }
+.bs-dosen-topbar .dosen-notification-panel header strong,
+.bs-dosen-topbar .dosen-notification-item strong { color: var(--c-fg); }
+.bs-dosen-topbar .dosen-notification-panel header span,
+.bs-dosen-topbar .dosen-notification-state,
+.bs-dosen-topbar .dosen-notification-item small { color: var(--c-fg-muted); }
+.bs-dosen-topbar .dosen-notification-item { border-color: var(--c-border); }
+.bs-dosen-topbar .dosen-notification-item span { color: var(--c-fg-sec); }
+.bs-dosen-topbar .dosen-notification-item small { font-size: 10px; }
+.bs-dosen-topbar .dosen-notification-item:focus-visible { outline: 2px solid var(--c-primary); outline-offset: -2px; }
+
+@media (max-width: 767px) {
+    .bs-topbar.bs-dosen-topbar,
+    body[data-mobile-shell] [data-mobile-frame] > .bs-workspace > .bs-dosen-topbar { height: 52px; min-height: 52px; padding: 0 14px; gap: 10px; flex-wrap: nowrap; }
+    .bs-dosen-topbar .bs-dosen-topbar-meta { display: none; }
+    .bs-dosen-topbar .bs-dosen-topbar-user { padding-left: 8px; gap: 6px; }
+    .bs-dosen-topbar .bs-dosen-topbar-avatar { width: 30px; height: 30px; font-size: 10px; }
+    .bs-dosen-topbar .dosen-notification-button { width: 30px; height: 30px; }
+    .bs-dosen-topbar .bs-dosen-crumb { flex: 1; }
+    .bs-dosen-topbar .bs-dosen-crumb-page { display: block; max-height: 36px; overflow-y: auto; line-height: 18px; }
+}

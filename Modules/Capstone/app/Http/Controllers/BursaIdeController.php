@@ -50,7 +50,10 @@ class BursaIdeController extends Controller
                 'proposedByGroup.members.student',
                 'proposedByGroup.period',
                 'proposedSupervisor',
-            ]);
+            ])
+            // Titles vanish from the marketplace only when the owner group
+            // locks for finalization — not when it reaches minimum members.
+            ->whereHas('proposedByGroup', fn ($q) => $q->whereIn('status', SoloTitleController::RECRUITABLE_STATUSES));
 
         if ($periodId) {
             $query->where('period_id', $periodId);

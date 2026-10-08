@@ -1,11 +1,11 @@
 <!-- Status Banner Component - untuk menampilkan periode aktif -->
 @if($activePeriode)
     <div class="mb-8 status-banner {{ $isUploadOpen ? 'status-banner-success' : 'status-banner-danger' }}">
-        <div class="flex gap-4 items-start">
+        <div class="flex gap-2 items-start">
             @if($isUploadOpen)
-                <i class="fas fa-calendar-check text-2xl text-green-600 mt-1"></i>
+                <i class="fas fa-calendar-check text-2xl text-green-600"></i>
             @else
-                <i class="fas fa-calendar-times text-2xl text-red-600 mt-1"></i>
+                <i class="fas fa-calendar-times text-2xl text-red-600"></i>
             @endif
             <div>
                 @if($isUploadOpen)
@@ -24,8 +24,8 @@
     </div>
 
     @if($tenggatH7 && count($unsubmittedMk) > 0)
-        <div class="mb-8 alert alert-warning">
-            <i class="fas fa-exclamation-triangle text-lg"></i>
+        <div class="mb-0 alert alert-warning">
+            <i class="fas fa-exclamation-triangle text-lg shrink-0"></i>
             <div>
                 <p class="text-sm">
                     <strong>
@@ -38,19 +38,22 @@
                     </strong>
                 </p>
                 <div x-data="{
-                    items: {{ json_encode($unsubmittedMk) }},
-                    limit: 5,
-                    get visibleItems() { return this.items.slice(0, this.limit); },
-                    get remaining() { return this.items.length - this.limit; }
-                }">
-                    <p class="text-sm">Anda belum mengunggah RPS untuk: 
+                                            items: {{ json_encode($unsubmittedMk) }},
+                                            limit: 5,
+                                            get visibleItems() { return this.items.slice(0, this.limit); },
+                                            get remaining() { return this.items.length - this.limit; }
+                                        }">
+                    <p class="text-sm">Anda belum mengunggah RPS untuk:
                         <strong>
                             <template x-for="(mk, index) in visibleItems" :key="index">
                                 <span>
-                                    <span x-text="mk"></span><span x-show="index < visibleItems.length - 1 || remaining > 0">, </span>
+                                    <span x-text="mk"></span><span x-show="index < visibleItems.length - 1 || remaining > 0">,
+                                    </span>
                                 </span>
                             </template>
-                            <button type="button" x-show="remaining > 0" @click="limit += 5" class="text-amber-700 hover:text-amber-900 underline font-bold cursor-pointer" x-text="'+' + remaining"></button>
+                            <button type="button" x-show="remaining > 0" @click="limit += 5"
+                                class="text-amber-700 hover:text-amber-900 underline font-bold cursor-pointer"
+                                x-text="'+' + remaining"></button>
                         </strong>
                     </p>
                 </div>

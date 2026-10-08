@@ -87,4 +87,23 @@ class RepoMulmed extends Model
     {
         return app(\App\Services\SupabaseStorage::class)->getPublicUrl($this->path_file);
     }
+
+    // -------------------------------------------------------------------------
+    // Helper
+    // -------------------------------------------------------------------------
+
+    /**
+     * Apakah file ini gambar? Dipakai untuk memisahkan galeri dari lampiran.
+     *
+     * Diperiksa dari ekstensi nama file, bukan kolom tipe_file, karena tipe_file
+     * diisi dari mime-type saat unggah dan bisa kosong pada baris lama.
+     */
+    public function isGambar(): bool
+    {
+        return in_array(
+            strtolower(pathinfo($this->nama_file ?? '', PATHINFO_EXTENSION)),
+            ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+            true
+        );
+    }
 }

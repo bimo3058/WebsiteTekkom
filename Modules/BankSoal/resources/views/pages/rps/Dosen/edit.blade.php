@@ -1,4 +1,4 @@
-﻿<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin>
     @section('breadcrumbs')
         <a href="{{ route('banksoal.rps.dosen.index') }}"
             class="text-slate-500 hover:text-primary transition-colors">Manajemen RPS</a>
@@ -527,7 +527,7 @@
             </p>
         </div>
         <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali
+            Kembali
         </a>
     </div>
 
@@ -643,7 +643,7 @@
                         </div>
                         <button type="button" class="btn btn-secondary" id="addCpmkRowBtn"
                             style="padding:8px 16px;font-size:13px;" {{ !$isUploadOpen ? 'disabled' : '' }}>
-                            <i class="fas fa-plus"></i> Tambah Baris
+                            Tambah Baris
                         </button>
                     </div>
 
@@ -696,7 +696,7 @@
                                         placeholder="sesuai kebutuhan" {{ !$isUploadOpen ? 'disabled' : '' }}>
                                 </div>
                                 <div style="display:flex;align-items:flex-end;">
-                                    <button type="button" class="btn-danger-sm" data-remove-cpmk-row {{ !$isUploadOpen ? 'disabled' : '' }}><i class="fas fa-trash"></i></button>
+                                    <button type="button" class="btn-danger-sm" data-remove-cpmk-row {{ !$isUploadOpen ? 'disabled' : '' }}>Hapus</button>
                                 </div>
                             </div>
                         @endforeach
@@ -724,7 +724,7 @@
 
             <div class="form-actions" style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px;">
                 <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary">Batal</a>
-                <button type="submit" class="btn btn-primary" id="btnSubmitManual" {{ !$isUploadOpen ? 'disabled' : '' }}><i class="fas fa-paper-plane"></i> Simpan Perubahan</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitManual" {{ !$isUploadOpen ? 'disabled' : '' }}>Simpan Perubahan</button>
             </div>
         </div>
 
@@ -771,7 +771,7 @@
                             </div>
                             <button type="button" class="btn btn-secondary" id="addCpmkRowBtnGenerator"
                                 style="padding:8px 16px;font-size:13px;" {{ !$isUploadOpen ? 'disabled' : '' }}>
-                                <i class="fas fa-plus"></i> Tambah Baris
+                                Tambah Baris
                             </button>
                         </div>
 
@@ -825,7 +825,7 @@
                                             style="font-size:13px;" placeholder="sesuai kebutuhan" {{ !$isUploadOpen ? 'disabled' : '' }}>
                                     </div>
                                     <div style="display:flex;align-items:flex-end;">
-                                        <button type="button" class="btn-danger-sm" data-remove-cpmk-row {{ !$isUploadOpen ? 'disabled' : '' }}><i class="fas fa-trash"></i></button>
+                                        <button type="button" class="btn-danger-sm" data-remove-cpmk-row {{ !$isUploadOpen ? 'disabled' : '' }}>Hapus</button>
                                     </div>
                                 </div>
                             @endforeach
@@ -845,8 +845,7 @@
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px;">
                     <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary">Batal</a>
-                    <button type="button" class="btn btn-primary btn-next-step" data-next="2">Next <i
-                            class="fas fa-chevron-right"></i></button>
+                        <button type="button" class="btn btn-primary btn-next-step" data-next="2">Next</button>
                 </div>
             </div>
 
@@ -976,10 +975,8 @@
                 </div>
 
                 <div style="display: flex; justify-content: space-between; gap: 12px;">
-                    <button type="button" class="btn btn-secondary btn-prev-step" data-prev="1"><i
-                            class="fas fa-chevron-left"></i> Back</button>
-                    <button type="button" class="btn btn-primary btn-next-step" data-next="3">Next <i
-                            class="fas fa-chevron-right"></i></button>
+                        <button type="button" class="btn btn-secondary btn-prev-step" data-prev="1">Back</button>
+                        <button type="button" class="btn btn-primary btn-next-step" data-next="3">Next</button>
                 </div>
             </div>
 
@@ -990,15 +987,15 @@
                     style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 2px solid var(--slate-200); padding-bottom: 8px;">
                     <button type="button" class="sub-tab-btn active" data-sub-tab="sebelum-uts"
                         style="background: none; border: none; font-size: 14px; font-weight: 600; color: var(--primary-blue); cursor: pointer; padding: 8px 16px; border-bottom: 3px solid var(--primary-blue); margin-bottom: -10px; transition: all 0.2s;">
-                        <i class="fas fa-arrow-right-to-bracket"></i> Pertemuan Sebelum UTS
+                        Pertemuan Sebelum UTS
                     </button>
                     <button type="button" class="sub-tab-btn" data-sub-tab="setelah-uts"
                         style="background: none; border: none; font-size: 14px; font-weight: 600; color: var(--slate-500); cursor: pointer; padding: 8px 16px; border-bottom: 3px solid transparent; margin-bottom: -10px; transition: all 0.2s;">
-                        <i class="fas fa-arrow-right-from-bracket"></i> Pertemuan Setelah UTS
+                        Pertemuan Setelah UTS
                     </button>
                     <button type="button" class="sub-tab-btn" data-sub-tab="referensi-catatan"
                         style="background: none; border: none; font-size: 14px; font-weight: 600; color: var(--slate-500); cursor: pointer; padding: 8px 16px; border-bottom: 3px solid transparent; margin-bottom: -10px; transition: all 0.2s;">
-                        <i class="fas fa-book-open"></i> Referensi & Catatan
+                        Referensi & Catatan
                     </button>
                 </div>
 
@@ -1027,10 +1024,8 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 16px;">
-                        <button type="button" class="btn btn-secondary btn-prev-step" data-prev="2"><i
-                                class="fas fa-chevron-left"></i> Back</button>
-                        <button type="button" class="btn btn-primary btn-next-sub-tab" data-next-tab="setelah-uts">Next
-                            (Setelah UTS) <i class="fas fa-chevron-right"></i></button>
+                        <button type="button" class="btn btn-secondary btn-prev-step" data-prev="2">Back</button>
+                        <button type="button" class="btn btn-primary btn-next-sub-tab" data-next-tab="setelah-uts">Next (Setelah UTS)</button>
                     </div>
                 </div>
 
@@ -1059,11 +1054,8 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 16px;">
-                        <button type="button" class="btn btn-secondary btn-prev-sub-tab" data-prev-tab="sebelum-uts"><i
-                                class="fas fa-chevron-left"></i> Back</button>
-                        <button type="button" class="btn btn-primary btn-next-sub-tab"
-                            data-next-tab="referensi-catatan">Next (Referensi) <i
-                                class="fas fa-chevron-right"></i></button>
+                        <button type="button" class="btn btn-secondary btn-prev-sub-tab" data-prev-tab="sebelum-uts">Back</button>
+                        <button type="button" class="btn btn-primary btn-next-sub-tab" data-next-tab="referensi-catatan">Next (Referensi)</button>
                     </div>
                 </div>
 
@@ -1078,12 +1070,12 @@
                                 <input type="text" name="referensi_data[]" class="field-control"
                                     placeholder="Contoh: Pressman, R.S. (2015). Software Engineering: A Practitioner's Approach. McGraw-Hill."
                                     required {{ !$isUploadOpen ? 'disabled' : '' }}>
-                                <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0;" {{ !$isUploadOpen ? 'disabled' : '' }}><i class="fas fa-trash"></i></button>
+                                <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0;" {{ !$isUploadOpen ? 'disabled' : '' }}>Hapus</button>
                             </div>
                         </div>
                         <button type="button" class="btn btn-secondary" id="btnAddReference"
                             style="margin-top:12px; padding:8px 16px; font-size:13px;" {{ !$isUploadOpen ? 'disabled' : '' }}>
-                            <i class="fas fa-plus"></i> Tambah Referensi
+                            Tambah Referensi
                         </button>
                     </div>
 
@@ -1096,9 +1088,8 @@
                     </div>
 
                     <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 16px;">
-                        <button type="button" class="btn btn-secondary btn-prev-sub-tab" data-prev-tab="setelah-uts"><i
-                                class="fas fa-chevron-left"></i> Back</button>
-                        <button type="submit" class="btn btn-primary" id="btnSubmitGenerator" {{ !$isUploadOpen ? 'disabled' : '' }}><i class="fas fa-paper-plane"></i> Simpan & Generate PDF</button>
+                        <button type="button" class="btn btn-secondary btn-prev-sub-tab" data-prev-tab="setelah-uts">Back</button>
+                        <button type="submit" class="btn btn-primary" id="btnSubmitGenerator" {{ !$isUploadOpen ? 'disabled' : '' }}>Simpan & Generate PDF</button>
                     </div>
                 </div>
             </div>
@@ -1139,7 +1130,9 @@
                     placeholder="sesuai kebutuhan">
             </div>
             <div style="display:flex;align-items:flex-end;">
-                <button type="button" class="btn-danger-sm" data-remove-cpmk-row><i class="fas fa-trash"></i></button>
+                <button type="button" class="btn-danger-sm" data-remove-cpmk-row aria-label="Hapus baris CPMK" title="Hapus baris CPMK">
+                    <i class="fas fa-trash"></i>
+                </button>
             </div>
         </div>
     </template>
@@ -1231,23 +1224,49 @@
                         let isValid = true;
 
                         inputs.forEach(input => {
-                            if (!input.checkValidity()) {
+                            let isInputEmpty = false;
+
+                            if (input.tomselect) {
+                                const val = input.tomselect.getValue();
+                                if (!val || (Array.isArray(val) && val.length === 0)) {
+                                    isInputEmpty = true;
+                                }
+                            } else if (!input.value || !input.value.trim() || !input.checkValidity()) {
+                                isInputEmpty = true;
+                            }
+
+                            if (isInputEmpty) {
                                 isValid = false;
-                                input.reportValidity();
+                                if (input.tomselect && input.tomselect.control) {
+                                    input.tomselect.control.style.borderColor = '#ef4444';
+                                } else {
+                                    input.style.borderColor = '#ef4444';
+                                }
+                            } else {
+                                if (input.tomselect && input.tomselect.control) {
+                                    input.tomselect.control.style.borderColor = '#cbd5e1';
+                                } else {
+                                    input.style.borderColor = '';
+                                }
                             }
                         });
 
+                        if (!isValid) {
+                            alert('Harap lengkapi seluruh kolom yang wajib diisi (Required), termasuk Target CPMK pada tabel!');
+                            return;
+                        }
+
                         // Specifically for Step 2 total weight check (Kontrak Kuliah)
-                        if (currentPanel.id === 'step_2_panel') {
+                        if (currentPanel && currentPanel.id === 'step_2_panel') {
                             const total = calculateTotalWeight();
                             if (total !== 100) {
                                 alert('Total Bobot Penilaian Mata Kuliah harus tepat berjumlah 100%! Sekarang: ' + total + '%');
-                                isValid = false;
+                                return;
                             }
                         }
 
-                        if (isValid) {
-                            const nextStep = parseInt(this.dataset.next);
+                        const nextStep = parseInt(this.dataset.next);
+                        if (nextStep) {
                             saveCache(nextStep);
                         }
                     });
@@ -1357,12 +1376,25 @@
 
                     const targetSelects = document.querySelectorAll('.cpmk-target-select, .pertemuan-cpmk-select');
                     targetSelects.forEach(select => {
+                        const placeholderOption = '<option value="" disabled>Belum ada CPMK — isi Step 1 terlebih dahulu</option>';
+
+                        if (list.length === 0) {
+                            if (select.tomselect) {
+                                select.tomselect.destroy();
+                            }
+                            select.innerHTML = placeholderOption;
+                            select.disabled = true;
+                            select.setAttribute('aria-label', 'Target CPMK');
+                            return;
+                        }
+
+                        select.disabled = false;
                         let currentVals = [];
                         if (select.tomselect) {
                             const tsVal = select.tomselect.getValue();
                             currentVals = Array.isArray(tsVal) ? tsVal : (tsVal ? [tsVal] : []);
                         } else {
-                            currentVals = Array.from(select.selectedOptions).map(opt => opt.value);
+                            currentVals = select.selectedOptions ? Array.from(select.selectedOptions).map(opt => opt.value) : [];
                         }
 
                         if (select.dataset.selectedValues) {
@@ -1426,7 +1458,7 @@
                     row.className = 'ref-row';
                     row.innerHTML = `
                         <input type="text" name="referensi_data[]" class="field-control" placeholder="Tulis rujukan referensi baru..." required>
-                        <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0;"><i class="fas fa-trash"></i></button>
+                        <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0;">Hapus</button>
                     `;
                     refContainer.appendChild(row);
                     triggerAutoSave();
@@ -1631,7 +1663,7 @@
                                 row.className = 'ref-row';
                                 row.innerHTML = `
                                     <input type="text" name="referensi_data[]" class="field-control" value="${ref}" required>
-                                    <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0;"><i class="fas fa-trash"></i></button>
+                                    <button type="button" class="btn-danger-sm btn-remove-ref" style="flex-shrink: 0;">Hapus</button>
                                 `;
                                 refContainer.appendChild(row);
                             });

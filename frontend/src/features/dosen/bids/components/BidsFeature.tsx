@@ -170,10 +170,21 @@ export function BidsFeature() {
                                                                     size="sm"
                                                                     variant="outline"
                                                                     className="text-orange-600 border-orange-300 hover:bg-orange-50"
-                                                                    onClick={() => handleRecommend(bid.id, 'REJECT')}
+                                                                    onClick={() => handleRecommend(bid.id, 'CANCEL')}
                                                                     disabled={submitting === bid.id || !canCancelAccept}
                                                                 >
                                                                     Batalkan
+                                                                </Button>
+                                                            )}
+                                                            {isRejected && (
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="text-orange-600 border-orange-300 hover:bg-orange-50"
+                                                                    onClick={() => handleRecommend(bid.id, 'CANCEL')}
+                                                                    disabled={submitting === bid.id}
+                                                                >
+                                                                    Batalkan penolakan
                                                                 </Button>
                                                             )}
                                                         </>

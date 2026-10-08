@@ -32,7 +32,7 @@ export interface Group {
     is_solo?: boolean;
     title?: { id: number; title: string };
     members: { id: number; student_id: number; is_leader: boolean }[];
-    period?: { max_group_size: number };
+    period?: { min_group_size?: number; max_group_size: number };
 }
 
 export interface BursaFlow {
@@ -47,4 +47,6 @@ export interface RegisteredPeriod {
     name: string;
     is_active: boolean;
     is_finalized: boolean;
+    min_group_size?: number;
+    max_group_size?: number;
 }

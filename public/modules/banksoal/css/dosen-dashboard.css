@@ -1,0 +1,81 @@
+/* Dashboard Dosen uses the same shell and visual tokens as Superadmin. */
+.banksoal-management .bs-dashboard-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.banksoal-management .bs-dashboard-stat { padding: 14px 16px; border: 1px solid var(--c-border); border-radius: 12px; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .03); transition: border-color .15s, box-shadow .15s; }
+.banksoal-management .bs-dashboard-stat:hover { border-color: var(--c-primary-border); box-shadow: 0 4px 14px rgba(11, 38, 110, .07); }
+.banksoal-management .bs-dashboard-stat-label { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+.banksoal-management .bs-dashboard-stat-label p { font-size: 12px; font-weight: 500; color: var(--c-fg-muted); }
+.banksoal-management .bs-dashboard-stat-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; font-size: 13px; }
+.banksoal-management .bs-dashboard-stat > strong { font-size: 24px; line-height: 1; letter-spacing: -.02em; color: var(--c-fg); font-variant-numeric: tabular-nums; }
+.banksoal-management .bs-dashboard-tone-primary { background: var(--c-primary-subtle); color: var(--c-primary); }
+.banksoal-management .bs-dashboard-tone-success { background: #ECFDF3; color: #067647; }
+.banksoal-management .bs-dashboard-tone-warning { background: #FFFAEB; color: #B54708; }
+.banksoal-management .bs-dashboard-tone-danger { background: #FFF1F3; color: #C01048; }
+.banksoal-management .bs-dashboard-alert { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border: 1px solid #FEDF89; border-radius: 12px; background: #FFFAEB; }
+.banksoal-management .bs-dashboard-alert-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 32px; border-radius: 8px; background: #FEF0C7; color: #B54708; font-size: 14px; }
+.banksoal-management .bs-dashboard-alert-copy { flex: 1; min-width: 0; color: #93370D; }
+.banksoal-management .bs-dashboard-alert-copy strong { font-size: 12px; }
+.banksoal-management .bs-dashboard-alert-copy p { margin-top: 3px; font-size: 12px; line-height: 1.7; overflow-wrap: anywhere; }
+.banksoal-management .bs-dashboard-alert-copy button { font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.banksoal-management .bs-dashboard-overview { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.banksoal-management .bs-dashboard-charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.banksoal-management .bs-dashboard-panel { display: flex; flex-direction: column; min-width: 0; border-color: var(--c-border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, .04); }
+.banksoal-management .bs-dashboard-panel > .border-b { padding: 14px 16px; border-color: var(--c-border); background: #fff; align-items: flex-start; }
+.banksoal-management .bs-dashboard-panel h2 { font-size: 13px; font-weight: 700; color: var(--c-fg); }
+.banksoal-management .bs-dashboard-panel > .border-b p { margin-top: 3px; font-size: 11px; color: var(--c-fg-muted); }
+.banksoal-management .bs-dashboard-panel-body { display: flex; flex: 1; flex-direction: column; justify-content: center; padding: 18px 16px; }
+.banksoal-management .bs-dashboard-analytics { display: flex; align-items: center; flex-wrap: wrap; justify-content: center; gap: 16px; }
+.banksoal-management .bs-dashboard-donut { position: relative; flex-shrink: 0; width: 112px; height: 112px; }
+.banksoal-management .bs-dashboard-donut-total { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+.banksoal-management .bs-dashboard-donut-total strong { max-width: 76px; font-size: 16px; color: var(--c-fg); overflow-wrap: anywhere; line-height: 1.2; }
+.banksoal-management .bs-dashboard-donut-total > span { margin-top: 3px; font-size: 9px; color: var(--c-fg-muted); }
+.banksoal-management .bs-dashboard-legend { flex: 1; min-width: 125px; }
+.banksoal-management .bs-dashboard-legend > div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 11px; }
+.banksoal-management .bs-dashboard-legend dt { display: flex; align-items: center; gap: 7px; color: var(--c-fg-muted); }
+.banksoal-management .bs-dashboard-legend dd { color: var(--c-fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+.banksoal-management .bs-dashboard-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.banksoal-management .bs-dashboard-dot-approved { background: #22C55E; }
+.banksoal-management .bs-dashboard-dot-submitted { background: #3B82F6; }
+.banksoal-management .bs-dashboard-dot-revision { background: #F59E0B; }
+.banksoal-management .bs-dashboard-dot-rejected { background: #EF4444; }
+.banksoal-management .bs-dashboard-period { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.banksoal-management .bs-dashboard-caption { display: block; margin-bottom: 6px; color: var(--c-fg-muted); font-size: 10px; font-weight: 600; }
+.banksoal-management .bs-dashboard-period strong { display: block; color: var(--c-fg); font-size: 13px; }
+.banksoal-management .bs-dashboard-badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 7px; border-radius: 6px; font-size: 10px; font-weight: 600; }
+.banksoal-management .bs-dashboard-courses { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--c-border); }
+.banksoal-management .bs-dashboard-course-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.banksoal-management .bs-dashboard-course { padding: 4px 8px; border: 1px solid var(--c-border); border-radius: 6px; background: var(--c-bg); color: var(--c-primary); font-size: 11px; font-weight: 600; overflow-wrap: anywhere; max-width: 100%; }
+.banksoal-management .bs-dashboard-course-more { background: #fff; color: var(--c-fg-muted); }
+.banksoal-management .bs-dashboard-course-more:hover { background: var(--c-primary-subtle); color: var(--c-primary); border-color: var(--c-primary-border); }
+.banksoal-management .bs-dashboard-muted { color: var(--c-fg-muted); font-size: 12px; }
+.banksoal-management .bs-dashboard-profile { display: flex; align-items: center; gap: 12px; }
+.banksoal-management .bs-dashboard-avatar { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 42px; height: 42px; border: 1px solid var(--c-border); border-radius: 12px; background: var(--c-primary-subtle); color: var(--c-primary); font-size: 17px; font-weight: 700; }
+.banksoal-management .bs-dashboard-profile > div { min-width: 0; overflow-wrap: anywhere; }
+.banksoal-management .bs-dashboard-profile strong { color: var(--c-fg); font-size: 13px; }
+.banksoal-management .bs-dashboard-profile p { margin-top: 3px; color: var(--c-fg-muted); font-size: 11px; }
+.banksoal-management .bs-dashboard-page .bs-dashboard-profile-link { align-self: flex-start; margin-top: 16px; min-height: 30px; padding: 6px 10px; font-size: 11px; }
+.banksoal-management .bs-dashboard-detail { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--c-primary); font-size: 11px; font-weight: 600; }
+.banksoal-management .bs-dashboard-detail:hover { text-decoration: underline; text-underline-offset: 3px; }
+.banksoal-management .bs-dashboard-chart-body { padding: 16px; }
+.banksoal-management .bs-dashboard-chart-scroll { overflow-x: auto; padding: 4px 2px 8px; }
+.banksoal-management .bs-dashboard-page :is(#cplChart, #mkChart) { height: 220px; min-height: 220px; }
+.banksoal-management .bs-dashboard-chart-scroll:has(.bs-dashboard-bar-item) { background: repeating-linear-gradient(to top, transparent 0, transparent 49px, #F0F2F5 49px, #F0F2F5 50px); }
+.banksoal-management .bs-dashboard-bar-item { min-width: 64px; }
+.banksoal-management .bs-dashboard-bar { max-width: 64px; }
+.banksoal-management .bs-dashboard-page .bs-dashboard-bar-label { color: var(--c-fg-muted); font-size: 10px; }
+.banksoal-management .bs-dashboard-page .bs-dashboard-bar-value { color: var(--c-fg-sec); font-size: 11px; }
+
+@media (max-width: 1199px) {
+    .banksoal-management .bs-dashboard-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .banksoal-management .bs-dashboard-overview > :last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 767px) {
+    .banksoal-management .bs-dashboard-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .banksoal-management .bs-dashboard-stat { padding: 12px; }
+    .banksoal-management .bs-dashboard-stat-label { align-items: flex-start; }
+    .banksoal-management .bs-dashboard-stat-label p { font-size: 11px; }
+    .banksoal-management .bs-dashboard-overview,
+    .banksoal-management .bs-dashboard-charts { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+    .banksoal-management .bs-dashboard-alert { flex-wrap: wrap; align-items: flex-start; }
+    .banksoal-management .bs-dashboard-alert > a { margin-left: 44px; }
+    .banksoal-management .bs-dashboard-panel > .border-b { flex-wrap: wrap; gap: 8px; }
+}

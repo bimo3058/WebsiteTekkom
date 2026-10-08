@@ -1,72 +1,43 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
+    @include('banksoal::pages.arsip.Dosen._styles')
     @section('breadcrumbs')
         <span class="text-slate-800 font-semibold">Arsip Soal</span>
     @endsection
 
-    <style>
-        :root {
-            --navy: #0B266E;
-            --navy-light: rgba(11, 38, 110, 0.1);
-        }
-        .bg-navy { background-color: var(--navy); }
-        .text-navy { color: var(--navy); }
-        .border-navy { border-color: var(--navy); }
-        .shadow-navy { --tw-shadow-color: rgba(11, 38, 110, 0.2); }
-        
-        @keyframes popup {
-            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .animate-popup {
-            animation: popup 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-
-    </style>
 
     <x-banksoal::notification.alerts />
 
+    <x-banksoal::ui.bank-soal-page class="bs-archive-page">
+    <x-slot:header>
     <x-banksoal::ui.page-header title="Arsip Soal Dosen" subtitle="Kelola riwayat penarikan dan arsip final dokumen ujian Anda.">
         <x-slot:actions>
             <div class="flex flex-wrap items-center gap-3">
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open" class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 font-bold text-white shadow-lg shadow-navy/20 transition-all hover:opacity-90 active:scale-95">
-                        <i class="fas fa-plus-circle"></i> Tambah Arsip
+                <div class="relative" x-data="{ open: false }" @click.outside="open = false" @keydown.escape.prevent.stop="open = false; $refs.addArchiveTrigger.focus()">
+                    <button @click="open = !open" type="button" class="bs-archive-primary bs-archive-add-trigger" x-ref="addArchiveTrigger" :aria-expanded="open" aria-controls="archiveAddMenu">
+                        <i class="fas fa-plus" aria-hidden="true"></i> Tambah Arsip
                         <i class="fas fa-chevron-down text-[10px] transition-transform" :class="open ? 'rotate-180' : ''"></i>
                     </button>
-                    <div x-show="open" @click.away="open = false" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-2 space-y-1">
-                        <a href="{{ route('banksoal.arsip.dosen.create-pdf') }}" class="flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition-all group">
-                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500 group-hover:bg-rose-100 transition-colors">
-                                <i class="fas fa-file-pdf"></i>
-                            </span>
-                            <div class="flex flex-col">
-                                <span>Upload PDF</span>
-                                <span class="text-[10px] text-slate-400 font-normal">Format PDF Standar</span>
-                            </div>
+                    <div id="archiveAddMenu" x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="bs-dropdown-menu bs-archive-add-menu absolute right-0 origin-top-right z-50">
+                        <a href="{{ route('banksoal.arsip.dosen.create-pdf') }}" class="bs-archive-add-option">
+                            <i class="fas fa-file-pdf" aria-hidden="true"></i>
+                            <span>Upload PDF</span>
                         </a>
-                        <a href="{{ route('banksoal.arsip.dosen.create-csv') }}" class="flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition-all group">
-                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100 transition-colors">
-                                <i class="fas fa-file-excel"></i>
-                            </span>
-                            <div class="flex flex-col">
-                                <span>Import CSV/Excel</span>
-                                <span class="text-[10px] text-slate-400 font-normal">Gunakan Template</span>
-                            </div>
+                        <a href="{{ route('banksoal.arsip.dosen.create-csv') }}" class="bs-archive-add-option">
+                            <i class="fas fa-file-excel" aria-hidden="true"></i>
+                            <span>Import CSV/Excel</span>
                         </a>
                     </div>
                 </div>
             </div>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
+    </x-slot:header>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <x-banksoal::ui.stat-card label="Total Arsip" :value="$stats['total_arsip']" icon="fa-archive" tone="blue" />
-        <x-banksoal::ui.stat-card label="Riwayat Penarikan" :value="$stats['total_penarikan']" icon="fa-history" tone="amber" />
-        <x-banksoal::ui.stat-card label="Mata Kuliah" :value="$stats['mata_kuliah']" icon="fa-book" tone="indigo" />
-    </div>
+    @include('banksoal::pages.arsip.Dosen._stats')
 
-    <div class="space-y-8 flex flex-col">
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden order-1" x-data="{ expandedGroups: [] }">
-            <div class="px-6 py-5 border-b border-slate-200">
+    <div class="bs-archive-sections">
+        <div class="bs-section bs-archive-final" x-data="{ expandedGroups: [] }">
+            <div class="bs-archive-section-header">
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-900">Daftar Arsip Final</h3>
@@ -76,37 +47,51 @@
                 </div>
             </div>
 
-            <div class="mx-4 mt-4 mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
+            <div class="bs-archive-filter">
                 <form action="{{ route('banksoal.arsip.dosen.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 w-full" id="filterForm">
                             <div class="relative w-full md:w-96">
                                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                                 <input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Cari nama arsip atau MK..." class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none">
                             </div>
 
-                            <x-banksoal::ui.filter-panel formId="filterForm" :hasActiveFilter="request('years') || request('semesters') ? true : false" resetRoute="{{ route('banksoal.arsip.dosen.index') }}" applyLabel="Terapkan">
+                            <div class="relative" x-data="{ filterOpen: false }" @click.outside="filterOpen = false" @keydown.escape.prevent.stop="filterOpen = false; $refs.archiveFilterTrigger.focus()">
+                                <button type="button" class="bs-dropdown-trigger" :class="{ 'is-open': filterOpen }" @click="filterOpen = !filterOpen" x-ref="archiveFilterTrigger" :aria-expanded="filterOpen" aria-controls="archiveFilterMenu">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z" /></svg>
+                                    <span>Filter</span>
+                                    @if(request('years') || request('semesters'))
+                                        <span class="bs-archive-filter-dot" aria-label="Filter aktif"></span>
+                                    @endif
+                                </button>
+                                <div id="archiveFilterMenu" x-show="filterOpen" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="bs-dropdown-menu bs-archive-filter-menu absolute right-0 origin-top-right z-50">
                                 <div>
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Tahun Ajaran</label>
-                                    <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
+                                    <div class="bs-dropdown-label">Tahun Ajaran</div>
+                                    <div class="bs-archive-filter-years">
                                         @foreach($availableYears as $year)
-                                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
-                                            <input type="checkbox" name="years[]" value="{{ $year }}" {{ in_array($year, (array)request('years')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
-                                            <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $year }}</span>
+                                        <label class="bs-archive-filter-option">
+                                            <input type="checkbox" name="years[]" value="{{ $year }}" {{ in_array($year, (array)request('years')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary transition-all">
+                                            <span>{{ $year }}</span>
                                         </label>
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="pt-3 border-t border-slate-100">
-                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Semester</label>
-                                    <div class="space-y-2">
+                                <div class="bs-dropdown-divider"></div>
+                                <div>
+                                    <div class="bs-dropdown-label">Semester</div>
+                                    <div>
                                         @foreach(['Ganjil', 'Genap'] as $sem)
-                                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
-                                            <input type="checkbox" name="semesters[]" value="{{ $sem }}" {{ in_array($sem, (array)request('semesters')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
-                                            <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $sem }}</span>
+                                        <label class="bs-archive-filter-option">
+                                            <input type="checkbox" name="semesters[]" value="{{ $sem }}" {{ in_array($sem, (array)request('semesters')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary transition-all">
+                                            <span>{{ $sem }}</span>
                                         </label>
                                         @endforeach
                                     </div>
                                 </div>
-                            </x-banksoal::ui.filter-panel>
+                                <div class="bs-archive-filter-footer">
+                                    <a href="{{ route('banksoal.arsip.dosen.index') }}" class="bs-archive-secondary">Reset</a>
+                                    <button type="submit" form="filterForm" @click="filterOpen = false" class="bs-archive-primary">Terapkan</button>
+                                </div>
+                                </div>
+                            </div>
 
                             @if($filters['search'] || request('years') || request('semesters'))
                             <a href="{{ route('banksoal.arsip.dosen.index') }}" class="text-rose-500 hover:text-rose-700 text-xs font-bold underline px-2">Reset</a>
@@ -116,7 +101,7 @@
 
             <div class="p-0">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm text-left">
+                    <table class="bs-table bs-archive-table">
                         <thead>
                             <tr class="bg-slate-50 text-[11px] font-semibold text-slate-500 uppercase tracking-wider border-y border-slate-200">
                                 <th class="w-12 px-6 py-4"></th>
@@ -133,11 +118,11 @@
                                 <?php $first = $items->first(); ?>
                                 <tr class="hover:bg-slate-50/50 cursor-pointer transition-colors group" @click="expandedGroups.includes({{ $mkId }}) ? expandedGroups = expandedGroups.filter(i => i !== {{ $mkId }}) : expandedGroups.push({{ $mkId }})">
                                     <td class="px-8 py-5 text-center">
-                                        <i class="fas fa-chevron-right text-slate-300 transition-transform duration-300" :class="expandedGroups.includes({{ $mkId }}) ? 'rotate-90 text-navy' : ''"></i>
+                                        <i class="fas fa-chevron-right text-slate-300 transition-transform duration-300" :class="expandedGroups.includes({{ $mkId }}) ? 'rotate-90 text-primary' : ''"></i>
                                     </td>
                                     <td class="px-4 py-5">
                                         <div class="flex items-center gap-4">
-                                            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-navy group-hover:text-white transition-all shadow-sm">
+                                            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
                                                 <i class="fas fa-book text-sm"></i>
                                             </div>
                                             <div class="flex flex-col">
@@ -148,7 +133,7 @@
                                     </td>
                                     <td class="px-8 py-5">
                                         <div class="flex items-center gap-2">
-                                            <span class="px-3 py-1 rounded-full bg-navy/5 text-navy text-xs font-bold">{{ $items->count() }} Versi</span>
+                                            <span class="px-3 py-1 rounded-full bg-primary/5 text-primary text-xs font-bold">{{ $items->count() }} Versi</span>
                                         </div>
                                     </td>
                                     <td class="px-8 py-5">
@@ -185,7 +170,7 @@
                                 <tr x-show="expandedGroups.includes({{ $mkId }})" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="bg-slate-50/30">
                                     <td class="px-8 py-0"></td>
                                     <td colspan="4" class="px-4 py-3">
-                                        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:border-navy/30 transition-colors">
+                                        <div class="bs-archive-version">
                                             <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
                                                 <div class="flex flex-col">
                                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pengarsip</p>
@@ -200,13 +185,13 @@
                                                 </div>
                                                 <div class="flex flex-col border-l border-slate-100 pl-4">
                                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Kategori</p>
-                                                    <span class="inline-flex w-fit px-2.5 py-0.5 rounded-lg bg-navy/5 text-navy text-[10px] font-bold border border-navy/10">
+                                                    <span class="inline-flex w-fit px-2.5 py-0.5 rounded-lg bg-primary/5 text-primary text-[10px] font-bold border border-primary/10">
                                                         {{ $categoryAbbr }}
                                                     </span>
                                                 </div>
                                                 <div class="flex flex-col border-l border-slate-100 pl-4">
                                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Periode</p>
-                                                    <p class="text-sm text-slate-700 font-medium">{{ $arsip->tahun_akademik }} - <span class="text-navy text-xs">{{ $arsip->semester }}</span></p>
+                                                    <p class="text-sm text-slate-700 font-medium">{{ $arsip->tahun_akademik }} - <span class="text-primary text-xs">{{ $arsip->semester }}</span></p>
                                                 </div>
                                                 <div class="flex flex-col border-l border-slate-100 pl-4">
                                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Statistik</p>
@@ -216,11 +201,11 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
-                                                    <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
+                                                    <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-primary transition-all">
                                                         <i class="fas fa-ellipsis-h"></i>
                                                     </button>
-                                                    <div x-show="menuOpen" @click.away="menuOpen = false" class="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-100 shadow-xl z-50 p-2 space-y-1 text-left">
-                                                        <a href="{{ route('banksoal.arsip.dosen.show', $arsip->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition-all">
+                                                    <div x-show="menuOpen" @click.away="menuOpen = false" x-cloak class="bs-dropdown-menu bs-archive-action-menu absolute right-0 z-50">
+                                                        <a href="{{ route('banksoal.arsip.dosen.show', $arsip->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-primary transition-all">
                                                             <i class="fas fa-external-link-alt w-4"></i> Buka Detail
                                                         </a>
                                                         <form action="{{ route('banksoal.arsip.dosen.destroy', $arsip->id) }}" method="POST" onsubmit="if(confirm('Hapus arsip ini?')){ window.showLoader(); return true; } else { return false; }" class="block">
@@ -248,15 +233,15 @@
                     </table>
                 </div>
 
-                <div class="px-6 py-4 border-t border-slate-200 bg-white">
+                <div class="bs-archive-pagination">
                     {{ $arsipPaginated->appends(request()->all())->links('banksoal::components.ui.laravel-pagination') }}
                 </div>
             </div>
         </div>
 
         @if($penarikanPending->isNotEmpty())
-        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden order-2 mt-8">
-            <div class="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+        <div class="bs-section bs-archive-pending">
+            <div class="bs-archive-section-header flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
                         <i class="fas fa-clock-rotate-left text-sm"></i>
@@ -267,9 +252,9 @@
             </div>
             <div class="p-0">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="bs-table bs-archive-table">
                         <thead>
-                            <tr class="bg-primary text-[10px] font-bold text-white uppercase tracking-widest">
+                            <tr class="bg-slate-50 text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
                                 <th class="px-8 py-4">Detail Penarikan</th>
                                 <th class="px-8 py-4">Mata Kuliah</th>
                                 <th class="px-8 py-4">Waktu</th>
@@ -281,7 +266,7 @@
                             <tr class="hover:bg-slate-50/50 transition-colors group">
                                 <td class="px-8 py-5">
                                     <div class="flex flex-col">
-                                        <span class="font-bold text-slate-900 group-hover:text-navy transition-colors">{{ $penarikan->nama_ekstraksi }}</span>
+                                        <span class="font-bold text-slate-900 group-hover:text-primary transition-colors">{{ $penarikan->nama_ekstraksi }}</span>
                                         <div class="flex items-center gap-2 mt-1">
                                             <span class="px-2 py-0.5 rounded-md bg-amber-50 text-[10px] font-bold text-amber-600 border border-amber-100 uppercase">{{ $penarikan->tipe_ujian }}</span>
                                             @if($penarikan->metode_ujian === 'offline')
@@ -301,11 +286,11 @@
                                 </td>
                                 <td class="px-8 py-5 text-right">
                                     <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
-                                        <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
+                                        <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-primary transition-all">
                                             <i class="fas fa-ellipsis-h"></i>
                                         </button>
-                                        <div x-show="menuOpen" @click.away="menuOpen = false" class="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-100 shadow-xl z-50 p-2 space-y-1 text-left">
-                                            <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-navy hover:bg-slate-50 transition-all">
+                                        <div x-show="menuOpen" @click.away="menuOpen = false" x-cloak class="bs-dropdown-menu bs-archive-action-menu absolute right-0 z-50">
+                                            <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-primary hover:bg-slate-50 transition-all">
                                                 <i class="fas fa-file-export w-4"></i> Konversi
                                             </a>
                                             <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="if(confirm('Hapus riwayat penarikan ini?')){ window.showLoader(); return true; } else { return false; }" class="block">
@@ -326,6 +311,8 @@
         </div>
         @endif
     </div>
+
+    </x-banksoal::ui.bank-soal-page>
 
     <script>
         document.getElementById('filterForm').addEventListener('submit', function() {

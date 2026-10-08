@@ -22,6 +22,10 @@ class SeminarSchedule extends Model
         'status',
         'requested_by',
         'rejection_reason',
+        'location_id',
+        'eoffice_ruangan_id',
+        'eoffice_peminjaman_id',
+        'final_score',
     ];
 
     protected $casts = [
@@ -46,5 +50,20 @@ class SeminarSchedule extends Model
     public function evaluations(): HasMany
     {
         return $this->hasMany(SeminarEvaluation::class, 'schedule_id');
+    }
+
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    public function eofficeRoom(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\EOffice\Models\Ruangan::class, 'eoffice_ruangan_id');
+    }
+
+    public function eofficeBooking(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\EOffice\Models\Peminjaman::class, 'eoffice_peminjaman_id');
     }
 }

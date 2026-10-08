@@ -7,13 +7,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import api from '@/lib/api';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Gavel, Trash2, UserCheck, Lock, AlertTriangle, ArrowUp, ArrowDown, Save } from 'lucide-react';
+import { Gavel, Trash2, Lock, AlertTriangle, ArrowUp, ArrowDown, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Loading } from '@/components/ui/loading';
 import { Field } from '@/components/ui/field';
 import { FieldLabel } from '@/components/ui/field-label';
 import { FieldError } from '@/components/ui/field-error';
-import { FieldContent } from '@/components/ui/field-content';
 import {
     Select,
     SelectContent,
@@ -35,7 +34,6 @@ import { useAuth } from '@/context/AuthContext';
 import { createBidSchema, type CreateBidFormData } from '@/lib/validations/bidding';
 import { getBidStatusBadgeVariant } from '@/lib/badge-variants';
 import {
-    Lecturer,
     Title,
     Bid,
     GroupInfo,
@@ -47,7 +45,6 @@ export function BiddingFeature() {
     const { user } = useAuth();
     const [bids, setBids] = useState<Bid[]>([]);
     const [titles, setTitles] = useState<Title[]>([]);
-    const [dosens, setDosens] = useState<Lecturer[]>([]);
     const [loading, setLoading] = useState(true);
     const [addOpen, setAddOpen] = useState(false);
     const [group, setGroup] = useState<GroupInfo | null>(null);
@@ -60,7 +57,6 @@ export function BiddingFeature() {
         control,
         handleSubmit,
         reset,
-        watch,
         formState: { errors, isSubmitting },
         setError: setFormError,
     } = useForm<CreateBidFormData>({
@@ -68,12 +64,8 @@ export function BiddingFeature() {
         mode: 'onBlur',
         defaultValues: {
             title_id: '',
-            proposed_supervisor_1_id: '',
-            proposed_supervisor_2_id: '',
         },
     });
-
-    const supervisor1Id = watch('proposed_supervisor_1_id');
 
     const fetchGroup = useCallback(async () => {
         try {
@@ -91,7 +83,7 @@ export function BiddingFeature() {
             const responseData = res.data?.data ?? res.data;
             const fetchedBids = responseData?.bids ?? responseData ?? [];
             setBids(fetchedBids);
-            setReorderedBids(fetchedBids);
+            setReorderedBids((fetchedBids ?? []).filter((b: Bid) => b.status !== 'REJECTED'));
             setBiddingFlow(res.data?.flow ?? responseData?.flow ?? null);
         } catch (err) {
             console.error('Failed to fetch bids', err);
@@ -122,38 +114,33 @@ export function BiddingFeature() {
         }
     }, []);
 
-    const fetchDosens = useCallback(async () => {
-        try {
-            const res = await api.get('/mahasiswa/lecturers');
-            setDosens(res.data?.data || []);
-        } catch (err) {
-            console.error('Failed to fetch lecturers', err);
-        }
-    }, []);
-
     useEffect(() => {
         fetchGroup();
         fetchBids();
         fetchTitles();
-        fetchDosens();
         fetchProposals();
-    }, [fetchGroup, fetchBids, fetchTitles, fetchDosens, fetchProposals]);
+    }, [fetchGroup, fetchBids, fetchTitles, fetchProposals]);
 
     const isLeader = group?.members.some(m => m.is_leader && m.student.id === user?.id) ?? false;
     const MAX_TITLES = 3;
 
-    const totalUsed = bids.length + proposals.length;
+    const activeBids = bids.filter(b => b.status !== 'REJECTED');
+    const rejectedBids = bids.filter(b => b.status === 'REJECTED');
+    const totalUsed = activeBids.length + proposals.length;
     const slotsRemaining = MAX_TITLES - totalUsed;
     const hasActiveProposal = proposals.length > 0;
     const localCanSubmit = isLeader && slotsRemaining > 0 && !hasActiveProposal;
     const canSubmitBid = biddingFlow?.can_submit_bid ?? localCanSubmit;
     const canReorderBid = biddingFlow?.can_reorder_bid ?? isLeader;
     const canDeleteBid = biddingFlow?.can_delete_bid ?? isLeader;
+    const memberCount = group?.members?.length ?? 0;
+    const minGroupSize = group?.period?.min_group_size ?? 3;
+    const isSoloBelowMin = !!group?.is_solo && memberCount < minGroupSize;
 
     const flowReasonMap: Record<string, string> = {
         NO_GROUP: 'Anda harus memiliki kelompok terlebih dahulu.',
         LEADER_ONLY: 'Hanya ketua kelompok yang dapat mengelola bidding.',
-        SOLO_GROUP_CANNOT_BID: 'Kelompok solo tidak dapat bidding judul dosen.',
+        SOLO_GROUP_CANNOT_BID: 'Solo seeker dapat bidding judul dosen setelah jumlah anggota memenuhi batas minimal.',
         INSUFFICIENT_MEMBERS: 'Jumlah anggota kelompok belum memenuhi minimal untuk bidding.',
         INVALID_GROUP_STATUS: 'Status kelompok saat ini tidak memungkinkan bidding.',
         ACTIVE_PROPOSAL_EXISTS: 'Kelompok Anda memiliki proposal aktif. Bidding dinonaktifkan.',
@@ -190,7 +177,10 @@ export function BiddingFeature() {
         try {
             const orderData = reorderedBids.map(b => ({ id: b.id, priority: b.priority }));
             await api.put('/mahasiswa/bids/reorder', { bids: orderData });
-            setBids(reorderedBids);
+            setBids(prev => {
+                const rejected = prev.filter(b => b.status === 'REJECTED');
+                return [...reorderedBids, ...rejected];
+            });
             setHasChanges(false);
             toast.success('Urutan prioritas berhasil disimpan');
         } catch (error) {
@@ -206,8 +196,6 @@ export function BiddingFeature() {
         try {
             await api.post('/mahasiswa/bids', {
                 title_id: Number(data.title_id),
-                proposed_supervisor_1_id: Number(data.proposed_supervisor_1_id),
-                proposed_supervisor_2_id: data.proposed_supervisor_2_id ? Number(data.proposed_supervisor_2_id) : null,
             });
             toast.success('Bid submitted successfully!');
             setAddOpen(false);
@@ -254,9 +242,8 @@ export function BiddingFeature() {
 
     if (loading) return <Loading variant="section" />;
 
-    const bidTitleIds = bids.map(b => b.title_id);
+    const bidTitleIds = activeBids.map(b => b.title_id);
     const availableTitles = titles.filter(t => !bidTitleIds.includes(t.id));
-    const availableSup2 = dosens.filter(d => d.id.toString() !== supervisor1Id);
 
     if (!isLeader) {
         return (
@@ -282,10 +269,10 @@ export function BiddingFeature() {
                         </AlertDescription>
                     </Alert>
                 ) : null}
-                {(bids ?? []).length > 0 && (
+                {(activeBids ?? []).length > 0 && (
                     <div className="grid gap-4">
                         <h2 className="text-lg font-semibold">Current Bids</h2>
-                        {(bids ?? []).sort((a, b) => a.priority - b.priority).map((bid) => (
+                        {(activeBids ?? []).sort((a, b) => a.priority - b.priority).map((bid) => (
                             <Card key={bid.id}>
                                 <CardHeader className="pb-3">
                                     <div className="flex items-start justify-between">
@@ -297,6 +284,24 @@ export function BiddingFeature() {
                                                 <CardTitle className="text-base">{bid.title.title}</CardTitle>
                                                 <CardDescription>Lecturer: {bid.title.lecturer?.name}</CardDescription>
                                             </div>
+                                        </div>
+                                        <Badge variant={getStatusVariant(bid.status)}>{bid.status}</Badge>
+                                    </div>
+                                </CardHeader>
+                            </Card>
+                        ))}
+                    </div>
+                )}
+                {rejectedBids.length > 0 && (
+                    <div className="grid gap-4">
+                        <h2 className="text-lg font-semibold">Riwayat Ditolak</h2>
+                        {rejectedBids.map((bid) => (
+                            <Card key={bid.id} className="opacity-80">
+                                <CardHeader className="pb-3">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <CardTitle className="text-base">{bid.title.title}</CardTitle>
+                                            <CardDescription>Lecturer: {bid.title.lecturer?.name} — ditolak dosen, slot sudah dibebaskan.</CardDescription>
                                         </div>
                                         <Badge variant={getStatusVariant(bid.status)}>{bid.status}</Badge>
                                     </div>
@@ -335,12 +340,24 @@ export function BiddingFeature() {
                 </div>
             </div>
 
-            {!canSubmitBid && biddingFlow?.reason && (
+            {!canSubmitBid && biddingFlow?.reason && !isSoloBelowMin && (
                 <Alert>
                     <Lock className="h-4 w-4" />
                     <AlertTitle>Bidding Terkunci</AlertTitle>
                     <AlertDescription>
                         {flowReasonMap[biddingFlow.reason] || 'Bidding tidak tersedia untuk kondisi kelompok saat ini.'}
+                    </AlertDescription>
+                </Alert>
+            )}
+
+            {!canSubmitBid && isSoloBelowMin && (
+                <Alert variant="destructive">
+                    <Lock className="h-4 w-4" />
+                    <AlertTitle>Belum Bisa Bidding Judul Dosen</AlertTitle>
+                    <AlertDescription>
+                        Kelompok solo Anda memiliki {memberCount} dari minimal {minGroupSize} anggota. Untuk membuka bidding judul dosen, tambah anggota di{' '}
+                        <Link href="/mahasiswa/group" className="underline font-bold">Grup Saya</Link> hingga mencapai minimal. Sementara itu, Anda tetap dapat{' '}
+                        <Link href="/mahasiswa/propose-title" className="font-medium underline">mengajukan judul sendiri</Link>.
                     </AlertDescription>
                 </Alert>
             )}
@@ -374,7 +391,7 @@ export function BiddingFeature() {
                 </Alert>
             )}
 
-            {bids.length === 0 && proposals.length === 0 ? (
+            {activeBids.length === 0 && proposals.length === 0 ? (
                 <div className="text-center py-12 border rounded-lg border-dashed">
                     <Gavel className="h-12 w-12 mx-auto mb-4 opacity-50 text-muted-foreground" />
                     <h2 className="text-xl font-bold mb-2">No Bids Yet</h2>
@@ -413,7 +430,7 @@ export function BiddingFeature() {
                         </div>
                     )}
 
-                    {(bids ?? []).length > 0 && (
+                    {(reorderedBids ?? []).length > 0 && (
                         <div>
                             <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
                                 <Badge variant="default" className="bg-green-100 text-green-800">Bid</Badge>
@@ -464,20 +481,6 @@ export function BiddingFeature() {
                                                 </div>
                                             </div>
                                         </CardHeader>
-                                        <CardContent className="pb-3">
-                                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                                <div className="flex items-center gap-1">
-                                                    <UserCheck className="h-4 w-4" />
-                                                    <span>Pembimbing 1: <span className="font-medium text-foreground">{bid.proposed_supervisor1?.name || '-'}</span></span>
-                                                </div>
-                                                {bid.proposed_supervisor2 && (
-                                                    <div className="flex items-center gap-1">
-                                                        <UserCheck className="h-4 w-4" />
-                                                        <span>Pembimbing 2: <span className="font-medium text-foreground">{bid.proposed_supervisor2.name}</span></span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </CardContent>
                                         <CardFooter className="border-t pt-3">
                                             <div className="flex justify-between w-full items-center">
                                                 <span className="text-sm text-muted-foreground">Priority #{bid.priority}</span>
@@ -494,6 +497,42 @@ export function BiddingFeature() {
                             </div>
                         </div>
                     )}
+                    {rejectedBids.length > 0 && (
+                        <div>
+                            <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                                <Badge variant="destructive">Riwayat</Badge>
+                                Bid Ditolak Dosen
+                            </h2>
+                            <p className="text-sm text-muted-foreground mb-3">
+                                Bid berikut ditolak dan otomatis dikeluarkan dari slot aktif — slot Anda sudah dibebaskan untuk bid judul lain.
+                            </p>
+                            <div className="grid gap-4">
+                                {rejectedBids.map((bid) => (
+                                    <Card key={bid.id} className="relative border-destructive/40 bg-muted/20">
+                                        <CardHeader className="pb-3">
+                                            <div className="flex items-start justify-between">
+                                                <div>
+                                                    <CardTitle className="text-base">{bid.title.title}</CardTitle>
+                                                    <CardDescription>Lecturer: {bid.title.lecturer?.name}</CardDescription>
+                                                </div>
+                                                <Badge variant={getStatusVariant(bid.status)}>{bid.status}</Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardFooter className="border-t pt-3">
+                                            <div className="flex justify-between w-full items-center">
+                                                <span className="text-sm text-muted-foreground">Ditolak dosen — tidak memakan slot</span>
+                                                {canDeleteBid && (
+                                                    <Button variant="ghost" size="sm" className="text-destructive" onClick={() => handleDeleteBid(bid.id)}>
+                                                        <Trash2 className="mr-1 h-4 w-4" /> Hapus riwayat
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </CardFooter>
+                                    </Card>
+                                ))}
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -504,7 +543,7 @@ export function BiddingFeature() {
                         <DialogHeader>
                             <DialogTitle>Submit a New Bid</DialogTitle>
                             <DialogDescription>
-                                Select a title and propose supervisors (Pembimbing 1 required, Pembimbing 2 optional).
+                                Select a title to bid. Supervisors are assigned during finalization (balancing).
                                 <br />
                                 <span className="font-medium">{slotsRemaining} slot{slotsRemaining !== 1 ? 's' : ''} remaining</span> (max {MAX_TITLES} bids + proposals combined).
                             </DialogDescription>
@@ -548,68 +587,12 @@ export function BiddingFeature() {
                                 <FieldLabel>Priority</FieldLabel>
                                 <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md border">
                                     <Badge variant="outline" className="bg-background">Auto</Badge>
-                                    <span className="font-semibold text-lg">#{(bids ?? []).length + 1}</span>
+                                    <span className="font-semibold text-lg">#{activeBids.length + 1}</span>
                                     <span className="text-sm text-muted-foreground">
-                                        (akan menjadi prioritas ke-{(bids ?? []).length + 1})
+                                        (akan menjadi prioritas ke-{activeBids.length + 1})
                                     </span>
                                 </div>
                             </Field>
-
-                            <Controller
-                                name="proposed_supervisor_1_id"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldLabel htmlFor={field.name}>
-                                            Proposed Pembimbing 1 <span className="text-destructive">*</span>
-                                        </FieldLabel>
-                                        <Select
-                                            name={field.name}
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger id={field.name} aria-invalid={fieldState.invalid}>
-                                                <SelectValue placeholder="Select supervisor..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {dosens.map(d => (
-                                                    <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-                                    </Field>
-                                )}
-                            />
-
-                            <Controller
-                                name="proposed_supervisor_2_id"
-                                control={control}
-                                render={({ field, fieldState }) => (
-                                    <Field data-invalid={fieldState.invalid}>
-                                        <FieldContent>
-                                            <FieldLabel htmlFor={field.name}>
-                                                Proposed Pembimbing 2 <span className="text-muted-foreground text-xs">(optional)</span>
-                                            </FieldLabel>
-                                        </FieldContent>
-                                        <Select
-                                            name={field.name}
-                                            value={field.value}
-                                            onValueChange={field.onChange}
-                                        >
-                                            <SelectTrigger id={field.name} aria-invalid={fieldState.invalid}>
-                                                <SelectValue placeholder="Select supervisor (optional)..." />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="">— None —</SelectItem>
-                                                {availableSup2.map(d => (
-                                                    <SelectItem key={d.id} value={d.id.toString()}>{d.name}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </Field>
-                                )}
-                            />
                         </div>
                         <DialogFooter>
                             <Button type="button" variant="outline" onClick={handleCloseDialog}>Cancel</Button>

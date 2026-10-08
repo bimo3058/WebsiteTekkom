@@ -107,6 +107,18 @@ class ScheduleController extends Controller
             );
         }
 
+        // Anti-collision with EOffice (approved bookings + internal schedules).
+        $eofficeConflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByRoom(
+            $validated['room'] ?? null,
+            null,
+            $validated['date'],
+            $validated['start_time'],
+            $validated['end_time']
+        );
+        if ($eofficeConflict) {
+            return response()->json(['message' => $eofficeConflict['message']], 422);
+        }
+
         $schedule = Schedule::create($validated);
 
         return response()->json(['message' => 'Schedule created successfully', 'data' => $schedule], 201);
@@ -168,6 +180,19 @@ class ScheduleController extends Controller
                 'Anda bukan dosen pembimbing kelompok ini.'
             );
         }
+
+        // Anti-collision with EOffice on the resulting slot.
+        $eofficeConflict = app(\Modules\Capstone\Services\EofficeAvailabilityService::class)->checkByRoom(
+            $validated['room'] ?? $schedule->room,
+            null,
+            $validated['date'] ?? $schedule->date->format('Y-m-d'),
+            $validated['start_time'] ?? $schedule->start_time,
+            $validated['end_time'] ?? $schedule->end_time
+        );
+        if ($eofficeConflict) {
+            return response()->json(['message' => $eofficeConflict['message']], 422);
+        }
+
         $schedule->update($validated);
 
         return response()->json(['message' => 'Schedule updated successfully', 'data' => $schedule]);

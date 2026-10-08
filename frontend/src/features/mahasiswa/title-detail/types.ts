@@ -15,5 +15,7 @@ export interface Group {
     id: number;
     title_id: number | null;
     status: string;
+    is_solo?: boolean;
     members: { id: number; student_id: number; is_leader: boolean }[];
+    period?: { min_group_size?: number; max_group_size?: number };
 }

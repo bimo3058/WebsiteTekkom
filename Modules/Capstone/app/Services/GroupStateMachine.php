@@ -18,7 +18,7 @@ class GroupStateMachine
         'FORMING' => ['READY_FOR_BIDDING', 'TITLE_APPROVED'],
         'READY_FOR_BIDDING' => ['READY_FOR_FINALIZATION', 'KELOMPOK_FINAL', 'FORMING'], // FORMING if members drop below min
         'KELOMPOK_FINAL' => ['PDC1_ACTIVE'],
-        'PDC1_ACTIVE' => ['READY_FOR_SEMPRO'],
+        'PDC1_ACTIVE' => ['READY_FOR_SEMPRO', 'KELOMPOK_FINAL'], // KELOMPOK_FINAL on period reopen
         'READY_FOR_SEMPRO' => ['SEMPRO_DONE', 'PDC1_ACTIVE'], // PDC1_ACTIVE on sempro fail
         'SEMPRO_DONE' => ['PDC2_ACTIVE'],
         'PDC2_ACTIVE' => ['PDC2_READY_FOR_EXPO'],

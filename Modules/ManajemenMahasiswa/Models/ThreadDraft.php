@@ -15,11 +15,14 @@ class ThreadDraft extends Model
         'kategori',
         'konten',
         'media_files',
+        'link_url',
+        'poll_data',
     ];
 
     protected $casts = [
-        'kategori' => 'array',
+        'kategori'   => 'array',
         'media_files' => 'array',
+        'poll_data'  => 'array',
     ];
 
     public function user()
