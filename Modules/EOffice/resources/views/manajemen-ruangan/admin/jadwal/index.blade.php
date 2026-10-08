@@ -291,7 +291,7 @@
                         </button>
                     </div>
 
-                    <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.store') }}" method="POST"
+                    <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.store') }}" method="POST" autocomplete="off"
                         @submit="if(isCheckingOut || conflictError) { $event.preventDefault(); return false; }"
                         class="flex flex-col flex-1 min-h-0">
                         @csrf
@@ -1318,7 +1318,7 @@
 
                                                 <form
                                                     action="{{ route('eoffice.peminjaman.admin.jadwal-internal.update', $j->id) }}"
-                                                    method="POST" class="flex flex-col flex-1 min-h-0"
+                                                    method="POST" class="flex flex-col flex-1 min-h-0" autocomplete="off"
                                                     @submit="if(isCheckingOut || conflictError) { $event.preventDefault(); return false; }">
                                                     @csrf
                                                     @method('PUT')

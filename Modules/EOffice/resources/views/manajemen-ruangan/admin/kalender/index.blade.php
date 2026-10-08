@@ -854,52 +854,52 @@
             " x-init="$watch('searchQuery', value => { 
                 if(nim && !value.includes(nim)) nim = ''; 
             })">
-            <div x-show="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+            <div x-show="show" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal"
                 aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;" x-cloak>
 
                 {{-- Backdrop --}}
-                <div x-show="show" x-transition:enter="transition ease-out duration-300"
+                <div x-show="show" x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 transition-opacity bg-slate-900/60" aria-hidden="true"
+                    class="fixed inset-0 bg-slate-900/60 transition-opacity" aria-hidden="true"
                     @click="show = false">
                 </div>
 
                 <div x-show="show" x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave="ease-in duration-200"
                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="relative bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+                    x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                    class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[500px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-0 overflow-visible">
 
-                    {{-- Header --}}
-                    <div class="px-5 py-4 border-b border-gray-100/80 bg-white/50 backdrop-blur flex-shrink-0 flex justify-between items-start rounded-t-xl sticky top-0 z-10">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center shrink-0">
-                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    <div class="p-4 sm:p-6 flex flex-col flex-1 min-h-0">
+                        {{-- Header --}}
+                        <div class="-mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-5 px-6 py-4 border-b border-[#0B266E]/10 flex items-center justify-between bg-[#0B266E]/[0.06] rounded-none sm:rounded-t-[20px]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center shrink-0">
+                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight" id="modal-title">Input Peminjaman</h3>
+                                    <p class="text-[10px] text-[#0B266E] font-medium">Mengunci penjadwalan paksa untuk <span class="font-bold" x-text="ruangan_nama"></span> pada <span class="font-bold" x-text="tanggal + ' pukul ' + jam + ' WIB'"></span></p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight" id="modal-title">Input Peminjaman</h3>
-                                <p class="text-[10px] text-[#0B266E] font-medium">Mengunci penjadwalan paksa untuk <span class="font-bold" x-text="ruangan_nama"></span> pada <span class="font-bold" x-text="tanggal + ' pukul ' + jam + ' WIB'"></span></p>
-                            </div>
+                            <button type="button" @click="show = false"
+                                class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
                         </div>
-                        <button type="button" @click="show = false"
-                            class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
 
-                    {{-- Scrollable Body --}}
-                    <div class="px-4 sm:px-6 md:px-8 pt-4 pb-5 overflow-y-auto overflow-x-hidden flex-1 bg-white whitespace-normal">
-                        <form id="expressBookingForm" method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}" class="flex flex-col flex-1 min-h-0">
+                        <form id="expressBookingForm" method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}" class="flex flex-col flex-1 min-h-0" autocomplete="off">
                             @csrf
                             <input type="hidden" name="ruangan_id" x-model="ruangan_id">
                             <input type="hidden" name="tanggal" x-model="tanggal">
                             <input type="hidden" name="jam_mulai" x-model="jam">
 
-                            <div class="space-y-4">
+                            {{-- Scrollable Body --}}
+                            <div class="space-y-4 overflow-y-auto overflow-x-hidden flex-1 bg-white whitespace-normal -mx-4 sm:-mx-6 px-4 sm:px-6 pb-2">
                                 <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Mode Tindakan</span>
@@ -1056,7 +1056,7 @@
                                         <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Target Peminjam</span>
                                     </div>
                                     <div class="space-y-1.5 relative">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama, NIM, atau Email Target <span class="text-red-500">*</span></label>
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama atau Email Target <span class="text-red-500">*</span></label>
                                         <!-- HIDDEN ACTUAL INPUT -->
                                         <input type="hidden" name="nim" x-model="nim">
                                         <!-- SEARCH INPUT -->
@@ -1099,11 +1099,23 @@
                                             placeholder="Misal: Kuliah Pengganti / Rapat Evaluasi..." required>
                                     </div>
                                 </div>
-                            </div>
-                        </form>
-                    </div>
 
-                    <div class="bg-slate-50/50 px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+                                <!-- Mobile Footer (Inside scrollable area so it doesn't follow keyboard) -->
+                                <div class="sm:hidden mt-6 pt-4 pb-2 border-t border-slate-100 flex items-center justify-end gap-3">
+                                    <button type="button" @click="show = false"
+                                    class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="submit"
+                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                    Simpan
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Desktop Sticky Footer -->
+                    <div class="hidden sm:flex mt-5 items-center justify-end gap-3 shrink-0">
                         <button type="button" @click="show = false"
                             class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
                             Batal
