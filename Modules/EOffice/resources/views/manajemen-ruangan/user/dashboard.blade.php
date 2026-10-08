@@ -8,9 +8,11 @@
 
         // Statistik
         $pendingCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'menunggu')->count();
 
         $approvedCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'disetujui')
             ->where(function ($q) use ($dateToday, $timeNow) {
                 $q->where('tanggal_pinjam', '>', $dateToday)
@@ -21,11 +23,13 @@
             })->count();
 
         $rejectedCount = \Modules\EOffice\Models\Peminjaman::where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'ditolak')->count();
 
         // Jadwal Terdekat
         $upcomingBookings = \Modules\EOffice\Models\Peminjaman::with('ruangan')
             ->where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->where('status', 'disetujui')
             ->where(function ($q) use ($dateToday, $timeNow) {
                 $q->where('tanggal_pinjam', '>', $dateToday)
@@ -42,6 +46,7 @@
         // Pengajuan Terakhir
         $recentBookings = \Modules\EOffice\Models\Peminjaman::with('ruangan')
             ->where('user_id', $user->id)
+            ->where('is_hidden_by_user', false)
             ->latest()
             ->take(5)
             ->get();
@@ -75,56 +80,50 @@
     </div>
 
     {{-- Stats Row --}}
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-5">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
         <a href="{{ route('eoffice.peminjaman.user.saya') }}"
-            class="block bg-white rounded-[16px] border border-gray-200 p-5 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer">
-            <div
-                class="w-12 h-12 flex-shrink-0 rounded-[12px] bg-amber-50 flex items-center justify-center text-amber-500 border border-amber-100">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
+           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                </div>
+                <p class="text-[13px] font-medium text-slate-500">Menunggu</p>
             </div>
-            <div>
-                <div class="text-[13px] font-semibold text-gray-500 mb-0.5 tracking-wide">Menunggu</div>
-                <div class="text-2xl font-black text-gray-900 leading-none">{{ $pendingCount }}</div>
-            </div>
+            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $pendingCount }}</p>
         </a>
 
         <a href="{{ route('eoffice.peminjaman.user.saya') }}"
-            class="block bg-white rounded-[16px] border border-gray-200 p-5 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer">
-            <div
-                class="w-12 h-12 flex-shrink-0 rounded-[12px] bg-emerald-50 flex items-center justify-center text-emerald-600 border border-emerald-100">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
+           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                </div>
+                <p class="text-[13px] font-medium text-slate-500">Jadwal Aktif</p>
             </div>
-            <div>
-                <div class="text-[13px] font-semibold text-gray-500 mb-0.5 tracking-wide">Jadwal Aktif</div>
-                <div class="text-2xl font-black text-gray-900 leading-none">{{ $approvedCount }}</div>
-            </div>
+            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $approvedCount }}</p>
         </a>
 
         <a href="{{ route('eoffice.peminjaman.user.riwayat') }}"
-            class="block bg-white rounded-[16px] border border-gray-200 p-5 flex items-center gap-4 shadow-sm hover:shadow-md hover:border-gray-300 hover:-translate-y-0.5 transition-all cursor-pointer">
-            <div
-                class="w-12 h-12 flex-shrink-0 rounded-[12px] bg-rose-50 flex items-center justify-center text-rose-600 border border-rose-100">
-                <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
+           class="block bg-white rounded-xl border border-gray-200 py-4 px-5 transition-colors hover:border-[#0B266E]">
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-100 text-[#0B266E] flex items-center justify-center flex-shrink-0">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="15" y1="9" x2="9" y2="15"></line>
+                        <line x1="9" y1="9" x2="15" y2="15"></line>
+                    </svg>
+                </div>
+                <p class="text-[13px] font-medium text-slate-500">Ditolak</p>
             </div>
-            <div>
-                <div class="text-[13px] font-semibold text-gray-500 mb-0.5 tracking-wide">Ditolak</div>
-                <div class="text-2xl font-black text-gray-900 leading-none">{{ $rejectedCount }}</div>
-            </div>
+            <p class="text-[26px] font-[800] text-gray-900 leading-none tracking-tight">{{ $rejectedCount }}</p>
         </a>
     </div>
 
