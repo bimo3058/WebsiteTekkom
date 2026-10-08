@@ -276,6 +276,18 @@ class PersetujuanController extends Controller
         ]);
 
         if ($peminjaman->user) {
+            // Hapus notifikasi lama untuk peminjaman ini agar user tidak bingung melihat 2 status ganda di lonceng
+            // Menggunakan PHP filter karena kolom 'data' di tabel notifications bertipe text (bukan jsonb) di PostgreSQL
+            $oldNotifs = $peminjaman->user->notifications()
+                ->where('type', \Modules\EOffice\Notifications\PeminjamanStatusUpdated::class)
+                ->get();
+
+            foreach ($oldNotifs as $notif) {
+                if (isset($notif->data['peminjaman_id']) && $notif->data['peminjaman_id'] == $peminjaman->id) {
+                    $notif->delete();
+                }
+            }
+
             // Check if this was a cancellation of an already approved booking
             $isCancelByAdmin = ($request->status == 'ditolak' && $originalStatus == 'disetujui');
             $peminjaman->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, $isCancelByAdmin));
@@ -447,5 +459,14 @@ class PersetujuanController extends Controller
         $peminjaman->forceDelete();
 
         return redirect()->back()->with('success', 'Data arsip peminjaman berhasil dihapus secara permanen.');
+    }
+
+    /**
+     * Get pending approval count via API (AJAX)
+     */
+    public function getPendingCount()
+    {
+        $count = Peminjaman::where('status', 'menunggu')->count();
+        return response()->json(['count' => $count]);
     }
 }

@@ -453,4 +453,36 @@ class UserPeminjamanController extends Controller
 
         return redirect()->back()->with('success', 'Semua notifikasi telah ditandai sebagai dibaca');
     }
+
+    /**
+     * Get recent notifications via API (AJAX)
+     */
+    public function getNotificationsApi()
+    {
+        $user = auth()->user();
+        if (!$user) {
+            return response()->json(['notifications' => [], 'count' => 0]);
+        }
+
+        $notifications = $user->notifications()->limit(10)->get()->map(function ($notif) {
+            $notifMessage = htmlspecialchars($notif->data['message'] ?? 'Pemberitahuan Baru');
+            $notifMessage = preg_replace('/(disetujui)/i', '<span class="font-bold text-emerald-600">$1</span>', $notifMessage);
+            $notifMessage = preg_replace('/(ditolak)/i', '<span class="font-bold text-rose-600">$1</span>', $notifMessage);
+            $notifMessage = preg_replace('/(dibatalkan(?: oleh admin)?)/i', '<span class="font-bold text-rose-600">$1</span>', $notifMessage);
+
+            return [
+                'id' => $notif->id,
+                'title' => $notif->data['title'] ?? 'Pemberitahuan Sistem',
+                'message' => $notifMessage,
+                'time' => $notif->created_at->diffForHumans(),
+                'is_read' => $notif->read_at !== null,
+                'url' => route('eoffice.peminjaman.user.notifikasi.read', $notif->id)
+            ];
+        });
+
+        return response()->json([
+            'notifications' => $notifications,
+            'count' => $user->unreadNotifications->count()
+        ]);
+    }
 }

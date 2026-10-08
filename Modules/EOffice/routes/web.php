@@ -692,6 +692,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
                 Route::post('/persetujuan/{id}/override', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateOverride'])->name('persetujuan.override');
                 Route::get('/persetujuan/api/check-collision', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'checkCollision'])->name('persetujuan.check-collision');
+                Route::get('/persetujuan/api/pending-count', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'getPendingCount'])->name('persetujuan.pending-count');
                 Route::delete('/riwayat/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'destroy'])->name('riwayat.destroy');
 
                 // Jadwal Akademik (Filter dari tabel Internal)
@@ -741,6 +742,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 // Notifikasi
                 Route::get('/notifikasi/count', [$MRUserPeminjamanController, 'getUnreadCount'])->name('notifikasi.count');
+                Route::get('/notifikasi/api', [$MRUserPeminjamanController, 'getNotificationsApi'])->name('notifikasi.api');
                 Route::post('/notifikasi/read-all', [$MRUserPeminjamanController, 'markAllNotificationsAsRead'])->name('notifikasi.read-all');
                 Route::post('/notifikasi/{id}/read', [$MRUserPeminjamanController, 'markNotificationAsRead'])->name('notifikasi.read');
             });

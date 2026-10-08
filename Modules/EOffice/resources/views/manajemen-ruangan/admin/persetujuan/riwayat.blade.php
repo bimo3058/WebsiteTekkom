@@ -8,7 +8,7 @@
 
         {{-- Quick Export Dropdown --}}
         <div class="mp-page-actions flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <div class="relative z-[60]" x-data="{ 
+            <div class="relative" :class="{'z-[60]': openExport, 'z-10': !openExport}" x-data="{ 
                 openExport: false,
                 dropdownStyles: '',
                 checkScroll() {
