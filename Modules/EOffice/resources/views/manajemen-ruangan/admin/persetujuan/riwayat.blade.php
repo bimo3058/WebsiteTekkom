@@ -110,8 +110,8 @@
                             @input="if(searchQuery.trim() === '') $el.form.submit()"
                             @scroll.window.capture="$el.blur()"
                             @touchmove.window.capture="$el.blur()"
-                            placeholder="Search"
-                            class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                            placeholder="Search..."
+                            class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400 font-medium text-slate-700">
                         
                         <!-- Clear Search (X) -->
                         <button type="button" x-show="searchQuery.length > 0" x-cloak
@@ -123,10 +123,11 @@
                         </button>
                     </div>
 
+                    {{-- Filter --}}
                     <div class="relative w-full sm:w-auto" x-data="{ open: false }">
                         <button type="button" @click="open = !open" 
                             class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-                            :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
+                            :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
@@ -241,6 +242,64 @@
                                     <button type="submit"
                                         class="px-3 py-1.5 text-[13px] font-medium text-white bg-[#0B266E] rounded-lg hover:bg-[#091F5E] transition-colors cursor-pointer">Terapkan
                                         Filter</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Sort --}}
+                    <div class="relative w-full sm:w-auto" x-data="{ 
+                        open: false,
+                        selectedSort: '{{ request('sort', 'tanggal_desc') }}',
+                        selectItem(val) {
+                            this.selectedSort = val;
+                            $refs.sortInput.value = val;
+                            $refs.sortInput.form.submit();
+                        }
+                    }">
+                        <input type="hidden" name="sort" x-ref="sortInput" :value="selectedSort">
+                        <button type="button" @click="open = !open" @click.away="open = false"
+                            class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer outline-none"
+                            :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                <line x1="4" y1="6" x2="20" y2="6"></line>
+                                <line x1="4" y1="12" x2="14" y2="12"></line>
+                                <line x1="4" y1="18" x2="8" y2="18"></line>
+                                <polyline points="14 15 17 18 20 15"></polyline>
+                                <line x1="17" y1="18" x2="17" y2="10"></line>
+                            </svg>
+                            Sort
+                        </button>
+
+                        <div x-show="open" style="display: none;"
+                            x-transition:enter="transition ease-out duration-100" 
+                            x-transition:enter-start="opacity-0 scale-95" 
+                            x-transition:enter-end="opacity-100 scale-100" 
+                            x-transition:leave="transition ease-in duration-75" 
+                            x-transition:leave-start="opacity-100 scale-100" 
+                            x-transition:leave-end="opacity-0 scale-95"
+                            class="absolute right-0 sm:left-auto top-full mt-2 origin-top-right sm:origin-top-left bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-56 overflow-hidden">
+                            <div class="p-3">
+                                <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Urutkan Berdasarkan</div>
+                                <div class="space-y-0.5">
+                                    <button type="button" @click="selectItem('updated_desc')"
+                                        class="w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-lg transition-colors"
+                                        :class="selectedSort == 'updated_desc' ? 'bg-slate-100 text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50 font-medium'">
+                                        <span>Aktivitas Terakhir</span>
+                                        <svg x-show="selectedSort == 'updated_desc'" class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                    </button>
+                                    <button type="button" @click="selectItem('tanggal_desc')"
+                                        class="w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-lg transition-colors"
+                                        :class="selectedSort == 'tanggal_desc' ? 'bg-slate-100 text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50 font-medium'">
+                                        <span>Tanggal (Terbaru)</span>
+                                        <svg x-show="selectedSort == 'tanggal_desc'" class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                    </button>
+                                    <button type="button" @click="selectItem('tanggal_asc')"
+                                        class="w-full flex items-center justify-between px-3 py-2 text-[13px] rounded-lg transition-colors"
+                                        :class="selectedSort == 'tanggal_asc' ? 'bg-slate-100 text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50 font-medium'">
+                                        <span>Tanggal (Terlama)</span>
+                                        <svg x-show="selectedSort == 'tanggal_asc'" class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                    </button>
                                 </div>
                             </div>
                         </div>

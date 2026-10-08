@@ -109,9 +109,17 @@ class PersetujuanController extends Controller
             });
         }
 
-        $peminjamans = $query->orderBy('tanggal_pinjam', 'desc')
-            ->orderBy('jam_mulai', 'desc')
-            ->paginate((int) $request->input('per_page', 10))->withQueryString();
+        $sort = $request->input('sort', 'tanggal_desc');
+        if ($sort === 'updated_desc') {
+            $query->orderBy('updated_at', 'desc');
+        } elseif ($sort === 'tanggal_asc') {
+            $query->orderBy('tanggal_pinjam', 'asc')->orderBy('jam_mulai', 'asc');
+        } else {
+            // Default: tanggal_desc
+            $query->orderBy('tanggal_pinjam', 'desc')->orderBy('jam_mulai', 'desc');
+        }
+
+        $peminjamans = $query->paginate((int) $request->input('per_page', 10))->withQueryString();
 
         $ruangans = Ruangan::orderBy('nama', 'asc')->get();
 
@@ -247,19 +255,37 @@ class PersetujuanController extends Controller
             }
         }
 
+        $originalStatus = $peminjaman->status;
+        $statusToSave = $request->status;
+        $alasanPenolakan = null;
+
+        if ($request->status == 'ditolak') {
+            if ($originalStatus == 'disetujui') {
+                $statusToSave = 'dibatalkan';
+                $alasanPenolakan = 'Dibatalkan oleh Admin: ' . $request->alasan_penolakan;
+            } else {
+                $statusToSave = 'ditolak';
+                $alasanPenolakan = $request->alasan_penolakan;
+            }
+        }
+
         $peminjaman->update([
-            'status' => $request->status,
-            'alasan_penolakan' => $request->status == 'ditolak' ? $request->alasan_penolakan : null,
+            'status' => $statusToSave,
+            'alasan_penolakan' => $alasanPenolakan,
             'waktu_approval' => now(),
         ]);
 
         if ($peminjaman->user) {
             // Check if this was a cancellation of an already approved booking
-            $isCancelByAdmin = ($request->status == 'ditolak' && $peminjaman->getOriginal('status') == 'disetujui');
+            $isCancelByAdmin = ($request->status == 'ditolak' && $originalStatus == 'disetujui');
             $peminjaman->user->notify(new \Modules\EOffice\Notifications\PeminjamanStatusUpdated($peminjaman, $isCancelByAdmin));
         }
 
-        $msg = $request->status == 'disetujui' ? 'berhasil disetujui' : 'telah ditolak';
+        if ($statusToSave == 'dibatalkan') {
+            $msg = 'berhasil dibatalkan (hak dicabut)';
+        } else {
+            $msg = $request->status == 'disetujui' ? 'berhasil disetujui' : 'telah ditolak';
+        }
         return redirect()->back()->with('success', "Pengajuan peminjaman {$msg}.");
     }
     public function updateOverride(Request $request, $id)
