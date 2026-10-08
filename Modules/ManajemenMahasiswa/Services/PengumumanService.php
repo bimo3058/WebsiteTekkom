@@ -121,6 +121,27 @@ class PengumumanService
         return Pengumuman::with(['author', 'repoMulmed'])->findOrFail($id);
     }
 
+    /**
+     * Pengumuman lain untuk bagian "Pengumuman Lainnya" di halaman detail.
+     *
+     * Aturan tampilnya sama dengan daftar publik (published + sesuai audiens),
+     * jadi pembaca tidak bisa menembus ke pengumuman yang bukan haknya lewat
+     * bagian ini. Pengumuman yang sedang dibuka dikecualikan.
+     *
+     * @return \Illuminate\Support\Collection<int, Pengumuman>
+     */
+    public function lainnya(int $kecualiId, string $audience, int $limit = 4)
+    {
+        return Pengumuman::with(['author', 'repoMulmed'])
+            ->published()
+            ->forAudience($audience)
+            ->whereKeyNot($kecualiId)
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('created_at')
+            ->limit($limit)
+            ->get();
+    }
+
     public function create(int $userId, array $data): Pengumuman
     {
         return DB::transaction(function () use ($userId, $data) {
@@ -257,7 +278,7 @@ class PengumumanService
 
         // Staff himpunan wajib verifikasi, KECUALI jika juga punya role senior
         $seniorRoles = ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen',
-                        'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+                        'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
                         'dosen', 'dosen_koordinator'];
 
         return $roles->contains('staff_himpunan')
@@ -273,7 +294,6 @@ class PengumumanService
     {
         $verifierRoleNames = [
             'ketua_himpunan',
-            'wakil_ketua_himpunan',
             'ketua_bidang',
             'ketua_unit',
             'dpm',

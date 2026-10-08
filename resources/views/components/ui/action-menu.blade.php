@@ -22,12 +22,12 @@
     };
 @endphp
 
-<div class="inline-block relative" x-data="{ open: false }" @click.outside="open = false" @close.stop="open = false">
+<div class="inline-block relative" x-data="{ open: false }" x-init="window.addEventListener('scroll', () => { if(open) open = false; }, true)" @click.outside="open = false" @close.stop="open = false" @resize.window="open = false">
     {{-- Three-dots trigger button --}}
     <button
-        @click="open = !open"
+        @click="open = !open; if(open) { const rect = $event.currentTarget.getBoundingClientRect(); $refs.dropdown.style.top = (rect.bottom + 4) + 'px'; $refs.dropdown.style.right = (window.innerWidth - rect.right) + 'px'; }"
         type="button"
-        class="inline-flex items-center justify-center p-2 text-gray-500 rounded-md hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        class="inline-flex items-center justify-center w-8 h-8 text-slate-500 bg-white border border-slate-200 rounded-lg hover:text-primary hover:bg-slate-50 hover:border-primary transition-colors focus:outline-none focus:ring-2 focus:ring-primary/20"
         title="More options"
     >
         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -36,17 +36,20 @@
     </button>
 
     {{-- Dropdown menu --}}
-    <div x-show="open"
-         x-transition:enter="transition ease-out duration-150"
-         x-transition:enter-start="opacity-0 scale-95"
-         x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-100"
-         x-transition:leave-start="opacity-100 scale-100"
-         x-transition:leave-end="opacity-0 scale-95"
-         class="absolute z-50 mt-1 w-48 {{ $alignClasses }} rounded-lg border border-border bg-popover shadow-lg"
-         style="display: none;">
-        <div class="py-1">
-            {{ $slot }}
+    <template x-teleport="body">
+        <div x-show="open"
+             x-ref="dropdown"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="fixed z-[9999] w-48 rounded-lg border border-slate-200 bg-white shadow-lg overflow-hidden"
+             style="display: none;">
+            <div class="py-1">
+                {{ $slot }}
+            </div>
         </div>
-    </div>
+    </template>
 </div>

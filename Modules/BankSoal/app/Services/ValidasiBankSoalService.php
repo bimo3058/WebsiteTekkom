@@ -52,7 +52,7 @@ class ValidasiBankSoalService
                 'bs_mata_kuliah.nama as mk_nama',
                 // STRING_AGG adalah fitur PostgreSQL — digunakan secara sadar (by design).
                 // Jika migrasi ke MySQL diperlukan, ganti dengan GROUP_CONCAT.
-                DB::raw("STRING_AGG(DISTINCT users.name, ', ') as dosen_pengampu"),
+                DB::raw("STRING_AGG(DISTINCT users.name, '|||') as dosen_pengampu"),
                 DB::raw('COUNT(DISTINCT bs_pertanyaan.id) as jumlah_soal')
             )
             ->groupBy('bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama')

@@ -48,6 +48,13 @@
 
     {{-- Footer --}}
     <div class="sb-footer">
+        <a href="{{ route('dashboard') }}" class="flex items-center gap-[10px] p-[8px_10px] rounded-lg text-[13px] font-medium text-[#353849] hover:bg-[#F6F8FA] transition-colors" :class="!sidebarOpen ? 'justify-center p-[8px_0]' : ''">
+            <svg class="w-4 h-4 flex-shrink-0 text-[#666D80]" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M9 15L3 9l6-6" />
+                <path d="M3 9h12.5a5.5 5.5 0 0 1 0 11H5" />
+            </svg>
+            <span x-show="sidebarOpen" class="whitespace-nowrap overflow-hidden text-ellipsis">Global Dashboard</span>
+        </a>
         <x-sidebar-link :href="route('profile.edit')" :icon="$iconGear" label="Settings"
             :active="request()->routeIs('profile.edit')" />
         <a class="sb-link" href="#">
@@ -193,6 +200,13 @@
         margin-left: 0;
     }
 
+    /* Saat collapse, ikon item footer Help & Logout ikut ter-center */
+    .sitkom-sidebar.is-collapsed .sb-link {
+        justify-content: center;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
     /* Nav */
     .sb-nav {
         flex: 1;
@@ -235,6 +249,12 @@
         flex-direction: column;
         gap: 1px;
         flex-shrink: 0;
+    }
+
+    /* Samakan metrik item footer (Settings) dengan .sb-link & tombol Global Dashboard */
+    .sb-footer .sb-item:not(.is-collapsed) {
+        padding: 8px 10px;
+        gap: 10px;
     }
 
     .sb-link {

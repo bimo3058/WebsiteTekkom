@@ -37,12 +37,12 @@ export function useBids() {
     });
 
     const recommendMutation = useMutation({
-        mutationFn: async ({ bidId, recommendation }: { bidId: number; recommendation: 'ACCEPT' | 'REJECT' }) => {
+        mutationFn: async ({ bidId, recommendation }: { bidId: number; recommendation: 'ACCEPT' | 'REJECT' | 'CANCEL' }) => {
             await api.put(`/dosen/bids/${bidId}/recommend`, { recommendation });
         },
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: BIDS_QUERY_KEY });
-            toast.success(`Recommendation: ${variables.recommendation}`);
+            toast.success(variables.recommendation === 'CANCEL' ? 'Recommendation cancelled' : `Recommendation: ${variables.recommendation}`);
         },
         onError: (error) => {
             toast.error(api.getApiErrorMessage(error, 'Failed to submit recommendation'));
@@ -53,7 +53,7 @@ export function useBids() {
         setSelectedPeriod(val);
     }, []);
 
-    const handleRecommend = useCallback((bidId: number, recommendation: 'ACCEPT' | 'REJECT') => {
+    const handleRecommend = useCallback((bidId: number, recommendation: 'ACCEPT' | 'REJECT' | 'CANCEL') => {
         recommendMutation.mutate({ bidId, recommendation });
     }, [recommendMutation]);
 

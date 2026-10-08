@@ -1,9 +1,11 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
         <span class="mx-2 text-slate-300">/</span>
         <span class="text-slate-800 font-semibold">Detail Soal</span>
     @endsection
+    <x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
     <x-banksoal::ui.page-header title="Detail Soal" subtitle="Informasi detail pertanyaan dan opsi jawaban.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
@@ -11,6 +13,7 @@
             </a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
+    </x-slot:header>
 
     <x-banksoal::ui.panel :title="'Detail Soal (' . ('Q-' . str_pad($soal->id, 3, '0', STR_PAD_LEFT)) . ')'" subtitle="Status dan metadata soal" padding="p-6">
         <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
@@ -109,4 +112,6 @@
             </div>
         @endcan
     </x-banksoal::ui.panel>
+    </x-banksoal::ui.bank-soal-page>
+
 </x-banksoal::layouts.dosen-admin>

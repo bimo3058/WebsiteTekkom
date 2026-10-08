@@ -2,7 +2,7 @@
 
 namespace Modules\Capstone\Services;
 
-use Modules\Capstone\Models\{Document, Group, GroupMember, PeerReview, PeerReviewIndicator, PeriodAssessmentComponent, PeriodPeerReviewIndicator, PhaseDocumentRequirement, StudentPeerReviewStatus, TaDefenseSchedule, TaSubmission};
+use Modules\Capstone\Models\{Document, Group, GroupMember, PeerReview, PeerReviewIndicator, PeriodAssessmentComponent, PeriodPeerReviewIndicator, PhaseDocumentRequirement, StudentPeerReviewStatus, TaDefenseSchedule, TaRegistration, TaSubmission};
 use Modules\Capstone\Repositories\AssessmentScoreRepository;
 
 class IndividualTaWorkflow
@@ -69,10 +69,17 @@ class IndividualTaWorkflow
         if ($submission && in_array($submission->status, ['TA_READY_FOR_SIDANG','TA_REGISTERED','TA_SCHEDULED','TA_DEFENDED','TA_REVISED'], true)) $status = $submission->status;
         $schedule = TaDefenseSchedule::where('group_id', $group->id)->whereIn('status', ['SCHEDULED','DONE'])->where(fn ($q) => $q->where('student_id', $studentId)->orWhereHas('students', fn ($q) => $q->where('students.id', $studentId)))->latest('date')->first();
         if ($schedule) $status = $schedule->status === 'DONE' ? 'TA_DEFENDED' : 'TA_READY_FOR_SIDANG';
-        if (! $canAccess) $status = 'TA_LOCKED';
-        $editable = $canAccess && in_array($status, ['TA_DOCUMENTS_REQUIRED','TA_DOCUMENTS_UNDER_REVIEW'], true);
+        $registration = TaRegistration::where('student_id', $studentId)->where('group_id', $group->id)->latest('id')->first();
+        $sidangApproved = $registration && $registration->isApproved();
+        if (! $canAccess) {
+            $status = 'TA_LOCKED';
+        } elseif (! $sidangApproved && ! in_array($status, ['TA_READY_FOR_SIDANG','TA_REGISTERED','TA_SCHEDULED','TA_DEFENDED','TA_REVISED'], true)) {
+            $status = 'TA_AWAITING_APPROVAL';
+        }
+        $editable = $canAccess && $sidangApproved && in_array($status, ['TA_DOCUMENTS_REQUIRED','TA_DOCUMENTS_UNDER_REVIEW'], true);
         return ['can_access'=>$canAccess, 'status'=>$status, 'submission'=>$submission, 'group'=>$group, 'documents'=>$taDocuments,
-            'document_requirements'=>$taRequirements, 'readiness'=>$readiness, 'can_upload'=>$editable];
+            'document_requirements'=>$taRequirements, 'readiness'=>$readiness, 'can_upload'=>$editable,
+            'registration'=>$registration, 'sidang_approved'=>$sidangApproved];
     }
 
     public function syncSubmission(int $studentId): void

@@ -3,7 +3,7 @@
 
     <div class="p-4 mb-6 rounded-xl border" style="background: var(--c-primary-subtle); border-color: rgba(11,38,110,0.12);">
         <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-[20px] mt-0.5 flex-shrink-0" style="color: var(--c-primary);">info</span>
+            <span class="mt-0.5 flex-shrink-0" style="color: var(--c-primary);"><x-icon name="information-circle" size="20" /></span>
             <p class="text-sm" style="color: var(--c-fg-sec);">
                 Tambahkan keahlian teknis (hard skills) dan non-teknis (soft skills) yang relevan. Keahlian ini sangat penting untuk membantu sistem <strong style="color: var(--c-primary);">Applicant Tracking System (ATS)</strong> memfilter profil Anda.
             </p>
@@ -22,7 +22,7 @@
                         <span class="text-[10px] text-slate-500 font-medium ml-2 px-2 py-0.5 bg-slate-100 rounded-full" x-text="skill.level"></span>
                     </div>
                     <button @click="removeSkill(index)" class="text-red-400 hover:text-red-600 transition-colors p-1 bg-red-50 rounded-lg">
-                        <span class="material-symbols-outlined text-[14px]">close</span>
+                        <x-icon name="close" size="14" />
                     </button>
                 </div>
             </template>
@@ -37,12 +37,10 @@
                 </div>
                 <div class="w-full md:w-40">
                     <label class="form-label" style="font-size:11px">Level</label>
-                    <select x-model="newSkill.level" class="form-control">
-                        <option>Beginner</option>
-                        <option>Intermediate</option>
-                        <option>Advanced</option>
-                        <option>Expert</option>
-                    </select>
+                    @include('profile.cv.partials._pilihan', [
+                        'model' => 'newSkill.level',
+                        'options' => ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
+                    ])
                 </div>
                 <button @click="addSkill()" class="btn-primary text-xs w-full md:w-auto" style="height: 38px;">
                     Tambah

@@ -3,12 +3,13 @@
     'formId' => 'filterForm',
     'applyLabel' => 'Terapkan',
     'resetRoute' => null,
+    'buttonRadius' => 'rounded-full',
 ])
 
 <div class="relative" x-data="{ filterOpen: false }" @click.away="filterOpen = false">
     {{-- Tombol Filter --}}
     <button @click="filterOpen = !filterOpen" type="button"
-        class="flex items-center gap-2 px-5 py-2.5 bg-white border rounded-full text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm
+        class="flex items-center gap-2 px-5 py-2.5 bg-white border {{ $buttonRadius }} text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm
                {{ $hasActiveFilter ? 'border-primary text-primary bg-primary/5' : 'border-slate-200' }}">
         <svg class="w-4 h-4 {{ $hasActiveFilter ? 'text-primary' : 'text-slate-400' }}" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 17v-6.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />

@@ -1,0 +1,15 @@
+import {basePage,mergePage,api,rows,unwrap,query,dialog} from './shared.js';
+export function periodRegistrationsAdmin(){return mergePage(basePage(),{status:'PENDING',decision:'approve',reason:'',pagination:{current_page:1,last_page:1,total:0},
+    async init(){try{await this.periodsLoad(false);await this.load();}catch(e){this.error=e.message;this.loading=false;}},
+    async load(){this.loading=true;this.error='';try{const list=await api('/admin/period-registrations'+query({period_id:this.periodId,status:this.status,search:this.search,page:this.page,per_page:this.pageSize}));this.items=rows(list);this.pagination=unwrap(list).pagination||{current_page:1,last_page:1,total:0};this.page=this.pagination.current_page||1;}catch(e){this.error=e.message;}finally{this.loading=false;}},
+    filter(){this.page=1;this.load();},
+    reset(){this.status='PENDING';this.search='';this.periodId='';this.page=1;this.load();},
+    studentName(item){return item.user?.name||item.user?.user?.name||('Student #'+(item.user_id??'—'));},
+    studentNim(item){return item.user?.nim||item.user?.student_number||'—';},
+    statusClass(status){return status==='APPROVED'?'bg-green-50 text-green-700 border border-green-200':status==='REJECTED'?'bg-red-50 text-red-600 border border-red-200':'bg-amber-50 text-amber-700 border border-amber-200';},
+    canReview(item){return item.status==='PENDING';},
+    review(item,decision){this.selected=item;this.decision=decision;this.reason='';this.errors={};dialog('join-review').showModal();},
+    async submit(){if(!this.selected||this.saving||(this.decision==='reject'&&!this.reason.trim()))return;const ok=await this.run(()=>api('/admin/period-registrations/'+this.selected.id+'/'+this.decision,{method:'PUT',body:this.decision==='reject'?{rejection_reason:this.reason.trim()}:{}}),this.decision==='approve'?'Join request approved':'Join request rejected');if(ok)dialog('join-review').close();},
+    gotoPage(p){p=Math.min(Math.max(1,p),this.pagination.last_page||1);if(p!==this.page){this.page=p;this.load();}},
+    shortDate(value){return value?new Date(value).toLocaleString('id-ID',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'—';},
+});}

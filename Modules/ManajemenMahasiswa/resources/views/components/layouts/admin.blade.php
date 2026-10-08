@@ -17,12 +17,37 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <style>
+        /* Palette SIMENMA admin diselaraskan dengan shell global SITKOM. */
+        :root {
+            --c-primary: #0B266E;
+            --c-primary-hover: #091958;
+            --c-primary-subtle: rgba(11, 38, 110, 0.08);
+            --c-primary-border: #5C78B8;
+            --c-bg: #F6F8FA;
+            --c-card: #FFFFFF;
+            --c-fg: #0D0D12;
+            --c-fg-sec: #353849;
+            --c-fg-muted: #666D80;
+            --c-fg-placeholder: #808897;
+            --c-border: #DFE1E7;
+            --c-border-strong: #C1C7CF;
+            --c-success: #287F6E;
+            --c-success-subtle: #DDF2EE;
+            --c-warning: #956321;
+            --c-warning-subtle: #F9ECCB;
+            --c-error: #DF1C41;
+            --c-error-subtle: #FADAE1;
+            --c-sky: #0C4D6E;
+            --c-sky-subtle: #D1F0F9;
+        }
+
         body {
             margin: 0;
-            background-color: #f5f6fa;
+            background-color: var(--c-bg);
             font-family: 'Inter Tight', sans-serif;
             display: flex;
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden;
         }
 
         .simenma-main {
@@ -30,6 +55,7 @@
             display: flex;
             flex-direction: column;
             min-width: 0;
+            min-height: 0;
             overflow: hidden;
         }
 
@@ -38,8 +64,8 @@
             height: 100vh;
             position: sticky;
             top: 0;
-            background: #ffffff;
-            border-right: 1px solid #DFE1E7;
+            background: var(--c-card);
+            border-right: 1px solid var(--c-border);
             padding: 0;
             transition: width 0.25s ease;
             z-index: 1000;
@@ -59,7 +85,7 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.2em;
-            color: #94a3b8;
+            color: var(--c-fg-placeholder);
             margin-top: 24px;
             margin-bottom: 12px;
             padding-left: 12px;
@@ -76,7 +102,7 @@
             padding: 7px 10px 7px 14px;
             border-radius: 8px;
             text-decoration: none;
-            color: #353849;
+            color: var(--c-fg-sec);
             font-weight: 500;
             font-size: 13px;
             margin-bottom: 1px;
@@ -91,13 +117,13 @@
         }
 
         .sidebar a:hover {
-            background: #F6F8FA;
-            color: #1A1C1E;
+            background: var(--c-bg);
+            color: var(--c-fg);
         }
 
         .sidebar a.active {
-            background: rgba(11, 38, 110, 0.08);
-            color: #0B266E;
+            background: var(--c-primary-subtle);
+            color: var(--c-primary);
             font-weight: 600;
             box-shadow: none;
         }
@@ -110,7 +136,7 @@
             transform: translateY(-50%);
             width: 3px;
             height: 20px;
-            background: #0B266E;
+            background: var(--c-primary);
             border-radius: 0 3px 3px 0;
         }
         .sidebar-collapsed .sidebar a.active::before {
@@ -118,7 +144,7 @@
         }
         
         .sidebar a svg {
-            color: #666D80;
+            color: var(--c-fg-muted);
             width: 16px;
             height: 16px;
             transition: color 0.12s;
@@ -126,11 +152,11 @@
         }
         
         .sidebar a.active svg {
-            color: #0B266E;
+            color: var(--c-primary);
         }
         
         .sidebar a:hover svg {
-            color: #1A1C1E;
+            color: var(--c-fg);
         }
 
         .btn-logout {
@@ -141,7 +167,7 @@
             padding: 7px 10px 7px 14px;
             border-radius: 8px;
             text-decoration: none;
-            color: #353849;
+            color: var(--c-fg-sec);
             font-weight: 500;
             font-size: 13px;
             margin-bottom: 1px;
@@ -160,18 +186,18 @@
         }
 
         .btn-logout:hover {
-            background: #FEF1F4;
-            color: #DF1C41;
+            background: var(--c-error-subtle);
+            color: var(--c-error);
         }
         .btn-logout svg {
-            color: #666D80;
+            color: var(--c-fg-muted);
             width: 16px;
             height: 16px;
             transition: color 0.12s;
             flex-shrink: 0;
         }
         .btn-logout:hover svg {
-            color: #DF1C41;
+            color: var(--c-error);
         }
 
         .bottom-menu {
@@ -185,17 +211,62 @@
             width: 100%;
         }
 
+        /* Area konten — setara .sitkom-content pada shell global SITKOM
+           (resources/views/components/sidebar.blade.php). Padding 0 supaya
+           halaman bisa menggambar kotak setinggi viewport sendiri, persis
+           pola .*-wrap/.*-box di halaman Super Admin. */
         .content {
-            padding: 24px 28px 48px;
+            display: flex;
+            flex-direction: column;
             flex: 1;
+            min-height: 0;
+            padding: 0;
+            overflow: hidden;
         }
 
+        /* Kotak konten bawaan — setara .*-box pada shell global SITKOM
+           (lihat resources/views/superadmin/users/index.blade.php).
+           Halaman yang sudah menggambar kotaknya sendiri mematikan blok ini. */
         .main-wrapper {
-            background: #fff;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+            box-sizing: border-box;
+            margin: 10px;
+            background: var(--c-card);
+            border: 1px solid var(--c-border);
             border-radius: 12px;
-            padding: 25px;
-            min-height: calc(100vh - 50px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+            padding: 20px 24px;
+            overflow-y: auto;
+        }
+
+        /* ── Mobile: kembalikan scroll natif halaman ── */
+        @media (max-width: 767px) {
+            body {
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+            }
+            .simenma-main {
+                overflow: visible;
+            }
+            .content {
+                display: block;
+                flex: none;
+                overflow: visible;
+                padding: 8px 8px 80px;
+            }
+            .main-wrapper {
+                display: block;
+                flex: none;
+                min-height: 0;
+                margin: 0;
+                overflow: visible;
+                border-radius: 10px;
+                padding: 12px 14px;
+            }
         }
 
         /* Sidebar Dropdown */
@@ -217,9 +288,10 @@
         .sidebar-dropdown.open .dropdown-arrow {
             transform: rotate(180deg);
         }
+        /* Ukuran huruf sengaja tidak ditimpa: sub-item ikut `.sidebar a` (13px)
+           supaya sama dengan menu induk. */
         .sidebar-dropdown .sub-item {
-            font-size: 14px !important;
-            padding: 9px 16px !important;
+            padding: 7px 10px 7px 38px !important;
         }
 
         /* Utils */
@@ -243,8 +315,8 @@
             top: 32px;
             width: 24px;
             height: 24px;
-            background: #fff;
-            border: 1px solid #e5e7eb;
+            background: var(--c-card);
+            border: 1px solid var(--c-border);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -252,12 +324,12 @@
             cursor: pointer;
             z-index: 1001;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            color: #6b7280;
+            color: var(--c-fg-muted);
             transition: all 0.2s;
         }
         .sidebar-toggle:hover {
-            background: #f8fafc;
-            color: #4f46e5;
+            background: var(--c-bg);
+            color: var(--c-primary);
         }
 
         /* Global Scrollbar Customization */
@@ -267,17 +339,17 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: #f1f5f9;
+            background: var(--c-bg);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
+            background: var(--c-border-strong);
             border-radius: 10px;
-            border: 2px solid #f1f5f9;
+            border: 2px solid var(--c-bg);
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
+            background: var(--c-fg-placeholder);
         }
         /*
         Button pattern untuk modul ini:
@@ -287,6 +359,10 @@
     </style>
 
     @stack('styles')
+
+    {{-- Sistem tombol modul; sengaja SETELAH @stack('styles') supaya menang atas
+         sisa gaya tombol lama yang masih menempel di masing-masing halaman. --}}
+    @include('manajemenmahasiswa::partials.button-theme')
     <x-mobile-navigation-assets />
 </head>
 
@@ -311,6 +387,12 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    {{-- Dialog konfirmasi/pemberitahuan global; pengganti confirm() & alert() bawaan browser.
+         Dipasang sebelum @stack('scripts') supaya mkConfirm/mkNotify sudah ada saat skrip
+         halaman dijalankan. --}}
+    <x-manajemenmahasiswa::ui.dialog />
+
     @stack('scripts')
     <x-mobile-navigation />
 </body>

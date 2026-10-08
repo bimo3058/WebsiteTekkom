@@ -1,0 +1,265 @@
+/* Bank Soal Dosen: the same visual tokens and page structure as Superadmin. */
+.banksoal-management {
+    --c-primary: #0B266E;
+    --c-primary-hover: #091958;
+    --c-primary-subtle: rgba(11, 38, 110, .08);
+    --c-primary-border: #5C78B8;
+    --c-bg: #F6F8FA;
+    --c-fg: #0D0D12;
+    --c-fg-sec: #353849;
+    --c-fg-muted: #666D80;
+    --c-fg-placeholder: #808897;
+    --c-border: #DFE1E7;
+    --c-border-strong: #C1C7CF;
+    --font-sans: 'Inter Tight', system-ui, sans-serif;
+    font-family: var(--font-sans);
+    color: var(--c-fg);
+    background: var(--c-bg);
+}
+
+.banksoal-management .bs-workspace { min-width: 0; }
+.banksoal-management .bs-topbar { height: 60px; border-color: var(--c-border); }
+.banksoal-management .bs-topbar > div:first-child { font-size: 12px; }
+.banksoal-management .bs-main { min-height: 0; overflow: hidden; background: var(--c-bg); }
+.banksoal-management .bs-content { height: 100%; max-width: none; padding: 0; }
+.banksoal-management [x-cloak] { display: none !important; }
+.banksoal-management #resetPackageFilter[hidden] { display: none; }
+
+.banksoal-management .dosen-page-wrap { display: flex; height: 100%; padding: 10px; }
+.banksoal-management .dosen-page-box {
+    display: flex; flex-direction: column; flex: 1; min-width: 0; min-height: 0;
+    background: #fff; border: 1px solid var(--c-border); border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06); overflow: hidden;
+}
+.banksoal-management .dosen-page-header {
+    position: relative; z-index: 20; flex-shrink: 0; padding: 16px 24px;
+    background: #fff; border-bottom: 1px solid var(--c-border);
+}
+.banksoal-management .dosen-page-header > .mb-8 { margin-bottom: 0; }
+.banksoal-management .dosen-page-header h1 {
+    margin: 0; font-size: 22px; font-weight: 700; line-height: 1.2;
+    letter-spacing: -.02em; color: var(--c-fg);
+}
+.banksoal-management .dosen-page-header p { margin: 4px 0 0; font-size: 12px; color: var(--c-fg-muted); }
+.banksoal-management .bs-heading-row,
+.banksoal-management .bs-heading-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.banksoal-management .bs-heading-row { justify-content: space-between; gap: 16px; }
+.banksoal-management .bs-heading-label { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.banksoal-management .bs-role-badge {
+    padding: 2px 8px; border: 1px solid var(--c-border); border-radius: 999px;
+    font-size: 10px; font-weight: 600; color: var(--c-primary); background: var(--c-primary-subtle);
+}
+.banksoal-management .dosen-page-body {
+    flex: 1; min-height: 0; padding: 20px 24px; overflow-y: auto;
+    display: flex; flex-direction: column; gap: 16px; scrollbar-gutter: stable;
+}
+.banksoal-management .dosen-page-body > * { flex-shrink: 0; min-width: 0; }
+.banksoal-management .dosen-page-body > :is(.mb-6, .mb-8) { margin-bottom: 0; }
+.banksoal-management .bs-section,
+.banksoal-management .dosen-page-body > .bg-white {
+    border: 1px solid var(--c-border); border-radius: 12px;
+    background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+}
+.banksoal-management .bs-section-heading,
+.banksoal-management .dosen-page-body > .bg-white > .border-b {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    padding: 14px 16px; background: #fff; border-bottom: 1px solid var(--c-border);
+    border-radius: 12px 12px 0 0;
+}
+.banksoal-management .bs-section-heading h2,
+.banksoal-management .dosen-page-body > .bg-white > .border-b h2 { font-size: 14px; font-weight: 700; color: var(--c-fg); }
+.banksoal-management .bs-section-heading p { margin-top: 3px; font-size: 12px; color: var(--c-fg-muted); }
+
+.banksoal-management .dosen-management-btn,
+.banksoal-management .dosen-page-header a.inline-flex {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 34px; padding: 8px 14px; border: 1px solid var(--c-border); border-radius: 8px;
+    background: #fff; color: var(--c-fg-sec); font-size: 12px; font-weight: 600;
+    line-height: 1.4; text-decoration: none; white-space: nowrap; cursor: pointer;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .04); transition: background .15s, border-color .15s;
+}
+.banksoal-management .dosen-management-btn:hover,
+.banksoal-management .dosen-page-header a.inline-flex:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+.banksoal-management .dosen-management-btn-primary,
+.banksoal-management .dosen-management-btn-success { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+.banksoal-management .dosen-management-btn-primary:hover,
+.banksoal-management .dosen-management-btn-success:hover { background: var(--c-primary-hover); border-color: var(--c-primary-hover); }
+.banksoal-management :is(button, a, input, select, textarea):focus-visible { outline: 2px solid var(--c-primary-border); outline-offset: 3px; }
+.banksoal-management .bs-toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--c-border); }
+.banksoal-management .bs-search { flex: 1 1 220px; min-width: 0; }
+.banksoal-management .bs-toolbar input[type="text"] { height: 36px; font-size: 12px; border-color: var(--c-border); border-radius: 8px; }
+.banksoal-management .bs-table { width: 100%; min-width: 720px; text-align: left; border-collapse: collapse; font-size: 12px; }
+.banksoal-management .bs-table thead { background: var(--c-bg); }
+.banksoal-management .bs-table th {
+    padding: 11px 16px; border-bottom: 1px solid var(--c-border); color: var(--c-fg-muted);
+    font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap;
+}
+.banksoal-management .bs-table td { padding: 14px 16px; vertical-align: middle; }
+.banksoal-management .bs-table tbody tr:hover { background: #F8F9FB; }
+.banksoal-management .bs-table .no-results-message td { padding: 48px 16px; }
+.banksoal-management .bs-pagination {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    padding: 12px 16px; border-top: 1px solid var(--c-border); border-radius: 0 0 12px 12px; background: #fff;
+}
+.banksoal-management .bs-pagination > span { font-size: 11px; color: var(--c-fg-muted); }
+.banksoal-management .pagination-list { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.banksoal-management .pagination-btn,
+.banksoal-management .pagination-ellipsis {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 30px; height: 30px; padding: 0 8px;
+    border: 1px solid var(--c-border); background: #fff; color: var(--c-fg-sec); border-radius: 7px;
+    font-size: 11px; font-weight: 600; text-decoration: none;
+}
+.banksoal-management .pagination-ellipsis { border-color: transparent; color: var(--c-fg-muted); }
+.banksoal-management .pagination-btn:hover { border-color: var(--c-primary); color: var(--c-primary); }
+.banksoal-management .pagination-btn.active { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+.banksoal-management #formSoal :is(label, input, select, button) { font-size: 12px; }
+.banksoal-management #formSoal > .grid { gap: 20px; }
+.banksoal-management #formSoal :is(input:not([type="radio"]):not([type="checkbox"]), select) { border-radius: 8px; }
+.banksoal-management #formSoal > .border-t:last-child { flex-wrap: wrap; gap: 12px; }
+.banksoal-management #formSoal > .border-t:last-child > div { flex-wrap: wrap; }
+.banksoal-management :is(#tarikSoalModalContent, #importModalContent, #ajukanModalContent > form, #reviewSoalModalContent, #lihatSoalModalContent) { border-radius: 12px; }
+.banksoal-management .fixed h3 { font-size: 16px; }
+@keyframes bs-modal-popup { from { opacity: 0; transform: scale(.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.banksoal-management .animate-popup { animation: bs-modal-popup .3s cubic-bezier(.16, 1, .3, 1) forwards; }
+
+/* Compact dropdowns, matching Superadmin User Management. */
+.banksoal-management .bs-dropdown-trigger,
+.banksoal-management .bs-status-filter > .relative > button {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 34px; padding: 0 14px; border: 1px solid var(--c-border); border-radius: 8px;
+    background: #fff; color: var(--c-fg-sec); font: 600 12.5px/1.4 var(--font-sans);
+    white-space: nowrap; cursor: pointer; box-shadow: none;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.banksoal-management .bs-dropdown-trigger:hover,
+.banksoal-management .bs-status-filter > .relative > button:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+.banksoal-management .bs-dropdown-trigger.is-open,
+.banksoal-management .bs-status-filter > .relative > button:focus,
+.banksoal-management #uploadDropdownContainer:has(.opacity-100) > button { color: var(--c-primary); border-color: var(--c-primary); }
+.banksoal-management .bs-dropdown-trigger > svg { flex-shrink: 0; width: 14px; height: 14px; }
+.banksoal-management .bs-dropdown-select { width: 100%; height: auto; min-height: 36px; padding: 8px 12px; justify-content: space-between; text-align: left; white-space: normal; }
+.banksoal-management .bs-dropdown-menu,
+.banksoal-management .bs-status-filter [x-show="filterOpen"] {
+    top: calc(100% + 6px); min-width: 200px; margin-top: 0; padding: 8px;
+    background: #fff; border: 1px solid var(--c-border); border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .1); color: var(--c-fg-sec);
+}
+.banksoal-management .bs-upload-menu { width: 220px; }
+.banksoal-management .bs-dropdown-options { min-width: 0; }
+.banksoal-management .bs-dropdown-label,
+.banksoal-management .bs-status-filter label.block {
+    margin: 0 0 5px 6px; font-size: 9px; line-height: 1.5; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em; color: var(--c-fg-placeholder);
+}
+.banksoal-management .bs-dropdown-item,
+.banksoal-management .bs-status-filter label:has(input[type="radio"]) {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+    padding: 7px 10px; border: 0; border-radius: 7px; background: transparent;
+    color: var(--c-fg-sec); font: 500 12px/1.4 var(--font-sans); text-align: left;
+    text-decoration: none; cursor: pointer; transition: background .12s;
+}
+.banksoal-management .bs-dropdown-item:hover,
+.banksoal-management .bs-status-filter label:has(input[type="radio"]):hover { background: var(--c-bg); }
+.banksoal-management .bs-dropdown-item.is-selected,
+.banksoal-management .bs-status-filter label:has(input:checked) { background: rgba(11, 38, 110, .06); color: var(--c-primary); font-weight: 700; }
+.banksoal-management .bs-dropdown-item > i { flex-shrink: 0; font-size: 11px; }
+.banksoal-management .bs-upload-menu .bs-dropdown-item { justify-content: flex-start; }
+.banksoal-management .bs-upload-menu .bs-dropdown-item > i { margin-right: 0; width: 14px; color: var(--c-fg-muted); }
+.banksoal-management .bs-dropdown-divider { height: 1px; margin: 7px 0; background: var(--c-border); }
+.banksoal-management .bs-status-filter [x-show="filterOpen"] { width: 200px; }
+.banksoal-management .bs-status-filter .space-y-2 > * { margin: 0; }
+.banksoal-management .bs-status-filter label:has(input[type="radio"]) { justify-content: flex-start; }
+.banksoal-management .bs-status-filter label:has(input[type="radio"]) span { font: inherit; color: inherit; }
+.banksoal-management .bs-status-filter input[type="radio"] { width: 12px; height: 12px; color: var(--c-primary); }
+.banksoal-management .bs-status-filter [x-show="filterOpen"] > .border-t { margin-top: 8px; padding-top: 8px; border-color: var(--c-border); }
+.banksoal-management .bs-status-filter .border-t :is(a, button) { padding: 6px 10px; font-size: 11px; font-weight: 600; box-shadow: none; border-radius: 7px; }
+
+/* Existing row-action components keep their handlers and permission gates. */
+.banksoal-management .bs-table td > .inline-block.relative > button {
+    width: 28px; height: 28px; padding: 0; border: 1px solid var(--c-border); border-radius: 6px;
+    background: #fff; color: var(--c-fg-muted);
+}
+.banksoal-management .bs-table td > .inline-block.relative > button:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+.banksoal-management .bs-table td > .inline-block.relative > button svg { width: 13px; height: 13px; }
+.banksoal-management .bs-table td > .inline-block.relative > [x-show] {
+    top: calc(100% + 5px); margin-top: 0; min-width: 160px; width: 180px;
+    border: 1px solid var(--c-border); border-radius: 10px; background: #fff;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .1);
+}
+.banksoal-management .bs-table td > .inline-block.relative > [x-show] > div { padding: 5px; }
+.banksoal-management .bs-table td > .inline-block.relative [x-show] :is(a, button) { gap: 8px; padding: 7px 10px; border-radius: 6px; font-size: 11px; font-weight: 500; }
+.banksoal-management .bs-table td > .inline-block.relative [x-show] :is(a, button):hover { background: var(--c-bg); }
+.banksoal-management .bs-table td > .inline-block.relative [x-show] i { width: 13px; font-size: 12px; }
+
+/* Match the existing form selects without changing Tom Select initialization. */
+.banksoal-management .bs-content select:not(.tomselected),
+.banksoal-management .ts-control { min-height: 34px; border-color: var(--c-border); border-radius: 8px; font-family: var(--font-sans); font-size: 12.5px; box-shadow: none; }
+.banksoal-management .ts-wrapper.focus .ts-control,
+.banksoal-management .ts-wrapper.dropdown-active .ts-control { border-color: var(--c-primary); box-shadow: 0 0 0 3px var(--c-primary-subtle); }
+.banksoal-management .ts-dropdown { margin-top: 6px; padding: 6px; background: #fff; border-color: var(--c-border); border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, .1); }
+.banksoal-management .ts-dropdown .option { gap: 8px; padding: 7px 10px; border-radius: 7px; font-size: 12px; font-weight: 500; color: var(--c-fg-sec); }
+.banksoal-management .ts-dropdown .option:hover,
+.banksoal-management .ts-dropdown .option.active { background: var(--c-bg); }
+.banksoal-management .ts-dropdown .option.selected { background: rgba(11, 38, 110, .06); color: var(--c-primary); font-weight: 700; }
+.banksoal-management .ts-dropdown.multi .option::before { width: 13px; height: 13px; margin-right: 0; }
+.banksoal-management .ts-dropdown.multi .option.selected::before { background-color: var(--c-primary); border-color: var(--c-primary); }
+.banksoal-management .ts-control > .item { background-color: var(--c-primary-subtle) !important; border-color: var(--c-border) !important; color: var(--c-primary) !important; font-size: 11px !important; }
+.banksoal-management .ts-control > .item .remove { color: var(--c-fg-muted) !important; }
+
+.banksoal-management .bs-question-form-panel { overflow: visible; }
+.banksoal-management .bs-alpine-select { position: relative; min-width: 0; }
+.banksoal-management .bs-alpine-select.is-open { z-index: 30; }
+.banksoal-management .bs-alpine-select.is-enhanced > select {
+    position: absolute; width: 1px; height: 1px; min-height: 0; padding: 0; border: 0;
+    opacity: 0; overflow: hidden; clip-path: inset(50%); pointer-events: none;
+}
+.banksoal-management .bs-select-options { position: absolute; left: 0; right: 0; z-index: 50; max-height: 220px; overflow-y: auto; overscroll-behavior: contain; }
+.banksoal-management .bs-select-options .bs-dropdown-item { align-items: flex-start; }
+.banksoal-management .bs-select-options .bs-dropdown-item span { overflow-wrap: anywhere; }
+.banksoal-management .bs-select-options .bs-dropdown-item i { margin-top: 3px; }
+.banksoal-management .bs-select-options .is-active { background: var(--c-bg); }
+.banksoal-management .bs-alpine-select button:disabled { opacity: .5; cursor: not-allowed; }
+.banksoal-management .bs-select-placeholder { color: var(--c-fg-muted); }
+.banksoal-management .bs-dropdown-trigger.is-invalid { border-color: #DF1C41; }
+.banksoal-management .bs-select-error { margin-top: 6px; font-size: 12px; color: #DF1C41; }
+
+/* Submission dialog follows the Superadmin add-user modal. */
+.banksoal-management .bs-submit-modal { background: rgba(15, 23, 42, .4); }
+.banksoal-management #ajukanModalContent > .bs-modal-card { background: #fff; border: 1px solid var(--c-border); border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, .25); overflow: hidden; }
+.banksoal-management .bs-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px; background: rgba(11, 38, 110, .06); border-bottom: 1px solid var(--c-primary-subtle); }
+.banksoal-management .bs-modal-heading { display: flex; align-items: center; gap: 12px; }
+.banksoal-management .bs-modal-icon { display: flex; align-items: center; justify-content: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: 12px; background: var(--c-primary); color: #fff; }
+.banksoal-management .bs-modal-header h3 { margin: 0; color: var(--c-fg); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: -.02em; }
+.banksoal-management .bs-modal-header p { margin-top: 3px; font-size: 11px; color: var(--c-primary); }
+.banksoal-management .bs-modal-close { flex-shrink: 0; padding: 6px; border-radius: 8px; color: var(--c-primary); cursor: pointer; }
+.banksoal-management .bs-modal-close:hover { background: var(--c-primary-subtle); }
+.banksoal-management .bs-modal-notice { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border: 1px solid var(--c-border); border-radius: 10px; background: var(--c-bg); }
+.banksoal-management .bs-modal-notice i { margin-top: 3px; color: var(--c-primary); }
+.banksoal-management .bs-modal-notice p { color: var(--c-fg-muted); font-size: 12px; line-height: 1.7; }
+.banksoal-management .bs-modal-footer { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: auto; padding: 16px 24px; border-top: 1px solid var(--c-border); background: #fff; }
+.banksoal-management .bs-modal-footer button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 38px; padding: 9px 16px; border: 1px solid; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s; }
+.banksoal-management .bs-modal-footer .bs-modal-cancel { background: #fff; border-color: var(--c-border); color: var(--c-fg-sec); }
+.banksoal-management .bs-modal-cancel:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+.banksoal-management .bs-modal-footer .bs-modal-confirm { background: var(--c-primary); border-color: var(--c-primary); color: #fff; }
+.banksoal-management .bs-modal-confirm:hover { background: var(--c-primary-hover); border-color: var(--c-primary-hover); }
+
+@media (max-width: 767px) {
+    .banksoal-management .bs-main { overflow-y: auto; }
+    .banksoal-management .bs-content { height: auto; }
+    .banksoal-management .bs-topbar { padding: 0 14px; }
+    .banksoal-management .dosen-page-wrap { height: auto; padding: 8px 8px 80px; }
+    .banksoal-management .dosen-page-box { overflow: visible; border-radius: 10px; }
+    .banksoal-management .dosen-page-header { padding: 14px; border-radius: 10px 10px 0 0; }
+    .banksoal-management .dosen-page-header h1 { font-size: 20px; }
+    .banksoal-management .dosen-page-body { overflow: visible; padding: 12px; gap: 12px; scrollbar-gutter: auto; }
+    .banksoal-management .bs-heading-actions { width: 100%; }
+    .banksoal-management .bs-toolbar .bs-search { flex-basis: 100%; }
+    .banksoal-management #filterForm > .flex { margin-left: auto; }
+    .banksoal-management #filterForm .w-72 { width: min(200px, calc(100vw - 72px)); }
+    .banksoal-management .bs-section-heading { align-items: flex-start; }
+    .banksoal-management #formSoal :is(.px-6, .p-6),
+    .banksoal-management .dosen-page-body > .bg-white > .p-6 { padding-left: 14px; padding-right: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .banksoal-management .animate-popup { animation: none; }
+}

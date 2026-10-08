@@ -3,14 +3,15 @@
 namespace Modules\Capstone\Services;
 
 use App\Models\Lecturer;
+use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Bid;
 use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\Title;
-use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 class FinalizationService
 {
@@ -22,13 +23,35 @@ class FinalizationService
     }
 
     /**
+     * Enforce period min/max group size before any finalization.
+     * Undersized groups (member kicked/left mid-bidding) keep their approved
+     * title but must refill to minimum; oversized groups must trim to maximum.
+     */
+    private function assertGroupSize(Group $group): void
+    {
+        if (! $group->relationLoaded('period')) {
+            $group->load('period');
+        }
+        $period = $group->period;
+        $minSize = $group->group_mode === 'INDIVIDUAL' ? 1 : (int) ($period?->min_group_size ?? 3);
+        $maxSize = (int) ($period?->max_group_size ?? 4);
+        $memberCount = GroupMember::where('group_id', $group->id)->count();
+        if ($memberCount < $minSize) {
+            throw new InvalidArgumentException("Cannot finalize: group has {$memberCount} members, minimum is {$minSize}. Add members until the minimum is reached (approved title is retained).");
+        }
+        if ($memberCount > $maxSize) {
+            throw new InvalidArgumentException("Cannot finalize: group has {$memberCount} members, maximum is {$maxSize}. Remove members until the maximum is reached.");
+        }
+    }
+
+    /**
      * Allocate a group to a title via bidding resolution.
      * Single atomic transaction: quota lock, bid resolution, supervisor assignment, state transitions.
      *
-     * @param int $bidId The winning bid to accept
-     * @param int $supervisor1Id Supervisor 1 user ID
-     * @param int|null $supervisor2Id Supervisor 2 user ID (optional)
-     * @param int $adminId The admin performing the allocation
+     * @param  int  $bidId  The winning bid to accept
+     * @param  int  $supervisor1Id  Supervisor 1 user ID
+     * @param  int|null  $supervisor2Id  Supervisor 2 user ID (optional)
+     * @param  int  $adminId  The admin performing the allocation
      */
     public function allocateGroup(int $bidId, int $supervisor1Id, ?int $supervisor2Id, int $adminId): array
     {
@@ -40,13 +63,18 @@ class FinalizationService
 
             // 2. Row lock on title for quota concurrency safety
             $title = Title::where('id', $titleId)->lockForUpdate()->first();
-            if (!$title) {
+            if (! $title) {
                 throw new InvalidArgumentException('Title not found.');
             }
 
             // GOVERNANCE: If title is student-proposed, it must be approved by supervisor
             if ($title->title_source === 'STUDENT' && $title->supervisor_approval_status !== 'APPROVED') {
                 throw new InvalidArgumentException('Cannot finalize: title has not been approved by the supervisor.');
+            }
+
+            // STUDENT titles are period-locked; LECTURER titles are cross-period.
+            if ($title->title_source === 'STUDENT' && $title->period_id && (int) $title->period_id !== (int) $group->period_id) {
+                throw new InvalidArgumentException('Title belongs to another period.');
             }
 
             // GOVERNANCE: Strict 2-level — bid must be recommended ACCEPT by lecturer
@@ -62,6 +90,10 @@ class FinalizationService
             if ($currentAllocations >= $title->quota) {
                 throw new InvalidArgumentException('Title quota is full.');
             }
+
+            // 3b. Validate group size (kicked/left member or oversized merge
+            // must refill/trim first; approved title is retained).
+            $this->assertGroupSize($group);
 
             // 4. Accept winning bid, reject all others for this title
             $bid->update(['status' => 'ACCEPTED']);
@@ -137,10 +169,18 @@ class FinalizationService
         return DB::transaction(function () use ($groupId, $titleId, $supervisor1Id, $supervisor2Id, $adminId) {
             $group = Group::findOrFail($groupId);
 
+            // Size gate applies to student-proposed allocations as well.
+            $this->assertGroupSize($group);
+
             // GOVERNANCE: Ensure title is approved by supervisor before admin finalization
             $title = Title::findOrFail($titleId);
             if ($title->title_source === 'STUDENT' && $title->supervisor_approval_status !== 'APPROVED') {
                 throw new InvalidArgumentException('Cannot finalize: title has not been approved by the supervisor.');
+            }
+
+            // STUDENT titles are period-locked; LECTURER titles are cross-period.
+            if ($title->title_source === 'STUDENT' && $title->period_id && (int) $title->period_id !== (int) $group->period_id) {
+                throw new InvalidArgumentException('Title belongs to another period.');
             }
 
             // Assign title (via explicit method — title_id not in $fillable)
@@ -249,16 +289,27 @@ class FinalizationService
                     continue;
                 }
 
+                // Size gate: undersized/oversized groups keep their bids but
+                // are skipped until refill/trim.
+                try {
+                    $this->assertGroupSize($group);
+                } catch (InvalidArgumentException $e) {
+                    $skipped[] = ['bid_id' => $bid->id, 'reason' => 'GROUP_SIZE_INVALID: '.$e->getMessage(), 'group_id' => $group->id];
+
+                    continue;
+                }
+
                 // Check quota
-                if (!isset($titleQuotaUsed[$titleId])) {
+                if (! isset($titleQuotaUsed[$titleId])) {
                     $titleQuotaUsed[$titleId] = Group::where('title_id', $titleId)
                         ->whereNotIn('status', ['FORMING', 'READY_FOR_BIDDING', 'CLOSED'])
                         ->count();
                 }
 
                 $title = Title::find($titleId);
-                if (!$title || $titleQuotaUsed[$titleId] >= $title->quota) {
+                if (! $title || $titleQuotaUsed[$titleId] >= $title->quota) {
                     $skipped[] = ['bid_id' => $bid->id, 'reason' => 'Quota full', 'group_id' => $group->id];
+
                     continue;
                 }
 

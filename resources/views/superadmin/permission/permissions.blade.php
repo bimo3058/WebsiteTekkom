@@ -2,11 +2,7 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
 
-<style>
-    .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-    .perm-wrap { display: flex; flex-direction: column; height: calc(100vh - 60px); padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; }
-    .perm-box  { display: flex; flex-direction: column; flex: 1; min-height: 0; background: #F2F3F5; border: 1px solid #D4D5D8; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden; }
-</style>
+@include('superadmin.permission._detail-style')
 
 @php
     // 1. Mapping manual: Slug Database => Prefix Permission Database
@@ -59,6 +55,7 @@
     // 5. Filter & Paginate Users Berdasarkan Role & Search
     $search        = request('search','');
     $perPagePerm   = (int) request('per_page', 10);
+    $perPagePerm = in_array($perPagePerm, [10,25,50,100], true) ? $perPagePerm : 10;
 
     // Gunakan $activeRole yang sudah didefinisikan di atas
     $filteredUsers = $users->filter(function($u) use ($activeRole) {
@@ -88,7 +85,7 @@
 <div class="perm-box">
 
     {{-- ── Toolbar ── --}}
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:#fff;border-bottom:1px solid #D4D5D8;flex-shrink:0;">
+    <div class="perm-header"><div><h1>Pengaturan Permission</h1><p>Atur izin akses modul untuk pengguna dengan role {{ $activeLabel }}.</p></div><div class="perm-header-actions">
         <a href="{{ route('superadmin.permissions') }}"
            style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:#475569;background:#fff;border:1px solid #D0D1D5;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.04);text-decoration:none;font-family:'Inter Tight',sans-serif;">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -96,32 +93,32 @@
         </a>
         <button onclick="saveBulkPermissions()"
                 style="padding:6px 18px;font-size:12px;font-weight:700;color:#fff;background:#1E293B;border:none;border-radius:6px;cursor:pointer;font-family:'Inter Tight',sans-serif;box-shadow:0 1px 2px rgba(0,0,0,.1);">
-            Simpan
+            Simpan perubahan
         </button>
-    </div>
+    </div></div>
 
     {{-- ── Scrollable body ── --}}
-    <div style="flex:1;overflow-y:auto;">
+    <div class="perm-body">
 
         {{-- ── Panel 1: Role & Permissions ── --}}
-        <div style="display:flex;border-bottom:1px solid #D4D5D8;background:#fff;">
+        <div class="perm-section">
 
             {{-- Kiri --}}
-            <div style="width:220px;flex-shrink:0;padding:20px;border-right:1px solid #D4D5D8;background:#fff;">
+            <div class="perm-section-heading">
                 <p style="font-size:13px;font-weight:900;color:#1E293B;margin:0 0 5px 0;font-family:'Inter Tight',sans-serif;">Role &amp; Permissions</p>
-                <p style="font-size:11px;font-weight:500;color:#64748B;line-height:1.6;margin:0;font-family:'Inter Tight',sans-serif;">Manage roles and module permissions for each user.</p>
+                <p style="font-size:11px;font-weight:500;color:#64748B;line-height:1.6;margin:0;font-family:'Inter Tight',sans-serif;">Pilih role, lalu tentukan permission yang akan diterapkan melalui tombol Simpan perubahan.</p>
             </div>
 
             {{-- Kanan --}}
-            <div style="flex:1;padding:20px 24px;">
+            <div class="perm-section-content">
 
                 {{-- Dropdown Nama Role — Alpine, posisi fixed agar tidak terpotong --}}
                 <p style="font-size:9px;font-weight:700;color:#94A3B8;text-transform:uppercase;letter-spacing:.08em;margin:0 0 6px 0;font-family:'Inter Tight',sans-serif;">
                     Nama Role <span style="color:#EF4444">*</span>
                 </p>
-                <div style="max-width:240px;margin-bottom:16px;position:relative;" x-data="{ open: false }">
+                <div style="max-width:240px;margin-bottom:16px;position:relative;" x-data="{ open: false }" @keydown.escape.stop.prevent="open = false">
                     <button type="button"
-                            @click="open = !open"
+                            @click="open = !open" :aria-expanded="open"
                             @click.outside="open = false"
                             style="width:100%; height:38px; display:flex; align-items:center; justify-content:space-between; padding:0 14px; background:#fff; border:1px solid #D0D1D5; border-radius:8px; font-size:13px; font-weight:600; color:#334155; cursor:pointer; font-family:'Inter Tight',sans-serif; box-shadow:0 1px 2px rgba(0,0,0,.04); outline:none; box-sizing:border-box;">
                         
@@ -172,7 +169,7 @@
                 </div>
 
                 {{-- Bagian Module Boxes di Panel 1 --}}
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                <div class="perm-module-grid">
                     @foreach($dbModules as $mod)
                         @php
                             $mkey    = strtolower($mod->slug);
@@ -188,7 +185,7 @@
                                             <path d="{{ $style['icon'] }}"/>
                                         </svg>
                                     </div>
-                                    <span style="font-size:12px; font-weight:900; color:#1E293B;">{{ strtoupper($mod->name) }}</span>
+                                    <span style="font-size:12px; font-weight:900; color:#1E293B;">{{ $mod->name }}</span>
                                 </div>
                                 <label style="display:flex; align-items:center; gap:5px; cursor:{{ $mod->is_active ? 'pointer' : 'not-allowed' }};">
                                     <input type="checkbox" class="module-select-all" data-module-target="bulk_{{ $pPrefix }}" {{ !$mod->is_active ? 'disabled' : '' }}
@@ -196,7 +193,7 @@
                                     <span style="font-size:9px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:.06em;">Pilih Semua</span>
                                 </label>
                             </div>
-                            <div style="padding:10px 13px; display:grid; grid-template-columns:1fr 1fr; gap:6px 8px;">
+                            <div class="perm-options">
                                 @foreach($perms as $perm)
                                     <label style="display:flex; align-items:center; gap:7px; cursor:{{ $mod->is_active ? 'pointer' : 'not-allowed' }};">
                                         <input type="checkbox" class="perm-checkbox" data-module-key="bulk_{{ $pPrefix }}" value="{{ $perm->name }}" {{ !$mod->is_active ? 'disabled' : '' }}
@@ -212,11 +209,11 @@
         </div>
 
         {{-- ── Panel 2: List User ── --}}
-        <div style="display:flex;">
+        <div class="perm-section">
 
             {{-- Kiri --}}
-            <div style="width:220px;flex-shrink:0;padding:20px;border-right:1px solid #D4D5D8;background:#fff;">
-                <p style="font-size:13px;font-weight:900;color:#1E293B;margin:0 0 5px 0;font-family:'Inter Tight',sans-serif;">List User</p>
+            <div class="perm-section-heading">
+                <p style="font-size:13px;font-weight:900;color:#1E293B;margin:0 0 5px 0;font-family:'Inter Tight',sans-serif;">Pengguna role</p>
                 <p style="font-size:11px;font-weight:500;color:#64748B;line-height:1.6;margin:0;font-family:'Inter Tight',sans-serif;">
                     Daftar tabel user dengan role<br>
                     "<span style="font-weight:700;color:{{ $activeColor }}">{{ $activeLabel }}</span>".
@@ -224,7 +221,7 @@
             </div>
 
             {{-- Kanan: table area --}}
-            <div style="flex:1;padding:16px 24px;background:#fff;display:flex;flex-direction:column;gap:12px;">
+            <div class="perm-section-content perm-users">
 
                 {{-- Toolbar: search + per_page + limit --}}
                 <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;">
@@ -241,7 +238,7 @@
                     <div></div>
 
                     {{-- Right: search + per_page --}}
-                    <form action="{{ url()->current() }}" method="GET" style="display:flex;align-items:center;gap:6px;">
+                    <form action="{{ url()->current() }}" method="GET" class="perm-search-form">
                         <input type="hidden" name="role" value="{{ $activeRole }}">
 
                         {{-- Per page --}}
@@ -267,7 +264,7 @@
                         {{-- Search --}}
                         <div style="position:relative;">
                             <svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:#94A3B8;pointer-events:none;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                            <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama atau email..."
+                            <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama atau email..." aria-label="Cari nama atau email"
                                    style="padding:5px 10px 5px 28px;font-size:11px;font-weight:500;border:1px solid #D0D1D5;border-radius:6px;background:#fff;color:#334155;outline:none;width:200px;font-family:'Inter Tight',sans-serif;height:30px;"
                                    onfocus="this.style.borderColor='#3B82F6'" onblur="this.style.borderColor='#D0D1D5'">
                         </div>
@@ -280,7 +277,7 @@
 
                 {{-- Table -- identical style to user management --}}
                 <div style="border:1px solid #E5E7EB;border-radius:10px;overflow:hidden;">
-                    <div style="overflow-x:auto;">
+                    <div class="perm-table-scroll" tabindex="0" role="region" aria-label="Tabel pengguna, geser untuk melihat semua kolom">
                         <table style="width:100%;border-collapse:collapse;min-width:680px;">
                             <thead>
                                 <tr style="border-bottom:1px solid #E5E7EB;background:#FAFAFA;">
@@ -370,19 +367,20 @@
 
                                         {{-- Action — same dropdown as user management --}}
                                         <td style="padding:12px 14px;text-align:center;">
-                                            <div style="position:relative;display:inline-block;" x-data="{ open: false }">
-                                                <button type="button" @click="open = !open" @click.outside="open = false"
+                                            <div style="position:relative;display:inline-block;" x-data="permissionActionDropdown()" @keydown.escape.stop.prevent="close(true)" @resize.window="close()" @scroll.window.capture="if (!$refs.panel?.contains($event.target)) close()">
+                                                <button type="button" x-ref="trigger" @click="toggle()" :aria-expanded="open" aria-label="Aksi untuk {{ $user->name }}"
                                                         style="width:28px;height:28px;border-radius:6px;border:1px solid #E2E8F0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#94A3B8;transition:all .15s;margin:0 auto;"
                                                         onmouseover="this.style.background='#F8FAFC';this.style.borderColor='#CBD5E1'"
                                                         onmouseout="this.style.background='#fff';this.style.borderColor='#E2E8F0'">
                                                     <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
                                                 </button>
 
-                                                <div x-show="open"
+                                                <template x-teleport="body">
+                                                <div x-ref="panel" popover="manual" x-show="open" x-cloak :style="position" @click.outside="close()" @keydown.escape.stop.prevent="close(true)" @click="if ($event.target.closest('a, button')) close()"
                                                      x-transition:enter="transition ease-out duration-100"
                                                      x-transition:enter-start="opacity-0 scale-95"
                                                      x-transition:enter-end="opacity-100 scale-100"
-                                                     style="position:absolute;right:0;top:calc(100% + 5px);background:#fff;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);min-width:160px;z-index:40;overflow:hidden;display:none;">
+                                                     style="position:fixed;inset:auto;margin:0;padding:0;background:#fff;border:1px solid #E2E8F0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);width:180px;max-height:280px;z-index:1050;overflow-y:auto;overscroll-behavior:contain;display:none;">
                                                     <div style="padding:5px;">
 
                                                         {{-- Detail --}}
@@ -395,7 +393,7 @@
 
                                                         {{-- Edit --}}
                                                         <button type="button"
-                                                                onclick="openEditInfo({{ json_encode(['id'=>$user->id,'name'=>$user->name,'email'=>$user->email]) }}); open = false"
+                                                                @click="openEditInfo({{ json_encode(['id'=>$user->id,'name'=>$user->name,'email'=>$user->email]) }}); open = false"
                                                                 style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:none;border-radius:6px;background:none;font-size:11px;font-weight:500;color:#475569;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s;"
                                                                 onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='none'">
                                                             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z"/></svg>
@@ -415,7 +413,7 @@
 
                                                             {{-- Force Logout --}}
                                                             <button type="button"
-                                                                    onclick="openForceLogoutModal({ id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' }); open = false"
+                                                                    @click="openForceLogoutModal({ id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' }); open = false"
                                                                     style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:none;border-radius:6px;background:none;font-size:11px;font-weight:500;color:#D97706;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s;"
                                                                     onmouseover="this.style.background='#FFFBEB'" onmouseout="this.style.background='none'">
                                                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M13 8.73V8.14C13 6.58 12.19 5.24 11.07 4.93L7.87 4.06C6.39 3.66 5 5.21 5 7.27V16.73C5 18.79 6.39 20.34 7.87 19.94L11.07 19.06C12.19 18.76 13 17.42 13 15.86V15.27M11 12H19M19 12L16.5 9.5M19 12L16.5 14.5"/></svg>
@@ -435,7 +433,7 @@
                                                                 </form>
                                                             @elseif(!$isSuperadmin)
                                                                 <button type="button"
-                                                                        onclick="openSuspendModal({{ json_encode(['id'=>$user->id,'name'=>$user->name]) }}); open = false"
+                                                                        @click="openSuspendModal({{ json_encode(['id'=>$user->id,'name'=>$user->name]) }}); open = false"
                                                                         style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:none;border-radius:6px;background:none;font-size:11px;font-weight:500;color:#DC2626;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s;"
                                                                         onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
                                                                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15.5 15.5L12 12M8.5 8.5L12 12M8.5 15.5L12 12M15.5 8.5L12 12M12 22C6.48 22 2 17.52 2 12C2 6.48 6.48 2 12 2C17.52 2 22 6.48 22 12C22 17.52 17.52 22 12 22Z"/></svg>
@@ -445,7 +443,7 @@
 
                                                             {{-- Delete --}}
                                                             <button type="button"
-                                                                    onclick="openDeleteHybrid({{ json_encode(['id'=>$user->id,'name'=>$user->name]) }}); open = false"
+                                                                    @click="openDeleteHybrid({{ json_encode(['id'=>$user->id,'name'=>$user->name]) }}); open = false"
                                                                     style="width:100%;display:flex;align-items:center;gap:8px;padding:7px 10px;border:none;border-radius:6px;background:none;font-size:11px;font-weight:500;color:#DC2626;cursor:pointer;font-family:inherit;text-align:left;transition:background .12s;"
                                                                     onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
                                                                 <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6H5H21M8 6V4C8 3.45 8.45 3 9 3H15C15.55 3 16 3.45 16 4V6M19 6L18.12 19.13C18.05 20.18 17.18 21 16.13 21H7.87C6.82 21 5.95 20.18 5.88 19.13L5 6H19Z"/></svg>
@@ -454,6 +452,7 @@
                                                         @endif
                                                     </div>
                                                 </div>
+                                                </template>
                                             </div>
                                         </td>
                                     </tr>

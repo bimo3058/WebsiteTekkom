@@ -2,6 +2,13 @@
 
 namespace Modules\Capstone\Services;
 
+use App\Models\Student;
+use App\Models\User;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Modules\Capstone\Exceptions\DomainRuleException;
 use Modules\Capstone\Models\AuditLog;
 use Modules\Capstone\Models\Group;
@@ -10,11 +17,6 @@ use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\JoinRequest;
 use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodRegistration;
-use App\Models\User;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Throwable;
 
 /**
@@ -51,7 +53,8 @@ class StudentFlagService
      * - Sends notification to the student
      *
      * @param  Period  $period  The period to flag the student from
-     * @param  User  $student  The student being flagged
+     * @param  Student  $student  The student being flagged (Student model; ids
+     *                            match capstone_period_registrations.user_id and group_members.student_id)
      * @param  User  $flaggedBy  The user performing the flagging action
      * @param  string  $reason  The reason for flagging
      *
@@ -60,7 +63,7 @@ class StudentFlagService
      */
     public function flagStudent(
         Period $period,
-        User $student,
+        Student $student,
         User $flaggedBy,
         string $reason
     ): void {
@@ -81,8 +84,16 @@ class StudentFlagService
             retry(3, function () use ($period, $student, $flaggedBy, $reason) {
                 DB::transaction(function () use ($period, $student, $flaggedBy, $reason) {
                     // Lock student and period records for concurrency safety
-                    $lockedStudent = User::where('id', $student->id)->lockForUpdate()->first();
+                    $lockedStudent = Student::whereKey($student->id)->lockForUpdate()->first();
                     $lockedPeriod = Period::where('id', $period->id)->lockForUpdate()->first();
+
+                    if (! $lockedStudent) {
+                        throw new DomainRuleException('Data mahasiswa tidak ditemukan.');
+                    }
+
+                    if (! $lockedStudent->user_id) {
+                        throw new DomainRuleException('Mahasiswa tidak memiliki akun pengguna yang tertaut.');
+                    }
 
                     // Verify student is registered for this period
                     $registration = PeriodRegistration::where('user_id', $lockedStudent->id)
@@ -95,7 +106,7 @@ class StudentFlagService
                     }
 
                     // Check if already flagged
-                    if ($registration->status === 'flagged') {
+                    if (strtoupper((string) $registration->status) === PeriodRegistration::STATUS_FLAGGED) {
                         throw new DomainRuleException('Student is already flagged for this period.');
                     }
 
@@ -130,7 +141,7 @@ class StudentFlagService
                     AuditLog::create([
                         'user_id' => $flaggedBy->id,
                         'action' => 'STUDENT_FLAGGED',
-                        'target_type' => User::class,
+                        'target_type' => Student::class,
                         'target_id' => $lockedStudent->id,
                         'payload' => [
                             'period_id' => $lockedPeriod->id,
@@ -142,7 +153,7 @@ class StudentFlagService
                     // Send notification to student (after commit)
                     DB::afterCommit(function () use ($lockedStudent, $lockedPeriod, $reason) {
                         $this->notificationService->send(
-                            $lockedStudent->id,
+                            $lockedStudent->user_id,
                             'STUDENT_FLAGGED',
                             'Akun Ditandai (Flagged)',
                             "Akun Anda telah ditandai oleh admin dari periode {$lockedPeriod->name}. Alasan: {$reason}. Hubungi admin untuk informasi lebih lanjut.",
@@ -175,7 +186,7 @@ class StudentFlagService
      * Note: Group restoration is manual - student will need to rejoin groups.
      *
      * @param  Period  $period  The period to unflag the student from
-     * @param  User  $student  The student being unflagged
+     * @param  Student  $student  The student being unflagged (Student model)
      * @param  User  $unflaggedBy  The user performing the unflagging action
      *
      * @throws DomainRuleException If the student cannot be unflagged
@@ -183,7 +194,7 @@ class StudentFlagService
      */
     public function unflagStudent(
         Period $period,
-        User $student,
+        Student $student,
         User $unflaggedBy
     ): void {
         $startTime = microtime(true);
@@ -201,8 +212,16 @@ class StudentFlagService
             retry(3, function () use ($period, $student, $unflaggedBy) {
                 DB::transaction(function () use ($period, $student, $unflaggedBy) {
                     // Lock student and period records for concurrency safety
-                    $lockedStudent = User::where('id', $student->id)->lockForUpdate()->first();
+                    $lockedStudent = Student::whereKey($student->id)->lockForUpdate()->first();
                     $lockedPeriod = Period::where('id', $period->id)->lockForUpdate()->first();
+
+                    if (! $lockedStudent) {
+                        throw new DomainRuleException('Data mahasiswa tidak ditemukan.');
+                    }
+
+                    if (! $lockedStudent->user_id) {
+                        throw new DomainRuleException('Mahasiswa tidak memiliki akun pengguna yang tertaut.');
+                    }
 
                     // Check if student is currently flagged in this period
                     // (i.e., has soft-deleted group_members but no period_registration)
@@ -221,7 +240,7 @@ class StudentFlagService
                     PeriodRegistration::create([
                         'user_id' => $lockedStudent->id,
                         'period_id' => $lockedPeriod->id,
-                        'status' => 'active',
+                        'status' => PeriodRegistration::STATUS_APPROVED,
                     ]);
 
                     // Restore soft-deleted GroupMember records
@@ -239,7 +258,7 @@ class StudentFlagService
                     AuditLog::create([
                         'user_id' => $unflaggedBy->id,
                         'action' => 'STUDENT_UNFLAGGED',
-                        'target_type' => User::class,
+                        'target_type' => Student::class,
                         'target_id' => $lockedStudent->id,
                         'payload' => [
                             'period_id' => $lockedPeriod->id,
@@ -250,7 +269,7 @@ class StudentFlagService
                     // Send notification to student (after commit)
                     DB::afterCommit(function () use ($lockedStudent, $lockedPeriod) {
                         $this->notificationService->send(
-                            $lockedStudent->id,
+                            $lockedStudent->user_id,
                             'STUDENT_UNFLAGGED',
                             'Akun Dikembalikan (Unflagged)',
                             "Akun Anda telah dikembalikan ke status aktif untuk periode {$lockedPeriod->name}. Anda dapat kembali bergabung dengan kelompok.",
@@ -300,10 +319,11 @@ class StudentFlagService
             return false;
         }
 
-        // Check if student has active period registration
+        // Check if student has approved period registration
         // (if no registration exists, they were flagged and removed)
         $hasActiveRegistration = PeriodRegistration::where('user_id', $studentId)
             ->where('period_id', $group->period_id)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->exists();
 
         if (! $hasActiveRegistration) {
@@ -350,9 +370,10 @@ class StudentFlagService
      */
     public function isFlaggedInPeriod(int $studentId, int $periodId): bool
     {
-        // Check if there's no active period registration
+        // Check if there's no approved period registration
         $hasActiveRegistration = PeriodRegistration::where('user_id', $studentId)
             ->where('period_id', $periodId)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->exists();
 
         if ($hasActiveRegistration) {
@@ -375,9 +396,9 @@ class StudentFlagService
      * but no active period_registration.
      *
      * @param  int  $studentId  The student ID
-     * @return \Illuminate\Support\Collection Collection of Period models
+     * @return Collection Collection of Period models
      */
-    public function getFlaggedRegistrations(int $studentId): \Illuminate\Support\Collection
+    public function getFlaggedRegistrations(int $studentId): Collection
     {
         // Get period IDs where student has flagged group memberships
         $flaggedPeriodIds = GroupMember::withTrashed()
@@ -387,64 +408,28 @@ class StudentFlagService
             ->distinct()
             ->pluck('period_id');
 
-        // Filter out periods where the student has active registration
+        // Filter out periods where the student has approved registration
         $activePeriodIds = PeriodRegistration::where('user_id', $studentId)
+            ->where('status', PeriodRegistration::STATUS_APPROVED)
             ->pluck('period_id');
 
         $flaggedPeriodIds = $flaggedPeriodIds->diff($activePeriodIds);
 
-        return \Modules\Capstone\Models\Period::whereIn('id', $flaggedPeriodIds)->get();
+        return Period::whereIn('id', $flaggedPeriodIds)->get();
     }
 
     /**
      * Handle a group that may have become empty after member removal.
      *
-     * If no active members remain, the group is dissolved.
+     * If no active members remain, the group is hard-deleted (with an
+     * AuditLog trail) instead of being left behind as an orphan row.
      *
      * @param  int  $groupId  The group ID to check
      * @param  int  $periodId  The period ID for context
      */
     private function handleEmptyGroup(int $groupId, int $periodId): void
     {
-        $activeMembersCount = GroupMember::where('group_id', $groupId)
-            ->whereNull('deleted_at')
-            ->count();
-
-        if ($activeMembersCount === 0) {
-            $group = Group::where('id', $groupId)->lockForUpdate()->first();
-
-            if ($group && $group->status !== 'DISSOLVED') {
-                // Dissolve the group
-                $group->update(['status' => 'DISSOLVED']);
-
-                // Cancel pending invitations for this group
-                GroupInvitation::where('group_id', $groupId)
-                    ->where('status', 'PENDING')
-                    ->update(['status' => 'INVALIDATED']);
-
-                // Cancel pending join requests for this group
-                JoinRequest::where('group_id', $groupId)
-                    ->where('status', 'PENDING')
-                    ->update(['status' => 'INVALIDATED']);
-
-                Log::info('group.lifecycle.dissolved', [
-                    'group_id' => $groupId,
-                    'reason' => 'last_member_flagged',
-                ]);
-
-                // Log to AuditLog
-                AuditLog::create([
-                    'user_id' => null,
-                    'action' => 'GROUP_DISSOLVED',
-                    'target_type' => Group::class,
-                    'target_id' => $groupId,
-                    'payload' => [
-                        'reason' => 'last_member_flagged',
-                        'period_id' => $periodId,
-                    ],
-                ]);
-            }
-        }
+        $this->groupService->destroyIfEmpty($groupId, 'member_flagged');
     }
 
     /**

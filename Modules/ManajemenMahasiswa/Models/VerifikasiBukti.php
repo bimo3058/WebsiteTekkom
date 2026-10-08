@@ -31,9 +31,18 @@ class VerifikasiBukti extends Model
     // Helpers
     // -------------------------------------------------------------------------
 
-    public function getPublicUrlAttribute(): string
+    /**
+     * Tautan untuk membuka berkas ini.
+     *
+     * Menunjuk ke route aplikasi, bukan ke URL publik Supabase: aksesnya
+     * diperiksa dulu di VerifikasiController::bukti(), baru dialihkan ke tautan
+     * bertanda tangan yang berumur pendek. URL publik sengaja tidak disediakan
+     * lagi di sini — tautannya tidak pernah menanyakan siapa yang membuka,
+     * sehingga sekali tersalin keluar, sertifikat mahasiswa ikut terbuka.
+     */
+    public function getUrlAksesAttribute(): string
     {
-        return app(\App\Services\SupabaseStorage::class)->getPublicUrl($this->path_file);
+        return route('manajemenmahasiswa.verifikasi.bukti.show', $this->id);
     }
 
     public function isImage(): bool

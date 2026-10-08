@@ -8,6 +8,78 @@
         <span class="text-gray-800 font-medium">Detail Hasil</span>
     @endsection
 
+   
+    <style>
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+        main.overflow-y-auto { overflow: hidden !important; }
+        #banksoal-main-content { padding: 0 !important; max-width: 100% !important; height: 100% !important; display: flex; flex-direction: column; }
+
+        .dash-wrap {
+            display: flex; flex-direction: column; height: 100%;
+            padding: 16px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
+        }
+
+        .dash-box {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            background: #fff; border: 1px solid var(--c-border);
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+            overflow: hidden; width: 100%; box-sizing: border-box;
+        }
+
+        .dash-box-header {
+            background: #fff;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0; width: 100%; box-sizing: border-box;
+            padding: 16px 24px;
+        }
+
+        .dash-box-body {
+            flex: 1; overflow-y: auto; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 2px;
+        }
+
+        .dash-box-body > * {
+            flex-shrink: 0;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb {
+            background: var(--c-border-strong);
+            border-radius: 10px;
+        }
+
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .dash-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .dash-box {
+                border-radius: 10px;
+                display: block;
+                height: auto;
+                overflow: visible;
+            }
+            .dash-box-header {
+                padding: 12px 14px;
+                position: sticky; top: 0; z-index: 20;
+            }
+            .dash-box-body {
+                padding: 14px;
+                overflow-y: visible;
+                display: block;
+            }
+        }
+    </style>
+
     @php
         $isNoShow = $session->title === 'Tidak Mengerjakan';
         $totalSoal = $session->jawabans->count();
@@ -26,10 +98,12 @@
         }
     @endphp
 
-    <div class="w-full">
-        {{-- ── Header ── --}}
-        <div
-            style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:24px;">
+    <div class="dash-wrap">
+        <div class="dash-box">
+
+        {{-- ── Box Header ── --}}
+        <div class="dash-box-header"
+            style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
             <div>
                 <div style="display:flex; align-items:center; gap:8px; margin-bottom:3px;">
                     <h1
@@ -58,15 +132,18 @@
             </div>
         </div>
 
+        <!-- Box Body -->
+        <div class="dash-box-body">
+
         {{-- ── Summary Panel (Stats Grid) ── --}}
         <div class="dash-stats" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px;">
             {{-- Score --}}
-            <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+            <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                 onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                 onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
                     <div
-                        style="width:28px;height:28px;border-radius:8px;background:{{ $lulus ? 'rgba(34,197,94,0.1)' : 'rgba(220,38,38,0.1)' }};color:{{ $lulus ? '#22C55E' : '#DC2626' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        style="width:28px;height:28px;border-radius:8px;background:var(--c-primary-subtle);color:var(--c-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                         <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             @if($lulus)
@@ -80,13 +157,13 @@
                         ({{ $lulus ? 'Lulus' : 'Tidak Lulus' }})</p>
                 </div>
                 <p
-                    style="font-size:24px;font-weight:700;color:{{ $lulus ? '#15803D' : '#B91C1C' }};line-height:1;letter-spacing:-.02em;">
+                    style="font-size:24px;font-weight:700;color:var(--c-fg);line-height:1;letter-spacing:-.02em;">
                     {{ $skor }}<span style="font-size:14px;color:var(--c-fg-muted);font-weight:500;">/100</span>
                 </p>
             </div>
 
             {{-- Benar --}}
-            <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+            <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                 onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                 onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
@@ -105,7 +182,7 @@
             </div>
 
             {{-- Salah --}}
-            <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+            <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                 onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                 onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
@@ -124,7 +201,7 @@
             </div>
 
             {{-- Kosong --}}
-            <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+            <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                 onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                 onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
@@ -143,7 +220,7 @@
             </div>
 
             {{-- Durasi --}}
-            <div style="background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
+            <div style="border:1px solid var(--c-border);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-card);transition:border-color .15s,box-shadow .15s;cursor:default;"
                 onmouseover="this.style.borderColor='var(--c-primary-border)';this.style.boxShadow='0 4px 14px rgba(11,38,110,0.07)'"
                 onmouseout="this.style.borderColor='var(--c-border)';this.style.boxShadow='var(--shadow-card)'">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
@@ -382,6 +459,9 @@
                 @endif
             </div>
         </div>
+
+        </div> {{-- end .dash-box-body --}}
+        </div> {{-- end .dash-box --}}
 
     </div>
 

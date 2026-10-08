@@ -58,4 +58,37 @@ class MobileNavigationTest extends TestCase
         $this->assertStringContainsString('method="POST" action="'.route('logout').'"', $html);
         $this->assertStringContainsString('name="_token"', $html);
     }
+
+    public function test_navbar_has_one_menu_trigger_and_multi_role_identity_is_in_the_dialog(): void
+    {
+        $user = new User(['name' => 'Dosen Koordinator']);
+        $user->id = 1;
+        $user->setRelation('roles', collect([new Role(['name' => 'dosen']), new Role(['name' => 'koor_prak'])]));
+        $this->actingAs($user);
+
+        $html = Blade::render('<x-mobile-navigation />');
+        $document = new \DOMDocument;
+        @$document->loadHTML($html);
+        $xpath = new \DOMXPath($document);
+        $this->assertSame(1, $xpath->query('//*[@id="mobile-navigation"]//button')->length);
+        $this->assertSame(0, $xpath->query('//*[@id="mobile-navigation"]//a')->length);
+        $this->assertSame(1, $xpath->query('//*[@role="dialog"][@aria-labelledby="mobile-menu-title"]')->length);
+        $this->assertStringContainsString('<span>Dosen</span>', $html);
+        $this->assertStringContainsString('<span>Koor Prak</span>', $html);
+        $this->assertStringNotContainsString('Dashboard superadmin', $html);
+    }
+
+    public function test_capstone_menu_uses_its_existing_logout_flow(): void
+    {
+        $user = new User(['name' => 'Mahasiswa Uji']);
+        $user->id = 1;
+        $user->setRelation('roles', collect([new Role(['name' => 'mahasiswa'])]));
+        $this->actingAs($user);
+        $request = Request::create('/capstone/dashboard');
+        $route = (new Route('GET', 'capstone/dashboard', fn () => null))->name('capstone.dashboard');
+        $request->setRouteResolver(fn () => $route);
+        $this->app->instance('request', $request);
+
+        $this->assertStringContainsString('method="POST" action="'.route('capstone.logout').'"', Blade::render('<x-mobile-navigation />'));
+    }
 }

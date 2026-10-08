@@ -1,50 +1,63 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
         <span class="mx-2 text-slate-300">/</span>
         <span class="text-slate-800 font-semibold">Buat Soal Baru</span>
     @endsection
+    <x-banksoal::ui.bank-soal-page>
+    <x-slot:header>
     <x-banksoal::ui.page-header title="Buat Soal Baru" subtitle="Lengkapi formulir untuk menambahkan butir soal ke bank soal.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
+    </x-slot:header>
 
-    <x-banksoal::ui.panel title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
+    <x-banksoal::ui.panel class="bs-question-form-panel" title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
         <form action="{{ route('banksoal.soal.dosen.store') }}" method="POST" id="formSoal">
             @csrf
             <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
                 <div>
-                    <label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
+                    <label for="mk_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
+                    <x-banksoal::ui.alpine-select id="mk_id" label="Mata Kuliah">
                     <select name="mk_id" id="mk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
                         <option value="">Pilih Mata Kuliah...</option>
                         @foreach($mataKuliahDosen as $mk)
                             <option value="{{ $mk->id }}" {{ old('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>
                         @endforeach
                     </select>
+                    </x-banksoal::ui.alpine-select>
                     @error('mk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
+                    <label for="cpl_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
+                    <x-banksoal::ui.alpine-select id="cpl_id" label="CPL">
                     <select name="cpl_id" id="cpl_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPL...</option></select>
+                    </x-banksoal::ui.alpine-select>
                     @error('cpl_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="cpmk_id" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
+                    <label for="cpmk_id-trigger" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
+                    <x-banksoal::ui.alpine-select id="cpmk_id" label="CPMK">
                     <select name="cpmk_id" id="cpmk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPMK...</option></select>
+                    </x-banksoal::ui.alpine-select>
                     @error('cpmk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
-                    <label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
+                    <label for="kesulitan-trigger" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
+                    <x-banksoal::ui.alpine-select id="kesulitan" label="Tingkat Kesulitan">
                     <select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
                         <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Easy</option>
                         <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Intermediate</option>
                         <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Advanced</option>
                     </select>
+                    </x-banksoal::ui.alpine-select>
                 </div>
+
+                <!-- Bobot / Skor -->
                 <div>
                     <label for="bobot" class="mb-2 block text-sm font-semibold text-slate-700">Bobot / Skor</label>
-                    <input type="number" id="bobot" name="bobot" min="1" max="10" value="{{ old('bobot', 10) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none" required oninput="if(this.value > 10) this.value = 10; if(this.value < 1) this.value = 1;">
+                    <input type="number" id="bobot" name="bobot" min="1" max="10" value="{{ old('bobot', 10) }}" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm transition-all" required oninput="if(this.value > 10) this.value = 10; if(this.value < 1) this.value = 1;">
                 </div>
             </div>
 
@@ -90,6 +103,8 @@
             </div>
         </form>
     </x-banksoal::ui.panel>
+
+    </x-banksoal::ui.bank-soal-page>
 
     @push('styles')
     <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
@@ -192,54 +207,93 @@
                 }
             });
 
-            const mkSelect = document.getElementById('mk_id');
-            const cplSelect = document.getElementById('cpl_id');
-            const cpmkSelect = document.getElementById('cpmk_id');
-            const oldCplId = "{{ old('cpl_id') }}";
-            const oldCpmkId = "{{ old('cpmk_id') }}";
-            
-            mkSelect.addEventListener('change', function() {
-                const mkId = this.value;
-                cplSelect.innerHTML = '<option value="">Memuat CPL...</option>';
-                cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                if (mkId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${mkId}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            cplSelect.innerHTML = '<option value="">Pilih CPL...</option>';
-                            data.forEach(c => {
-                                const selected = oldCplId == c.id ? 'selected' : '';
-                                cplSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
-                            });
-                            // Trigger change on CPL to load CPMK if old value exists
-                            if (oldCplId) cplSelect.dispatchEvent(new Event('change'));
-                        })
-                        .catch(() => { cplSelect.innerHTML = '<option value="">Gagal memuat cpl</option>'; });
-                } else {
-                    cplSelect.innerHTML = '<option value="">Pilih CPL...</option>';
-                }
-            });
+            // Soal Form Alpine Logic
+            window.soalForm = function() {
+                return {
+                    mkId: '{{ old('mk_id', '') }}',
+                    mkOptions: [
+                        @foreach($mataKuliahDosen as $mk)
+                        { id: '{{ $mk->id }}', label: '{{ $mk->kode }} - {{ addslashes($mk->nama) }}' },
+                        @endforeach
+                    ],
+                    mkOpen: false,
 
-            cplSelect.addEventListener('change', function() {
-                const cplId = this.value;
-                cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
-                if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkSelect.value}`)
-                        .then(r => r.json())
-                        .then(data => {
-                            cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                            data.forEach(c => {
-                                const selected = oldCpmkId == c.id ? 'selected' : '';
-                                cpmkSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
-                            });
-                        })
-                        .catch(() => { cpmkSelect.innerHTML = '<option value="">Gagal memuat cpmk</option>'; });
-                } else {
-                    cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
-                }
-            });
+                    cplId: '{{ old('cpl_id', '') }}',
+                    cplOptions: [],
+                    cplLoading: false,
+                    cplOpen: false,
 
-            if (mkSelect.value) { mkSelect.dispatchEvent(new Event('change')); }
+                    cpmkId: '{{ old('cpmk_id', '') }}',
+                    cpmkOptions: [],
+                    cpmkLoading: false,
+                    cpmkOpen: false,
+
+                    kesulitan: '{{ old('kesulitan', '') }}',
+                    kesulitanOpen: false,
+                    kesulitanOptions: [
+                        { id: 'easy', label: 'Easy' },
+                        { id: 'intermediate', label: 'Intermediate' },
+                        { id: 'advanced', label: 'Advanced' }
+                    ],
+
+                    init() {
+                        this.$watch('mkId', (value) => {
+                            this.cplId = '';
+                            this.cpmkId = '';
+                            this.cplOptions = [];
+                            this.cpmkOptions = [];
+                            if (value) this.fetchCpl(value);
+                        });
+
+                        this.$watch('cplId', (value) => {
+                            this.cpmkId = '';
+                            this.cpmkOptions = [];
+                            if (value && this.mkId) this.fetchCpmk(value, this.mkId);
+                        });
+
+                        if (this.mkId) {
+                            this.fetchCpl(this.mkId, true);
+                        }
+                    },
+
+                    fetchCpl(mkId, isInitial = false) {
+                        this.cplLoading = true;
+                        fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${mkId}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                this.cplOptions = data.map(c => ({
+                                    id: c.id.toString(),
+                                    label: `${c.kode} - ${c.deskripsi.substring(0, 60)}...`
+                                }));
+                                this.cplLoading = false;
+                                if (isInitial && this.cplId) {
+                                    this.fetchCpmk(this.cplId, mkId, true);
+                                }
+                            })
+                            .catch(() => { this.cplLoading = false; });
+                    },
+
+                    fetchCpmk(cplId, mkId, isInitial = false) {
+                        this.cpmkLoading = true;
+                        fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkId}`)
+                            .then(r => r.json())
+                            .then(data => {
+                                this.cpmkOptions = data.map(c => ({
+                                    id: c.id.toString(),
+                                    label: `${c.kode} - ${c.deskripsi.substring(0, 60)}...`
+                                }));
+                                this.cpmkLoading = false;
+                            })
+                            .catch(() => { this.cpmkLoading = false; });
+                    },
+                    
+                    getLabel(options, id, defaultLabel) {
+                        if (!id) return defaultLabel;
+                        const opt = options.find(o => o.id == id);
+                        return opt ? opt.label : defaultLabel;
+                    }
+                }
+            };
             const container = document.getElementById('optionsContainer');
             const addBtn = document.getElementById('addOptionBtn');
             function updateStyles() {

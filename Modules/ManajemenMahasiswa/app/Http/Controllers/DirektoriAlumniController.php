@@ -8,11 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Modules\ManajemenMahasiswa\Models\Alumni;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Services\AlumniService;
+use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class DirektoriAlumniController extends Controller
 {
@@ -86,14 +88,20 @@ class DirektoriAlumniController extends Controller
     {
         $roles = $this->getUserRoles();
 
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
+        // Admin group + DPM → layout admin
+        if (\in_array('superadmin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
-        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles)) {
+        // GPM, Dosen, Ketua Departemen → layout dosen
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('ketua_departemen', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
-        if (\in_array('pengurus_himpunan', $roles)) {
-            return 'manajemenmahasiswa::layouts.admin';
+        // Semua jenis pengurus himpunan → layout admin
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        foreach ($pengurus as $role) {
+            if (\in_array($role, $roles)) {
+                return 'manajemenmahasiswa::layouts.admin';
+            }
         }
         return 'manajemenmahasiswa::layouts.mahasiswa';
     }
@@ -123,12 +131,11 @@ class DirektoriAlumniController extends Controller
     {
         return $this->hasRole(
             'superadmin',
-            'admin',
             'admin_kemahasiswaan',
             'gpm',
             'dosen',
-            'dosen_koordinator',
-            'pengurus_himpunan'
+            'pengurus_himpunan',
+            'ketua_departemen'
         );
     }
 
@@ -140,7 +147,6 @@ class DirektoriAlumniController extends Controller
     {
         return $this->hasRole(
             'superadmin',
-            'admin',
             'admin_kemahasiswaan'
             // Tambahkan role lain di sini jika suatu saat dibutuhkan:
             // 'gpm',
@@ -179,10 +185,15 @@ class DirektoriAlumniController extends Controller
             ->get();
 
         // 3. Sebagai ketua pelaksana
-        $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)->get();
+        //    Hanya kegiatan berstatus "selesai" yang dihitung sebagai riwayat
+        //    (konsisten dengan Laporan & Arsip; menyembunyikan draft/legacy).
+        $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->get();
 
         // 4. Sebagai panitia (via pivot)
         $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))
+            ->where('status', Kegiatan::STATUS_SELESAI)
             ->with(['panitia' => fn($q) => $q->where('students.id', $studentId)])
             ->get();
 
@@ -291,7 +302,6 @@ class DirektoriAlumniController extends Controller
                     'angkatan' => $km?->angkatan ?? $student?->cohort_year ?? date('Y'),
                     'tahun_lulus' => $km?->tahun_lulus ?? (int) date('Y'),
                     'program_studi' => 'S1 Teknik Komputer',
-                    'ipk' => $km?->ipk,
                 ]);
 
                 // Sekaligus pastikan status km juga konsisten
@@ -315,15 +325,6 @@ class DirektoriAlumniController extends Controller
                 $changed = true;
             }
 
-            // 3. Sinkronisasi IPK: untuk semua alumni yang sudah ada, pastikan IPK sesuai dengan mk_kemahasiswaan
-            $alumniRecords = Alumni::whereIn('user_id', $alumniUserIds)->get();
-            foreach ($alumniRecords as $alumniRecord) {
-                $km = Kemahasiswaan::where('user_id', $alumniRecord->user_id)->first();
-                if ($km && $km->ipk !== null && (string) $alumniRecord->ipk !== (string) $km->ipk) {
-                    $alumniRecord->update(['ipk' => $km->ipk]);
-                }
-            }
-
             if ($changed) {
                 \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
                 \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
@@ -344,8 +345,11 @@ class DirektoriAlumniController extends Controller
             // Sync gagal — lanjutkan
         }
 
-        $filters = $request->only(['angkatan', 'tahun_lulus', 'status_karir', 'bidang_industri', 'search']);
+        $filters = $request->only(['tahun_lulus', 'status_karir', 'bidang_industri', 'search']);
         $filters = array_filter($filters, fn($v) => $v !== 'semua' && $v !== null && $v !== '');
+
+        // Jumlah baris per halaman — pilihan yang sama dengan Direktori Mahasiswa.
+        $perPage = PerPage::resolve($request);
 
         try {
             [
@@ -353,15 +357,15 @@ class DirektoriAlumniController extends Controller
                 $angkatanList,
                 $tahunLulusList,
                 $summary,
-            ] = $this->withRetry(function () use ($filters) {
-                $alumni = $this->alumniService->listAlumni($filters, 15);
+            ] = $this->withRetry(function () use ($filters, $perPage) {
+                $alumni = $this->alumniService->listAlumni($filters, $perPage);
                 $angkatanList = Alumni::select('angkatan')->distinct()->orderByDesc('angkatan')->pluck('angkatan');
                 $tahunLulusList = Alumni::select('tahun_lulus')->distinct()->orderByDesc('tahun_lulus')->pluck('tahun_lulus');
                 $summary = $this->alumniService->getSummary();
                 return [$alumni, $angkatanList, $tahunLulusList, $summary];
             });
         } catch (\Throwable) {
-            $alumni = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
+            $alumni = new \Illuminate\Pagination\LengthAwarePaginator([], 0, $perPage);
             $angkatanList = collect();
             $tahunLulusList = collect();
             $summary = ['total' => 0, 'per_status' => []];
@@ -369,7 +373,7 @@ class DirektoriAlumniController extends Controller
 
         $statusKarirOptions = Alumni::STATUS_LABELS;
         $bidangIndustriOptions = Alumni::BIDANG_INDUSTRI_LIST;
-        $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isAdmin = $this->hasRole('superadmin', 'admin_kemahasiswaan');
 
         $totalAlumni = $summary['total'];
         $bekerja = $summary['per_status']['bekerja'] ?? 0;
@@ -419,12 +423,12 @@ class DirektoriAlumniController extends Controller
             );
 
             // Permission flags — mudah diperluas lewat canSeeHistory() / canManageHistory()
-            $isAdmin         = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-            $canGenerateCv   = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan');
+            $isAdmin         = $this->hasRole('superadmin', 'admin_kemahasiswaan');
             $canSeeHistory   = $this->canSeeHistory();
             $canManageHistory = $this->canManageHistory();
-            // Hanya admin group, GPM, DPM, Dosen yang bisa lihat IPK
-            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
+            // Role yang boleh mengunduh CV alumni — sumber kebenarannya CvProfilePolicy,
+            // sama dengan gerbang route dan Policy di generateCv().
+            $canDownloadCv = $this->hasRole(...\App\Policies\CvProfilePolicy::PENGELOLA_CV);
 
             return view('manajemenmahasiswa::direktori.alumni-show', compact(
                 'alumni',
@@ -432,10 +436,9 @@ class DirektoriAlumniController extends Controller
                 'riwayatKegiatan',
                 'semuaKegiatan',
                 'isAdmin',
-                'canGenerateCv',
                 'canSeeHistory',
                 'canManageHistory',
-                'isCanSeeIpk',
+                'canDownloadCv',
             ))->with('layout', $this->resolveLayout());
 
         } catch (\Throwable) {
@@ -466,7 +469,6 @@ class DirektoriAlumniController extends Controller
                         'angkatan' => $mhs->angkatan,
                         'tahun_lulus' => $mhs->tahun_lulus ?? date('Y'),
                         'program_studi' => 'Teknik Komputer',
-                        'ipk' => $mhs->ipk,
                     ]));
                 } else {
                     return back()->with('error', 'Akses ditolak. Anda belum terdaftar sebagai alumni.');
@@ -502,7 +504,7 @@ class DirektoriAlumniController extends Controller
             'perusahaan' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
             'bidang_industri' => 'nullable|string|in:' . implode(',', array_keys(Alumni::BIDANG_INDUSTRI_LIST)),
-            'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . (date('Y') + 1),
+            'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . date('Y'),
             'linkedin' => 'nullable|url|max:255',
         ]);
 
@@ -541,17 +543,20 @@ class DirektoriAlumniController extends Controller
     public function update(Request $request, int $id)
     {
         $validated = $request->validate([
-            'nim' => 'required|string|max:30',
-            'angkatan' => 'required|integer|min:2000|max:2099',
             'tahun_lulus' => 'required|integer|min:2000|max:2099',
             'program_studi' => 'nullable|string|max:255',
             'status_karir' => 'nullable|string|in:' . implode(',', Alumni::STATUS_LIST),
             'perusahaan' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
-            'bidang_industri' => 'nullable|string',
-            'tahun_mulai_bekerja' => 'nullable|integer',
+            'bidang_industri' => 'nullable|string|in:' . implode(',', array_keys(Alumni::BIDANG_INDUSTRI_LIST)),
+            'tahun_mulai_bekerja' => 'nullable|integer|min:2000|max:' . date('Y'),
             'linkedin' => 'nullable|url|max:255',
+            'personal_email' => 'nullable|email|max:255',
         ]);
+
+        // Email pribadi disimpan di tabel users (bukan kolom mk_alumni) — pisahkan dari payload alumni.
+        $personalEmail = $validated['personal_email'] ?? null;
+        unset($validated['personal_email']);
 
         try {
             $alumni = $this->withRetry(fn() => $this->alumniService->update($id, $validated));
@@ -585,6 +590,14 @@ class DirektoriAlumniController extends Controller
                 \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $alumni->user_id)->update(['kontak' => $fullWa]);
             }
 
+            // Sinkronisasi email pribadi ke tabel users
+            if ($request->has('personal_email')) {
+                $userModel = \App\Models\User::find($alumni->user_id);
+                if ($userModel) {
+                    $userModel->updateQuietly(['personal_email' => $personalEmail]);
+                }
+            }
+
         } catch (\Throwable $e) {
             return back()->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
         }
@@ -606,11 +619,24 @@ class DirektoriAlumniController extends Controller
 
         $mode = $request->input('input_mode', 'dropdown');
 
+        // Ditambah admin → langsung approved, sama seperti storePrestasi() di
+        // bawah. Tanpa ini status jatuh ke default "pending": datanya tidak
+        // pernah tampil di profil (profil hanya menampilkan yang disetujui),
+        // sekaligus nyangkut di antrean Verifikasi Kegiatan tanpa berkas bukti
+        // sebagai pengajuan yang tidak pernah dibuat alumninya.
+        $terverifikasi = [
+            'verification_status' => RiwayatKegiatan::VERIF_APPROVED,
+            'verified_by'         => auth()->id(),
+            'verified_at'         => now(),
+        ];
+
         if ($mode === 'manual') {
             $request->validate([
-                'nama_kegiatan_manual' => 'required|string|max:255',
-                'peran_manual'         => 'required|string|max:255',
-                'tanggal_kegiatan'     => 'nullable|date',
+                'nama_kegiatan_manual' => 'required|string|max:' . VerifikasiController::MAKS_NAMA,
+                'peran_manual'         => 'required|string|max:' . VerifikasiController::MAKS_PERAN,
+                'tanggal_kegiatan'     => 'nullable|date|before_or_equal:today',
+            ], [
+                'tanggal_kegiatan.before_or_equal' => 'Tanggal kegiatan tidak boleh melewati hari ini.',
             ]);
 
             RiwayatKegiatan::create([
@@ -620,7 +646,7 @@ class DirektoriAlumniController extends Controller
                 'nama_kegiatan_manual' => $request->nama_kegiatan_manual,
                 'peran_manual'         => $request->peran_manual,
                 'tanggal_kegiatan'     => $request->tanggal_kegiatan,
-            ]);
+            ] + $terverifikasi);
         } else {
             $request->validate([
                 'kegiatan_id' => 'required|exists:mk_kegiatan,id',
@@ -631,7 +657,7 @@ class DirektoriAlumniController extends Controller
                 'student_id'  => $student->id,
                 'kegiatan_id' => $request->kegiatan_id,
                 'peran'       => $request->peran,
-            ]);
+            ] + $terverifikasi);
         }
 
         return redirect()
@@ -687,9 +713,12 @@ class DirektoriAlumniController extends Controller
     public function storePrestasi(Request $request, int $id)
     {
         $request->validate([
-            'nama_prestasi' => 'required|string|max:255',
+            // Batas & aturan tanggalnya disamakan dengan form pengajuan mahasiswa
+            'nama_prestasi' => 'required|string|max:' . VerifikasiController::MAKS_NAMA,
             'tingkat'       => 'required|in:' . implode(',', \Modules\ManajemenMahasiswa\Models\Prestasi::TINGKAT_LIST),
-            'tanggal'       => 'nullable|date',
+            'tanggal'       => 'nullable|date|before_or_equal:today',
+        ], [
+            'tanggal.before_or_equal' => 'Tanggal prestasi tidak boleh melewati hari ini.',
         ]);
 
         $alumni = Alumni::findOrFail($id);
@@ -751,6 +780,17 @@ class DirektoriAlumniController extends Controller
             'sertifikasi' => [],
             'template' => 'modern'
         ]);
+
+        // Gerbang yang sama persis dengan CV mahasiswa — lihat CvProfilePolicy.
+        $this->authorize('view', $cvProfile);
+
+        if ((int) $user->id !== (int) Auth::id()) {
+            Log::info('Unduh CV alumni', [
+                'pengunduh_id'    => Auth::id(),
+                'pemilik_user_id' => $user->id,
+                'alumni_id'       => $id,
+            ]);
+        }
 
         $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
         $data['is_print'] = true;

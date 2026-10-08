@@ -7,10 +7,10 @@ use Modules\Capstone\Http\Requests\Admin\AssignExaminersRequest;
 use Modules\Capstone\Http\Requests\Admin\StoreTaDefenseRequest;
 use Modules\Capstone\Http\Requests\Admin\UpdateTaDefenseRequest;
 use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\Location;
 use Modules\Capstone\Models\Notification;
 use Modules\Capstone\Models\TaDefenseEvaluation;
 use Modules\Capstone\Models\TaDefenseSchedule;
+use Modules\Capstone\Models\TaRegistration;
 use Modules\Capstone\Models\TaSubmission;
 use App\Models\Lecturer;
 use App\Models\Student;
@@ -184,6 +184,18 @@ class TaDefenseScheduleController extends Controller
             return $this->errorResponse('All selected students must have TA_DOCUMENTS_APPROVED status', 400);
         }
 
+        // Validate all students have an APPROVED sidang TA registration
+        $approvedRegistrations = TaRegistration::whereIn('student_id', $studentIds)
+            ->where('group_id', $group->id)
+            ->where('status', TaRegistration::STATUS_APPROVED)
+            ->pluck('student_id')
+            ->toArray();
+
+        $unapprovedStudents = array_diff($studentIds, $approvedRegistrations);
+        if (! empty($unapprovedStudents)) {
+            return $this->errorResponse('All selected students must have an approved sidang TA registration', 400);
+        }
+
         // Check for existing scheduled defenses for these students
         $existingScheduled = TaDefenseSchedule::where(fn ($q) => $q->whereIn('student_id', $studentIds)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $studentIds)))
             ->whereIn('status', ['SCHEDULED', 'DONE'])
@@ -219,19 +231,21 @@ class TaDefenseScheduleController extends Controller
         // Validate scheduling conflicts
         $examinerIds = [$validated['examiner_1_id'], $validated['examiner_2_id']];
 
-        // Determine room/location for conflict checking
-        $room = $validated['room'] ?? null;
-        if (! empty($validated['location_id']) && empty($room)) {
-            $location = Location::find($validated['location_id']);
-            $room = $location->name;
-        }
+        // Determine room for conflict checking — single source: EOffice.
+        $ruangan = \Modules\EOffice\Models\Ruangan::findOrFail($validated['eoffice_ruangan_id']);
+        $room = $ruangan->nama;
 
         $conflicts = $this->schedulingService->validateScheduleConflicts(
             $examinerIds,
             $validated['date'],
             $validated['start_time'],
             $validated['end_time'],
-            $room
+            $room,
+            null,
+            null,
+            null,
+            null,
+            $ruangan->id
         );
 
         if (! empty($conflicts)) {
@@ -252,7 +266,7 @@ class TaDefenseScheduleController extends Controller
                 'start_time' => $validated['start_time'],
                 'end_time' => $validated['end_time'],
                 'room' => $room,
-                'location_id' => $validated['location_id'] ?? null,
+                'eoffice_ruangan_id' => $ruangan->id,
                 'status' => 'SCHEDULED',
                 'evaluation_deadline' => $evaluationDeadline,
                 'notes' => $validated['notes'] ?? null,
@@ -364,6 +378,8 @@ class TaDefenseScheduleController extends Controller
             $added = array_values(array_diff($studentIds, $currentIds));
             $ready = TaSubmission::where('group_id', $group->id)->whereIn('student_id', $added)->where('status', 'TA_DOCUMENTS_APPROVED')->pluck('student_id')->all();
             if (array_diff($added, $ready)) return $this->errorResponse('All selected students must have TA_DOCUMENTS_APPROVED status', 400);
+            $registered = TaRegistration::where('group_id', $group->id)->whereIn('student_id', $added)->where('status', TaRegistration::STATUS_APPROVED)->pluck('student_id')->all();
+            if (array_diff($added, $registered)) return $this->errorResponse('All selected students must have an approved sidang TA registration', 400);
             $hasOtherDefense = TaDefenseSchedule::whereKeyNot($id)->whereIn('status', ['SCHEDULED','DONE','COMPLETED'])
                 ->where(fn ($q) => $q->whereIn('student_id', $added)->orWhereHas('students', fn ($q) => $q->whereIn('students.id', $added)))->exists();
             if ($hasOtherDefense) return $this->errorResponse('A selected student already has an active defense', 400);
@@ -373,9 +389,13 @@ class TaDefenseScheduleController extends Controller
             if (array_intersect($examinerIds, $supervisorIds)) return $this->errorResponse('Examiners cannot be supervisors of this group', 400);
             $examinersChanged = $examinerIds !== [(int) $schedule->examiner_1_id,(int) $schedule->examiner_2_id];
             if (($examinersChanged || $added) && TaDefenseEvaluation::where('schedule_id', $id)->where('status', '!=', 'PENDING')->exists()) return $this->errorResponse('Examiners and students are locked after evaluation submission', 403);
-            $payload = collect($validated)->only(['date','start_time','end_time','room','location_id','notes','status','examiner_1_id','examiner_2_id'])->all();
-            if (! empty($payload['location_id'])) $payload['room'] = Location::findOrFail($payload['location_id'])->name;
-            $conflicts = $this->schedulingService->validateScheduleConflicts($examinerIds, $payload['date'] ?? $schedule->date->format('Y-m-d'), $payload['start_time'] ?? $schedule->start_time, $payload['end_time'] ?? $schedule->end_time, $payload['room'] ?? $schedule->room, null, $schedule->id);
+            $payload = collect($validated)->only(['date','start_time','end_time','eoffice_ruangan_id','notes','status','examiner_1_id','examiner_2_id'])->all();
+            unset($payload['room'], $payload['location_id']);
+            if (! empty($payload['eoffice_ruangan_id'])) {
+                $payload['room'] = \Modules\EOffice\Models\Ruangan::findOrFail($payload['eoffice_ruangan_id'])->nama;
+            }
+            $eofficeId = isset($payload['eoffice_ruangan_id']) ? (int) $payload['eoffice_ruangan_id'] : ($schedule->getAttributes()['eoffice_ruangan_id'] ?? null);
+            $conflicts = $this->schedulingService->validateScheduleConflicts($examinerIds, $payload['date'] ?? $schedule->date->format('Y-m-d'), $payload['start_time'] ?? $schedule->start_time, $payload['end_time'] ?? $schedule->end_time, $payload['room'] ?? $schedule->room, null, $schedule->id, null, ($schedule->getAttributes()['eoffice_peminjaman_id'] ?? null), $eofficeId ? (int) $eofficeId : null);
             if ($conflicts) return $this->errorResponse('Scheduling conflicts detected.', 400, $conflicts);
             $schedule->update($payload);
             if ($added) {
@@ -564,8 +584,15 @@ class TaDefenseScheduleController extends Controller
                 ?->toArray() ?? [];
         }
 
+        $approvedRegistrationIds = TaRegistration::whereIn('student_id', $memberIds)
+            ->where('status', TaRegistration::STATUS_APPROVED)
+            ->pluck('student_id')
+            ->unique()
+            ->values()
+            ->all();
+
         // Transform groups with ALL members
-        $result = $groups->map(function ($group) use ($submissions, $activeDefenseStudentIds, $currentScheduleStudentIds) {
+        $result = $groups->map(function ($group) use ($submissions, $activeDefenseStudentIds, $currentScheduleStudentIds, $approvedRegistrationIds) {
             return [
                 'id' => $group->id,
                 'name' => $group->code ?? 'Group #'.$group->id,
@@ -579,7 +606,7 @@ class TaDefenseScheduleController extends Controller
                         ],
                     ];
                 }),
-                'members' => $group->members->map(function ($member) use ($group, $submissions, $activeDefenseStudentIds, $currentScheduleStudentIds) {
+                'members' => $group->members->map(function ($member) use ($group, $submissions, $activeDefenseStudentIds, $currentScheduleStudentIds, $approvedRegistrationIds) {
                     $studentId = $member->student_id;
                     $submission = $submissions->get($studentId.':'.$group->id);
                     $hasActiveDefense = in_array($studentId, $activeDefenseStudentIds);
@@ -587,9 +614,10 @@ class TaDefenseScheduleController extends Controller
 
                     // Student is ready if:
                     // 1. Has TA_DOCUMENTS_APPROVED status
-                    // 2. Is NOT already in another active defense
-                    // 3. OR is already in current schedule (edit mode)
-                    $isReadyForSidang = ($submission && $submission->status === 'TA_DOCUMENTS_APPROVED' && ! $hasActiveDefense) || $isInCurrentSchedule;
+                    // 2. Has an APPROVED sidang TA registration
+                    // 3. Is NOT already in another active defense
+                    // 4. OR is already in current schedule (edit mode)
+                    $isReadyForSidang = ($submission && $submission->status === 'TA_DOCUMENTS_APPROVED' && in_array($studentId, $approvedRegistrationIds) && ! $hasActiveDefense) || $isInCurrentSchedule;
 
                     return [
                         'student' => [
