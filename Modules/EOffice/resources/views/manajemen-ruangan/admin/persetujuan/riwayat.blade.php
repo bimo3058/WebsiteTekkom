@@ -58,11 +58,11 @@
                         <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                             PILIH FORMAT</div>
                             
-                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-pdf', request()->query()) }}" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-pdf', request()->query()) }}" target="_blank" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
                             <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                             Cetak PDF
                         </a>
-                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', request()->query()) }}" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
+                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', request()->query()) }}" target="_blank" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer">
                             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             Unduh Excel
                         </a>
@@ -76,7 +76,7 @@
                             $startBulanIni = now()->startOfMonth()->format('Y-m-d');
                             $endBulanIni = now()->endOfMonth()->format('Y-m-d');
                         @endphp
-                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', ['start_date' => $startBulanIni, 'end_date' => $endBulanIni]) }}" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer" title="Unduh data bulan berjalan">
+                        <a href="{{ route('eoffice.peminjaman.admin.riwayat.export-excel', ['start_date' => $startBulanIni, 'end_date' => $endBulanIni]) }}" target="_blank" class="w-full text-left px-3 py-2 text-[13px] rounded-md transition-colors flex items-center gap-2 text-gray-700 hover:bg-gray-50 cursor-pointer" title="Unduh data bulan berjalan">
                             <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             Laporan Bulan Berjalan
                         </a>
@@ -124,17 +124,17 @@
                     </div>
 
                     <div class="relative w-full sm:w-auto" x-data="{ open: false }">
-                        <button type="button" 
-                            @click="open = !open"
-                            class="w-full sm:w-auto justify-center h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                                </path>
+                        <button type="button" @click="open = !open" 
+                            class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                            :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
                             Filter
                             @if(request()->hasAny(['status', 'ruangan_id', 'start_date', 'end_date']) && array_filter(request()->only(['status', 'ruangan_id', 'start_date', 'end_date'])))
-                                <span class="w-2 h-2 rounded-full bg-[#0B266E] absolute -top-0.5 -right-0.5"></span>
+                                <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
+                                </span>
                             @endif
                         </button>
 
@@ -172,7 +172,7 @@
                                         <input type="hidden" name="ruangan_id" :value="selectedId">
 
                                         <button type="button" @click="open = !open" 
-                                            class="w-full flex items-center justify-between text-xs border border-gray-200 rounded p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
+                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
                                             <span x-text="selectedName" class="truncate text-gray-700"></span>
                                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -180,12 +180,12 @@
                                         </button>
                                         
                                         <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto" style="display: none;">
-                                            <div class="p-1">
-                                                <button type="button" @click="selectItem('', 'Semua Ruangan')" class="w-full text-left px-3 py-2 text-xs font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50': selectedId != ''}">Semua Ruangan</button>
+                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] max-h-48 overflow-y-auto" style="display: none;">
+                                            <div class="py-2 px-1">
+                                                <button type="button" @click="selectItem('', 'Semua Ruangan')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedId != ''}">Semua Ruangan</button>
                                                 
                                                 @foreach($ruangans as $ruangan)
-                                                    <button type="button" @click="selectItem('{{ $ruangan->id }}', '{{ addslashes($ruangan->nama) }}')" class="w-full text-left px-3 py-2 mt-0.5 text-xs font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $ruangan->id }}', 'text-gray-700 hover:bg-gray-50': selectedId != '{{ $ruangan->id }}'}">
+                                                    <button type="button" @click="selectItem('{{ $ruangan->id }}', '{{ addslashes($ruangan->nama) }}')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $ruangan->id }}', 'text-gray-700 hover:bg-gray-50 font-medium': selectedId != '{{ $ruangan->id }}'}">
                                                         {{ $ruangan->nama }}
                                                     </button>
                                                 @endforeach
@@ -216,7 +216,7 @@
                                         <input type="hidden" name="status" :value="selectedVal">
 
                                         <button type="button" @click="open = !open" 
-                                            class="w-full flex items-center justify-between text-xs border border-gray-200 rounded p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
+                                            class="w-full flex items-center justify-between text-[13px] border border-gray-200 rounded p-2 bg-white hover:border-[#0B266E] focus:outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] transition-colors cursor-pointer">
                                             <span x-text="selectedName" class="truncate text-gray-700"></span>
                                             <svg class="w-3.5 h-3.5 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
@@ -224,22 +224,22 @@
                                         </button>
                                         
                                         <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" 
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-hidden" style="display: none;">
-                                            <div class="p-1">
-                                                <button type="button" @click="selectItem('')" class="w-full text-left px-3 py-2 text-xs font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50': selectedVal != ''}">Semua Status</button>
-                                                <button type="button" @click="selectItem('disetujui')" class="w-full text-left px-3 py-2 mt-0.5 text-xs font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'disetujui', 'text-gray-700 hover:bg-gray-50': selectedVal != 'disetujui'}">Disetujui</button>
-                                                <button type="button" @click="selectItem('ditolak')" class="w-full text-left px-3 py-2 mt-0.5 text-xs font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'ditolak', 'text-gray-700 hover:bg-gray-50': selectedVal != 'ditolak'}">Ditolak</button>
-                                                <button type="button" @click="selectItem('dibatalkan')" class="w-full text-left px-3 py-2 mt-0.5 text-xs font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'dibatalkan', 'text-gray-700 hover:bg-gray-50': selectedVal != 'dibatalkan'}">Dibatalkan</button>
-                                                <button type="button" @click="selectItem('selesai')" class="w-full text-left px-3 py-2 mt-0.5 text-xs font-medium rounded-md transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'selesai', 'text-gray-700 hover:bg-gray-50': selectedVal != 'selesai'}">Selesai</button>
+                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-100 rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] z-[60] overflow-hidden" style="display: none;">
+                                            <div class="py-2 px-1">
+                                                <button type="button" @click="selectItem('')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == '', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != ''}">Semua Status</button>
+                                                <button type="button" @click="selectItem('disetujui')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'disetujui', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'disetujui'}">Disetujui</button>
+                                                <button type="button" @click="selectItem('ditolak')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'ditolak', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'ditolak'}">Ditolak</button>
+                                                <button type="button" @click="selectItem('dibatalkan')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'dibatalkan', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'dibatalkan'}">Dibatalkan</button>
+                                                <button type="button" @click="selectItem('selesai')" class="w-[calc(100%-8px)] text-left px-3 py-2 mx-1 mb-0.5 transition-colors cursor-pointer text-[13px] rounded-lg" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 'selesai', 'text-gray-700 hover:bg-gray-50 font-medium': selectedVal != 'selesai'}">Selesai</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="pt-2 flex justify-end gap-2 border-t border-gray-100">
                                     <a href="{{ route('eoffice.peminjaman.admin.riwayat.index') }}"
-                                        class="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors cursor-pointer">Reset</a>
+                                        class="px-3 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer">Reset</a>
                                     <button type="submit"
-                                        class="px-3 py-1.5 text-xs font-medium text-white bg-[#0B266E] rounded-md hover:bg-[#091F5E] transition-colors cursor-pointer">Terapkan
+                                        class="px-3 py-1.5 text-[13px] font-medium text-white bg-[#0B266E] rounded-lg hover:bg-[#091F5E] transition-colors cursor-pointer">Terapkan
                                         Filter</button>
                                 </div>
                             </div>

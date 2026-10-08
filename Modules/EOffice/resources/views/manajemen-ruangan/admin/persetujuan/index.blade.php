@@ -58,15 +58,17 @@
                         <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
 
                         <button type="button" @click="open = !open" 
-                            class="w-full sm:w-auto justify-center h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                                </path>
+                            class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                            :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
                             Filter
                             @if(request('ruangan_id'))
-                                <span class="w-2 h-2 rounded-full bg-[#0B266E] absolute -top-0.5 -right-0.5"></span>
+                                <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
+                                </span>
                             @endif
                         </button>
                         
