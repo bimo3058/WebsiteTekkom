@@ -19,30 +19,173 @@
 
 
 
-        <div class="bg-white border border-gray-200 rounded-[12px] mt-6"
-            style="box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
-            <div
-                class="px-5 py-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white rounded-t-[12px]">
-                <h2 class="text-base font-bold text-gray-900 tracking-tight">Daftar Ruangan</h2>
+        <div class="mp-card" style="margin-top: 15px;">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full" style="padding-bottom: 20px;">
+                <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">Daftar Ruangan</h2>
 
                 <form action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" method="GET"
                     class="flex flex-wrap items-center gap-2.5">
                     {{-- Search --}}
-                    <div class="relative w-full sm:w-auto">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                        <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
                             </svg>
+                        </button>
+                        <input type="text" name="search" x-model="searchQuery" 
+                            @input.debounce.500ms="$el.form.submit()"
+                            @scroll.window.capture="$el.blur()"
+                            @touchmove.window.capture="$el.blur()"
+                            placeholder="Search..."
+                            class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                        
+                        <!-- Clear Search (X) -->
+                        <button type="button" x-show="searchQuery.length > 0" x-cloak
+                            @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
+                    <div class="flex flex-row items-stretch gap-2 w-full md:w-auto" x-data="{ openFilter: false, openSort: false }">
+                        <!-- Filter Button -->
+                        <div class="relative flex-1 md:flex-none" @click.away="openFilter = false">
+                            <button type="button" @click="openFilter = !openFilter; openSort = false"
+                                class="relative w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-slate-700 transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E] whitespace-nowrap cursor-pointer">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                </svg>
+                                Filter
+                                @if(request('status') || request('lokasi'))
+                                    <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                        <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
+                                    </span>
+                                @endif
+                            </button>
+                            <!-- Filter Popover -->
+                            <div x-show="openFilter" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute left-0 md:left-auto md:right-0 z-50 mt-2 w-52 origin-top-left md:origin-top-right rounded-xl bg-white shadow-md border border-gray-200 focus:outline-none overflow-hidden max-h-[320px] overflow-y-auto"
+                                style="display:none;">
+                                
+                                <input type="hidden" name="status" x-ref="statusInput" value="{{ request('status') }}">
+                                <input type="hidden" name="lokasi" x-ref="lokasiInput" value="{{ request('lokasi') }}">
+
+                                <div class="py-1 px-1">
+                                    <!-- Section: PILIH STATUS -->
+                                    <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        STATUS RUANGAN</div>
+                                    <button type="button"
+                                        @click="$refs.statusInput.value=''; $el.closest('form').submit();"
+                                        class="w-full text-left px-3 py-1.5 text-[13px] rounded-md transition-colors flex items-center justify-between {{ !request('status') ? 'bg-[#F1F5F9] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
+                                        Semua Status
+                                        @if(!request('status'))
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                        @endif
+                                    </button>
+                                    @foreach(['aktif' => 'Aktif', 'nonaktif' => 'Non-aktif'] as $val => $label)
+                                        <button type="button"
+                                            @click="$refs.statusInput.value='{{ $val }}'; $el.closest('form').submit();"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] rounded-md transition-colors flex items-center justify-between {{ request('status') == $val ? 'bg-[#F1F5F9] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
+                                            {{ $label }}
+                                            @if(request('status') == $val)
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            @endif
+                                        </button>
+                                    @endforeach
+
+                                    <div class="my-1 border-t border-gray-100"></div>
+
+                                    <!-- Section: PILIH LOKASI -->
+                                    <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        PILIH GEDUNG</div>
+                                    <button type="button"
+                                        @click="$refs.lokasiInput.value=''; $el.closest('form').submit();"
+                                        class="w-full text-left px-3 py-1.5 text-[13px] rounded-md transition-colors flex items-center justify-between {{ !request('lokasi') ? 'bg-[#F1F5F9] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
+                                        Semua Gedung
+                                        @if(!request('lokasi'))
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                        @endif
+                                    </button>
+                                    @foreach($lokasis as $lok)
+                                        <button type="button"
+                                            @click="$refs.lokasiInput.value='{{ $lok }}'; $el.closest('form').submit();"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] rounded-md transition-colors flex items-center justify-between {{ request('lokasi') == $lok ? 'bg-[#F1F5F9] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
+                                            {{ $lok }}
+                                            @if(request('lokasi') == $lok)
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
                         </div>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            class="w-full sm:w-56 h-[38px] pl-9 pr-3 text-[13px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:bg-slate-50 focus:ring-1 focus:ring-[#0B266E] focus:border-[#0B266E] outline-none transition-all placeholder-gray-400 cursor-text"
-                            placeholder="Search" x-data x-on:input.debounce.700ms="$el.form.submit()">
+
+                        <!-- Sort By Button -->
+                        <div class="relative flex-1 md:flex-none" @click.away="openSort = false">
+                            <button type="button" @click="openSort = !openSort; openFilter = false"
+                                class="w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border border-gray-300 rounded-lg hover:bg-gray-50 text-[13px] font-semibold text-slate-700 transition-colors focus:outline-none focus:ring-1 focus:ring-[#0B266E] whitespace-nowrap cursor-pointer">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                    <line x1="4" y1="6" x2="20" y2="6"></line>
+                                    <line x1="4" y1="12" x2="14" y2="12"></line>
+                                    <line x1="4" y1="18" x2="8" y2="18"></line>
+                                    <polyline points="14 15 17 18 20 15"></polyline>
+                                    <line x1="17" y1="18" x2="17" y2="10"></line>
+                                </svg>
+                                Sort
+                            </button>
+                            <!-- Sort Popover -->
+                            <div x-show="openSort" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 z-50 mt-2 w-52 origin-top-right rounded-xl bg-white shadow-md border border-gray-200 focus:outline-none overflow-hidden max-h-[320px] overflow-y-auto"
+                                style="display:none;">
+                                
+                                <input type="hidden" name="sort" x-ref="sortInput" value="{{ request('sort', 'terbaru') }}">
+
+                                <div class="py-1 px-1">
+                                    <!-- Section: URUTAN -->
+                                    <div class="px-3 py-1.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        URUTKAN BERDASARKAN</div>
+                                    @php
+                                        $sorts = [
+                                            'terbaru' => 'Terbaru',
+                                            'terlama' => 'Terlama',
+                                            'kapasitas_desc' => 'Kapasitas Terbesar',
+                                            'kapasitas_asc' => 'Kapasitas Terkecil',
+                                            'nama_asc' => 'Nama Ruangan (A-Z)',
+                                            'nama_desc' => 'Nama Ruangan (Z-A)'
+                                        ];
+                                        $currentSort = request('sort', 'terbaru');
+                                    @endphp
+                                    @foreach($sorts as $val => $label)
+                                        <button type="button"
+                                            @click="$refs.sortInput.value='{{ $val }}'; $el.closest('form').submit();"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] rounded-md transition-colors flex items-center justify-between {{ $currentSort == $val ? 'bg-[#F1F5F9] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50' }}">
+                                            {{ $label }}
+                                            @if($currentSort == $val)
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                            @endif
+                                        </button>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </form>
             </div>
 
-            <div class="mp-table-wrap">
+            <div class="mp-table-wrap" @scroll.passive="$dispatch('close-action-dropdowns')">
                 <table class="mp-table" style="table-layout: auto; width: 100%;">
                     <thead>
                         <tr style="border-bottom:1px solid #E2E8F0; background:#FAFAFA;">
@@ -93,14 +236,43 @@
                                     @endif
                                 </td>
                                 <td style="text-align:right;">
-                                    <div class="relative inline-flex flex-col items-center justify-center w-full" x-data="{ open: false }" :class="{'z-50': open, 'z-[1]': !open}">
-                                        <button type="button" @click="open = !open"
+                                    <div class="relative inline-flex flex-col items-center justify-center w-full"
+                                        x-data="{ 
+                                            open: false, 
+                                            dropdownStyles: '',
+                                            initialX: 0,
+                                            initialY: 0,
+                                            checkScroll() {
+                                                if (!this.open) return;
+                                                const rect = this.$el.getBoundingClientRect();
+                                                const diffX = Math.abs(rect.left - this.initialX);
+                                                const diffY = Math.abs(rect.top - this.initialY);
+                                                if (diffX > 30 || diffY > 30) {
+                                                    this.open = false;
+                                                }
+                                            }
+                                        }">
+                                        <button type="button" 
+                                            @click="
+                                                const rect = $el.getBoundingClientRect();
+                                                initialX = rect.left;
+                                                initialY = rect.top;
+                                                
+                                                const popUp = (window.innerHeight - rect.bottom) < 150;
+                                                let calcLeft = Math.max(10, rect.right - 140);
+                                                
+                                                let style = `position: fixed; left: ${calcLeft}px; z-index: 99999; width: 140px; `;
+                                                if (popUp) {
+                                                    style += `bottom: ${window.innerHeight - rect.top + 8}px; transform-origin: bottom right;`;
+                                                } else {
+                                                    style += `top: ${rect.bottom + 8}px; transform-origin: top right;`;
+                                                }
+                                                dropdownStyles = style;
+                                                open = !open;
+                                            "
                                             @click.away="open = false"
-                                            class="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-1.5 rounded-md transition-colors cursor-pointer">
-                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                                <path
-                                                    d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                            </svg>
+                                            class="inline-flex items-center justify-center w-[32px] h-[32px] rounded-lg border border-[#E2E8F0] bg-white text-[#64748B] hover:bg-[#F8FAFC] transition-colors cursor-pointer">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"></circle><circle cx="12" cy="12" r="1.5"></circle><circle cx="19" cy="12" r="1.5"></circle></svg>
                                         </button>
 
                                         <div x-show="open" style="display:none;"
@@ -110,7 +282,10 @@
                                             x-transition:leave="transition ease-in duration-75"
                                             x-transition:leave-start="transform opacity-100 scale-100"
                                             x-transition:leave-end="transform opacity-0 scale-95"
-                                            class="origin-top-right absolute right-5 top-0 mt-8 bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5 z-20 w-[140px]">
+                                            class="bg-white rounded-xl shadow-[0_4px_16px_rgba(0,0,0,0.08)] border border-gray-100 p-1.5"
+                                            :style="dropdownStyles"
+                                            @scroll.window.capture="checkScroll()"
+                                            @close-action-dropdowns.window="checkScroll()">
 
                                             <a href="{{ route('eoffice.peminjaman.admin.ruangan.edit', $r->id) }}"
                                                 class="w-full text-left px-2.5 py-1.5 text-[12px] text-gray-700 hover:bg-gray-100 font-semibold rounded-md focus:outline-none flex items-center gap-2 transition-colors no-underline cursor-pointer">
@@ -146,10 +321,7 @@
                         @empty
                             <tr>
                                 <td colspan="6" style="text-align:center; padding: 30px; color: #666D80;">
-                                    Belum ada data ruangan.<br>
-                                    <a href="{{ route('eoffice.peminjaman.admin.ruangan.create') }}" class="cursor-pointer"
-                                        style="color:#0B266E; font-weight:600; text-decoration:none; margin-top:8px; display:inline-block;">+
-                                        Tambah Data Pertama</a>
+                                    Belum ada data ruangan.
                                 </td>
                             </tr>
                         @endforelse
@@ -158,90 +330,139 @@
             </div>
 
             {{-- Pagination (Arsip & Rekap Style) --}}
-            <div
-                class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
-                <div class="flex items-center gap-4">
-                    <div
-                        class="flex items-center border border-slate-200 rounded-md bg-white overflow-visible text-[13px] shadow-sm">
-                        <span class="px-3 py-1.5 text-slate-600 font-medium border-r border-slate-200 bg-slate-50 shrink-0">Per
-                            halaman</span>
-                            
+            <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 rounded-b-[12px]">
+                <div class="flex flex-col md:flex-row items-center gap-4 text-[13px] text-slate-500 w-full md:w-auto">
+                    <div class="flex items-center justify-center gap-2 w-full md:w-auto">
+                        <span class="font-medium">Per halaman</span>
                         <div x-data="{ 
                             open: false, 
-                            value: '{{ request('per_page', 10) }}', 
-                            select(val, url) { 
-                                this.value = val; 
-                                window.location.href = url; 
-                            } 
-                        }" class="relative w-[65px]" @click.away="open = false">
-                            
-                            <button type="button" @click="open = !open" 
-                                class="w-full flex items-center justify-between px-2.5 py-1.5 text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-r-md cursor-pointer">
-                                <span x-text="value"></span>
-                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            selectedVal: '{{ request('per_page', 10) }}',
+                            selectItem(val, url) {
+                                this.selectedVal = val;
+                                this.open = false;
+                                window.location.href = url;
+                            }
+                        }" class="relative" @click.away="open = false">
+                            <button type="button" @click="open = !open"
+                                class="flex items-center justify-between px-3 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm gap-2 min-w-[64px] transition-colors">
+                                <span x-text="selectedVal"></span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                                    :class="{'rotate-180': open}" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-                            
-                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="transform opacity-0 scale-95" x-transition:enter-end="transform opacity-100 scale-100" x-transition:leave="transition ease-in duration-75" x-transition:leave-start="transform opacity-100 scale-100" x-transition:leave-end="transform opacity-0 scale-95" 
-                                class="absolute left-0 bottom-full mb-1 w-full min-w-[70px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden" style="display: none;">
-                                <div class="py-1">
-                                    <button type="button" @click="select('10', '{{ request()->fullUrlWithQuery(['per_page' => 10]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '10'}">10</button>
-                                    <button type="button" @click="select('25', '{{ request()->fullUrlWithQuery(['per_page' => 25]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '25'}">25</button>
-                                    <button type="button" @click="select('50', '{{ request()->fullUrlWithQuery(['per_page' => 50]) }}')" class="w-full text-left px-3 py-1.5 text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': value == '50'}">50</button>
+    
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 bottom-full mb-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
+                                style="display: none;">
+                                <div class="p-1">
+                                    <button type="button"
+                                        @click="selectItem(10, '{{ request()->fullUrlWithQuery(['per_page' => 10, 'page' => 1]) }}')"
+                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 10, 'text-slate-700 hover:bg-slate-50': selectedVal != 10}">10</button>
+                                    <button type="button"
+                                        @click="selectItem(25, '{{ request()->fullUrlWithQuery(['per_page' => 25, 'page' => 1]) }}')"
+                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 25, 'text-slate-700 hover:bg-slate-50': selectedVal != 25}">25</button>
+                                    <button type="button"
+                                        @click="selectItem(50, '{{ request()->fullUrlWithQuery(['per_page' => 50, 'page' => 1]) }}')"
+                                        class="w-full text-left px-3 py-1.5 text-[13px] font-medium rounded-md transition-colors cursor-pointer"
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedVal == 50, 'text-slate-700 hover:bg-slate-50': selectedVal != 50}">50</button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <p class="text-xs font-medium text-slate-600">
+    
+                    <div class="hidden md:block w-px h-4 bg-slate-200"></div>
+    
+                    <p class="hidden md:block font-medium text-slate-500">
                         Menampilkan <span class="font-bold text-slate-800">{{ $ruangans->firstItem() ?? 0 }}</span>
                         sampai <span class="font-bold text-slate-800">{{ $ruangans->lastItem() ?? 0 }}</span>
                         dari <span class="font-bold text-slate-800">{{ $ruangans->total() }}</span> entri
                     </p>
                 </div>
-
-                <div class="flex items-center gap-1.5">
+    
+                <div class="flex items-center justify-center gap-1.5 w-full md:w-auto">
                     @if ($ruangans->onFirstPage())
                         <button disabled
-                            class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                            class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7" />
                             </svg>
                         </button>
                     @else
                         <a href="{{ $ruangans->previousPageUrl() }}"
-                            class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                            class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 19l-7-7 7-7" />
                             </svg>
                         </a>
                     @endif
-
-                    <div
-                        class="flex items-center rounded-md border border-slate-200 bg-white overflow-hidden text-[13px] shadow-sm font-medium">
-                        @foreach ($ruangans->getUrlRange(max(1, $ruangans->currentPage() - 2), min($ruangans->lastPage(), $ruangans->currentPage() + 2)) as $page => $url)
-                            @if ($page == $ruangans->currentPage())
-                                <span
-                                    class="bg-[#354371] text-white w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</span>
-                            @else
-                                <a href="{{ $url }}"
-                                    class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center border-r border-slate-200 transition-colors cursor-pointer">{{ $page }}</a>
-                            @endif
-                        @endforeach
-                    </div>
-
+    
+                    @php
+                        $startPage = max(1, $ruangans->currentPage() - 1);
+                        $endPage = min($ruangans->lastPage(), $ruangans->currentPage() + 1);
+    
+                        if ($endPage - $startPage < 2) {
+                            if ($startPage == 1) {
+                                $endPage = min($ruangans->lastPage(), 3);
+                            } elseif ($endPage == $ruangans->lastPage()) {
+                                $startPage = max(1, $ruangans->lastPage() - 2);
+                            }
+                        }
+                    @endphp
+    
+                    @if($startPage > 1)
+                        <a href="{{ $ruangans->url(1) }}"
+                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">1</a>
+                        @if($startPage > 2)
+                            <span
+                                class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                        @endif
+                    @endif
+    
+                    @foreach ($ruangans->getUrlRange($startPage, $endPage) as $page => $url)
+                        @if ($page == $ruangans->currentPage())
+                            <span
+                                class="bg-[#0f1b40] shadow-md shadow-[#0f1b40]/20 text-white font-bold text-[13px] w-8 h-8 flex items-center justify-center rounded-lg transition-colors">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}"
+                                class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $page }}</a>
+                        @endif
+                    @endforeach
+    
+                    @if($endPage < $ruangans->lastPage())
+                        @if($endPage < $ruangans->lastPage() - 1)
+                            <span
+                                class="text-slate-400 font-medium text-[13px] w-6 flex items-center justify-center">...</span>
+                        @endif
+                        <a href="{{ $ruangans->url($ruangans->lastPage()) }}"
+                            class="text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium text-[13px] w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">{{ $ruangans->lastPage() }}</a>
+                    @endif
+    
                     @if ($ruangans->hasMorePages())
                         <a href="{{ $ruangans->nextPageUrl() }}"
-                            class="text-slate-600 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors cursor-pointer">
+                            class="text-slate-500 hover:text-slate-700 hover:bg-slate-50 w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7" />
                             </svg>
                         </a>
                     @else
                         <button disabled
-                            class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 bg-white shadow-sm transition-colors">
+                            class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
                     @endif
@@ -250,46 +471,49 @@
         </div>
 
         {{-- Modal Delete Confirmation --}}
-        <div x-show="showDeleteModal" style="display: none;"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true">
-            {{-- Backdrop --}}
-            <div x-show="showDeleteModal" x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
+        <div x-show="showDeleteModal" x-cloak style="display: none;"
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal"
+            role="dialog" aria-modal="true">
+            
+            <!-- Backdrop -->
+            <div x-show="showDeleteModal" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0" 
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="ease-in duration-200" 
+                x-transition:leave-start="opacity-100"
                 x-transition:leave-end="opacity-0"
-                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity cursor-pointer" aria-hidden="true"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity"
                 @click="showDeleteModal = false"></div>
 
-            {{-- Modal Panel --}}
-            <div x-show="showDeleteModal" x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            <!-- Modal Content -->
+            <div x-show="showDeleteModal" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden text-center p-6">
+                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[400px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-6 overflow-hidden z-10 text-center">
 
-                <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4">
-                    <svg class="h-7 w-7 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4 border border-red-100">
+                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                 </div>
-
-                <h3 class="text-lg font-bold text-gray-900 mb-2">Hapus Ruangan</h3>
-                <p class="text-sm text-gray-500 mb-6">
-                    Apakah Anda yakin ingin menghapus <span class="font-bold text-gray-800"
-                        x-text="deleteRoomName"></span>? Sistem akan
-                    menonaktifkan ruangan ini secara permanen agar tidak lagi bisa dipinjam oleh pengguna.
+                <h3 class="font-bold text-gray-900 text-[16px] mb-2 tracking-tight">Konfirmasi Hapus</h3>
+                <p class="text-[13.5px] text-gray-500 mb-6 leading-relaxed px-2">
+                    Apakah Anda yakin ingin menghapus <strong class="text-red-600" x-text="deleteRoomName"></strong>? Sistem akan menonaktifkan ruangan ini secara permanen agar tidak lagi bisa dipinjam oleh pengguna.
                 </p>
 
-                <div class="flex items-center gap-3">
+                <div class="flex justify-center gap-3">
                     <button type="button" @click="showDeleteModal = false"
-                        class="flex-1 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                        class="px-5 py-2.5 text-[13px] font-semibold text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 hover:text-gray-900 rounded-xl transition-colors focus:ring-2 focus:ring-gray-200 outline-none w-1/2 cursor-pointer">
                         Batal
                     </button>
                     <button type="button" @click="executeDelete()"
-                        class="flex-1 px-4 py-2.5 bg-red-600 border border-transparent rounded-lg text-sm font-semibold text-white hover:bg-red-700 transition-colors shadow-sm cursor-pointer">
+                        class="px-5 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 rounded-xl transition-colors shadow-sm focus:ring-2 focus:ring-red-500 focus:ring-offset-1 outline-none w-1/2 cursor-pointer">
                         Ya, Hapus
                     </button>
                 </div>

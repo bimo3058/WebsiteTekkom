@@ -10,9 +10,11 @@
         </div>
     </div>
 
+    {{-- DEBUG: action URL = {{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }} --}}
     <div class="mp-card" style="margin-top: 20px; max-width: 800px;">
         <form method="POST" id="editForm" action="{{ route('eoffice.peminjaman.admin.ruangan.update', $ruangan->id) }}"
-            enctype="multipart/form-data">
+            enctype="multipart/form-data"
+            onsubmit="console.log('FORM SUBMIT FIRED - action:', this.action); return true;">
             @csrf
             @method('PUT')
             <div class="mp-card-body" style="display:flex; flex-direction:column; gap:20px; padding: 24px;">
@@ -23,33 +25,96 @@
                             <span style="color:red">*</span></label>
                         <input type="text" name="nama" class="mp-input" value="{{ old('nama', $ruangan->nama) }}"
                             required>
+                        @error('nama')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
                 <div style="display:flex; gap:16px;">
                     <div style="flex:1;">
+                        <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kategori Ruangan
+                            <span style="color:red">*</span></label>
+                        <div x-data="{ 
+                                open: false, 
+                                selected: '{{ old('kategori', $ruangan->kategori ?? '') }}',
+                                options: ['Kelas', 'Laboratorium', 'Sidang'],
+                                get selectedLabel() {
+                                    return this.selected ? this.selected : 'Pilih Kategori';
+                                }
+                            }" 
+                            class="relative" 
+                            @click.away="open = false">
+                            
+                            <!-- Visually hidden input for browser validation -->
+                            <input type="text" name="kategori" x-model="selected" class="absolute w-0 h-0 opacity-0 pointer-events-none" required tabindex="-1">
+                        
+                            <button type="button" @click="open = !open" 
+                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2 text-[13px] focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[38px] cursor-pointer">
+                                <span x-text="selectedLabel" :class="selected ? 'text-[#0D0D12]' : 'text-gray-400'"></span>
+                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                        
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95"
+                                x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] max-h-48 overflow-y-auto overflow-x-hidden"
+                                style="display: none;">
+                                <div class="p-1 flex flex-col">
+                                    <template x-for="option in options" :key="option">
+                                        <button type="button" @click="selected = option; open = false"
+                                            class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                            :class="selected === option ? 'bg-[#EFF6FF] text-[#0B266E] font-bold' : 'text-gray-700 hover:bg-gray-50'">
+                                            <span x-text="option"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        @error('kategori')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <div class="w-full sm:flex-1">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Lokasi /
                             Gedung <span style="color:red">*</span></label>
                         <input type="text" name="lokasi" class="mp-input" value="{{ old('lokasi', $ruangan->lokasi) }}"
                             required>
+                        @error('lokasi')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div style="width: 120px;">
+                    <div class="w-full sm:w-[120px]">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Lantai</label>
                         <input type="number" name="lantai" class="mp-input"
                             value="{{ old('lantai', $ruangan->lantai) }}">
+                        @error('lantai')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
-                    <div style="width: 150px;">
+                    <div class="w-full sm:w-[150px]">
                         <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Kapasitas
                             <span style="color:red">*</span></label>
                         <input type="number" name="kapasitas" class="mp-input" min="1"
                             value="{{ old('kapasitas', $ruangan->kapasitas) }}" required>
+                        @error('kapasitas')
+                            <div style="color:red; font-size:11px; margin-top:4px;">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
                 <div>
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:10px;">Fasilitas
                         Tersedia</label>
-                    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
                         @php
                             $opsiFasilitas = \Modules\EOffice\Models\Fasilitas::orderBy('nama_fasilitas')->pluck('nama_fasilitas')->toArray();
                             $currentFasilitas = is_array($ruangan->fasilitas) ? $ruangan->fasilitas : [];
@@ -66,7 +131,7 @@
 
                 <div style="margin-top: 5px;">
                     <label style="display:block; font-size:12px; font-weight:600; margin-bottom:6px;">Foto Ruangan
-                        Terkini (Maks. 5MB per foto)</label>
+                        Terkini (Maks. 2MB per foto)</label>
 
                     <input type="file" name="fotos[]" multiple accept="image/png, image/jpeg, image/jpg"
                         class="mp-input cursor-pointer" style="padding: 6px;" id="fotoInput" onchange="previewImages(event)">
@@ -130,11 +195,7 @@
                                                 
                                                 <div class="flex justify-center gap-3">
                                                     <button type="button" @click="showDeleteModal = false" class="mp-btn secondary px-4 py-2">Batal</button>
-                                                    <form method="POST" action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}/foto/{{ $foto->id }}" style="margin:0;">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <button type="submit" class="mp-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-transparent" style="border:none;">Hapus Foto</button>
-                                                    </form>
+                                                    <button type="button" onclick="document.getElementById('delete-foto-{{ $foto->id }}').submit();" class="mp-btn px-4 py-2 bg-red-600 hover:bg-red-700 text-white border-transparent" style="border:none;">Hapus Foto</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -174,7 +235,14 @@
         </form>
     </div>
 
-
+    @if($ruangan->fotos && $ruangan->fotos->count() > 0)
+        @foreach($ruangan->fotos as $foto)
+            <form id="delete-foto-{{ $foto->id }}" method="POST" action="{{ route('eoffice.peminjaman.admin.ruangan.index') }}/foto/{{ $foto->id }}" style="display: none;">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endforeach
+    @endif
 
     <!-- SortableJS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -220,11 +288,67 @@
         let accumulatedFiles = new DataTransfer();
         let sortableClientInstance = null;
 
+        function showCustomToast(message) {
+            const oldToast = document.getElementById('client-toast');
+            if (oldToast) oldToast.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'client-toast';
+            toast.className = 'mp-flash mp-flash-error';
+            toast.style.position = 'fixed';
+            toast.style.top = '24px';
+            toast.style.left = '50%';
+            toast.style.transform = 'translateX(-50%)';
+            toast.style.zIndex = '99999';
+            toast.style.justifyContent = 'space-between';
+            toast.style.borderRadius = '8px';
+            toast.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+            toast.style.minWidth = '320px';
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 300ms ease, top 300ms ease';
+
+            toast.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="8" x2="12" y2="12" />
+                        <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                    <span>${message}</span>
+                </div>
+                <button type="button" onclick="this.parentElement.style.opacity='0'; setTimeout(()=>this.parentElement.remove(), 300)" style="background:transparent; border:none; cursor:pointer; color:inherit; padding:0; display:flex; align-items:center; opacity:0.7;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            `;
+
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.top = '32px';
+            });
+            setTimeout(() => {
+                if (document.body.contains(toast)) {
+                    toast.style.opacity = '0';
+                    toast.style.top = '24px';
+                    setTimeout(() => toast.remove(), 300);
+                }
+            }, 5000);
+        }
+
         function previewImages(event) {
             var files = event.target.files;
             if (files && files.length > 0) {
                 Array.from(files).forEach(function (file) {
-                    accumulatedFiles.items.add(file);
+                    if (file.size > 2 * 1024 * 1024) {
+                        showCustomToast('Ukuran foto "' + file.name + '" terlalu besar (Maks. 2MB). Foto diabaikan.');
+                    } else if (!file.type.match('image.*')) {
+                        showCustomToast('Format file "' + file.name + '" tidak didukung. Foto diabaikan.');
+                    } else {
+                        accumulatedFiles.items.add(file);
+                    }
                 });
                 document.getElementById('fotoInput').files = accumulatedFiles.files;
             }

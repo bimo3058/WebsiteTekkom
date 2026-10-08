@@ -26,6 +26,7 @@ class Peminjaman extends Model
         'alasan_penolakan',
         'waktu_approval',
         'created_by',
+        'is_hidden_by_user',
     ];
 
     protected $casts = [

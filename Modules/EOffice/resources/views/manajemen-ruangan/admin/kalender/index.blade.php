@@ -10,107 +10,89 @@
             $weekDays[] = $weekStart->copy()->addDays($d);
         }
 
-        // Group weekly bookings by [date][ruangan_id] => list of slots
-        $slotMap = [];
+        
+        // Build absolute events map: [date][ruangan_id] => list of events
+        $eventsMap = [];
+        $pxPerMinute = 1; // 1 pixel = 1 menit, 1 jam = 60 pixel
+        
         foreach ($bookingsRaw as $b) {
-            $mulai = (int) \Carbon\Carbon::parse($b->jam_mulai)->format('H');
-            $selesaiCarbon = \Carbon\Carbon::parse($b->jam_selesai);
-            $selesai = (int) $selesaiCarbon->format('H');
-            if ($selesaiCarbon->format('i') > 0 || $selesaiCarbon->format('s') > 0) {
-                $selesai += 1;
-            }
             $tgl = is_string($b->tanggal_pinjam) ? $b->tanggal_pinjam : $b->tanggal_pinjam->format('Y-m-d');
-
-            $isMenunggu = $b->status === 'menunggu';
-
-            $namaPengguna = explode(' ', trim($b->user->name ?? 'Mhs'))[0];
-            $cleanTujuan = trim(str_ireplace('digunakan untuk', '', $b->tujuan ?? ''));
-            $cleanTujuan = str_ireplace(' - Kelas ', '-', $cleanTujuan);
-            $cleanTujuan = str_ireplace(' (Kelas ', '-', $cleanTujuan);
-            $cleanTujuan = str_replace(')', '', $cleanTujuan);
-
-            for ($h = $mulai; $h < $selesai; $h++) {
-                $slotMap[$tgl][$b->ruangan_id][$h] = [
-                    'id' => 'pm_' . $b->id,
-                    'st' => 'event',
-                    'pengguna' => $b->user->name ?? 'Mahasiswa',
-                    'tujuan' => $b->tujuan,
-                    'waktu' => substr($b->jam_mulai, 0, 5) . ' - ' . substr($b->jam_selesai, 0, 5),
-                    'type' => 'Peminjaman',
-                    'telepon' => $b->nomor_telepon ?? '-',
-                    'label' => $isMenunggu ? 'Menunggu' : substr($b->user->name ?? 'Mhs', 0, 15),
-                    'bg' => $isMenunggu ? '#FEF9C3' : '#EDE9FE',
-                    'border' => $isMenunggu ? '#FBBF24' : '#C4B5FD',
-                    'text' => $isMenunggu ? '#B45309' : '#5B21B6',
-                    'cursor' => 'pointer'
-                ];
-            }
+            $eventsMap[$tgl][$b->ruangan_id][] = [
+                'id' => 'pm_' . $b->id,
+                'status' => $b->status,
+                'tujuan' => $b->tujuan ?? '',
+                'pengguna' => $b->user->name ?? 'Mahasiswa',
+                'user_id' => $b->user_id,
+                'telepon' => $b->nomor_telepon ?? '-',
+                'jam_mulai' => substr($b->jam_mulai, 0, 5),
+                'jam_selesai' => substr($b->jam_selesai, 0, 5)
+            ];
         }
 
-        // Parse and superimpose MrJadwalInternal events (Blocks entire slot)
-        foreach ($internalSchedules as $j) {
-            $mulai = (int) \Carbon\Carbon::parse($j->jam_mulai)->format('H');
-            $selesaiCarbon = \Carbon\Carbon::parse($j->jam_selesai);
-            $selesai = (int) $selesaiCarbon->format('H');
-            if ($selesaiCarbon->format('i') > 0 || $selesaiCarbon->format('s') > 0) {
-                $selesai += 1;
-            }
+        $rutins = collect($internalSchedules)->where('tipe_jadwal', 'rutin');
+        $spesifiks = collect($internalSchedules)->where('tipe_jadwal', 'spesifik');
 
-            $tipeKategori = $j->kategori ?? '';
-            if ($j->tipe_jadwal === 'rutin' || $tipeKategori === 'Jadwal Akademik (Kuliah)' || $tipeKategori === 'Pindah Kelas' || $tipeKategori === 'Pindah / Pengganti Kelas') {
-                $bg = '#DBEAFE';
-                $border = '#60A5FA';
-                $text = '#1E40AF';
-            } elseif ($tipeKategori === 'Ujian / Evaluasi (UTS/UAS)' || $tipeKategori === 'Lainnya...') {
-                $bg = '#EDE9FE';
-                $border = '#C4B5FD';
-                $text = '#5B21B6';
-            } else {
-                $bg = '#FEE2E2';
-                $border = '#F87171';
-                $text = '#991B1B';
-            }
-            $eventName = $j->mata_kuliah ? trim($j->mata_kuliah . ' ' . $j->kelas) : ($j->keterangan ?: $j->kategori);
-            $payload = [
-                'id' => 'it_' . $j->id,
-                'st' => 'event',
-                'pengguna' => 'Admin Sistem',
-                'tujuan' => $eventName,
-                'waktu' => substr($j->jam_mulai, 0, 5) . ' - ' . substr($j->jam_selesai, 0, 5),
-                'type' => $j->tipe_jadwal === 'rutin' ? 'Jadwal Akademik (Kuliah)' : ($j->kategori ?? 'Agenda Internal'),
-                'telepon' => '-',
-                'label' => $eventName,
-                'bg' => $bg,
-                'border' => $border,
-                'text' => $text,
-                'cursor' => 'pointer'
-            ];
-
-            if ($j->tipe_jadwal === 'spesifik') {
-                $tgl = \Carbon\Carbon::parse($j->tanggal_spesifik)->format('Y-m-d');
-                for ($h = $mulai; $h < $selesai; $h++) {
-                    $slotMap[$tgl][$j->ruangan_id][$h] = $payload;
-                }
-            } else if ($j->tipe_jadwal === 'rutin') {
-                foreach ($weekDays as $day) {
-                    if ($day->dayOfWeekIso == $j->hari) {
-                        $tgl = $day->format('Y-m-d');
-
-                        // Temporal Boundary Check: Skip drawing if outside active boundaries
-                        if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif)
-                            continue;
-                        if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif)
-                            continue;
-
-                        for ($h = $mulai; $h < $selesai; $h++) {
-                            $slotMap[$tgl][$j->ruangan_id][$h] = $payload;
+        foreach ([$rutins, $spesifiks] as $scheduleGroup) {
+            foreach ($scheduleGroup as $j) {
+                if ($j->tipe_jadwal === 'spesifik') {
+                    $tgl = \Carbon\Carbon::parse($j->tanggal_spesifik)->format('Y-m-d');
+                    $eventsMap[$tgl][$j->ruangan_id][] = [
+                        'id' => 'it_' . $j->id,
+                        'status' => 'internal',
+                        'tipe_jadwal' => 'spesifik',
+                        'type' => $j->kategori ?? 'Agenda Internal',
+                        'tujuan' => $j->keterangan ?? '',
+                        'pengguna' => '-',
+                        'telepon' => '-',
+                        'jam_mulai' => substr($j->jam_mulai, 0, 5),
+                        'jam_selesai' => substr($j->jam_selesai, 0, 5)
+                    ];
+                } else if ($j->tipe_jadwal === 'rutin') {
+                    foreach ($weekDays as $day) {
+                        if ($day->dayOfWeekIso == $j->hari) {
+                            $tgl = $day->format('Y-m-d');
+                            if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif) continue;
+                            if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif) continue;
+                            $eventsMap[$tgl][$j->ruangan_id][] = [
+                                'id' => 'it_' . $j->id,
+                                'status' => 'internal',
+                                'tipe_jadwal' => 'rutin',
+                                'type' => $j->kategori ?? 'Jadwal Akademik (Kuliah)',
+                                'tujuan' => $j->keterangan ?? '',
+                                'pengguna' => '-',
+                                'telepon' => '-',
+                                'jam_mulai' => substr($j->jam_mulai, 0, 5),
+                                'jam_selesai' => substr($j->jam_selesai, 0, 5)
+                            ];
                         }
                     }
                 }
             }
         }
-
-        // Month grid
+        
+        // HUKUM MENGALAH (VISUAL OVERRIDE)
+        // Menghapus kotak jadwal rutin dari UI jika bertabrakan waktu dengan jadwal spesifik (Blokir Ruangan)
+        foreach ($eventsMap as $tgl => &$ruanganEvents) {
+            foreach ($ruanganEvents as $rId => &$events) {
+                $spesifikEvents = array_filter($events, fn($e) => isset($e['tipe_jadwal']) && $e['tipe_jadwal'] === 'spesifik');
+                if (count($spesifikEvents) > 0) {
+                    $events = array_filter($events, function($e) use ($spesifikEvents) {
+                        if (!isset($e['tipe_jadwal']) || $e['tipe_jadwal'] !== 'rutin') return true;
+                        
+                        // Cek apakah waktu rutin ini bertabrakan dengan jadwal spesifik apapun di ruangan dan hari yang sama
+                        foreach ($spesifikEvents as $se) {
+                            if ($e['jam_mulai'] < $se['jam_selesai'] && $e['jam_selesai'] > $se['jam_mulai']) {
+                                return false; // Gusur rutin (jangan di-render ke UI)
+                            }
+                        }
+                        return true;
+                    });
+                    $events = array_values($events);
+                }
+            }
+        }
+        
+// Month grid
         $calendarDays = [];
         $firstDayOfWeek = (int) $monthStart->format('N'); // 1=Mon ... 7=Sun
         for ($i = 1; $i < $firstDayOfWeek; $i++)
@@ -153,53 +135,106 @@
                     @if($mode === 'month') <input type="hidden" name="month" value="{{ $monthDate->format('Y-m') }}">
                     @endif
 
-                    <div
-                        class="flex items-center rounded-md border border-slate-200 bg-white overflow-visible shadow-sm">
-                        <div x-data="{ 
-                                open: false, 
-                                selectedId: '{{ $selectedRoomId }}', 
-                                selectedName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
-                                selectItem(id, name) { 
-                                    this.selectedId = id; 
-                                    this.selectedName = name; 
-                                    $refs.ruanganInput.value = id;
-                                    document.getElementById('roomFilterForm').submit();
-                                } 
-                            }" class="relative w-[140px] sm:w-[180px]" @click.away="open = false">
-
-                            <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
-
-                            <button type="button" @click="open = !open"
-                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white hover:bg-slate-50 focus:outline-none transition-colors rounded-md cursor-pointer">
-                                <span x-text="selectedName" class="truncate pr-2"></span>
-                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0"
-                                    :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7" />
+                    <div x-data="{
+                            openCat: false,
+                            openRoom: false,
+                            selectedCat: '{{ request()->get('kategori', 'Semua Kategori') }}',
+                            selectedRoomId: '{{ $selectedRoomId }}',
+                            selectedRoomName: '{{ $selectedRoomId ? addslashes($allRuangansDaftar->firstWhere('id', $selectedRoomId)->nama ?? 'Semua Ruangan') : 'Semua Ruangan' }}',
+                            rooms: {{ $allRuangansDaftar->map(fn($r) => ['id'=>$r->id, 'nama'=>$r->nama, 'kategori'=>$r->kategori])->toJson() }},
+                            categories: {{ $kategoriList->toJson() }},
+                            get filteredRooms() {
+                                if (this.selectedCat === 'Semua Kategori') {
+                                    return this.rooms;
+                                }
+                                return this.rooms.filter(r => r.kategori === this.selectedCat);
+                            },
+                            selectCat(cat) {
+                                this.selectedCat = cat;
+                                this.openCat = false;
+                                // Automatically submit the form to update calendar to show all rooms in this category
+                                this.selectedRoomId = '';
+                                this.selectedRoomName = 'Semua Ruangan';
+                                $refs.ruanganInput.value = '';
+                                $refs.kategoriInput.value = cat;
+                                document.getElementById('roomFilterForm').submit();
+                            },
+                            selectRoom(id, name) {
+                                this.selectedRoomId = id;
+                                this.selectedRoomName = name;
+                                $refs.ruanganInput.value = id;
+                                $refs.kategoriInput.value = this.selectedCat;
+                                document.getElementById('roomFilterForm').submit();
+                            },
+                            init() {
+                                if (this.selectedRoomId !== '') {
+                                    let currentRoom = this.rooms.find(r => r.id == this.selectedRoomId);
+                                    if (currentRoom && currentRoom.kategori) {
+                                        this.selectedCat = currentRoom.kategori;
+                                        $refs.kategoriInput.value = currentRoom.kategori;
+                                    }
+                                }
+                            }
+                        }" 
+                        class="flex flex-col sm:flex-row items-center gap-2">
+                        
+                        <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedRoomId">
+                        <input type="hidden" name="kategori" x-ref="kategoriInput" :value="selectedCat">
+                        
+                        <!-- Dropdown Kategori (Filter 1) -->
+                        <div class="relative w-full sm:w-[150px]" @click.away="openCat = false">
+                            <button type="button" @click="openCat = !openCat"
+                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white border border-slate-200 rounded-md hover:bg-slate-50 focus:outline-none shadow-sm transition-colors cursor-pointer">
+                                <span x-text="selectedCat" class="truncate pr-2"></span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': openCat}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                 </svg>
                             </button>
-
-                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
-                                x-transition:enter-start="opacity-0 scale-95"
-                                x-transition:enter-end="opacity-100 scale-100"
-                                x-transition:leave="transition ease-in duration-75"
-                                x-transition:leave-start="opacity-100 scale-100"
+                            <div x-show="openCat" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
                                 x-transition:leave-end="opacity-0 scale-95"
-                                class="absolute left-0 top-full mt-1 w-full min-w-[160px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48"
+                                class="absolute left-0 top-full mt-1 w-full min-w-[150px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48"
                                 style="display: none;">
                                 <div class="py-1">
-                                    <button type="button" @click="selectItem('', 'Semua Ruangan')"
+                                    <button type="button" @click="selectCat('Semua Kategori')"
                                         class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
-                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == ''}">Semua
-                                        Ruangan</button>
-                                    @foreach($allRuangansDaftar as $r)
-                                        <button type="button"
-                                            @click="selectItem('{{ $r->id }}', '{{ addslashes($r->nama) }}')"
-                                            class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors mt-0.5 cursor-pointer"
-                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedId == '{{ $r->id }}'}">
-                                            {{ $r->nama }}
-                                        </button>
-                                    @endforeach
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedCat === 'Semua Kategori'}">Semua Kategori</button>
+                                    <template x-for="cat in categories" :key="cat">
+                                        <button type="button" @click="selectCat(cat)"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
+                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedCat === cat}"
+                                            x-text="cat"></button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Ruangan (Filter 2) -->
+                        <div class="relative w-full sm:w-[170px]" @click.away="openRoom = false">
+                            <button type="button" @click="openRoom = !openRoom"
+                                class="w-full flex items-center justify-between px-3 py-1.5 text-[13px] text-slate-900 font-bold bg-white border border-slate-200 rounded-md hover:bg-slate-50 focus:outline-none shadow-sm transition-colors cursor-pointer">
+                                <span x-text="selectedRoomName" class="truncate pr-2"></span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0" :class="{'rotate-180': openRoom}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+                            <div x-show="openRoom" x-cloak x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75" x-transition:leave-start="opacity-100 scale-100"
+                                x-transition:leave-end="opacity-0 scale-95"
+                                class="absolute left-0 top-full mt-1 w-full min-w-[170px] bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-y-auto max-h-48"
+                                style="display: none;">
+                                <div class="py-1">
+                                    <button type="button" @click="selectRoom('', 'Semua Ruangan')"
+                                        class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
+                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedRoomId === ''}">Semua Ruangan</button>
+                                    <template x-for="r in filteredRooms" :key="r.id">
+                                        <button type="button" @click="selectRoom(r.id, r.nama)"
+                                            class="w-full text-left px-3 py-1.5 text-[13px] text-slate-700 hover:bg-slate-50 hover:text-[#0B266E] font-medium transition-colors cursor-pointer"
+                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': selectedRoomId == r.id}"
+                                            x-text="r.nama"></button>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -274,19 +309,22 @@
             <div class="flex items-center justify-between mb-4 mt-2">
                 @if($canGoBackWeek)
                     <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                        ← Minggu Lalu
+                        class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
+                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                        <span class="hidden md:inline">Minggu Lalu</span>
                     </a>
                 @else
-                    <div class="px-4 py-2 min-w-[130px]"></div>
+                    <div class="min-w-[36px] md:min-w-[130px]"></div>
                 @endif
 
                 {{-- Date Picker Dropdown (Weekly) --}}
-                <div x-data="{ open: false }" class="relative">
+                <div x-data="{ open: false }" class="relative flex-1 flex justify-center">
                     <button @click="open = !open" type="button"
-                        class="flex items-center gap-2 text-[15px] font-bold text-[#0B266E] hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
-                        {{ $weekStart->translatedFormat('d M Y') }} — {{ $weekEnd->translatedFormat('d M Y') }}
-                        <svg class="w-4 h-4 text-gray-500 transition-transform duration-200" :class="{'rotate-180': open}"
+                        class="flex items-center gap-1 md:gap-2 text-[12px] md:text-[15px] font-bold text-[#0B266E] hover:bg-gray-100 px-1 md:px-3 py-1.5 rounded-lg transition-colors cursor-pointer text-center">
+                        {{ $weekStart->translatedFormat('d M') }} — {{ $weekEnd->translatedFormat('d M Y') }}
+                        <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-500 transition-transform duration-200 shrink-0" :class="{'rotate-180': open}"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                         </svg>
@@ -296,7 +334,7 @@
                         x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95"
                         x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[220px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-4"
+                        class="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[200px] md:w-[220px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-3 md:p-4"
                         style="display: none;">
                         <p class="text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2 text-center">Pindah ke
                             Tanggal</p>
@@ -314,223 +352,211 @@
                 </div>
 
                 <a href="{{ request()->fullUrlWithQuery(['week_start' => $nextWeek]) }}"
-                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[130px]">
-                    Minggu Depan →
+                    class="inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold px-3 md:px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg shadow-sm hover:bg-gray-50 hover:text-[#0B266E] hover:border-gray-300 transition-all min-w-[36px] md:min-w-[130px]">
+                    <span class="hidden md:inline">Minggu Depan</span>
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
                 </a>
             </div>
 
-            @php
-                $cellMatrix = [];
-                foreach ($weekDays as $day) {
-                    foreach ($ruangans as $ruang) {
-                        $dateStr = $day->format('Y-m-d');
-                        $rId = $ruang->id;
-                        $hourStatuses = [];
-                        foreach ($jamList as $hIndex => $jam) {
-                            $slotData = $slotMap[$dateStr][$rId][$jam] ?? ['st' => 'tersedia'];
-
-                            $isPastDay = $day->copy()->startOfDay()->lt(\Carbon\Carbon::today());
-                            $isPastHourToday = $day->isToday() && (int) $jam <= (int) now()->format('H');
-                            $isPast = $isPastDay || $isPastHourToday;
-                            $isHoliday = isset($holidays[$dateStr]);
-                            $isWeekend = $day->isWeekend();
-                            $isClosedWeekend = !$bukaAkhirPekan && $isWeekend;
-                            $jamStr = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00';
-                            $isOutOfHours = ($jamStr < $jamBuka) || ($jamStr >= $jamTutup);
-
-                            if ($isClosedWeekend || $isOutOfHours) {
-                                $slotData = ['st' => 'tutup', 'bg' => '#F3F4F6', 'border' => '#D1D5DB', 'text' => '#9CA3AF', 'label' => '', 'cursor' => 'not-allowed', 'id' => 'closed_' . $jam];
-                            } elseif ($isHoliday) {
-                                $slotData = ['st' => 'libur', 'bg' => '#FEE2E2', 'border' => '#F87171', 'text' => '#B91C1C', 'label' => 'Libur', 'cursor' => 'not-allowed', 'id' => 'holiday_' . $jam];
-                            }
-
-                            // Apply past overlay: preserve event ID so rowspan still merges correctly
-                            if ($isPast) {
-                                if ($slotData['st'] === 'tersedia') {
-                                    // Empty past slot → grey, unique ID per hour prevents rowspan merge
-                                    $slotData = ['st' => 'tutup', 'bg' => '#F3F4F6', 'border' => '#D1D5DB', 'text' => '#9CA3AF', 'label' => '', 'cursor' => 'not-allowed', 'id' => 'past_' . $jam];
-                                } else {
-                                    // Past events keep their identity but look faded
-                                    $slotData['opacity'] = '0.55';
-                                }
-                            } else {
-                                $slotData['opacity'] = $slotData['opacity'] ?? '1';
-                            }
-
-                            $hourStatuses[$jam] = $slotData;
-                        }
-
-                        // Lookahead pass: only merge 'event' blocks with the same event ID
-                        $skipCount = 0;
-                        foreach ($jamList as $hIndex => $jam) {
-                            if ($skipCount > 0) {
-                                $cellMatrix[$dateStr][$rId][$jam] = ['skip' => true];
-                                $skipCount--;
-                                continue;
-                            }
-                            $st = $hourStatuses[$jam];
-                            $rowspan = 1;
-                            // Merge for events and holidays
-                            if (($st['st'] === 'event' && isset($st['id'])) || $st['st'] === 'libur') {
-                                for ($k = $hIndex + 1; $k < count($jamList); $k++) {
-                                    $nextSt = $hourStatuses[$jamList[$k]];
-                                    if ($st['st'] === 'libur') {
-                                        if ($nextSt['st'] !== 'libur')
-                                            break;
-                                    } else {
-                                        if ($nextSt['st'] !== 'event' || ($nextSt['id'] ?? '') !== $st['id'])
-                                            break;
-                                    }
-                                    $rowspan++;
-                                }
-                            }
-                            $cellMatrix[$dateStr][$rId][$jam] = ['skip' => false, 'rowspan' => $rowspan, 'payload' => $st];
-                            $skipCount = $rowspan - 1;
-                        }
-                    }
-                }
-                $minTWidth = 64 + (7 * $ruangans->count() * 75);
+            
+            @php 
+                $minTWidth = 64 + (7 * $ruangans->count() * 75); 
+                $pxPerHour = 60; // 1 menit = 1 pixel
+                $totalHours = count($jamList);
+                $gridHeight = $totalHours * $pxPerHour;
             @endphp
-            {{-- Calendar Grid --}}
-            <div class="mp-card overflow-hidden">
-                <div style="overflow-x: auto; width: 100%;">
-                    <table
-                        style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; min-width: {{ max(900, $minTWidth) }}px;">
+            {{-- Calendar Grid (Absolute Positioning) --}}
+            <div id="calendar-grid-wrapper" class="mp-card overflow-hidden select-none">
+                <div id="table-scroll-container" style="overflow-x: auto; position: relative;">
+                    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; min-width: {{ max(900, $minTWidth) }}px;">
                         <thead>
-                            {{-- Row 1: Day headers spanning all rooms --}}
                             <tr style="background: #F1F3F9;">
-                                <th
-                                    style="width: 64px; min-width:64px; border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; background:#F8F9FB; color: #4B5563; font-weight: 700; vertical-align:middle; position: sticky; left: 0; z-index: 20; border-right: 2px solid #D1D5DB;">
-                                    Jam
-                                </th>
+                                <th style="width: 64px; min-width:64px; border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; background:#F8F9FB; color: #4B5563; font-weight: 700; position: sticky; left: 0; z-index: 30; border-right: 2px solid #D1D5DB;">Jam</th>
                                 @foreach($weekDays as $day)
-                                    <th colspan="{{ $ruangans->count() }}"
-                                        style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E;
-                                                                            {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
+                                    <th colspan="{{ $ruangans->count() }}" style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; font-weight: 700; color: #0B266E; {{ $day->isToday() ? 'background: #EFF6FF;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
-                                        <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">
-                                            {{ $day->format('d/m') }}
-                                        </div>
+                                        <div style="font-size:11px; font-weight:500; color: #0B266E; margin-top:2px;">{{ $day->format('d/m') }}</div>
                                     </th>
                                 @endforeach
                             </tr>
-                            {{-- Row 2: Room sub-headers per day --}}
                             <tr style="background: #FAFAFA;">
-                                <th
-                                    style="border: 1px solid #E5E7EB; background: #FAFAFA; position: sticky; left: 0; z-index: 20; border-right: 2px solid #D1D5DB;">
-                                </th>
+                                <th style="border: 1px solid #E5E7EB; background: #FAFAFA; position: sticky; left: 0; z-index: 30; border-right: 2px solid #D1D5DB;"></th>
                                 @foreach($weekDays as $day)
                                     @foreach($ruangans as $ruang)
-                                        <th
-                                            style="border: 1px solid #E5E7EB; padding: 6px 4px; text-align:center; font-size:10px; font-weight:700; color:#6B7280; min-width: 72px;">
-                                            {{ $ruang->nama }}
-                                        </th>
+                                        <th style="border: 1px solid #E5E7EB; padding: 6px 4px; text-align:center; font-size:10px; font-weight:700; color:#6B7280; min-width: 72px;">{{ $ruang->nama }}</th>
                                     @endforeach
                                 @endforeach
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($jamList as $jam)
-                                <tr style="{{ $loop->odd ? 'background:#FFFFFF;' : 'background:#FAFAFA;' }}">
-                                    {{-- Time label --}}
-                                    <td
-                                        style="border: 1px solid #E5E7EB; padding: 6px 8px; text-align:center; font-weight:700; font-size:11px; color:#374151; background:#F8F9FB; white-space:nowrap; position: sticky; left: 0; z-index: 10; border-right: 2px solid #D1D5DB;">
-                                        {{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}.00
-                                    </td>
-                                    {{-- Cells per day per room --}}
-                                    @foreach($weekDays as $day)
+                            <tr>
+                                {{-- Kolom Jam --}}
+                                <td style="border: 1px solid #E5E7EB; padding: 0; background:#F8F9FB; position: relative; height: {{ $gridHeight }}px; vertical-align: top; width: 64px; min-width: 64px; position: sticky; left: 0; z-index: 20; border-right: 2px solid #D1D5DB;">
+                                    
+                                    
+
+                                    @foreach($jamList as $index => $jam)
+                                        <div style="position: absolute; top: {{ $index * $pxPerHour }}px; width: 100%; height: {{ $pxPerHour }}px; text-align: center; font-weight:700; font-size:11px; color:#374151; box-sizing: border-box; padding-top: 4px; transform: translateY(-50%);">
+                                            {{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}.00
+                                        </div>
+                                    @endforeach
+                                </td>
+                                
+                                {{-- Kolom Hari & Ruangan --}}
+                                @foreach($weekDays as $day)
+                                    @foreach($ruangans as $ruang)
                                         @php
                                             $dateStr = $day->format('Y-m-d');
+                                            $isPastDay = $day->isPast() && !$day->isToday();
                                             $isHoliday = isset($holidays[$dateStr]);
+                                            $bgCell = '#FFFFFF';
+                                            
+                                            $events = $eventsMap[$dateStr][$ruang->id] ?? [];
+                                            $eventBounds = [];
+                                            foreach($events as $ev) {
+                                                $mStartArr = explode(':', $ev['jam_mulai']);
+                                                $mEndArr = explode(':', $ev['jam_selesai']);
+                                                $startMinutes = ( (int)$mStartArr[0] * 60 + (int)$mStartArr[1] ) - ($bukaInt * 60);
+                                                $endMinutes = ( (int)$mEndArr[0] * 60 + (int)$mEndArr[1] ) - ($bukaInt * 60);
+                                                if ($startMinutes < 0) $startMinutes = 0;
+                                                if ($endMinutes > ($totalHours * 60)) $endMinutes = ($totalHours * 60);
+                                                if ($endMinutes > $startMinutes) {
+                                                    $eventBounds[] = [$startMinutes, $endMinutes];
+                                                }
+                                            }
+                                            $eventBoundsJson = json_encode($eventBounds);
                                         @endphp
+                                        <td style="border: 1px solid #E5E7EB; padding: 0; position: relative; height: {{ $gridHeight }}px; vertical-align: top; background: {{ $bgCell }}; min-width: 72px;"
+                                                @mousedown.prevent="startDragAbsolute($event, '{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', {{ $bukaInt }}, {{ $totalHours }}, {{ $eventBoundsJson }})"
+                                                @mousemove.prevent="doDragAbsolute($event)"
+                                                @mouseup.prevent="stopDragAbsolute()"
+                                                @mouseenter="hoverCol = '{{ $dateStr }}_{{ $ruang->id }}'"
+                                                @mouseleave="hoverCol = null; if(isDragging) stopDragAbsolute()"
+                                                :style="hoverCol === '{{ $dateStr }}_{{ $ruang->id }}' && !isDragging ? 'background: #F8FAFC;' : ''"
+                                                class="cursor-crosshair relative"
+                                        >
+                                            <div style="position: relative; width: 100%; height: 100%; min-height: {{ $gridHeight }}px;">
+                                            {{-- Garis Grid per Jam --}}
+                                            @foreach($jamList as $index => $jam)
+                                                <div style="position: absolute; top: {{ $index * $pxPerHour }}px; width: 100%; height: {{ $pxPerHour }}px; border-top: 1px dashed #E5E7EB; box-sizing: border-box; pointer-events: none;"></div>
+                                            @endforeach
 
-                                        @if($isHoliday)
-                                            @if($loop->parent->first)
-                                                <td colspan="{{ $ruangans->count() }}" rowspan="{{ count($jamList) }}"
-                                                    style="border: 1px solid #E5E7EB; padding: 4px; vertical-align: top; height: 1px;">
-                                                    @php $isMultiRoom = $ruangans->count() > 1; @endphp
-                                                    <div
-                                                        style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:41px; height:100%; width:100%; padding: 0 4px; overflow:hidden; background:#FEE2E2; border:1px dashed #F87171; border-radius:6px; text-align:center; color:#B91C1C; font-size:{{ $isMultiRoom ? '14px' : '10px' }}; font-weight:{{ $isMultiRoom ? '800' : '700' }}; {{ $isMultiRoom ? 'letter-spacing: 0.5px;' : '' }}">
+                                            {{-- Indikator Hari Libur di background --}}
+                                            @if($isHoliday)
+                                                <div style="position: absolute; inset: 0; background: rgba(254, 226, 226, 0.4); z-index: 1; pointer-events: none; display:flex; align-items:center; justify-content:center;">
+                                                    <span style="transform: rotate(-90deg); color: #EF4444; font-weight: bold; font-size: 14px; opacity: 0.5; white-space: nowrap;">
                                                         {{ ucwords(strtolower($holidays[$dateStr])) }}
-                                                    </div>
-                                                </td>
-                                            @endif
-                                            @continue
-                                        @endif
-
-                                        @foreach($ruangans as $ruang)
-                                            @php
-                                                $cData = $cellMatrix[$dateStr][$ruang->id][$jam] ?? ['skip' => false, 'rowspan' => 1];
-                                            @endphp
-
-                                            @if($cData['skip'])
-                                                @continue
+                                                    </span>
+                                                </div>
                                             @endif
 
-
+                                            {{-- Events --}}
                                             @php
-                                                $payload = $cData['payload'] ?? [];
-                                                $bg = $payload['bg'] ?? '#F3F4F6';
-                                                $border = $payload['border'] ?? '#D1D5DB';
-                                                $text = $payload['text'] ?? '#9CA3AF';
-                                                $label = $payload['label'] ?? '';
-                                                $st = $payload['st'] ?? 'tutup';
+                                                $events = $eventsMap[$dateStr][$ruang->id] ?? [];
                                             @endphp
-                                            <td rowspan="{{ $cData['rowspan'] }}"
-                                                style="border: 1px solid #E5E7EB; padding: 4px; vertical-align: top; height: 1px;">
-                                                @if($st === 'tersedia')
-                                                    @php $hStr = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00';
-                                                        $bgT = '#D1FAE5';
-                                                    $borderT = '#6EE7B7'; @endphp
-                                                    <button type="button"
-                                                        @mousedown.prevent="startDrag('{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', '{{ $hStr }}')"
-                                                        @mouseenter="enterDrag('{{ $ruang->id }}', '{{ $dateStr }}', '{{ $hStr }}')"
-                                                        @mouseup="stopDrag()"
-                                                        @mouseover="!isDragging && ($el.style.background = '#A7F3D0'); !isDragging && ($el.style.transform = 'scale(1.03)')"
-                                                        @mouseout="!isDragging && ($el.style.background = '{{ $bgT }}'); !isDragging && ($el.style.transform = 'scale(1)')"
-                                                        class="select-none"
-                                                        :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
-                                                                                                                                                                                                                                                                                                                                ? 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: #6EE7B7; border: 1px solid #059669; border-radius:6px; transform: scale(1.05); z-index: 10; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};' 
-                                                                                                                                                                                                                                                                                                                                : 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: {{ $bgT }}; border:1px solid {{ $borderT }}; border-radius:6px; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};'"
-                                                        title="Booking Cepat {{ $ruang->nama }} pukul {{ $hStr }}">
-                                                    </button>
-                                                @elseif($st === 'event')
-                                                    <div @click.stop="window.dispatchEvent(new CustomEvent('open-event-modal', {
-                                                                                                                                                                                                                                                                                                                                                                        detail: {
-                                                                                                                                                                                                                                                                                                                                                                            title: '{{ addslashes($label) }}',
-                                                                                                                                                                                                                                                                                                                                                                            pengguna: '{{ addslashes($payload["pengguna"] ?? "") }}',
-                                                                                                                                                                                                                                                                                                                                                                            ruangan: '{{ addslashes($ruang->nama) }}',
-                                                                                                                                                                                                                                                                                                                                                                            tujuan: '{{ addslashes($payload["tujuan"] ?? "") }}',
-                                                                                                                                                                                                                                                                                                                                                                            tanggal: '{{ $day->translatedFormat('l, d M Y') }}',
-                                                                                                                                                                                                                                                                                                                                                                            waktu: '{{ addslashes($payload["waktu"] ?? "") }}',
-                                                                                                                                                                                                                                                                                                                                                                            type: '{{ addslashes($payload["type"] ?? "") }}',
-                                                                                                                                                                                                                                                                                                                                                                            telepon: '{{ addslashes($payload["telepon"] ?? "-") }}'
-                                                                                                                                                                                                                                                                                                                                                                        }
-                                                                                                                                                                                                                                                                                                                                                                    }))"
-                                                        style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; padding:4px; overflow:hidden;
-                                                                                                                                                                                                                                                                                                                                                                           background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:6px;
-                                                                                                                                                                                                                                                                                                                                                                           text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                                                                                                                                                                                                                           font-size:10px; font-weight:700; color:{{ $text }};
-                                                                                                                                                                                                                                                                                                                                                                           cursor:pointer; opacity: {{ $payload['opacity'] ?? '1' }}; transition: transform 0.1s;"
-                                                        onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.1)'"
-                                                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
-                                                        {{ $label }}
-                                                    </div>
-                                                @else
-                                                    <div
-                                                        style="height: 100%; width:100%; background: #F9FAFB; border: 1px dashed #D1D5DB; border-radius: 6px;">
+                                            @foreach($events as $ev)
+                                                @php
+                                                    $mStartArr = explode(':', $ev['jam_mulai']);
+                                                    $mEndArr = explode(':', $ev['jam_selesai']);
+                                                    
+                                                    $startMinutes = ( (int)$mStartArr[0] * 60 + (int)$mStartArr[1] ) - ($bukaInt * 60);
+                                                    $endMinutes = ( (int)$mEndArr[0] * 60 + (int)$mEndArr[1] ) - ($bukaInt * 60);
+                                                    
+                                                    if ($startMinutes < 0) $startMinutes = 0;
+                                                    if ($endMinutes > ($totalHours * 60)) $endMinutes = ($totalHours * 60);
+                                                    
+                                                    $top = $startMinutes; // 1 menit = 1 px
+                                                    $height = $endMinutes - $startMinutes;
+                                                    if ($height <= 0) continue;
+
+                                                    $status = $ev['status'];
+                                                    $type = $ev['type'] ?? '';
+                                                    $isMenunggu = $status === 'menunggu';
+                                                    $tujuan = $ev['tujuan'];
+                                                    $pengguna = $ev['pengguna'] ?? '-';
+                                                    $telepon = $ev['telepon'] ?? '-';
+                                                    
+                                                    $bg = '#EDE9FE';
+                                                    $border = '#C4B5FD';
+                                                    $text = '#5B21B6';
+                                                    $eventType = 'Peminjaman';
+                                                    
+                                                    if ($status === 'internal') {
+                                                        $eventType = 'Jadwal Internal';
+                                                        if ($type === 'Jadwal Akademik (Kuliah)' || $type === 'Pindah Kelas' || $type === 'Pindah / Pengganti Kelas') {
+                                                            $bg = '#DBEAFE'; $border = '#60A5FA'; $text = '#1E40AF';
+                                                        } elseif ($type === 'Ujian / Evaluasi (UTS/UAS)' || $type === 'Lainnya...') {
+                                                            $bg = '#EDE9FE'; $border = '#C4B5FD'; $text = '#5B21B6';
+                                                        } else {
+                                                            $bg = '#FEE2E2'; $border = '#F87171'; $text = '#991B1B';
+                                                        }
+                                                        $label = trim(str_ireplace(['digunakan untuk', ' - Kelas ', ' (Kelas ', ')'], ['', '-', '-', ''], $tujuan));
+                                                    } else {
+                                                        if ($isMenunggu) {
+                                                            $bg = '#FEF9C3'; $border = '#FBBF24'; $text = '#B45309';
+                                                            $label = 'Menunggu';
+                                                        } else {
+                                                            $label = substr($pengguna, 0, 15);
+                                                        }
+                                                    }
+                                                    
+                                                    $waktuStr = "{$ev['jam_mulai']} - {$ev['jam_selesai']}";
+                                                    
+                                                    $onClick = "window.dispatchEvent(new CustomEvent('open-event-modal', {
+                                                        detail: {
+                                                            title: '".addslashes($label)."',
+                                                            pengguna: '".addslashes($pengguna)."',
+                                                            ruangan: '".addslashes($ruang->nama)."',
+                                                            tujuan: '".addslashes($tujuan)."',
+                                                            tanggal: '".$day->translatedFormat('l, d M Y')."',
+                                                            waktu: '".addslashes($waktuStr)."',
+                                                            type: '".addslashes($eventType)."',
+                                                            telepon: '".addslashes($telepon)."'
+                                                        }
+                                                    }))";
+                                                @endphp
+                                                <div @mousedown.stop @click.stop="{!! $onClick !!}"
+                                                    class="absolute left-0.5 right-0.5 rounded shadow-sm overflow-hidden flex flex-col justify-center items-center px-1 py-0.5 cursor-pointer hover:shadow-md transition-all z-10"
+                                                    style="top: {{ $top }}px; height: {{ $height }}px; background: {{ $bg }}; border: 1px solid {{ $border }}; backdrop-filter: blur(2px);"
+                                                    @mouseover="$el.style.transform='translateY(-2px)'" @mouseout="$el.style.transform='translateY(0)'">
+                                                    <span style="font-size: 9px; font-weight: 800; color: {{ $text }}; text-align: center; line-height: 1.1; word-break: break-word;">{{ $label }}</span>
+                                                    @if($height >= 30)
+                                                    <span style="font-size: 8px; font-weight: 600; color: {{ $text }}; opacity: 0.8; margin-top: 1px;">{{ $waktuStr }}</span>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                            
+                                            {{-- Indikator Waktu Saat Ini --}}
+                                            @if($day->isToday())
+                                                @php
+                                                    $now = \Carbon\Carbon::now();
+                                                    $nowMinutes = ($now->hour * 60 + $now->minute) - ($bukaInt * 60);
+                                                @endphp
+                                                @if($nowMinutes >= 0 && $nowMinutes <= ($totalHours * 60))
+                                                    <div style="position: absolute; top: {{ $nowMinutes }}px; left: 0; right: 0; height: 2px; background: #EF4444; z-index: 15; pointer-events: none;">
+                                                        <div style="position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 50%; background: #EF4444;"></div>
                                                     </div>
                                                 @endif
-                                            </td>
+                                            @endif
 
-                                        @endforeach
+                                            {{-- Area Drag (Aktif saat di-drag) --}}
+                                            <template x-if="isDragging && dragRoom == '{{ $ruang->id }}' && dragDate == '{{ $dateStr }}'">
+                                                <div class="absolute left-0 right-0 bg-emerald-500/50 z-20 pointer-events-none"
+                                                     :style="`top: ${dragTop}px; height: ${dragHeight}px;`">
+                                                </div>
+                                            </template>
+                                            </div>
+                                        </td>
                                     @endforeach
-                                </tr>
-                            @endforeach
+                                @endforeach
+                            </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
 
 
 
@@ -909,18 +935,16 @@
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
                                         <label
-                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Mulai
-                                            Menit Ke</label>
-                                        <input type="time"
-                                            class="mp-input w-full bg-gray-50 text-gray-700 font-medium cursor-not-allowed"
-                                            :value="jam" disabled>
+                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam Mulai</label>
+                                        <input type="time" x-model="jam" required
+                                            class="mp-input w-full bg-white border-gray-300 text-gray-700 font-medium cursor-text focus:ring-[#0B266E]">
                                     </div>
                                     <div>
                                         <label
-                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Hingga
-                                            Jam <span class="text-red-500">*</span></label>
+                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam Selesai
+                                            <span class="text-red-500">*</span></label>
                                         <input type="time" name="jam_selesai" x-model="jam_selesai"
-                                            class="mp-input w-full bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold focus:ring-emerald-500"
+                                            class="mp-input w-full bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold focus:ring-emerald-500 cursor-text"
                                             required>
                                     </div>
                                 </div>
@@ -1129,57 +1153,207 @@
     </div>
     </div>
 
+    <script src="//unpkg.com/alpinejs" defer></script>
     <script>
+        // AJAX Polling setiap 30 detik untuk update Real-time
+        document.addEventListener('DOMContentLoaded', () => {
+            setInterval(() => {
+                const kalenderDiv = document.querySelector('[x-data="bookingKalender()"]');
+                if (kalenderDiv && kalenderDiv.__x) {
+                    const data = Alpine.$data(kalenderDiv);
+                    // Jangan update UI jika admin sedang berinteraksi dengan modal atau dragging
+                    if (data && (data.showModal || data.showDetailModal || data.showBlockModal || data.isDragging)) return;
+                }
+                
+                fetch(window.location.href, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    
+                    const newContainer = doc.getElementById('calendar-grid-wrapper');
+                    const currentContainer = document.getElementById('calendar-grid-wrapper');
+                    
+                    if (newContainer && currentContainer) {
+                        // Simpan posisi scroll sebelum replace
+                        let scrollWrapper = currentContainer.querySelector('div[style*="overflow-x"]');
+                        let currentScroll = scrollWrapper ? scrollWrapper.scrollLeft : 0;
+
+                        currentContainer.innerHTML = newContainer.innerHTML;
+
+                        // Kembalikan posisi scroll setelah replace
+                        let newScrollWrapper = currentContainer.querySelector('div[style*="overflow-x"]');
+                        if (newScrollWrapper) {
+                            newScrollWrapper.scrollLeft = currentScroll;
+                        }
+                    }
+                })
+                .catch(err => console.error('Polling error:', err));
+            }, 30000);
+        });
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('bookingKalender', () => ({
                 isDragging: false,
                 dragStartPoint: null,
                 dragSelection: [],
-
-                startDrag(roomId, roomName, date, hourStart) {
-                    this.isDragging = true;
-                    this.dragStartPoint = { roomId, roomName, dateStr: date, hourStart };
-                    this.dragSelection = [hourStart];
+                hoverCol: null,
+                
+                // Absolute Drag properties
+                dragRoom: null,
+                dragRoomName: '',
+                dragDate: null,
+                dragStartY: 0,
+                dragCurrentY: 0,
+                bukaJam: 0,
+                totalDurasiJam: 0,
+                
+                get dragTop() {
+                    return Math.min(this.dragStartY, this.dragCurrentY);
+                },
+                get dragHeight() {
+                    return Math.max(Math.abs(this.dragCurrentY - this.dragStartY), 15); // Minimal 15 menit
+                },
+                get dragTimeText() {
+                    let startMin = this.dragTop;
+                    let endMin = this.dragTop + this.dragHeight;
+                    
+                    let sH = Math.floor(startMin / 60) + this.bukaJam;
+                    let sM = Math.floor(startMin % 60);
+                    let eH = Math.floor(endMin / 60) + this.bukaJam;
+                    let eM = Math.floor(endMin % 60);
+                    
+                    return `${String(sH).padStart(2,'0')}:${String(sM).padStart(2,'0')} - ${String(eH).padStart(2,'0')}:${String(eM).padStart(2,'0')}`;
                 },
 
-                enterDrag(roomId, date, hourStart) {
-                    if (!this.isDragging) return;
-                    if (this.dragStartPoint.roomId !== roomId || this.dragStartPoint.dateStr !== date) return;
+                // Absolute Drag Methods
+                startDragAbsolute(e, roomId, roomName, date, bukaInt, totalHours, eventBounds = []) {
+                    if (e.button !== 0) return; // Hanya klik kiri
+                    
+                    let rect = e.currentTarget.getBoundingClientRect();
+                    let y = e.clientY - rect.top;
 
-                    let sh = parseInt(this.dragStartPoint.hourStart.substring(0, 2));
-                    let eh = parseInt(hourStart.substring(0, 2));
-                    let minH = Math.min(sh, eh);
-                    let maxH = Math.max(sh, eh);
-
-                    let newSel = [];
-                    for (let i = minH; i <= maxH; i++) {
-                        newSel.push(i.toString().padStart(2, '0') + ':00');
+                    // --- MENCEGAH KLIK DI MASA LALU (HARI INI) ---
+                    let today = new Date();
+                    let todayYmd = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+                    
+                    let minAllowedY = 0;
+                    if (date === todayYmd) {
+                        minAllowedY = (today.getHours() * 60 + today.getMinutes()) - (bukaInt * 60);
                     }
-                    this.dragSelection = newSel;
+                    
+                    // Jika klik di atas batas waktu sekarang (area masa lalu), gagalkan
+                    if (y < minAllowedY) {
+                        return;
+                    }
+                    // ---------------------------------------------
+
+                    this.isDragging = true;
+                    this.dragRoom = roomId;
+                    this.dragRoomName = roomName;
+                    this.dragDate = date;
+                    this.bukaJam = bukaInt;
+                    this.totalDurasiJam = totalHours;
+                    this.minAllowedY = minAllowedY; // Simpan untuk doDragAbsolute
+                    this.eventBounds = eventBounds;
+                    
+                    this.dragStartY = Math.floor(y / 15) * 15; // Snap 15 menit
+                    
+                    // Pastikan snapping startY tidak mundur ke masa lalu
+                    let snapMin = Math.ceil(minAllowedY / 15) * 15;
+                    if (this.dragStartY < snapMin && minAllowedY > 0) {
+                        this.dragStartY = snapMin;
+                    }
+
+                    // --- MENCEGAH KLIK DI DALAM EVENT YANG SUDAH ADA ---
+                    for (let bound of this.eventBounds) {
+                        if (this.dragStartY >= bound[0] && this.dragStartY < bound[1]) {
+                            this.isDragging = false;
+                            return;
+                        }
+                    }
+
+                    // --- MENENTUKAN BATAS DRAG (ATAS & BAWAH) BERDASARKAN EVENT LAIN ---
+                    this.maxAllowedY = totalHours * 60; // Default mentok bawah
+                    this.minAllowedYEvent = 0; // Default mentok atas
+                    
+                    for (let bound of this.eventBounds) {
+                        if (bound[0] >= this.dragStartY) {
+                            if (bound[0] < this.maxAllowedY) {
+                                this.maxAllowedY = bound[0];
+                            }
+                        }
+                        if (bound[1] <= this.dragStartY) {
+                            if (bound[1] > this.minAllowedYEvent) {
+                                this.minAllowedYEvent = bound[1];
+                            }
+                        }
+                    }
+                    
+                    // Gabungkan dengan batas masa lalu (time travel)
+                    if (this.minAllowedY !== undefined && this.minAllowedY > this.minAllowedYEvent) {
+                        this.minAllowedYEvent = this.minAllowedY;
+                    }
+                    
+                    this.dragCurrentY = this.dragStartY + 60; // Default rentang klik = 1 Jam
+                    // Jika drag 1 jam nabrak maxAllowedY, sesuaikan
+                    if (this.dragCurrentY > this.maxAllowedY) {
+                        this.dragCurrentY = this.maxAllowedY;
+                    }
                 },
-
-                stopDrag() {
-                    if (this.isDragging && this.dragSelection.length > 0) {
-                        let sorted = this.dragSelection.map(h => parseInt(h.substring(0, 2))).sort((a, b) => a - b);
-                        let startH = sorted[0].toString().padStart(2, '0') + ':00';
-                        let endHStr = (sorted[sorted.length - 1] + 1).toString().padStart(2, '0') + ':00';
-
+                
+                doDragAbsolute(e) {
+                    if (!this.isDragging) return;
+                    let rect = e.currentTarget.getBoundingClientRect();
+                    let y = e.clientY - rect.top;
+                    
+                    let snappedY = Math.floor(y / 15) * 15;
+                    
+                    if (snappedY < 0) snappedY = 0;
+                    if (snappedY > (this.totalDurasiJam * 60)) snappedY = this.totalDurasiJam * 60;
+                    
+                    // --- MENCEGAH TARIKAN KE MASA LALU ATAU EVENT LAIN ---
+                    if (this.minAllowedYEvent !== undefined && snappedY < this.minAllowedYEvent) {
+                        snappedY = this.minAllowedYEvent;
+                    }
+                    if (this.maxAllowedY !== undefined && snappedY > this.maxAllowedY) {
+                        snappedY = this.maxAllowedY;
+                    }
+                    // -------------------------------------
+                    
+                    this.dragCurrentY = snappedY;
+                },
+                
+                stopDragAbsolute() {
+                    if (this.isDragging) {
+                        let startMin = this.dragTop;
+                        let endMin = this.dragTop + this.dragHeight;
+                        
+                        let sH = Math.floor(startMin / 60) + this.bukaJam;
+                        let sM = Math.floor(startMin % 60);
+                        let eH = Math.floor(endMin / 60) + this.bukaJam;
+                        let eM = Math.floor(endMin % 60);
+                        
+                        let startHStr = String(sH).padStart(2,'0') + ':' + String(sM).padStart(2,'0');
+                        let endHStr = String(eH).padStart(2,'0') + ':' + String(eM).padStart(2,'0');
+                        
                         // Dispatch event for Admin Modal
                         window.dispatchEvent(new CustomEvent('open-jalur-tol', {
                             detail: {
-                                ruangan_id: this.dragStartPoint.roomId,
-                                ruangan_nama: this.dragStartPoint.roomName,
-                                tanggal: this.dragStartPoint.dateStr,
-                                jam: startH,
+                                ruangan_id: this.dragRoom,
+                                ruangan_nama: this.dragRoomName,
+                                tanggal: this.dragDate,
+                                jam: startHStr,
                                 jam_selesai: endHStr
                             }
                         }));
                     }
                     this.isDragging = false;
-                    this.dragStartPoint = null;
-                    this.dragSelection = [];
+                    this.dragRoom = null;
                 }
-            }))
+            }));
         });
     </script>
 </x-eoffice::manajemen-ruangan.layout>

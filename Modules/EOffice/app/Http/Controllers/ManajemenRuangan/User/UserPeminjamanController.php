@@ -17,6 +17,7 @@ class UserPeminjamanController extends Controller
         Peminjaman::autoExpirePending();
 
         $ruangans = Ruangan::where('is_active', true)
+            ->where('kategori', '!=', 'Sidang')
             ->with([
                 'fotos',
                 'peminjamans' => function ($q) {
@@ -37,7 +38,10 @@ class UserPeminjamanController extends Controller
     // Room Detail Page
     public function showRuangan($id)
     {
-        $room = Ruangan::where('is_active', true)->with('fotos')->findOrFail($id);
+        $room = Ruangan::where('is_active', true)
+            ->where('kategori', '!=', 'Sidang')
+            ->with('fotos')
+            ->findOrFail($id);
         $fasilitas = is_array($room->fasilitas) ? $room->fasilitas : (json_decode($room->fasilitas, true) ?? []);
 
         // Upcoming bookings for this room (next 7 days)
@@ -62,7 +66,7 @@ class UserPeminjamanController extends Controller
             'tanggal_pinjam' => 'required|date',
             'jam_mulai' => 'required',
             'jam_selesai' => 'required|after:jam_mulai',
-            'file_berkas' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120'
+            'file_berkas' => 'nullable|file|mimes:pdf|max:2048'
         ]);
 
         // Interceptor: Cek status blacklist / Banned account 
@@ -109,7 +113,7 @@ class UserPeminjamanController extends Controller
         // Pengecekan Bentrok Jadwal Peminjaman (Global Checks)
         $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
             ->where('tanggal_pinjam', $request->tanggal_pinjam)
-            ->where('status', 'disetujui')
+            ->whereIn('status', ['menunggu', 'disetujui'])
             ->where(function ($query) use ($request) {
                 // Logika Overlap: Waktu yang diajukan bertabrakan dengan rentang jam sistem
                 $query->where(function ($q) use ($request) {
@@ -147,17 +151,16 @@ class UserPeminjamanController extends Controller
         if ($isConflict) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan dan DISETUJUI oleh pihak lain pada rentang jam tersebut.']);
+                ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan atau sedang dalam proses antrean (menunggu persetujuan) pada rentang jam tersebut.']);
         }
         if ($isInternalConflict) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['Sistem Internal' => 'Ruangan terblokir secara otomatis. Terbentrok dengan Jadwal ' . $isInternalConflict->kategori . ': ' . $isInternalConflict->keterangan]);
+                ->withErrors(['Sistem Internal' => 'Mohon maaf, ruangan terblokir secara otomatis karena terbentrok dengan Agenda Internal Kampus (Kategori: ' . $isInternalConflict->kategori . ').']);
         }
 
-        // Arsitektur Status Logika Akhir (VIP Shortcut untuk Dosen HANYA pada ruang yang 100% kosong)
-        $isDosen = auth()->user()->hasRole('dosen');
-        $statusAkhir = $isDosen ? 'disetujui' : 'menunggu';
+        // Arsitektur Status Logika Akhir
+        $statusAkhir = 'menunggu';
 
         Peminjaman::create([
             'user_id' => auth()->id(),
@@ -172,9 +175,7 @@ class UserPeminjamanController extends Controller
             'created_by' => auth()->id()
         ]);
 
-        $feedbackMsg = $statusAkhir == 'disetujui'
-            ? 'Pengajuan peminjaman ruangan Anda telah berhasil diproses dan disetujui secara otomatis oleh sistem.'
-            : 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
+        $feedbackMsg = 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
 
         return redirect()->route('eoffice.peminjaman.user.saya')
             ->with('success', $feedbackMsg);
@@ -198,18 +199,31 @@ class UserPeminjamanController extends Controller
             ? \Carbon\Carbon::parse($request->get('month') . '-01')
             : $today->copy()->startOfMonth();
 
-        // Handle Room Filter
+        // Handle Room Filter & Sensible Default
         $selectedRoomId = $request->get('ruangan_id');
-        $allRuangansQuery = Ruangan::where('is_active', true)->orderBy('nama');
+        $selectedKategori = $request->get('kategori');
+        
+        $allowedCategories = ['Kelas', 'Laboratorium', 'Aula', 'Fasilitas Umum'];
+        $allRuangansQuery = Ruangan::where('is_active', true)
+            ->whereIn('kategori', $allowedCategories)
+            ->orderBy('nama');
 
-        if ($selectedRoomId) {
-            $ruangans = $allRuangansQuery->where('id', $selectedRoomId)->get();
-        } else {
-            $ruangans = $allRuangansQuery->get();
+        // List semua ruangan (yang boleh dipinjam) untuk dropdown filter
+        $allRuangansDaftar = $allRuangansQuery->get();
+        $kategoriList = $allRuangansDaftar->pluck('kategori')->filter()->unique()->values();
+
+        // Sensible Default: Jika tidak ada ruangan/kategori yang dipilih, default ke Kelas
+        if (!$selectedRoomId && !$selectedKategori) {
+            $selectedKategori = 'Kelas';
         }
 
-        // List semua ruangan untuk dropdown filter
-        $allRuangansDaftar = Ruangan::where('is_active', true)->orderBy('nama')->get();
+        if ($selectedRoomId) {
+            $ruangans = $allRuangansDaftar->where('id', $selectedRoomId)->values();
+        } elseif ($selectedKategori && $selectedKategori !== 'Semua Kategori') {
+            $ruangans = $allRuangansDaftar->where('kategori', $selectedKategori)->values();
+        } else {
+            $ruangans = $allRuangansDaftar;
+        }
 
         // Fetch bookings for the week range
         $bookingsRaw = Peminjaman::with('user:id,name')
@@ -238,12 +252,20 @@ class UserPeminjamanController extends Controller
         $nim = $user->student->student_number ?? $user->lecturer->employee_number ?? explode('@', $user->email)[0];
         $phone = ''; // User model currently may not have phone natively unless it does, we can leave blank.
 
-        $internalSchedules = \Modules\EOffice\Models\MrJadwalInternal::all();
+        $internalSchedules = \Modules\EOffice\Models\MrJadwalInternal::all()->map(function($jadwal) {
+            $publicCategories = ['Jadwal Akademik (Kuliah)', 'Pindah Kelas', 'Pindah / Pengganti Kelas'];
+            if (!in_array($jadwal->kategori, $publicCategories)) {
+                $jadwal->keterangan = 'Agenda Internal Terjadwal';
+            }
+            return $jadwal;
+        });
 
         return view('eoffice::manajemen-ruangan.user.kalender.index', compact(
             'ruangans',
             'allRuangansDaftar',
             'selectedRoomId',
+            'kategoriList',
+            'selectedKategori',
             'bookingsRaw',
             'internalSchedules',
             'weekStart',
@@ -303,7 +325,10 @@ class UserPeminjamanController extends Controller
             ->firstOrFail();
 
         if ($peminjaman->status == 'menunggu' || $peminjaman->status == 'disetujui') {
-            $peminjaman->update(['status' => 'dibatalkan']);
+            $peminjaman->update([
+                'status' => 'dibatalkan',
+                'waktu_approval' => now()
+            ]);
             return redirect()->back()->with('success', 'Peminjaman berhasil dibatalkan secara mandiri.');
         }
 
@@ -320,8 +345,26 @@ class UserPeminjamanController extends Controller
         $dateToday = $now->copy()->format('Y-m-d');
         $timeNow = $now->copy()->format('H:i:s');
 
+        // Cleanup otomatis: Sembunyikan riwayat yang lebih dari 14 hari
+        Peminjaman::where('user_id', auth()->id())
+            ->where('is_hidden_by_user', false)
+            ->where(function($q) {
+                // Yang ditolak/dibatalkan lebih dari 14 hari yang lalu
+                $q->where(function($subQ) {
+                    $subQ->whereIn('status', ['ditolak', 'dibatalkan'])
+                         ->where('updated_at', '<', now()->subDays(14));
+                })
+                // Yang disetujui dan sudah selesai pelaksanaannya 14 hari yang lalu
+                ->orWhere(function($subQ) {
+                    $subQ->where('status', 'disetujui')
+                         ->where('tanggal_pinjam', '<', now()->subDays(14)->format('Y-m-d'));
+                });
+            })
+            ->update(['is_hidden_by_user' => true]);
+
         $riwayats = Peminjaman::with('ruangan')
             ->where('user_id', auth()->id())
+            ->where('is_hidden_by_user', false)
             ->where(function ($q) use ($dateToday, $timeNow) {
                 // Yang ditolak/dibatalkan
                 $q->whereIn('status', ['ditolak', 'dibatalkan'])
@@ -340,5 +383,74 @@ class UserPeminjamanController extends Controller
             ->latest('updated_at')
             ->paginate(request('per_page', 10))->appends(request()->query());
         return view('eoffice::manajemen-ruangan.user.riwayat.index', compact('riwayats'));
+    }
+
+    public function hideRiwayat($id)
+    {
+        $peminjaman = Peminjaman::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->firstOrFail();
+            
+        $peminjaman->update(['is_hidden_by_user' => true]);
+        return redirect()->back()->with('success', 'Riwayat berhasil disembunyikan dari daftar Anda.');
+    }
+
+    /**
+     * Mark a specific notification as read and redirect to its URL
+     */
+    public function markNotificationAsRead(Request $request, $id)
+    {
+        $notification = auth()->user()->notifications()->findOrFail($id);
+        $notification->markAsRead();
+
+        $peminjamanId = $notification->data['peminjaman_id'] ?? null;
+        $url = $notification->data['url'] ?? route('eoffice.peminjaman.user.riwayat');
+
+        if ($peminjamanId) {
+            $peminjaman = \Modules\EOffice\Models\Peminjaman::find($peminjamanId);
+            if ($peminjaman) {
+                if ($peminjaman->status == 'disetujui') {
+                    $now = now();
+                    $date = $now->format('Y-m-d');
+                    $time = $now->format('H:i:s');
+                    
+                    $isPast = ($peminjaman->tanggal_pinjam < $date) || ($peminjaman->tanggal_pinjam == $date && $peminjaman->jam_selesai <= $time);
+                    
+                    if ($isPast) {
+                        $url = route('eoffice.peminjaman.user.riwayat');
+                    } else {
+                        $url = route('eoffice.peminjaman.user.saya');
+                    }
+                } else {
+                    // Ditolak / Dibatalkan
+                    $url = route('eoffice.peminjaman.user.riwayat');
+                }
+            }
+        }
+
+        return redirect()->to($url);
+    }
+
+    /**
+     * Get the current unread notification count
+     */
+    public function getUnreadCount()
+    {
+        $count = auth()->check() ? auth()->user()->unreadNotifications->count() : 0;
+        return response()->json(['count' => $count]);
+    }
+
+    /**
+     * Mark all notifications as read
+     */
+    public function markAllNotificationsAsRead(Request $request)
+    {
+        auth()->user()->unreadNotifications->markAsRead();
+        
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true]);
+        }
+        
+        return redirect()->back()->with('success', 'Semua notifikasi telah ditandai sebagai dibaca');
     }
 }
