@@ -862,7 +862,7 @@
                     x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
                     x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
-                    class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-md" aria-hidden="true"
+                    class="fixed inset-0 transition-opacity bg-slate-900/60" aria-hidden="true"
                     @click="show = false">
                 </div>
 
@@ -875,56 +875,52 @@
                     class="relative bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
 
                     {{-- Header --}}
-                    <div
-                        class="bg-white px-6 py-5 border-b border-gray-100 flex-shrink-0 flex justify-between items-start">
-                        <div>
-                            <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Input Peminjaman</h3>
-                            <p class="text-sm text-gray-500 mt-1">Mengunci penjadwalan paksa untuk <span
-                                    class="font-semibold text-primary-500" x-text="ruangan_nama"></span> pada <span
-                                    class="font-semibold text-primary-500"
-                                    x-text="tanggal + ' pukul ' + jam + ' WIB'"></span>.</p>
+                    <div class="px-5 py-4 border-b border-gray-100/80 bg-white/50 backdrop-blur flex-shrink-0 flex justify-between items-start rounded-t-xl sticky top-0 z-10">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight" id="modal-title">Input Peminjaman</h3>
+                                <p class="text-[10px] text-[#0B266E] font-medium">Mengunci penjadwalan paksa untuk <span class="font-bold" x-text="ruangan_nama"></span> pada <span class="font-bold" x-text="tanggal + ' pukul ' + jam + ' WIB'"></span></p>
+                            </div>
                         </div>
                         <button type="button" @click="show = false"
-                            class="text-gray-400 hover:text-gray-500 rounded-md focus:outline-none">
-                            <span class="sr-only">Close menu</span>
-                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
 
                     {{-- Scrollable Body --}}
-                    <div class="px-6 py-5 overflow-y-auto flex-1 bg-white">
-                        <form id="expressBookingForm" method="POST"
-                            action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}">
+                    <div class="px-4 sm:px-6 md:px-8 pt-4 pb-5 overflow-y-auto overflow-x-hidden flex-1 bg-white whitespace-normal">
+                        <form id="expressBookingForm" method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}" class="flex flex-col flex-1 min-h-0">
                             @csrf
                             <input type="hidden" name="ruangan_id" x-model="ruangan_id">
                             <input type="hidden" name="tanggal" x-model="tanggal">
                             <input type="hidden" name="jam_mulai" x-model="jam">
 
-                            <div class="space-y-5">
-                                <div>
-                                    <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-2">Pilih
-                                        Mode Tindakan</label>
+                            <div class="space-y-4">
+                                <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Mode Tindakan</span>
+                                    </div>
                                     <div class="grid grid-cols-2 gap-3">
-                                        <label class="border rounded-lg p-3 cursor-pointer transition-colors"
-                                            :class="modeAction === 'internal' ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                        <label class="border rounded-xl p-3 cursor-pointer transition-colors"
+                                            :class="modeAction === 'internal' ? 'bg-blue-50 border-blue-400 ring-2 ring-blue-100' : 'bg-white border-slate-200 hover:bg-slate-50'">
                                             <input type="radio" name="tipe_aksi" value="internal" x-model="modeAction"
                                                 class="hidden">
                                             <div class="font-bold text-sm"
-                                                :class="modeAction === 'internal' ? 'text-emerald-700' : 'text-gray-700'">
+                                                :class="modeAction === 'internal' ? 'text-blue-800' : 'text-gray-700'">
                                                 Jadwal Internal</div>
                                             <div class="text-[10px] text-gray-500 mt-1">Blokir Kuliah / Maintenance
                                             </div>
                                         </label>
-                                        <label class="border rounded-lg p-3 cursor-pointer transition-colors"
-                                            :class="modeAction === 'dosen' ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                        <label class="border rounded-xl p-3 cursor-pointer transition-colors"
+                                            :class="modeAction === 'dosen' ? 'bg-emerald-50 border-emerald-400 ring-2 ring-emerald-100' : 'bg-white border-slate-200 hover:bg-slate-50'">
                                             <input type="radio" name="tipe_aksi" value="dosen" x-model="modeAction"
                                                 class="hidden">
                                             <div class="font-bold text-sm"
-                                                :class="modeAction === 'dosen' ? 'text-emerald-700' : 'text-gray-700'">
+                                                :class="modeAction === 'dosen' ? 'text-emerald-800' : 'text-gray-700'">
                                                 Peminjaman Manual</div>
                                             <div class="text-[10px] text-gray-500 mt-1">Peminjaman langsung disetujui
                                             </div>
@@ -932,94 +928,83 @@
                                     </div>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label
-                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam Mulai</label>
-                                        <input type="time" x-model="jam" required
-                                            class="mp-input w-full bg-white border-gray-300 text-gray-700 font-medium cursor-text focus:ring-[#0B266E]">
+                                <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Waktu & Tanggal</span>
                                     </div>
-                                    <div>
-                                        <label
-                                            class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Jam Selesai
-                                            <span class="text-red-500">*</span></label>
-                                        <input type="time" name="jam_selesai" x-model="jam_selesai"
-                                            class="mp-input w-full bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold focus:ring-emerald-500 cursor-text"
-                                            required>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Mulai</label>
+                                            <input type="time" x-model="jam" required
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                        </div>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Selesai
+                                                <span class="text-red-500">*</span></label>
+                                            <input type="time" name="jam_selesai" x-model="jam_selesai"
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800"
+                                                required>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div x-show="modeAction === 'internal'" style="display:none;">
-                                    <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Kategori
-                                        <span class="text-red-500">*</span></label>
-                                    <div x-data="{ 
-                                            open: false,
-                                            get selectedName() {
-                                                const map = {
-                                                    'Pindah Kelas': 'Pindah / Pengganti Kelas',
-                                                    'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
-                                                    'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
-                                                    'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
-                                                    'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                    'Lainnya': 'Lainnya...'
-                                                };
-                                                return map[kategoriType] || 'Pilih Kategori...';
-                                            },
-                                            selectItem(val) { 
-                                                kategoriType = val;
-                                                this.open = false; 
-                                            } 
-                                        }" class="relative w-full" :class="{'z-50': open, 'z-[1]': !open}"
-                                        @click.away="open = false">
+                                <div x-show="modeAction === 'internal'" style="display:none;" class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Kategori & Detail</span>
+                                    </div>
+                                    <div class="space-y-1.5 relative z-50">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori
+                                            <span class="text-red-500">*</span></label>
+                                        <div x-data="{ 
+                                                open: false,
+                                                get selectedName() {
+                                                    const map = {
+                                                        'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                        'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                        'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                        'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
+                                                        'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
+                                                        'Lainnya': 'Lainnya...'
+                                                    };
+                                                    return map[kategoriType] || 'Pilih Kategori...';
+                                                },
+                                                selectItem(val) { 
+                                                    kategoriType = val;
+                                                    this.open = false; 
+                                                } 
+                                            }" class="relative w-full" :class="{'z-50': open, 'z-[1]': !open}"
+                                            @click.away="open = false">
 
-                                        <input type="hidden" name="kategori" :value="kategoriType"
-                                            :required="modeAction === 'internal'">
+                                            <input type="hidden" name="kategori" :value="kategoriType" :required="modeAction === 'internal'">
 
-                                        <button type="button" @click="open = !open"
-                                            class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
-                                            <span x-text="selectedName" class="truncate"
-                                                :class="{'text-gray-400': !kategoriType, 'text-gray-800': kategoriType}"></span>
-                                            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
-                                                :class="{'rotate-180': open}" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
+                                            <button type="button" @click="open = !open"
+                                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                                <span x-text="selectedName" class="truncate"
+                                                    :class="{'text-gray-400': !kategoriType, 'text-gray-800': kategoriType}"></span>
+                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+                                                    :class="{'rotate-180': open}" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
 
-                                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            x-transition:leave="transition ease-in duration-75"
-                                            x-transition:leave-start="opacity-100 scale-100"
-                                            x-transition:leave-end="opacity-0 scale-95"
-                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-y-auto max-h-48"
-                                            style="display: none;">
-                                            <div class="p-1">
-                                                <button type="button" @click="selectItem('Pindah Kelas')"
-                                                    class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah
-                                                    / Pengganti Kelas</button>
-                                                <button type="button" @click="selectItem('Maintenance / Perbaikan')"
-                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance
-                                                    / Perbaikan Ruangan</button>
-                                                <button type="button" @click="selectItem('Sterilisasi Ruangan')"
-                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi
-                                                    / Persiapan Ruangan</button>
-                                                <button type="button" @click="selectItem('Penutupan Khusus')"
-                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan
-                                                    Khusus / Libur Nasional</button>
-                                                <button type="button" @click="selectItem('Ujian / Evaluasi')"
-                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian
-                                                    / Evaluasi (UTS/UAS)</button>
-                                                <button type="button" @click="selectItem('Lainnya')"
-                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
+                                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="opacity-100 scale-100"
+                                                x-transition:leave-end="opacity-0 scale-95"
+                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[60] overflow-y-auto max-h-48"
+                                                style="display: none;">
+                                                <div class="p-1 flex flex-col">
+                                                    <button type="button" @click="selectItem('Pindah Kelas')" class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                                    <button type="button" @click="selectItem('Maintenance / Perbaikan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                                    <button type="button" @click="selectItem('Sterilisasi Ruangan')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                                    <button type="button" @click="selectItem('Penutupan Khusus')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
+                                                    <button type="button" @click="selectItem('Ujian / Evaluasi')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
+                                                    <button type="button" @click="selectItem('Lainnya')" class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors" :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1028,121 +1013,103 @@
                                 <!-- Academic Metadata Panel (Dynamic) -->
                                 <div x-show="kategoriType === 'Jadwal Akademik (Kuliah)' && modeAction === 'internal'"
                                     style="display:none;"
-                                    class="bg-primary-50 border border-primary-100 p-4 rounded-lg space-y-4 mt-2">
-                                    <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-primary-500 mb-1.5 flex items-center gap-1.5">
+                                    class="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl space-y-4">
+                                    <label class="block text-[10px] uppercase tracking-widest font-black text-blue-800 mb-1.5 flex items-center gap-1.5">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                         </svg>
-                                        Metadata Akademik Tambahan <span
-                                            class="text-primary-500 font-normal">(Opsional)</span>
+                                        Metadata Akademik Tambahan <span class="text-blue-500 font-medium normal-case tracking-normal">(Opsional)</span>
                                     </label>
                                     <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Mata
-                                                Kuliah</label>
-                                            <input type="text" name="mata_kuliah"
-                                                :required="kategoriType === 'Jadwal Akademik (Kuliah)'"
-                                                class="mp-input w-full" placeholder="Nama Lengkap Matkul">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mata Kuliah</label>
+                                            <input type="text" name="mata_kuliah" :required="kategoriType === 'Jadwal Akademik (Kuliah)'"
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all" placeholder="Nama Lengkap Matkul">
                                         </div>
-                                        <div>
-                                            <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Kode
-                                                MK</label>
-                                            <input type="text" name="kode_mk" class="mp-input w-full"
-                                                placeholder="Contoh: TKK102">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kode MK</label>
+                                            <input type="text" name="kode_mk" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all" placeholder="Contoh: TKK102">
                                         </div>
                                     </div>
                                     <div class="grid grid-cols-3 gap-4">
-                                        <div>
-                                            <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Kelas</label>
-                                            <input type="text" name="kelas" class="mp-input w-full"
-                                                placeholder="Misal: A">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kelas</label>
+                                            <input type="text" name="kelas" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all" placeholder="Misal: A">
                                         </div>
-                                        <div>
-                                            <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">SKS</label>
-                                            <input type="number" name="sks" class="mp-input w-full" placeholder="0-4">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">SKS</label>
+                                            <input type="number" name="sks" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all" placeholder="0-4">
                                         </div>
-                                        <div>
-                                            <label
-                                                class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Kuota</label>
-                                            <input type="number" name="kuota" class="mp-input w-full"
-                                                placeholder="Kuota">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kuota</label>
+                                            <input type="number" name="kuota" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all" placeholder="Kuota">
                                         </div>
                                     </div>
-                                    <div>
-                                        <label
-                                            class="block text-[11px] uppercase tracking-wider font-bold text-primary-500/70 mb-1.5">Nama
-                                            Dosen Pengampu</label>
-                                        <input type="text" name="pengampu" class="mp-input w-full"
-                                            placeholder="Dosen Pengampu Mata Kuliah">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Dosen Pengampu</label>
+                                        <input type="text" name="pengampu" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all" placeholder="Dosen Pengampu Mata Kuliah">
                                     </div>
                                 </div>
 
-                                <div x-show="modeAction === 'dosen'" class="relative">
-                                    <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama,
-                                        NIM, atau Email Target <span class="text-red-500">*</span></label>
-                                    <!-- HIDDEN ACTUAL INPUT -->
-                                    <input type="hidden" name="nim" x-model="nim">
-                                    <!-- SEARCH INPUT -->
-                                    <input type="text" x-model="searchQuery" @input.debounce.500ms="searchUsers"
-                                        placeholder="Ketik nama atau email peminjam..." class="mp-input w-full"
-                                        autocomplete="off" :required="modeAction === 'dosen'">
-
-                                    <!-- LOADING SPINNER -->
-                                    <div x-show="isSearching" class="absolute right-3 top-8 text-primary-500">
-                                        <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                            viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                                stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor"
-                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                                        </svg>
+                                <div x-show="modeAction === 'dosen'" class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl" style="display:none;">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Target Peminjam</span>
                                     </div>
+                                    <div class="space-y-1.5 relative">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama, NIM, atau Email Target <span class="text-red-500">*</span></label>
+                                        <!-- HIDDEN ACTUAL INPUT -->
+                                        <input type="hidden" name="nim" x-model="nim">
+                                        <!-- SEARCH INPUT -->
+                                        <input type="text" x-model="searchQuery" @input.debounce.500ms="searchUsers"
+                                            placeholder="Ketik nama atau email peminjam..." class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                            autocomplete="off" :required="modeAction === 'dosen'">
 
-                                    <!-- DROPDOWN SUGGESTIONS -->
-                                    <ul x-show="suggestions.length > 0" @click.away="suggestions = []"
-                                        class="absolute z-[100] w-full bg-white mt-1 border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
-                                        style="display: none;">
-                                        <template x-for="user in suggestions" :key="user.id">
-                                            <li @click="selectUser(user)"
-                                                class="px-4 py-2.5 hover:bg-primary-50 cursor-pointer border-b border-gray-100 last:border-b-0">
-                                                <div class="font-bold text-sm text-gray-800" x-text="user.name"></div>
-                                                <div
-                                                    class="flex items-center gap-2 mt-0.5 text-[11px] font-medium text-gray-500">
-                                                    <span x-text="user.external_id || 'N/A'"></span>
-                                                    <span class="text-gray-300">•</span>
-                                                    <span x-text="user.email"></span>
-                                                </div>
-                                            </li>
-                                        </template>
-                                    </ul>
+                                        <!-- LOADING SPINNER -->
+                                        <div x-show="isSearching" class="absolute right-3 top-8 text-primary-500">
+                                            <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                            </svg>
+                                        </div>
 
-                                    <p class="text-[10px] text-gray-400 mt-1">Sistem akan melakukan autorisasi instan,
-                                        peminjaman ini akan dikunci dan langsung berstatus 'Disetujui'.</p>
+                                        <!-- DROPDOWN SUGGESTIONS -->
+                                        <ul x-show="suggestions.length > 0" @click.away="suggestions = []"
+                                            class="absolute z-[100] w-full bg-white mt-1 border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto"
+                                            style="display: none;">
+                                            <template x-for="user in suggestions" :key="user.id">
+                                                <li @click="selectUser(user)" class="px-4 py-2.5 hover:bg-primary-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                                                    <div class="font-bold text-sm text-gray-800" x-text="user.name"></div>
+                                                    <div class="flex items-center gap-2 mt-0.5 text-[11px] font-medium text-gray-500">
+                                                        <span x-text="user.external_id || 'N/A'"></span>
+                                                        <span class="text-gray-300">&bull;</span>
+                                                        <span x-text="user.email"></span>
+                                                    </div>
+                                                </li>
+                                            </template>
+                                        </ul>
+
+                                        <p class="text-[10px] text-gray-400 mt-1">Sistem akan melakukan autorisasi instan, peminjaman ini akan dikunci dan langsung berstatus 'Disetujui'.</p>
+                                    </div>
                                 </div>
 
-                                <div>
-                                    <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama
-                                        Kegiatan <span class="text-red-500">*</span></label>
-                                    <input type="text" name="keterangan" x-model="keterangan" class="mp-input w-full"
-                                        placeholder="Misal: Kuliah Pengganti / Rapat Evaluasi..." required>
+                                <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                        <input type="text" name="keterangan" x-model="keterangan" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all"
+                                            placeholder="Misal: Kuliah Pengganti / Rapat Evaluasi..." required>
+                                    </div>
                                 </div>
                             </div>
                         </form>
                     </div>
 
-                    <div class="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
-                        <button type="button" @click="show = false" class="mp-btn secondary md">
+                    <div class="bg-slate-50/50 px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+                        <button type="button" @click="show = false"
+                            class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
                             Batal
                         </button>
-                        <button type="submit" form="expressBookingForm" class="mp-btn primary md">
+                        <button type="submit" form="expressBookingForm"
+                            class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
                             Simpan
                         </button>
                     </div>
