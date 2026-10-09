@@ -1,1 +1,23 @@
-<div class="mx-auto max-w-4xl space-y-6"><div class="flex items-start gap-3 border-b pb-4"><div class="rounded-lg bg-accent p-2"><x-capstone::icon name="ClipboardCheck" class="h-5 w-5 text-primary" /></div><div><h2 class="text-lg font-semibold text-gray-900">Review Konfigurasi Periode</h2><p class="text-sm text-gray-500">Periksa kembali data sebelum menyimpan periode</p></div></div><div class="grid gap-6 md:grid-cols-2"><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Informasi Dasar</h3><p class="text-lg font-medium" x-text="form.name"></p><p class="mt-2 text-sm text-gray-600" x-text="form.start_date+' — '+form.end_date"></p><x-capstone::badge variant="outline" class="mt-3" x-text="form.is_active ? 'Aktif' : 'Nonaktif'" /></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Konfigurasi Group</h3><p class="text-sm text-gray-600" x-text="form.min_group_size+'–'+form.max_group_size+' anggota per group'"></p><p class="mt-2 text-sm text-gray-600" x-text="form.max_supervisor_load+' group/dosen'"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Tanggal Fase</h3>@foreach(['bidding'=>'Bidding','pdc1'=>'PDC1','pdc2'=>'PDC2','ta'=>'Sidang TA'] as $key=>$label)<div class="mb-3 text-sm"><p class="font-medium">{{ $label }}</p><p class="text-gray-600" x-text="(form.{{ $key }}_start || '-')+' — '+(form.{{ $key }}_end || '-')"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.{{ $key }}_reminder_at || '-')"></p></div>@endforeach<p class="text-sm font-medium">EXPO TA</p><p class="text-sm text-gray-600" x-text="form.expo_date || '-'"></p><p class="text-xs text-gray-500" x-text="'Pengingat: '+(form.expo_reminder_at || '-')"></p></div><div class="rounded-xl border p-5"><h3 class="mb-4 font-semibold">Period Setup</h3><template x-for="type in types" :key="type"><div class="flex justify-between gap-3 py-2 text-sm"><span x-text="type.replaceAll('_',' ')"></span><span x-text="assessments[type].length+' komponen / '+weight(assessments[type])+'%'"></span></div></template><div class="flex justify-between py-2 text-sm"><span>Peer Review</span><span x-text="peerIds.length+' indikator / '+weight(peerIds,true)+'%'"></span></div></div></div></div>
+<div class="grid grid-cols-1 gap-5 p-6 sm:p-8 lg:grid-cols-[280px_1fr]">
+    <div>
+        <h2 class="text-base font-bold text-gray-900">Review</h2>
+        <p class="mt-1 text-sm text-gray-500">Tinjau konfigurasi Anda sebelum menyimpan.</p>
+    </div>
+    <div class="text-sm">
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Konfigurasi Periode Baru</h3>
+        <dl class="mt-3 space-y-3">
+            <div class="flex items-center justify-between gap-4"><dt class="text-gray-500">Nama Periode</dt><dd class="font-medium text-gray-900" x-text="form.name || '-'"></dd></div>
+            <div class="flex items-center justify-between gap-4"><dt class="text-gray-500">Durasi</dt><dd class="font-medium text-gray-900" x-text="reviewDuration"></dd></div>
+            <div class="flex items-center justify-between gap-4"><dt class="text-gray-500">Status</dt><dd><span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700" x-show="form.is_active"><span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>Aktif</span><span class="inline-flex items-center rounded-full border border-gray-300 bg-gray-50 px-2.5 py-0.5 text-xs font-medium text-gray-600" x-show="!form.is_active">Nonaktif</span></dd></div>
+            <div class="flex items-center justify-between gap-4"><dt class="text-gray-500">Bidding</dt><dd class="font-medium text-gray-900" x-text="(form.bidding_start || '-')+' - '+(form.bidding_end || '-')"></dd></div>
+            <div class="flex items-center justify-between gap-4"><dt class="text-gray-500">Jumlah Anggota</dt><dd class="font-medium text-gray-900" x-text="form.min_group_size+'-'+form.max_group_size+' Anggota/Group'"></dd></div>
+            <div class="flex items-center justify-between gap-4"><dt class="text-gray-500">Maximal Dosen Pembimbing</dt><dd class="font-medium text-gray-900" x-text="form.max_supervisor_load+' Group/Dosen'"></dd></div>
+        </dl>
+        <div class="my-5 h-px bg-gray-100"></div>
+        <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500">Setup Evaluasi</h3>
+        <dl class="mt-3 space-y-3">
+            <template x-for="type in types" :key="type"><div class="flex items-center justify-between gap-4"><dt class="text-gray-500" x-text="reviewLabel(type)"></dt><dd class="text-right font-medium text-gray-900" x-text="templateCodes(type).join(', ') || '-'"></dd></div></template>
+            <div class="flex items-center justify-between gap-4"><dt class="text-gray-500">Peer Review</dt><dd class="text-right font-medium text-gray-900" x-text="peerCodes.join(', ') || '-'"></dd></div>
+        </dl>
+    </div>
+</div>

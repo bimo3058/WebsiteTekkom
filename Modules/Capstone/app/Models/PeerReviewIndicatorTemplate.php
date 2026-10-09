@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class PeerReviewIndicatorTemplate extends Model
 {
     protected $table = 'capstone_peer_review_indicator_templates';
+
     protected $fillable = [
+        'code',
         'name',
         'description',
         'weight',

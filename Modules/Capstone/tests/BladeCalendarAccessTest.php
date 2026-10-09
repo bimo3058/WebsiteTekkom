@@ -36,6 +36,7 @@ use Modules\Capstone\Http\Controllers\GroupController;
 use Modules\Capstone\Http\Controllers\IndividualTaController;
 use Modules\Capstone\Http\Controllers\LaunchController;
 use Modules\Capstone\Http\Controllers\PeerReviewController;
+use Modules\Capstone\Http\Controllers\PeerReviewIndicatorTemplateController;
 use Modules\Capstone\Http\Controllers\PeriodAssessmentConfigController;
 use Modules\Capstone\Http\Controllers\PeriodPeerReviewConfigController;
 use Modules\Capstone\Http\Controllers\RegistrationController;
@@ -832,8 +833,8 @@ class BladeCalendarAccessTest extends TestCase
         $target = Period::create(['name' => 'Target', 'start_date' => '2026-01-01', 'end_date' => '2026-12-31']);
         $template = AssessmentComponentTemplate::create(['name' => 'Assessment', 'code' => 'A', 'weight' => 100]);
         // Different IDs prove that an assessment template cannot masquerade as a peer template.
-        $peer = PeerReviewIndicatorTemplate::create(['name' => 'Unused', 'weight' => 50]);
-        $peer = PeerReviewIndicatorTemplate::create(['name' => 'Peer template', 'weight' => 100]);
+        $peer = PeerReviewIndicatorTemplate::create(['code' => 'UNUSED', 'name' => 'Unused', 'weight' => 50]);
+        $peer = PeerReviewIndicatorTemplate::create(['code' => 'PEER-1', 'name' => 'Peer template', 'weight' => 100]);
         $assessmentController = new PeriodAssessmentConfigController;
         $peerController = new PeriodPeerReviewConfigController;
         foreach ([$period, $target] as $p) {
@@ -896,11 +897,37 @@ class BladeCalendarAccessTest extends TestCase
         $this->assertNotNull($component->fresh());
     }
 
+    public function test_peer_review_bank_requires_unique_code_like_assessment_bank(): void
+    {
+        $this->periodWizardSchema();
+        $admin = $this->actor('admin');
+        $controller = new PeerReviewIndicatorTemplateController;
+        try {
+            $controller->store($this->requestFor($admin, '/', 'POST', ['name' => 'No code', 'weight' => 100]));
+            $this->fail('Missing code must fail validation');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('code', $e->errors());
+        }
+        $payload = ['code' => 'PR-KONTRIBUSI', 'name' => 'Kontribusi', 'description' => 'Peer description', 'weight' => 100];
+        $response = $controller->store($this->requestFor($admin, '/', 'POST', $payload));
+        $this->assertSame(201, $response->getStatusCode());
+        $template = PeerReviewIndicatorTemplate::firstOrFail();
+        $this->assertSame('PR-KONTRIBUSI', $template->code);
+        try {
+            $controller->store($this->requestFor($admin, '/', 'POST', $payload));
+            $this->fail('Duplicate code must fail validation');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('code', $e->errors());
+        }
+        $controller->update($this->requestFor($admin, '/', 'PUT', ['code' => 'PR-KERJASAMA']), $template->id);
+        $this->assertSame('PR-KERJASAMA', $template->fresh()->code);
+    }
+
     public function test_period_wizard_persists_configurations_atomically_and_preserves_component_ids(): void
     {
         $this->periodWizardSchema();
         $template = AssessmentComponentTemplate::create(['name' => 'Demo', 'code' => 'DEMO', 'weight' => 100]);
-        $peer = PeerReviewIndicatorTemplate::create(['name' => 'Teamwork', 'weight' => 100]);
+        $peer = PeerReviewIndicatorTemplate::create(['code' => 'TEAMWORK', 'name' => 'Teamwork', 'weight' => 100]);
         $controller = new BladePeriodController;
         $body = ['name' => 'Semester', 'start_date' => '2026-01-01', 'end_date' => '2026-12-31', 'is_active' => false, 'min_group_size' => 3, 'max_group_size' => 4, 'max_supervisor_load' => 5, 'expo_reminder_at' => '2026-06-01', 'assessments' => array_fill_keys($controller::TYPES, []), 'peer_ids' => [$peer->id]];
         $body['assessments']['EXPO'] = [$template->id];
@@ -1332,6 +1359,7 @@ class BladeCalendarAccessTest extends TestCase
         (require __DIR__.'/../database/migrations/2026_05_05_000025_create_capstone_peer_reviews_table.php')->up();
         Schema::create('capstone_peer_review_indicator_templates', function (Blueprint $t) {
             $t->id();
+            $t->string('code')->unique();
             $t->string('name');
             $t->text('description')->nullable();
             $t->decimal('weight', 5, 2);
@@ -1417,7 +1445,7 @@ class BladeCalendarAccessTest extends TestCase
         $reviewee = $this->actor('mahasiswa');
         $group = $this->group($reviewer, null, 'EXPO_REGISTERED');
         GroupMember::create(['group_id' => $group->id, 'student_id' => $reviewee->student->id]);
-        $template = PeerReviewIndicatorTemplate::create(['name' => 'Teamwork', 'weight' => 100]);
+        $template = PeerReviewIndicatorTemplate::create(['code' => 'TEAMWORK', 'name' => 'Teamwork', 'weight' => 100]);
         $indicator = PeriodPeerReviewIndicator::create(['period_id' => $group->period_id, 'template_id' => $template->id]);
         $controller = new PeerReviewController;
         $form = $controller->index($this->requestFor($reviewer, '/'))->getData(true);
