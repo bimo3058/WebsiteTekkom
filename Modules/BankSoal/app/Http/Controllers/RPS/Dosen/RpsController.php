@@ -544,6 +544,53 @@ class RpsController extends Controller
                     }
                 }
 
+                // Susun lengkap 16 pertemuan (1-7, 8 UTS, 9-15, 16 UAS)
+                $completePertemuan = [];
+                for ($m = 1; $m <= 16; $m++) {
+                    if ($m === 8) {
+                        $completePertemuan[] = [
+                            'pertemuan' => 8,
+                            'kemampuan_akhir' => 'UTS',
+                            'pokok_bahasan' => '-',
+                            'metode' => '-',
+                            'waktu' => 0,
+                            'pengalaman_belajar' => '-',
+                            'target_cpmk' => '-',
+                            'kriteria_penilaian' => '-',
+                            'bobot' => 0,
+                        ];
+                    } elseif ($m === 16) {
+                        $completePertemuan[] = [
+                            'pertemuan' => 16,
+                            'kemampuan_akhir' => 'UAS',
+                            'pokok_bahasan' => '-',
+                            'metode' => '-',
+                            'waktu' => 0,
+                            'pengalaman_belajar' => '-',
+                            'target_cpmk' => '-',
+                            'kriteria_penilaian' => '-',
+                            'bobot' => 0,
+                        ];
+                    } else {
+                        $meeting = $normalizedPertemuan[$m] ?? $normalizedPertemuan[(string)$m] ?? null;
+                        if ($meeting) {
+                            $completePertemuan[] = array_merge(['pertemuan' => $m], $meeting);
+                        } else {
+                            $completePertemuan[] = [
+                                'pertemuan' => $m,
+                                'kemampuan_akhir' => '-',
+                                'pokok_bahasan' => '-',
+                                'metode' => '-',
+                                'waktu' => 150,
+                                'pengalaman_belajar' => '-',
+                                'target_cpmk' => '-',
+                                'kriteria_penilaian' => '-',
+                                'bobot' => 0,
+                            ];
+                        }
+                    }
+                }
+
                 $pdfData = [
                     'tahun_akademik' => $validated['tahun_ajaran'],
                     'mata_kuliah' => [
@@ -556,7 +603,7 @@ class RpsController extends Controller
                     'cpl' => $cpls,
                     'cpmk' => $createdCpmkRowsTemp,
                     'deskripsi_mk' => $validated['deskripsi_mk'],
-                    'pertemuan' => $normalizedPertemuan,
+                    'pertemuan' => $completePertemuan,
                     'referensi' => $validated['referensi_data'],
                     'semester' => $validated['semester'],
                 ];

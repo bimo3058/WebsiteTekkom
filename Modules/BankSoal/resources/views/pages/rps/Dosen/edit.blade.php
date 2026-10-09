@@ -1,4 +1,4 @@
-<x-banksoal::layouts.dosen-admin>
+<x-banksoal::layouts.dosen-admin :bank-soal="true">
     @section('breadcrumbs')
         <a href="{{ route('banksoal.rps.dosen.index') }}"
             class="text-slate-500 hover:text-primary transition-colors">Manajemen RPS</a>
@@ -514,24 +514,29 @@
         $creationMethod = old('creation_method', $rps->creation_method ?? 'upload');
     @endphp
 
-    <div class="page-header">
-        <div class="header-content">
-            <h1>Revisi RPS</h1>
-            <p>Perbarui Rencana Pembelajaran Semester. Status saat ini: <span class="badge {{ match ($rps->status->value) {
-    'diajukan' => 'bg-amber-100 text-amber-800 border-amber-200',
-    'revisi' => 'bg-rose-100 text-rose-800 border-rose-200',
-    'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    default => 'bg-slate-100 text-slate-800 border-slate-200'
-} }}"
-                    style="padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;">{{ $rps->status->label() }}</span>
-            </p>
-        </div>
-        <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary">
-            Kembali
-        </a>
-    </div>
+    <x-banksoal::ui.bank-soal-page>
+        <x-slot:header>
+            <div class="bs-heading-row">
+                <div>
+                    <div class="bs-heading-label">
+                        <h1>Revisi RPS</h1>
+                        <span class="bs-role-badge">Dosen</span>
+                        <span class="badge {{ match ($rps->status->value) {
+                            'diajukan' => 'bg-amber-100 text-amber-800 border-amber-200',
+                            'revisi' => 'bg-rose-100 text-rose-800 border-rose-200',
+                            'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                            default => 'bg-slate-100 text-slate-800 border-slate-200'
+                        } }}" style="padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;">{{ $rps->status->label() }}</span>
+                    </div>
+                    <p>Perbarui Rencana Pembelajaran Semester mata kuliah Anda.</p>
+                </div>
+                <a href="{{ route('banksoal.rps.dosen.index') }}" class="dosen-management-btn">
+                    <i class="fas fa-arrow-left"></i> Kembali
+                </a>
+            </div>
+        </x-slot:header>
 
-    <x-banksoal::notification.alerts />
+        <x-banksoal::notification.alerts />
 
     @if(!$isUploadOpen)
         <div class="alert-closed"
@@ -1137,6 +1142,8 @@
         </div>
     </template>
 
+    </x-banksoal::ui.bank-soal-page>
+
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function () {
@@ -1212,8 +1219,174 @@
                     }
                 }
 
+                // Helper to attach toggle deselect hook & Navy badge formatting on TomSelect instance
+                function attachTomSelectToggleDeselect(ts) {
+                    if (!ts) return;
+
+                    if (!ts._hasToggleHook) {
+                        ts._hasToggleHook = true;
+                        const orig_onOptionSelect = ts.onOptionSelect;
+                        ts.onOptionSelect = function (evt, option) {
+                            if (!option && evt && evt.target) {
+                                option = evt.target.closest('.option');
+                            }
+                            if (!option) return;
+                            const val = option.dataset?.value || option.getAttribute('data-value');
+                            const normalizedVal = val ? String(val) : '';
+                            const selectedValues = (ts.getValue ? ts.getValue() : ts.items || []).toString().split(',').filter(Boolean);
+                            const isCurrentlySelected = !!(normalizedVal && selectedValues.includes(normalizedVal));
+                            if (isCurrentlySelected || option.classList.contains('selected')) {
+                                option.classList.remove('selected');
+                                if (normalizedVal) {
+                                    ts.removeItem(normalizedVal);
+                                }
+                                ts.refreshOptions(false);
+                                ts.refreshItems();
+                                if (evt && evt.preventDefault) evt.preventDefault();
+                                return;
+                            }
+                            orig_onOptionSelect.call(ts, evt, option);
+                        };
+                    }
+
+                    const updateDisplayAndSort = () => {
+                        if (!ts) return;
+
+                        const allOptions = Object.values(ts.options || {});
+                        allOptions.forEach(opt => {
+                            opt.$is_selected = ts.items.includes(String(opt.value));
+                        });
+                        allOptions.sort((a, b) => {
+                            if (a.$is_selected && !b.$is_selected) return -1;
+                            if (!a.$is_selected && b.$is_selected) return 1;
+                            return (a.$order || 0) - (b.$order || 0);
+                        });
+
+                        const count = ts.items ? ts.items.length : 0;
+                        const control = ts.control;
+                        if (control) {
+                            control.style.display = 'flex';
+                            control.style.flexWrap = 'nowrap';
+                            control.style.overflowX = 'auto';
+                            control.style.overflowY = 'hidden';
+                            control.style.height = '38px';
+                            control.style.minHeight = '38px';
+                            control.style.maxHeight = '38px';
+                            control.style.boxSizing = 'border-box';
+                            control.style.alignItems = 'center';
+                            control.style.gap = '4px';
+                            control.style.width = '100%';
+                            control.style.minWidth = '220px';
+                            if (ts.wrapper) ts.wrapper.style.width = '100%';
+
+                            const itemEls = control.querySelectorAll('.item');
+                            itemEls.forEach((el, index) => {
+                                const removeBtn = el.querySelector('.remove');
+                                if (count > 0 && index === 0) {
+                                    const textNode = Array.from(el.childNodes).find(n => n.nodeType === Node.TEXT_NODE);
+                                    if (textNode) {
+                                        textNode.textContent = `${count} Terpilih`;
+                                    } else {
+                                        el.insertBefore(document.createTextNode(`${count} Terpilih`), el.firstChild);
+                                    }
+                                    el.style.display = 'inline-flex';
+                                    el.style.alignItems = 'center';
+                                    el.style.backgroundColor = '#f1f5f9';
+                                    el.style.color = '#0b266e';
+                                    el.style.fontWeight = '600';
+                                    el.style.border = '1px solid #cbd5e1';
+                                    el.style.borderRadius = '6px';
+                                    el.style.padding = '2px 8px';
+                                    el.style.fontSize = '12px';
+                                    el.style.whiteSpace = 'nowrap';
+                                    el.style.flexShrink = '0';
+                                    el.style.height = '24px';
+                                    el.style.boxSizing = 'border-box';
+                                    if (removeBtn) {
+                                        removeBtn.style.display = '';
+                                        removeBtn.style.marginLeft = '4px';
+                                        removeBtn.style.color = '#0b266e';
+                                    }
+                                } else {
+                                    el.style.display = 'none';
+                                    if (removeBtn) removeBtn.style.display = 'none';
+                                }
+                            });
+                        }
+                    };
+
+                    if (!ts._hasDisplayEvents) {
+                        ts._hasDisplayEvents = true;
+                        ts.on('change', () => {
+                            updateDisplayAndSort();
+                            ts.refreshOptions(false);
+                        });
+                        ts.on('item_add', updateDisplayAndSort);
+                        ts.on('item_remove', updateDisplayAndSort);
+                    }
+
+                    updateDisplayAndSort();
+                }
+
+                async function initDosenSelect(selectedIds = []) {
+                    const sel = document.getElementById('dosenSelect');
+                    if (!sel) return;
+
+                    try {
+                        const res = await fetch("{{ route('banksoal.rps.dosen.dosen') }}");
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        const data = await res.json();
+
+                        if (sel.tomselect) {
+                            sel.tomselect.destroy();
+                        }
+
+                        sel.innerHTML = '<option value="">Pilih dosen pengampu lain</option>';
+                        data.forEach(dosen => {
+                            const opt = document.createElement('option');
+                            opt.value = String(dosen.id);
+                            opt.textContent = dosen.name;
+                            if (selectedIds.map(String).includes(String(dosen.id))) {
+                                opt.selected = true;
+                            }
+                            sel.appendChild(opt);
+                        });
+
+                        if (typeof TomSelect !== 'undefined') {
+                            const ts = new TomSelect(sel, {
+                                plugins: { remove_button: { title: "Hapus dosen ini" } },
+                                maxOptions: 100,
+                                searchField: ["text"],
+                                persist: false,
+                                hideSelected: false,
+                                render: {
+                                    item: function(data, escape) {
+                                        return `<div class="item" style="background:#f1f5f9;color:#0b266e;font-weight:600;border:1px solid #cbd5e1;border-radius:6px;padding:2px 8px;font-size:12px;margin:2px;">${escape(data.text)}</div>`;
+                                    },
+                                    option: function(data, escape) {
+                                        return `<div class="option py-2 px-3">${escape(data.text)}</div>`;
+                                    }
+                                }
+                            });
+                            attachTomSelectToggleDeselect(ts);
+                            if (selectedIds.length > 0) {
+                                ts.setValue(selectedIds.map(String), true);
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('Gagal memuat dosen pengampu lain:', e);
+                    }
+                }
+                window.initDosenSelect = initDosenSelect;
+
                 // Initial setup based on creation method
                 setCreationMethod(creationMethodInput ? creationMethodInput.value : 'upload');
+                try {
+                    const initialDosenIds = JSON.parse(rpsSubmitForm.dataset.selectedDosenIds || '[]');
+                    initDosenSelect(initialDosenIds);
+                } catch (e) {
+                    initDosenSelect();
+                }
 
 
                 // Next / Prev triggers
@@ -1509,6 +1682,10 @@
                                 cplCheckboxContainer.appendChild(item);
                             });
                             updateCplSelectDropdowns(data);
+                            if (window.BanksoalRpsUploadForm) {
+                                window.BanksoalRpsUploadForm.cplOptions = data;
+                                window.BanksoalRpsUploadForm.renderAllCplSelects();
+                            }
                         });
 
                     const restorePromise = initPrefilledGeneratorData();
