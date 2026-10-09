@@ -566,8 +566,10 @@
                 $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.jadwal-akademik.index'), 'label' => 'Jadwal Akademik', 'match' => 'admin.jadwal-akademik', 'icon' => 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'];
             if ($sb_adm_evt)
                 $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.jadwal-internal.index'), 'label' => 'Blokir Ruangan', 'match' => 'admin.jadwal-internal', 'icon' => $iBlock];
-            if ($sb_adm_set)
-                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan', 'match' => 'admin.persetujuan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'];
+            if ($sb_adm_set) {
+                $pendingCount = \Modules\EOffice\Models\Peminjaman::where('status', 'menunggu')->count();
+                $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan', 'match' => 'admin.persetujuan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'badge' => $pendingCount, 'poll_url' => route('eoffice.peminjaman.admin.persetujuan.pending-count')];
+            }
             if ($sb_adm_ars)
                 $admSisRuangan[] = ['href' => route('eoffice.peminjaman.admin.riwayat.index'), 'label' => 'Arsip & Rekap', 'match' => 'admin.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'];
             if (count($admSisRuangan) > 0)
@@ -700,6 +702,24 @@
                                         </svg>
                                         <span class="text-[13px] flex-1 overflow-hidden text-ellipsis"
                                             x-show="sidebarOpen">{{ $item['label'] }}</span>
+                                        @if(isset($item['badge']))
+                                            <span 
+                                                @if(isset($item['poll_url']))
+                                                    x-data="{ count: {{ $item['badge'] }} }"
+                                                    x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; } catch(e) {} }, 30000);"
+                                                    x-show="sidebarOpen && count > 0"
+                                                    x-text="count > 99 ? '99+' : count"
+                                                @else
+                                                    x-show="sidebarOpen"
+                                                @endif
+                                                class="inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold shrink-0 ml-1" 
+                                                @if(!isset($item['poll_url']) && $item['badge'] <= 0) style="display: none;" @endif
+                                                x-cloak>
+                                                @if(!isset($item['poll_url']))
+                                                    {{ $item['badge'] > 99 ? '99+' : $item['badge'] }}
+                                                @endif
+                                            </span>
+                                        @endif
                                     </a>
                                 @endforeach
                             @endforeach
@@ -770,27 +790,46 @@
                     {{-- ── Right Actions ── --}}
                     <div class="flex items-center gap-2 md:gap-4">
                         {{-- Notification Bell --}}
-                        <div class="relative" x-data="{ openNotif: false }" @click.outside="openNotif = false">
-                            <button @click="openNotif = !openNotif" type="button"
+                        <div class="relative" x-data="{ 
+                            openNotif: false,
+                            loading: false,
+                            error: false,
+                            items: [],
+                            unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications->count() : 0 }},
+                            async toggle() {
+                                this.openNotif = !this.openNotif;
+                                if (!this.openNotif) return;
+                                this.loading = true;
+                                this.error = false;
+                                this.items = [];
+                                try {
+                                    const response = await fetch('{{ route('eoffice.peminjaman.user.notifikasi.api') }}', { headers: { Accept: 'application/json' } });
+                                    if (!response.ok) throw new Error('load');
+                                    const data = await response.json();
+                                    this.items = data.notifications;
+                                    this.unreadCount = data.count;
+                                } catch (_) {
+                                    this.error = true;
+                                } finally {
+                                    this.loading = false;
+                                }
+                            }
+                        }" @click.outside="openNotif = false">
+                            <button @click="toggle()" type="button"
                                 class="relative flex items-center justify-center cursor-pointer transition-colors hover:bg-gray-50 rounded-[10px] border border-[#DFE1E7] bg-white text-[#666D80] w-[30px] h-[30px] md:w-[36px] md:h-[36px]">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                                 </svg>
-                                @php
-                                    $unreadNotifications = $user->unreadNotifications;
-                                    $notifCount = $unreadNotifications->count();
-                                @endphp
-                                @if($notifCount > 0)
-                                    <span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">
-                                        {{ $notifCount > 99 ? '99+' : $notifCount }}
+                                <template x-if="unreadCount > 0">
+                                    <span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none" x-text="unreadCount > 99 ? '99+' : unreadCount">
                                     </span>
-                                @endif
+                                </template>
                             </button>
 
                             {{-- Dropdown Notifikasi --}}
-                            <div x-show="openNotif" x-transition.opacity.duration.200ms
+                            <div x-show="openNotif" x-transition.opacity.duration.200ms x-cloak
                                 class="absolute right-0 mt-2 w-[340px] bg-white border border-[#DFE1E7] rounded-[16px] shadow-lg overflow-hidden z-[99]"
                                 style="display: none;">
                                 <div class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-start bg-white">
@@ -798,41 +837,49 @@
                                         <h3 class="font-bold text-[13px] text-gray-900 leading-none mt-0.5">Notifikasi</h3>
                                         <p class="text-[11px] text-gray-500">Aktivitas Terkini</p>
                                     </div>
-                                    @if($notifCount > 0)
-                                    <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}" class="m-0" id="mark-all-read-form">
-                                        @csrf
-                                        <button type="submit" class="text-[12px] text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0">Tandai semua dibaca</button>
-                                    </form>
-                                    @endif
-                                </div>
-                                <div class="max-h-[350px] overflow-y-auto bg-white">
-                                    @forelse($user->notifications()->limit(5)->get() as $notification)
-                                        <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read', $notification->id) }}" class="m-0 border-b border-[#F0F1F4] last:border-b-0">
+                                    <template x-if="unreadCount > 0">
+                                        <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}" class="m-0" id="mark-all-read-form">
                                             @csrf
-                                            <button type="submit" class="w-full text-left px-4 py-3 transition-colors cursor-pointer {{ $notification->read_at ? 'bg-white opacity-60 hover:bg-gray-50' : 'bg-[#EFF6FF] hover:bg-[#E0F2FE] unread-item' }}">
+                                            <button type="submit" class="text-[12px] text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0">Tandai semua dibaca</button>
+                                        </form>
+                                    </template>
+                                </div>
+                                <div class="max-h-[350px] overflow-y-auto bg-white relative min-h-[100px]">
+                                    {{-- Loading State --}}
+                                    <div x-show="loading" class="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center">
+                                        <svg class="animate-spin h-6 w-6 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <span class="text-[11px] text-gray-500 font-medium">Memuat notifikasi...</span>
+                                    </div>
+
+                                    {{-- Error State --}}
+                                    <div x-show="error" class="p-6 text-center text-[12px] text-red-500 bg-red-50">
+                                        Gagal memuat notifikasi. Coba tutup dan buka kembali.
+                                    </div>
+
+                                    {{-- Empty State --}}
+                                    <div x-show="!loading && !error && items.length === 0" class="p-6 flex flex-col items-center justify-center text-center gap-2">
+                                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                        <span class="text-[12px] text-gray-500">Belum ada aktivitas</span>
+                                    </div>
+
+                                    {{-- Items --}}
+                                    <template x-for="item in items" :key="item.id">
+                                        <form method="POST" :action="item.url" class="m-0 border-b border-[#F0F1F4] last:border-b-0">
+                                            @csrf
+                                            <button type="submit" :class="item.is_read ? 'bg-white opacity-60 hover:bg-gray-50' : 'bg-[#EFF6FF] hover:bg-[#E0F2FE] unread-item'" class="w-full text-left px-4 py-3 transition-colors cursor-pointer block relative">
                                                 <div class="flex flex-col gap-1">
                                                     <div class="flex justify-between items-start gap-2">
-                                                        <h4 class="text-[13px] font-bold text-gray-900">{{ $notification->data['title'] ?? 'Pemberitahuan Sistem' }}</h4>
-                                                        @if(!$notification->read_at)
-                                                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1 blue-dot"></span>
-                                                        @endif
+                                                        <h4 class="text-[13px] font-bold text-gray-900" x-text="item.title"></h4>
+                                                        <template x-if="!item.is_read">
+                                                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1"></span>
+                                                        </template>
                                                     </div>
-                                                    @php
-                                                        $notifMessage = htmlspecialchars($notification->data['message'] ?? 'Pemberitahuan Baru');
-                                                        $notifMessage = preg_replace('/(disetujui)/i', '<span class="font-bold text-emerald-600">$1</span>', $notifMessage);
-                                                        $notifMessage = preg_replace('/(ditolak)/i', '<span class="font-bold text-rose-600">$1</span>', $notifMessage);
-                                                        $notifMessage = preg_replace('/(dibatalkan(?: oleh admin)?)/i', '<span class="font-bold text-rose-600">$1</span>', $notifMessage);
-                                                    @endphp
-                                                    <p class="text-[12px] text-gray-600 leading-snug">{!! $notifMessage !!}</p>
-                                                    <span class="text-[11px] text-gray-400 mt-0.5">{{ $notification->created_at->diffForHumans() }}</span>
+                                                    <p class="text-[12px] text-gray-600 leading-snug" x-html="item.message"></p>
+                                                    <span class="text-[11px] text-gray-400 mt-0.5" x-text="item.time"></span>
                                                 </div>
                                             </button>
                                         </form>
-                                    @empty
-                                        <div class="p-5 text-center text-[12px] text-gray-500">
-                                            Belum ada notifikasi
-                                        </div>
-                                    @endforelse
+                                    </template>
                                 </div>
                             </div>
                         </div>

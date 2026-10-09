@@ -1,9 +1,11 @@
 <x-eoffice::manajemen-ruangan.layout
     pageTitle="{{ $viewMode === 'akademik' ? 'Jadwal Akademik' : 'Kelola Blokir Ruangan' }}">
 
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+
     <div
         x-data="{ showModal: false, showImportModal: false, formType: '{{ $viewMode === 'akademik' ? 'rutin' : 'spesifik' }}', kategoriType: '{{ $viewMode === 'akademik' ? 'Jadwal Akademik (Kuliah)' : 'Maintenance / Perbaikan' }}' }">
-        <div class="mp-page-header">
+        <div class="mp-page-header flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 @if($viewMode === 'akademik')
                     <h1 class="mp-page-title">Kelola Jadwal Akademik</h1>
@@ -15,7 +17,7 @@
                         perawatan fisik.</p>
                 @endif
             </div>
-            <div class="mp-page-actions flex items-center gap-3">
+            <div class="mp-page-actions flex flex-col md:flex-row md:items-center gap-3">
                 <button @click="showModal = true" class="mp-btn primary md">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round">
@@ -28,38 +30,50 @@
         </div> <!-- Close mp-page-header -->
 
         <!-- Add Modal Alpine Component -->
-        <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
+        <div x-show="showModal" x-cloak style="display: none;"
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6" 
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 
-                <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-                    x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
-                    x-transition:leave-end="opacity-0" class="fixed inset-0 transition-opacity bg-slate-900/60 "
-                    aria-hidden="true" @click="showModal = false"></div>
-                <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <!-- 1. BACKDROP OVERLAY (Latar Belakang Gelap) -->
+            <div x-show="showModal" 
+                x-transition:enter="ease-out duration-300" 
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" 
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" 
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" 
+                aria-hidden="true" @click="showModal = false"></div>
 
-                <div x-show="showModal" x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave="transition ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                    class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative">
+            <!-- 2. MODAL PANEL (Kotak Utama Modal) -->
+            <div x-show="showModal" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                class="relative bg-white rounded-t-[24px] sm:rounded-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-visible">
+                
+                <div class="p-4 sm:p-6 flex flex-col flex-1 min-h-0">
 
-                    <div>
-                        <div class="flex items-center justify-between mb-5">
-                            <h3 class="text-[18px] font-bold text-gray-900 font-['Inter_Tight']" id="modal-title">Blokir
-                                Ruangan</h3>
-                            <button @click="showModal = false" class="text-gray-400 hover:text-gray-500">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </button>
+                    <div class="-mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-5 px-6 py-4 border-b border-[#0B266E]/10 flex items-center justify-between bg-[#0B266E]/[0.06] rounded-none sm:rounded-t-[20px]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white" style="font-size:20px">event_busy</span>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Blokir Ruangan Baru</h3>
+                                <p class="text-[10px] text-[#0B266E] font-medium">Buat jadwal penutupan ruangan</p>
+                            </div>
                         </div>
+                        <button type="button" @click="showModal = false" class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                            <span class="material-symbols-outlined" style="font-size:20px">close</span>
+                        </button>
+                    </div>
 
                         <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.store') }}" method="POST"
+                            class="flex flex-col flex-1 min-h-0"
                             x-data="{ 
                                 isMultiday: false,
                                 selectedRooms: [],
@@ -112,65 +126,68 @@
                             @csrf
                             <input type="hidden" name="tipe_jadwal" value="spesifik">
 
-                            <div class="space-y-5 max-h-[65vh] overflow-y-auto pr-2" style="scrollbar-width: thin;">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <!-- Bagian Kategori Kegiatan -->
-                                    <div x-data="{ open: false, options: ['Maintenance / Perbaikan', 'Sterilisasi Ruangan', 'Penutupan Khusus', 'Ujian / Evaluasi', 'Pindah Kelas', 'Lainnya'] }"
-                                        class="relative" :class="{'z-50': open, 'z-10': !open}">
-                                        <label
-                                            class="block mb-1.5 text-xs font-bold text-gray-700 uppercase tracking-widest">Kategori
-                                            Kegiatan</label>
-                                        <input type="hidden" name="kategori" :value="selectedKategori">
-                                        <button type="button" @click="open = !open" @click.away="open = false"
-                                            class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
-                                            <span x-text="selectedKategori"
-                                                class="truncate text-gray-800 text-[14px]"></span>
-                                            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
-                                                :class="{'rotate-180': open}" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </button>
-                                        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
-                                            x-transition:enter-start="opacity-0 scale-95"
-                                            x-transition:enter-end="opacity-100 scale-100"
-                                            x-transition:leave="transition ease-in duration-75"
-                                            x-transition:leave-start="opacity-100 scale-100"
-                                            x-transition:leave-end="opacity-0 scale-95"
-                                            class="absolute left-0 mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
-                                            style="display: none;">
-                                            <div class="p-1">
-                                                <template x-for="opt in options" :key="opt">
-                                                    <button type="button"
-                                                        @click="selectedKategori = opt; open = false; checkCollision()"
-                                                        class="w-full text-left px-3 py-1.5 text-[13px] text-gray-700 font-medium hover:bg-[#EFF6FF] hover:text-[#0B266E] rounded-md transition-colors"
-                                                        x-text="opt"></button>
-                                                </template>
+                            <div class="space-y-4 overflow-y-auto overflow-x-hidden pl-1 -ml-1 pr-2 -mr-2 pb-2 flex-1 whitespace-normal">
+                                <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Informasi Kegiatan</span>
+                                    </div>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <!-- Bagian Kategori Kegiatan -->
+                                        <div x-data="{ open: false, options: ['Maintenance / Perbaikan', 'Sterilisasi Ruangan', 'Penutupan Khusus', 'Ujian / Evaluasi', 'Pindah Kelas', 'Lainnya'] }"
+                                            class="relative space-y-1.5" :class="{'z-50': open, 'z-10': !open}">
+                                            <label
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori
+                                                Kegiatan</label>
+                                            <input type="hidden" name="kategori" :value="selectedKategori">
+                                            <button type="button" @click="open = !open" @click.away="open = false"
+                                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                                <span x-text="selectedKategori"
+                                                    class="truncate text-gray-800"></span>
+                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+                                                    :class="{'rotate-180': open}" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100"
+                                                x-transition:enter-start="opacity-0 scale-95"
+                                                x-transition:enter-end="opacity-100 scale-100"
+                                                x-transition:leave="transition ease-in duration-75"
+                                                x-transition:leave-start="opacity-100 scale-100"
+                                                x-transition:leave-end="opacity-0 scale-95"
+                                                class="absolute left-0 mt-1 w-full bg-white border border-slate-200 rounded-md shadow-lg z-50 overflow-hidden"
+                                                style="display: none;">
+                                                <div class="p-1">
+                                                    <template x-for="opt in options" :key="opt">
+                                                        <button type="button"
+                                                            @click="selectedKategori = opt; open = false; checkCollision()"
+                                                            class="w-full text-left px-3 py-1.5 text-[13px] text-gray-700 font-medium hover:bg-[#EFF6FF] hover:text-[#0B266E] rounded-md transition-colors"
+                                                            x-text="opt"></button>
+                                                    </template>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Bagian Nama Acara -->
-                                    <div>
-                                        <label
-                                            class="block mb-1.5 text-xs font-bold text-gray-700 uppercase tracking-widest">Nama
-                                            Kegiatan</label>
-                                        <input type="text" name="keterangan" x-model="namaAcara" required
-                                            class="mp-input text-[14px] w-full" placeholder="Misal: UTS Ganjil 2026">
+                                        <!-- Bagian Nama Acara -->
+                                        <div class="space-y-1.5">
+                                            <label
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama
+                                                Kegiatan</label>
+                                            <input type="text" name="keterangan" x-model="namaAcara" required autocomplete="off"
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]" placeholder="Misal: UTS Ganjil 2026">
+                                        </div>
                                     </div>
                                 </div>
 
                                 <!-- Bagian Pilih Ruangan (Accordion Checkbox) -->
-                                <div>
-                                    <label class="flex justify-between items-end mb-1.5">
+                                <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="flex items-center gap-2 mb-1 justify-between">
+                                        <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Pemilihan Ruangan (Bisa > 1)</span>
                                         <span
-                                            class="block text-xs font-bold text-gray-700 uppercase tracking-widest">Pilih
-                                            Ruangan (Bisa > 1)</span>
-                                        <span
-                                            class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#0B266E]"
+                                            class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#0B266E]"
                                             x-text="selectedRooms.length + ' Dipilih'"></span>
-                                    </label>
+                                    </div>
 
                                     <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
                                         @php
@@ -213,9 +230,9 @@
                                 </div>
 
                                 <!-- Bagian Pengaturan Waktu & Tanggal -->
-                                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
-                                    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-                                        <h4 class="text-[13px] font-bold text-slate-800">Waktu Pelaksanaan</h4>
+                                <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                    <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-1">
+                                        <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Waktu & Tanggal</span>
                                         <label
                                             class="flex items-center gap-2 cursor-pointer bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-sm">
                                             <input type="hidden" name="is_multiday" value="0">
@@ -228,44 +245,47 @@
 
                                     <div class="grid grid-cols-2 gap-4">
                                         <!-- Tanggal Mode 1 Hari -->
-                                        <div x-show="!isMultiday" class="col-span-2">
+                                        <div x-show="!isMultiday" class="col-span-2 space-y-1.5">
                                             <label
-                                                class="block mb-1.5 text-[11px] font-bold text-gray-700 uppercase tracking-widest">Tanggal
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal
                                                 Pelaksanaan</label>
                                             <input type="date" name="tanggal_spesifik" x-model="tglSpesifik"
-                                                class="mp-input text-[13px] w-full" :required="!isMultiday">
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]" :required="!isMultiday">
                                         </div>
 
                                         <!-- Tanggal Mode Multi-Hari -->
-                                        <div x-show="isMultiday" class="col-span-1" style="display: none;">
+                                        <div x-show="isMultiday" class="col-span-1 space-y-1.5" style="display: none;">
                                             <label
-                                                class="block mb-1.5 text-[11px] font-bold text-gray-700 uppercase tracking-widest">Dari
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dari
                                                 Tanggal</label>
                                             <input type="date" name="tanggal_mulai" x-model="tglMulai"
-                                                class="mp-input text-[13px] w-full" :required="isMultiday">
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]" :required="isMultiday">
                                         </div>
-                                        <div x-show="isMultiday" class="col-span-1" style="display: none;">
+                                        <div x-show="isMultiday" class="col-span-1 space-y-1.5" style="display: none;">
                                             <label
-                                                class="block mb-1.5 text-[11px] font-bold text-gray-700 uppercase tracking-widest">Sampai
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sampai
                                                 Tanggal</label>
                                             <input type="date" name="tanggal_selesai" x-model="tglSelesai"
-                                                class="mp-input text-[13px] w-full" :required="isMultiday">
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]" :required="isMultiday">
                                         </div>
 
                                         <!-- Jam -->
-                                        <div class="col-span-1">
+                                        <div class="col-span-1 space-y-1.5">
                                             <label
-                                                class="block mb-1.5 text-[11px] font-bold text-gray-700 uppercase tracking-widest">Jam
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam
                                                 Mulai</label>
                                             <input type="time" name="jam_mulai" x-model="jamMulai" required
-                                                class="mp-input text-[13px] w-full">
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
                                         </div>
-                                        <div class="col-span-1">
+                                        <div class="col-span-1 space-y-1.5">
                                             <label
-                                                class="block mb-1.5 text-[11px] font-bold text-gray-700 uppercase tracking-widest">Jam
+                                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam
                                                 Selesai</label>
                                             <input type="time" name="jam_selesai" x-model="jamSelesai" required
-                                                class="mp-input text-[13px] w-full">
+                                                class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                        </div>
+                                        <div class="col-span-2 text-[10px] text-slate-500 mt-0.5 ml-1">
+                                            <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>07:00 - 17:00</b>. Sebagai Admin, Anda bebas melewati batas ini untuk pemblokiran 24 jam jika diperlukan.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -297,14 +317,31 @@
                                         </div>
                                     </div>
                                 </template>
+                                <!-- Mobile Footer (Scrolls with content) -->
+                                <div class="sm:hidden mt-6 pt-4 pb-2 border-t border-slate-100 flex items-center justify-end gap-3">
+                                    <button type="button" @click="showModal = false"
+                                        class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200 cursor-pointer text-center">
+                                        Batal
+                                    </button>
+                                    <button type="submit"
+                                        :disabled="isChecking"
+                                        class="px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-center justify-center">
+                                        Simpan Konfigurasi
+                                    </button>
+                                </div>
                             </div>
 
-                            <div class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                            <!-- Desktop Sticky Footer -->
+                            <div class="hidden sm:flex px-2 pt-4 pb-2 border-t border-gray-100 items-center justify-end gap-2 bg-white mt-auto shrink-0">
                                 <button type="button" @click="showModal = false"
-                                    class="mp-btn secondary md">Batal</button>
+                                    class="px-5 py-2.5 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all focus:outline-none focus:ring-2 focus:ring-gray-200 cursor-pointer">
+                                    Batal
+                                </button>
                                 <button type="submit"
-                                    class="mp-btn primary md bg-red-600 hover:bg-red-700 border-none !text-white"
-                                    :class="{'opacity-80': warningData}">Simpan Konfigurasi</button>
+                                    :disabled="isChecking"
+                                    class="px-5 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] transition-all shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0B266E] focus:ring-offset-2 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                                    Simpan Konfigurasi
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -327,55 +364,56 @@
             </div>
         @endif
 
-        <div class="mp-card" style="margin-top: 15px;">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
-                <h2 class="text-base font-bold text-gray-900 tracking-tight">Daftar Jadwal</h2>
+        <div class="mp-card" style="margin-top: 0px;"
+            x-data="{ openFilter: false, openSort: false }">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full"
+                style="padding-bottom: 20px;">
+                <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">Daftar Jadwal</h2>
 
-                <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.index') }}" method="GET"
-                    class="flex flex-wrap items-center gap-2.5">
-                    <!-- Search Bar -->
-                    <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
-                        <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
-                            </svg>
-                        </button>
-                        <input type="text" name="search" x-model="searchQuery" 
-                            @input.debounce.500ms="$el.form.submit()"
-                            @scroll.window.capture="$el.blur()"
-                            @touchmove.window.capture="$el.blur()"
-                            placeholder="Cari acara..."
-                            class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg hover:border-gray-300 focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
-                        
-                        <!-- Clear Search (X) -->
-                        <button type="button" x-show="searchQuery.length > 0" x-cloak
-                            @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
-                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <!-- Hidden Inputs untuk mempertahankan state -->
-                    <input type="hidden" name="status_waktu" x-ref="statusWaktuInput"
-                        value="{{ request('status_waktu') }}">
-                    <input type="hidden" name="ruangan_id" x-ref="ruanganInput" value="{{ request('ruangan_id') }}">
-                    <input type="hidden" name="kategori" x-ref="kategoriInput" value="{{ request('kategori') }}">
-                    <input type="hidden" name="sort" x-ref="sortInput" value="{{ request('sort', 'terbaru') }}">
-
-                    <div class="flex items-center gap-2 ml-auto">
-                        {{-- Filter Dropdown --}}
-                        <div x-data="{ openFilter: false }" class="relative inline-block text-left">
-                            <!-- Tombol Filter -->
-                            <button type="button" @click="openFilter = !openFilter" @click.away="openFilter = false"
-                                class="flex items-center relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
-                                :class="openFilter ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                <div class="flex flex-col md:flex-row items-stretch md:items-center gap-2 w-full md:w-auto mt-3 md:mt-0">
+                    <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.index') }}" method="GET"
+                        class="flex flex-col md:flex-row items-stretch md:items-center gap-2 m-0 relative w-full">
+                        <!-- Search Bar -->
+                        <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
+                            <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"></path>
                                 </svg>
-                                Filter
+                            </button>
+                            <input type="text" name="search" x-model="searchQuery" 
+                                @input="if(searchQuery.trim() === '') $el.form.submit()"
+                                @scroll.window.capture="$el.blur()"
+                                @touchmove.window.capture="$el.blur()"
+                                placeholder="Cari acara..."
+                                class="w-full sm:w-56 h-[38px] pl-9 pr-8 text-[13px] bg-white border border-gray-200 rounded-lg focus:border-[#0B266E] focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400">
+                            
+                            <!-- Clear Search (X) -->
+                            <button type="button" x-show="searchQuery.length > 0" x-cloak
+                                @click="searchQuery = ''; $nextTick(() => $el.closest('form').submit())"
+                                class="absolute inset-y-0 right-0 pr-2.5 flex items-center cursor-pointer text-gray-400 hover:text-gray-700 transition-colors bg-transparent border-0 outline-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+
+                        <!-- Hidden Inputs untuk mempertahankan state -->
+                        <input type="hidden" name="status_waktu" x-ref="statusWaktuInput" value="{{ request('status_waktu') }}">
+                        <input type="hidden" name="ruangan_id" x-ref="ruanganInput" value="{{ request('ruangan_id') }}">
+                        <input type="hidden" name="kategori" x-ref="kategoriInput" value="{{ request('kategori') }}">
+                        <input type="hidden" name="sort" x-ref="sortInput" value="{{ request('sort', 'terbaru') }}">
+
+                        <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
+                        <div class="flex flex-row items-stretch gap-2 w-full md:w-auto">
+                            <!-- Filter Button -->
+                            <div class="relative flex-1 md:flex-none" @click.away="openFilter = false">
+                                <button type="button" @click="openFilter = !openFilter"
+                                    class="relative w-full inline-flex justify-center items-center gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors whitespace-nowrap cursor-pointer"
+                                    :class="openFilter ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+                                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                                    </svg>
+                                    Filter
                                 @if(request('status_waktu') || request('ruangan_id') || request('kategori'))
                                     <span class="absolute -top-1 -right-1 flex h-3 w-3">
                                         <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
@@ -390,7 +428,7 @@
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                class="absolute right-0 z-50 mt-2 w-52 origin-top-right rounded-xl bg-white shadow-md border border-gray-200 focus:outline-none overflow-hidden max-h-[320px] overflow-y-auto"
+                                class="absolute left-0 sm:left-auto sm:right-0 z-50 mt-2 w-52 origin-top-left sm:origin-top-right rounded-xl bg-white shadow-md border border-gray-200 focus:outline-none overflow-hidden max-h-[320px] overflow-y-auto"
                                 style="display: none;">
                                 <div class="py-1 px-1">
                                     <!-- Section: STATUS WAKTU -->
@@ -496,10 +534,10 @@
                         </div>
 
                         {{-- Sort Dropdown --}}
-                        <div x-data="{ openSort: false }" class="relative inline-block text-left">
+                        <div x-data="{ openSort: false }" class="relative inline-block text-left flex-1 sm:flex-none">
                             <!-- Tombol Sort -->
                             <button type="button" @click="openSort = !openSort" @click.away="openSort = false"
-                                class="flex items-center relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                                class="flex items-center justify-center w-full relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
                                 :class="openSort ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -656,6 +694,7 @@
                     </div>
                 </form>
             </div>
+        </div>
             <div class="mp-card-body" x-data="{ 
                 selectedIds: [],
                 toggleAll() {
@@ -899,261 +938,270 @@
                                         </div>
 
                                         <!-- EDIT MODAL -->
+                                        <!-- EDIT MODAL -->
                                         <div x-show="showEditModal" style="display: none;"
-                                            class="fixed inset-0 z-[100] overflow-y-auto text-left"
+                                            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6"
                                             aria-labelledby="modal-title" role="dialog" aria-modal="true">
-                                            <div
-                                                class="flex items-end justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
 
-                                                <div x-show="showEditModal"
-                                                    x-transition:enter="transition ease-out duration-300"
-                                                    x-transition:enter-start="opacity-0"
-                                                    x-transition:enter-end="opacity-100"
-                                                    x-transition:leave="transition ease-in duration-200"
-                                                    x-transition:leave-start="opacity-100"
-                                                    x-transition:leave-end="opacity-0"
-                                                    class="fixed inset-0 transition-opacity bg-slate-900/60 "
-                                                    aria-hidden="true" @click="showEditModal = false"></div>
-                                                <span class="hidden sm:inline-block sm:align-middle sm:h-screen"
-                                                    aria-hidden="true">&#8203;</span>
+                                            <div x-show="showEditModal"
+                                                x-transition:enter="transition ease-out duration-300"
+                                                x-transition:enter-start="opacity-0"
+                                                x-transition:enter-end="opacity-100"
+                                                x-transition:leave="transition ease-in duration-200"
+                                                x-transition:leave-start="opacity-100"
+                                                x-transition:leave-end="opacity-0"
+                                                class="fixed inset-0 transition-opacity bg-slate-900/60"
+                                                aria-hidden="true" @click="showEditModal = false"></div>
 
-                                                <div x-show="showEditModal"
-                                                    x-transition:enter="transition ease-out duration-300"
-                                                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
-                                                    x-transition:leave="transition ease-in duration-200"
-                                                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                                                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                                                    class="inline-block px-4 pt-5 pb-4 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 relative">
-
-                                                    <div class="flex items-center justify-between mb-5">
-                                                        <h3 class="text-[18px] font-bold text-gray-900" id="modal-title">
-                                                            Edit
-                                                            Jadwal Internal</h3>
+                                            <!-- 2. MODAL PANEL (Kotak Utama Modal) -->
+                                            <div x-show="showEditModal"
+                                                x-transition:enter="ease-out duration-300"
+                                                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                                                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                                x-transition:leave="ease-in duration-200"
+                                                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                                                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[600px] max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden z-10 text-left">
+                                                
+                                                <div class="p-4 sm:p-6 flex flex-col flex-1 min-h-0">
+                                                    <div class="-mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-5 px-6 py-4 border-b border-[#0B266E]/10 flex items-center justify-between bg-[#0B266E]/[0.06] rounded-none sm:rounded-t-[20px]">
+                                                        <div class="flex items-center gap-3">
+                                                            <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center shadow-sm">
+                                                                <span class="material-symbols-outlined text-white" style="font-size:20px">edit</span>
+                                                            </div>
+                                                            <div>
+                                                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight">Edit Blokir Ruangan</h3>
+                                                                <p class="text-[10px] text-[#0B266E] font-medium">Perbarui informasi blokir</p>
+                                                            </div>
+                                                        </div>
                                                         <button type="button" @click="showEditModal = false"
-                                                            class="text-gray-400 hover:text-gray-500">
-                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
-                                                                viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                                    stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                                            </svg>
+                                                            class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                                                            <span class="material-symbols-outlined" style="font-size:20px">close</span>
                                                         </button>
                                                     </div>
 
                                                     <form
                                                         action="{{ route('eoffice.peminjaman.admin.jadwal-internal.update', $j->id) }}"
-                                                        method="POST">
+                                                        method="POST" class="flex flex-col flex-1 min-h-0">
                                                         @csrf
                                                         @method('PUT')
-                                                        <div class="space-y-4">
-                                                            <div class="grid grid-cols-2 gap-4">
-                                                                <div>
-                                                                    <label
-                                                                        class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Tipe
-                                                                        Ruangan</label>
-                                                                    <div x-data="{ 
-                                                                                    open: false,
-                                                                                    get selectedName() {
-                                                                                        const room = [
-                                                                                            @foreach($ruangans as $r)
-                                                                                                {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
-                                                                                            @endforeach
-                                                                                        ].find(r => r.id == ruanganId);
-                                                                                        return room ? room.name : '-- Pilih Ruangan --';
-                                                                                    },
-                                                                                    selectItem(id) { 
-                                                                                        ruanganId = id;
-                                                                                        this.open = false; 
-                                                                                    } 
-                                                                                }" class="relative w-full"
-                                                                        :class="{'z-50': open, 'z-10': !open}"
-                                                                        @click.away="open = false">
+                                                        <div class="space-y-4 overflow-y-auto overflow-x-hidden pr-2 -mr-2 pb-2 flex-1 relative h-full min-h-0 whitespace-normal">
+                                                            
+                                                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl mx-1">
+                                                                <div class="flex items-center gap-2 mb-1">
+                                                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Informasi Kegiatan</span>
+                                                                </div>
+                                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                    <!-- Tipe Ruangan -->
+                                                                    <div class="space-y-1.5">
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tipe Ruangan</label>
+                                                                        <div x-data="{ 
+                                                                                        open: false,
+                                                                                        get selectedName() {
+                                                                                            const room = [
+                                                                                                @foreach($ruangans as $r)
+                                                                                                    {id: '{{ $r->id }}', name: '{{ addslashes($r->nama) }} - Lt. {{ $r->lantai }}'},
+                                                                                                @endforeach
+                                                                                            ].find(r => r.id == ruanganId);
+                                                                                            return room ? room.name : '-- Pilih Ruangan --';
+                                                                                        },
+                                                                                        selectItem(id) { 
+                                                                                            ruanganId = id;
+                                                                                            this.open = false; 
+                                                                                        } 
+                                                                                    }" class="relative w-full"
+                                                                            :class="{'z-50': open, 'z-10': !open}"
+                                                                            @click.away="open = false">
 
-                                                                        <input type="hidden" name="ruangan_id"
-                                                                            :value="ruanganId" required>
+                                                                            <input type="hidden" name="ruangan_id"
+                                                                                :value="ruanganId" required>
 
-                                                                        <button type="button" @click="open = !open"
-                                                                            class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
-                                                                            <span x-text="selectedName" class="truncate"
-                                                                                :class="{'text-gray-400': !ruanganId, 'text-gray-800': ruanganId}"></span>
-                                                                            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
-                                                                                :class="{'rotate-180': open}" fill="none"
-                                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round" stroke-width="2"
-                                                                                    d="M19 9l-7 7-7-7" />
-                                                                            </svg>
-                                                                        </button>
+                                                                            <button type="button" @click="open = !open"
+                                                                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                                                                <span x-text="selectedName" class="truncate"
+                                                                                    :class="{'text-gray-400': !ruanganId, 'text-gray-800': ruanganId}"></span>
+                                                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+                                                                                    :class="{'rotate-180': open}" fill="none"
+                                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round" stroke-width="2"
+                                                                                        d="M19 9l-7 7-7-7" />
+                                                                                </svg>
+                                                                            </button>
 
-                                                                        <div x-show="open" x-cloak
-                                                                            x-transition:enter="transition ease-out duration-100"
-                                                                            x-transition:enter-start="opacity-0 scale-95"
-                                                                            x-transition:enter-end="opacity-100 scale-100"
-                                                                            x-transition:leave="transition ease-in duration-75"
-                                                                            x-transition:leave-start="opacity-100 scale-100"
-                                                                            x-transition:leave-end="opacity-0 scale-95"
-                                                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden"
-                                                                            style="display: none;">
-                                                                            <div class="p-1 flex flex-col">
-                                                                                <button type="button"
-                                                                                    @click="selectItem('')"
-                                                                                    class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words"
-                                                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">--
-                                                                                    Pilih Ruangan --</button>
-                                                                                @foreach($ruangans as $r)
+                                                                            <div x-show="open" x-cloak
+                                                                                x-transition:enter="transition ease-out duration-100"
+                                                                                x-transition:enter-start="opacity-0 scale-95"
+                                                                                x-transition:enter-end="opacity-100 scale-100"
+                                                                                x-transition:leave="transition ease-in duration-75"
+                                                                                x-transition:leave-start="opacity-100 scale-100"
+                                                                                x-transition:leave-end="opacity-0 scale-95"
+                                                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto overflow-x-hidden"
+                                                                                style="display: none;">
+                                                                                <div class="p-1 flex flex-col">
                                                                                     <button type="button"
-                                                                                        @click="selectItem('{{ $r->id }}')"
-                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words"
-                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
-                                                                                        {{ $r->nama }} - Lt. {{ $r->lantai }}
-                                                                                    </button>
-                                                                                @endforeach
+                                                                                        @click="selectItem('')"
+                                                                                        class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words"
+                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '', 'text-gray-700 hover:bg-gray-50': ruanganId != ''}">--
+                                                                                        Pilih Ruangan --</button>
+                                                                                    @foreach($ruangans as $r)
+                                                                                        <button type="button"
+                                                                                            @click="selectItem('{{ $r->id }}')"
+                                                                                            class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors whitespace-normal break-words"
+                                                                                            :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': ruanganId == '{{ $r->id }}', 'text-gray-700 hover:bg-gray-50': ruanganId != '{{ $r->id }}'}">
+                                                                                            {{ $r->nama }} - Lt. {{ $r->lantai }}
+                                                                                        </button>
+                                                                                    @endforeach
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                                <div>
-                                                                    <label
-                                                                        class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Kategori</label>
-                                                                    <div x-data="{ 
-                                                                                    open: false,
-                                                                                    get selectedName() {
-                                                                                        const map = {
-                                                                                            'Pindah Kelas': 'Pindah / Pengganti Kelas',
-                                                                                            'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
-                                                                                            'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
-                                                                                            'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
-                                                                                            'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
-                                                                                            'Lainnya': 'Lainnya...'
-                                                                                        };
-                                                                                        return map[kategoriType] || 'Pilih Kategori...';
-                                                                                    },
-                                                                                    selectItem(val) { 
-                                                                                        kategoriType = val;
-                                                                                        this.open = false; 
-                                                                                    } 
-                                                                                }" class="relative w-full"
-                                                                        :class="{'z-50': open, 'z-10': !open}"
-                                                                        @click.away="open = false">
 
-                                                                        <input type="hidden" name="kategori"
-                                                                            :value="kategoriType" required>
+                                                                    <!-- Kategori -->
+                                                                    <div class="space-y-1.5">
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori Kegiatan</label>
+                                                                        <div x-data="{ 
+                                                                                        open: false,
+                                                                                        get selectedName() {
+                                                                                            const map = {
+                                                                                                'Pindah Kelas': 'Pindah / Pengganti Kelas',
+                                                                                                'Maintenance / Perbaikan': 'Maintenance / Perbaikan Ruangan',
+                                                                                                'Sterilisasi Ruangan': 'Sterilisasi / Persiapan Ruangan',
+                                                                                                'Penutupan Khusus': 'Penutupan Khusus / Libur Nasional',
+                                                                                                'Ujian / Evaluasi': 'Ujian / Evaluasi (UTS/UAS)',
+                                                                                                'Lainnya': 'Lainnya...'
+                                                                                            };
+                                                                                            return map[kategoriType] || 'Pilih Kategori...';
+                                                                                        },
+                                                                                        selectItem(val) { 
+                                                                                            kategoriType = val;
+                                                                                            this.open = false; 
+                                                                                        } 
+                                                                                    }" class="relative w-full"
+                                                                            :class="{'z-50': open, 'z-10': !open}"
+                                                                            @click.away="open = false">
 
-                                                                        <button type="button" @click="open = !open"
-                                                                            class="w-full flex items-center justify-between mp-input bg-white focus:outline-none transition-colors h-[42px] px-3">
-                                                                            <span x-text="selectedName" class="truncate"
-                                                                                :class="{'text-gray-400': !kategoriType, 'text-gray-800': kategoriType}"></span>
-                                                                            <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
-                                                                                :class="{'rotate-180': open}" fill="none"
-                                                                                stroke="currentColor" viewBox="0 0 24 24">
-                                                                                <path stroke-linecap="round"
-                                                                                    stroke-linejoin="round" stroke-width="2"
-                                                                                    d="M19 9l-7 7-7-7" />
-                                                                            </svg>
-                                                                        </button>
+                                                                            <input type="hidden" name="kategori"
+                                                                                :value="kategoriType" required>
 
-                                                                        <div x-show="open" x-cloak
-                                                                            x-transition:enter="transition ease-out duration-100"
-                                                                            x-transition:enter-start="opacity-0 scale-95"
-                                                                            x-transition:enter-end="opacity-100 scale-100"
-                                                                            x-transition:leave="transition ease-in duration-75"
-                                                                            x-transition:leave-start="opacity-100 scale-100"
-                                                                            x-transition:leave-end="opacity-0 scale-95"
-                                                                            class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto"
-                                                                            style="display: none;">
-                                                                            <div class="p-1 flex flex-col">
-                                                                                <button type="button"
-                                                                                    @click="selectItem('Pindah Kelas')"
-                                                                                    class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
-                                                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah
-                                                                                    / Pengganti Kelas</button>
-                                                                                <button type="button"
-                                                                                    @click="selectItem('Maintenance / Perbaikan')"
-                                                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance
-                                                                                    / Perbaikan Ruangan</button>
-                                                                                <button type="button"
-                                                                                    @click="selectItem('Sterilisasi Ruangan')"
-                                                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi
-                                                                                    / Persiapan Ruangan</button>
-                                                                                <button type="button"
-                                                                                    @click="selectItem('Penutupan Khusus')"
-                                                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan
-                                                                                    Khusus / Libur Nasional</button>
-                                                                                <button type="button"
-                                                                                    @click="selectItem('Ujian / Evaluasi')"
-                                                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian
-                                                                                    / Evaluasi (UTS/UAS)</button>
-                                                                                <button type="button"
-                                                                                    @click="selectItem('Lainnya')"
-                                                                                    class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
-                                                                                    :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
+                                                                            <button type="button" @click="open = !open"
+                                                                                class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                                                                <span x-text="selectedName" class="truncate"
+                                                                                    :class="{'text-gray-400': !kategoriType, 'text-gray-800': kategoriType}"></span>
+                                                                                <svg class="w-4 h-4 text-gray-400 transition-transform duration-200 shrink-0"
+                                                                                    :class="{'rotate-180': open}" fill="none"
+                                                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round" stroke-width="2"
+                                                                                        d="M19 9l-7 7-7-7" />
+                                                                                </svg>
+                                                                            </button>
+
+                                                                            <div x-show="open" x-cloak
+                                                                                x-transition:enter="transition ease-out duration-100"
+                                                                                x-transition:enter-start="opacity-0 scale-95"
+                                                                                x-transition:enter-end="opacity-100 scale-100"
+                                                                                x-transition:leave="transition ease-in duration-75"
+                                                                                x-transition:leave-start="opacity-100 scale-100"
+                                                                                x-transition:leave-end="opacity-0 scale-95"
+                                                                                class="absolute left-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-[9999] max-h-48 overflow-y-auto"
+                                                                                style="display: none;">
+                                                                                <div class="p-1 flex flex-col">
+                                                                                    <button type="button"
+                                                                                        @click="selectItem('Pindah Kelas')"
+                                                                                        class="w-full text-left px-3 py-2 text-[13px] font-medium rounded-md transition-colors"
+                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Pindah Kelas', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Pindah Kelas'}">Pindah / Pengganti Kelas</button>
+                                                                                    <button type="button"
+                                                                                        @click="selectItem('Maintenance / Perbaikan')"
+                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Maintenance / Perbaikan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Maintenance / Perbaikan'}">Maintenance / Perbaikan Ruangan</button>
+                                                                                    <button type="button"
+                                                                                        @click="selectItem('Sterilisasi Ruangan')"
+                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Sterilisasi Ruangan', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Sterilisasi Ruangan'}">Sterilisasi / Persiapan Ruangan</button>
+                                                                                    <button type="button"
+                                                                                        @click="selectItem('Penutupan Khusus')"
+                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Penutupan Khusus', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Penutupan Khusus'}">Penutupan Khusus / Libur Nasional</button>
+                                                                                    <button type="button"
+                                                                                        @click="selectItem('Ujian / Evaluasi')"
+                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Ujian / Evaluasi', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Ujian / Evaluasi'}">Ujian / Evaluasi (UTS/UAS)</button>
+                                                                                    <button type="button"
+                                                                                        @click="selectItem('Lainnya')"
+                                                                                        class="w-full text-left px-3 py-2 mt-0.5 text-[13px] font-medium rounded-md transition-colors"
+                                                                                        :class="{'bg-[#EFF6FF] text-[#0B266E] font-bold': kategoriType == 'Lainnya', 'text-gray-700 hover:bg-gray-50': kategoriType != 'Lainnya'}">Lainnya...</button>
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
+                                                                    
+                                                                    <div class="space-y-1.5 sm:col-span-2">
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan</label>
+                                                                        <input type="text" name="keterangan"
+                                                                            value="{{ $j->keterangan }}" required autocomplete="off"
+                                                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]"
+                                                                            placeholder="Misal: Rapat Evaluasi Kurikulum...">
+                                                                    </div>
                                                                 </div>
                                                             </div>
-
-                                                            <div class="mt-2 text-left">
-                                                                <label
-                                                                    class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Nama
-                                                                    Acara</label>
-                                                                <input type="text" name="keterangan"
-                                                                    value="{{ $j->keterangan }}" required
-                                                                    class="mp-input text-[14px] w-full"
-                                                                    placeholder="Misal: Rapat Evaluasi Kurikulum...">
-                                                            </div>
-
-                                                            <div
-                                                                class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
-                                                                <h4
-                                                                    class="text-[13px] font-bold text-slate-800 border-b border-slate-200 pb-2 mb-3">
-                                                                    Pengaturan Waktu Pelaksanaan</h4>
+                                                            
+                                                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl mx-1 mt-3">
+                                                                <div class="flex items-center gap-2 mb-1">
+                                                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Waktu & Tanggal</span>
+                                                                </div>
 
                                                                 <input type="hidden" name="tipe_jadwal"
                                                                     value="{{ $j->tipe_jadwal }}">
 
                                                                 <div class="grid grid-cols-2 gap-4">
-                                                                    <div>
-                                                                        <label
-                                                                            class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Tanggal
-                                                                            Spesifik</label>
+                                                                    <div class="col-span-2 space-y-1.5">
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tanggal Spesifik</label>
                                                                         <input type="date" name="tanggal_spesifik"
                                                                             value="{{ $j->tanggal_spesifik }}" required
-                                                                            class="mp-input text-[14px]">
-                                                                    </div>
-                                                                    </template>
-
-                                                                    <div class="grid grid-cols-2 gap-2">
-                                                                        <div>
-                                                                            <label
-                                                                                class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Mulai</label>
-                                                                            <input type="time" name="jam_mulai"
-                                                                                value="{{ substr($j->jam_mulai, 0, 5) }}"
-                                                                                required class="mp-input text-[14px]">
-                                                                        </div>
-                                                                        <div>
-                                                                            <label
-                                                                                class="block mb-1 text-xs font-semibold text-gray-700 uppercase tracking-widest">Akhir</label>
-                                                                            <input type="time" name="jam_selesai"
-                                                                                value="{{ substr($j->jam_selesai, 0, 5) }}"
-                                                                                required class="mp-input text-[14px]">
-                                                                        </div>
+                                                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
                                                                     </div>
 
+                                                                    <div class="space-y-1.5">
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Mulai</label>
+                                                                        <input type="time" name="jam_mulai"
+                                                                            value="{{ substr($j->jam_mulai, 0, 5) }}" required 
+                                                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                                                    </div>
+                                                                    <div class="space-y-1.5">
+                                                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Akhir</label>
+                                                                        <input type="time" name="jam_selesai"
+                                                                            value="{{ substr($j->jam_selesai, 0, 5) }}" required 
+                                                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all h-[42px]">
+                                                                    </div>
+                                                                    <div class="col-span-2 text-[10px] text-slate-500 mt-0.5 ml-1">
+                                                                        <p class="leading-relaxed"><b>Info:</b> Jam operasional peminjaman reguler adalah <b>07:00 - 17:00</b>. Sebagai Admin, Anda bebas melewati batas ini untuk pemblokiran 24 jam jika diperlukan.</p>
+                                                                    </div>
                                                                 </div>
+                                                            </div>
+                                                            <!-- Mobile Footer (Inside scrollable area so it doesn't follow keyboard) -->
+                                                            <div class="sm:hidden mt-6 pt-4 pb-2 border-t border-slate-100 flex items-center justify-end gap-3">
+                                                                <button type="button" @click="showEditModal = false"
+                                                                    class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
+                                                                    Batal
+                                                                </button>
+                                                                <button type="submit"
+                                                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                                                    <span>Simpan Perubahan</span>
+                                                                </button>
                                                             </div>
                                                         </div>
 
-                                                        <div
-                                                            class="mt-6 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                                                        <!-- Desktop Sticky Footer -->
+                                                        <div class="hidden sm:flex -mx-4 sm:-mx-6 -mb-4 sm:-mb-6 px-4 sm:px-6 py-4 border-t border-slate-100 bg-slate-50/50 mt-4 flex-row items-center justify-end gap-3 shrink-0 rounded-b-none sm:rounded-b-[20px]">
                                                             <button type="button" @click="showEditModal = false"
-                                                                class="mp-btn secondary md">Batal</button>
-                                                            <button type="submit" class="mp-btn primary md">Simpan
-                                                                Perubahan</button>
+                                                                class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
+                                                                Batal
+                                                            </button>
+                                                            <button type="submit"
+                                                                class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                                                <span>Simpan Perubahan</span>
+                                                            </button>
                                                         </div>
                                                     </form>
                                                 </div>
@@ -1185,8 +1233,8 @@
                 </div>
 
                 <div class="border-t border-slate-200 bg-slate-50/50 px-5 py-3 flex flex-col md:flex-row items-center justify-between gap-4 mt-2 rounded-b-[12px]">
-                    <div class="flex items-center gap-4 text-[13px] text-slate-500">
-                        <div class="flex items-center gap-2">
+                    <div class="flex flex-col md:flex-row items-center gap-4 text-[13px] text-slate-500 w-full md:w-auto">
+                        <div class="flex items-center justify-center gap-2 w-full md:w-auto">
                             <span class="font-medium">Per halaman</span>
                             <div x-data="{ 
                         open: false, 
@@ -1234,16 +1282,16 @@
                             </div>
                         </div>
 
-                        <div class="w-px h-4 bg-slate-200"></div>
+                        <div class="hidden md:block w-px h-4 bg-slate-200"></div>
 
-                        <p class="font-medium text-slate-500">
+                        <p class="hidden md:block font-medium text-slate-500">
                             Menampilkan <span class="font-bold text-slate-800">{{ $jadwals->firstItem() ?? 0 }}</span>
                             sampai <span class="font-bold text-slate-800">{{ $jadwals->lastItem() ?? 0 }}</span>
                             dari <span class="font-bold text-slate-800">{{ $jadwals->total() }}</span> entri
                         </p>
                     </div>
 
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center justify-center gap-1.5 w-full md:w-auto">
                         @if ($jadwals->onFirstPage())
                             <button disabled
                                 class="text-slate-300 cursor-not-allowed w-8 h-8 flex items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition-colors">
