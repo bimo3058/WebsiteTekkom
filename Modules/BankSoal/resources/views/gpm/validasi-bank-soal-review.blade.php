@@ -1,4 +1,5 @@
 <x-banksoal::layouts.gpm-master>
+    <div class="gpm-review-page p-8 w-full max-w-screen-2xl mx-auto">
     @section('breadcrumbs')
     <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
     <span class="mx-2 text-slate-300">/</span>
@@ -55,9 +56,6 @@
                 <p class="text-sm text-slate-600 leading-relaxed">{{ $soal->cpmk_deskripsi }}</p>
             @endif
 
-            <span class="mt-4 inline-flex items-center rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-white">
-                Level Kognitif: C4 (Menganalisis)
-            </span>
         </div>
 
         <div class="lg:col-span-2">
@@ -151,4 +149,5 @@
         </div>
     </div>
 
+    </div>
 </x-banksoal::layouts.gpm-master>

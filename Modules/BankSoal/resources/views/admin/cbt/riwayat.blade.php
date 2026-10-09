@@ -148,7 +148,7 @@
                     <!-- Filter Button -->
                     <div class="relative">
                         <button @click="openFilter = !openFilter" type="button"
-                            class="relative inline-flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-[13px] font-medium transition-all"
+                            class="relative inline-flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-[13px] font-medium transition-all cursor-pointer"
                             :class="activeCount > 0 ? 'border-primary text-primary bg-primary/5' : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800'">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
@@ -209,11 +209,11 @@
                             {{-- Panel Footer --}}
                             <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
                                 <button @click="clearFilters()" type="button"
-                                    class="px-4 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100 transition-colors">
+                                    class="px-4 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
                                     Clear
                                 </button>
                                 <button @click="applyFilters()" type="button"
-                                    class="px-5 py-1.5 text-[13px] font-semibold bg-primary text-white rounded-lg hover:bg-[#1e2d60] transition-colors shadow-sm">
+                                    class="px-5 py-1.5 text-[13px] font-semibold bg-primary text-white rounded-lg hover:bg-[#1e2d60] transition-colors shadow-sm cursor-pointer">
                                     Terapkan
                                 </button>
                             </div>

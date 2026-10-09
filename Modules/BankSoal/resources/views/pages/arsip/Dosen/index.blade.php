@@ -285,21 +285,56 @@
                                     <span class="text-sm text-slate-600">{{ $penarikan->created_at->diffForHumans() }}</span>
                                 </td>
                                 <td class="px-8 py-5 text-right">
-                                    <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
-                                        <button type="button" @click.stop="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-primary transition-all">
+                                    <div class="flex items-center justify-end gap-2" x-data="{ menuOpen: false }">
+                                        <button
+                                            type="button"
+                                            @click.stop="
+                                                menuOpen = !menuOpen;
+                                                if (menuOpen) {
+                                                    const triggerRect = $event.currentTarget.getBoundingClientRect();
+                                                    $nextTick(() => {
+                                                        requestAnimationFrame(() => {
+                                                            const menu = $refs.pendingActionMenu;
+                                                            const gap = 4;
+                                                            const viewportPadding = 8;
+                                                            const spaceBelow = window.innerHeight - triggerRect.bottom;
+                                                            const openAbove = spaceBelow < menu.offsetHeight + gap && triggerRect.top >= menu.offsetHeight + gap;
+                                                            const top = openAbove
+                                                                ? triggerRect.top - menu.offsetHeight - gap
+                                                                : Math.min(triggerRect.bottom + gap, window.innerHeight - menu.offsetHeight - viewportPadding);
+
+                                                            menu.style.top = `${Math.max(viewportPadding, top)}px`;
+                                                            menu.style.right = `${Math.max(viewportPadding, window.innerWidth - triggerRect.right)}px`;
+                                                        });
+                                                    });
+                                                }
+                                            "
+                                            class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-primary transition-all"
+                                        >
                                             <i class="fas fa-ellipsis-h"></i>
                                         </button>
-                                        <div x-show="menuOpen" @click.away="menuOpen = false" x-cloak class="bs-dropdown-menu bs-archive-action-menu absolute right-0 z-50">
-                                            <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-primary hover:bg-slate-50 transition-all">
-                                                <i class="fas fa-file-export w-4"></i> Konversi
-                                            </a>
-                                            <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="if(confirm('Hapus riwayat penarikan ini?')){ window.showLoader(); return true; } else { return false; }" class="block">
-                                                @csrf @method('DELETE')
-                                                <button type="submit" class="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all">
-                                                    <i class="fas fa-trash-alt w-4"></i> Hapus
-                                                </button>
-                                            </form>
-                                        </div>
+                                        <template x-teleport="body">
+                                            <div
+                                                x-show="menuOpen"
+                                                x-ref="pendingActionMenu"
+                                                @click.outside="menuOpen = false"
+                                                @resize.window="menuOpen = false"
+                                                @scroll.window.capture="menuOpen = false"
+                                                x-cloak
+                                                x-transition
+                                                class="bs-dropdown-menu bs-archive-action-menu fixed z-[9999]"
+                                            >
+                                                <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-primary hover:bg-slate-50 transition-all">
+                                                    <i class="fas fa-file-export w-4"></i> Konversi
+                                                </a>
+                                                <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="if(confirm('Hapus riwayat penarikan ini?')){ window.showLoader(); return true; } else { return false; }" class="block">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all">
+                                                        <i class="fas fa-trash-alt w-4"></i> Hapus
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </template>
                                     </div>
                                 </td>
                             </tr>

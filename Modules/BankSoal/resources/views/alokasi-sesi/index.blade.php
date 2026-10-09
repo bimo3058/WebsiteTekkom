@@ -130,7 +130,7 @@
 
                     <!-- Trigger Button -->
                     <button type="button" @click="toggle()"
-                            class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg text-[13px] font-semibold border transition-all duration-200 shadow-sm
+                            class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg text-[13px] font-semibold border transition-all duration-200 shadow-sm cursor-pointer
                                    {{ $selectedPeriode
                                        ? 'bg-white text-slate-700 border-slate-300 hover:border-primary/40 hover:shadow-md'
                                        : 'bg-primary text-white border-primary hover:bg-primary/90' }}">
@@ -330,7 +330,7 @@
                                             <span x-text="formatTime(selectedJadwal?.waktu_mulai)"></span> – <span x-text="formatTime(selectedJadwal?.waktu_selesai)"></span> WIB
                                         </p>
                                     </div>
-                                    <button type="button" class="rounded-lg p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors focus:outline-none" @click="closeDrawer()">
+                                    <button type="button" class="rounded-lg p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors focus:outline-none cursor-pointer" @click="closeDrawer()">
                                         <span class="sr-only">Close panel</span>
                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                     </button>
@@ -355,11 +355,11 @@
                                 
                                 <!-- TAB PANEL -->
                                 <div class="flex bg-slate-100 p-1 rounded-lg mb-5 w-full">
-                                    <button type="button" @click="drawerTab = 'unassigned'" :class="{'bg-white shadow-sm text-primary-600': drawerTab === 'unassigned', 'text-slate-500 hover:text-slate-700': drawerTab !== 'unassigned'}" class="flex-1 py-2 rounded-md text-[13px] font-bold transition-all flex justify-center items-center gap-1.5">
+                                    <button type="button" @click="drawerTab = 'unassigned'" :class="{'bg-white shadow-sm text-primary-600': drawerTab === 'unassigned', 'text-slate-500 hover:text-slate-700': drawerTab !== 'unassigned'}" class="flex-1 py-2 rounded-md text-[13px] font-bold transition-all flex justify-center items-center gap-1.5 cursor-pointer">
                                         Belum Dialokasi
                                         <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold" :class="{'bg-primary-50 text-primary-600': drawerTab === 'unassigned', 'bg-slate-200/80 text-slate-500': drawerTab !== 'unassigned'}" x-text="unassignedStudents.length"></span>
                                     </button>
-                                    <button type="button" @click="drawerTab = 'assigned'" :class="{'bg-white shadow-sm text-primary-600': drawerTab === 'assigned', 'text-slate-500 hover:text-slate-700': drawerTab !== 'assigned'}" class="flex-1 py-2 rounded-md text-[13px] font-bold transition-all flex justify-center items-center gap-1.5">
+                                    <button type="button" @click="drawerTab = 'assigned'" :class="{'bg-white shadow-sm text-primary-600': drawerTab === 'assigned', 'text-slate-500 hover:text-slate-700': drawerTab !== 'assigned'}" class="flex-1 py-2 rounded-md text-[13px] font-bold transition-all flex justify-center items-center gap-1.5 cursor-pointer">
                                         Dalam Sesi Ini
                                         <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold" :class="{'bg-primary-50 text-primary-600': drawerTab === 'assigned', 'bg-slate-200/80 text-slate-500': drawerTab !== 'assigned'}" x-text="assignedStudents.length"></span>
                                     </button>
@@ -373,7 +373,7 @@
                                         
                                         <div class="flex justify-between items-center mb-3">
                                             <h3 class="font-bold text-slate-700 text-[13px]">Tambahkan ke sesi ini:</h3>
-                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formAssign').submit()" class="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="isSubmitting || selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
+                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formAssign').submit()" class="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2 cursor-pointer" :disabled="isSubmitting || selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
                                                 <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                                                 <span x-text="isSubmitting ? 'Memproses...' : 'Tambahkan (' + selectedUnassignedIds.length + ')'"></span>
                                             </button>
@@ -428,7 +428,7 @@
                                         
                                         <div class="flex justify-between items-center mb-4">
                                             <h3 class="font-bold text-slate-700 text-[13px]">Daftar peserta di sesi ini:</h3>
-                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formRemove').submit()" class="bg-white text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="isSubmitting || selectedAssignedIds.length === 0">
+                                            <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formRemove').submit()" class="bg-white text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed border border-red-200 text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2 cursor-pointer" :disabled="isSubmitting || selectedAssignedIds.length === 0">
                                                 <svg x-show="isSubmitting" class="w-3.5 h-3.5 animate-spin text-red-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                                                 <span x-text="isSubmitting ? 'Memproses...' : 'Keluarkan (' + selectedAssignedIds.length + ')'"></span>
                                             </button>
@@ -502,7 +502,7 @@
                 <!-- Modal Header -->
                 <div class="px-6 py-5 flex items-center justify-between border-b border-transparent">
                     <h3 class="text-lg font-bold text-slate-800 tracking-tight">Tambah Sesi Baru</h3>
-                    <button @click="openModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors">
+                    <button @click="openModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors cursor-pointer">
                         <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -597,7 +597,7 @@
                                     <div class="overflow-y-auto max-h-52 py-1.5">
                                         <template x-for="opt in options" :key="opt.value">
                                             <button type="button" @click="choose(opt.value)"
-                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-slate-50"
+                                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-slate-50 cursor-pointer"
                                                     :class="value === opt.value ? 'bg-primary/10 text-primary' : 'text-slate-700'">
                                                 <span x-text="opt.label" class="flex-1 text-left"></span>
                                                 <svg x-show="value === opt.value" class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
@@ -658,10 +658,10 @@
 
                 <!-- Modal Footer -->
                 <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-end gap-2">
-                    <button type="button" @click="openModal = false" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-sm rounded-xl focus:outline-none transition-colors">
+                    <button type="button" @click="openModal = false" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-sm rounded-xl focus:outline-none transition-colors cursor-pointer">
                         Batal
                     </button>
-                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formTambahSesi').submit()" :disabled="isSubmitting" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                    <button type="button" @click="if (isSubmitting) return; isSubmitting = true; document.getElementById('formTambahSesi').submit()" :disabled="isSubmitting" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2 cursor-pointer">
                         <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                         <span x-text="isSubmitting ? 'Memproses...' : 'Simpan Sesi'"></span>
                     </button>
@@ -703,10 +703,10 @@
                 </div>
 
                 <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
-                    <button type="button" @click="closeDeleteConfirm()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">
+                    <button type="button" @click="closeDeleteConfirm()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors cursor-pointer">
                         Batal
                     </button>
-                    <button type="button" @click="submitDelete()" :disabled="isSubmitting" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                    <button type="button" @click="submitDelete()" :disabled="isSubmitting" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2 cursor-pointer">
                         <svg x-show="!isSubmitting" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         <svg x-show="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
                         <span x-text="isSubmitting ? 'Memproses...' : 'Hapus Sesi'"></span>
