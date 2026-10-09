@@ -174,6 +174,28 @@ class ScheduleCancellationTest extends TestCase
             $t->string('title')->nullable();
             $t->timestamps();
         });
+        Schema::create('capstone_expo_events', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('period_id')->nullable();
+            $t->string('name');
+            $t->date('date')->nullable();
+            $t->time('start_time')->nullable();
+            $t->time('end_time')->nullable();
+            $t->string('room')->nullable();
+            $t->integer('capacity')->default(100);
+            $t->boolean('is_published')->default(false);
+            $t->unsignedBigInteger('created_by')->nullable();
+            $t->timestamps();
+            $t->softDeletes();
+        });
+        Schema::create('capstone_expo_registrations', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('expo_event_id');
+            $t->unsignedBigInteger('group_id');
+            $t->timestamp('registered_at')->nullable();
+            $t->string('status')->default('REGISTERED');
+            $t->timestamps();
+        });
         Schema::create('capstone_locations', function (Blueprint $t) {
             $t->id();
             $t->string('name')->nullable();

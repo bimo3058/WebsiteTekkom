@@ -25,7 +25,7 @@ export function schedulePage() {
                 this.periods=rows(result[1]);this.groups=rows(result[2]);this.locations=rows(result[3]).map(r=>r.nama!==undefined?{id:r.id,name:r.nama,type:'offline'}:r);
             } catch(e){this.error=e.message;} finally{this.loading=false;}
         },
-        get filtered(){return this.schedules.filter(s=>this.selectedPeriod==='all' || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
+        get filtered(){return this.schedules.filter(s=>this.selectedPeriod==='all' || (s.is_master && s.period_id==null) || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
         get tableRows(){
             const term=this.search.toLocaleLowerCase();
             return this.filtered.filter(s=>(this.typeFilter==='all'||s.type===this.typeFilter) && (this.statusFilter==='all'||s.status===this.statusFilter)
@@ -66,7 +66,7 @@ export function schedulePage() {
         goto(p){this.page=Math.min(Math.max(1,p),this.totalPages);},
         openDay(key){this.selectedDate=key;document.getElementById('schedule-day').showModal();},
         time(event){const start=(event.start_time||'').slice(0,5),end=(event.end_time||'').slice(0,5);return start ? start+(end?' — '+end:'') : 'Time not set';},
-        title(event){return event.student_name || event.group?.title?.title || this.label(event.type);},
+        title(event){return event.name || event.student_name || event.group?.title?.title || this.label(event.type);},
         students(event){return event.students?.map(s=>s.name).join(', ') || event.student_name || '';},
         examiners(event){return event.examiners?.map(e=>e.name || e.examiner?.name).filter(Boolean).join(', ') || [event.examiner1?.name,event.examiner2?.name].filter(Boolean).join(', ');},
         canApprove(event){return context.role==='admin' && ['SEMPRO','EXPO','TA_DEFENSE'].includes(event?.type) && ['PENDING','PENDING_APPROVAL'].includes(event?.status);},

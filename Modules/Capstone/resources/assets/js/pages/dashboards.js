@@ -39,7 +39,7 @@ export function registerDashboards(Alpine) {
         documentHref(doc){return url('/mahasiswa/documents')+'?phase='+encodeURIComponent(doc.phase)+'&type='+encodeURIComponent(doc.type)+(doc.latest_document?.id ? '&document='+encodeURIComponent(doc.latest_document.id) : '');},
         get activePeriodsCount(){return this.data.active_periods_count ?? (this.data.active_periods || []).length ?? 0;},
         get pendingApproval(){return this.data.pending_approval ?? this.data.pending_finalization ?? 0;},
-        get filteredSchedules(){return this.schedules.filter(s=>this.selectedPeriod==='all' || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
+        get filteredSchedules(){return this.schedules.filter(s=>this.selectedPeriod==='all' || (s.is_master && s.period_id==null) || String(s.period_id || s.group?.period_id)===String(this.selectedPeriod));},
         get jadwalFiltered(){
             const term=this.jadwalSearch.toLocaleLowerCase();
             return this.filteredSchedules.filter(s=>(this.typeFilter==='all'||s.type===this.typeFilter) && (this.statusFilter==='all'||s.status===this.statusFilter)
@@ -69,7 +69,7 @@ export function registerDashboards(Alpine) {
         label(type){return eventLabels[type] || type;},
         statusColor(status){return ['APPROVED','SCHEDULED'].includes(status) ? 'bg-green-100 text-green-700' : ['COMPLETED','DONE'].includes(status) ? 'bg-blue-100 text-blue-700' : ['REJECTED','CANCELLED'].includes(status) ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';},
         time(event){const start=(event.start_time||'').slice(0,5),end=(event.end_time||'').slice(0,5);return start ? start+(end?' — '+end:'') : 'Time not set';},
-        title(event){return event.student_name || event.group?.title?.title || this.label(event.type);},
+        title(event){return event.name || event.student_name || event.group?.title?.title || this.label(event.type);},
         students(event){return event.students?.map(s=>s.name).join(', ') || event.student_name || '';},
         examiners(event){return event.examiners?.map(e=>e.name || e.examiner?.name).filter(Boolean).join(', ') || [event.examiner1?.name,event.examiner2?.name].filter(Boolean).join(', ');},
         safeLink(link){try{const u=new URL(link);return ['http:','https:'].includes(u.protocol)?u.href:'#';}catch{return '#';}},

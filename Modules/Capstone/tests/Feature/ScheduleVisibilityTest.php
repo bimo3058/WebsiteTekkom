@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Modules\Capstone\Http\Controllers\CalendarController;
 use Modules\Capstone\Http\Controllers\SeminarDashboardController;
+use Modules\Capstone\Models\ExpoEvent;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\SeminarSchedule;
 use Modules\Capstone\Models\TaDefenseSchedule;
@@ -140,6 +141,28 @@ class ScheduleVisibilityTest extends TestCase
             $t->string('title')->nullable();
             $t->timestamps();
         });
+        Schema::create('capstone_expo_events', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('period_id')->nullable();
+            $t->string('name');
+            $t->date('date')->nullable();
+            $t->time('start_time')->nullable();
+            $t->time('end_time')->nullable();
+            $t->string('room')->nullable();
+            $t->integer('capacity')->default(100);
+            $t->boolean('is_published')->default(false);
+            $t->unsignedBigInteger('created_by')->nullable();
+            $t->timestamps();
+            $t->softDeletes();
+        });
+        Schema::create('capstone_expo_registrations', function (Blueprint $t) {
+            $t->id();
+            $t->unsignedBigInteger('expo_event_id');
+            $t->unsignedBigInteger('group_id');
+            $t->timestamp('registered_at')->nullable();
+            $t->string('status')->default('REGISTERED');
+            $t->timestamps();
+        });
         Schema::create('capstone_locations', function (Blueprint $t) {
             $t->id();
             $t->string('name')->nullable();
@@ -258,6 +281,113 @@ class ScheduleVisibilityTest extends TestCase
         $this->assertContains($foreignExpo->id, array_column($data['expo_schedules'], 'id'));
     }
 
+    public function test_mahasiswa_calendar_sees_foreign_period_expo(): void
+    {
+        $period1 = DB::table('capstone_periods')->insertGetId(['name' => 'P1']);
+        $period2 = DB::table('capstone_periods')->insertGetId(['name' => 'P2']);
+        $studentUser = $this->makeUser('Student Cal');
+        $this->giveRole($studentUser, 'mahasiswa');
+        $studentId = DB::table('students')->insertGetId(['user_id' => $studentUser->id, 'name' => 'Student Cal']);
+        $groupA = Group::create(['period_id' => $period1, 'code' => 'GRP-CAL-A', 'status' => 'EXPO_REGISTERED']);
+        DB::table('capstone_group_members')->insert(['group_id' => $groupA->id, 'student_id' => $studentId]);
+
+        $groupB = Group::create(['period_id' => $period2, 'code' => 'GRP-CAL-B', 'status' => 'EXPO_REGISTERED']);
+        $foreignExpo = SeminarSchedule::create([
+            'group_id' => $groupB->id, 'type' => 'EXPO', 'date' => '2026-11-01', 'status' => 'SCHEDULED',
+        ]);
+        $foreignSempro = SeminarSchedule::create([
+            'group_id' => $groupB->id, 'type' => 'SEMPRO', 'date' => '2026-10-01', 'status' => 'SCHEDULED',
+        ]);
+
+        $ids = array_column((new CalendarController)->index($this->requestAs($studentUser))->getData(true)['data'], 'id');
+        $this->assertContains($foreignExpo->id, $ids, 'cross-period expo hidden from mahasiswa calendar');
+        $this->assertNotContains($foreignSempro->id, $ids);
+    }
+
+    public function test_calendar_period_filter_never_hides_expo(): void
+    {
+        $period1 = DB::table('capstone_periods')->insertGetId(['name' => 'P1']);
+        $period2 = DB::table('capstone_periods')->insertGetId(['name' => 'P2']);
+        $admin = $this->makeUser('Admin Filter');
+        $this->giveRole($admin, 'superadmin');
+
+        $groupB = Group::create(['period_id' => $period2, 'code' => 'GRP-FLT-B', 'status' => 'EXPO_REGISTERED']);
+        $foreignExpo = SeminarSchedule::create([
+            'group_id' => $groupB->id, 'type' => 'EXPO', 'date' => '2026-11-01', 'status' => 'SCHEDULED',
+        ]);
+        $foreignSempro = SeminarSchedule::create([
+            'group_id' => $groupB->id, 'type' => 'SEMPRO', 'date' => '2026-10-01', 'status' => 'SCHEDULED',
+        ]);
+
+        $request = Request::create('/x', 'GET', ['period_id' => $period1]);
+        $request->setUserResolver(fn () => $admin);
+        $ids = array_column((new CalendarController)->index($request)->getData(true)['data'], 'id');
+        $this->assertContains($foreignExpo->id, $ids, 'period filter hid a cross-period expo');
+        $this->assertNotContains($foreignSempro->id, $ids);
+    }
+
+    public function test_calendar_includes_published_expo_masters_for_every_role(): void
+    {
+        $period1 = DB::table('capstone_periods')->insertGetId(['name' => 'P1']);
+        $period2 = DB::table('capstone_periods')->insertGetId(['name' => 'P2']);
+        $global = $this->makeExpoEvent(null, 'Global Expo');
+        $scoped = $this->makeExpoEvent($period1, 'P1 Expo');
+        $draft = $this->makeExpoEvent($period2, 'P2 Draft', false);
+
+        $admin = $this->makeUser('Admin Master');
+        $this->giveRole($admin, 'superadmin');
+        $stranger = $this->makeLecturer('Stranger Master');
+
+        $studentUser = $this->makeUser('Student Master');
+        $this->giveRole($studentUser, 'mahasiswa');
+        $studentId = DB::table('students')->insertGetId(['user_id' => $studentUser->id, 'name' => 'Student Master']);
+        $group = Group::create(['period_id' => $period1, 'code' => 'GRP-MST', 'status' => 'PDC2_READY_FOR_EXPO']);
+        DB::table('capstone_group_members')->insert(['group_id' => $group->id, 'student_id' => $studentId]);
+
+        foreach ([$admin, $stranger, $studentUser] as $viewer) {
+            $ids = array_column((new CalendarController)->index($this->requestAs($viewer))->getData(true)['data'], 'id');
+            $this->assertContains('expo_event_'.$global->id, $ids, 'global master hidden from '.$viewer->name);
+            $this->assertContains('expo_event_'.$scoped->id, $ids, 'scoped master hidden from '.$viewer->name);
+            $this->assertNotContains('expo_event_'.$draft->id, $ids, 'unpublished master leaked to '.$viewer->name);
+        }
+    }
+
+    public function test_calendar_master_period_filter_keeps_matching_masters(): void
+    {
+        $period1 = DB::table('capstone_periods')->insertGetId(['name' => 'P1']);
+        $period2 = DB::table('capstone_periods')->insertGetId(['name' => 'P2']);
+        $global = $this->makeExpoEvent(null, 'Global Expo');
+        $ownPeriod = $this->makeExpoEvent($period1, 'P1 Expo');
+        $foreignPeriod = $this->makeExpoEvent($period2, 'P2 Expo');
+
+        $admin = $this->makeUser('Admin Master Filter');
+        $this->giveRole($admin, 'superadmin');
+
+        $request = Request::create('/x', 'GET', ['period_id' => $period1]);
+        $request->setUserResolver(fn () => $admin);
+        $ids = array_column((new CalendarController)->index($request)->getData(true)['data'], 'id');
+        $this->assertContains('expo_event_'.$global->id, $ids);
+        $this->assertContains('expo_event_'.$ownPeriod->id, $ids);
+        $this->assertNotContains('expo_event_'.$foreignPeriod->id, $ids);
+    }
+
+    public function test_calendar_master_entry_is_read_only_shaped(): void
+    {
+        $this->makeExpoEvent(null, 'Global Expo');
+
+        $admin = $this->makeUser('Admin Master Shape');
+        $this->giveRole($admin, 'superadmin');
+
+        $items = (new CalendarController)->index($this->requestAs($admin))->getData(true)['data'];
+        $masters = array_values(array_filter($items, fn ($i) => ($i['is_master'] ?? false) === true));
+        $this->assertNotEmpty($masters);
+        $master = $masters[0];
+        $this->assertSame('EXPO', $master['type']);
+        $this->assertSame('PUBLISHED', $master['status']);
+        $this->assertSame('Global Expo', $master['name']);
+        $this->assertSame('Semua periode', $master['period_name']);
+    }
+
     public function test_admin_calendar_still_sees_everything_cross_period(): void
     {
         $period2 = DB::table('capstone_periods')->insertGetId(['name' => 'P2']);
@@ -294,6 +424,15 @@ class ScheduleVisibilityTest extends TestCase
         ]);
 
         return ['slot1' => $slot1, 'slot2' => $slot2, 'group' => $group, 'studentId' => $studentId];
+    }
+
+    private function makeExpoEvent(?int $periodId, string $name, bool $published = true): ExpoEvent
+    {
+        return ExpoEvent::create([
+            'period_id' => $periodId, 'name' => $name,
+            'date' => '2026-11-20', 'start_time' => '09:00', 'end_time' => '12:00',
+            'room' => 'Hall A', 'capacity' => 100, 'is_published' => $published,
+        ]);
     }
 
     private function makeLecturer(string $name): User
