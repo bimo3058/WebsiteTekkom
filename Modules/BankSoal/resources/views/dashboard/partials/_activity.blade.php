@@ -11,10 +11,14 @@
             @if($periodeAktif)
                 <div style="margin-bottom:16px;">
                     <h4 style="font-size:16px; font-weight:700; color:var(--c-fg); margin-bottom:4px;">{{ $periodeAktif->nama_periode }}</h4>
-                    <p style="font-size:12px; color:var(--c-fg-muted);">{{ \Carbon\Carbon::parse($periodeAktif->tanggal_mulai)->translatedFormat('d M') }} – {{ \Carbon\Carbon::parse($periodeAktif->tanggal_selesai)->translatedFormat('d M Y') }}</p>
+                    <p style="font-size:12px; color:var(--c-fg-muted);">Pendaftaran: {{ \Carbon\Carbon::parse($periodeAktif->tanggal_mulai)->translatedFormat('d F Y') }} – {{ \Carbon\Carbon::parse($periodeAktif->tanggal_selesai)->translatedFormat('d F Y') }}</p>
+                    @if($periodeAktif->tanggal_mulai_ujian)
+                    <p style="font-size:12px; color:var(--c-fg-muted);">Ujian: {{ \Carbon\Carbon::parse($periodeAktif->tanggal_mulai_ujian)->translatedFormat('d F Y') }} – {{ $periodeAktif->tanggal_selesai_ujian ? \Carbon\Carbon::parse($periodeAktif->tanggal_selesai_ujian)->translatedFormat('d F Y') : '—' }}</p>
+                    @endif
                 </div>
                 
                 @if($statPendaftar)
+                    
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
                         <div style="background:var(--c-bg); border-radius:8px; padding:12px; text-align:center;">
                             <p style="font-size:10px; font-weight:700; color:var(--c-fg-muted); letter-spacing:0.05em; margin-bottom:4px;">TOTAL PENDAFTAR</p>
@@ -22,14 +26,14 @@
                         </div>
                         <div style="background:rgba(245,158,11,0.05); border:1px solid rgba(245,158,11,0.2); border-radius:8px; padding:12px; text-align:center;">
                             <p style="font-size:10px; font-weight:700; color:var(--c-warning); letter-spacing:0.05em; margin-bottom:4px;">MENUNGGU</p>
-                            <p style="font-size:20px; font-weight:800; color:var(--c-warning);">{{ $statPendaftar->pending }}</p>
+                            <p style="font-size:20px; font-weight:800; color:var(--c-warning);">{{ $statPendaftar->pending ?? 0 }}</p>
                         </div>
                     </div>
                 @endif
 
                 <div style="display:flex; gap:8px; margin-top:auto;">
-                    <a href="{{ route('banksoal.pendaftaran.index', ['periode_id' => $periodeAktif->id]) }}" style="flex:1; text-align:center; padding:8px; background:var(--c-primary); color:#fff; font-size:12px; font-weight:600; border-radius:8px; text-decoration:none;">Kelola Pendaftar</a>
-                    <a href="{{ route('banksoal.pendaftaran.alokasi-sesi.index') }}" style="flex:1; text-align:center; padding:8px; background:#fff; color:var(--c-fg-sec); border:1px solid var(--c-border); font-size:12px; font-weight:600; border-radius:8px; text-decoration:none;">Jadwal</a>
+                    <a href="{{ route('banksoal.pendaftaran.index', ['periode_id' => $periodeAktif->id]) }}" style="flex:1; text-align:center; padding:8px; background:var(--c-primary); color:#fff; font-size:12px; font-weight:600; border:1px solid transparent; border-radius:8px; text-decoration:none; cursor:pointer;">Kelola Pendaftar</a>
+                    <a href="{{ route('banksoal.pendaftaran.alokasi-sesi.index', ['periode_id' => $periodeAktif->id]) }}" style="flex:1; text-align:center; padding:8px; background:var(--c-primary); color:#fff; font-size:12px; font-weight:600; border:1px solid transparent; border-radius:8px; text-decoration:none; cursor:pointer;">Jadwal</a>
                 </div>
             @else
                 <div style="text-align:center; padding:30px 0;">

@@ -52,8 +52,8 @@ class PendaftarAdminController extends Controller
             if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function (Builder $q) use ($search) {
-                    $q->where('nim', 'like', "%{$search}%")
-                        ->orWhere('nama_lengkap', 'like', "%{$search}%");
+                    $q->where('nim', 'ilike', "%{$search}%")
+                        ->orWhere('nama_lengkap', 'ilike', "%{$search}%");
                 });
             }
 
