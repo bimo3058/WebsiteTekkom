@@ -13,6 +13,7 @@ export function adminUsers(mode='list') {
             catch(e){this.error=e.message;}finally{this.loading=false;}
         },
         async load(){
+            if(mode==='list'||!context.params.id)return;
             const version=++this.loadVersion;this.loading=true;this.error='';
             try{
                 const user=unwrap(await api('/admin/user-management/'+encodeURIComponent(context.params.id)));if(version!==this.loadVersion)return;this.user=user;

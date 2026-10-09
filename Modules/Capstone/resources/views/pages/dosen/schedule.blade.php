@@ -1,17 +1,11 @@
 @extends('capstone::layouts.app')
 @section('title','My Schedule')
 @section('content')
-<div x-data="capstoneSchedules" class="space-y-6">
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div><h1 class="text-3xl font-bold tracking-tight">My Schedule</h1><p class="text-muted-foreground">View all your schedules: bimbingan sessions, examinations, and events.</p></div>
-        <div class="flex flex-wrap items-center gap-2"><x-capstone::button @click="edit()"><x-capstone::icon name="Plus" class="mr-2 h-4 w-4" />New BIMBINGAN</x-capstone::button>
-            <select class="w-[200px] max-w-full h-9 rounded-md border px-3 text-sm bg-background" x-model="selectedPeriod" aria-label="Academic Period"><option value="all">All Periods</option><template x-for="period in periods" :key="period.id"><option :value="period.id" x-text="period.name+(period.is_active ? ' (Active)' : '')"></option></template></select>
-        </div>
-    </div>
+<div x-data="capstoneSchedules" class="space-y-5">
+    @include('capstone::partials.schedule-header')
     @include('capstone::partials.loading')
-    <div x-show="!loading && !error" x-cloak class="space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-3"><div class="inline-flex rounded-lg bg-muted p-1" role="group" aria-label="Schedule view"><button type="button" @click="view='calendar'" :aria-pressed="view==='calendar'" :class="view==='calendar'?'bg-background shadow-sm':''" class="rounded-md px-4 py-2 text-sm">Calendar</button><button type="button" @click="view='table'" :aria-pressed="view==='table'" :class="view==='table'?'bg-background shadow-sm':''" class="rounded-md px-4 py-2 text-sm">Table</button></div><x-capstone::button variant="outline" @click="exportCsv(true)">Export CSV</x-capstone::button></div>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">@foreach(['BIMBINGAN'=>'Bimbingan','SEMPRO'=>'Sempro','EXPO'=>'Expo','TA_DEFENSE'=>'TA Defense'] as $type=>$label)<div class="p-4 rounded-lg border" :class="color('{{ $type }}')"><p class="text-2xl font-bold" x-text="count('{{ $type }}')"></p><p class="text-sm text-muted-foreground">{{ $label }}</p></div>@endforeach</div>
+    <div x-show="!loading && !error" x-cloak class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        @include('capstone::partials.schedule-toolbar')
         @include('capstone::partials.schedule-calendar')
         @include('capstone::partials.schedule-table')
     </div>

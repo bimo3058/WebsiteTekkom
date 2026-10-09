@@ -106,12 +106,12 @@
                 <span x-text="'Showing '+userFrom+' to '+userTo+' of, '+userTotal+' results'"></span>
             </div>
             <div class="flex items-center gap-1">
-                <button type="button" @click="page=Math.max(1,userPage-1);load()" :disabled="userPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
+                <button type="button" @click="page=Math.max(1,userPage-1)" :disabled="userPage<=1" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman sebelumnya"><x-capstone::icon name="ChevronLeft" size="15" /></button>
                 <template x-for="(p,i) in userPageList" :key="i+'-'+p">
-                    <button type="button" x-show="p!=='…'" @click="page=p;load()" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===userPage ? 'border-primary bg-primary text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
+                    <button type="button" x-show="p!=='…'" @click="page=p" class="min-w-8 rounded-lg border px-2 py-1.5 text-xs font-semibold" :class="p===userPage ? 'border-primary bg-primary text-white' : 'border-slate-200 text-slate-500 hover:bg-slate-50'" x-text="p"></button>
                     <span x-show="p==='…'" class="px-1 text-xs text-slate-400">...</span>
                 </template>
-                <button type="button" @click="page=Math.min(userLastPage,userPage+1);load()" :disabled="userPage>=userLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
+                <button type="button" @click="page=Math.min(userLastPage,userPage+1)" :disabled="userPage>=userLastPage" class="rounded-lg border border-slate-200 p-1.5 text-slate-500 disabled:opacity-40" aria-label="Halaman berikutnya"><x-capstone::icon name="ChevronRight" size="15" /></button>
             </div>
         </div>
     </div>

@@ -84,3 +84,32 @@ test('admin TA edits preserve the student selection and submit examiner changes 
     assert.deepEqual(body.student_ids,[8,10]);assert.equal(body.examiner_1_id,2);assert.equal(body.examiner_2_id,3);assert.equal(body.location_id,7);
     assert.equal(body.group_id,undefined);assert.equal(body.period_id,undefined);assert.equal(page.saving,false);
 });
+
+test('schedule dashboard formats Indonesian dates, dot times, pills and avatar stacks',()=>{
+    const page=schedulePage();
+    assert.equal(page.dateId('2026-05-21'),'21 Mei 2026');
+    assert.equal(page.dateId('2026-05-21T00:00:00.000Z'),'21 Mei 2026');
+    assert.equal(page.timeShort('16:00:00'),'16.00');
+    assert.equal(page.typePill('SEMPRO'),'sched-type-SEMPRO');
+    assert.equal(page.pillClass('SEMPRO'),'sched-pill-navy');
+    assert.equal(page.pillClass('BIMBINGAN'),'sched-pill-amber');
+    assert.equal(page.statusPill('COMPLETED'),'sched-status-done');
+    assert.equal(page.statusLabel('COMPLETED'),'Selesai');
+    assert.equal(page.statusLabel('SCHEDULED'),'Terjadwal');
+    assert.equal(page.groupCode({group:{code:'S1T26K01'}}),'S1T26K01');
+    assert.deepEqual(page.memberNames({group:{members:[{student:{name:'Aisyah Rahma'}},{student:{name:'Budi'}}]}}),['Aisyah Rahma','Budi']);
+    assert.equal(page.initials('Aisyah Rahma'),'AR');
+    assert.match(page.avatarBg('Aisyah Rahma'),/^#[0-9A-Fa-f]{6}$/);
+});
+
+test('schedule dashboard paginates with a compact window',()=>{
+    const page=schedulePage();
+    page.schedules=Array.from({length:85},(_,i)=>normalizeSchedule({id:i+1,date:'2026-05-21',start_time:'09:00'},'BIMBINGAN'));
+    page.perPage=10;
+    assert.equal(page.totalPages,9);
+    assert.deepEqual(page.pageList,[1,2,'…',8,9]);
+    page.page=5;assert.deepEqual(page.pageList,[1,2,'…',4,5,6,'…',8,9]);
+    page.page=4;
+    assert.equal(page.showingFrom,31);assert.equal(page.showingTo,40);
+    page.goto(99);assert.equal(page.page,9);
+});

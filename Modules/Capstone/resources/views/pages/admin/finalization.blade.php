@@ -2,52 +2,39 @@
 @section('title','Finalisasi')
 @section('content')
 <div x-data="adminFinalization" x-init="init()" x-cloak class="space-y-5">
-    <nav aria-label="Langkah finalisasi" class="rounded-xl border bg-card px-4 py-3 md:px-6">
-        <div class="flex flex-wrap items-center gap-3">
-            <div class="mr-auto min-w-52 max-w-[68ch]">
-                <p class="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Finalisasi per periode</p>
-                <h1 class="text-xl font-bold leading-tight md:text-2xl">Finalisasi Kelompok</h1>
-                <p class="mt-1 text-sm text-muted-foreground">Verifikasi kesiapan, tandai Kelompok Final, lalu kunci periode ke PDC1. Setiap angka di bawah terhubung ke filter kerja.</p>
-            </div>
-            <label class="text-sm">Periode
-                <select x-model="periodId" @change="page=1;loadLecturers();load()" :disabled="saving" class="ml-2 rounded-md border bg-background px-3 py-2">
-                    <option value="">Pilih periode</option>
-                    <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name"></option></template>
-                </select>
-            </label>
-            <span x-show="period && period.is_finalized" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"><span aria-hidden="true">●</span>Periode terkunci</span>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold tracking-tight text-foreground">Finalisasi</h1>
+            <p class="mt-1 text-sm text-muted-foreground">Kelola finalisasi grup dan penentuan supervisor</p>
         </div>
-        <ol class="mt-4 grid gap-2 md:grid-cols-3" aria-label="Alur finalisasi">
-            <li class="flex items-center gap-3 rounded-lg border px-3 py-2" :class="(tab==='ready'||tab==='others') ? 'border-primary bg-primary/5' : 'bg-background'">
-                <span class="flex size-7 items-center justify-center rounded-full text-xs font-bold" :class="(tab==='ready'||tab==='others') ? 'bg-primary text-primary-foreground' : 'border text-muted-foreground'">1</span>
-                <div><p class="text-sm font-semibold">Kesiapan</p><p class="text-xs text-muted-foreground"><span x-text="stats?.total_ready ?? 0"></span> siap, <span x-text="(stats?.total_no_title ?? 0) + (stats?.total_not_ready ?? 0)"></span> perlu perbaikan</p></div>
-            </li>
-            <li class="flex items-center gap-3 rounded-lg border px-3 py-2" :class="tab==='final' ? 'border-primary bg-primary/5' : 'bg-background'">
-                <span class="flex size-7 items-center justify-center rounded-full text-xs font-bold" :class="tab==='final' ? 'bg-primary text-primary-foreground' : 'border text-muted-foreground'">2</span>
-                <div><p class="text-sm font-semibold">Final</p><p class="text-xs text-muted-foreground"><span x-text="stats?.total_kelompok_final ?? 0"></span> Kelompok Final</p></div>
-            </li>
-            <li class="flex items-center gap-3 rounded-lg border px-3 py-2" :class="period?.is_finalized ? 'border-emerald-300 bg-emerald-50' : 'bg-background'">
-                <span class="flex size-7 items-center justify-center rounded-full text-xs font-bold" :class="period?.is_finalized ? 'bg-emerald-600 text-white' : 'border text-muted-foreground'">3</span>
-                <div><p class="text-sm font-semibold">Kunci Periode</p><p class="text-xs text-muted-foreground" x-text="period?.is_finalized ? 'Terkunci, bidding berhenti' : 'Belum dikunci'"></p></div>
-            </li>
-        </ol>
-        <div class="mt-3 flex flex-wrap items-center gap-2 border-t pt-3">
-            <x-capstone::button @click="openPeriodFlag()" x-show="!period?.is_finalized && !flow?.can_execute_finalization && ((stats?.total_kelompok_final ?? 0) + (stats?.total_pdc1_active ?? 0)) > 0" ::disabled="saving"><x-capstone::icon name="Flag" />Finalisasi Periode</x-capstone::button>
-            <x-capstone::button variant="outline" @click="load()" ::disabled="loading || saving"><x-capstone::icon name="RefreshCw" />Muat Ulang</x-capstone::button>
+        <div class="flex flex-wrap items-center gap-2.5">
+            <span x-show="period && period.is_finalized" class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700"><span aria-hidden="true">●</span>Periode terkunci</span>
+            <label class="inline-flex items-center gap-2 rounded-lg border border-input bg-white px-4 py-2 text-sm font-semibold shadow-xs">
+                <span class="sr-only">Periode</span>
+                <select x-model="periodId" @change="page=1;loadLecturers();load()" :disabled="saving" aria-label="Pilih periode" class="bg-transparent font-semibold outline-none">
+                    <option value="" disabled x-show="!periodId">Pilih periode</option>
+                    <template x-for="period in periods" :key="period.id"><option :value="String(period.id)" x-text="period.name" :selected="String(period.id)===String(periodId)"></option></template>
+                </select>
+                <x-capstone::icon name="ChevronDown" class="size-4 text-muted-foreground" />
+            </label>
             <details class="relative">
-                <summary class="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-md border bg-background px-4 py-2 text-sm font-medium shadow-xs hover:bg-accent [&::-webkit-details-marker]:hidden">Ekspor</summary>
-                <div class="absolute z-20 mt-2 flex w-44 flex-col gap-1 rounded-lg border bg-card p-2 shadow-md">
+                <summary class="inline-flex h-9 cursor-pointer list-none items-center gap-2 rounded-lg bg-[#1E2A5A] px-4 text-sm font-semibold text-white shadow-xs hover:bg-[#16204a] [&::-webkit-details-marker]:hidden"><x-capstone::icon name="Download" class="size-4" />Export<x-capstone::icon name="ChevronDown" class="size-4" /></summary>
+                <div class="absolute right-0 z-20 mt-2 flex w-44 flex-col gap-1 rounded-lg border border-border bg-white p-1.5 shadow-md">
                     <button type="button" class="rounded-md px-3 py-2 text-left text-sm hover:bg-accent" @click="doExport('excel')" :disabled="loading || saving || !periodId">Unduh Excel</button>
                     <button type="button" class="rounded-md px-3 py-2 text-left text-sm hover:bg-accent" @click="doExport('pdf')" :disabled="loading || saving || !periodId">Unduh PDF</button>
                 </div>
             </details>
-            <x-capstone::button variant="outline" @click="openAutoFix()" ::disabled="!periodId || saving"><x-capstone::icon name="Wrench" />Perbaiki Otomatis</x-capstone::button>
-            <span class="mx-1 hidden h-6 w-px bg-border sm:inline-block" aria-hidden="true"></span>
-            <x-capstone::button variant="outline" @click="confirmBidding('lock')" x-show="period && period.is_finalized" ::disabled="saving">Kunci Bidding</x-capstone::button>
-            <x-capstone::button variant="outline" @click="confirmBidding('unlock')" x-show="period && !period.is_finalized" ::disabled="saving">Buka Bidding</x-capstone::button>
-            <x-capstone::button variant="destructive" @click="openReopen()" x-show="stats?.can_reopen_finalization" ::disabled="saving"><x-capstone::icon name="RotateCcw" />Buka Kembali Periode</x-capstone::button>
         </div>
-    </nav>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+        <x-capstone::button @click="openPeriodFlag()" x-show="!period?.is_finalized && !flow?.can_execute_finalization && ((stats?.total_kelompok_final ?? 0) + (stats?.total_pdc1_active ?? 0)) > 0" ::disabled="saving"><x-capstone::icon name="Flag" />Finalisasi Periode</x-capstone::button>
+        <x-capstone::button variant="outline" @click="load()" ::disabled="loading || saving"><x-capstone::icon name="RefreshCw" />Muat Ulang</x-capstone::button>
+        <x-capstone::button variant="outline" @click="openAutoFix()" ::disabled="!periodId || saving"><x-capstone::icon name="Wrench" />Perbaiki Otomatis</x-capstone::button>
+        <span class="mx-1 hidden h-6 w-px bg-border sm:inline-block" aria-hidden="true"></span>
+        <x-capstone::button variant="outline" @click="confirmBidding('lock')" x-show="period && period.is_finalized" ::disabled="saving">Kunci Bidding</x-capstone::button>
+        <x-capstone::button variant="outline" @click="confirmBidding('unlock')" x-show="period && !period.is_finalized" ::disabled="saving">Buka Bidding</x-capstone::button>
+        <x-capstone::button variant="destructive" @click="openReopen()" x-show="stats?.can_reopen_finalization" ::disabled="saving"><x-capstone::icon name="RotateCcw" />Buka Kembali Periode</x-capstone::button>
+    </div>
 
     <x-capstone::card x-show="multiplePeriods" title="Pilih satu periode" description="Terdapat lebih dari satu periode aktif. Pilih satu periode untuk melanjutkan kerja.">
         <div class="flex flex-wrap gap-2 px-6 pb-6">
@@ -73,55 +60,63 @@
         <button type="button" class="ml-2 font-semibold underline" @click="load()">Coba lagi</button>
     </div>
 
-    <div class="rounded-xl border bg-card px-4 py-3 md:px-6" aria-label="Ringkasan periode">
-        <dl class="grid grid-cols-2 gap-x-6 gap-y-3 tabular-nums md:grid-cols-3 xl:grid-cols-6">
-            <div><dt class="text-xs text-muted-foreground">Siap finalisasi</dt><dd class="text-2xl font-bold" x-text="stats?.total_ready ?? 0"></dd></div>
-            <div><dt class="text-xs text-muted-foreground">Kelompok Final</dt><dd class="text-2xl font-bold" x-text="stats?.total_kelompok_final ?? 0"></dd></div>
-            <div><dt class="text-xs text-muted-foreground">Tanpa kelompok</dt><dd class="text-2xl font-bold" x-text="stats?.total_no_group ?? 0"></dd></div>
-            <div><dt class="text-xs text-muted-foreground">Tanpa judul</dt><dd class="text-2xl font-bold" x-text="stats?.total_no_title ?? 0"></dd></div>
-            <div><dt class="text-xs text-muted-foreground">Belum siap</dt><dd class="text-2xl font-bold" x-text="stats?.total_not_ready ?? 0"></dd></div>
-            <div><dt class="text-xs text-muted-foreground">PDC1 aktif dan pasca</dt><dd class="text-2xl font-bold"><span x-text="stats?.total_pdc1_active ?? 0"></span><span class="text-sm font-normal text-muted-foreground"> dari <span x-text="stats?.total_post_finalization ?? 0"></span></span></dd></div>
-        </dl>
+    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Ringkasan periode">
+        <div @click="setTab('ready')" class="cursor-pointer rounded-xl border border-border bg-white p-4 shadow-xs hover:border-ring">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex size-9 items-center justify-center rounded-full bg-[#EEF1FF] text-[#1E2A5A]"><x-capstone::icon name="User" class="size-4" /></span>
+                    <p class="text-sm font-medium text-foreground">Siap Finalisasi</p>
+                </div>
+                <x-capstone::icon name="Info" class="size-4 text-muted-foreground" />
+            </div>
+            <p class="mt-3 text-2xl font-bold tabular-nums" x-text="stats?.total_ready ?? 0"></p>
+            <p class="mt-1 text-sm text-muted-foreground">Grup siap difinalisasi</p>
+        </div>
+        <div @click="setTab('final')" class="cursor-pointer rounded-xl border border-border bg-white p-4 shadow-xs hover:border-ring">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex size-9 items-center justify-center rounded-full bg-[#EEF1FF] text-[#1E2A5A]"><x-capstone::icon name="User" class="size-4" /></span>
+                    <p class="text-sm font-medium text-foreground">Group Final</p>
+                </div>
+                <x-capstone::icon name="Info" class="size-4 text-muted-foreground" />
+            </div>
+            <p class="mt-3 text-2xl font-bold tabular-nums" x-text="stats?.total_kelompok_final ?? 0"></p>
+            <p class="mt-1 text-sm text-muted-foreground">Sudah di-set supervisor</p>
+        </div>
+        <div @click="setTab('others', 'no_group')" class="cursor-pointer rounded-xl border border-border bg-white p-4 shadow-xs hover:border-ring">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex size-9 items-center justify-center rounded-full bg-[#EEF1FF] text-[#1E2A5A]"><x-capstone::icon name="User" class="size-4" /></span>
+                    <p class="text-sm font-medium text-foreground">Tanpa Kelompok</p>
+                </div>
+                <x-capstone::icon name="Info" class="size-4 text-muted-foreground" />
+            </div>
+            <p class="mt-3 text-2xl font-bold tabular-nums" x-text="stats?.total_no_group ?? 0"></p>
+            <p class="mt-1 text-sm text-muted-foreground">Mahasiswa perlu grouping</p>
+        </div>
+        <div @click="setTab('others', 'not_ready')" class="cursor-pointer rounded-xl border border-border bg-white p-4 shadow-xs hover:border-ring">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <span class="flex size-9 items-center justify-center rounded-full bg-[#EEF1FF] text-[#1E2A5A]"><x-capstone::icon name="User" class="size-4" /></span>
+                    <p class="text-sm font-medium text-foreground">Belum Siap</p>
+                </div>
+                <x-capstone::icon name="Info" class="size-4 text-muted-foreground" />
+            </div>
+            <p class="mt-3 text-2xl font-bold tabular-nums" x-text="stats?.total_not_ready ?? 0"></p>
+            <p class="mt-1 text-sm text-muted-foreground">Grup belum ready</p>
+        </div>
     </div>
 
-    <div class="flex flex-wrap items-center gap-2" role="tablist" aria-label="Filter daftar kerja">
-        <button type="button" role="tab" :aria-selected="tab==='ready'" @click="setTab('ready')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="tab==='ready' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Siap (<span x-text="stats?.total_ready ?? 0"></span>)</button>
-        <button type="button" role="tab" :aria-selected="tab==='final'" @click="setTab('final')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="tab==='final' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Final (<span x-text="stats?.total_kelompok_final ?? 0"></span>)</button>
-        <button type="button" role="tab" :aria-selected="tab==='others' && subTab==='no_group'" @click="setTab('others', 'no_group')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="tab==='others' && subTab==='no_group' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Tanpa Kelompok (<span x-text="stats?.total_no_group ?? 0"></span>)</button>
-        <button type="button" role="tab" :aria-selected="tab==='others' && subTab==='no_title'" @click="setTab('others', 'no_title')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="tab==='others' && subTab==='no_title' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Tanpa Judul (<span x-text="stats?.total_no_title ?? 0"></span>)</button>
-        <button type="button" role="tab" :aria-selected="tab==='others' && subTab==='not_ready'" @click="setTab('others', 'not_ready')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="tab==='others' && subTab==='not_ready' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Belum Siap (<span x-text="stats?.total_not_ready ?? 0"></span>)</button>
-        <button type="button" role="tab" :aria-selected="tab==='post'" @click="setTab('post')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="tab==='post' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Pasca (<span x-text="stats?.total_post_finalization ?? 0"></span>)</button>
+    <div class="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-[#F1F2F6] p-1.5" role="tablist" aria-label="Filter daftar kerja">
+        <button type="button" role="tab" :aria-selected="tab==='final'" @click="setTab('final')" class="inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-sm font-medium tabular-nums" :class="tab==='final' ? 'bg-white text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">Kelompok Final (<span x-text="stats?.total_kelompok_final ?? 0"></span>)</button>
+        <button type="button" role="tab" :aria-selected="tab==='ready'" @click="setTab('ready')" class="inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-sm font-medium tabular-nums" :class="tab==='ready' ? 'bg-white text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">Siap Finalisasi (<span x-text="stats?.total_ready ?? 0"></span>)</button>
+        <button type="button" role="tab" :aria-selected="tab==='others'" @click="setTab('others', 'no_group')" class="inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-sm font-medium tabular-nums" :class="tab==='others' ? 'bg-white text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">Perlu Perhatian (<span x-text="(stats?.total_no_group ?? 0) + (stats?.total_no_title ?? 0) + (stats?.total_not_ready ?? 0)"></span>)</button>
+        <button type="button" role="tab" :aria-selected="tab==='post'" @click="setTab('post')" class="inline-flex h-9 items-center gap-1.5 rounded-lg px-4 text-sm font-medium tabular-nums" :class="tab==='post' ? 'bg-white text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'">Pasca (<span x-text="stats?.total_post_finalization ?? 0"></span>)</button>
     </div>
-
-    <div class="flex flex-wrap items-center gap-3 rounded-xl border bg-card p-4">
-        <label class="min-w-48 flex-1 text-sm">Cari daftar kerja
-            <input type="search" x-model="search" @input="onSearch()" placeholder="Cari kelompok, judul, nama, NIM..." aria-label="Cari daftar kerja" class="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm">
-        </label>
-        <template x-if="isGroupView">
-            <label class="text-sm">Pembimbing
-                <select x-model="supervisorStatus" @change="page=1;load()" class="ml-2 rounded-md border bg-background px-3 py-2">
-                    <option value="all">Semua</option>
-                    <option value="missing_sv1">Belum ada SV1</option>
-                    <option value="missing_sv2">Belum ada SV2</option>
-                    <option value="complete">Lengkap</option>
-                </select>
-            </label>
-        </template>
-        <template x-if="isGroupView">
-            <label class="text-sm">Anggota
-                <select x-model="memberCount" @change="page=1;load()" class="ml-2 rounded-md border bg-background px-3 py-2">
-                    <option value="all">Semua</option>
-                    <option value="under_min">Kurang</option>
-                    <option value="in_range">Sesuai</option>
-                    <option value="over_max">Lebih</option>
-                </select>
-            </label>
-        </template>
-        <label class="text-sm">Per halaman
-            <select x-model.number="pageSize" @change="page=1;load()" class="ml-2 rounded-md border bg-background px-3 py-2">
-                <option :value="10">10</option><option :value="20">20</option><option :value="50">50</option>
-            </select>
-        </label>
+    <div x-show="tab==='others'" class="flex flex-wrap items-center gap-2" role="tablist" aria-label="Rincian perlu perhatian">
+        <button type="button" role="tab" :aria-selected="subTab==='no_group'" @click="setSubTab('no_group')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="subTab==='no_group' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Tanpa Kelompok (<span x-text="stats?.total_no_group ?? 0"></span>)</button>
+        <button type="button" role="tab" :aria-selected="subTab==='no_title'" @click="setSubTab('no_title')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="subTab==='no_title' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Tanpa Judul (<span x-text="stats?.total_no_title ?? 0"></span>)</button>
+        <button type="button" role="tab" :aria-selected="subTab==='not_ready'" @click="setSubTab('not_ready')" class="inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium tabular-nums" :class="subTab==='not_ready' ? 'bg-primary text-primary-foreground' : 'border bg-background shadow-xs'">Belum Siap (<span x-text="stats?.total_not_ready ?? 0"></span>)</button>
     </div>
 
     <div x-show="tab==='ready' && selectedIds.length" x-cloak class="flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
@@ -144,6 +139,43 @@
     </div>
 
     <x-capstone::card>
+        <div class="flex flex-wrap items-center justify-between gap-3 px-5 pt-5">
+            <h2 class="text-base font-semibold" x-text="tableTitle"></h2>
+            <div class="flex flex-wrap items-center gap-2.5">
+                <div class="relative">
+                    <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"><x-capstone::icon name="Search" class="size-4" /></span>
+                    <input type="search" x-model="search" @input="onSearch()" placeholder="Search" aria-label="Cari daftar kerja" class="h-9 w-64 rounded-lg border border-input bg-white pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-ring">
+                </div>
+                <div class="relative" x-data="{open:false}" @keydown.escape="open=false">
+                    <button type="button" @click="open=!open" :aria-expanded="open" class="inline-flex h-9 items-center gap-2 rounded-lg border border-input bg-white px-3.5 text-sm text-muted-foreground shadow-xs hover:bg-accent">
+                        <x-capstone::icon name="ListFilter" class="size-4" />Filter
+                    </button>
+                    <div x-show="open" @click.outside="open=false" x-cloak class="absolute right-0 z-20 mt-2 w-56 space-y-3 rounded-lg border bg-white p-3 shadow-md">
+                        <template x-if="isGroupView">
+                            <label class="block text-sm">Pembimbing
+                                <select x-model="supervisorStatus" @change="page=1;load()" class="mt-1 w-full rounded-md border bg-background px-3 py-2">
+                                    <option value="all">Semua</option>
+                                    <option value="missing_sv1">Belum ada SV1</option>
+                                    <option value="missing_sv2">Belum ada SV2</option>
+                                    <option value="complete">Lengkap</option>
+                                </select>
+                            </label>
+                        </template>
+                        <template x-if="isGroupView">
+                            <label class="block text-sm">Anggota
+                                <select x-model="memberCount" @change="page=1;load()" class="mt-1 w-full rounded-md border bg-background px-3 py-2">
+                                    <option value="all">Semua</option>
+                                    <option value="under_min">Kurang</option>
+                                    <option value="in_range">Sesuai</option>
+                                    <option value="over_max">Lebih</option>
+                                </select>
+                            </label>
+                        </template>
+                        <p x-show="!isGroupView" class="text-sm text-muted-foreground">Tidak ada filter untuk daftar ini.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
         @include('capstone::partials.loading')
         <div x-show="!loading && !error && !items.length" x-cloak class="flex flex-col items-center justify-center px-4 py-16 text-center">
             <template x-if="tab==='ready'"><p class="max-w-[60ch] font-medium text-gray-500">Belum ada kelompok siap. Periksa tab Tanpa Judul dan Belum Siap, lengkapi judul dan anggota, lalu kembali ke sini.</p></template>
@@ -156,27 +188,27 @@
         </div>
         <div x-show="!loading && !error && items.length" x-cloak class="relative w-full overflow-x-auto">
             <table x-show="isGroupView" class="w-full caption-bottom text-sm tabular-nums">
-                <thead class="[&_tr]:border-b"><tr class="border-b bg-gray-50/50">
-                    <th class="h-10 px-2 text-left" scope="col"><input type="checkbox" @change="toggleAll($event.target.checked)" :checked="items.length>0 && selectedIds.length===items.length" aria-label="Pilih semua kelompok"></th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Kelompok</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Anggota</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Judul</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Pembimbing</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Status</th>
-                    <th x-show="tab==='ready'" class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Kesiapan</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Aksi</th>
+                <thead class="[&_tr]:border-b"><tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <th class="px-4 py-3 text-left" scope="col"><input type="checkbox" @change="toggleAll($event.target.checked)" :checked="items.length>0 && selectedIds.length===items.length" aria-label="Pilih semua kelompok"></th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Kelompok</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Anggota</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Judul</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Pembimbing</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Status</th>
+                    <th x-show="tab==='ready'" class="px-4 py-3 text-left font-medium" scope="col">Kesiapan</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Aksi</th>
                 </tr></thead>
                 <tbody class="[&_tr:last-child]:border-0">
                     <template x-for="item in items" :key="item.id">
-                        <tr class="border-b">
-                            <td class="px-2 py-2"><input type="checkbox" @change="toggleId(item.id)" :checked="selectedIds.includes(item.id)" :aria-label="'Pilih '+(item.code||item.id)"></td>
-                            <td class="px-2 py-2 font-medium" x-text="item.code || ('Kelompok #'+item.id)"></td>
-                            <td class="px-2 py-2"><span x-text="(item.members||[]).length + ' anggota'"></span><br><span class="text-xs text-muted-foreground" x-text="memberNames(item)"></span></td>
-                            <td class="px-2 py-2"><span x-text="item.title?.title || 'Belum ada judul'"></span></td>
-                            <td class="px-2 py-2 text-xs"><span x-text="'SV1: '+(item.supervisor1?.name || item.supervisor1?.user?.name || 'Belum ditetapkan')"></span><br><span x-text="'SV2: '+(item.supervisor2?.name || item.supervisor2?.user?.name || 'Belum ditetapkan')"></span></td>
-                            <td class="px-2 py-2"><span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs" :class="groupStatusClass(item.status)"><span aria-hidden="true">●</span><span x-text="item.status_label || item.status"></span></span></td>
+                        <tr class="border-b bg-white hover:bg-muted/30">
+                            <td class="px-4 py-3"><input type="checkbox" @change="toggleId(item.id)" :checked="selectedIds.includes(item.id)" :aria-label="'Pilih '+(item.code||item.id)"></td>
+                            <td class="px-4 py-3 font-medium" x-text="item.code || ('Kelompok #'+item.id)"></td>
+                            <td class="px-4 py-3"><span x-text="(item.members||[]).length + ' anggota'"></span><br><span class="text-xs text-muted-foreground" x-text="memberNames(item)"></span></td>
+                            <td class="px-4 py-3"><span x-text="item.title?.title || 'Belum ada judul'"></span></td>
+                            <td class="px-4 py-3 text-xs"><span x-text="'SV1: '+(item.supervisor1?.name || item.supervisor1?.user?.name || 'Belum ditetapkan')"></span><br><span x-text="'SV2: '+(item.supervisor2?.name || item.supervisor2?.user?.name || 'Belum ditetapkan')"></span></td>
+                            <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs" :class="groupStatusClass(item.status)"><span aria-hidden="true">●</span><span x-text="item.status_label || item.status"></span></span></td>
                             <td x-show="tab==='ready'" class="px-2 py-2"><div class="flex flex-wrap gap-1"><template x-for="r in readiness(item)" :key="r.label"><span class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" :class="r.ok ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-red-200 bg-red-50 text-red-800'"><span aria-hidden="true" x-text="r.ok ? '✓' : '!'"></span><span x-text="r.label"></span></span></template></div></td>
-                            <td class="px-2 py-2"><div class="flex flex-wrap gap-1">
+                            <td class="px-4 py-3"><div class="flex flex-wrap gap-1">
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_set_supervisor" @click="openSingleSv(item)">Atur SV</x-capstone::button>
                                 <x-capstone::button size="sm" x-show="item.allowed_actions?.can_mark_kelompok_final" @click="openMarkFinal(item)">Tandai Final</x-capstone::button>
                                 <x-capstone::button size="sm" variant="outline" x-show="item.allowed_actions?.can_assign_title" @click="openAssignTitle(item)">Tetapkan Judul</x-capstone::button>
@@ -189,32 +221,43 @@
                 </tbody>
             </table>
             <table x-show="!isGroupView" class="w-full caption-bottom text-sm tabular-nums">
-                <thead class="[&_tr]:border-b"><tr class="border-b bg-gray-50/50">
-                    <th class="h-10 px-2 text-left" scope="col"><input type="checkbox" @change="toggleAllStudents($event.target.checked)" :checked="items.length>0 && noGroupSelected.length===items.length" aria-label="Pilih semua mahasiswa"></th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Nama</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">NIM</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Email</th>
+                <thead class="[&_tr]:border-b"><tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <th class="px-4 py-3 text-left" scope="col"><input type="checkbox" @change="toggleAllStudents($event.target.checked)" :checked="items.length>0 && noGroupSelected.length===items.length" aria-label="Pilih semua mahasiswa"></th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Nama</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">NIM</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Email</th>
                 </tr></thead>
                 <tbody class="[&_tr:last-child]:border-0">
                     <template x-for="item in items" :key="item.id">
-                        <tr class="border-b">
-                            <td class="px-2 py-2"><input type="checkbox" @change="toggleStudent(item.id)" :checked="noGroupSelected.includes(item.id)" :aria-label="'Pilih '+(item.name||item.id)"></td>
-                            <td class="px-2 py-2 font-medium" x-text="item.name || item.user?.name || 'Tanpa nama'"></td>
-                            <td class="px-2 py-2 font-mono text-xs" x-text="item.student_number || item.nim || 'Tanpa NIM'"></td>
-                            <td class="px-2 py-2" x-text="item.email || item.user?.email || 'Tanpa email'"></td>
+                        <tr class="border-b bg-white hover:bg-muted/30">
+                            <td class="px-4 py-3"><input type="checkbox" @change="toggleStudent(item.id)" :checked="noGroupSelected.includes(item.id)" :aria-label="'Pilih '+(item.name||item.id)"></td>
+                            <td class="px-4 py-3 font-medium" x-text="item.name || item.user?.name || 'Tanpa nama'"></td>
+                            <td class="px-4 py-3 font-mono text-xs" x-text="item.student_number || item.nim || 'Tanpa NIM'"></td>
+                            <td class="px-4 py-3" x-text="item.email || item.user?.email || 'Tanpa email'"></td>
                         </tr>
                     </template>
                 </tbody>
             </table>
         </div>
-        <div x-show="!loading && !error && items.length" x-cloak class="flex flex-wrap items-center justify-between gap-4 border-t px-6 py-4 text-sm">
-            <p class="text-muted-foreground">Total <span x-text="pagination.total" class="tabular-nums"></span> data</p>
-            <div class="flex items-center gap-2">
-                <x-capstone::button variant="outline" size="sm" @click="gotoPage(1)" ::disabled="page<=1" aria-label="Halaman pertama">«</x-capstone::button>
-                <x-capstone::button variant="outline" size="sm" @click="gotoPage(page-1)" ::disabled="page<=1" aria-label="Halaman sebelumnya">‹</x-capstone::button>
-                <span>Halaman <span x-text="page" class="tabular-nums"></span> dari <span x-text="pagination.last_page" class="tabular-nums"></span></span>
-                <x-capstone::button variant="outline" size="sm" @click="gotoPage(page+1)" ::disabled="page>=pagination.last_page" aria-label="Halaman berikutnya">›</x-capstone::button>
-                <x-capstone::button variant="outline" size="sm" @click="gotoPage(pagination.last_page)" ::disabled="page>=pagination.last_page" aria-label="Halaman terakhir">»</x-capstone::button>
+        <div x-show="!loading && !error && items.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
+            <div class="flex items-center gap-3">
+                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <select x-model.number="pageSize" @change="page=1;load()" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
+                        <option :value="10">10</option><option :value="20">20</option><option :value="50">50</option>
+                    </select>
+                </label>
+                <span class="text-foreground"><span x-text="'Showing '+showingFrom+' to '+showingTo+' of, '+pagination.total+' results'"></span></span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button type="button" @click="gotoPage(page-1)" :disabled="page<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
+                <template x-for="(n,i) in pageNumbers" :key="n">
+                    <span class="flex items-center gap-1.5">
+                        <span x-show="i>0 && n-pageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
+                        <button type="button" @click="gotoPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="page===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                    </span>
+                </template>
+                <button type="button" @click="gotoPage(page+1)" :disabled="page>=pagination.last_page" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>
             </div>
         </div>
     </x-capstone::card>
@@ -223,26 +266,47 @@
         <x-capstone::alert variant="warning" x-show="overloadedLecturers.length" class="mx-6 mb-3"><span x-text="overloadedLecturers.length" class="tabular-nums"></span> dosen overload. Hindari menetapkan mereka sebagai SV baru.</x-capstone::alert>
         <div class="relative w-full overflow-x-auto px-6 pb-6">
             <table class="w-full caption-bottom text-sm tabular-nums">
-                <thead class="[&_tr]:border-b"><tr class="border-b bg-gray-50/50">
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Dosen</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">NIP</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Beban</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Sisa</th>
-                    <th class="h-10 px-2 text-left font-semibold text-gray-700" scope="col">Status</th>
+                <thead class="[&_tr]:border-b"><tr class="bg-[#F8F9FB] text-[13px] font-medium text-[#666D80]">
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Dosen</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">NIP</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Beban</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Sisa</th>
+                    <th class="px-4 py-3 text-left font-medium" scope="col">Status</th>
                 </tr></thead>
                 <tbody>
-                    <template x-for="lecturer in lecturers" :key="lecturer.id">
-                        <tr class="border-b">
-                            <td class="px-2 py-2 font-medium" x-text="lecturer.name || 'Tanpa nama'"></td>
-                            <td class="px-2 py-2 font-mono text-xs" x-text="lecturer.nip || lecturer.employee_number || 'Tanpa NIP'"></td>
-                            <td class="px-2 py-2"><span x-text="lecturer.current_load"></span> dari <span x-text="lecturer.max_load"></span></td>
-                            <td class="px-2 py-2" x-text="lecturer.remaining_capacity"></td>
-                            <td class="px-2 py-2"><span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs" :class="lecturer.is_overloaded ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'"><span aria-hidden="true">●</span><span x-text="lecturer.is_overloaded ? 'Overload' : 'Tersedia'"></span></span></td>
+                    <template x-for="lecturer in visibleLecturers" :key="lecturer.id">
+                        <tr class="border-b bg-white hover:bg-muted/30">
+                            <td class="px-4 py-3 font-medium" x-text="lecturer.name || 'Tanpa nama'"></td>
+                            <td class="px-4 py-3 font-mono text-xs" x-text="lecturer.nip || lecturer.employee_number || 'Tanpa NIP'"></td>
+                            <td class="px-4 py-3"><span x-text="lecturer.current_load"></span> dari <span x-text="lecturer.max_load"></span></td>
+                            <td class="px-4 py-3" x-text="lecturer.remaining_capacity"></td>
+                            <td class="px-4 py-3"><span class="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs" :class="lecturer.is_overloaded ? 'border-red-200 bg-red-50 text-red-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800'"><span aria-hidden="true">●</span><span x-text="lecturer.is_overloaded ? 'Overload' : 'Tersedia'"></span></span></td>
                         </tr>
                     </template>
                 </tbody>
             </table>
             <p x-show="!lecturers.length && !loading" class="py-6 text-center text-sm text-gray-400">Belum ada data dosen untuk periode ini.</p>
+        </div>
+        <div x-show="!loading && !error && lecturers.length" x-cloak class="flex flex-wrap items-center justify-between gap-3 border-t border-border px-5 py-3.5 text-sm">
+            <div class="flex items-center gap-3">
+                <label class="inline-flex items-center gap-0 overflow-hidden rounded-lg border border-input bg-white text-[13px]">
+                    <span class="px-2.5 text-muted-foreground">Per page</span>
+                    <select x-model.number="lecturerPageSize" @change="lecturerPage=1" aria-label="Baris per halaman" class="border-l border-input bg-transparent px-2 py-1.5 font-medium outline-none">
+                        <option :value="10">10</option><option :value="20">20</option><option :value="50">50</option>
+                    </select>
+                </label>
+                <span class="text-foreground"><span x-text="'Showing '+lecturerShowingFrom+' to '+lecturerShowingTo+' of, '+lecturerTotal+' results'"></span></span>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button type="button" @click="gotoLecturerPage(lecturerPage-1)" :disabled="lecturerPage<=1" aria-label="Halaman sebelumnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronLeft" class="size-4" /></button>
+                <template x-for="(n,i) in lecturerPageNumbers" :key="n">
+                    <span class="flex items-center gap-1.5">
+                        <span x-show="i>0 && n-lecturerPageNumbers[i-1]>1" class="px-1 text-muted-foreground">...</span>
+                        <button type="button" @click="gotoLecturerPage(n)" x-text="n" class="inline-flex size-8 items-center justify-center rounded-lg border text-sm" :class="lecturerPage===n?'border-[#1E2A5A] bg-[#1E2A5A] font-semibold text-white':'border-input bg-white text-foreground hover:bg-accent'"></button>
+                    </span>
+                </template>
+                <button type="button" @click="gotoLecturerPage(lecturerPage+1)" :disabled="lecturerPage>=lecturerTotalPages" aria-label="Halaman berikutnya" class="inline-flex size-8 items-center justify-center rounded-lg border border-input bg-white text-muted-foreground disabled:opacity-40"><x-capstone::icon name="ChevronRight" class="size-4" /></button>
+            </div>
         </div>
     </x-capstone::card>
 

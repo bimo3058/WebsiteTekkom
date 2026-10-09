@@ -50,15 +50,32 @@ export function adminGroups(detail=false){return mergePage(basePage(),{detail,gr
         }
     },
 });}
-export function expoAdmin(){return mergePage(basePage(),{editing:null,form:{},action:'',eofficeRooms:[],
+export function expoAdmin(){return mergePage(basePage(),{editing:null,form:{},action:'',eofficeRooms:[],statusFilter:'all',filterMenu:false,sortMenu:false,sortOption:'',openMenuItem:null,menuStyle:{},
     async init(){try{await this.periodsLoad(false);this.eofficeRooms=rows(await api('/locations/eoffice-rooms'));await this.load();}catch(e){this.error=e.message;this.loading=false;}},
+    get filtered(){const q=(this.search||'').toLowerCase();let list=this.items.filter(i=>JSON.stringify(i).toLowerCase().includes(q));if(this.statusFilter==='published')list=list.filter(i=>i.is_published);else if(this.statusFilter==='draft')list=list.filter(i=>!i.is_published);if(this.sortOption==='name-az')list=[...list].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));else if(this.sortOption==='date-desc')list=[...list].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));else if(this.sortOption==='date-asc')list=[...list].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));return list;},
+    get showingFrom(){return this.filtered.length?(Math.min(this.page,this.pageCount)-1)*Number(this.pageSize)+1:0;},
+    get showingTo(){return Math.min(Math.min(this.page,this.pageCount)*Number(this.pageSize),this.filtered.length);},
+    get pageNumbers(){const total=this.pageCount;const current=Math.min(Math.max(1,this.page),total);const pages=new Set([1,2,current-1,current,current+1,total-1,total].filter(n=>n>=1&&n<=total));return [...pages].sort((a,b)=>a-b);},
+    goPage(n){n=Math.min(Math.max(1,n),this.pageCount);if(n!==this.page)this.page=n;},
+    setSort(v){this.sortOption=v;this.sortMenu=false;this.page=1;},
+    statusBadgeClass(item){return item?.is_published?'bg-[#DDF2EE] text-[#287F6E]':'bg-[#F9ECCB] text-[#956321]';},
     async load(){this.loading=true;this.error='';try{this.items=rows(await api('/admin/expo-events'+query({period_id:this.periodId})));}catch(e){this.error=e.message;}finally{this.loading=false;}},
     edit(item=null){this.editing=item;this.errors={};this.form={period_id:String(item?.period_id||this.periodId||''),name:item?.name||'',date:(item?.date||'').slice(0,10),start_time:(item?.start_time||'').slice(0,5),end_time:(item?.end_time||'').slice(0,5),eoffice_ruangan_id:String(item?.eoffice_ruangan_id||''),capacity:item?.capacity||20,is_published:item?.is_published||false};dialog('expo-form').showModal();},
     async save(){if(await this.run(()=>api('/admin/expo-events'+(this.editing?'/'+this.editing.id:''),{method:this.editing?'PUT':'POST',body:{...this.form,period_id:Number(this.form.period_id),eoffice_ruangan_id:Number(this.form.eoffice_ruangan_id),capacity:Number(this.form.capacity)}}))){dialog('expo-form').close();await this.load();}},
     confirm(item,action){this.selected=item;this.action=action;dialog('expo-confirm').showModal();},
     async apply(){const endpoint='/admin/expo-events/'+this.selected.id;if(await this.run(()=>api(endpoint+(this.action==='publish'?'/publish':''),{method:this.action==='publish'?'PUT':'DELETE'}))){dialog('expo-confirm').close();await this.load();}},
+    openRowMenu(event,item){if(this.openMenuItem&&this.openMenuItem.id===item.id){this.closeMenu();return;}this.openMenuItem=item;const rect=(event?.currentTarget||event?.target)?.getBoundingClientRect?.();if(!rect)return;const menuWidth=192;const menuHeight=160;let left=rect.right-menuWidth;left=Math.max(8,Math.min(left,window.innerWidth-menuWidth-8));let top=rect.bottom+4;if(top+menuHeight>window.innerHeight-8)top=Math.max(8,rect.top-menuHeight-4);this.menuStyle={left:left+'px',top:top+'px'};},
+    closeMenu(){this.openMenuItem=null;},
 });}
-export function semproAdmin(){return mergePage(basePage(),{groups:[],lecturers:[],eofficeRooms:[],form:{},mode:'create',reason:'',
+export function semproAdmin(){return mergePage(basePage(),{groups:[],lecturers:[],eofficeRooms:[],form:{},mode:'create',reason:'',statusFilter:'all',filterMenu:false,sortMenu:false,sortOption:'',openMenuItem:null,menuStyle:{},
+    get filtered(){const q=(this.search||'').toLowerCase();let list=this.items.filter(i=>JSON.stringify(i).toLowerCase().includes(q));if(this.statusFilter!=='all')list=list.filter(i=>String(i.status)===String(this.statusFilter));if(this.sortOption==='date-desc')list=[...list].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));else if(this.sortOption==='date-asc')list=[...list].sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')));else if(this.sortOption==='group-az')list=[...list].sort((a,b)=>String(this.groupName(a.group)).localeCompare(String(this.groupName(b.group))));else if(this.sortOption==='status')list=[...list].sort((a,b)=>String(a.status||'').localeCompare(String(b.status||'')));return list;},
+    get showingFrom(){return this.filtered.length?(Math.min(this.page,this.pageCount)-1)*Number(this.pageSize)+1:0;},
+    get showingTo(){return Math.min(Math.min(this.page,this.pageCount)*Number(this.pageSize),this.filtered.length);},
+    get pageNumbers(){const total=this.pageCount;const current=Math.min(Math.max(1,this.page),total);const pages=new Set([1,2,current-1,current,current+1,total-1,total].filter(n=>n>=1&&n<=total));return [...pages].sort((a,b)=>a-b);},
+    goPage(n){n=Math.min(Math.max(1,n),this.pageCount);if(n!==this.page)this.page=n;},
+    setSort(v){this.sortOption=v;this.sortMenu=false;this.page=1;},
+    statusBadgeClass(status){return ['PENDING','PENDING_APPROVAL'].includes(status)?'bg-[#F9ECCB] text-[#956321]':status==='SCHEDULED'||status==='APPROVED'?'bg-[#DDF2EE] text-[#287F6E]':['REJECTED'].includes(status)?'bg-[#FADAE1] text-[#B4232B]':'bg-slate-100 text-slate-600';},
+    statusLabel(status){return {PENDING:'Pending',PENDING_APPROVAL:'Menunggu persetujuan',SCHEDULED:'Terjadwal',APPROVED:'Disetujui',REJECTED:'Ditolak',CANCELLED:'Dibatalkan'}[status]||status||'—';},
     async init(){try{await this.periodsLoad(false);const [groups,lecturers,eofficeRooms]=await Promise.all([allRows('/admin/groups'),allRows('/admin/users?role=dosen'),api('/locations/eoffice-rooms')]);this.groups=groups;this.lecturers=rows(lecturers);this.eofficeRooms=rows(eofficeRooms);await this.load();}catch(e){this.error=e.message;this.loading=false;}},
     async load(){this.loading=true;this.error='';try{const schedules=rows(await api('/admin/sempro/schedules'));this.items=schedules.filter(s=>!this.periodId||String(s.group?.period_id)===String(this.periodId));}catch(e){this.error=e.message;}finally{this.loading=false;}},
     get eligible(){return this.groups.filter(g=>g.status==='READY_FOR_SEMPRO'&&(!this.periodId||String(g.period_id)===String(this.periodId)));},
@@ -68,12 +85,15 @@ export function semproAdmin(){return mergePage(basePage(),{groups:[],lecturers:[
     async cancelSave(){if(await this.run(()=>api(`/admin/sempro/schedules/${this.selected.id}/cancel`,{method:'PUT'}))){dialog('sempro-cancel').close();await this.load();}},
     reject(item){this.selected=item;this.reason='';dialog('sempro-reject').showModal();},
     async rejectSave(){if(!this.reason.trim())return;if(await this.run(()=>api(`/admin/sempro/schedules/${this.selected.id}/reject`,{method:'PUT',body:{rejection_reason:this.reason.trim()}}))){dialog('sempro-reject').close();await this.load();}},
+    openRowMenu(event,item){if(this.openMenuItem&&this.openMenuItem.id===item.id){this.closeMenu();return;}this.openMenuItem=item;const rect=(event?.currentTarget||event?.target)?.getBoundingClientRect?.();if(!rect)return;const menuWidth=192;const menuHeight=220;let left=rect.right-menuWidth;left=Math.max(8,Math.min(left,window.innerWidth-menuWidth-8));let top=rect.bottom+4;if(top+menuHeight>window.innerHeight-8)top=Math.max(8,rect.top-menuHeight-4);this.menuStyle={left:left+'px',top:top+'px'};},
+    closeMenu(){this.openMenuItem=null;},
 });}
 export function finalizationAdmin(){return mergePage(basePage(),{
     tab:'ready',subTab:'no_group',supervisorStatus:'all',memberCount:'all',
     stats:null,flow:null,pagination:{current_page:1,last_page:1,total:0,per_page:20},
     multiplePeriods:false,execConfirm:false,periodFlagConfirm:false,activatePdc1:true,
     lecturers:[],availTitles:[],availGroups:[],
+    lecturerPage:1,lecturerPageSize:10,
     selectedIds:[],noGroupSelected:[],
     svForm:{group_ids:[],supervisor_1_id:'',supervisor_2_id:'',notes:'',mark_final:false,isReady:false,svDefaultName:''},svError:'',
     titleForm:{group_id:'',group_code:'',title_id:''},
@@ -82,7 +102,18 @@ export function finalizationAdmin(){return mergePage(basePage(),{
     rollbackIds:[],cancelTarget:null,forceTarget:null,biddingAction:'',autoFixMode:'safe',
     searchTimer:null,
     get isGroupView(){return this.tab!=='others'||this.subTab!=='no_group';},
+    get tableTitle(){return this.tab==='final'?'Tabel Kelompok Final':this.tab==='ready'?'Tabel Siap Finalisasi':this.tab==='post'?'Tabel Pasca Finalisasi':'Tabel Perlu Perhatian';},
+    get showingFrom(){return this.pagination.total?(this.page-1)*Number(this.pageSize)+1:0;},
+    get showingTo(){return Math.min(this.page*Number(this.pageSize),this.pagination.total);},
+    get pageNumbers(){const total=Math.max(1,Number(this.pagination.last_page)||1);const current=Math.min(Math.max(1,this.page),total);const pages=new Set([1,2,current-1,current,current+1,total-1,total].filter(n=>n>=1&&n<=total));return [...pages].sort((a,b)=>a-b);},
     get overloadedLecturers(){return (this.lecturers||[]).filter(l=>l.is_overloaded);},
+    get lecturerTotal(){return (this.lecturers||[]).length;},
+    get lecturerTotalPages(){return Math.max(1,Math.ceil(this.lecturerTotal/Math.max(1,Number(this.lecturerPageSize)||10)));},
+    get visibleLecturers(){const size=Math.max(1,Number(this.lecturerPageSize)||10);const page=Math.min(Math.max(1,this.lecturerPage),this.lecturerTotalPages);return (this.lecturers||[]).slice((page-1)*size,page*size);},
+    get lecturerShowingFrom(){return this.lecturerTotal?(Math.min(Math.max(1,this.lecturerPage),this.lecturerTotalPages)-1)*Math.max(1,Number(this.lecturerPageSize)||10)+1:0;},
+    get lecturerShowingTo(){return Math.min(Math.min(Math.max(1,this.lecturerPage),this.lecturerTotalPages)*Math.max(1,Number(this.lecturerPageSize)||10),this.lecturerTotal);},
+    get lecturerPageNumbers(){const total=this.lecturerTotalPages;const current=Math.min(Math.max(1,this.lecturerPage),total);const pages=new Set([1,2,current-1,current,current+1,total-1,total].filter(n=>n>=1&&n<=total));return [...pages].sort((a,b)=>a-b);},
+    gotoLecturerPage(page){page=Math.min(Math.max(1,page),this.lecturerTotalPages);if(page!==this.lecturerPage){this.lecturerPage=page;}},
     get svOverloadWarning(){
         const ids=[this.svForm.supervisor_1_id,this.svForm.supervisor_2_id].filter(Boolean).map(String);
         return ids.some(id=>(this.lecturers||[]).some(l=>String(l.id)===id&&l.is_overloaded));
@@ -132,6 +163,7 @@ export function finalizationAdmin(){return mergePage(basePage(),{
         try{
             const body=unwrap(await api('/admin/finalization/lecturers'+query({period_id:this.periodId})));
             this.lecturers=body?.lecturers||[];
+            this.lecturerPage=1;
         }catch(e){notify(e.message,true);}
     },
     async refreshAll(){await this.loadLecturers();await this.load();},

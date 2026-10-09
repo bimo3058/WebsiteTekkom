@@ -1,6 +1,21 @@
 @import './theme.css';
 
 [x-cloak] { display: none !important; }
+
+/* Schedule dashboard (SITKOM-matched): purge-proof pills used by
+   partials/schedule-calendar.blade.php and schedule-table.blade.php. */
+.sched-pill { display: block; border-width: 1px; border-style: solid; }
+.sched-pill-navy { background-color: #EEF0F6; border-color: #E2E5EE; border-left-color: #0B266E; color: #334155; }
+.sched-pill-amber { background-color: #FFFBEB; border-color: #FDEFC9; border-left-color: #EAB308; color: #57534E; }
+.sched-type-SEMPRO { background-color: #F3E8FF; color: #6D21A8; }
+.sched-type-BIMBINGAN { background-color: #DBEAFE; color: #1D4ED8; }
+.sched-type-EXPO { background-color: #D1FAE5; color: #047857; }
+.sched-type-TA_DEFENSE { background-color: #FFE4E6; color: #BE123C; }
+.sched-type-SIDANG { background-color: #E0F2FE; color: #0369A1; }
+.sched-status-done { background-color: #DDF2EE; color: #287F6E; }
+.sched-status-soon { background-color: #D1F0F9; color: #0C4D6E; }
+.sched-status-wait { background-color: #F9ECCB; color: #956321; }
+.sched-status-bad { background-color: #FADAE1; color: #DF1C41; }
 dialog::backdrop { background: rgb(0 0 0 / 50%); }
 dialog[open] { animation: capstone-dialog-in .15s ease-out; }
 @keyframes capstone-dialog-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }

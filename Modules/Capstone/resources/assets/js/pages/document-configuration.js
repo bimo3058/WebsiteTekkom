@@ -15,7 +15,7 @@ const defaults = {PDC1:['Proposal','Gantt Chart'],SEMPRO:['Buku Bimbingan','Bukt
 
 export function documentRequirementsPage(phase = '') {
     return {
-        phase:phase.toUpperCase(),periods:[],selectedPeriod:'',items:[],loading:true,saving:false,error:'',search:'',status:'all',page:1,pageSize:10,sortKey:'phase',sortDirection:1,newName:'',newDescription:'',requestId:0,nextKey:0,
+        phase:phase.toUpperCase(),periods:[],selectedPeriod:'',items:[],loading:true,saving:false,error:'',search:'',status:'all',page:1,pageSize:10,sortKey:'phase',sortDirection:1,newName:'',newDescription:'',requestId:0,nextKey:0,filterMenu:false,sortMenu:false,sortOption:'',openMenu:null,openMenuHref:'',menuStyle:{},
         url,labels,descriptions,colors,
         async init() {
             try {
@@ -34,6 +34,14 @@ export function documentRequirementsPage(phase = '') {
         },
         get pageCount(){return Math.max(1,Math.ceil(this.filtered.length/this.pageSize));},
         get visible(){return this.filtered.slice((Math.min(this.page,this.pageCount)-1)*this.pageSize,Math.min(this.page,this.pageCount)*this.pageSize);},
+        get showingFrom(){return this.filtered.length?(Math.min(this.page,this.pageCount)-1)*Number(this.pageSize)+1:0;},
+        get showingTo(){return (Math.min(this.page,this.pageCount)-1)*Number(this.pageSize)+this.visible.length;},
+        get pageNumbers(){const total=this.pageCount;const current=Math.min(this.page,total);const pages=new Set([1,2,current-1,current,current+1,total-1,total].filter(n=>n>=1&&n<=total));return [...pages].sort((a,b)=>a-b);},
+        goPage(n){this.page=Math.min(Math.max(1,Number(n)||1),this.pageCount);},
+        setSort(option){this.sortOption=option;this.sortMenu=false;if(option==='fase-az'){this.sortKey='phase';this.sortDirection=1;}else if(option==='fase-za'){this.sortKey='phase';this.sortDirection=-1;}else if(option==='jumlah'){this.sortKey='count';this.sortDirection=1;}else{this.sortKey='phase';this.sortDirection=1;}this.page=1;},
+        dokumenLabel(item){const names=(item?.document_names || []).filter(Boolean);return names.length?names.join(', '):'Belum dikonfigurasi';},
+        openRowMenu(event,id,href){if(this.openMenu===id){this.closeMenu();return;}this.openMenu=id;this.openMenuHref=href||'';const rect=(event?.currentTarget||event?.target)?.getBoundingClientRect?.();if(!rect)return;const menuWidth=176;const menuHeight=60;let left=rect.right-menuWidth;left=Math.max(8,Math.min(left,window.innerWidth-menuWidth-8));let top=rect.bottom+4;if(top+menuHeight>window.innerHeight-8)top=Math.max(8,rect.top-menuHeight-4);this.menuStyle={left:left+'px',top:top+'px'};},
+        closeMenu(){this.openMenu=null;this.openMenuHref='';},
         sort(key){this.sortDirection=this.sortKey===key ? -this.sortDirection : 1;this.sortKey=key;},
         phaseUrl(phase=''){return url('/admin/document-requirements'+(phase ? '/'+phase.toLowerCase() : '')+'?period_id='+encodeURIComponent(this.selectedPeriod));},
         async load(){
