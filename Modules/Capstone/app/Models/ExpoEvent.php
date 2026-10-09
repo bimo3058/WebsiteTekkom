@@ -5,10 +5,13 @@ namespace Modules\Capstone\Models;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\EOffice\Models\Peminjaman;
+use Modules\EOffice\Models\Ruangan;
 
 class ExpoEvent extends Model
 {
     protected $table = 'capstone_expo_events';
+
     use SoftDeletes;
 
     protected $fillable = [
@@ -27,9 +30,18 @@ class ExpoEvent extends Model
 
     protected $casts = [
         'date' => 'date',
+        'period_id' => 'integer',
         'is_published' => 'boolean',
         'capacity' => 'integer',
     ];
+
+    /**
+     * Cross-period (global) event: visible and registrable from every period.
+     */
+    public function isCrossPeriod(): bool
+    {
+        return $this->period_id === null;
+    }
 
     public function period()
     {
@@ -48,12 +60,12 @@ class ExpoEvent extends Model
 
     public function eofficeRoom()
     {
-        return $this->belongsTo(\Modules\EOffice\Models\Ruangan::class, 'eoffice_ruangan_id');
+        return $this->belongsTo(Ruangan::class, 'eoffice_ruangan_id');
     }
 
     public function eofficeBooking()
     {
-        return $this->belongsTo(\Modules\EOffice\Models\Peminjaman::class, 'eoffice_peminjaman_id');
+        return $this->belongsTo(Peminjaman::class, 'eoffice_peminjaman_id');
     }
 
     /**

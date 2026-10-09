@@ -20,6 +20,20 @@ class ExpoEventController extends Controller
         $this->expoService = $expoService;
     }
 
+    /**
+     * Normalize the period selector before validation: an empty value
+     * means cross-period (global, NULL). Stale clients may send '' or 0,
+     * which would otherwise fail the `exists` rule with "period id yang
+     * dipilih tidak valid". The key is only touched when present, so
+     * `sometimes` updates that omit period_id leave it unchanged.
+     */
+    private function normalizePeriodInput(Request $request): void
+    {
+        if ($request->has('period_id') && empty($request->input('period_id'))) {
+            $request->merge(['period_id' => null]);
+        }
+    }
+
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     // Admin CRUD
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -29,8 +43,10 @@ class ExpoEventController extends Controller
         $query = ExpoEvent::with(['period', 'creator'])
             ->withCount(['registrations' => fn ($query) => $query->where('status', 'REGISTERED')]);
 
-        if ($request->has('period_id')) {
-            $query->where('period_id', $request->period_id);
+        if ($request->filled('period_id')) {
+            // Cross-period (global, period_id NULL) events apply to every
+            // period, so they stay visible under any period filter.
+            $query->where(fn ($q) => $q->whereNull('period_id')->orWhere('period_id', $request->period_id));
         }
 
         return response()->json($query->orderBy('date', 'desc')->get());
@@ -38,8 +54,9 @@ class ExpoEventController extends Controller
 
     public function store(Request $request)
     {
+        $this->normalizePeriodInput($request);
         $validated = $request->validate([
-            'period_id' => 'required|exists:capstone_periods,id',
+            'period_id' => 'nullable|exists:capstone_periods,id',
             'name' => 'required|string|max:255',
             'date' => 'required|date',
             'start_time' => 'required|date_format:H:i',
@@ -60,6 +77,10 @@ class ExpoEventController extends Controller
 
         $validated['room'] = $ruangan->nama;
         $validated['created_by'] = $request->user()->id;
+        // Empty-string from the "All periods" option means cross-period (global).
+        if (array_key_exists('period_id', $validated) && empty($validated['period_id'])) {
+            $validated['period_id'] = null;
+        }
 
         $event = ExpoEvent::create($validated);
 
@@ -75,7 +96,9 @@ class ExpoEventController extends Controller
 
     public function update(Request $request, ExpoEvent $expoEvent)
     {
+        $this->normalizePeriodInput($request);
         $validated = $request->validate([
+            'period_id' => 'sometimes|nullable|exists:capstone_periods,id',
             'name' => 'sometimes|string|max:255',
             'date' => 'sometimes|date',
             'start_time' => 'sometimes|date_format:H:i',
@@ -85,6 +108,9 @@ class ExpoEventController extends Controller
         ]);
 
         unset($validated['room']);
+        if (array_key_exists('period_id', $validated) && empty($validated['period_id'])) {
+            $validated['period_id'] = null;
+        }
         $eofficeId = $validated['eoffice_ruangan_id'] ?? $expoEvent->getAttributes()['eoffice_ruangan_id'] ?? null;
         if (! empty($validated['eoffice_ruangan_id'])) {
             $validated['room'] = Ruangan::findOrFail($validated['eoffice_ruangan_id'])->nama;
@@ -136,7 +162,8 @@ class ExpoEventController extends Controller
     // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     /**
-     * List published expo events for the student's period.
+     * List published expo events for the student's period, plus cross-period
+     * (global, period_id NULL) events which are visible to every period.
      */
     public function studentEvents(Request $request)
     {
@@ -148,7 +175,7 @@ class ExpoEventController extends Controller
             return response()->json([]);
         }
 
-        $events = ExpoEvent::where('period_id', $group->period_id)
+        $events = ExpoEvent::where(fn ($q) => $q->whereNull('period_id')->orWhere('period_id', $group->period_id))
             ->where('is_published', true)
             ->withCount(['registrations' => fn ($q) => $q->where('status', 'REGISTERED')])
             ->withExists(['registrations as is_registered' => fn ($q) => $q->where('status', 'REGISTERED')->where('group_id', $group->id)])

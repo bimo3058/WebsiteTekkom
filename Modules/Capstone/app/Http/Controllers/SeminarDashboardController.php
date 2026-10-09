@@ -71,8 +71,8 @@ class SeminarDashboardController extends Controller
      * Dosen: schedules where I'm a supervisor (read-only view).
      *
      * Visibility is split by supervisor slot: SEMPRO belongs to
-     * supervisor 2, TA defense to supervisor 1, EXPO is visible for
-     * every supervised group regardless of slot.
+     * supervisor 2, TA defense to supervisor 1. EXPO is global
+     * read-only (all groups, all periods), matching the calendar.
      */
     public function supervisorSchedules(Request $request)
     {
@@ -88,9 +88,7 @@ class SeminarDashboardController extends Controller
                 ->where(fn (Builder $sempro) => $sempro
                     ->where('type', 'SEMPRO')
                     ->whereHas('group', fn (Builder $g) => $g->supervisedByInSlot($lecturerId, 'SUPERVISOR_2')))
-                ->orWhere(fn (Builder $expo) => $expo
-                    ->where('type', 'EXPO')
-                    ->whereIn('group_id', $groupIds))
+                ->orWhere(fn (Builder $expo) => $expo->where('type', 'EXPO'))
                 ->orWhere(fn (Builder $other) => $other
                     ->whereNotIn('type', ['SEMPRO', 'EXPO'])
                     ->whereIn('group_id', $groupIds)))

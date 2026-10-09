@@ -28,7 +28,10 @@ class ExpoStudentController extends Controller
         $registration = $this->registration($request, $expoEvent);
         $studentId = CapstoneActor::student($request->user())->id;
         $group = $registration->group()->with('members.student')->firstOrFail();
-        $components = PeriodAssessmentComponent::with('template')->where('period_id', $expoEvent->period_id)->where('type', 'EXPO')->orderBy('sort_order')->get();
+        // Cross-period (global) events have no own period: each group is
+        // graded on its own period's EXPO components.
+        $componentPeriodId = $expoEvent->period_id ?? $group->period_id;
+        $components = PeriodAssessmentComponent::with('template')->where('period_id', $componentPeriodId)->where('type', 'EXPO')->orderBy('sort_order')->get();
         $scores = ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->get();
         $documents = ExpoStudentDocument::where('expo_registration_id', $registration->id)->get()->keyBy('student_id');
         $mine = $scores->where('student_id', $studentId)->keyBy('period_component_id');
@@ -56,7 +59,7 @@ class ExpoStudentController extends Controller
             if (ExpoSelfEvaluation::where('expo_registration_id', $registration->id)->where('student_id', $studentId)->exists()) {
                 return response()->json(['message' => 'Self-evaluation sudah dikirim dan tidak dapat diubah.'], 403);
             }
-            $expected = PeriodAssessmentComponent::where('period_id', $expoEvent->period_id)->where('type', 'EXPO')->pluck('id')->sort()->values()->all();
+            $expected = PeriodAssessmentComponent::where('period_id', $expoEvent->period_id ?? $registration->group->period_id)->where('type', 'EXPO')->pluck('id')->sort()->values()->all();
             $actual = collect($data['scores'])->pluck('period_component_id')->map(fn ($id) => (int) $id)->sort()->values()->all();
             if (empty($expected) || $expected !== $actual) {
                 return response()->json(['message' => 'Lengkapi seluruh komponen EXPO pada periode Anda.'], 422);

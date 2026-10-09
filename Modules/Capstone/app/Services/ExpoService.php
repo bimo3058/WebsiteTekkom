@@ -53,8 +53,10 @@ class ExpoService
                 );
             }
 
-            // Guard: group must belong to same period as event
-            if ($group->period_id !== $event->period_id) {
+            // Guard: group must belong to same period as event, unless the
+            // event is cross-period (global, period_id NULL) which accepts
+            // groups from every period.
+            if ($event->period_id !== null && $group->period_id !== $event->period_id) {
                 throw new InvalidArgumentException('Group does not belong to the same period as this event.');
             }
 
