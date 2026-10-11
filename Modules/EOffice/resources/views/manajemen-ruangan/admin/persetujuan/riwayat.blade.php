@@ -622,13 +622,7 @@
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
             <!-- 1. BACKDROP OVERLAY (Latar Belakang Gelap) -->
-            <div x-show="isDetailOpen" 
-                x-transition:enter="ease-out duration-300" 
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100" 
-                x-transition:leave="ease-in duration-200"
-                x-transition:leave-start="opacity-100" 
-                x-transition:leave-end="opacity-0"
+            <div x-show="isDetailOpen" x-transition.opacity
                 class="fixed inset-0 bg-slate-900/60 transition-opacity" 
                 aria-hidden="true" @click="closeDetail()"></div>
 
@@ -640,20 +634,23 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border border-gray-100 shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+                class="relative bg-white rounded-t-[24px] sm:rounded-[20px] rounded-b-none sm:rounded-b-[20px] shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col border-0 sm:border border-gray-100">
                 
                 <!-- Modal Header -->
                 <div class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
                     <div class="flex items-center gap-3">
                         <div class="bg-[#0B266E] p-2.5 rounded-xl">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
                         </div>
                         <div>
                             <h3 class="text-base font-semibold text-[#1A1C1E]">Detail Arsip Peminjaman</h3>
                             <p class="text-xs text-[#0B266E] mt-0.5">Arsip peminjaman dari <span class="font-bold" x-text="detailData.nama"></span></p>
                         </div>
                     </div>
-                    <button type="button" @click="closeDetail()" class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                    <button type="button" @click="closeDetail()"
+                        class="text-[#0B266E] hover:bg-[#0B266E]/10 transition-colors cursor-pointer p-1.5 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -661,41 +658,33 @@
                 </div>
 
                 <!-- Modal Body (Scrollable) -->
-                <div class="p-6 flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar">
+                <div class="p-6 flex-1 overflow-y-auto bg-white">
                     
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mx-1">
-                        <!-- HEADER -->
-                        <div class="px-5 py-4 border-b border-slate-100 bg-white">
-                            <h4 class="text-[13px] font-bold text-slate-800 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                Informasi Lengkap Peminjaman
-                            </h4>
-                        </div>
+                    <!-- Ringkasan Informasi -->
+                    <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
                         
-                        <!-- BODY -->
-                        <div class="p-5 grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr] gap-x-4 gap-y-4 text-[13px]">
-                            
-                            <!-- Nama Pemohon -->
-                            <div class="text-slate-500 font-medium">Nama Pemohon</div>
-                            <div class="text-slate-900 font-bold" x-text="detailData.nama"></div>
+                        <!-- Informasi Peminjam -->
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
+                            Informasi Peminjam
+                        </h4>
+                        <div class="grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2 text-[13px] mb-3 border-b border-slate-100 pb-3">
+                            <div class="text-slate-500 font-medium">Nama</div>
+                            <div class="text-slate-800 font-bold" x-text="detailData.nama"></div>
 
-                            <!-- NIM/NIP -->
-                            <div class="text-slate-500 font-medium">NIM / NIP</div>
-                            <div class="text-slate-900 font-medium" x-text="detailData.nim_nip"></div>
+                            <div class="text-slate-500 font-medium">NIM/NIP</div>
+                            <div class="text-slate-800 font-medium" x-text="detailData.nim_nip"></div>
 
-                            <!-- Role -->
-                            <div class="text-slate-500 font-medium flex items-start mt-0.5">Role / Peran</div>
-                            <div class="flex items-center">
-                                <span class="bg-blue-50 text-[#0B266E] px-2 py-0.5 rounded text-[11px] font-semibold border border-blue-200" x-text="detailData.role"></span>
+                            <div class="text-slate-500 font-medium flex items-center">Role</div>
+                            <div class="font-medium flex items-center">
+                                <span class="bg-blue-50 text-[#0B266E] px-1.5 py-0.5 rounded text-xs font-semibold border border-blue-200" x-text="detailData.role"></span>
                             </div>
 
-                            <!-- No. Telp -->
-                            <div class="text-slate-500 font-medium">No. Telepon</div>
-                            <div class="text-slate-900 font-medium flex items-center">
+                            <div class="text-slate-500 font-medium flex items-center">No. Telp</div>
+                            <div class="font-medium flex items-center">
                                 <template x-if="detailData.telepon && detailData.telepon !== '-'">
                                     <a :href="'https://wa.me/' + (detailData.telepon.toString().startsWith('0') ? '62' + detailData.telepon.toString().substring(1) : detailData.telepon)" 
                                         target="_blank" 
-                                        class="inline-flex items-center gap-1.5 text-[#25D366] hover:text-[#1da851] hover:underline transition-colors"
+                                        class="inline-flex items-center gap-1.5 text-[#25D366] hover:text-[#1da851] hover:underline transition-colors group"
                                         title="Hubungi via WhatsApp">
                                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
@@ -707,48 +696,51 @@
                                     <span class="text-slate-800" x-text="detailData.telepon || '-'"></span>
                                 </template>
                             </div>
+                        </div>
 
-                            <div class="col-span-full my-2 border-t border-slate-100"></div>
-
-                            <!-- Ruangan -->
+                        <!-- Informasi Peminjaman -->
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-3">
+                            Informasi Peminjaman
+                        </h4>
+                        <div class="grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2 text-[13px] mb-3 border-b border-slate-100 pb-3">
                             <div class="text-slate-500 font-medium">Ruangan</div>
-                            <div class="text-slate-900 font-bold" x-text="detailData.ruangan"></div>
+                            <div class="text-slate-800 font-bold" x-text="detailData.ruangan"></div>
 
-                            <!-- Tanggal -->
                             <div class="text-slate-500 font-medium">Tanggal</div>
-                            <div class="text-slate-900 font-bold" x-text="detailData.tanggal"></div>
+                            <div class="text-slate-800 font-bold" x-text="detailData.tanggal"></div>
 
-                            <!-- Waktu -->
-                            <div class="text-slate-500 font-medium flex items-start mt-0.5">Waktu</div>
-                            <div class="text-slate-900 font-bold flex items-center">
-                                <span class="bg-blue-50 text-[#0B266E] px-1.5 py-0.5 rounded text-[11px] font-semibold border border-blue-200" x-text="detailData.jam"></span>
-                                <span class="text-slate-600 font-medium text-[12px] ml-2" x-text="detailData.durasi"></span>
+                            <div class="text-slate-500 font-medium flex items-center">Waktu</div>
+                            <div class="text-slate-800 font-bold flex items-center">
+                                <span class="bg-blue-50 text-[#0B266E] px-1.5 py-0.5 rounded text-xs font-semibold border border-blue-200"
+                                    x-text="detailData.jam"></span>
+                                <span class="text-slate-500 font-normal text-xs ml-1.5" x-text="'(' + detailData.durasi + ')'"></span>
                             </div>
 
-                            <!-- Kegiatan -->
                             <div class="text-slate-500 font-medium">Kegiatan</div>
-                            <div class="text-slate-900 font-medium leading-relaxed" x-text="detailData.kegiatan"></div>
+                            <div class="text-slate-800 font-medium leading-snug" x-text="detailData.kegiatan"></div>
 
-                            <!-- Berkas -->
-                            <div class="text-slate-500 font-medium flex items-start mt-0.5">Berkas</div>
-                            <div class="text-slate-900 font-medium">
+                            <div class="text-slate-500 font-medium pt-1">Berkas</div>
+                            <div class="pt-1">
                                 <template x-if="detailData.berkas">
-                                    <a :href="detailData.berkas" target="_blank" class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors inline-block">
-                                        Lihat Berkas Terlampir
+                                    <a :href="detailData.berkas" target="_blank"
+                                        class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors mt-0.5 inline-block">
+                                        Lihat Berkas
                                     </a>
                                 </template>
                                 <template x-if="!detailData.berkas">
                                     <span class="text-gray-400 italic text-[12px]">Tidak dilampirkan</span>
                                 </template>
                             </div>
-                            
-                            <div class="col-span-full my-2 border-t border-slate-100"></div>
-                            
-                            <!-- JEJAK AUDIT -->
-                            <!-- Status -->
-                            <div class="text-slate-500 font-medium flex items-start mt-1">Status Akhir</div>
-                            <div>
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                        </div>
+
+                        <!-- Status & Riwayat -->
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-3">
+                            Status & Riwayat
+                        </h4>
+                        <div class="grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2 text-[13px]">
+                            <div class="text-slate-500 font-medium flex items-center">Status Akhir</div>
+                            <div class="flex items-center">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-block"
                                     :class="{
                                         'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]': detailData.status === 'disetujui',
                                         'bg-[#FFF1F2] text-[#9D174D] border-[#FECDD3]': detailData.status === 'ditolak' || detailData.status === 'dibatalkan',
@@ -760,22 +752,23 @@
                             </div>
 
                             <template x-if="detailData.status === 'ditolak' || detailData.status === 'dibatalkan'">
-                                <div class="col-span-full grid grid-cols-[100px_1fr] sm:grid-cols-[140px_1fr] gap-x-4 gap-y-1 mt-1">
-                                    <div class="text-slate-500 font-medium">Alasan Penolakan</div>
-                                    <div class="text-red-600 font-semibold leading-relaxed" x-text="detailData.alasan_penolakan || 'Tidak ada keterangan tambahan.'"></div>
+                                <div class="col-span-full grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2">
+                                    <div class="text-slate-500 font-medium" x-text="detailData.status === 'dibatalkan' ? 'Alasan Batal' : 'Alasan Tolak'"></div>
+                                    <div class="text-red-600 font-semibold leading-relaxed" 
+                                        x-text="detailData.alasan_penolakan || 'Tidak ada keterangan tambahan.'"></div>
                                 </div>
                             </template>
-                            
-                            <!-- Waktu Pengajuan -->
-                            <div class="text-slate-500 font-medium">Waktu Diajukan</div>
-                            <div class="text-slate-900 font-medium" x-text="detailData.waktu_pengajuan"></div>
-                            
-                            <!-- Waktu Diproses -->
-                            <div class="text-slate-500 font-medium">Waktu Diproses</div>
-                            <div class="text-slate-900 font-medium" x-text="detailData.waktu_diproses"></div>
+
+                            <div class="text-slate-500 font-medium">Diajukan</div>
+                            <div class="text-slate-800 font-medium" x-text="detailData.waktu_pengajuan"></div>
+
+                            <div class="text-slate-500 font-medium">Diproses</div>
+                            <div class="text-slate-800 font-medium" x-text="detailData.waktu_diproses"></div>
                         </div>
+
                     </div>
-                </div>
+                </div> <!-- End of scrollable body -->
+
             </div>
         </div>
 
