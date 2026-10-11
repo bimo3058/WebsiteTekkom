@@ -256,6 +256,8 @@
             </div>
         </div>
     </div>
+    {{-- DO / Pindah Studi / Wafat: orang yang sudah bukan mahasiswa lagi, hanya untuk pengelola --}}
+    @if($bisaLihatDataLengkap)
     <div class="col">
         <div class="stat-card p-3">
             <div class="stat-icon tone-error">
@@ -302,6 +304,7 @@
             </div>
         </div>
     </div>
+    @endif
     <div class="col">
         <div class="stat-card p-3">
             <div class="stat-icon tone-warning">
@@ -391,9 +394,11 @@
                                 <option value="semua">Semua Status</option>
                                 <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
                                 <option value="cuti" {{ request('status') == 'cuti' ? 'selected' : '' }}>Cuti</option>
-                                <option value="drop_out" {{ request('status') == 'drop_out' ? 'selected' : '' }}>DO</option>
-                                <option value="pindah_studi" {{ request('status') == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
-                                <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
+                                @if($bisaLihatDataLengkap)
+                                    <option value="drop_out" {{ request('status') == 'drop_out' ? 'selected' : '' }}>DO</option>
+                                    <option value="pindah_studi" {{ request('status') == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
+                                    <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
+                                @endif
                                 <option value="mangkir" {{ request('status') == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
                             </x-manajemenmahasiswa::ui.select>
                         </div>

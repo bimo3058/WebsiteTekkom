@@ -212,13 +212,14 @@
                     <span class="detail-value">{{ $mhs->user->email }}</span>
                 </div>
                 @endif
-                @if($mhs->user && $mhs->user->personal_email)
+                {{-- Kontak pribadi hanya untuk pengelola dan pemilik profil --}}
+                @if($mhs->user && $mhs->user->personal_email && ($bisaLihatDataLengkap || ($isSelf ?? false)))
                 <div class="detail-row">
                     <span class="detail-label">Email Pribadi</span>
                     <span class="detail-value">{{ $mhs->user->personal_email }}</span>
                 </div>
                 @endif
-                @if($mhs->kontak)
+                @if($mhs->kontak && ($bisaLihatDataLengkap || ($isSelf ?? false)))
                 <div class="detail-row">
                     <span class="detail-label">Nomor WhatsApp/Telepon</span>
                     <span class="detail-value">{{ $mhs->kontak }}</span>

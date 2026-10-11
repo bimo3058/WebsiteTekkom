@@ -15,6 +15,7 @@ use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Alumni;
+use Modules\ManajemenMahasiswa\Policies\KemahasiswaanPolicy;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class DirektoriMahasiswaController extends Controller
@@ -38,6 +39,15 @@ class DirektoriMahasiswaController extends Controller
         }
 
         return $this->userRoles;
+    }
+
+    /**
+     * Apakah user boleh melihat data mahasiswa secara utuh (status lengkap + kontak pribadi).
+     * Daftar role ada di KemahasiswaanPolicy::LIHAT_DATA_LENGKAP — satu sumber kebenaran.
+     */
+    private function bisaLihatDataLengkap(): bool
+    {
+        return $this->hasRole(...KemahasiswaanPolicy::LIHAT_DATA_LENGKAP);
     }
 
     /**
@@ -316,6 +326,20 @@ class DirektoriMahasiswaController extends Controller
 
     public function index(Request $request)
     {
+        // Role di luar daftar pengelola tidak boleh melihat siapa yang sudah bukan
+        // mahasiswa lagi (DO, wafat, pindah studi). Disaring di query — bukan hanya
+        // disembunyikan di tampilan — supaya URL ?status=drop_out pun tak membocorkannya.
+        $bisaLihatDataLengkap = $this->bisaLihatDataLengkap();
+        $statusTersembunyi    = $bisaLihatDataLengkap ? [] : KemahasiswaanPolicy::STATUS_BUKAN_MAHASISWA;
+
+        // Filter yang menunjuk status tersembunyi dibuang dari request, sehingga
+        // pesan "tidak ada hasil", tombol Reset, dan form filter ikut menganggapnya tak ada.
+        $statusDiminta = $request->input('status');
+        if (!is_string($statusDiminta) || in_array($statusDiminta, $statusTersembunyi, true)) {
+            $request->query->remove('status');
+            $request->request->remove('status');
+        }
+
         // Benar-benar ada kriteria yang mempersempit hasil? "Semua Angkatan" /
         // "Semua Status" / kotak pencarian kosong tidak dihitung sebagai filter,
         // supaya tombol Reset dan pesan "tidak ada hasil" tidak muncul sia-sia.
@@ -352,6 +376,10 @@ class DirektoriMahasiswaController extends Controller
                 // Direktori Mahasiswa tidak menampilkan alumni — mereka ada di Direktori Alumni
                 ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI);
 
+            if ($statusTersembunyi) {
+                $query->whereNotIn('status', $statusTersembunyi);
+            }
+
             // Filter angkatan
             if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
                 $query->byAngkatan((int) $request->angkatan);
@@ -373,6 +401,10 @@ class DirektoriMahasiswaController extends Controller
             $statsQuery = Kemahasiswaan::query()
                 ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI);
 
+            if ($statusTersembunyi) {
+                $statsQuery->whereNotIn('status', $statusTersembunyi);
+            }
+
             if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
                 $statsQuery->byAngkatan((int) $request->angkatan);
             }
@@ -381,7 +413,7 @@ class DirektoriMahasiswaController extends Controller
                 $statsQuery->search($request->search);
             }
 
-            [$mahasiswa, $angkatanList, $statusCounts] = $this->withRetry(function () use ($query, $statsQuery, $perPage) {
+            [$mahasiswa, $angkatanList, $statusCounts] = $this->withRetry(function () use ($query, $statsQuery, $perPage, $statusTersembunyi) {
                 $mahasiswa = $query->orderBy('angkatan', 'desc')
                     ->orderBy('nama', 'asc')
                     ->paginate($perPage);
@@ -392,6 +424,7 @@ class DirektoriMahasiswaController extends Controller
                 $angkatanList = Kemahasiswaan::select('angkatan')
                     ->whereNotNull('angkatan')
                     ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI)
+                    ->when($statusTersembunyi, fn ($q) => $q->whereNotIn('status', $statusTersembunyi))
                     ->distinct()
                     ->orderBy('angkatan', 'desc')
                     ->pluck('angkatan');
@@ -443,6 +476,7 @@ class DirektoriMahasiswaController extends Controller
             'isMahasiswa',
             'isFiltered',
             'error',
+            'bisaLihatDataLengkap',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -483,6 +517,20 @@ class DirektoriMahasiswaController extends Controller
         // bukan dilempar diam-diam ke halaman daftar tanpa penjelasan.
         abort_if(!$mhs, 404, 'Data mahasiswa tidak ditemukan.');
 
+        // Mahasiswa yang sudah bukan mahasiswa lagi (DO, wafat, pindah studi) tidak
+        // boleh dibuka lewat URL oleh role di luar pengelola. Pesannya sengaja sama
+        // dengan "tidak ditemukan" agar keberadaan datanya tak ikut bocor.
+        // Pemilik baris sendiri tetap boleh membuka profilnya.
+        $bisaLihatDataLengkap = $this->bisaLihatDataLengkap();
+        $milikSendiri = (int) $mhs->user_id === (int) Auth::id();
+        abort_if(
+            !$bisaLihatDataLengkap
+                && !$milikSendiri
+                && in_array($mhs->status, KemahasiswaanPolicy::STATUS_BUKAN_MAHASISWA, true),
+            404,
+            'Data mahasiswa tidak ditemukan.'
+        );
+
         $isAdmin    = $this->hasRole('superadmin', 'admin_kemahasiswaan');
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isGpm      = $this->hasRole('gpm');
@@ -505,6 +553,7 @@ class DirektoriMahasiswaController extends Controller
             'isMahasiswa',
             'canDownloadCv',
             'isSelf',
+            'bisaLihatDataLengkap',
         ))->with('layout', $this->resolveLayout());
     }
 
