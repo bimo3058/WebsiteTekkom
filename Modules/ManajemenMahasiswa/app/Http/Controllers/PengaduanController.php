@@ -5,18 +5,23 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Modules\ManajemenMahasiswa\Http\Requests\PengaduanPayloadRequest;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
 use Modules\ManajemenMahasiswa\Models\PengaduanLog;
 use Modules\ManajemenMahasiswa\Services\PengaduanService;
+use Modules\ManajemenMahasiswa\Services\PengaduanStatistikService;
 use Modules\ManajemenMahasiswa\Support\PengaduanBukti;
+use Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan;
 use Modules\ManajemenMahasiswa\Support\PengaduanQuota;
 use Modules\ManajemenMahasiswa\Support\PerPage;
 
 class PengaduanController extends Controller
 {
-    /** Kunci bukti "pending" di session untuk jalur reguler (lihat PengaduanBukti). */
+    /** Kunci bukti "pending" di session untuk form Buat Pengaduan (lihat PengaduanBukti). */
     private const BUKTI_SCOPE = 'reguler';
+
+    private const PESAN_BUKTI_WAJIB = 'Lampirkan minimal satu berkas bukti (PDF).';
 
     /**
      * Role yang berstatus mahasiswa dan boleh membuat pengaduan. Pengurus
@@ -87,11 +92,16 @@ class PengaduanController extends Controller
         // tidak, pelapor bisa menebak status tiketnya lewat ?status= di URL.
         $kategori = (string)$request->query('kategori', '');
         $status = $isStaff ? (string)$request->query('status', '') : '';
+        // Filter "melihat pola" (pihak terlapor & ketersediaan bukti) khusus staff.
+        $pihak = $isStaff ? (string)$request->query('pihak', '') : '';
+        $bukti = $isStaff ? (string)$request->query('bukti', '') : '';
 
         $filters = [
             'q' => trim((string)$request->query('q', '')),
             'kategori' => in_array($kategori, Pengaduan::KATEGORI_LIST, true) ? $kategori : '',
             'status' => in_array($status, ['baru', 'tercatat'], true) ? $status : '',
+            'pihak' => in_array($pihak, PengaduanPertanyaan::PIHAK, true) ? $pihak : '',
+            'bukti' => array_key_exists($bukti, PengaduanPertanyaan::BUKTI_OPSI) ? $bukti : '',
         ];
 
         $query = Pengaduan::query();
@@ -121,9 +131,25 @@ class PengaduanController extends Controller
             $query->whereNotIn('status', Pengaduan::TERCATAT_STATUSES);
         }
 
+        if ($filters['pihak'] !== '') {
+            $query->whereRaw("data_template->>'pihak_terkait' = ?", [$filters['pihak']]);
+        }
+
+        if ($filters['bukti'] !== '') {
+            $query->where(function ($sub) use ($filters) {
+                $sub->whereRaw("data_template->>'ketersediaan_bukti' = ?", [$filters['bukti']]);
+
+                // Tiket lama belum ditanya ketersediaan bukti; yang berlampiran
+                // tetap terhitung "Ada, saya lampirkan".
+                if ($filters['bukti'] === PengaduanPertanyaan::BUKTI_LAMPIRKAN) {
+                    $sub->orWhereRaw("(data_template->>'ketersediaan_bukti' IS NULL AND CASE WHEN jsonb_typeof(data_template->'bukti') = 'array' THEN jsonb_array_length(data_template->'bukti') ELSE 0 END > 0)");
+                }
+            });
+        }
+
         if ($filters['q'] !== '') {
             $q = $filters['q'];
-            $query->where(function ($sub) use ($q) {
+            $query->where(function ($sub) use ($q, $isStaff) {
                 if (ctype_digit($q)) {
                     $sub->orWhere('id', (int)$q);
                 }
@@ -132,6 +158,12 @@ class PengaduanController extends Controller
                 $sub->orWhereRaw("data_template->>'judul' ILIKE ?", [$like])
                     ->orWhereRaw("data_template->>'hal_aduan' ILIKE ?", [$like])
                     ->orWhereRaw("data_template->>'kronologi' ILIKE ?", [$like]);
+
+                // Lokasi & objek membantu staff melihat laporan berulang di tempat/hal yang sama.
+                if ($isStaff) {
+                    $sub->orWhereRaw("data_template->>'lokasi' ILIKE ?", [$like])
+                        ->orWhereRaw("data_template->>'objek' ILIKE ?", [$like]);
+                }
             });
         }
 
@@ -177,14 +209,14 @@ class PengaduanController extends Controller
 
 
     /**
-     * Pemilih jalur kini berupa modal di halaman daftar. URL lama dialihkan ke
-     * sana supaya tautan/bookmark lama tetap bekerja.
+     * Pemilih jalur sudah tidak ada (satu form untuk semua pelapor). URL lama
+     * dialihkan ke form supaya tautan/bookmark lama tetap bekerja.
      */
     public function jalur(Request $request)
     {
         $this->ensureMahasiswa($request->user());
 
-        return redirect()->route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]);
+        return redirect()->route('manajemenmahasiswa.pengaduan.create');
     }
 
     public function create(Request $request)
@@ -192,12 +224,6 @@ class PengaduanController extends Controller
         $user = $request->user();
 
         $this->ensureMahasiswa($user);
-
-        // Form ini khusus jalur Reguler. Jalur Konfidensial memakai alur
-        // magic link terpisah yang dimulai dari modal pemilih jalur.
-        if ($request->query('jalur') !== 'reguler') {
-            return redirect()->route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]);
-        }
 
         if (PengaduanQuota::exhausted($user->id)) {
             return redirect()
@@ -253,9 +279,18 @@ class PengaduanController extends Controller
                 ->with('error', PengaduanQuota::message($user->id));
         }
 
-        // Berkas baru menggantikan bukti pending; tanpa berkas baru, yang lama dipertahankan.
-        if ($request->hasFile('bukti')) {
-            PengaduanBukti::stage($request->file('bukti'), self::BUKTI_SCOPE);
+        if ($request->lampirBukti()) {
+            // Berkas baru menggantikan bukti pending; tanpa berkas baru, yang lama dipertahankan.
+            if ($request->hasFile('bukti')) {
+                PengaduanBukti::stage($request->file('bukti'), self::BUKTI_SCOPE);
+            }
+
+            if (PengaduanBukti::pending(self::BUKTI_SCOPE) === []) {
+                throw ValidationException::withMessages(['bukti' => self::PESAN_BUKTI_WAJIB]);
+            }
+        } else {
+            // Jawaban "Ketersediaan Bukti" bukan "Ada, saya lampirkan": berkas tidak dilampirkan.
+            PengaduanBukti::discard(self::BUKTI_SCOPE);
         }
 
         $request->flash();
@@ -284,9 +319,16 @@ class PengaduanController extends Controller
 
         $template = $request->normalizedTemplate();
 
-        $bukti = PengaduanBukti::commit(self::BUKTI_SCOPE);
-        if ($bukti !== []) {
-            $template['bukti'] = $bukti;
+        if ($request->lampirBukti()) {
+            // Bukti pending bisa hilang bila session kedaluwarsa di antara Konfirmasi dan Kirim.
+            if (PengaduanBukti::pending(self::BUKTI_SCOPE) === []) {
+                throw ValidationException::withMessages(['bukti' => self::PESAN_BUKTI_WAJIB])
+                    ->redirectTo(route('manajemenmahasiswa.pengaduan.create'));
+            }
+
+            $template['bukti'] = PengaduanBukti::commit(self::BUKTI_SCOPE);
+        } else {
+            PengaduanBukti::discard(self::BUKTI_SCOPE);
         }
 
         $pengaduan = $this->pengaduanService->create(
@@ -296,12 +338,16 @@ class PengaduanController extends Controller
             template: $template,
         );
 
+        // Penghitung kuota ada di cache dan tidak ditempelkan pada tiket, jadi
+        // tidak menjadi jalur balik ke identitas pelapor anonim.
         PengaduanQuota::consume($user->id);
 
         if ($pengaduan->is_anonim) {
+            // Tautan rahasia hanya ditampilkan SEKALI (flash); sistem sengaja tidak
+            // menyimpan kaitan antara akun ini dan pengaduannya.
             return redirect()
-                ->route('manajemenmahasiswa.pengaduan.track', ['token' => $pengaduan->anon_token])
-                ->with('success', 'Pengaduan konfidensial berhasil dikirim. Simpan tautan ini untuk melihat kembali pengaduan Anda.');
+                ->route('manajemenmahasiswa.pengaduan.index')
+                ->with('anon_link', route('manajemenmahasiswa.pengaduan.track', ['token' => $pengaduan->anon_token]));
         }
 
         return redirect()
@@ -348,7 +394,7 @@ class PengaduanController extends Controller
 
     /**
      * Membuka satu bukti dukung. Staf boleh membuka semua tiket; pelapor hanya
-     * tiket reguler miliknya (tiket konfidensial tak punya user_id, pelapornya
+     * tiket non-anonim miliknya (tiket anonim tak punya user_id, pelapornya
      * memakai route magic link di AnonPengaduanController::bukti).
      */
     public function bukti(Request $request, Pengaduan $pengaduan, int $index)
@@ -390,6 +436,35 @@ class PengaduanController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.pengaduan.index')
             ->with('success', 'Pengaduan berhasil dihapus.');
+    }
+
+    /**
+     * Statistik Layanan Pengaduan (staf saja). Dua tab sesuai kebutuhan peran:
+     * "Antrian Kerja" (admin kemahasiswaan) dan "Evaluasi Mutu" (GPM). Semua staf
+     * boleh membuka keduanya; tab awal mengikuti peran.
+     */
+    public function statistik(Request $request, PengaduanStatistikService $statistik)
+    {
+        $user = $request->user();
+        $this->ensureViewer($user);
+
+        if (!$this->isStaffViewer($user)) {
+            abort(403, 'Statistik pengaduan hanya untuk pengelola.');
+        }
+
+        $tabAwal = $user->hasAnyRole(['gpm', 'kaprodi', 'ketua_departemen']) ? 'evaluasi' : 'antrian';
+        $tab = in_array($request->query('tab'), ['antrian', 'evaluasi'], true) ? $request->query('tab') : $tabAwal;
+
+        $periode = array_key_exists((string) $request->query('periode'), PengaduanStatistikService::PERIODE)
+            ? (string) $request->query('periode')
+            : 'semester';
+
+        return view('manajemenmahasiswa::pengaduan.statistik', [
+            'tab'         => $tab,
+            'periode'     => $periode,
+            'operasional' => $statistik->operasional(),
+            'evaluasi'    => $statistik->evaluasi($periode),
+        ]);
     }
 
     public function toggleTercatat(Request $request, Pengaduan $pengaduan)

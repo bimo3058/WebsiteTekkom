@@ -12,13 +12,12 @@ use Modules\ManajemenMahasiswa\Support\PengaduanBukti;
 use Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan;
 
 /**
- * Aturan validasi tunggal untuk KEDUA jalur pengaduan (Reguler & Konfidensial).
+ * Aturan validasi tunggal untuk form Buat Pengaduan (langkah Konfirmasi & Kirim).
  *
- * Sebelumnya jalur konfidensial hanya memvalidasi 5 field tetapi menyimpan 11,
- * sehingga link_bukti dan waktu_kejadian masuk mentah ke database. Akibatnya:
- * skema javascript: bisa tersimpan lalu dirender sebagai href, dan teks
- * sembarang pada waktu_kejadian membuat Carbon::parse melempar 500 permanen
- * di halaman detail tiket. Semua jalur kini melewati aturan yang sama di sini.
+ * Sejak Oktober 2026 hanya ada satu form; pelapor yang ingin anonim cukup
+ * mencentang "Sembunyikan identitas saya" (is_anonim). Dulu jalur konfidensial
+ * punya alur magic link terpisah yang hanya memvalidasi 5 field tetapi menyimpan
+ * 11, sehingga link_bukti dan waktu_kejadian masuk mentah ke database.
  */
 class PengaduanPayloadRequest extends FormRequest
 {
@@ -38,8 +37,12 @@ class PengaduanPayloadRequest extends FormRequest
             'template'                  => ['required', 'array'],
             'template.judul'            => ['required', 'string', 'max:255'],
             'template.kronologi'        => ['required', 'string', 'min:20', 'max:5000'],
-            // Wajib di jalur Reguler bila akun belum punya angkatan (lihat withValidator).
+            // Wajib bila akun belum punya angkatan (lihat withValidator).
             'template.angkatan'         => ['nullable', 'digits:4', 'integer', 'between:1990,' . now()->year],
+            // Email kontak: wajib untuk pengaduan biasa (pengelola bisa menghubungi
+            // pelapor untuk klarifikasi), opsional untuk anonim (diisi bila pelapor
+            // bersedia dihubungi).
+            'template.email_kontak'     => [$this->boolean('is_anonim') ? 'nullable' : 'required', 'string', 'email:rfc', 'max:255'],
             'template.lokasi'           => ['nullable', 'string', 'max:255'],
             // Kejadian tidak mungkin terjadi di masa depan.
             'template.waktu_kejadian'   => ['nullable', 'date', 'before_or_equal:now'],
@@ -51,6 +54,7 @@ class PengaduanPayloadRequest extends FormRequest
             'template.frekuensi'        => ['nullable', 'string', 'max:100'],
             'template.objek'            => ['nullable', 'string', 'max:255'],
             'template.pihak_terkait'    => ['nullable', 'string', Rule::in(PengaduanPertanyaan::PIHAK)],
+            'template.ketersediaan_bukti' => ['nullable', 'string', Rule::in(array_keys(PengaduanPertanyaan::BUKTI_OPSI))],
             // Bukti berupa berkas PDF (bukan link Drive yang membocorkan akun
             // pemilik). Hanya diunggah pada langkah konfirmasi; lihat PengaduanBukti.
             'bukti'                     => ['nullable', 'array', 'max:' . PengaduanBukti::MAX_FILES],
@@ -59,10 +63,14 @@ class PengaduanPayloadRequest extends FormRequest
 
         // Pertanyaan Detail Kejadian milik kategori terpilih wajib dijawab semua.
         foreach ($this->pertanyaanKategori() as $key => $field) {
-            $rules['template.' . $key] = array_merge(
-                ['required'],
-                array_values(array_diff($rules['template.' . $key], ['nullable']))
-            );
+            $rules['template.' . $key] = $this->wajib($rules['template.' . $key]);
+        }
+
+        // Ketersediaan bukti wajib dijawab, kecuali di kategori yang berkasnya
+        // selalu wajib (jawabannya diisi otomatis di normalizedTemplate).
+        $kategori = $this->kategoriValid();
+        if ($kategori !== null && ! PengaduanPertanyaan::buktiSelaluWajib($kategori)) {
+            $rules['template.ketersediaan_bukti'] = $this->wajib($rules['template.ketersediaan_bukti']);
         }
 
         return $rules;
@@ -77,7 +85,12 @@ class PengaduanPayloadRequest extends FormRequest
             'template.angkatan.digits'   => 'Angkatan berupa tahun 4 digit, misalnya 2022.',
             'template.angkatan.integer'  => 'Angkatan berupa tahun 4 digit, misalnya 2022.',
             'template.angkatan.between'  => 'Angkatan harus antara 1990 dan ' . now()->year . '.',
+            'template.email_kontak.required' => 'Email kontak wajib diisi.',
+            'template.email_kontak.email'    => 'Format email kontak tidak valid.',
+            'template.email_kontak.max'      => 'Email kontak maksimal 255 karakter.',
             'template.pihak_terkait.in'  => 'Pilihan pihak terkait tidak dikenali.',
+            'template.ketersediaan_bukti.required' => 'Pilih ketersediaan bukti.',
+            'template.ketersediaan_bukti.in'       => 'Pilihan ketersediaan bukti tidak dikenali.',
             'template.waktu_kejadian.date' => 'Waktu kejadian harus berupa tanggal yang valid.',
             'template.waktu_kejadian.before_or_equal'   => 'Waktu kejadian tidak boleh melebihi waktu saat ini.',
             'template.tanggal_kejadian.before_or_equal' => 'Waktu kejadian tidak boleh melebihi waktu saat ini.',
@@ -92,31 +105,6 @@ class PengaduanPayloadRequest extends FormRequest
         }
 
         return $messages;
-    }
-
-    /** Pertanyaan Detail Kejadian kategori yang sedang dikirim (kosong bila kategori tak dikenal). */
-    private function pertanyaanKategori(): array
-    {
-        $kategori = $this->input('kategori');
-
-        return is_string($kategori) && in_array($kategori, Pengaduan::KATEGORI_LIST, true)
-            ? PengaduanPertanyaan::untuk($kategori)['fields']
-            : [];
-    }
-
-    /** Jalur Konfidensial memakai route magic link ({token}); nama tidak pernah diminta. */
-    public function isJalurKonfidensial(): bool
-    {
-        // boolean() bukan validated(): metode ini juga dipanggil dari hook after() validator.
-        return $this->route('token') !== null || $this->boolean('is_anonim');
-    }
-
-    /** Angkatan dari akun pelapor; null bila akun belum punya data mahasiswa. */
-    private function angkatanAkun(): ?string
-    {
-        $angkatan = optional(optional($this->user())->student)->cohort_year;
-
-        return filled($angkatan) ? (string) $angkatan : null;
     }
 
     public function attributes(): array
@@ -144,9 +132,10 @@ class PengaduanPayloadRequest extends FormRequest
                 );
             }
 
-            // Jalur Reguler: angkatan wajib (mengikuti Google Form pengaduan awal).
-            // Diambil dari akun; hanya akun tanpa data mahasiswa yang mengetiknya sendiri.
-            if (! $this->isJalurKonfidensial() && $this->angkatanAkun() === null && blank($this->input('template.angkatan'))) {
+            // Angkatan wajib di kedua mode (mengikuti Google Form pengaduan awal;
+            // untuk pelapor anonim dipakai sebagai statistik saja). Diambil dari akun;
+            // hanya akun tanpa data mahasiswa yang mengetiknya sendiri.
+            if ($this->angkatanAkun() === null && blank($this->input('template.angkatan'))) {
                 $validator->errors()->add('template.angkatan', 'Angkatan wajib diisi.');
             }
         });
@@ -160,20 +149,26 @@ class PengaduanPayloadRequest extends FormRequest
     public function normalizedTemplate(): array
     {
         $template = (array) $this->validated('template');
+        $kategori = (string) $this->validated('kategori');
 
         if (!isset($template['waktu_kejadian']) && isset($template['tanggal_kejadian'])) {
             $template['waktu_kejadian'] = $template['tanggal_kejadian'];
         }
 
         $template = Arr::only($template, array_merge(
-            ['judul', 'kronologi', 'angkatan'],
-            PengaduanPertanyaan::kunci((string) $this->validated('kategori'))
+            ['judul', 'kronologi', 'angkatan', 'email_kontak', 'ketersediaan_bukti'],
+            PengaduanPertanyaan::kunci($kategori)
         ));
 
-        // Jalur Reguler: angkatan akun selalu menang atas isian browser.
-        // Jalur Konfidensial: isian pelapor apa adanya (boleh kosong).
-        if (! $this->isJalurKonfidensial()) {
-            $template['angkatan'] = $this->angkatanAkun() ?? ($template['angkatan'] ?? null);
+        // Angkatan akun selalu menang atas isian browser.
+        $template['angkatan'] = $this->angkatanAkun() ?? ($template['angkatan'] ?? null);
+
+        if (isset($template['email_kontak'])) {
+            $template['email_kontak'] = mb_strtolower(trim((string) $template['email_kontak'])) ?: null;
+        }
+
+        if (PengaduanPertanyaan::buktiSelaluWajib($kategori)) {
+            $template['ketersediaan_bukti'] = PengaduanPertanyaan::BUKTI_LAMPIRKAN;
         }
 
         return array_map(
@@ -185,5 +180,44 @@ class PengaduanPayloadRequest extends FormRequest
     public function isAnonim(): bool
     {
         return (bool) $this->validated('is_anonim', false);
+    }
+
+    /** Berkas bukti wajib dilampirkan untuk pengaduan yang sedang dikirim. */
+    public function lampirBukti(): bool
+    {
+        return PengaduanPertanyaan::lampirBukti(
+            (string) $this->validated('kategori'),
+            $this->normalizedTemplate()['ketersediaan_bukti'] ?? null
+        );
+    }
+
+    /** Kategori yang sedang dikirim bila dikenali; null bila tidak. */
+    private function kategoriValid(): ?string
+    {
+        $kategori = $this->input('kategori');
+
+        return is_string($kategori) && in_array($kategori, Pengaduan::KATEGORI_LIST, true) ? $kategori : null;
+    }
+
+    /** Pertanyaan Detail Kejadian kategori yang sedang dikirim (kosong bila kategori tak dikenal). */
+    private function pertanyaanKategori(): array
+    {
+        $kategori = $this->kategoriValid();
+
+        return $kategori === null ? [] : PengaduanPertanyaan::untuk($kategori)['fields'];
+    }
+
+    /** Aturan "nullable" diganti "required". */
+    private function wajib(array $rules): array
+    {
+        return array_merge(['required'], array_values(array_diff($rules, ['nullable'])));
+    }
+
+    /** Angkatan dari akun pelapor; null bila akun belum punya data mahasiswa. */
+    private function angkatanAkun(): ?string
+    {
+        $angkatan = optional(optional($this->user())->student)->cohort_year;
+
+        return filled($angkatan) ? (string) $angkatan : null;
     }
 }

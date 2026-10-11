@@ -72,6 +72,8 @@
         .kf-label { width: 180px; padding-right: 12px; box-sizing: border-box; font-size: 13px; line-height: 1.4; color: var(--c-fg-placeholder); flex-shrink: 0; font-weight: 500; }
         .kf-value { font-size: 13px; font-weight: 600; color: var(--c-fg-sec); min-width: 0; overflow-wrap: anywhere; }
         .kf-value.is-empty { color: var(--c-border-strong); }
+        .kf-value.kf-link { color: var(--c-primary); text-decoration: none; }
+        .kf-value.kf-link:hover { text-decoration: underline; }
 
         /* ── Bagian terbelah ── */
         .kf-split { display: flex; border-bottom: 1px solid var(--c-border); }
@@ -85,6 +87,8 @@
         }
         .kf-main.is-fields { white-space: normal; line-height: normal; }
         .kf-empty { color: var(--c-border-strong); }
+        .kf-bukti-status { font-size: 13px; color: var(--c-fg-muted); margin-bottom: 10px; }
+        .kf-bukti-status strong { color: var(--c-fg); font-weight: 600; }
 
         .kf-footer {
             display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px;
@@ -148,24 +152,49 @@
         .pgd-kategori-title { display: block; font-size: 13px; font-weight: 700; color: var(--c-fg); }
         .pgd-kategori-desc { display: block; margin-top: 2px; font-size: 11px; line-height: 1.45; color: var(--c-fg-muted); }
 
-        /* Keterangan jalur pelaporan */
-        .pgd-jalur { display: flex; align-items: center; gap: 12px; }
-        .pgd-jalur-icon {
-            width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            background: var(--c-primary-subtle); color: var(--c-primary);
+        /* Kotak centang "Sembunyikan identitas saya" — bentuk sama dengan kartu kategori. */
+        .pgd-anon {
+            display: flex; align-items: flex-start; gap: 10px; margin: 16px 0 0; padding: 12px 14px;
+            border: 1px solid var(--c-border); border-radius: 10px; background: #ffffff;
+            cursor: pointer; transition: border-color .15s, background .15s;
         }
-        .pgd-jalur-icon.is-konfidensial { background: var(--c-grey-50); color: var(--c-fg-sec); }
-        .pgd-jalur-title { font-size: 14px; font-weight: 700; color: var(--c-fg); }
-        .pgd-jalur-desc { font-size: 12px; color: var(--c-fg-muted); }
-        .pgd-jalur-desc a { color: var(--c-primary); font-weight: 600; }
+        .pgd-anon:hover { border-color: var(--c-border-strong); }
+        .pgd-anon:has(:checked) { border-color: var(--c-primary); background: var(--c-primary-subtle); }
+        .pgd-anon input { margin-top: 2px; width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--c-primary); cursor: pointer; }
+        .pgd-anon-title { display: block; font-size: 13px; font-weight: 700; color: var(--c-fg); }
+        .pgd-anon-desc { display: block; margin-top: 3px; font-size: 12px; line-height: 1.55; color: var(--c-fg-muted); }
+
+        /* Saran / catatan informatif di bawah pilihan (biru langit = info, bukan peringatan). */
+        .pgd-saran {
+            display: flex; align-items: flex-start; gap: 8px; margin-top: 12px; padding: 10px 12px;
+            border: 1px solid var(--c-border); border-radius: 10px; background: var(--c-bg);
+            color: var(--c-fg-sec); font-size: 12px; line-height: 1.55;
+        }
+        .pgd-saran > :first-child { color: var(--c-sky); margin-top: 1px; }
+        .pgd-saran[hidden] { display: none; }
+        .pgd-set + .pgd-saran { margin-top: 0; }
+
+        /* Pilihan "Ketersediaan Bukti": radio ringkas dua kolom. */
+        legend.pgd-label { float: none; width: auto; padding: 0; }
+        .pgd-opsi-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .pgd-opsi {
+            display: flex; align-items: center; gap: 10px; margin: 0; padding: 9px 12px;
+            border: 1px solid var(--c-border); border-radius: 8px; background: #ffffff;
+            font-size: 13px; font-weight: 500; color: var(--c-fg); cursor: pointer;
+            transition: border-color .15s, background .15s;
+        }
+        .pgd-opsi:hover { border-color: var(--c-border-strong); }
+        .pgd-opsi:has(:checked) { border-color: var(--c-primary); background: var(--c-primary-subtle); }
+        .pgd-opsi input { width: 15px; height: 15px; flex-shrink: 0; accent-color: var(--c-primary); cursor: pointer; margin: 0; }
+        .pgd-berkas { margin-top: 16px; }
+        .pgd-saran + .pgd-berkas, .pgd-berkas:first-child { margin-top: 12px; }
 
         @media (max-width: 768px) {
             .kf-profile { flex-direction: column; }
             .kf-grid { grid-template-columns: 1fr; }
             .kf-split { flex-direction: column; }
             .kf-side { width: auto; border-right: none; border-bottom: 1px solid var(--c-border); padding-bottom: 12px; }
-            .pgd-fields, .pgd-fields.is-3, .pgd-kategori-grid { grid-template-columns: 1fr; }
+            .pgd-fields, .pgd-fields.is-3, .pgd-kategori-grid, .pgd-opsi-grid { grid-template-columns: 1fr; }
         }
     </style>
 @endonce

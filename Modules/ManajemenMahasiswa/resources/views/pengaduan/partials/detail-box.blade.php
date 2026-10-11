@@ -24,17 +24,29 @@
     $kategoriLabel = $kategoriLabel ?? \Modules\ManajemenMahasiswa\Models\Pengaduan::kategoriLabel((string) $pengaduan->kategori);
 
     $adaBukti = !empty(data_get($pengaduan, 'data_template.bukti')) || $tpl('link_bukti');
+    // Tiket sebelum Oktober 2026 belum ditanya ketersediaan bukti → null, baris tidak tampil.
+    $ketersediaanLabel = \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::labelBukti($tpl('ketersediaan_bukti'));
 
     $infoItems = [];
     if ($isStaff) {
         $infoItems[] = ['label' => 'Pelapor', 'value' => $pengaduan->is_anonim
-            ? 'Konfidensial'
+            ? 'Anonim'
             : (optional($pengaduan->pelapor)->name ?? null)];
     }
-    // Angkatan tiket konfidensial sudah dibuang controller; barisnya tidak ditampilkan.
+    // Angkatan tiket anonim hanya untuk statistik: tidak pernah ditampilkan per tiket.
     if (!$pengaduan->is_anonim) {
         $infoItems[] = ['label' => 'Angkatan', 'value' => $tpl('angkatan')];
     }
+    // Email kontak isian pelapor. Tiket biasa sebelum Oktober 2026 belum menanyakannya,
+    // jadi staf diberi email akun pelapor sebagai gantinya. Tiket anonim tanpa email
+    // memang tidak bisa dihubungi.
+    $emailKontak = $tpl('email_kontak')
+        ?: (!$pengaduan->is_anonim ? optional($pengaduan->pelapor)->email : null);
+    $infoItems[] = [
+        'label' => 'Email Kontak',
+        'value' => $emailKontak ?: ($pengaduan->is_anonim ? 'Tidak diisi' : null),
+        'href'  => $isStaff && $emailKontak ? 'mailto:' . $emailKontak : null,
+    ];
     // Pertanyaan Detail Kejadian sesuai kategori tiket; jawaban tiket lama di luar
     // set kategorinya tetap ditampilkan bila berisi.
     $infoItems = array_merge($infoItems, \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::barisInfo(
@@ -113,7 +125,7 @@
                 @endif
                 @if ($pengaduan->is_anonim)
                     <span class="pgd-pill konfidensial">
-                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
+                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Anonim
                     </span>
                 @endif
             </div>
@@ -125,7 +137,11 @@
                 @foreach ($infoItems as $info)
                     <div class="kf-row">
                         <span class="kf-label">{{ $info['label'] }}</span>
-                        <span class="kf-value {{ empty($info['value']) ? 'is-empty' : '' }}">{{ $info['value'] ?: '—' }}</span>
+                        @if (!empty($info['href']))
+                            <a class="kf-value kf-link" href="{{ $info['href'] }}">{{ $info['value'] }}</a>
+                        @else
+                            <span class="kf-value {{ empty($info['value']) ? 'is-empty' : '' }}">{{ $info['value'] ?: '—' }}</span>
+                        @endif
                     </div>
                 @endforeach
             </div>
@@ -157,6 +173,9 @@
             <p>{{ $adaBukti ? 'Berkas yang dilampirkan pelapor. Klik untuk melihat isinya.' : 'Pelapor tidak melampirkan berkas.' }}</p>
         </div>
         <div class="kf-main is-fields">
+            @if ($ketersediaanLabel)
+                <div class="kf-bukti-status">Ketersediaan bukti: <strong>{{ $ketersediaanLabel }}</strong></div>
+            @endif
             @php $buktiParams = ['pengaduan' => $pengaduan] + (!empty($buktiToken) ? ['token' => $buktiToken] : []); @endphp
             @include('manajemenmahasiswa::pengaduan.partials.bukti-list', $buktiParams)
         </div>

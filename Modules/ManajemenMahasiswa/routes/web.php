@@ -21,21 +21,16 @@ Route::middleware(['module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
     ->name('manajemenmahasiswa.')
     ->group(function () {
-        // ── Layanan Pengaduan (Publik / Magic Link) ──────────────────────
-        // Route ini sengaja tanpa 'auth' (magic link dibuka tanpa login), jadi
-        // throttle adalah satu-satunya rem terhadap brute force token & spam.
+        // ── Layanan Pengaduan (Publik / Tautan Rahasia) ──────────────────
+        // Hanya untuk MELIHAT pengaduan anonim yang sudah terkirim; pembuatannya
+        // memakai form biasa (centang "Sembunyikan identitas saya"). Route ini
+        // sengaja tanpa 'auth' (tautan dibuka tanpa login), jadi throttle adalah
+        // satu-satunya rem terhadap brute force token.
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            Route::post('/track/{token}/confirm', [AnonPengaduanController::class, 'confirm'])
-                ->middleware('throttle:20,1')->name('anon.confirm');
-            Route::post('/track/{token}/store', [AnonPengaduanController::class, 'store'])
-                ->middleware('throttle:5,1')->name('anon.store');
             Route::get('/track/{token}', [AnonPengaduanController::class, 'track'])
                 ->middleware('throttle:30,1')->name('track');
             Route::get('/track/{token}/bukti/{index}', [AnonPengaduanController::class, 'bukti'])
                 ->whereNumber('index')->middleware('throttle:30,1')->name('anon.bukti');
-            // Pratinjau bukti yang baru diunggah (draft) — hanya bisa dibuka oleh sesi pengunggah.
-            Route::get('/track/{token}/bukti-pending/{index}', [AnonPengaduanController::class, 'buktiPending'])
-                ->whereNumber('index')->middleware('throttle:60,1')->name('anon.bukti.pending');
         });
     });
 
@@ -169,12 +164,6 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->middleware('throttle:20,1')->name('confirm');
                 Route::post('/', [PengaduanController::class, 'store'])
                     ->middleware('throttle:5,1')->name('store');
-
-                // Jalur Konfidensial (pembuatan Magic Link).
-                // POST, bukan GET: method ini menulis ke database, dan sebagai GET
-                // setiap refresh/prefetch membuat satu baris draft baru.
-                Route::post('/anon/generate', [AnonPengaduanController::class, 'generate'])
-                    ->middleware('throttle:10,1')->name('anon.generate');
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (gpm)
@@ -189,8 +178,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('bukti');
             });
 
-            // Toggle tercatat: superadmin, admin_kemahasiswaan, dan staff terkait
+            // Toggle tercatat & statistik: superadmin, admin_kemahasiswaan, dan staff terkait
             Route::middleware('role:superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen')->group(function () {
+                Route::get('/statistik', [PengaduanController::class, 'statistik'])->name('statistik');
                 Route::post('/{pengaduan}/toggle-tercatat', [PengaduanController::class, 'toggleTercatat'])
                     ->name('toggle.tercatat')->whereNumber('pengaduan');
             });

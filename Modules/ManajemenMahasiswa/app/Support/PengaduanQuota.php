@@ -5,12 +5,11 @@ namespace Modules\ManajemenMahasiswa\Support;
 use Illuminate\Support\Facades\RateLimiter;
 
 /**
- * Kuota pengaduan per akun per 24 jam (kedua jalur berbagi satu jatah).
+ * Kuota pengaduan per akun per 24 jam (pengaduan biasa & anonim berbagi satu jatah).
  *
  * Penghitung disimpan di cache (redis) dengan kedaluwarsa otomatis dan TIDAK
  * ditempelkan pada tiket, sehingga tidak menjadi jalur balik ke identitas
- * pelapor konfidensial. Untuk jalur konfidensial, jatah dipakai saat tautan
- * (draft) dibuat, karena saat pengiriman akhir sistem sengaja tidak tahu siapa pelapornya.
+ * pelapor anonim. Jatah dipakai saat pengaduan benar-benar dikirim.
  */
 final class PengaduanQuota
 {

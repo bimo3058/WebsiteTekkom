@@ -8,19 +8,16 @@
         </style>
     @endpush
 
-    {{-- Form ini khusus jalur Reguler; jalur Konfidensial memakai alur magic link terpisah. --}}
+    {{-- Satu form untuk semua pelapor; anonim cukup lewat centang di bagian Pelapor. --}}
     <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.confirm') }}" enctype="multipart/form-data" style="position: relative; margin: 0;">
         @csrf
         @include('manajemenmahasiswa::pengaduan.partials.honeypot')
-        <input type="hidden" name="is_anonim" value="0">
-        <input type="hidden" name="jalur_query" value="reguler">
 
         @include('manajemenmahasiswa::pengaduan.partials.form-fields', [
-            'jalur'             => 'reguler',
             'kategoriList'      => $kategoriList,
             'dosenList'         => $dosenList ?? [],
             'buktiPendingItems' => $buktiPendingItems ?? [],
-            'backUrl'           => route('manajemenmahasiswa.pengaduan.index', ['buat' => 1]),
+            'backUrl'           => route('manajemenmahasiswa.pengaduan.index'),
         ])
     </form>
 

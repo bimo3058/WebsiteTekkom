@@ -91,6 +91,31 @@
 
     /* Sengaja tanpa kolom centang & aksi massal: "tercatat" berarti tiket sudah dibaca
        satu per satu, dan aduan (termasuk PPKS) tidak dihapus beramai-ramai. */
+
+    /* ── Kartu tautan rahasia (sekali tampil setelah mengirim pengaduan anonim) ── */
+    .pgd-link-card {
+        background: #ffffff; border: 1px solid #9DE0D3; border-left: 3px solid var(--c-success);
+        border-radius: 12px; padding: 16px; margin-bottom: 16px; flex-shrink: 0;
+    }
+    .pgd-link-head { display: flex; gap: 12px; align-items: flex-start; }
+    .pgd-link-icon {
+        width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--c-success-subtle); color: var(--c-success);
+    }
+    .pgd-link-title { font-size: 14px; font-weight: 700; color: var(--c-fg); }
+    .pgd-link-desc { font-size: 12px; line-height: 1.55; color: var(--c-fg-muted); margin: 3px 0 0; }
+    .pgd-link-row { display: flex; gap: 8px; align-items: center; margin-top: 12px; padding-left: 40px; }
+    .pgd-link-url {
+        flex: 1; min-width: 0; height: 32px; padding: 0 10px; font-family: monospace; font-size: 12px;
+        color: var(--c-primary); background: var(--c-bg); border: 1px dashed var(--c-border-strong); border-radius: 7px;
+    }
+    .pgd-link-url:focus { outline: none; border-color: var(--c-primary); }
+    #pgdSalinLink.is-done { border-color: var(--c-success); color: var(--c-success); }
+    @media (max-width: 600px) {
+        .pgd-link-row { flex-wrap: wrap; padding-left: 0; }
+        .pgd-link-url { flex-basis: 100%; }
+    }
 </style>
 
 {{-- ── Header ── --}}
@@ -107,6 +132,11 @@
     @endif
 
     <x-slot:actions>
+        @if($isStaff)
+            <a href="{{ route('manajemenmahasiswa.pengaduan.statistik') }}" class="mk-btn mk-btn--secondary">
+                <x-manajemenmahasiswa::ui.icon name="bar-chart-12" size="16" /> Statistik
+            </a>
+        @endif
         @if($canCreate)
             @if($kuotaPesan)
                 {{-- Kuota harian habis: tombol mati, alasannya di subjudul. --}}
@@ -114,9 +144,9 @@
                     <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
                 </button>
             @else
-                <button type="button" class="mk-btn mk-btn--primary" data-bs-toggle="modal" data-bs-target="#buatPengaduanModal">
+                <a href="{{ route('manajemenmahasiswa.pengaduan.create') }}" class="mk-btn mk-btn--primary">
                     <x-manajemenmahasiswa::ui.icon name="plus" size="16" /> Buat Pengaduan
-                </button>
+                </a>
             @endif
         @endif
     </x-slot:actions>
@@ -124,8 +154,34 @@
 
 @include('manajemenmahasiswa::pengaduan.partials.alerts')
 
+{{-- Pengaduan anonim baru terkirim: tautan rahasianya hanya ditampilkan sekali (flash). --}}
+@if(session('anon_link'))
+    <div class="pgd-link-card" role="status">
+        <div class="pgd-link-head">
+            <span class="pgd-link-icon"><x-manajemenmahasiswa::ui.icon name="check" size="16" /></span>
+            <div>
+                <div class="pgd-link-title">Pengaduan anonim berhasil dikirim</div>
+                <p class="pgd-link-desc">
+                    Pengaduan ini tidak tercatat atas nama Anda, sehingga tidak muncul di daftar di bawah.
+                    Simpan tautan rahasia berikut untuk melihatnya kembali. <strong>Tautan hanya ditampilkan sekali</strong>
+                    dan tidak dapat dipulihkan bila hilang.
+                </p>
+            </div>
+        </div>
+        <div class="pgd-link-row">
+            <input type="text" class="pgd-link-url" id="pgdAnonLink" value="{{ session('anon_link') }}" readonly
+                   aria-label="Tautan rahasia pengaduan" onclick="this.select()">
+            <button type="button" class="mk-btn mk-btn--secondary mk-btn--sm" id="pgdSalinLink">
+                <x-manajemenmahasiswa::ui.icon name="files-01" size="15" /> <span>Salin</span>
+            </button>
+            <a href="{{ session('anon_link') }}" target="_blank" rel="noopener" class="mk-btn mk-btn--primary mk-btn--sm">Buka</a>
+        </div>
+    </div>
+@endif
+
 @php
-    $filterPanelAktif = $filters['kategori'] !== '' || $filters['status'] !== '';
+    $filterPanelAktif = $filters['kategori'] !== '' || $filters['status'] !== ''
+        || $filters['pihak'] !== '' || $filters['bukti'] !== '';
     $adaFilter = $filters['q'] !== '' || $filterPanelAktif;
     // Pelapor tidak melihat status tiket (kolom Status & filternya khusus staff).
     $jumlahKolom = $isStaff ? 7 : 4;
@@ -144,7 +200,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </span>
                 <input type="text" name="q" class="search-input" value="{{ $filters['q'] }}"
-                       placeholder="Cari judul, kronologi, atau ID…">
+                       placeholder="{{ $isStaff ? 'Cari judul, isi, lokasi, atau ID…' : 'Cari judul, isi, atau ID…' }}">
             </div>
 
             <div class="filter-pop" x-data="{ filterOpen: false }" @keydown.escape.window="filterOpen = false">
@@ -193,6 +249,27 @@
                                     <option value="semua">Semua Status</option>
                                     <option value="baru" @selected($filters['status'] === 'baru')>Baru</option>
                                     <option value="tercatat" @selected($filters['status'] === 'tercatat')>Tercatat</option>
+                                </x-manajemenmahasiswa::ui.select>
+                            </div>
+
+                            {{-- Melihat pola: mis. beberapa laporan terpisah tentang pihak yang sama. --}}
+                            <div>
+                                <label class="filter-pop-label" for="filterPihak">Pihak Terlapor</label>
+                                <x-manajemenmahasiswa::ui.select name="pihak" id="filterPihak">
+                                    <option value="semua">Semua Pihak</option>
+                                    @foreach(\Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::PIHAK as $pihak)
+                                        <option value="{{ $pihak }}" @selected($filters['pihak'] === $pihak)>{{ $pihak }}</option>
+                                    @endforeach
+                                </x-manajemenmahasiswa::ui.select>
+                            </div>
+
+                            <div>
+                                <label class="filter-pop-label" for="filterBukti">Ketersediaan Bukti</label>
+                                <x-manajemenmahasiswa::ui.select name="bukti" id="filterBukti">
+                                    <option value="semua">Semua</option>
+                                    @foreach(\Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::BUKTI_OPSI as $value => $label)
+                                        <option value="{{ $value }}" @selected($filters['bukti'] === $value)>{{ $label }}</option>
+                                    @endforeach
                                 </x-manajemenmahasiswa::ui.select>
                             </div>
                         @endif
@@ -246,10 +323,10 @@
                             <td>
                                 <div class="pgd-pelapor">
                                     @if($item->is_anonim)
-                                        <span class="pgd-anon-avatar" title="Identitas dilindungi">
+                                        <span class="pgd-anon-avatar" title="Identitas tidak disimpan">
                                             <x-manajemenmahasiswa::ui.icon name="shield-02" size="15" />
                                         </span>
-                                        <span class="pgd-pelapor-name is-anon">Konfidensial</span>
+                                        <span class="pgd-pelapor-name is-anon">Anonim</span>
                                     @else
                                         <x-ui.user-avatar :user="$item->pelapor" size="sm" />
                                         <span class="pgd-pelapor-name">{{ optional($item->pelapor)->name ?? '—' }}</span>
@@ -336,12 +413,23 @@
     @include('manajemenmahasiswa::partials.table-footer', ['paginator' => $pengaduan])
 </div>
 
-{{-- Bootstrap JS sudah dimuat layout; tidak dimuat ulang di sini (dulu dobel → latar modal menumpuk). --}}
-@if($canCreate)
-    @include('manajemenmahasiswa::pengaduan.partials.buat-modal')
-@endif
-
 <script>
+    // Tombol "Salin" pada kartu tautan rahasia pengaduan anonim.
+    document.getElementById('pgdSalinLink')?.addEventListener('click', async function () {
+        const input = document.getElementById('pgdAnonLink');
+        try {
+            await navigator.clipboard.writeText(input.value);
+        } catch (err) {
+            // Konteks non-HTTPS: salin lewat seleksi teks.
+            input.select();
+            document.execCommand('copy');
+        }
+        const label = this.querySelector('span:last-child');
+        label.textContent = 'Tersalin';
+        this.classList.add('is-done');
+        setTimeout(() => { label.textContent = 'Salin'; this.classList.remove('is-done'); }, 2000);
+    });
+
     // Menu aksi "⋯" per baris. Posisinya dihitung dari tombol saat dibuka (position:
     // fixed), jadi tidak terpotong pembungkus tabel; bila ruang di bawah tombol tidak
     // cukup, menu dibuka ke atas. Ditutup saat halaman digulir/diubah ukurannya.

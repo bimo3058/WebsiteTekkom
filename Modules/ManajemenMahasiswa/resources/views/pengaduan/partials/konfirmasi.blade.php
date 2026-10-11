@@ -1,27 +1,31 @@
 {{--
-    Halaman konfirmasi pengaduan — SATU tampilan untuk jalur Reguler & Konfidensial.
+    Halaman konfirmasi pengaduan — satu tampilan untuk pengaduan biasa & anonim.
     Strukturnya mengikuti halaman Detail User (superadmin/users/show): satu card berisi
     toolbar, bagian profil dengan grid label–nilai, lalu bagian dua kolom.
 
     Param:
       $payload     ['kategori','template','bukti_items']
-      $isAnonim    bool — jalur konfidensial
+      $isAnonim    bool — pelapor mencentang "Sembunyikan identitas saya"
       $backUrl     tujuan tombol Kembali (satu-satunya, ikon di kiri bilah atas)
       $formAction  route pengiriman akhir
-      $reporterName nama pelapor (hanya jalur reguler)
+      $reporterName nama pelapor
 --}}
 @php
+    use Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan;
+
     $tpl = fn (string $key) => data_get($payload, 'template.' . $key);
 
     $kategoriLabel = \Modules\ManajemenMahasiswa\Models\Pengaduan::kategoriLabel((string) $payload['kategori']);
     $buktiItems = (array) ($payload['bukti_items'] ?? []);
     $buktiCount = count($buktiItems);
+    $ketersediaanLabel = PengaduanPertanyaan::labelBukti($tpl('ketersediaan_bukti'));
 
     $infoItems = array_merge([
-        // Istilah sama dengan daftar & detail staff: "Konfidensial".
-        ['label' => 'Pelapor',  'value' => $isAnonim ? 'Konfidensial' : ($reporterName ?? '-')],
-        ['label' => 'Angkatan', 'value' => $tpl('angkatan')],
-    ], \Modules\ManajemenMahasiswa\Support\PengaduanPertanyaan::barisInfo(
+        // Istilah sama dengan daftar & detail staff: "Anonim".
+        ['label' => 'Pelapor',  'value' => $isAnonim ? 'Disembunyikan (anonim)' : ($reporterName ?? '-')],
+        ['label' => 'Angkatan', 'value' => $isAnonim && $tpl('angkatan') ? $tpl('angkatan') . ' (statistik saja)' : $tpl('angkatan')],
+        ['label' => 'Email Kontak', 'value' => $tpl('email_kontak') ?: ($isAnonim ? 'Tidak diisi (tidak dapat dihubungi)' : null)],
+    ], PengaduanPertanyaan::barisInfo(
         (string) $payload['kategori'],
         (array) ($payload['template'] ?? [])
     ));
@@ -44,9 +48,7 @@
         @csrf
         @include('manajemenmahasiswa::pengaduan.partials.honeypot')
 
-        @unless($isAnonim)
-            <input type="hidden" name="is_anonim" value="0">
-        @endunless
+        <input type="hidden" name="is_anonim" value="{{ $isAnonim ? 1 : 0 }}">
         <input type="hidden" name="kategori" value="{{ $payload['kategori'] }}">
         @foreach(($payload['template'] ?? []) as $key => $value)
             @continue(is_array($value))
@@ -55,7 +57,12 @@
 
         <div class="kf-notice">
             <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="16" />
-            Periksa kembali data di bawah. Setelah dikirim, pengaduan tidak bisa diedit lagi.
+            <span>
+                Periksa kembali data di bawah. Setelah dikirim, pengaduan tidak bisa diedit lagi.
+                @if($isAnonim)
+                    Karena identitas Anda disembunyikan, Anda akan mendapat <strong>tautan rahasia</strong> untuk melihatnya kembali — simpan baik-baik.
+                @endif
+            </span>
         </div>
 
         {{-- ── Profil: subjek + badge + grid informasi ── --}}
@@ -70,12 +77,7 @@
                     <span class="pgd-pill kategori">{{ $kategoriLabel }}</span>
                     @if($isAnonim)
                         <span class="pgd-pill konfidensial">
-                            <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
-                        </span>
-                    @else
-                        {{-- Penanda jalur, bukan status tiket: pill abu tanpa titik. --}}
-                        <span class="pgd-pill jalur">
-                            <x-manajemenmahasiswa::ui.icon name="user-circle" size="11" /> Reguler
+                            <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Anonim
                         </span>
                     @endif
                 </div>
@@ -108,6 +110,9 @@
                 <p>Berkas PDF yang dilampirkan. Metadata penulis dokumen sudah dikosongkan sebisanya.</p>
             </div>
             <div class="kf-main is-fields">
+                @if($ketersediaanLabel)
+                    <div class="kf-bukti-status">Ketersediaan bukti: <strong>{{ $ketersediaanLabel }}</strong></div>
+                @endif
                 @if($buktiCount > 0)
                     <div style="font-size: 13px; font-weight: 600; color: var(--c-fg-sec);">{{ $buktiCount }} berkas — klik untuk melihat isinya</div>
                     @include('manajemenmahasiswa::pengaduan.partials.bukti-items', ['items' => $buktiItems])

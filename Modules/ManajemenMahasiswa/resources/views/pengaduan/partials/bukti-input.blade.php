@@ -1,7 +1,8 @@
 {{--
     Input bukti dukung (khusus PDF). Pilihan berkas ditampilkan sebagai daftar ikon
     berikut tombol hapus dan pratinjau pop-up, seperti "Ajukan Riwayat Kegiatan" di Verifikasi Kegiatan.
-    Param: $buktiPendingItems (bukti yang sudah terunggah, opsional), $confidential (jalur konfidensial, opsional).
+    Hanya ditampilkan bila berkas memang diminta (lihat form-fields), jadi labelnya selalu wajib.
+    Param: $buktiPendingItems (bukti yang sudah terunggah, opsional).
 --}}
 @include('manajemenmahasiswa::pengaduan.partials.bukti-styles')
 @php
@@ -10,7 +11,7 @@
     $maxKb = \Modules\ManajemenMahasiswa\Support\PengaduanBukti::MAX_KB;
     $maxMb = $maxKb / 1024;
 @endphp
-<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-opt">(opsional)</span></label>
+<label class="pgd-label" for="buktiInput">Berkas PDF <span class="is-req">*</span></label>
 {{-- Input bawaan disembunyikan (tetap bisa difokus keyboard): tampilannya selalu
      menulis "Tidak ada file yang dipilih", padahal berkas terpilih sudah didaftar di bawah. --}}
 <input type="file" class="bk-file-native" name="bukti[]" id="buktiInput" accept="application/pdf,.pdf" multiple>
@@ -22,15 +23,15 @@
     Hanya berkas PDF, maks. {{ $maxFiles }} berkas &times; {{ $maxMb }} MB.
     Gabungkan foto/screenshot ke dalam PDF terlebih dahulu.
 </div>
-{{-- Hanya jalur konfidensial: di jalur reguler identitas pelapor memang sudah
-     diketahui pengelola, jadi peringatan ini cuma menambah teks. --}}
-@if (!empty($confidential))
-    <div class="pgd-help" style="color: var(--c-warning); font-weight: 600;">
-        Pastikan nama atau NIM Anda tidak tertulis di dalam isi PDF.
-    </div>
-@endif
+{{-- Hanya saat identitas disembunyikan (form-fields menyalakannya lewat data-pgd-anon-only):
+     tanpa centang itu identitas pelapor memang sudah diketahui pengelola. --}}
+<div class="pgd-help" data-pgd-anon-only @unless (old('is_anonim')) hidden @endunless style="color: var(--c-warning); font-weight: 600;">
+    Pastikan nama atau NIM Anda tidak tertulis di dalam isi PDF.
+</div>
 <div class="bk-list" id="buktiPreview"></div>
 <div class="bk-error" id="buktiError" role="alert"></div>
+@error('bukti') <div class="pgd-error">{{ $message }}</div> @enderror
+@error('bukti.*') <div class="pgd-error">{{ $message }}</div> @enderror
 @if ($pendingCount > 0)
     <div class="pgd-help" style="margin-top: 12px; color: var(--c-primary); font-weight: 600;">
         {{ $pendingCount }} berkas sudah terunggah. Pilih berkas baru hanya bila ingin menggantinya.
