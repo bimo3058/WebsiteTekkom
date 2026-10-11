@@ -96,9 +96,9 @@
             class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full">
             <h2 class="text-base font-bold text-gray-900 tracking-tight">Arsip Peminjaman</h2>
 
-            <div class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
                 <form action="{{ route('eoffice.peminjaman.admin.riwayat.index') }}" method="GET"
-                    class="flex flex-col sm:flex-row flex-wrap sm:items-center gap-2.5 w-full sm:w-auto">
+                    class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto m-0 relative">
                     {{-- Search --}}
                     <div class="relative w-full sm:w-auto" x-data="{ searchQuery: '{{ addslashes(request('search')) }}' }">
                         <button type="submit" class="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer text-gray-400 hover:text-[#0B266E] transition-colors bg-transparent border-0 outline-none">
@@ -123,8 +123,10 @@
                         </button>
                     </div>
 
-                    {{-- Filter --}}
-                    <div class="relative w-full sm:w-auto" x-data="{ open: false }">
+                    <!-- Wrapper for Filter & Sort to sit side-by-side on mobile -->
+                    <div class="flex flex-row items-stretch gap-2.5 w-full sm:w-auto">
+                        {{-- Filter --}}
+                        <div class="relative flex-1 sm:flex-none" x-data="{ open: false }">
                         <button type="button" @click="open = !open" 
                             class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
                             :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-200 text-slate-700 hover:bg-gray-50'">
@@ -248,7 +250,7 @@
                     </div>
 
                     {{-- Sort --}}
-                    <div class="relative w-full sm:w-auto" x-data="{ 
+                    <div class="relative flex-1 sm:flex-none" x-data="{ 
                         open: false,
                         selectedSort: '{{ request('sort', 'tanggal_desc') }}',
                         selectItem(val) {
@@ -278,7 +280,7 @@
                             x-transition:leave="transition ease-in duration-75" 
                             x-transition:leave-start="opacity-100 scale-100" 
                             x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute right-0 sm:left-auto top-full mt-2 origin-top-right sm:origin-top-left bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-full sm:w-56 overflow-hidden">
+                            class="absolute right-0 sm:left-auto top-full mt-2 origin-top-right sm:origin-top-left bg-white rounded-xl shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] border border-gray-100 z-50 w-52 sm:w-56 overflow-hidden">
                             <div class="p-3">
                                 <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Urutkan Berdasarkan</div>
                                 <div class="space-y-0.5">
@@ -304,6 +306,7 @@
                             </div>
                         </div>
                     </div>
+                </div> <!-- End Wrapper Filter & Sort -->
                 </form>
 
 

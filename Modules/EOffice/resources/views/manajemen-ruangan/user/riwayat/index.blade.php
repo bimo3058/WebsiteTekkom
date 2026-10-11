@@ -349,13 +349,13 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border border-gray-100 shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+                class="relative bg-white rounded-t-[24px] sm:rounded-[20px] rounded-b-none sm:rounded-b-[20px] shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col border-0 sm:border border-gray-100">
 
                 <!-- Modal Header -->
                 <div
                     class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
                     <div class="flex items-center gap-3">
-                        <div class="bg-[#0B266E] p-2.5 rounded-xl shadow-sm">
+                        <div class="bg-[#0B266E] p-2.5 rounded-xl">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -369,7 +369,7 @@
                         </div>
                     </div>
                     <button type="button" @click="$dispatch('close-detail')"
-                        class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                        class="text-[#0B266E] hover:bg-[#0B266E]/10 transition-colors cursor-pointer p-1.5 rounded-lg">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -377,120 +377,71 @@
                 </div>
 
                 <!-- Modal Body (Scrollable) -->
-                <div class="p-4 sm:p-6 flex-1 overflow-y-auto bg-slate-50/50 custom-scrollbar">
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
+                <div class="p-6 flex-1 overflow-y-auto bg-white">
+                    <!-- Ringkasan Informasi -->
+                    <div class="p-4 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
 
-                        <!-- INFORMASI PEMINJAMAN -->
-                        <div
-                            class="text-[12px] font-bold text-[#5c6e9a] uppercase tracking-wider pb-2.5 border-b border-slate-100 mb-3.5">
+                        <!-- Informasi Peminjaman -->
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2">
                             INFORMASI PEMINJAMAN
-                        </div>
+                        </h4>
+                        <div class="grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2 text-[13px] mb-3 border-b border-slate-100 pb-3">
+                            <div class="text-slate-500 font-medium">Ruangan</div>
+                            <div class="text-slate-800 font-bold" x-text="selected.ruangan"></div>
 
-                        <div class="space-y-3 mb-5">
-                            <div class="flex items-start">
-                                <div
-                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
-                                    Ruangan</div>
-                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words"
-                                    x-text="selected.ruangan"></div>
-                            </div>
+                            <div class="text-slate-500 font-medium">Tanggal</div>
+                            <div class="text-slate-800 font-bold" x-text="selected.tanggal"></div>
 
-                            <div class="flex items-start">
-                                <div
-                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
-                                    Tanggal</div>
-                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words"
-                                    x-text="selected.tanggal"></div>
-                            </div>
+                            <div class="text-slate-500 font-medium">Waktu</div>
+                            <div class="text-slate-800 font-bold" x-text="selected.jam"></div>
 
-                            <div class="flex items-start">
-                                <div
-                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
-                                    Waktu</div>
-                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words"
-                                    x-text="selected.jam"></div>
-                            </div>
+                            <div class="text-slate-500 font-medium">Kegiatan</div>
+                            <div class="text-slate-800 font-medium leading-snug" x-text="selected.tujuan"></div>
 
-                            <div class="flex items-start">
-                                <div
-                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
-                                    Kegiatan</div>
-                                <div class="flex-1 text-[12px] text-slate-800 font-medium leading-relaxed break-words"
-                                    x-text="selected.tujuan"></div>
-                            </div>
-
-                            <div class="flex items-start">
-                                <div
-                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
-                                    Berkas</div>
-                                <div class="flex-1">
-                                    <template x-if="selected.berkas">
-                                        <a :href="selected.berkas" target="_blank"
-                                            class="text-[12px] text-[#0065ff] hover:text-[#0052cc] hover:underline font-semibold italic inline-flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
-                                                </path>
-                                            </svg>
-                                            Lihat File Terlampir
-                                        </a>
-                                    </template>
-                                    <template x-if="!selected.berkas">
-                                        <span class="text-[12px] text-slate-400 italic">Tidak dilampirkan</span>
-                                    </template>
-                                </div>
+                            <div class="text-slate-500 font-medium pt-1">Berkas</div>
+                            <div class="pt-1">
+                                <template x-if="selected.berkas">
+                                    <a :href="selected.berkas" target="_blank"
+                                        class="text-[13px] font-bold text-[#0065ff] hover:text-[#0052cc] hover:underline transition-colors mt-0.5 inline-block">
+                                        Lihat Berkas
+                                    </a>
+                                </template>
+                                <template x-if="!selected.berkas">
+                                    <span class="text-gray-400 italic text-[12px]">Tidak dilampirkan</span>
+                                </template>
                             </div>
                         </div>
 
-                        <!-- STATUS & RIWAYAT -->
-                        <div
-                            class="text-[12px] font-bold text-[#5c6e9a] uppercase tracking-wider pb-2.5 border-b border-slate-100 mb-3.5">
+                        <!-- Status & Riwayat -->
+                        <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-2 mt-3">
                             STATUS & RIWAYAT
-                        </div>
-
-                        <div class="space-y-3">
-                            <div class="flex items-start">
-                                <div
-                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
-                                    Status</div>
-                                <div class="flex-1">
-                                    <span class="text-[12px] font-bold tracking-wide uppercase" :class="{
-                                        'text-emerald-600': selected.status && selected.status.toLowerCase() === 'disetujui',
-                                        'text-amber-600': selected.status && selected.status.toLowerCase() === 'menunggu',
-                                        'text-rose-600': selected.status && (selected.status.toLowerCase() === 'ditolak' || selected.status.toLowerCase() === 'dibatalkan'),
-                                        'text-indigo-600': selected.status && selected.status.toLowerCase() === 'selesai'
+                        </h4>
+                        <div class="grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2 text-[13px]">
+                            <div class="text-slate-500 font-medium flex items-center">Status Akhir</div>
+                            <div class="flex items-center">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border inline-block"
+                                    :class="{
+                                        'bg-[#ECFDF5] text-[#047857] border-[#A7F3D0]': selected.status && selected.status.toLowerCase() === 'disetujui',
+                                        'bg-[#FFF1F2] text-[#9D174D] border-[#FECDD3]': selected.status && (selected.status.toLowerCase() === 'ditolak' || selected.status.toLowerCase() === 'dibatalkan'),
+                                        'bg-[#FFF9E6] text-[#B45309] border-[#FFEBB3]': selected.status && selected.status.toLowerCase() === 'menunggu',
+                                        'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]': selected.status && selected.status.toLowerCase() === 'selesai'
                                     }"
-                                        x-text="selected.status ? (selected.status.toLowerCase() === 'disetujui' ? 'SELESAI' : selected.status) : ''">
-                                    </span>
+                                    x-text="selected.status ? (selected.status.toLowerCase() === 'disetujui' ? 'SELESAI' : selected.status) : ''">
+                                </span>
+                            </div>
+
+                            <template x-if="selected.status && (selected.status.toLowerCase() === 'ditolak' || selected.status.toLowerCase() === 'dibatalkan')">
+                                <div class="col-span-full grid grid-cols-[80px_1fr] sm:grid-cols-[90px_1fr] gap-x-2 gap-y-2">
+                                    <div class="text-slate-500 font-medium" x-text="selected.status.toLowerCase() === 'dibatalkan' ? 'Alasan Batal' : 'Alasan Tolak'"></div>
+                                    <div class="text-red-600 font-semibold leading-relaxed" 
+                                        x-text="selected.alasan || 'Tidak ada keterangan tambahan.'"></div>
                                 </div>
-                            </div>
-                            <div class="flex items-start">
-                                <div
-                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
-                                    Diajukan Pada</div>
-                                <div class="flex-1 text-[12px] text-slate-800 font-medium break-words"
-                                    x-text="selected.diajukan_pada"></div>
-                            </div>
+                            </template>
+
+                            <div class="text-slate-500 font-medium">Diajukan</div>
+                            <div class="text-slate-800 font-medium" x-text="selected.diajukan_pada"></div>
                         </div>
 
-                        <!-- Alasan Penolakan -->
-                        <template
-                            x-if="selected.status && (selected.status.toLowerCase() === 'ditolak' || selected.status.toLowerCase() === 'dibatalkan')">
-                            <div class="mt-4 bg-rose-50 border border-rose-100 rounded-xl p-4 flex gap-3">
-                                <svg class="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" fill="none"
-                                    stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                                    </path>
-                                </svg>
-                                <div>
-                                    <h5 class="text-[12px] font-bold text-rose-800">Catatan Penolakan / Pembatalan</h5>
-                                    <p class="text-[12px] text-rose-700 mt-1 break-words"
-                                        x-text="selected.alasan || 'Tidak ada catatan tambahan.'"></p>
-                                </div>
-                            </div>
-                        </template>
                     </div>
                 </div>
             </div>
