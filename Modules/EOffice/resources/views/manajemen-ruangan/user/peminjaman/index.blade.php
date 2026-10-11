@@ -264,41 +264,52 @@
         </div>
 
         {{-- Custom Alpine Modal for Cancellation --}}
-        <div x-show="modalBatal" style="display: none;"
-            class="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div x-show="modalBatal" x-transition.opacity
-                class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity cursor-pointer" @click="closeModal()">
-            </div>
+        <div x-show="modalBatal" x-cloak style="display: none;"
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
-            <div x-show="modalBatal" x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+            <!-- 1. BACKDROP OVERLAY (Latar Belakang Gelap) -->
+            <div x-show="modalBatal" 
+                x-transition:enter="ease-out duration-300" 
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" 
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" 
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" 
+                aria-hidden="true" @click="closeModal()"></div>
+
+            <!-- 2. MODAL PANEL (Kotak Utama Modal) -->
+            <div x-show="modalBatal" 
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative bg-white rounded-[16px] shadow-2xl w-full max-w-sm overflow-hidden flex flex-col border border-gray-100 text-center">
-
+                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+                
                 <div class="p-6">
-                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
                         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                            </path>
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
                         </svg>
                     </div>
-                    <h3 class="text-lg font-bold text-gray-900 mb-2">Batalkan Peminjaman?</h3>
-                    <p class="text-[13px] text-gray-500 mb-6">Apakah Anda yakin ingin membatalkan pengajuan peminjaman
+                    <h3 class="text-lg font-bold text-gray-900 text-center mb-2">Batalkan Peminjaman?</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6 leading-relaxed">Apakah Anda yakin ingin membatalkan pengajuan peminjaman
                         ruangan ini? Data yang telah dibatalkan tidak dapat dikembalikan atau diproses ulang.</p>
-
-                    <form method="POST" :action="cancelUrl">
+                    
+                    <form method="POST" :action="cancelUrl" class="flex gap-3 w-full">
                         @csrf
-                        <div class="flex gap-3 w-full">
-                            <button type="button" @click="closeModal()"
-                                class="flex-1 py-2 px-4 bg-white border border-gray-200 text-gray-700 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors cursor-pointer">Tutup</button>
-                            <button type="submit"
-                                class="flex-1 py-2 px-4 bg-red-600 text-white rounded-xl font-medium text-sm hover:bg-red-700 shadow-sm hover:shadow-md transition-all cursor-pointer">Ya,
-                                Batalkan</button>
-                        </div>
+                        <button type="button" @click="closeModal()"
+                            class="w-1/2 flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="w-1/2 flex items-center justify-center px-4 py-2.5 bg-red-600 border border-transparent rounded-lg text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer shadow-sm shadow-red-200">
+                            Ya, Batalkan
+                        </button>
                     </form>
                 </div>
             </div>

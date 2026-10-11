@@ -193,14 +193,14 @@
                         <div class="flex items-center justify-center gap-2 w-full md:w-auto">
                             <span class="font-medium">Per halaman</span>
                             <div x-data="{ 
-                                            open: false, 
-                                            selectedVal: '{{ request('per_page', 10) }}',
-                                            selectItem(val, url) {
-                                                this.selectedVal = val;
-                                                this.open = false;
-                                                window.location.href = url;
-                                            }
-                                        }" class="relative" @click.away="open = false">
+                                                open: false, 
+                                                selectedVal: '{{ request('per_page', 10) }}',
+                                                selectItem(val, url) {
+                                                    this.selectedVal = val;
+                                                    this.open = false;
+                                                    window.location.href = url;
+                                                }
+                                            }" class="relative" @click.away="open = false">
                                 <button type="button" @click="open = !open"
                                     class="flex items-center justify-between px-3 py-1.5 text-slate-900 font-bold bg-white outline-none cursor-pointer hover:bg-slate-50 border border-slate-200 rounded-lg shadow-sm gap-2 min-w-[64px] transition-colors">
                                     <span x-text="selectedVal"></span>
@@ -332,24 +332,18 @@
 
         {{-- Detail Modal --}}
         <div x-show="showDetail" x-cloak style="display: none;"
-            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6" 
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
             <!-- 1. BACKDROP OVERLAY -->
-            <div x-show="showDetail" 
-                x-transition:enter="ease-out duration-300" 
-                x-transition:enter-start="opacity-0"
-                x-transition:enter-end="opacity-100" 
-                x-transition:leave="ease-in duration-200"
-                x-transition:leave-start="opacity-100" 
-                x-transition:leave-end="opacity-0"
-                class="fixed inset-0 bg-slate-900/60 transition-opacity" 
-                aria-hidden="true" 
+            <div x-show="showDetail" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                class="fixed inset-0 bg-slate-900/60 transition-opacity" aria-hidden="true"
                 @click="$dispatch('close-detail')"></div>
 
             <!-- 2. MODAL PANEL -->
-            <div x-show="showDetail" 
-                x-transition:enter="ease-out duration-300"
+            <div x-show="showDetail" x-transition:enter="ease-out duration-300"
                 x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave="ease-in duration-200"
@@ -358,19 +352,24 @@
                 class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border border-gray-100 shadow-2xl w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
 
                 <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
+                <div
+                    class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
                     <div class="flex items-center gap-3">
                         <div class="bg-[#0B266E] p-2.5 rounded-xl shadow-sm">
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                </path>
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-base font-semibold text-[#1A1C1E]">Detail Arsip Peminjaman</h3>
-                            <p class="text-xs text-[#0B266E] mt-0.5">Arsip peminjaman dari <span class="font-bold" x-text="selected.nama || '{{ auth()->user()->name }}'"></span></p>
+                            <h3 class="text-base font-semibold text-[#1A1C1E]">Detail Riwayat Peminjaman</h3>
+                            <p class="text-xs text-[#0B266E] mt-0.5">Riwayat peminjaman dari <span class="font-bold"
+                                    x-text="selected.nama || '{{ auth()->user()->name }}'"></span></p>
                         </div>
                     </div>
-                    <button type="button" @click="$dispatch('close-detail')" class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                    <button type="button" @click="$dispatch('close-detail')"
+                        class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
@@ -382,41 +381,58 @@
                     <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5">
 
                         <!-- INFORMASI PEMINJAMAN -->
-                        <div class="text-[12px] font-bold text-[#5c6e9a] uppercase tracking-wider pb-2.5 border-b border-slate-100 mb-3.5 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                        <div
+                            class="text-[12px] font-bold text-[#5c6e9a] uppercase tracking-wider pb-2.5 border-b border-slate-100 mb-3.5">
                             INFORMASI PEMINJAMAN
                         </div>
 
                         <div class="space-y-3 mb-5">
                             <div class="flex items-start">
-                                <div class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Ruangan</div>
-                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words" x-text="selected.ruangan"></div>
+                                <div
+                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
+                                    Ruangan</div>
+                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words"
+                                    x-text="selected.ruangan"></div>
                             </div>
 
                             <div class="flex items-start">
-                                <div class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Tanggal</div>
-                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words" x-text="selected.tanggal"></div>
+                                <div
+                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
+                                    Tanggal</div>
+                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words"
+                                    x-text="selected.tanggal"></div>
                             </div>
 
                             <div class="flex items-start">
-                                <div class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Waktu</div>
-                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words" x-text="selected.jam"></div>
+                                <div
+                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
+                                    Waktu</div>
+                                <div class="flex-1 text-[12px] font-bold text-slate-800 break-words"
+                                    x-text="selected.jam"></div>
                             </div>
 
                             <div class="flex items-start">
-                                <div class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Kegiatan</div>
-                                <div class="flex-1 text-[12px] text-slate-800 font-medium leading-relaxed break-words" x-text="selected.tujuan"></div>
+                                <div
+                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
+                                    Kegiatan</div>
+                                <div class="flex-1 text-[12px] text-slate-800 font-medium leading-relaxed break-words"
+                                    x-text="selected.tujuan"></div>
                             </div>
 
                             <div class="flex items-start">
-                                <div class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Berkas</div>
+                                <div
+                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
+                                    Berkas</div>
                                 <div class="flex-1">
                                     <template x-if="selected.berkas">
                                         <a :href="selected.berkas" target="_blank"
                                             class="text-[12px] text-[#0065ff] hover:text-[#0052cc] hover:underline font-semibold italic inline-flex items-center gap-1.5">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                                </path>
+                                            </svg>
                                             Lihat File Terlampir
                                         </a>
                                     </template>
@@ -428,16 +444,16 @@
                         </div>
 
                         <!-- STATUS & RIWAYAT -->
-                        <div class="text-[12px] font-bold text-[#5c6e9a] uppercase tracking-wider pb-2.5 border-b border-slate-100 mb-3.5 flex items-center gap-2">
-                            <svg class="w-4 h-4 text-[#0B266E]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                            </svg>
+                        <div
+                            class="text-[12px] font-bold text-[#5c6e9a] uppercase tracking-wider pb-2.5 border-b border-slate-100 mb-3.5">
                             STATUS & RIWAYAT
                         </div>
 
                         <div class="space-y-3">
                             <div class="flex items-start">
-                                <div class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Status</div>
+                                <div
+                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
+                                    Status</div>
                                 <div class="flex-1">
                                     <span class="text-[12px] font-bold tracking-wide uppercase" :class="{
                                         'text-emerald-600': selected.status && selected.status.toLowerCase() === 'disetujui',
@@ -450,7 +466,9 @@
                                 </div>
                             </div>
                             <div class="flex items-start">
-                                <div class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">Diajukan Pada</div>
+                                <div
+                                    class="w-[100px] sm:w-[130px] flex-shrink-0 text-[12px] text-[#5c6e9a] font-medium">
+                                    Diajukan Pada</div>
                                 <div class="flex-1 text-[12px] text-slate-800 font-medium break-words"
                                     x-text="selected.diajukan_pada"></div>
                             </div>
@@ -479,56 +497,50 @@
         </div>
 
         <!-- Modal Hapus -->
-        <div x-show="showDelete" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+        <div x-show="showDelete" x-cloak style="display: none;"
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6"
             aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
-            <!-- 1. BACKDROP OVERLAY -->
+            <!-- 1. BACKDROP OVERLAY (Latar Belakang Gelap) -->
             <div x-show="showDelete" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
                 x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
                 class="fixed inset-0 bg-slate-900/60 transition-opacity" aria-hidden="true" @click="showDelete = false">
             </div>
 
-            <!-- Modal Panel -->
+            <!-- 2. MODAL PANEL (Kotak Utama Modal) -->
             <div x-show="showDelete" x-transition:enter="ease-out duration-300"
-                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                class="relative bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-md w-full p-6 mx-4">
+                x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
 
-                <div class="sm:flex sm:items-start">
-                    <div
-                        class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                        <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="p-6">
+                    <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                            </path>
                         </svg>
                     </div>
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                        <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Hapus Riwayat?</h3>
-                        <div class="mt-2">
-                            <p class="text-[13px] text-gray-500">
-                                Riwayat ini hanya akan disembunyikan dari daftar Anda. Data peminjaman tetap akan
-                                tersimpan aman dalam Arsip Administrasi Kampus.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <h3 class="text-lg font-bold text-gray-900 text-center mb-2" id="modal-title">Hapus Riwayat?</h3>
+                    <p class="text-sm text-gray-500 text-center mb-6 leading-relaxed">Riwayat ini akan dihapus dari
+                        daftar Anda, namun data peminjaman tetap tersimpan di arsip kampus.</p>
+
                     <form :action="`{{ url('eoffice/peminjaman/user/riwayat') }}/${deleteId}/hide`" method="POST"
-                        class="w-full sm:w-auto">
+                        class="flex gap-3 w-full">
                         @csrf
+                        <button type="button" @click="showDelete = false"
+                            class="w-1/2 flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50 transition-colors cursor-pointer">
+                            Batal
+                        </button>
                         <button type="submit"
-                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-[#0B266E] text-base font-medium text-white hover:bg-[#071946] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0B266E] sm:ml-3 sm:w-auto sm:text-sm transition-colors cursor-pointer">
+                            class="w-1/2 flex items-center justify-center px-4 py-2.5 bg-red-600 border border-transparent rounded-lg text-sm font-semibold text-white hover:bg-red-700 transition-colors cursor-pointer shadow-sm shadow-red-200">
                             Ya, Hapus
                         </button>
                     </form>
-                    <button type="button" @click="showDelete = false"
-                        class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm transition-colors cursor-pointer">
-                        Batal
-                    </button>
                 </div>
             </div>
         </div>
