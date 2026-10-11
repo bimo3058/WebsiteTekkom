@@ -826,30 +826,22 @@
 
                         {{-- Scrollable Body --}}
                         <div class="space-y-4 overflow-y-auto overflow-x-hidden flex-1 bg-white whitespace-normal -mx-4 sm:-mx-6 px-4 sm:px-6 pb-2">
-                            {{-- Card 1: Waktu Peminjaman --}}
-                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Waktu Peminjaman</span>
+                            {{-- Waktu Peminjaman --}}
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Mulai <span class="text-red-500">*</span></label>
+                                    <input type="time" name="jam_mulai" x-model="bookingData.jamMulai" required
+                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                                 </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div class="space-y-1.5">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Mulai <span class="text-red-500">*</span></label>
-                                        <input type="time" name="jam_mulai" x-model="bookingData.jamMulai" required
-                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
-                                    </div>
-                                    <div class="space-y-1.5">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Selesai <span class="text-red-500">*</span></label>
-                                        <input type="time" name="jam_selesai" x-model="bookingData.jamSelesai" required
-                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
-                                    </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Selesai <span class="text-red-500">*</span></label>
+                                    <input type="time" name="jam_selesai" x-model="bookingData.jamSelesai" required
+                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                                 </div>
                             </div>
 
-                            {{-- Card 2: Identitas Peminjam --}}
-                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Identitas Peminjam</span>
-                                </div>
+                            {{-- Identitas Peminjam --}}
+                            <div class="space-y-3">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <div class="space-y-1.5">
                                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
@@ -869,37 +861,27 @@
                                 </div>
                             </div>
 
-                            {{-- Card 3: Detail Kegiatan --}}
-                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Detail Kegiatan</span>
-                                </div>
-                                <div class="space-y-1.5">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan <span class="text-red-500">*</span></label>
-                                    <input type="text" name="tujuan" placeholder="Misal: Rapat Kerja HIMASKOM" required maxlength="150"
-                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
-                                </div>
+                            {{-- Detail Kegiatan --}}
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                <input type="text" name="tujuan" placeholder="Misal: Rapat Kerja HIMASKOM" required maxlength="150"
+                                    class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
                             </div>
 
-                            {{-- Card 4: Berkas Pendukung (Opsional) --}}
-                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Berkas Pendukung</span>
+                            {{-- Berkas Pendukung (Opsional) --}}
+                            <div class="space-y-1.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas Proposal <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
+                                <div class="relative bg-white border border-slate-200 rounded-xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
+                                    <input type="file" name="file_berkas" accept=".pdf"
+                                        class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#0B266E]/10 file:text-[#0B266E] hover:file:bg-[#0B266E]/20 cursor-pointer transition-all outline-none">
                                 </div>
-                                <div class="space-y-1.5">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas Proposal <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
-                                    <div class="relative bg-white border border-slate-200 rounded-xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
-                                        <input type="file" name="file_berkas" accept=".pdf"
-                                            class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#0B266E]/10 file:text-[#0B266E] hover:file:bg-[#0B266E]/20 cursor-pointer transition-all outline-none">
-                                    </div>
-                                    <p class="text-[10px] text-gray-400 ml-1 leading-relaxed">Format <strong class="text-gray-600 font-semibold">PDF</strong> maksimal <strong class="text-gray-600 font-semibold">2MB</strong>. Biasanya diperlukan untuk persetujuan acara berskala besar atau formal.</p>
-                                    @error('file_berkas')
-                                        <p class="text-[11px] text-rose-600 mt-2 font-bold flex items-center gap-1.5 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
-                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            Ukuran maksimal 2MB dan wajib berformat PDF.
-                                        </p>
-                                    @enderror
-                                </div>
+                                <p class="text-[10px] text-gray-400 ml-1 leading-relaxed">Format <strong class="text-gray-600 font-semibold">PDF</strong> maksimal <strong class="text-gray-600 font-semibold">2MB</strong>. Biasanya diperlukan untuk persetujuan acara berskala besar atau formal.</p>
+                                @error('file_berkas')
+                                    <p class="text-[11px] text-rose-600 mt-2 font-bold flex items-center gap-1.5 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
+                                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Ukuran maksimal 2MB dan wajib berformat PDF.
+                                    </p>
+                                @enderror
                             </div>
 
                             {{-- Card 5: Persetujuan S&K --}}
