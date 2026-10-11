@@ -776,8 +776,8 @@
 
         {{-- =================== BOOKING MODAL =================== --}}
         <div x-show="showModal" x-cloak style="display: none;"
-            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6" aria-labelledby="modal-title"
-            role="dialog" aria-modal="true">
+            class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6 text-left whitespace-normal"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true">
 
             {{-- Backdrop --}}
             <div x-show="showModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0"
@@ -793,133 +793,154 @@
                 x-transition:leave="ease-in duration-200"
                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
                 x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
-                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] shadow-2xl w-full max-w-xl max-h-[95vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
+                class="relative bg-white rounded-t-[24px] sm:rounded-t-[20px] rounded-b-none sm:rounded-b-[20px] border-0 sm:border border-gray-100 shadow-2xl w-full max-w-[500px] max-h-[95vh] sm:max-h-[90vh] flex flex-col p-0 overflow-visible">
 
-                {{-- Header --}}
-                <div class="px-4 sm:px-6 py-4 border-b border-[#0B266E]/10 flex items-center justify-between bg-[#0B266E]/[0.06] flex-shrink-0">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-[#0B266E] p-2.5 rounded-xl shrink-0">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <div class="p-4 sm:p-6 flex flex-col flex-1 min-h-0">
+                    {{-- Header --}}
+                    <div class="-mx-4 sm:-mx-6 -mt-4 sm:-mt-6 mb-5 px-6 py-4 border-b border-[#0B266E]/10 flex items-center justify-between bg-[#0B266E]/[0.06] rounded-none sm:rounded-t-[20px]">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-[#0B266E] flex items-center justify-center shrink-0">
+                                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-[#1A1C1E] tracking-tight" id="modal-title">Form Booking Ruangan</h3>
+                                <p class="text-[10px] text-[#0B266E] font-medium">Meminjam <span class="font-bold" x-text="bookingData.roomName"></span> pada <span class="font-bold" x-text="bookingData.waktu"></span></p>
+                            </div>
+                        </div>
+                        <button type="button" @click="closeModal"
+                            class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
+                            <span class="sr-only">Tutup</span>
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                             </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-semibold text-[#1A1C1E]" id="modal-title">Form Booking Ruangan</h3>
-                            <p class="text-xs text-[#0B266E] mt-0.5">Meminjam <span class="font-bold" x-text="bookingData.roomName"></span> pada <span class="font-bold" x-text="bookingData.waktu"></span></p>
-                        </div>
+                        </button>
                     </div>
-                    <button type="button" @click="closeModal"
-                        class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors p-1.5 rounded-lg shrink-0 cursor-pointer">
-                        <span class="sr-only">Close menu</span>
-                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
 
-                {{-- Scrollable Body --}}
-                <div class="px-4 sm:px-6 md:px-8 pt-3 pb-4 overflow-y-auto flex-1 bg-white">
                     <form id="bookingForm" method="POST" action="{{ route('eoffice.peminjaman.user.booking.store') }}"
-                        enctype="multipart/form-data">
+                        enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0" autocomplete="off">
                         @csrf
                         <input type="hidden" name="ruangan_id" :value="selectedRoomId">
                         <input type="hidden" name="tanggal_pinjam" :value="selectedDate">
-                        
-                        <div class="grid grid-cols-2 gap-5 mt-0">
-                            <div>
-                                <label class="block text-[12px] font-semibold text-gray-700 mb-1.5">Jam Mulai <span class="text-red-500">*</span></label>
-                                <input type="time" name="jam_mulai" x-model="bookingData.jamMulai" required class="mp-input text-[13px] font-bold w-full">
-                            </div>
-                            <div>
-                                <label class="block text-[12px] font-semibold text-gray-700 mb-1.5">Jam Selesai <span class="text-red-500">*</span></label>
-                                <input type="time" name="jam_selesai" x-model="bookingData.jamSelesai" required class="mp-input text-[13px] font-bold w-full">
-                            </div>
-                        </div>
 
-
-                        <div class="space-y-3 mt-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-[12px] font-semibold text-gray-700 mb-1.5">Nama Lengkap</label>
-                                    <input type="text" class="mp-input w-full bg-gray-50/80 text-gray-600 font-medium border-gray-200"
-                                        value="{{ $user->name ?? 'Student' }}" readonly>
+                        {{-- Scrollable Body --}}
+                        <div class="space-y-4 overflow-y-auto overflow-x-hidden flex-1 bg-white whitespace-normal -mx-4 sm:-mx-6 px-4 sm:px-6 pb-2">
+                            {{-- Card 1: Waktu Peminjaman --}}
+                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Waktu Peminjaman</span>
                                 </div>
-                                <div>
-                                    <label class="block text-[12px] font-semibold text-gray-700 mb-1.5">NIM / NIP</label>
-                                    <input type="text" class="mp-input w-full bg-gray-50/80 text-gray-600 font-medium border-gray-200"
-                                        value="{{ $nim ?? '00000' }}" readonly>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Mulai <span class="text-red-500">*</span></label>
+                                        <input type="time" name="jam_mulai" x-model="bookingData.jamMulai" required
+                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Jam Selesai <span class="text-red-500">*</span></label>
+                                        <input type="time" name="jam_selesai" x-model="bookingData.jamSelesai" required
+                                            class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                    </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-[12px] font-semibold text-gray-700 mb-1.5">No. Telepon / WhatsApp <span class="text-red-500">*</span></label>
-                                <input type="text" name="nomor_telepon" class="mp-input w-full cursor-text"
-                                    value="{{ $phone ?? '' }}" required maxlength="20" placeholder="Contoh: 08123456789">
+                            {{-- Card 2: Identitas Peminjam --}}
+                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Identitas Peminjam</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
+                                        <input type="text" class="w-full bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-600 cursor-not-allowed outline-none"
+                                            value="{{ $user->name ?? 'Student' }}" readonly>
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">NIM / NIP</label>
+                                        <input type="text" class="w-full bg-slate-100/80 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-gray-600 cursor-not-allowed outline-none"
+                                            value="{{ $nim ?? '00000' }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">No. Telepon / WhatsApp <span class="text-red-500">*</span></label>
+                                    <input type="text" name="nomor_telepon" value="{{ $phone ?? '' }}" required maxlength="20" placeholder="Contoh: 08123456789"
+                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                </div>
                             </div>
 
-                            <div>
-                                <label class="block text-[12px] font-semibold text-gray-700 mb-1.5">Nama Kegiatan <span class="text-red-500">*</span></label>
-                                <input type="text" name="tujuan" class="mp-input w-full cursor-text"
-                                    placeholder="Misal: Rapat Kerja HIMASKOM" required maxlength="150">
+                            {{-- Card 3: Detail Kegiatan --}}
+                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Detail Kegiatan</span>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                    <input type="text" name="tujuan" placeholder="Misal: Rapat Kerja HIMASKOM" required maxlength="150"
+                                        class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium focus:ring-2 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all text-gray-800">
+                                </div>
                             </div>
 
-                            <div class="bg-gray-50 border border-gray-200 p-4 md:p-5 rounded-[12px]">
-                                <label class="block text-[13px] font-bold text-gray-800 mb-2 flex items-center gap-2">
-                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                    </svg>
-                                    File Berkas Proposal <span class="text-gray-500 font-normal ml-1">(Opsional)</span>
-                                </label>
-                                <input type="file" name="file_berkas" accept=".pdf" class="block w-full text-[13px] text-slate-500
-                                    file:mr-4 file:py-2.5 file:px-4
-                                    file:rounded-xl file:border-0
-                                    file:text-[12px] file:font-semibold
-                                    file:bg-blue-50 file:text-[#0B266E]
-                                    hover:file:bg-blue-100
-                                    border border-slate-200 rounded-xl p-1
-                                    cursor-pointer transition-all outline-none hover:border-[#0B266E]/40">
-                                <p class="text-[11px] text-gray-500 mt-2.5 leading-relaxed">Format <strong>PDF</strong> maksimal <strong>2MB</strong>. Biasanya diperlukan untuk persetujuan acara berskala besar atau formal.</p>
-                                @error('file_berkas')
-                                    <p class="text-[11px] text-rose-600 mt-2 font-bold flex items-center gap-1.5 bg-rose-50 p-2 rounded-md border border-rose-100">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                        </svg>
-                                        Ukuran maksimal 2MB dan wajib berformat PDF.
-                                    </p>
-                                @enderror
+                            {{-- Card 4: Berkas Pendukung (Opsional) --}}
+                            <div class="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-black text-[#0B266E] uppercase tracking-widest">Berkas Pendukung</span>
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">File Berkas Proposal <span class="text-slate-400 font-normal lowercase tracking-normal">(opsional)</span></label>
+                                    <div class="relative bg-white border border-slate-200 rounded-xl p-2 focus-within:ring-2 focus-within:ring-blue-100 focus-within:border-blue-400 transition-all">
+                                        <input type="file" name="file_berkas" accept=".pdf"
+                                            class="block w-full text-xs text-slate-500 file:mr-3 file:py-2 file:px-3.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-[#0B266E]/10 file:text-[#0B266E] hover:file:bg-[#0B266E]/20 cursor-pointer transition-all outline-none">
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 ml-1 leading-relaxed">Format <strong class="text-gray-600 font-semibold">PDF</strong> maksimal <strong class="text-gray-600 font-semibold">2MB</strong>. Biasanya diperlukan untuk persetujuan acara berskala besar atau formal.</p>
+                                    @error('file_berkas')
+                                        <p class="text-[11px] text-rose-600 mt-2 font-bold flex items-center gap-1.5 bg-rose-50 p-2.5 rounded-xl border border-rose-100">
+                                            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            Ukuran maksimal 2MB dan wajib berformat PDF.
+                                        </p>
+                                    @enderror
+                                </div>
                             </div>
 
-                            {{-- Persetujuan S&K --}}
-                            <div class="pt-1">
-                                <label class="flex items-start gap-3.5 cursor-pointer group bg-blue-50/50 p-3.5 md:p-4 rounded-[12px] border border-blue-100/50 hover:bg-blue-50 transition-colors">
+                            {{-- Card 5: Persetujuan S&K --}}
+                            <div class="space-y-3 p-4 bg-blue-50/50 border border-blue-100 rounded-2xl">
+                                <label class="flex items-start gap-3 cursor-pointer group">
                                     <div class="flex items-center h-5 mt-0.5 shrink-0">
                                         <input type="checkbox" name="syarat_ketentuan" required
                                             class="w-4 h-4 border border-blue-300 rounded bg-white text-[#0B266E] focus:ring-[#0B266E] focus:ring-2 transition-all cursor-pointer shadow-sm"
                                             style="scroll-margin-bottom: 80px; scroll-margin-top: 120px;">
                                     </div>
-                                    <div class="flex flex-col">
-                                        <span class="text-[12px] text-gray-600 leading-relaxed block">
-                                            Saya setuju dan bersedia <strong class="text-gray-900 font-bold">merapikan kembali ruangan</strong> setelah digunakan serta siap <strong class="text-gray-900 font-bold">bertanggung jawab penuh mengganti kerusakan</strong> barang atau fasilitas akibat kelalaian selama peminjaman.
-                                        </span>
-                                    </div>
+                                    <span class="text-[11px] text-gray-600 leading-relaxed block">
+                                        Saya setuju dan bersedia <strong class="text-gray-900 font-bold">merapikan kembali ruangan</strong> setelah digunakan serta siap <strong class="text-gray-900 font-bold">bertanggung jawab penuh mengganti kerusakan</strong> barang atau fasilitas akibat kelalaian selama peminjaman.
+                                    </span>
                                 </label>
+                            </div>
+
+                            <!-- Mobile Footer (Inside scrollable area so it doesn't follow keyboard) -->
+                            <div class="sm:hidden mt-6 pt-4 pb-2 border-t border-slate-100 flex items-center justify-end gap-3">
+                                <button type="button" @click="closeModal"
+                                    class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
+                                    Batal
+                                </button>
+                                <button type="submit"
+                                    class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                                    Kirim Pengajuan
+                                </button>
                             </div>
                         </div>
                     </form>
-                </div>
 
-                {{-- Footer / Actions --}}
-                <div class="bg-white px-4 sm:px-6 py-4 border-t border-gray-100 flex gap-3 flex-shrink-0 mt-auto pb-6 sm:pb-4">
-                    <button type="button" @click="closeModal"
-                        class="flex-1 px-4 py-3 sm:py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-all text-sm cursor-pointer">
-                        Batal
-                    </button>
-                    <button type="submit" form="bookingForm"
-                        class="flex-1 px-4 py-3 sm:py-2.5 bg-[#0B266E] hover:bg-[#091F5E] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm">
-                        Kirim Pengajuan
-                    </button>
+                    <!-- Desktop Sticky Footer -->
+                    <div class="hidden sm:flex mt-5 items-center justify-end gap-3 shrink-0">
+                        <button type="button" @click="closeModal"
+                            class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all text-center cursor-pointer">
+                            Batal
+                        </button>
+                        <button type="submit" form="bookingForm"
+                            class="px-6 py-2.5 text-sm font-semibold text-white bg-[#0B266E] rounded-xl hover:bg-[#091F5E] focus:outline-none focus:ring-2 focus:ring-[#0B266E]/50 shadow-lg shadow-[#0B266E]/20 transition-all text-center flex items-center justify-center cursor-pointer">
+                            Kirim Pengajuan
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
