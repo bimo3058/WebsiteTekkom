@@ -313,7 +313,7 @@ class UserPeminjamanController extends Controller
             })
             ->orderBy('tanggal_pinjam', 'asc')
             ->orderBy('jam_mulai', 'asc')
-            ->get();
+            ->paginate((int) request('per_page', 10))->withQueryString();
 
         return view('eoffice::manajemen-ruangan.user.peminjaman.index', compact('peminjamans'));
     }
@@ -381,7 +381,7 @@ class UserPeminjamanController extends Controller
                 });
             })
             ->latest('updated_at')
-            ->paginate(request('per_page', 10))->appends(request()->query());
+            ->paginate((int) request('per_page', 10))->withQueryString();
         return view('eoffice::manajemen-ruangan.user.riwayat.index', compact('riwayats'));
     }
 

@@ -16,6 +16,17 @@
         #nprogress .spinner { display: none !important; }
 
         /* ─── SITKOM Design System — ManajemenRuangan component layer ─── */
+        :root {
+            --c-bg: #F6F8FA;
+            --c-card: #FFFFFF;
+            --c-border: #DFE1E7;
+            --c-border-strong: #C1C7CF;
+            --c-fg: #0D0D12;
+            --c-fg-sec: #353849;
+            --c-fg-muted: #666D80;
+            --c-fg-placeholder: #A4ABB8;
+            --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
 
         /* Box / Wrap (superadmin pattern) */
         .mp-wrap {
