@@ -380,19 +380,19 @@
 
             {{-- Modal Tindakan --}}
             <div x-show="modalTindakan" style="display: none;"
-                class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6">
                 <div x-show="modalTindakan" x-transition.opacity
                     class="fixed inset-0 bg-slate-900/60 transition-opacity" @click="closeModal()">
                 </div>
 
                 <div x-show="modalTindakan" 
                     x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 -translate-y-8"
-                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 -translate-y-8"
-                    class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                    class="relative bg-white rounded-t-[24px] sm:rounded-[20px] rounded-b-none sm:rounded-b-[20px] shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col border-0 sm:border border-gray-100">
 
                     <div
                         class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
@@ -681,7 +681,7 @@
                         </div> <!-- End of scrollable body -->
 
                         <!-- Fixed Footer -->
-                        <div class="px-6 py-4 flex gap-3 z-10 w-full justify-end border-t border-slate-100 bg-white">
+                        <div class="px-6 py-4 pb-8 sm:pb-4 flex gap-3 z-10 w-full justify-end border-t border-slate-100 bg-white">
                             <button type="button" @click="closeModal()"
                                 class="flex-1 cursor-pointer py-2.5 px-4 border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all">Batalkan</button>
                             <button type="submit"
