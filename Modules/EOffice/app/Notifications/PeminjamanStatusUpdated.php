@@ -28,7 +28,7 @@ class PeminjamanStatusUpdated extends Notification implements ShouldQueue
         $this->isCancelByAdmin = $isCancelByAdmin;
 
         if ($this->isCancelByAdmin) {
-            $this->statusMessage = 'dibatalkan oleh admin';
+            $this->statusMessage = 'yang sebelumnya disetujui, kini terpaksa dibatalkan oleh admin';
         } elseif ($this->peminjaman->status == 'disetujui') {
             $this->statusMessage = 'telah disetujui';
         } elseif ($this->peminjaman->status == 'ditolak') {
@@ -59,9 +59,10 @@ class PeminjamanStatusUpdated extends Notification implements ShouldQueue
     {
         $ruanganNama = $this->peminjaman->ruangan ? $this->peminjaman->ruangan->nama : 'Ruangan';
         $tanggal = \Carbon\Carbon::parse($this->peminjaman->tanggal_pinjam)->format('d M Y');
+        $waktu = \Carbon\Carbon::parse($this->peminjaman->jam_mulai)->format('H:i');
 
         $title = "Peminjaman Ruangan";
-        $message = "Pengajuan peminjaman {$ruanganNama} tanggal {$tanggal} {$this->statusMessage}.";
+        $message = "Pengajuan peminjaman {$ruanganNama} pada pukul {$waktu} tanggal {$tanggal} {$this->statusMessage}.";
 
         return [
             'peminjaman_id' => $this->peminjaman->id,

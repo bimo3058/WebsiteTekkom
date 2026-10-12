@@ -58,15 +58,17 @@
                         <input type="hidden" name="ruangan_id" x-ref="ruanganInput" :value="selectedId">
 
                         <button type="button" @click="open = !open" 
-                            class="w-full sm:w-auto justify-center h-[38px] px-3.5 bg-white border border-gray-200 rounded-lg flex items-center gap-2 text-[13px] font-medium text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors cursor-pointer">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                                </path>
+                            class="flex items-center justify-center w-full sm:w-auto relative gap-2 px-3 h-[38px] bg-white border rounded-lg text-[13px] font-semibold transition-colors cursor-pointer"
+                            :class="open ? 'border-[#0B266E] text-[#0B266E]' : 'border-gray-300 text-slate-700 hover:bg-gray-50'">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
                             </svg>
                             Filter
                             @if(request('ruangan_id'))
-                                <span class="w-2 h-2 rounded-full bg-[#0B266E] absolute -top-0.5 -right-0.5"></span>
+                                <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-[#0B266E] border-2 border-white"></span>
+                                </span>
                             @endif
                         </button>
                         
@@ -378,19 +380,19 @@
 
             {{-- Modal Tindakan --}}
             <div x-show="modalTindakan" style="display: none;"
-                class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 pt-10 sm:p-6">
                 <div x-show="modalTindakan" x-transition.opacity
                     class="fixed inset-0 bg-slate-900/60 transition-opacity" @click="closeModal()">
                 </div>
 
                 <div x-show="modalTindakan" 
                     x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0 -translate-y-8"
-                    x-transition:enter-end="opacity-100 translate-y-0"
+                    x-transition:enter-start="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                     x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 -translate-y-8"
-                    class="relative bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-full sm:translate-y-4 sm:scale-95"
+                    class="relative bg-white rounded-t-[24px] sm:rounded-[20px] rounded-b-none sm:rounded-b-[20px] shadow-2xl w-full max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col border-0 sm:border border-gray-100">
 
                     <div
                         class="px-6 py-4 border-b border-[#0B266E]/10 flex-shrink-0 flex justify-between items-center bg-[#0B266E]/[0.06] z-10">
@@ -679,7 +681,7 @@
                         </div> <!-- End of scrollable body -->
 
                         <!-- Fixed Footer -->
-                        <div class="px-6 py-4 flex gap-3 z-10 w-full justify-end border-t border-slate-100 bg-white">
+                        <div class="px-6 py-4 pb-8 sm:pb-4 flex gap-3 z-10 w-full justify-end border-t border-slate-100 bg-white">
                             <button type="button" @click="closeModal()"
                                 class="flex-1 cursor-pointer py-2.5 px-4 border border-slate-200 text-slate-600 rounded-xl font-semibold text-sm hover:bg-slate-50 transition-all">Batalkan</button>
                             <button type="submit"
