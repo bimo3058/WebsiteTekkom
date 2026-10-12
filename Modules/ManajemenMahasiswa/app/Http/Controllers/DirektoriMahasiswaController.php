@@ -558,7 +558,11 @@ class DirektoriMahasiswaController extends Controller
     }
 
     // -------------------------------------------------------------------------
-    // Edit — Form edit biodata (Admin: semua mahasiswa; mahasiswa: dirinya sendiri)
+    // Edit — Dua wajah, satu halaman:
+    //   • pengelola membuka baris ORANG LAIN → hanya Status Kemahasiswaan;
+    //   • pemilik baris (termasuk pengelola yang membuka barisnya sendiri)
+    //     → hanya data pribadinya (email pribadi, kontak).
+    // Tidak ada yang bisa mengubah biodata milik orang lain.
     // -------------------------------------------------------------------------
 
     public function edit(int $id)
@@ -569,17 +573,14 @@ class DirektoriMahasiswaController extends Controller
         // "baris siapa". Mahasiswa yang mengetik id orang lain berhenti di sini (403).
         $this->authorize('update', $mhs);
 
-        // Status adalah keputusan akademik (aktif/cuti/DO/alumni), bukan data yang
-        // boleh ditetapkan sendiri oleh mahasiswa — satu-satunya field yang hilang
-        // dari form versi pemilik.
-        $isAdmin = $this->hasRole(...\Modules\ManajemenMahasiswa\Policies\KemahasiswaanPolicy::PENGELOLA);
+        $ubahStatus = Auth::user()->can('ubahStatus', $mhs);
 
-        return view('manajemenmahasiswa::direktori.mahasiswa-edit', compact('mhs', 'isAdmin'))
+        return view('manajemenmahasiswa::direktori.mahasiswa-edit', compact('mhs', 'ubahStatus'))
             ->with('layout', $this->resolveLayout());
     }
 
     // -------------------------------------------------------------------------
-    // Update — Simpan perubahan biodata (Admin only)
+    // Update — Simpan Status (pengelola) atau data pribadi (pemilik)
     // -------------------------------------------------------------------------
 
     public function update(Request $request, int $id)
@@ -589,41 +590,22 @@ class DirektoriMahasiswaController extends Controller
         // Sama seperti edit(): route menyaring role, baris ini menyaring pemilik.
         $this->authorize('update', $mhs);
 
-        $isAdmin = $this->hasRole(...\Modules\ManajemenMahasiswa\Policies\KemahasiswaanPolicy::PENGELOLA);
-
-        // Nama, NIM, dan Angkatan sengaja TIDAK divalidasi maupun disimpan di sini.
-        // Ketiganya milik SSO UNDIP dan hanya ditampilkan sebagai teks terkunci di form.
-        // Tanpa aturan ini, nilai kiriman apa pun (mis. hasil utak-atik inspect element)
-        // akan tetap tertulis ke database dan membuat data direktori beda dengan SSO.
-        //
-        // Status, tahun_lulus, dan profesi mengikuti pola yang sama untuk pemilik yang
-        // bukan pengelola: aturannya tidak dipasang DAN kolomnya tidak pernah ikut
-        // ditulis, sehingga kiriman `status=alumni` dari form yang diutak-atik tidak
-        // berefek apa pun — bukan sekadar disembunyikan di tampilan.
-        $rules = [
-            'kontak'        => 'nullable|string|max:15',
-            'email_pribadi' => 'nullable|email|max:254',
-        ];
-
-        // Kolom mk_kemahasiswaan yang boleh ditulis request ini. Kosong untuk pemilik
-        // yang bukan pengelola: kontak dan email_pribadi disinkronkan lewat blok di bawah.
-        $kolomBolehDitulis = [];
-
-        if ($isAdmin) {
-            $rules['status']      = 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST);
-            $rules['tahun_lulus'] = 'nullable|integer|min:2000|max:2099';
-            $rules['profesi']     = 'nullable|string|max:255';
-
-            $kolomBolehDitulis = ['status', 'tahun_lulus', 'profesi'];
+        // Pengelola pada baris orang lain: hanya jalur status. Kiriman email/kontak
+        // dari jalur ini tidak pernah dibaca, jadi utak-atik form tidak berefek apa pun.
+        if (Auth::user()->can('ubahStatus', $mhs)) {
+            return $this->simpanStatus($request, $mhs);
         }
 
-        $request->validate($rules, [], [
+        // Jalur pemilik. Nama, NIM, dan Angkatan milik SSO UNDIP dan tidak pernah
+        // ditulis di sini. Status, tahun_lulus, dan profesi juga tidak: aturannya tidak
+        // dipasang DAN kolomnya tidak diteruskan, sehingga kiriman `status=alumni` dari
+        // form yang diutak-atik tidak berefek — bukan sekadar disembunyikan di tampilan.
+        $request->validate([
+            'kontak'        => 'nullable|string|max:15',
+            'email_pribadi' => 'nullable|email|max:254',
+        ], [], [
             'email_pribadi' => 'email pribadi',
         ]);
-
-        $oldStatus = $mhs->status;
-
-        $mhs->update($request->only($kolomBolehDitulis));
 
         // ─── Sinkronisasi kontak & email_pribadi ke users + cv_profiles ───────
         // Load user model sekali agar tidak query dua kali
@@ -691,32 +673,86 @@ class DirektoriMahasiswaController extends Controller
             $userModel->clearUserCache();
         }
 
-        // Sinkronisasi: jika status baru = alumni, otomatis buat/perbarui record di mk_alumni
-        if ($mhs->status === Kemahasiswaan::STATUS_ALUMNI && $oldStatus !== Kemahasiswaan::STATUS_ALUMNI) {
-            \Modules\ManajemenMahasiswa\Models\Alumni::updateOrCreate(
-                ['user_id' => $mhs->user_id],
-                [
-                    'nim' => $mhs->nim,
-                    'angkatan' => $mhs->angkatan,
-                    'tahun_lulus' => $mhs->tahun_lulus ?? (int) date('Y'),
-                    'program_studi' => 'Teknik Komputer',
-                ]
-            );
-            \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
-            \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
+        return redirect()
+            ->route('manajemenmahasiswa.direktori.mahasiswa.show', $id)
+            ->with('success', 'Data Anda berhasil diperbarui.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Simpan Status Kemahasiswaan — satu-satunya perubahan yang boleh dilakukan
+    // pengelola pada baris orang lain (lihat KemahasiswaanPolicy::ubahStatus).
+    //
+    // Status adalah keputusan akademik yang tidak punya sumber otomatis, jadi tiap
+    // perubahan tercatat di audit log beserta pelakunya (siapa, kapan, dari apa ke apa).
+    // Penyimpanan, sinkron Direktori Alumni, dan log satu transaksi: bila log gagal
+    // tertulis, status juga tidak berubah.
+    // -------------------------------------------------------------------------
+
+    private function simpanStatus(Request $request, Kemahasiswaan $mhs)
+    {
+        $statusLama = $mhs->status;
+        $statusBaru = (string) $request->input('status');
+        $berubah    = $statusBaru !== $statusLama;
+        $keAlumni   = $statusBaru === Kemahasiswaan::STATUS_ALUMNI && $statusLama !== Kemahasiswaan::STATUS_ALUMNI;
+
+        $data = $request->validate([
+            'status'      => ['required', \Illuminate\Validation\Rule::in(Kemahasiswaan::STATUS_LIST)],
+            'tahun_lulus' => [\Illuminate\Validation\Rule::requiredIf($keAlumni), 'nullable', 'integer', 'min:2000', 'max:2099'],
+        ], [
+            'status.required'      => 'Status baru wajib dipilih.',
+            'status.in'            => 'Status yang dipilih tidak dikenal.',
+            'tahun_lulus.required' => 'Tahun lulus wajib diisi bila status diubah menjadi Alumni.',
+            'tahun_lulus.integer'  => 'Tahun lulus harus berupa angka.',
+            'tahun_lulus.min'      => 'Tahun lulus tidak boleh sebelum 2000.',
+            'tahun_lulus.max'      => 'Tahun lulus tidak boleh melewati 2099.',
+        ]);
+
+        if (!$berubah) {
+            return redirect()
+                ->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id)
+                ->with('success', 'Status tidak berubah, tidak ada yang disimpan.');
         }
-        // Sinkronisasi balik: jika status berubah DARI alumni ke status lain, hapus dari mk_alumni
-        elseif ($oldStatus === Kemahasiswaan::STATUS_ALUMNI && $mhs->status !== Kemahasiswaan::STATUS_ALUMNI) {
-            \Modules\ManajemenMahasiswa\Models\Alumni::where('user_id', $mhs->user_id)->delete();
+
+        DB::transaction(function () use ($mhs, $data, $statusLama, $statusBaru, $keAlumni) {
+            $mhs->update(['status' => $statusBaru] + ($keAlumni ? ['tahun_lulus' => (int) $data['tahun_lulus']] : []));
+
+            // Status baru = alumni → buat/perbarui record di mk_alumni.
+            if ($keAlumni) {
+                Alumni::updateOrCreate(
+                    ['user_id' => $mhs->user_id],
+                    [
+                        'nim'           => $mhs->nim,
+                        'angkatan'      => $mhs->angkatan,
+                        'tahun_lulus'   => $mhs->tahun_lulus,
+                        'program_studi' => 'Teknik Komputer',
+                    ]
+                );
+            }
+            // Keluar dari alumni → hapus dari mk_alumni.
+            elseif ($statusLama === Kemahasiswaan::STATUS_ALUMNI) {
+                Alumni::where('user_id', $mhs->user_id)->delete();
+            }
+
+            \App\Services\AuditLogger::update(
+                module:  'manajemen_mahasiswa',
+                desc:    "Mengubah status kemahasiswaan {$mhs->nama} ({$mhs->nim}): {$statusLama} → {$statusBaru}",
+                subject: $mhs,
+                oldData: ['status' => $statusLama],
+                newData: array_filter([
+                    'status'      => $statusBaru,
+                    'tahun_lulus' => $keAlumni ? (int) $data['tahun_lulus'] : null,
+                ], fn ($v) => $v !== null),
+            );
+        });
+
+        if ($keAlumni || $statusLama === Kemahasiswaan::STATUS_ALUMNI) {
             \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
             \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
         }
 
         return redirect()
-            ->route('manajemenmahasiswa.direktori.mahasiswa.show', $id)
-            ->with('success', (int) $mhs->user_id === (int) Auth::id()
-                ? 'Data Anda berhasil diperbarui.'
-                : 'Biodata mahasiswa berhasil diperbarui.');
+            ->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id)
+            ->with('success', 'Status kemahasiswaan berhasil diperbarui.');
     }
 
     // -------------------------------------------------------------------------

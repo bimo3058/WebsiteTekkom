@@ -77,4 +77,18 @@ class KemahasiswaanPolicy
 
         return $user->hasAnyRole(self::PENGELOLA);
     }
+
+    /**
+     * Mengubah Status Kemahasiswaan — SATU-SATUNYA yang boleh dilakukan pengelola
+     * pada baris orang lain. Biodata (email pribadi, kontak) milik mahasiswa itu
+     * sendiri; nama, NIM, dan angkatan milik SSO.
+     *
+     * Pengelola tidak boleh mengubah status barisnya sendiri (kasus pengelola yang
+     * juga terdaftar sebagai mahasiswa): keputusan atas dirinya diambil pengelola lain.
+     */
+    public function ubahStatus(User $user, Kemahasiswaan $mhs): bool
+    {
+        return $user->hasAnyRole(self::PENGELOLA)
+            && (int) $mhs->user_id !== (int) $user->getKey();
+    }
 }
