@@ -7,14 +7,26 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle ?? 'Manajemen Ruangan' }} — SIPERKOM</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0"
+        rel="stylesheet" />
     <style>
-        [x-cloak] { display: none !important; }
-        
+        [x-cloak] {
+            display: none !important;
+        }
+
         /* Custom NProgress Color (Biru Dongker) */
-        #nprogress .bar { background: #0B266E !important; height: 3px !important; }
-        #nprogress .peg { display: none !important; }
-        #nprogress .spinner { display: none !important; }
+        #nprogress .bar {
+            background: #0B266E !important;
+            height: 3px !important;
+        }
+
+        #nprogress .peg {
+            display: none !important;
+        }
+
+        #nprogress .spinner {
+            display: none !important;
+        }
 
         /* ─── SITKOM Design System — ManajemenRuangan component layer ─── */
         :root {
@@ -75,6 +87,250 @@
         .mp-box-body::-webkit-scrollbar-thumb {
             background: var(--c-border-strong);
             border-radius: 10px;
+        }
+
+        [x-cloak] {
+            display: none !important;
+        }
+
+        /* ─── Desktop Sidebar (aligned with Global E-Office) ─── */
+        .mr-sidebar {
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            width: 240px;
+            height: 100%;
+            min-height: 0;
+            background: #ffffff;
+            border-right: 1px solid var(--c-border);
+            transition: width .25s ease, transform .25s ease;
+            z-index: 20;
+        }
+
+        .mr-sidebar.is-collapsed {
+            width: 64px;
+        }
+
+        .mr-sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 60px;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0;
+        }
+
+        .mr-brand-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .mr-brand-link>img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .mr-brand-text {
+            min-width: 0;
+        }
+
+        .mr-brand-text strong {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.01em;
+            color: var(--c-fg);
+            white-space: nowrap;
+        }
+
+        .mr-brand-text>span {
+            display: block;
+            margin-top: 2px;
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--c-fg-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mr-sidebar-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            padding: 0;
+            border: 1px solid var(--c-border);
+            border-radius: 7px;
+            background: #ffffff;
+            color: var(--c-fg-muted);
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
+        }
+
+        .mr-sidebar-toggle:hover {
+            background: #F6F8FA;
+            border-color: var(--c-border-strong);
+            color: var(--c-fg);
+        }
+
+        .mr-sidebar-toggle svg {
+            transition: transform .25s ease;
+        }
+
+        .mr-sidebar.is-collapsed .mr-sidebar-brand {
+            flex-direction: column;
+            padding: 12px 10px 8px;
+            gap: 8px;
+        }
+
+        .mr-sidebar.is-collapsed .mr-brand-link {
+            flex: none;
+        }
+
+        .mr-sidebar.is-collapsed .mr-sidebar-toggle svg {
+            transform: rotate(180deg);
+        }
+
+        .mr-sidebar-nav {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 6px 10px 10px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--c-border) transparent;
+        }
+
+        .mr-sidebar-nav::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .mr-sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .mr-sidebar-nav::-webkit-scrollbar-thumb {
+            background: var(--c-border);
+            border-radius: 9999px;
+        }
+
+        .mr-sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background: var(--c-border-strong);
+        }
+
+        .mr-nav-label {
+            padding: 12px 10px 5px;
+            color: var(--c-fg-muted);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .mr-nav-link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            width: 100%;
+            min-height: 36px;
+            padding: 8px 10px 8px 14px;
+            margin: 1px 0;
+            border: 0;
+            border-radius: 8px;
+            background: transparent;
+            color: var(--c-fg-sec);
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.4;
+            text-decoration: none;
+            text-align: left;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.12s, color 0.12s;
+        }
+
+        .mr-nav-link>svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+            color: var(--c-fg-muted);
+            transition: color 0.12s;
+        }
+
+        .mr-nav-link>span {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .mr-nav-link:hover {
+            background: #F6F8FA;
+        }
+
+        .mr-nav-link.is-active {
+            background: #EEF1F8;
+            color: #0B266E;
+            font-weight: 600;
+        }
+
+        .mr-nav-link.is-active>svg {
+            color: #0B266E;
+        }
+
+        .mr-nav-link.is-active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 20px;
+            border-radius: 0 3px 3px 0;
+            background: #0B266E;
+        }
+
+        .mr-sidebar.is-collapsed .mr-nav-link {
+            justify-content: center;
+            padding: 9px 0;
+        }
+
+        .mr-sidebar.is-collapsed .mr-nav-group+.mr-nav-group {
+            border-top: 1px solid var(--c-border);
+            margin-top: 10px;
+            padding-top: 10px;
+        }
+
+        .mr-sidebar-footer {
+            padding: 8px 10px 12px;
+            border-top: 1px solid var(--c-border);
+            flex-shrink: 0;
+        }
+
+        .mr-sidebar-footer form {
+            margin: 0;
+        }
+
+        .mr-nav-logout,
+        .mr-nav-logout>svg {
+            color: #DF1C41 !important;
+        }
+
+        .mr-nav-logout:hover {
+            background: #FEF1F4 !important;
         }
 
         /* Flash */
@@ -653,136 +909,96 @@
     <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: localStorage.getItem('mr_sb') !== '0' }"
         x-init="$watch('sidebarOpen', v => localStorage.setItem('mr_sb', v ? '1' : '0'))">
 
-        {{-- SIDEBAR --}}
-        <aside
-            class="hidden md:flex flex-col flex-shrink-0 w-[240px] bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
-            :class="sidebarOpen ? '' : '!w-[64px]'">
+        {{-- SIDEBAR DESKTOP --}}
+        <aside class="hidden md:flex mr-sidebar" :class="{ 'is-collapsed': !sidebarOpen }"
+            aria-label="Sidebar Manajemen Ruangan">
 
-            <div class="relative px-[14px] h-[60px] flex items-center border-b border-[#DFE1E7] flex-shrink-0 transition-all duration-200"
-                :class="sidebarOpen ? 'gap-[8px]' : 'justify-center'">
-                <div class="flex items-center justify-center w-[32px] h-[32px] flex-shrink-0">
-                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP"
-                        class="w-full h-full object-contain drop-shadow-sm">
-                </div>
-                <div class="flex-1 min-w-0 overflow-hidden" x-show="sidebarOpen" x-transition.opacity.duration.200ms>
-                    <div
-                        class="font-bold text-[14px] text-[#0D0D12] leading-[1.2] whitespace-nowrap tracking-[-0.01em]">
-                        SIPERKOM</div>
-                    <div class="text-[9px] font-medium text-[#808897] whitespace-nowrap mt-[2px]">Manajemen Ruangan
-                        Teknik Komputer
+            {{-- Brand & Toggle Header (Consistent with Global E-Office) --}}
+            <div class="mr-sidebar-brand">
+                <a href="{{ url('/eoffice/dashboard') }}" class="mr-brand-link" title="SIPERKOM — Manajemen Ruangan">
+                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" width="32" height="32"
+                        class="drop-shadow-sm">
+                    <div class="mr-brand-text" x-show="sidebarOpen">
+                        <strong>SIPERKOM</strong>
+                        <span>Peminjaman Ruangan T. Komp</span>
                     </div>
-                </div>
+                </a>
 
-                {{-- Floating collapse button --}}
-                <button @click="sidebarOpen = !sidebarOpen"
-                    class="absolute right-[-14px] top-1/2 -translate-y-1/2 flex items-center justify-center w-[28px] h-[28px] rounded-[7px] bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.05)] cursor-pointer z-30 text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#0F172A] transition-colors"
-                    title="Toggle Sidebar">
-                    <svg class="transition-transform duration-[240ms]" :class="sidebarOpen ? '' : 'rotate-180'"
-                        width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                <button type="button" @click="sidebarOpen = !sidebarOpen" class="mr-sidebar-toggle"
+                    :aria-expanded="sidebarOpen" :title="sidebarOpen ? 'Lipat menu' : 'Perluas menu'">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
                         stroke-linecap="round" stroke-linejoin="round">
                         <path d="M15 18l-6-6 6-6" />
                     </svg>
                 </button>
             </div>
 
-            <nav
-                class="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-1 flex flex-col [scrollbar-width:thin] [scrollbar-color:#DFE1E7_transparent] [&::-webkit-scrollbar]:w-[3px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#DFE1E7] [&::-webkit-scrollbar-thumb]:rounded-full">
+            <nav class="mr-sidebar-nav" aria-label="Menu Ruangan">
                 @foreach($sections as $section)
-                    @php
-                        $sectionColor = $section['color'];
-                        $sectionActive = str_contains($currentRoute, $section['match']);
-                    @endphp
-                    <div class="mb-[2px]">
-                        <div>
-                            @foreach($section['groups'] as $groupLabel => $items)
-                                <div class="text-[11px] font-semibold text-[#64748b] uppercase tracking-[.05em] px-[14px] pt-[16px] pb-[6px] whitespace-nowrap overflow-hidden transition-opacity duration-200"
-                                    :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">{{ $groupLabel }}</div>
-
-                                @foreach($items as $item)
-                                    @php $active = str_contains($currentRoute, $item['match']); @endphp
-                                    <a href="{{ $item['href'] }}"
-                                        class="group relative flex items-center gap-[9px] pl-[14px] pr-[10px] py-[7px] rounded-[8px] mb-[2px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap {{ $active ? 'bg-[#EEF2FF] text-[#0B266E] font-semibold' : 'text-[#475569] font-medium hover:bg-[#F8FAFC]' }}"
-                                        :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0'">
-                                        @if($active)
-                                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-[20px] bg-[#0B266E] rounded-r-[3px]"
-                                                x-show="sidebarOpen"></div>
-                                        @endif
-                                        <svg class="w-[16px] h-[16px] flex-shrink-0 transition-colors {{ $active ? 'text-[#0B266E]' : 'text-[#94A3B8]' }}"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="{{ $item['icon'] }}" />
-                                        </svg>
-                                        <span class="text-[13px] flex-1 overflow-hidden text-ellipsis"
-                                            x-show="sidebarOpen">{{ $item['label'] }}</span>
-                                        @if(isset($item['badge']))
-                                            <span 
-                                                @if(isset($item['poll_url']))
-                                                    x-data="{ count: {{ $item['badge'] }} }"
-                                                    x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; } catch(e) {} }, 30000);"
-                                                    x-show="sidebarOpen && count > 0"
-                                                    x-text="count > 99 ? '99+' : count"
-                                                @else
-                                                    x-show="sidebarOpen"
-                                                @endif
-                                                class="inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold shrink-0 ml-1" 
-                                                @if(!isset($item['poll_url']) && $item['badge'] <= 0) style="display: none;" @endif
-                                                x-cloak>
-                                                @if(!isset($item['poll_url']))
-                                                    {{ $item['badge'] > 99 ? '99+' : $item['badge'] }}
-                                                @endif
-                                            </span>
-                                        @endif
-                                    </a>
-                                @endforeach
+                    @foreach($section['groups'] as $groupLabel => $items)
+                        <div class="mr-nav-group">
+                            <div class="mr-nav-label" x-show="sidebarOpen">{{ $groupLabel }}</div>
+                            @foreach($items as $item)
+                                @php $active = str_contains($currentRoute, $item['match']); @endphp
+                                <a href="{{ $item['href'] }}" title="{{ $item['label'] }}"
+                                    class="mr-nav-link {{ $active ? 'is-active' : '' }}">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                                        stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="{{ $item['icon'] }}" />
+                                    </svg>
+                                    <span x-show="sidebarOpen">{{ $item['label'] }}</span>
+                                    @if(isset($item['badge']))
+                                        <span @if(isset($item['poll_url'])) x-data="{ count: {{ $item['badge'] }} }"
+                                            x-init="setInterval(async () => { try { let res = await fetch('{{ $item['poll_url'] }}'); let json = await res.json(); count = json.count; } catch(e) {} }, 30000);"
+                                        x-show="sidebarOpen && count > 0" x-text="count > 99 ? '99+' : count" @else
+                                            x-show="sidebarOpen" @endif
+                                            class="inline-flex items-center justify-center px-1.5 min-w-[20px] h-[20px] rounded-full bg-rose-100 text-rose-600 text-[10px] font-bold shrink-0 ml-auto"
+                                            @if(!isset($item['poll_url']) && $item['badge'] <= 0) style="display: none;" @endif x-cloak>
+                                            @if(!isset($item['poll_url']))
+                                                {{ $item['badge'] > 99 ? '99+' : $item['badge'] }}
+                                            @endif
+                                        </span>
+                                    @endif
+                                </a>
                             @endforeach
                         </div>
-                    </div>
-                    @if(!$loop->last)
-                        <div class="h-px bg-[#F0F1F4] mx-[6px] my-[4px]"></div>
-                    @endif
+                    @endforeach
                 @endforeach
             </nav>
 
             {{-- Bottom fixed section: Dasbor Utama, Pengaturan Profil, Keluar --}}
-            <div class="flex-shrink-0 border-t border-[#DFE1E7] px-[10px] py-[8px] pb-[12px]">
+            <div class="mr-sidebar-footer">
 
-                {{-- Kembali ke EOffice --}}
-                <a href="{{ url('/eoffice/dashboard') }}"
-                    class="relative flex items-center gap-[9px] w-full min-h-[36px] px-[10px] py-[8px] pl-[14px] rounded-[8px] no-underline transition-colors duration-[120ms] hover:bg-[#F6F8FA] text-[#353849] font-medium text-[13px] leading-[1.4] whitespace-nowrap"
-                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0 !pl-0'">
-                    <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#94A3B8]" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                {{-- Dasbor Utama SITKOM --}}
+                <a href="{{ url('/eoffice/dashboard') }}" title="Dasbor Utama SITKOM" class="mr-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <path d="M19 12H5m7-7-7 7 7 7" />
                     </svg>
-                    <span class="min-w-0 overflow-hidden text-ellipsis" x-show="sidebarOpen">Kembali ke Eoffice</span>
+                    <span x-show="sidebarOpen">Dasbor Utama SITKOM</span>
                 </a>
 
                 {{-- Pengaturan Profil --}}
-                <a href="{{ url('/profile') }}"
-                    class="relative flex items-center gap-[9px] w-full min-h-[36px] px-[10px] py-[8px] pl-[14px] rounded-[8px] no-underline transition-colors duration-[120ms] hover:bg-[#F6F8FA] text-[#353849] font-medium text-[13px] leading-[1.4] whitespace-nowrap"
-                    :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0 !pl-0'">
-                    <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#94A3B8]" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <a href="{{ url('/profile') }}" title="Pengaturan Profil" class="mr-nav-link">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                        stroke-linejoin="round">
                         <path d="M19 21v-2a7 7 0 0 0-14 0v2 M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8" />
                     </svg>
-                    <span class="min-w-0 overflow-hidden text-ellipsis" x-show="sidebarOpen">Pengaturan Profil</span>
+                    <span x-show="sidebarOpen">Pengaturan Profil</span>
                 </a>
 
                 {{-- Keluar --}}
                 <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                     @csrf
-                    <button type="submit"
-                        class="relative flex items-center gap-[9px] w-full min-h-[36px] px-[10px] py-[8px] pl-[14px] rounded-[8px] transition-colors duration-[120ms] hover:bg-[#FEF1F4] text-[#DF1C41] font-medium text-[13px] leading-[1.4] whitespace-nowrap bg-transparent border-none cursor-pointer text-left"
-                        :class="sidebarOpen ? '' : '!gap-0 justify-center !px-0 !pl-0'">
-                        <svg class="w-[16px] h-[16px] flex-shrink-0 text-[#DF1C41]" viewBox="0 0 24 24" fill="none"
-                            stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="submit" title="Keluar" class="mr-nav-link mr-nav-logout">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+                            stroke-linecap="round" stroke-linejoin="round">
                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9" />
                         </svg>
-                        <span class="min-w-0 overflow-hidden text-ellipsis" x-show="sidebarOpen">Keluar</span>
+                        <span x-show="sidebarOpen">Keluar</span>
                     </button>
                 </form>
             </div>
-
 
         </aside>
 
@@ -790,7 +1006,7 @@
         <div class="flex-1 flex flex-col overflow-hidden">
             {{-- Topbar --}}
             <div
-                class="flex items-center justify-between px-[14px] md:pl-[28px] md:pr-8 bg-white border-b border-[#DFE1E7] flex-shrink-0 h-[52px] md:h-[60px] transition-all">
+                class="flex items-center justify-between px-[14px] md:pl-[28px] md:pr-8 bg-white border-b border-[#DFE1E7] flex-shrink-0 h-[52px] md:h-[60px]">
                 <div class="flex items-center gap-3 min-w-0">
                     <div>
                         <div class="font-bold text-[14px] md:text-[15px] text-[#0D0D12] leading-[1.2] truncate">
@@ -835,39 +1051,53 @@
                                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                                 </svg>
                                 <template x-if="unreadCount > 0">
-                                    <span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none" x-text="unreadCount > 99 ? '99+' : unreadCount">
+                                    <span id="notif-badge"
+                                        class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none"
+                                        x-text="unreadCount > 99 ? '99+' : unreadCount">
                                     </span>
                                 </template>
                             </button>
 
 
                             {{-- Dropdown Notifikasi --}}
-                            <div x-show="openNotif" 
-                                x-transition:enter="transition ease-out duration-200"
+                            <div x-show="openNotif" x-transition:enter="transition ease-out duration-200"
                                 x-transition:enter-start="opacity-0 translate-y-1 sm:translate-y-0 sm:scale-95"
                                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                                 x-transition:leave="transition ease-in duration-150"
                                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
-                                x-transition:leave-end="opacity-0 translate-y-1 sm:translate-y-0 sm:scale-95"
-                                x-cloak
+                                x-transition:leave-end="opacity-0 translate-y-1 sm:translate-y-0 sm:scale-95" x-cloak
                                 class="fixed left-3 right-3 top-[58px] w-auto max-w-[360px] ml-auto sm:left-auto sm:right-3.5 sm:w-[360px] md:absolute md:top-full md:right-0 md:left-auto md:ml-0 md:mt-2 md:w-[360px] md:max-w-none bg-white border border-[#DFE1E7] rounded-[16px] shadow-2xl overflow-hidden z-[99]"
                                 style="display: none;">
-                                <div class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-center bg-white">
+                                <div
+                                    class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-center bg-white">
                                     <div class="flex flex-col gap-0.5">
                                         <h3 class="font-bold text-[13px] text-gray-900 leading-none">Notifikasi</h3>
                                         <p class="text-[11px] text-gray-500">Aktivitas Terkini</p>
                                     </div>
                                     <template x-if="unreadCount > 0">
-                                        <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}" class="m-0 shrink-0" id="mark-all-read-form">
+                                        <form method="POST"
+                                            action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}"
+                                            class="m-0 shrink-0" id="mark-all-read-form">
                                             @csrf
-                                            <button type="submit" class="text-[12px] font-semibold text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0 whitespace-nowrap">Tandai semua dibaca</button>
+                                            <button type="submit"
+                                                class="text-[12px] font-semibold text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0 whitespace-nowrap">Tandai
+                                                semua dibaca</button>
                                         </form>
                                     </template>
                                 </div>
-                                <div class="max-h-[min(380px,calc(100vh-140px))] overflow-y-auto bg-white relative min-h-[100px] custom-scrollbar">
+                                <div
+                                    class="max-h-[min(380px,calc(100vh-140px))] overflow-y-auto bg-white relative min-h-[100px] custom-scrollbar">
                                     {{-- Loading State --}}
-                                    <div x-show="loading" class="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center">
-                                        <svg class="animate-spin h-6 w-6 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    <div x-show="loading"
+                                        class="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center">
+                                        <svg class="animate-spin h-6 w-6 text-blue-600 mb-2"
+                                            xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                            </path>
+                                        </svg>
                                         <span class="text-[11px] text-gray-500 font-medium">Memuat notifikasi...</span>
                                     </div>
 
@@ -877,25 +1107,38 @@
                                     </div>
 
                                     {{-- Empty State --}}
-                                    <div x-show="!loading && !error && items.length === 0" class="p-6 flex flex-col items-center justify-center text-center gap-2">
-                                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                    <div x-show="!loading && !error && items.length === 0"
+                                        class="p-6 flex flex-col items-center justify-center text-center gap-2">
+                                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
+                                            </path>
+                                        </svg>
                                         <span class="text-[12px] text-gray-500">Belum ada aktivitas</span>
                                     </div>
 
                                     {{-- Items --}}
                                     <template x-for="item in items" :key="item.id">
-                                        <form method="POST" :action="item.url" class="m-0 border-b border-[#F0F1F4] last:border-b-0">
+                                        <form method="POST" :action="item.url"
+                                            class="m-0 border-b border-[#F0F1F4] last:border-b-0">
                                             @csrf
-                                            <button type="submit" :class="item.is_read ? 'bg-white opacity-60 hover:bg-gray-50' : 'bg-[#EFF6FF] hover:bg-[#E0F2FE] unread-item'" class="w-full text-left px-4 py-3 transition-colors cursor-pointer block relative">
+                                            <button type="submit"
+                                                :class="item.is_read ? 'bg-white opacity-60 hover:bg-gray-50' : 'bg-[#EFF6FF] hover:bg-[#E0F2FE] unread-item'"
+                                                class="w-full text-left px-4 py-3 transition-colors cursor-pointer block relative">
                                                 <div class="flex flex-col gap-1">
                                                     <div class="flex justify-between items-start gap-2">
-                                                        <h4 class="text-[13px] font-bold text-gray-900 leading-tight" x-text="item.title"></h4>
+                                                        <h4 class="text-[13px] font-bold text-gray-900 leading-tight"
+                                                            x-text="item.title"></h4>
                                                         <template x-if="!item.is_read">
-                                                            <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1"></span>
+                                                            <span
+                                                                class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1"></span>
                                                         </template>
                                                     </div>
-                                                    <p class="text-[12px] text-gray-600 leading-snug break-words" x-html="item.message"></p>
-                                                    <span class="text-[11px] text-gray-400 mt-0.5" x-text="item.time"></span>
+                                                    <p class="text-[12px] text-gray-600 leading-snug break-words"
+                                                        x-html="item.message"></p>
+                                                    <span class="text-[11px] text-gray-400 mt-0.5"
+                                                        x-text="item.time"></span>
                                                 </div>
                                             </button>
                                         </form>
@@ -1017,31 +1260,31 @@
     @endif
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const markAllForm = document.getElementById('mark-all-read-form');
             if (markAllForm) {
-                markAllForm.addEventListener('submit', function(e) {
+                markAllForm.addEventListener('submit', function (e) {
                     e.preventDefault();
-                    
+
                     // Optimistic UI updates
                     // 1. Hilangkan badge angka merah di atas lonceng
                     const badge = document.getElementById('notif-badge');
                     if (badge) badge.style.display = 'none';
-                    
+
                     // 2. Ubah semua notif biru terang menjadi abu-abu pudar
                     const unreadItems = document.querySelectorAll('.unread-item');
                     unreadItems.forEach(item => {
                         item.classList.remove('bg-[#EFF6FF]', 'hover:bg-[#E0F2FE]', 'unread-item');
                         item.classList.add('bg-white', 'opacity-60', 'hover:bg-gray-50');
-                        
+
                         // Sembunyikan titik biru (dot)
                         const dot = item.querySelector('.blue-dot');
                         if (dot) dot.style.display = 'none';
                     });
-                    
+
                     // 3. Sembunyikan tombol "Tandai semua dibaca"
                     markAllForm.style.display = 'none';
-                    
+
                     // 4. Sembunyikan pill merah "X Baru" di header dropdown (jika ada)
                     const newCountPill = document.querySelector('span.bg-\\[\\#DF1C41\\]');
                     if (newCountPill) newCountPill.style.display = 'none';
@@ -1063,29 +1306,29 @@
                 fetch('{{ route('eoffice.peminjaman.user.notifikasi.count') }}', {
                     headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                 })
-                .then(res => res.json())
-                .then(data => {
-                    const count = data.count;
-                    let badge = document.getElementById('notif-badge');
-                    
-                    if (count > 0) {
-                        let displayCount = count > 99 ? '99+' : count;
-                        if (badge) {
-                            badge.innerText = displayCount;
-                            badge.style.display = 'flex';
-                        } else {
-                            // Buat badge jika belum ada (dari state 0 ke >0)
-                            const btn = document.querySelector('[x-data="{ openNotif: false }"] button');
-                            if (btn) {
-                                btn.insertAdjacentHTML('beforeend', `<span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">${displayCount}</span>`);
+                    .then(res => res.json())
+                    .then(data => {
+                        const count = data.count;
+                        let badge = document.getElementById('notif-badge');
+
+                        if (count > 0) {
+                            let displayCount = count > 99 ? '99+' : count;
+                            if (badge) {
+                                badge.innerText = displayCount;
+                                badge.style.display = 'flex';
+                            } else {
+                                // Buat badge jika belum ada (dari state 0 ke >0)
+                                const btn = document.querySelector('[x-data="{ openNotif: false }"] button');
+                                if (btn) {
+                                    btn.insertAdjacentHTML('beforeend', `<span id="notif-badge" class="absolute flex items-center justify-center rounded-full min-w-[18px] h-[18px] px-[4px] bg-[#F43F5E] border-2 border-white text-white text-[10px] font-bold top-[-5px] right-[-5px] shadow-sm leading-none">${displayCount}</span>`);
+                                }
                             }
+                        } else {
+                            // Hilangkan jika 0
+                            if (badge) badge.style.display = 'none';
                         }
-                    } else {
-                        // Hilangkan jika 0
-                        if (badge) badge.style.display = 'none';
-                    }
-                })
-                .catch(err => console.error('Notif Polling Error:', err));
+                    })
+                    .catch(err => console.error('Notif Polling Error:', err));
             }, 10000);
         });
     </script>
@@ -1093,8 +1336,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     <script>
         // NProgress configuration
-        NProgress.configure({ 
-            showSpinner: false, 
+        NProgress.configure({
+            showSpinner: false,
             minimum: 0.1,
             speed: 200,          // Animation speed (ms)
             trickleSpeed: 100    // How often to trickle (ms)
@@ -1109,7 +1352,7 @@
         });
 
         // Intercept clicks on links to show NProgress
-        document.addEventListener('click', function(e) {
+        document.addEventListener('click', function (e) {
             const link = e.target.closest('a');
             if (link && link.href && !link.href.includes('javascript:') && !link.href.startsWith('#') && link.target !== '_blank') {
                 // Check if it's the same page anchor
@@ -1122,16 +1365,17 @@
         });
 
         // Intercept form submissions
-        document.addEventListener('submit', function() {
+        document.addEventListener('submit', function () {
             NProgress.start();
         });
 
         // Handle back/forward cache (bfcache)
-        window.addEventListener('pageshow', function(e) {
+        window.addEventListener('pageshow', function (e) {
             if (e.persisted) {
                 NProgress.done();
             }
         });
     </script>
 </body>
+
 </html>
