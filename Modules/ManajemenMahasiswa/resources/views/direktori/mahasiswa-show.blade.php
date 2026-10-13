@@ -177,13 +177,13 @@
                     Download CV
                 </a>
             @endif
-            {{-- Pengelola di baris orang lain hanya mengubah Status Kemahasiswaan; pemilik baris
+            {{-- Pengelola di baris orang lain mengubah status + kontak; pemilik baris
                  (termasuk pengelola di barisnya sendiri) mengedit data pribadinya. Halaman
-                 tujuannya sama, isinya ditentukan KemahasiswaanPolicy::ubahStatus. --}}
+                 tujuannya sama, isinya ditentukan KemahasiswaanPolicy::ubahDataMahasiswa. --}}
             @if($isAdmin || ($isSelf ?? false))
                 <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.edit', $mhs->id) }}" class="mk-btn mk-btn--primary mk-btn--sm">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                    {{ ($isAdmin && !($isSelf ?? false)) ? 'Ubah Status' : 'Edit' }}
+                    Edit
                 </a>
             @endif
         </div>
@@ -213,13 +213,13 @@
                 </div>
                 @endif
                 {{-- Kontak pribadi hanya untuk pengelola dan pemilik profil --}}
-                @if($mhs->user && $mhs->user->personal_email && ($bisaLihatDataLengkap || ($isSelf ?? false)))
+                @if($mhs->user && $mhs->user->personal_email && ($bisaLihatKontakPribadi || ($isSelf ?? false)))
                 <div class="detail-row">
                     <span class="detail-label">Email Pribadi</span>
                     <span class="detail-value">{{ $mhs->user->personal_email }}</span>
                 </div>
                 @endif
-                @if($mhs->kontak && ($bisaLihatDataLengkap || ($isSelf ?? false)))
+                @if($mhs->kontak && ($bisaLihatKontakPribadi || ($isSelf ?? false)))
                 <div class="detail-row">
                     <span class="detail-label">Nomor WhatsApp/Telepon</span>
                     <span class="detail-value">{{ $mhs->kontak }}</span>

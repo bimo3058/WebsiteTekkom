@@ -33,16 +33,17 @@ class KemahasiswaanPolicy
     ];
 
     /**
-     * Role yang boleh melihat data mahasiswa secara utuh di Direktori Mahasiswa:
-     * status akademik lengkap (termasuk yang sudah bukan mahasiswa) serta kontak
-     * pribadi (Email Pribadi, WhatsApp/Telepon).
+     * Role yang boleh melihat kontak pribadi (Email Pribadi, WhatsApp/Telepon)
+     * mahasiswa lain di Direktori Mahasiswa. Role di luar daftar ini hanya melihat
+     * kontak pribadinya sendiri — prinsip need-to-know (UU PDP No. 27/2022
+     * Pasal 16 ayat 2, Pasal 35, Pasal 36).
      *
-     * Role di luar daftar ini (mahasiswa, alumni, pengurus himpunan, dst.) hanya
-     * melihat mahasiswa yang masih berstatus mahasiswa dan tanpa kontak pribadi
-     * orang lain — prinsip need-to-know (UU PDP No. 27/2022 Pasal 16 ayat 2,
-     * Pasal 35, Pasal 36).
+     * Status kemahasiswaan (termasuk DO, mangkir, pindah studi, wafat) TIDAK
+     * dibatasi: semua role yang membuka direktori melihatnya, supaya siapa pun
+     * bisa memeriksa orang yang mengaku mahasiswa/alumni Tekkom (keputusan Bu Eve,
+     * 13 Okt 2026).
      */
-    public const LIHAT_DATA_LENGKAP = [
+    public const LIHAT_KONTAK_PRIBADI = [
         'superadmin',
         'admin_kemahasiswaan',
         'ketua_departemen',
@@ -52,22 +53,12 @@ class KemahasiswaanPolicy
     ];
 
     /**
-     * Status yang menandakan orang itu sudah bukan mahasiswa lagi. Disembunyikan
-     * total dari role di luar LIHAT_DATA_LENGKAP. Cuti dan Mangkir sengaja tidak
-     * termasuk: keduanya masih berstatus mahasiswa dan bisa aktif kembali.
-     */
-    public const STATUS_BUKAN_MAHASISWA = [
-        Kemahasiswaan::STATUS_DO,
-        Kemahasiswaan::STATUS_WAFAT,
-        Kemahasiswaan::STATUS_PINDAH_STUDI,
-    ];
-
-    /**
      * Membuka form edit dan menyimpan perubahannya.
      *
      * Pemilik baris selalu boleh — itulah yang menggantikan halaman "Profil Saya".
      * Field yang boleh ia ubah dibatasi terpisah di controller (Status hanya milik
-     * pengelola); Policy ini hanya menjawab "baris siapa", bukan "kolom apa".
+     * pengelola, lihat ubahDataMahasiswa); Policy ini hanya menjawab "baris siapa",
+     * bukan "kolom apa".
      */
     public function update(User $user, Kemahasiswaan $mhs): bool
     {
@@ -79,14 +70,16 @@ class KemahasiswaanPolicy
     }
 
     /**
-     * Mengubah Status Kemahasiswaan — SATU-SATUNYA yang boleh dilakukan pengelola
-     * pada baris orang lain. Biodata (email pribadi, kontak) milik mahasiswa itu
-     * sendiri; nama, NIM, dan angkatan milik SSO.
+     * Mengubah data mahasiswa lain sebagai pengelola: Status Kemahasiswaan serta
+     * kontak (email pribadi, WhatsApp) — kontak boleh diperbaiki admin atas keputusan
+     * Bu Eve (13 Okt 2026), dan tiap perubahan tercatat di audit log. Nama, NIM, dan
+     * angkatan tetap milik SSO.
      *
-     * Pengelola tidak boleh mengubah status barisnya sendiri (kasus pengelola yang
-     * juga terdaftar sebagai mahasiswa): keputusan atas dirinya diambil pengelola lain.
+     * Pengelola tidak memakai jalur ini di barisnya sendiri (kasus pengelola yang juga
+     * terdaftar sebagai mahasiswa): status dirinya diputuskan pengelola lain, dan
+     * kontaknya ia ubah lewat jalur pemilik.
      */
-    public function ubahStatus(User $user, Kemahasiswaan $mhs): bool
+    public function ubahDataMahasiswa(User $user, Kemahasiswaan $mhs): bool
     {
         return $user->hasAnyRole(self::PENGELOLA)
             && (int) $mhs->user_id !== (int) $user->getKey();

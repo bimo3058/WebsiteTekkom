@@ -5,13 +5,14 @@
 
 {{--
     Satu halaman, dua wajah (aturannya ada di KemahasiswaanPolicy):
-      $ubahStatus = true  → pengelola membuka baris ORANG LAIN: hanya Status Kemahasiswaan.
-      $ubahStatus = false → pemilik baris (termasuk pengelola yang membuka barisnya
-                            sendiri): hanya data pribadinya, yaitu email pribadi dan kontak.
+      $sebagaiPengelola = true  → pengelola membuka baris ORANG LAIN: Status Kemahasiswaan
+                                  + Kontak (email pribadi, WhatsApp).
+      $sebagaiPengelola = false → pemilik baris (termasuk pengelola yang membuka barisnya
+                                  sendiri): hanya data pribadinya, yaitu email pribadi dan WhatsApp.
     Nama, NIM, dan Angkatan milik SSO dan hanya tampil sebagai teks di subjudul.
 --}}
 @php
-    $ubahStatus = $ubahStatus ?? false;
+    $sebagaiPengelola = $sebagaiPengelola ?? false;
 
     $statusLabel = [
         'aktif'        => 'Aktif',
@@ -22,6 +23,31 @@
         'pindah_studi' => 'Pindah Studi',
         'wafat'        => 'Wafat',
     ];
+
+    // Prioritaskan users.whatsapp (sumber kanonik dari Settings global)
+    // Fallback ke mk_kemahasiswaan.kontak jika belum tersinkron
+    $savedWa = $mhs->user?->whatsapp ?? $mhs->kontak ?? '';
+    $savedCode = '+62';
+    $localNum = $savedWa;
+
+    $knownCodes = ['+93','+27','+1','+966','+54','+61','+31','+55','+673','+971','+63','+91','+62','+44','+39','+81','+49','+855','+82','+856','+60','+95','+92','+33','+974','+64','+65','+66','+90','+84','+86'];
+    usort($knownCodes, fn($a, $b) => strlen($b) - strlen($a));
+
+    foreach ($knownCodes as $code) {
+        if (str_starts_with($savedWa, $code)) {
+            $savedCode = $code;
+            $localNum = substr($savedWa, strlen($code));
+            break;
+        }
+    }
+
+    if ($localNum === '' && $savedWa !== '') {
+        $localNum = $savedWa;
+        if (str_starts_with($localNum, '0')) {
+            $savedCode = '+62';
+            $localNum = ltrim($localNum, '0');
+        }
+    }
 @endphp
 
 <style>
@@ -63,51 +89,46 @@
         line-height: 1.5;
         color: var(--c-fg-muted);
     }
-    .mm-current { display: flex; align-items: center; min-height: 38px; }
     @media (max-width: 767px) {
         .mm-sec-fields { grid-template-columns: 1fr; padding: 12px; gap: 12px; }
     }
 </style>
 
-<x-manajemenmahasiswa::ui.page-header bordered :title="$ubahStatus ? 'Ubah Status Kemahasiswaan' : 'Edit Data Saya'">
+<x-manajemenmahasiswa::ui.page-header bordered :title="$sebagaiPengelola ? 'Edit Data Mahasiswa' : 'Edit Data Saya'">
     {{ $mhs->nama }} · {{ $mhs->nim }} · Angkatan {{ $mhs->angkatan }}
-    @unless($ubahStatus)
+    @if($sebagaiPengelola)
+        · <span class="status-badge {{ $mhs->status }}">{{ $statusLabel[$mhs->status] ?? ucfirst($mhs->status) }}</span>
+    @else
         — data dari SSO, tidak dapat diubah.
-    @endunless
+    @endif
     <x-slot:actions>
         <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id) }}" class="mk-btn mk-btn--secondary mk-btn--sm">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
             Kembali
         </a>
-        <button type="submit" form="formEditBiodata" class="mk-btn mk-btn--primary mk-btn--sm">Simpan Perubahan</button>
+        <button type="submit" form="formEditBiodata" id="btnSimpan" class="mk-btn mk-btn--primary mk-btn--sm">Simpan Perubahan</button>
     </x-slot:actions>
 </x-manajemenmahasiswa::ui.page-header>
 
 <x-manajemenmahasiswa::ui.flash type="error" :messages="$errors->all()" class="mb-3" />
 
 <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.update', $mhs->id) }}"
-      id="formEditBiodata" data-status-awal="{{ $mhs->status }}">
+      id="formEditBiodata" data-status-awal="{{ $mhs->status }}"
+      data-email-awal="{{ $mhs->user?->personal_email }}" data-kontak-awal="{{ $localNum }}" data-kode-awal="{{ $savedCode }}">
     @csrf
     @method('PUT')
 
-@if($ubahStatus)
+@if($sebagaiPengelola)
 
     <div class="mm-sec">
         <div class="mm-sec-head">
             <h2>Status Akademik</h2>
-            <p>Tentukan apakah mahasiswa ini masih berstatus mahasiswa. Setiap perubahan tercatat di audit log beserta pelakunya.</p>
+            <p>Tentukan apakah mahasiswa ini masih berstatus mahasiswa.</p>
         </div>
 
         <div class="mm-sec-fields">
             <div>
-                <span class="form-label-custom">Status saat ini</span>
-                <div class="mm-current">
-                    <span class="status-badge {{ $mhs->status }}">{{ $statusLabel[$mhs->status] ?? ucfirst($mhs->status) }}</span>
-                </div>
-            </div>
-
-            <div>
-                <label class="form-label-custom" for="statusSelect">Status baru <span class="required">*</span></label>
+                <label class="form-label-custom" for="statusSelect">Status <span class="required">*</span></label>
                 <x-manajemenmahasiswa::ui.select name="status" id="statusSelect" size="md" required
                     :maxHeight="320" :invalid="$errors->has('status')">
                     <optgroup label="Masih mahasiswa">
@@ -121,7 +142,7 @@
                         @endforeach
                     </optgroup>
                 </x-manajemenmahasiswa::ui.select>
-                <p class="mm-hint">Memilih <strong>Alumni</strong> memindahkan mahasiswa ini ke <strong>Direktori Alumni</strong>.</p>
+                <p class="mm-hint" id="hintAlumni" hidden>Memilih <strong>Alumni</strong> memindahkan mahasiswa ini ke <strong>Direktori Alumni</strong>.</p>
             </div>
 
             <div id="tahunLulusWrap" hidden>
@@ -134,39 +155,17 @@
         </div>
     </div>
 
-@else
-
-    @php
-        // Prioritaskan users.whatsapp (sumber kanonik dari Settings global)
-        // Fallback ke mk_kemahasiswaan.kontak jika belum tersinkron
-        $savedWa = old('kontak', $mhs->user?->whatsapp ?? $mhs->kontak ?? '');
-        $savedCode = '+62';
-        $localNum = $savedWa;
-
-        $knownCodes = ['+93','+27','+1','+966','+54','+61','+31','+55','+673','+971','+63','+91','+62','+44','+39','+81','+49','+855','+82','+856','+60','+95','+92','+33','+974','+64','+65','+66','+90','+84','+86'];
-        usort($knownCodes, fn($a, $b) => strlen($b) - strlen($a));
-
-        foreach ($knownCodes as $code) {
-            if (str_starts_with($savedWa, $code)) {
-                $savedCode = $code;
-                $localNum = substr($savedWa, strlen($code));
-                break;
-            }
-        }
-
-        if ($localNum === '' && $savedWa !== '') {
-            $localNum = $savedWa;
-            if (str_starts_with($localNum, '0')) {
-                $savedCode = '+62';
-                $localNum = ltrim($localNum, '0');
-            }
-        }
-    @endphp
+@endif
 
     <div class="mm-sec">
         <div class="mm-sec-head">
-            <h2>Data Pribadi</h2>
-            <p>Email pribadi dan kontak diubah oleh pemiliknya sendiri, lalu tersinkron ke profil global dan CV.</p>
+            @if($sebagaiPengelola)
+                <h2>Kontak</h2>
+                <p>Isi atau perbaiki bila mahasiswa melapor perubahan atau datanya belum terisi. Perubahan ikut tersinkron ke profil global dan CV mahasiswa.</p>
+            @else
+                <h2>Data Pribadi</h2>
+                <p>Email pribadi dan WhatsApp diubah oleh pemiliknya sendiri, lalu tersinkron ke profil global dan CV.</p>
+            @endif
         </div>
 
         <div class="mm-sec-fields">
@@ -178,8 +177,8 @@
                        maxlength="254" placeholder="contoh@gmail.com">
             </div>
 
-            <div x-data="mhsPhoneCode('{{ $savedCode }}')">
-                <label class="form-label-custom" for="kontakInput">Kontak</label>
+            <div x-data="mhsPhoneCode('{{ old('phone_code', $savedCode) }}')">
+                <label class="form-label-custom" for="kontakInput">WhatsApp/Telepon</label>
                 <div class="d-flex position-relative form-control-custom p-0" style="overflow: visible; background: #fff;">
                     <button type="button" @click.prevent="toggle($el)"
                             class="btn border-0 d-flex align-items-center gap-2" style="background: var(--c-grey-0); color: var(--c-fg-sec); border-right: 1px solid var(--c-border-strong) !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 7px; border-bottom-left-radius: 7px;">
@@ -222,28 +221,43 @@
         </div>
     </div>
 
-@endif
 </form>
 
 <script>
-@if($ubahStatus)
 (function () {
     const form       = document.getElementById('formEditBiodata');
-    const select     = document.getElementById('statusSelect');
+    const select     = document.getElementById('statusSelect');   // hanya ada untuk pengelola
     const tahunWrap  = document.getElementById('tahunLulusWrap');
-    const statusAwal = form.dataset.statusAwal;
+    const hintAlumni = document.getElementById('hintAlumni');
+    const btnSimpan  = document.getElementById('btnSimpan');
+    const awal       = form.dataset;
 
-    // Tahun Lulus hanya muncul saat status BARU menjadi Alumni.
+    // Tahun Lulus dan petunjuk Direktori Alumni hanya muncul saat status BARU menjadi Alumni;
+    // Simpan baru aktif setelah status atau kontak berbeda dari yang tersimpan.
     function sinkron() {
-        tahunWrap.hidden = !(select.value !== statusAwal && select.value === 'alumni');
+        const statusBerubah = select ? select.value !== awal.statusAwal : false;
+        if (select) {
+            const jadiAlumni = statusBerubah && select.value === 'alumni';
+            tahunWrap.hidden  = !jadiAlumni;
+            hintAlumni.hidden = !jadiAlumni;
+        }
+
+        const nomor = form.elements.kontak.value;
+        const kode  = form.elements.phone_code.value || awal.kodeAwal;
+        const kontakBerubah = form.elements.email_pribadi.value.trim() !== awal.emailAwal
+            || nomor !== awal.kontakAwal
+            || (nomor !== '' && kode !== awal.kodeAwal);
+
+        btnSimpan.disabled = !statusBerubah && !kontakBerubah;
     }
-    select.addEventListener('change', sinkron);
+    form.addEventListener('input', sinkron);
+    form.addEventListener('change', sinkron);
     sinkron();
 
     // Pengaman terakhir: memindahkan mahasiswa KELUAR dari status Alumni akan menghapus
     // datanya di Direktori Alumni, jadi minta konfirmasi eksplisit lebih dulu.
     form.addEventListener('submit', function (e) {
-        if (statusAwal !== 'alumni' || select.value === 'alumni') {
+        if (!select || awal.statusAwal !== 'alumni' || select.value === 'alumni') {
             return;
         }
 
@@ -262,7 +276,7 @@
         }).then(function (ok) { if (ok) form.submit(); });
     });
 })();
-@else
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('mhsPhoneCode', (defaultDial) => {
         const countries = [
@@ -325,10 +339,12 @@ document.addEventListener('alpine:init', () => {
                 this.selected = c;
                 this.open = false;
                 this.search = '';
+                // Kode negara tersimpan di input tersembunyi yang tidak memicu event sendiri;
+                // beri tahu form agar tombol Simpan ikut menilai ulang perubahan.
+                this.$nextTick(() => document.getElementById('formEditBiodata').dispatchEvent(new Event('change')));
             }
         };
     });
 });
-@endif
 </script>
 </x-dynamic-component>
