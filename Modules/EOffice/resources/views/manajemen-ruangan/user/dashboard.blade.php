@@ -54,11 +54,14 @@
 
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8">
         <div class="min-w-0">
-            <h1 class="text-[22px] font-bold text-gray-900 tracking-tight flex items-center gap-2">
-                Selamat datang, <span
-                    class="truncate block max-w-[200px] sm:max-w-xs">{{ array_pad(explode(' ', $user->name), 1, 'Mahasiswa')[0] }}</span>
+            <h1 class="text-[22px] font-bold text-gray-900 tracking-tight">
+                Dashboard Peminjaman
             </h1>
-            <p class="text-[13px] text-gray-500 mt-1.5">Kelola dan pantau pengajuan peminjaman ruangan Anda di sini.</p>
+            <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1 mt-1.5 text-[13px] text-gray-500">
+                <span>Selamat datang kembali, <strong class="font-semibold text-gray-900">{{ $user->name }}</strong></span>
+                <span class="text-gray-300" aria-hidden="true">&middot;</span>
+                <time datetime="{{ now()->toDateString() }}">{{ now()->locale('id')->translatedFormat('l, d F Y') }}</time>
+            </div>
         </div>
         <div class="flex flex-shrink-0 gap-3">
             <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
