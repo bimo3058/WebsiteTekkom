@@ -811,10 +811,7 @@
                         </div>
                         <button type="button" @click="closeModal"
                             class="text-[#0B266E] hover:text-[#091F5E] hover:bg-[#0B266E]/10 transition-colors w-8 h-8 flex items-center justify-center shrink-0 rounded-lg cursor-pointer">
-                            <span class="sr-only">Tutup</span>
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
+                            <span class="material-symbols-outlined" style="font-size:20px">close</span>
                         </button>
                     </div>
 

@@ -142,7 +142,7 @@
             {{-- Table Header --}}
             <div
                 class="px-5 py-2.5 border-b border-gray-100 flex justify-between items-center text-[12px] font-medium text-gray-500 bg-gray-50/50">
-                <div class="flex-1">Ruangan & Tujuan</div>
+                <div class="flex-1">Ruangan & Kegiatan</div>
                 <div class="w-32 text-right">Waktu</div>
             </div>
 
@@ -198,7 +198,7 @@
                         <tr class="border-b border-gray-100 bg-gray-50/50">
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Ruangan &
                                 Tanggal</th>
-                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Tujuan</th>
+                            <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap">Kegiatan</th>
                             <th class="px-5 py-2.5 text-[12px] font-medium text-gray-500 whitespace-nowrap text-left">
                                 Status</th>
                         </tr>
@@ -222,15 +222,9 @@
                                         {{ $booking->tujuan }}
                                     </div>
                                     @if($booking->status === 'ditolak' && $booking->alasan_penolakan)
-                                        <div class="text-[10px] font-medium text-rose-600 mt-1 flex items-start gap-1">
-                                            <svg class="w-3 h-3 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <circle cx="12" cy="12" r="10"></circle>
-                                                <line x1="12" y1="8" x2="12" y2="12"></line>
-                                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                                            </svg>
-                                            <span class="line-clamp-1"
-                                                title="{{ $booking->alasan_penolakan }}">{{ $booking->alasan_penolakan }}</span>
+                                        <div class="text-[10px] font-medium text-rose-600 mt-1"
+                                            title="{{ $booking->alasan_penolakan }}">
+                                            <span class="line-clamp-1">{{ $booking->alasan_penolakan }}</span>
                                         </div>
                                     @endif
                                 </td>

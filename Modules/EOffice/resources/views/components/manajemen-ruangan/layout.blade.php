@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $pageTitle ?? 'Manajemen Ruangan' }} — SIPERKOM</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
     <style>
         [x-cloak] { display: none !important; }
         
@@ -839,23 +840,31 @@
                                 </template>
                             </button>
 
+
                             {{-- Dropdown Notifikasi --}}
-                            <div x-show="openNotif" x-transition.opacity.duration.200ms x-cloak
-                                class="absolute right-0 mt-2 w-[340px] bg-white border border-[#DFE1E7] rounded-[16px] shadow-lg overflow-hidden z-[99]"
+                            <div x-show="openNotif" 
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 translate-y-1 sm:translate-y-0 sm:scale-95"
+                                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                                x-transition:leave-end="opacity-0 translate-y-1 sm:translate-y-0 sm:scale-95"
+                                x-cloak
+                                class="fixed left-3 right-3 top-[58px] w-auto max-w-[360px] ml-auto sm:left-auto sm:right-3.5 sm:w-[360px] md:absolute md:top-full md:right-0 md:left-auto md:ml-0 md:mt-2 md:w-[360px] md:max-w-none bg-white border border-[#DFE1E7] rounded-[16px] shadow-2xl overflow-hidden z-[99]"
                                 style="display: none;">
-                                <div class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-start bg-white">
-                                    <div class="flex flex-col gap-1">
-                                        <h3 class="font-bold text-[13px] text-gray-900 leading-none mt-0.5">Notifikasi</h3>
+                                <div class="px-4 py-3 border-b border-[#DFE1E7] flex justify-between items-center bg-white">
+                                    <div class="flex flex-col gap-0.5">
+                                        <h3 class="font-bold text-[13px] text-gray-900 leading-none">Notifikasi</h3>
                                         <p class="text-[11px] text-gray-500">Aktivitas Terkini</p>
                                     </div>
                                     <template x-if="unreadCount > 0">
-                                        <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}" class="m-0" id="mark-all-read-form">
+                                        <form method="POST" action="{{ route('eoffice.peminjaman.user.notifikasi.read-all') }}" class="m-0 shrink-0" id="mark-all-read-form">
                                             @csrf
-                                            <button type="submit" class="text-[12px] text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0">Tandai semua dibaca</button>
+                                            <button type="submit" class="text-[12px] font-semibold text-[#0B266E] hover:underline cursor-pointer bg-transparent border-none p-0 whitespace-nowrap">Tandai semua dibaca</button>
                                         </form>
                                     </template>
                                 </div>
-                                <div class="max-h-[350px] overflow-y-auto bg-white relative min-h-[100px]">
+                                <div class="max-h-[min(380px,calc(100vh-140px))] overflow-y-auto bg-white relative min-h-[100px] custom-scrollbar">
                                     {{-- Loading State --}}
                                     <div x-show="loading" class="absolute inset-0 bg-white/80 z-10 flex flex-col items-center justify-center">
                                         <svg class="animate-spin h-6 w-6 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -880,12 +889,12 @@
                                             <button type="submit" :class="item.is_read ? 'bg-white opacity-60 hover:bg-gray-50' : 'bg-[#EFF6FF] hover:bg-[#E0F2FE] unread-item'" class="w-full text-left px-4 py-3 transition-colors cursor-pointer block relative">
                                                 <div class="flex flex-col gap-1">
                                                     <div class="flex justify-between items-start gap-2">
-                                                        <h4 class="text-[13px] font-bold text-gray-900" x-text="item.title"></h4>
+                                                        <h4 class="text-[13px] font-bold text-gray-900 leading-tight" x-text="item.title"></h4>
                                                         <template x-if="!item.is_read">
                                                             <span class="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0 mt-1"></span>
                                                         </template>
                                                     </div>
-                                                    <p class="text-[12px] text-gray-600 leading-snug" x-html="item.message"></p>
+                                                    <p class="text-[12px] text-gray-600 leading-snug break-words" x-html="item.message"></p>
                                                     <span class="text-[11px] text-gray-400 mt-0.5" x-text="item.time"></span>
                                                 </div>
                                             </button>
